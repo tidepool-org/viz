@@ -26,6 +26,17 @@ import TrendsContainer from './containers/trends/TrendsContainer';
 
 import vizReducer from './redux/reducers/';
 
+import * as workerActions from './redux/actions/worker';
+
+// eslint-disable-next-line import/no-unresolved
+import Worker from 'worker?inline!./preprocessing/index';
+
+const actions = {
+  workerFilterDataFailure: workerActions.workerFilterDataFailure,
+  workerProcessDataFailure: workerActions.workerProcessDataFailure,
+  workerProcessPatientData: workerActions.workerProcessPatientData,
+};
+
 const components = {
   FocusedCBGSliceHTMLLabels,
   FocusedCBGSliceTime,
@@ -36,4 +47,4 @@ const containers = {
   TrendsContainer,
 };
 
-export { components, containers, vizReducer };
+export { actions, components, containers, vizReducer, Worker };

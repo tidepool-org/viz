@@ -7,6 +7,7 @@ packageConfig.output.libraryTarget = 'commonjs';
 
 packageConfig.externals = {
   classnames: 'classnames',
+  crossfilter: 'crossfilter',
   'd3-array': 'd3-array',
   'd3-format': 'd3-format',
   'd3-scale': 'd3-scale',
@@ -19,7 +20,6 @@ packageConfig.externals = {
   'react-redux': 'react-redux',
   redux: 'redux',
   react: 'react',
-  'simple-statistics': 'simple-statistics',
 };
 
 module.exports = packageConfig;

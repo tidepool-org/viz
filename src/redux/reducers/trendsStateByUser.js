@@ -71,6 +71,15 @@ const trendsStateByUser = (state = {}, action) => {
         } }
       );
     }
+    case actionTypes.WORKER_FILTER_DATA_SUCCESS: {
+      const { userId, data } = action.payload;
+      return update(
+        state,
+        { [userId]: {
+          data: { $set: data },
+        } }
+      );
+    }
     default:
       return state;
   }
