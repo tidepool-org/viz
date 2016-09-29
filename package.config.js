@@ -15,11 +15,12 @@ packageConfig.externals = {
   'd3-time': 'd3-time',
   lodash: 'lodash',
   'moment-timezone': 'moment-timezone',
+  react: 'react',
   'react-addons-update': 'react-addons-update',
   'react-motion': 'react-motion',
   'react-redux': 'react-redux',
   redux: 'redux',
-  react: 'react',
+  'redux-thunk': 'redux-thunk',
 };
 
 module.exports = packageConfig;

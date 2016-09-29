@@ -81,7 +81,7 @@ export function workerProcessPatientData(id, data, timePrefs) {
       'time'
     );
     const thirtyDaysAgo = utcDay.offset(new Date(), -30).toISOString();
-    const indexAtThirtyDaysAgo = _.findLastIndex(sorted, (d) => (d.time < thirtyDaysAgo));
+    const indexAtThirtyDaysAgo = _.findLastIndex(sorted, (d) => (d.time < thirtyDaysAgo)) + 1;
     const mostRecentThirtyDaysData = sorted.splice(indexAtThirtyDaysAgo);
 
     dispatch(workerProcessDataRequest(id, mostRecentThirtyDaysData, timePrefs));
