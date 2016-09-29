@@ -20,13 +20,15 @@ import update from 'react-addons-update';
 
 import * as actionTypes from '../constants/actionTypes';
 
+const DATA = 'data';
 const FOCUSED_CBG_SLICE = 'focusedCbgSlice';
 const FOCUSED_CBG_KEYS = 'focusedCbgSliceKeys';
 const FOCUSED_SMBG = 'focusedSmbg';
 const FOCUSED_SMBG_RANGE_AVG = 'focusedSmbgRangeAvg';
 const TOUCHED = 'touched';
 
-const initialState = {
+export const initialState = {
+  [DATA]: [],
   [FOCUSED_CBG_SLICE]: null,
   [FOCUSED_CBG_KEYS]: null,
   [FOCUSED_SMBG]: null,
