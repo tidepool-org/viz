@@ -24,6 +24,8 @@ import TwoOptionToggle from './components/common/controls/TwoOptionToggle';
 
 import TrendsContainer from './containers/trends/TrendsContainer';
 
+import * as SettingsFactory from './utils/settings/factory';
+
 import vizReducer from './redux/reducers/';
 
 import * as workerActions from './redux/actions/worker';
@@ -40,6 +42,7 @@ const actions = {
 const components = {
   FocusedCBGSliceHTMLLabels,
   FocusedCBGSliceTime,
+  SettingsFactory,
   TwoOptionToggle,
 };
 
