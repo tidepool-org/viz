@@ -31,7 +31,7 @@ import vizReducer from './redux/reducers/';
 import * as workerActions from './redux/actions/worker';
 
 // eslint-disable-next-line import/no-unresolved
-import Worker from 'worker?inline!./preprocessing/index';
+import Worker from 'worker?inline!./worker/index';
 
 const actions = {
   workerFilterDataFailure: workerActions.workerFilterDataFailure,

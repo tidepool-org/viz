@@ -18,7 +18,7 @@
 import _ from 'lodash';
 import { utcDay } from 'd3-time';
 
-import { types } from '../../preprocessing/datatypes';
+import { types } from '../../worker/datatypes';
 import * as actionTypes from '../../redux/constants/actionTypes';
 
 export function workerFilterDataRequest(userId, filters, datatypes) {
