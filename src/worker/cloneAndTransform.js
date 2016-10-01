@@ -15,39 +15,31 @@
  * == BSD2 LICENSE ==
  */
 
-import moment from 'moment-timezone';
+import _ from 'lodash';
 
-import { getMsPer24 } from '../utils/datetime';
-
-/**
- * toHammertime
- *
- * @param {Object} d - a Tidepool datum
- *
- * @return {Object} containing hammertime and rawDisplayTimeMs fields
- */
-export function toHammertime(d) {
-  return {
-    rawDisplayTimeMs: Date.parse(`${d.deviceTime}.000Z`),
-    hammertime: Date.parse(d.time),
-  };
-}
+import * as mungers from './mungers';
 
 /**
- * calcTzSensitiveFields
+ * cloneAndTransform
  *
  * @param {Object} d - a Tidepool datum
  * @param {String} tz - a named timezone from the IANA Time Zone Database
  *
- * @return {Object} MUTATED Tidepool datum width tz-sensitive fields added or replaced
+ * @return {Object} transformed - cloned & transformed Tidepool datum
  */
-export function calcTzSensitiveFields(d, tz) {
-  const datum = d;
-  const localized = moment.utc(d.hammertime).tz(tz);
-
-  datum.date = localized.format('YYYY-MM-DD');
-  datum.dayOfWeek = localized.format('dddd').toLowerCase();
-  datum.msPer24 = getMsPer24(localized);
-
-  return datum;
+export default function cloneAndTransform(d, tz) {
+  const transformed = _.pick(
+    _.assign({}, d, mungers.calcTzSensitiveFields(mungers.toHammertime(d), tz)),
+    [
+      'date',
+      'dayOfWeek',
+      'hammertime',
+      'id',
+      'msPer24',
+      'rawDisplayTimeMs',
+      'type',
+      'value',
+    ]
+  );
+  return transformed;
 }
