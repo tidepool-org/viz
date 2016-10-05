@@ -105,6 +105,7 @@
     "react-motion": "0.4.4"
   },
   "peerDependencies": {
+    "bows": "1.x",
     "classnames": "2.x",
     "lodash": "3.x",
     "moment-timezone": "0.x",

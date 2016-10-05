@@ -45,6 +45,11 @@ describe('DiabetesDataWorker', () => {
         expect(worker.crossfilters[type].dataByDayOfWeek).to.exist;
       });
     });
+
+    it('should set up a logger', () => {
+      const worker = new DiabetesDataWorker();
+      expect(worker.log).to.exist;
+    });
   });
 
   describe('handleMessage', () => {

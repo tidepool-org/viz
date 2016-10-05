@@ -6,6 +6,7 @@ const packageConfig = _.cloneDeep(baseConfig);
 packageConfig.output.libraryTarget = 'commonjs';
 
 packageConfig.externals = {
+  bows: 'bows',
   classnames: 'classnames',
   crossfilter: 'crossfilter',
   'd3-array': 'd3-array',

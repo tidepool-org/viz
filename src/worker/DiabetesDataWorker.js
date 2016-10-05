@@ -16,6 +16,7 @@
  */
 
 import _ from 'lodash';
+import bows from 'bows';
 import crossfilter from 'crossfilter';
 
 import { types } from './datatypes';
@@ -34,12 +35,16 @@ export default class DiabetesDataWorker {
       this.crossfilters[type].dataByDayOfWeek = this.crossfilters[type]
         .dimension((d) => (d.dayOfWeek));
     });
+
+    this.log = bows('DataWorker');
+    this.log('DataWorker constructed!');
   }
 
   handleMessage(msg, postMessage) {
     const { data: action } = msg;
     switch (action.type) {
       case actionTypes.WORKER_PROCESS_DATA_REQUEST: {
+        this.log('Handling a WORKER_PROCESS_DATA_REQUEST');
         const { data, timePrefs, userId } = action.payload;
 
         const newData = _.map(data, (d) => (
@@ -50,10 +55,12 @@ export default class DiabetesDataWorker {
           this.crossfilters[type].add(grouped[type]);
         });
 
+        this.log('Posting WORKER_PROCESS_DATA_SUCCESS');
         postMessage(actions.workerProcessDataSuccess(userId));
         break;
       }
       case actionTypes.WORKER_FILTER_DATA_REQUEST: {
+        this.log('Handling a WORKER_FILTER_DATA_REQUEST');
         const { filters: { activeDays, dateDomain }, types: datatypes, userId } = action.payload;
 
         const filtered = {};
@@ -69,6 +76,7 @@ export default class DiabetesDataWorker {
           filtered[type] = typedCrossfilter.dataByDate.top(Infinity).reverse();
         });
 
+        this.log('Posting WORKER_FILTER_DATA_SUCCESS');
         postMessage(actions.workerFilterDataSuccess(userId, filtered));
         break;
       }
