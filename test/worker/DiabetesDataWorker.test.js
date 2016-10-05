@@ -60,7 +60,7 @@ describe('DiabetesDataWorker', () => {
     });
 
     it('should throw an error on unhandled action type', () => {
-      expect(() => { worker.handleMessage({ type: 'FOO' }); })
+      expect(() => { worker.handleMessage({ data: { type: 'FOO' } }); })
         .to.throw('Unhandled action type [FOO] passed to Web Worker!');
     });
 
