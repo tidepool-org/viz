@@ -56,6 +56,7 @@ export default class DiabetesDataWorker {
       }
       case actionTypes.WORKER_PROCESS_DATA_REQUEST: {
         this.log('Handling a WORKER_PROCESS_DATA_REQUEST');
+        const start = new Date().valueOf();
         const { data, timePrefs, userId } = action.payload;
 
         const newData = _.map(data, (d) => (
@@ -70,6 +71,7 @@ export default class DiabetesDataWorker {
         _.each(types, (type) => {
           this.log(`Crossfilter for [${type}] size: ${this.crossfilters[type].size()}`);
         });
+        this.log(`Worker data preprocessing took ${new Date().valueOf() - start} milliseconds`);
         postMessage(actions.workerProcessDataSuccess(userId));
         break;
       }
