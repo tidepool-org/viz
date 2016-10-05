@@ -19,7 +19,8 @@ import _ from 'lodash';
 import mutationTracker from 'object-invariant-test-helper';
 
 import * as mungers from '../../src/worker/mungers';
-import cloneAndTransform from '../../src/worker/cloneAndTransform';
+import * as transformers from '../../src/worker/transformers';
+const cloneAndTransform = transformers.cloneAndTransform;
 
 describe('cloneAndTransform', () => {
   beforeEach(() => {

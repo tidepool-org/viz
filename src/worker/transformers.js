@@ -27,7 +27,7 @@ import * as mungers from './mungers';
  *
  * @return {Object} transformed - cloned & transformed Tidepool datum
  */
-export default function cloneAndTransform(d, tz) {
+export function cloneAndTransform(d, tz) {
   const transformed = _.pick(
     _.assign({}, d, mungers.calcTzSensitiveFields(mungers.toHammertime(d), tz)),
     [

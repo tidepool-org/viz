@@ -17,7 +17,11 @@
 
 /* global onmessage */
 
-import * as handlers from './handlers';
+import DiabetesDataWorker from './DiabetesDataWorker';
+
+const worker = new DiabetesDataWorker();
 
 // eslint-disable-next-line no-native-reassign
-onmessage = handlers.onmessage;
+onmessage = (msg) => {
+  worker.handleMessage(msg, postMessage);
+};
