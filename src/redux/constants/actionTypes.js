@@ -28,6 +28,7 @@ export const UNFOCUS_TRENDS_SMBG_RANGE_AVG = 'UNFOCUS_TRENDS_SMBG_RANGE_AVG';
 // from blip's redux implementation
 // TODO: how could we DRY this out??
 
+export const FETCH_PATIENT_DATA_REQUEST = 'FETCH_PATIENT_DATA_REQUEST';
 export const FETCH_PATIENT_DATA_SUCCESS = 'FETCH_PATIENT_DATA_SUCCESS';
 export const LOGOUT_REQUEST = 'LOGOUT_REQUEST';
 

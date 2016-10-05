@@ -69,6 +69,44 @@ describe('DiabetesDataWorker', () => {
         .to.throw('Unhandled action type [FOO] passed to Web Worker!');
     });
 
+    describe('handling FETCH_PATIENT_DATA_REQUEST', () => {
+      before(() => {
+        _.each(types, (type) => {
+          sinon.spy(worker.crossfilters[type].dataByDate, 'filterAll');
+          sinon.spy(worker.crossfilters[type].dataByDayOfWeek, 'filterAll');
+          sinon.spy(worker.crossfilters[type], 'remove');
+        });
+      });
+
+      after(() => {
+        _.each(types, (type) => {
+          worker.crossfilters[type].dataByDate.filterAll.restore();
+          worker.crossfilters[type].dataByDayOfWeek.filterAll.restore();
+          worker.crossfilters[type].remove.restore();
+        });
+      });
+
+      it('should clear the crossfilters so we don\'t duplicate data in them', () => {
+        _.each(types, (type) => {
+          expect(worker.crossfilters[type].dataByDate.filterAll.callCount).to.equal(0);
+          expect(worker.crossfilters[type].dataByDayOfWeek.filterAll.callCount).to.equal(0);
+          expect(worker.crossfilters[type].remove.callCount).to.equal(0);
+        });
+
+        worker.handleMessage({
+          data: {
+            type: actionTypes.FETCH_PATIENT_DATA_REQUEST,
+          },
+        });
+
+        _.each(types, (type) => {
+          expect(worker.crossfilters[type].dataByDate.filterAll.callCount).to.equal(1);
+          expect(worker.crossfilters[type].dataByDayOfWeek.filterAll.callCount).to.equal(1);
+          expect(worker.crossfilters[type].remove.callCount).to.equal(1);
+        });
+      });
+    });
+
     describe('handling WORKER_PROCESS_DATA_REQUEST', () => {
       const data = [{
         type: 'cbg',

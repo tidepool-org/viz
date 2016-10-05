@@ -43,6 +43,17 @@ export default class DiabetesDataWorker {
   handleMessage(msg, postMessage) {
     const { data: action } = msg;
     switch (action.type) {
+      case actionTypes.FETCH_PATIENT_DATA_REQUEST: {
+        this.log('Handling a FETCH_PATIENT_DATA_REQUEST');
+        // for now, we clear the crossfilters on every new patient data fetch
+        _.each(_.keys(this.crossfilters), (type) => {
+          this.crossfilters[type].dataByDate.filterAll();
+          this.crossfilters[type].dataByDayOfWeek.filterAll();
+          this.crossfilters[type].remove();
+        });
+        this.log('Cleared crossfilters on new patient data fetch/refresh.');
+        break;
+      }
       case actionTypes.WORKER_PROCESS_DATA_REQUEST: {
         this.log('Handling a WORKER_PROCESS_DATA_REQUEST');
         const { data, timePrefs, userId } = action.payload;
@@ -56,6 +67,9 @@ export default class DiabetesDataWorker {
         });
 
         this.log('Posting WORKER_PROCESS_DATA_SUCCESS');
+        _.each(types, (type) => {
+          this.log(`Crossfilter for [${type}] size: ${this.crossfilters[type].size()}`);
+        });
         postMessage(actions.workerProcessDataSuccess(userId));
         break;
       }
