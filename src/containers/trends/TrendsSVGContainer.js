@@ -108,6 +108,16 @@ export class TrendsSVGContainer extends React.Component {
             probably this will be mapping through the data grouped by days
             and rendering a SMBGDayAnimationContainer for each day
             skipping a day (if any) that is focused through hover */}
+            <g id="smbgsByDate">
+              <g id="smbgsByDate-2016-01-01">
+                <path id="smbgLine-2016-01-01" />
+                <g id="smbgCircles-2016-01-01">
+                  <circle />
+                  <circle />
+                  ...
+                </g>
+              </g>
+            </g>
           {/* TODO: render SMBGRangeAvgAnimationContainer if rangeOverlay passing in only SMBGAvg as the component to render (top layer when nothing focused) */}
           {/* TODO: if a day of smbgs or an individual smbg is focused through hover, render it here (topmost layer) */}
         </g>
