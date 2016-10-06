@@ -23,6 +23,21 @@ export const THREE_HRS = 10800000;
 export const TWENTY_FOUR_HRS = 86400000;
 
 /**
+ * getMsPer24
+ *
+ * @param {Object} a moment localized to the appropriate timezone
+ *
+ * @return {Number} milliseconds per twenty-four hour day (>= 0 and < 864e5)
+ */
+export function getMsPer24(localized) {
+  const hrsToMs = localized.hours() * 1000 * 60 * 60;
+  const minToMs = localized.minutes() * 1000 * 60;
+  const secToMs = localized.seconds() * 1000;
+  const ms = localized.milliseconds();
+  return hrsToMs + minToMs + secToMs + ms;
+}
+
+/**
  * getTimezoneFromTimePrefs
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
  *

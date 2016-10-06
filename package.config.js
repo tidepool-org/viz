@@ -6,7 +6,9 @@ const packageConfig = _.cloneDeep(baseConfig);
 packageConfig.output.libraryTarget = 'commonjs';
 
 packageConfig.externals = {
+  bows: 'bows',
   classnames: 'classnames',
+  crossfilter: 'crossfilter',
   'd3-array': 'd3-array',
   'd3-format': 'd3-format',
   'd3-scale': 'd3-scale',
@@ -22,6 +24,7 @@ packageConfig.externals = {
   'react-motion': 'react-motion',
   'react-redux': 'react-redux',
   redux: 'redux',
+  'redux-thunk': 'redux-thunk',
 };
 
 module.exports = packageConfig;

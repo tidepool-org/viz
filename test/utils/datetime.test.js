@@ -15,6 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
+import moment from 'moment-timezone';
+
 import * as datetime from '../../src/utils/datetime';
 
 describe('datetime', () => {
@@ -30,6 +32,42 @@ describe('datetime', () => {
   describe('TWENTY_FOUR_HRS', () => {
     it('should be an integer', () => {
       assert.isNumber(datetime.TWENTY_FOUR_HRS);
+    });
+  });
+
+  describe('getMsPer24', () => {
+    it('should be a function', () => {
+      assert.isFunction(datetime.getMsPer24);
+    });
+
+    it('should return 0 for a midnight Zulu timestamp localized to UTC', () => {
+      const dt = '2016-03-15T00:00:00.000Z';
+      const localized = moment.utc(dt).tz('UTC');
+      expect(datetime.getMsPer24(localized)).to.equal(0);
+    });
+
+    it('should return 43200005 for a noon + 5ms Zulu timestamp localized to UTC', () => {
+      const dt = '2016-03-15T12:00:00.005Z';
+      const localized = moment.utc(dt).tz('UTC');
+      expect(datetime.getMsPer24(localized)).to.equal(43200005);
+    });
+
+    it('should return 36e5 for an 8 a.m. Zulu timestamp localized to US/Mountain, no DST', () => {
+      const dt = '2016-01-01T08:00:00.000Z';
+      const localized = moment.utc(dt).tz('US/Mountain');
+      expect(datetime.getMsPer24(localized)).to.equal(36e5);
+    });
+
+    it('should return 72e5 for an 8 a.m. Zulu timestamp localized to US/Mountain, DST', () => {
+      const dt = '2016-06-01T08:00:00.000Z';
+      const localized = moment.utc(dt).tz('US/Mountain');
+      expect(datetime.getMsPer24(localized)).to.equal(72e5);
+    });
+
+    it('should never produce a value > 864e5, even on "fall back" day (end of DST)', () => {
+      const dt = '2015-11-01T23:30:00-07:00';
+      const localized = moment.utc(dt).tz('US/Mountain');
+      expect(datetime.getMsPer24(localized)).to.equal(864e5 - 18e5);
     });
   });
 

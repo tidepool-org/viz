@@ -15,5 +15,13 @@
  * == BSD2 LICENSE ==
  */
 
-export * from './trends';
-export * from './worker';
+/* global onmessage */
+
+import DiabetesDataWorker from './DiabetesDataWorker';
+
+const worker = new DiabetesDataWorker();
+
+// eslint-disable-next-line no-native-reassign
+onmessage = (msg) => {
+  worker.handleMessage(msg, postMessage);
+};

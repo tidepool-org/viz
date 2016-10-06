@@ -15,5 +15,31 @@
  * == BSD2 LICENSE ==
  */
 
-export * from './trends';
-export * from './worker';
+import _ from 'lodash';
+
+import * as mungers from './mungers';
+
+/**
+ * cloneAndTransform
+ *
+ * @param {Object} d - a Tidepool datum
+ * @param {String} tz - a named timezone from the IANA Time Zone Database
+ *
+ * @return {Object} transformed - cloned & transformed Tidepool datum
+ */
+export function cloneAndTransform(d, tz) {
+  const transformed = _.pick(
+    _.assign({}, d, mungers.calcTzSensitiveFields(mungers.toHammertime(d), tz)),
+    [
+      'date',
+      'dayOfWeek',
+      'hammertime',
+      'id',
+      'msPer24',
+      'rawDisplayTimeMs',
+      'type',
+      'value',
+    ]
+  );
+  return transformed;
+}
