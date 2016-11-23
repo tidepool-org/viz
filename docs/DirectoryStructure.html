@@ -1,0 +1,509 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    
+    <head>
+        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>app &amp; directory structure | @tidepool/viz</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+
+        
+    
+    
+    <link rel="next" href="../docs/CodeStyle.html" />
+    
+    
+    <link rel="prev" href="../docs/Architecture.html" />
+    
+
+        
+    </head>
+    <body>
+        
+        
+    <div class="book"
+        data-level="1.4"
+        data-chapter-title="app &amp; directory structure"
+        data-filepath="docs/DirectoryStructure.md"
+        data-basepath=".."
+        data-revision="Tue Nov 22 2016 22:19:56 GMT-0800 (PST)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" data-path="docs/StartHere.html">
+            
+                
+                    <a href="../docs/StartHere.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.</b>
+                        
+                        @tidepool/viz developer guide
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="docs/Background.html">
+            
+                
+                    <a href="../docs/Background.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        background
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="docs/FeatureOverview.html">
+            
+                
+                    <a href="../docs/FeatureOverview.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        overview of features
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="docs/Architecture.html">
+            
+                
+                    <a href="../docs/Architecture.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        planned architecture
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.4" data-path="docs/DirectoryStructure.html">
+            
+                
+                    <a href="../docs/DirectoryStructure.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        app &amp; directory structure
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="docs/CodeStyle.html">
+            
+                
+                    <a href="../docs/CodeStyle.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.5.</b>
+                        
+                        code style
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" data-path="docs/Dependencies.html">
+            
+                
+                    <a href="../docs/Dependencies.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.</b>
+                        
+                        usage of dependencies
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="docs/D3.html">
+            
+                
+                    <a href="../docs/D3.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        D3
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.2" data-path="docs/Moment.html">
+            
+                
+                    <a href="../docs/Moment.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Moment
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="docs/React.html">
+            
+                
+                    <a href="../docs/React.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.3.</b>
+                        
+                        React
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.4" data-path="docs/Redux.html">
+            
+                
+                    <a href="../docs/Redux.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.4.</b>
+                        
+                        Redux
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.5" data-path="docs/Webpack.html">
+            
+                
+                    <a href="../docs/Webpack.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.5.</b>
+                        
+                        webpack
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" data-path="docs/Misc.html">
+            
+                
+                    <a href="../docs/Misc.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.</b>
+                        
+                        misc
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="docs/TimeRenderingModes.html">
+            
+                
+                    <a href="../docs/TimeRenderingModes.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Time-rendering modes
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../" >@tidepool/viz</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h2 id="app--directory-structure">App &amp; directory structure</h2>
+<h4 id="table-of-contents">Table of contents</h4>
+<ul>
+<li><a href="#the-core">The core</a></li>
+<li><a href="#redux-directories">Redux directories</a></li>
+<li><a href="#react-component-directories">React component directories</a><ul>
+<li><a href="#components">components</a></li>
+<li><a href="#containers">containers</a></li>
+<li><a href="#views">views</a></li>
+</ul>
+</li>
+<li><a href="#misc">Misc</a><ul>
+<li><a href="#styles">styles</a></li>
+<li><a href="#utils">utils</a></li>
+</ul>
+</li>
+<li><a href="#react-storybook-code">React Storybook code</a></li>
+<li><a href="#the-test-directory">The test directory</a></li>
+</ul>
+<hr>
+<p>As of November, 2016, the directory structure is as follows (although this may change as we continue to develop new code in this repository):</p>
+<!-- to generate the directory structure below use `tree -d --matchdirs -I '_book|coverage|dist|node_modules|web'` -->
+<pre><code>&#x251C;&#x2500;&#x2500; data
+&#x2502;   &#x2514;&#x2500;&#x2500; pumpSettings
+&#x2502;       &#x251C;&#x2500;&#x2500; animas
+&#x2502;       &#x251C;&#x2500;&#x2500; medtronic
+&#x2502;       &#x251C;&#x2500;&#x2500; omnipod
+&#x2502;       &#x2514;&#x2500;&#x2500; tandem
+&#x251C;&#x2500;&#x2500; docs
+&#x251C;&#x2500;&#x2500; src
+&#x2502;   &#x251C;&#x2500;&#x2500; components
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; common
+&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; controls
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; settings
+&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; common
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; trends
+&#x2502;   &#x2502;       &#x251C;&#x2500;&#x2500; cbg
+&#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; common
+&#x2502;   &#x251C;&#x2500;&#x2500; containers
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; settings
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; trends
+&#x2502;   &#x251C;&#x2500;&#x2500; redux
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; actions
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; constants
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; reducers
+&#x2502;   &#x251C;&#x2500;&#x2500; styles
+&#x2502;   &#x2514;&#x2500;&#x2500; utils
+&#x2502;       &#x251C;&#x2500;&#x2500; settings
+&#x2502;       &#x2514;&#x2500;&#x2500; trends
+&#x251C;&#x2500;&#x2500; stories
+&#x2502;   &#x251C;&#x2500;&#x2500; components
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; common
+&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; controls
+&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; settings
+&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; trends
+&#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; common
+&#x2502;   &#x2514;&#x2500;&#x2500; containers
+&#x2502;       &#x2514;&#x2500;&#x2500; trends
+&#x251C;&#x2500;&#x2500; storybook
+&#x2514;&#x2500;&#x2500; test
+    &#x251C;&#x2500;&#x2500; components
+    &#x2502;   &#x251C;&#x2500;&#x2500; common
+    &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; controls
+    &#x2502;   &#x251C;&#x2500;&#x2500; settings
+    &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; common
+    &#x2502;   &#x2514;&#x2500;&#x2500; trends
+    &#x2502;       &#x251C;&#x2500;&#x2500; cbg
+    &#x2502;       &#x2514;&#x2500;&#x2500; common
+    &#x251C;&#x2500;&#x2500; containers
+    &#x2502;   &#x251C;&#x2500;&#x2500; settings
+    &#x2502;   &#x2514;&#x2500;&#x2500; trends
+    &#x251C;&#x2500;&#x2500; helpers
+    &#x251C;&#x2500;&#x2500; redux
+    &#x2502;   &#x251C;&#x2500;&#x2500; actions
+    &#x2502;   &#x2514;&#x2500;&#x2500; reducers
+    &#x2514;&#x2500;&#x2500; utils
+        &#x251C;&#x2500;&#x2500; settings
+        &#x2514;&#x2500;&#x2500; trends
+</code></pre><h3 id="the-core">The core</h3>
+<p>All active, non-tooling code in the repository is contained in <code>src/</code>, and <code>src/</code> has the following structure:</p>
+<pre><code>&#x2514;&#x2500;&#x2500; src
+    &#x251C;&#x2500;&#x2500; components
+    &#x251C;&#x2500;&#x2500; containers
+    &#x251C;&#x2500;&#x2500; redux
+    &#x251C;&#x2500;&#x2500; styles
+    &#x2514;&#x2500;&#x2500; utils
+</code></pre><h3 id="redux-directories">Redux directories</h3>
+<pre><code>&#x2514;&#x2500;&#x2500; redux
+    &#x251C;&#x2500;&#x2500; actions
+    &#x2514;&#x2500;&#x2500; reducers
+</code></pre><p>Within <code>src/redux/</code>, the <code>actions/</code> and <code>reducers/</code> contain the actions and reducers specific to the components in this component library. An <code>index.js</code> file in each of these directories exports the set of actions and a root reducer for a consuming application to import and consume via <code>connect()</code>ed components (in the case of actions) and by adding the reducer as a branch of the consuming application&apos;s state tree.</p>
+<p>In both <code>actions/</code> and <code>reducers/</code>, files should be grouped into sub-directories by <a href="#views">&quot;view&quot;</a> or located in a directory called <code>common/</code> if the action(s) or reducer(s) is relevant to more than one view.</p>
+<h3 id="react-component-directories">React component directories</h3>
+<p>Within <code>src/</code>, the <code>components/</code>, <code>containers/</code>, and (eventually) <code>views/</code> directories all contain the source for React components of various types and purposes.</p>
+<p>Note that our convention for naming React component files is <a href="https://en.wikipedia.org/wiki/PascalCase" target="_blank">PascalCase</a>: <code>BGSlice</code>, <code>DailyContainer</code>, &amp;c.</p>
+<h4 id="components">components</h4>
+<p><code>components/</code> contains the lowest level of component. For the most part, these components should be stateless and (albeit with some rare exceptions) coded as <a href="https://facebook.github.io/react/blog/2015/10/07/react-v0.14.html#stateless-functional-components" target="_blank">stateless functional components</a> rather than ES6 classes extending <code>React.Component</code>.</p>
+<p>Files should be grouped into sub-directories by <a href="#views">&quot;view&quot;</a> and where necessary (because of a large number of components) into further sub-directories by datatype.</p>
+<p>Components used in more than one view should be located in <code>common/</code>. Examples of common components are controls like the BGM &lt;-&gt; CGM toggle used in both the basics and trends views and, potentially, animation containers like the header + child component (proposed for new device settings and potentially useful as well for sections in the basics view) that will slide the child component in and out on click of the header.</p>
+<p>CSS particular to a component should be written using <a href="https://github.com/css-modules/css-modules" target="_blank">CSS modules</a> and contained in a file in the same directory and with the same name as the component, substituting the <code>.css</code> suffix for <code>.js</code>.</p>
+<h4 id="containers">containers</h4>
+<p><code>containers/</code> contains the mid-tier type of component. The distinction between a &quot;container&quot; and a &quot;component&quot; is a bit fuzzy, but generally the purpose of a container is to perform logic to <em>prepare</em> for rendering and then pass the resulting state to one or more stateless functional components for pure rendering. For example, for the trends view, the <code>TrendsContainer</code> determines the blood glucose and time domains on mount and on every update, preserving the current time domain in view and arrays of <code>cbg</code> and <code>smbg</code> currently in view (given the time domain) in its state. At the next level down, the <code>CBGTrendsContainer</code> sets up the rendering &quot;canvas&quot; (actually an SVG element) and scales for rendering (given the dimensions of the &quot;canvas&quot;). Another hallmark of &quot;container&quot; components is that they often do <em>not</em> have any associated styles since their purpose is computation and set up, not rendering.</p>
+<p>Files should be grouped into sub-directories by <a href="#views">&quot;view&quot;</a> or located in a directory called <code>common/</code> if applicable to more than one view.</p>
+<h4 id="views">views</h4>
+<p><code>views/</code> is a proposal for the eventual location of a top-level container component for each of blip&apos;s major data visualizations: (currently) basics, daily, weekly, trends, and device settings. A &quot;view&quot; will encompass more than just the rendered visualization; the navigation sub-header (currently containing links for navigating between views and arrows for navigating along the time dimension) and footer (containing options for some views like grouping for the <code>smbg</code> version of the trends view) will also be part of a top-level view component since some header and footer controls are specific to certain views or have specific behavior on certain views.</p>
+<h3 id="misc">Misc</h3>
+<h4 id="styles">styles</h4>
+<p><code>styles/</code> contains a few <code>.css</code> files with common styles to be used in CSS modules <code>composes</code> statements in the style files for individual components.</p>
+<h4 id="utils">utils</h4>
+<p>Complex logic should be factored out into utilities for ease of testing as much as possible. Our file naming convention for these is <code>lowercase.js</code> or camelCase <code>lowercaseUtil.js</code> if necessary.</p>
+<p>In general, utilities should export individual constants, functions, &amp;c, <strong>not</strong> use the ES6 <code>export default</code>.</p>
+<h3 id="react-storybook-code">React Storybook code</h3>
+<p><code>stories/</code> contains the <a href="https://github.com/kadirahq/react-storybook" target="_blank">React Storybook</a> &quot;stories&quot; for ease of design-in-browser work where possible/relevant with some of our React components. The internal structure of the <code>stories/</code> directory mirrors the internal structure of the <code>src/</code> directory, in particular the React component directories.</p>
+<p><code>storybook/</code> contains configuration files for React Storybook. This directory <strong>cannot</strong> be moved or renamed without changing React Storybook configuration options!</p>
+<h3 id="the-test-directory">The test directory</h3>
+<p>The <code>test/</code> directory mirrors the structure of <code>src/</code>. Our convention for naming test files is to use the same names but insert <code>.test</code> before the <code>.js</code> suffix. For example, the tests for a component <code>BGSlice.js</code> should be in a file named <code>BGSlice.test.js</code>. The tests for a <code>datetime.js</code> utility file should be in a file named <code>datetime.test.js</code>.</p>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../docs/Architecture.html" class="navigation navigation-prev " aria-label="Previous page: planned architecture"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../docs/CodeStyle.html" class="navigation navigation-next " aria-label="Next page: code style"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../gitbook/app.js"></script>
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-sharing/buttons.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        
+    </body>
+    
+</html>

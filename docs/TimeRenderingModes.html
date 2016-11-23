@@ -1,0 +1,414 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    
+    <head>
+        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Time-rendering modes | @tidepool/viz</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+
+        
+    
+    
+    
+    <link rel="prev" href="../docs/Misc.html" />
+    
+
+        
+    </head>
+    <body>
+        
+        
+    <div class="book"
+        data-level="3.1"
+        data-chapter-title="Time-rendering modes"
+        data-filepath="docs/TimeRenderingModes.md"
+        data-basepath=".."
+        data-revision="Tue Nov 22 2016 22:19:56 GMT-0800 (PST)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" data-path="docs/StartHere.html">
+            
+                
+                    <a href="../docs/StartHere.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.</b>
+                        
+                        @tidepool/viz developer guide
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="docs/Background.html">
+            
+                
+                    <a href="../docs/Background.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        background
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="docs/FeatureOverview.html">
+            
+                
+                    <a href="../docs/FeatureOverview.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        overview of features
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="docs/Architecture.html">
+            
+                
+                    <a href="../docs/Architecture.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        planned architecture
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="docs/DirectoryStructure.html">
+            
+                
+                    <a href="../docs/DirectoryStructure.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        app &amp; directory structure
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="docs/CodeStyle.html">
+            
+                
+                    <a href="../docs/CodeStyle.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.5.</b>
+                        
+                        code style
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" data-path="docs/Dependencies.html">
+            
+                
+                    <a href="../docs/Dependencies.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.</b>
+                        
+                        usage of dependencies
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="docs/D3.html">
+            
+                
+                    <a href="../docs/D3.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        D3
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.2" data-path="docs/Moment.html">
+            
+                
+                    <a href="../docs/Moment.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Moment
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="docs/React.html">
+            
+                
+                    <a href="../docs/React.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.3.</b>
+                        
+                        React
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.4" data-path="docs/Redux.html">
+            
+                
+                    <a href="../docs/Redux.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.4.</b>
+                        
+                        Redux
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.5" data-path="docs/Webpack.html">
+            
+                
+                    <a href="../docs/Webpack.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.5.</b>
+                        
+                        webpack
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" data-path="docs/Misc.html">
+            
+                
+                    <a href="../docs/Misc.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.</b>
+                        
+                        misc
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter active" data-level="3.1" data-path="docs/TimeRenderingModes.html">
+            
+                
+                    <a href="../docs/TimeRenderingModes.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Time-rendering modes
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../" >@tidepool/viz</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h2 id="time-rendering-modes">Time rendering modes</h2>
+<p>Tidepool supports two rendering &quot;modes&quot; for diabetes device data &amp; notes visualized via the code in this repository (as well as legacy <a href="https://github.com/tidepool-org/tideline" title="GitHub: @tidepool-org/tideline" target="_blank">tideline</a> code): the default timezone-aware rendering and timezone-na&#xEF;ve rendering. This document explains and demonstrates the difference(s) between these and the utility of each.</p>
+<h3 id="background-time-and-devicetime">Background: <code>time</code> and <code>deviceTime</code></h3>
+<p>Two of the time-related fields in the <a href="http://developer.tidepool.io/data-model/device-data/common.html" title="Tidepool data model docs: common fields" target="_blank">Tidepool data model for diabetes device data</a> are important to understand as background to the discussion presented in this document; these are <a href="http://developer.tidepool.io/data-model/device-data/common.html#time" title="Tidepool data model docs: time" target="_blank"><code>time</code></a> and <a href="http://developer.tidepool.io/data-model/device-data/common.html#devicetime" title="Tidepool data model docs: deviceTime" target="_blank"><code>deviceTime</code></a>.</p>
+<p><code>deviceTime</code> is what it sounds like: the display time on the diabetes device at the time the event occurred. For almost every current Tidepool data source, this is <em>the</em> (only) time value that we extract directly from a device&apos;s memory.<sup><a href="#fn_a" id="reffn_a">a</a></sup> In the base case, this should be an accurate representation of the clock time for the user&#x2014;that is, localized to the timezone the user is currently in or was in at the time of the event, assuming the user updates the device display time when switching timezones. Of course, since the display time settings on diabetes devices are subject to manual user control, user error can occur, occasionally with drastic results. We have seen cases where users have accidentally set the display time on their device to the wrong a.m. or p.m. (resulting in <code>deviceTime</code>s that are off by exactly twelve hours), to the wrong month, and&#x2014;more often than one might expect!&#x2014;to the wrong <em>year</em>.</p>
+<p><a href="http://developer.tidepool.io/chrome-uploader/docs/BootstrappingToUTC.html" target="_blank">Bootstrapping to UTC (BtUTC)</a> is the algorithm we have developed to correct for these types of user errors (as well as the more common challenge of handling the switch between Daylight Saving time and standard time) by inferring the UTC time for each event so that we can plot all the data from a user&apos;s many diabetes devices on the same scale with all the data properly aligned. This is the value stored in the <code>time</code> field.</p>
+<h3 id="timezoneaware-rendering">Timezone-aware rendering</h3>
+<p>The default rendering mode is timezone-aware. This means that all events are rendered on a UTC time scale using the <code>time</code> value to determine the placement along this scale. Whenever a time-related value needs to be surfaced to the user, we apply a timezone to this <code>time</code> value and surface the result, as this is our best guess at the corresponding local display time for the user (the exception is if the user was traveling in a different timezone for a span of data). Currently (as of November, 2016) we use the <code>timezone</code> from the user&apos;s most recent <a href="http://developer.tidepool.io/data-model/device-data/types/upload.html#timezone" title="Tidepool data model docs: upload.timezone" target="_blank">upload metadata</a> as the timezone to be applied to the <code>time</code> values across the entire history of the user&apos;s diabetes device data. This <em>does</em> adjust as expected for Daylight Saving time, but does <em>not</em> adjust for travel across timezones if the user changed their device display time when switching timezones. In the future, instead of pulling the display timezone from the most recent upload metadata we plan to support a &quot;default timezone for data display&quot; along with other display settings for each user persisted to Tidepool&apos;s servers, including preferred blood glucose units (mg/dL or mmol/L) and a user-defined target range for blood glucose values.</p>
+<p>Features of timezone-aware rendering:</p>
+<ul>
+<li>no gaps or overlaps in data</li>
+<li>all data aligns <em>except</em> BGM data in cases of user error setting the BGM time or travel across timezones (because no BGM is currently bootstrap-able)</li>
+</ul>
+<h3 id="timezonena&#xEF;ve-rendering">Timezone-na&#xEF;ve rendering</h3>
+<p>A second rendering mode is available (currently, as of November, 2016) by adding a query parameter to the URL: <code>?timezone=None</code> (any string that does not correspond to an actual <a href="https://www.iana.org/time-zones" title="IANA: Time Zone Database" target="_blank">IANA timezone</a> may take the place of <code>None</code> here as long as it is not a falsey value in JavaScript such as <code>null</code>). This rendering mode also renders the events on the same UTC time scale but using the <code>deviceTime</code> <em>as if it were a true UTC value</em>. In order to &quot;spoof&quot; a true UTC value from a <code>deviceTime</code>, we simply add the string suffix <code>Z</code> denoting UTC or &quot;Zulu&quot; time to the value&#x2014;that is, a <code>deviceTime</code> of <code>2016-03-15T12:00:00</code> with no timezone offset information becomes the UTC string <code>2016-03-15T12:00:00Z</code>. (The technical reason for performing this string transformation is demonstrated below.)</p>
+<p>To date, timezone-na&#xEF;ve mode has been most valuable as a debugging tool when investigating data quality issues reported by users. For users whose situations fall into edge cases that BtUTC does not handle, timezone-na&#xEF;ve rendering may also be the <em>only</em> method available to see all diabetes device data aligned.</p>
+<p>Features of timezone-na&#xEF;ve rendering:</p>
+<ul>
+<li>gaps and overlaps appear in the data whenever the user has made a significant (i.e., non-<a href="http://developer.tidepool.io/chrome-uploader/docs/BootstrappingToUTC.html#adjustments-for-clock-drift" title="BtUTC documentation: Adjustments for clock drift" target="_blank">&quot;clock drift&quot;</a>) change to the display time</li>
+<li>all data aligns as long as there were no user error(s) setting one or more device display times and the user consistently updated device display time across <em>all</em> devices when switching timezones and entering/exiting Daylight Saving time (if applicable)</li>
+</ul>
+<hr>
+<blockquote id="fn_a">
+<sup>a</sup>. The exception is Dexcom G5 data imported from HealthKit through one of Tidepool&apos;s iOS applications; in this case, we have <em>no</em> <code>deviceTime</code>, only a true UTC timestamp&#x2014;our <code>time</code> field&#x2014;extracted from the iOS HealthKit data model.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../docs/Misc.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: misc"><i class="fa fa-angle-left"></i></a>
+        
+        
+    </div>
+</div>
+
+        
+<script src="../gitbook/app.js"></script>
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-sharing/buttons.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        
+    </body>
+    
+</html>

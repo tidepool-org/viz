@@ -1,0 +1,492 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    
+    <head>
+        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>planned architecture | @tidepool/viz</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-highlight/website.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+
+        
+    
+    
+    <link rel="next" href="../docs/DirectoryStructure.html" />
+    
+    
+    <link rel="prev" href="../docs/FeatureOverview.html" />
+    
+
+        
+    </head>
+    <body>
+        
+        
+    <div class="book"
+        data-level="1.3"
+        data-chapter-title="planned architecture"
+        data-filepath="docs/Architecture.md"
+        data-basepath=".."
+        data-revision="Tue Nov 22 2016 22:19:56 GMT-0800 (PST)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" data-path="docs/StartHere.html">
+            
+                
+                    <a href="../docs/StartHere.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.</b>
+                        
+                        @tidepool/viz developer guide
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="docs/Background.html">
+            
+                
+                    <a href="../docs/Background.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        background
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="docs/FeatureOverview.html">
+            
+                
+                    <a href="../docs/FeatureOverview.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        overview of features
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3" data-path="docs/Architecture.html">
+            
+                
+                    <a href="../docs/Architecture.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        planned architecture
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="docs/DirectoryStructure.html">
+            
+                
+                    <a href="../docs/DirectoryStructure.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        app &amp; directory structure
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="docs/CodeStyle.html">
+            
+                
+                    <a href="../docs/CodeStyle.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.5.</b>
+                        
+                        code style
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" data-path="docs/Dependencies.html">
+            
+                
+                    <a href="../docs/Dependencies.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.</b>
+                        
+                        usage of dependencies
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="2.1" data-path="docs/D3.html">
+            
+                
+                    <a href="../docs/D3.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        D3
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.2" data-path="docs/Moment.html">
+            
+                
+                    <a href="../docs/Moment.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        Moment
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="docs/React.html">
+            
+                
+                    <a href="../docs/React.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.3.</b>
+                        
+                        React
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.4" data-path="docs/Redux.html">
+            
+                
+                    <a href="../docs/Redux.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.4.</b>
+                        
+                        Redux
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.5" data-path="docs/Webpack.html">
+            
+                
+                    <a href="../docs/Webpack.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.5.</b>
+                        
+                        webpack
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" data-path="docs/Misc.html">
+            
+                
+                    <a href="../docs/Misc.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.</b>
+                        
+                        misc
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="docs/TimeRenderingModes.html">
+            
+                
+                    <a href="../docs/TimeRenderingModes.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        Time-rendering modes
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../" >@tidepool/viz</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h2 id="architecture">Architecture</h2>
+<h4 id="background-documents-tidepoolinternal">Background documents (Tidepool-internal)</h4>
+<ul>
+<li>A fairly comprehensive set of notes explaining <a href="https://docs.google.com/document/d/134kiT-aVvp63WpjBOafd63LyhecEs37T0u6-ChsyUSA/edit" target="_blank">the tech debt in tideline</a></li>
+<li>Document used to structure discussion around <a href="https://docs.google.com/document/d/1zACQThnrFmlcvxMIF2g_CnnkQ9A16ilw-JSI6oKgvoA/edit#heading=h.4t4q8lakp971" target="_blank">goals for the tideline rewrite</a></li>
+</ul>
+<h3 id="desiderata-for-tidepool-visualization-code">Desiderata for Tidepool visualization code</h3>
+<p>At a meeting in January 2016, we decided on the following goals for the new visualization code (replacing <a href="https://github.com/tidepool-org/tideline" target="_blank">tideline</a>). The goal(s) is/are that new visualization code should (eventually):</p>
+<ol>
+<li>be <strong><em>responsive</em></strong> if rendered inside a responsive container (i.e., precisely what blip does <em>not</em> provide at the moment since it creates a <code>&lt;div&gt;</code> with fixed width for the visualization code to be rendered in)</li>
+<li>sync visualization state with the URL (&quot;deep linking&quot;) so that a copied and shared URL can facilitate conversation among the members of a care team</li>
+<li>&quot;page&quot; data in from the server and update itself when new data is received rather than only operate via a single &quot;all you can eat&quot; fetch of a user&apos;s entire dataset</li>
+<li>be modular in order to enable:<ul>
+<li>more efficient development by the core team</li>
+<li>easier and more efficient contributions from the open-source community</li>
+<li>&quot;cleaner&quot; and more testable code</li>
+<li>code re-use by commericial and non-commericial third parties</li>
+</ul>
+</li>
+</ol>
+<p>Ambiguous:</p>
+<ul>
+<li>tablet support</li>
+</ul>
+<p>There were also a few desiderata that were discussed but explicitly <em>rejected</em>, so the new visualization code should/need <strong>not</strong>:</p>
+<ol>
+<li>cache data on the client side</li>
+<li>support non-Chrome browsers</li>
+</ol>
+<h3 id="proposal-for-the-architecture-of-tidepool-visualization-code">Proposal for the architecture of Tidepool visualization code</h3>
+<p>In this document, we attempt to explain the architectural choices made for Tidepool&apos;s data visualization code (in this repository) by listing the major problems the code needs to solve along with the solution proposed (or chosen) for each.</p>
+<h4 id="state-management">State management</h4>
+<p><strong>Problem:</strong> Effectively manage all the state shared across visualizations (listed below) with a minimum of duplicated code so that feature iteration can proceed as efficiently as possible.</p>
+<p>General principle, learned from experience: It is better to think about the Tidepool data visualizations as <em>one</em> (meta) interface between a user and a set of diabetes device (+ contextual) data with many different surface manifestations (daily, weekly, trends, basics, device settings) than to think of it as half a dozen <em>different</em> data visualizations (daily, weekly, etc.)</p>
+<p>Another way to phrase this: there is more application state requiring code to manage that is <em>shared</em> between all of the separate data views in blip (daily, weekly, etc.) than there is that is separate. The shared state includes:</p>
+<ul>
+<li>user display preference for blood glucose units (mg/dL or mmol/L)</li>
+<li>user display preference for target blood glucose range</li>
+<li>user display preference for timezone</li>
+<li>the actual diabetes device data, preprocessed as necessary to facilitate data visualization</li>
+<li>the date(s) that the user is focusing on, including filters for days of the week (Monday, Tuesday, etc.) being focused on, where appropriate<ul>
+<li>Note that even though each data view presently has a different type of date domain (e.g., twenty-four hours, two weeks, most recent three calendar weeks, etc.), we already currently (attempt to) share state across these domains, making this state largely shared. For example, when a user navigates backwards in time on the trends view in two week chunks by having the (default) &quot;14 day&quot; domain selected and clicking the back arrow, if the user then switches to the daily view, they will presented with the most recent twenty-four hours of data within the current 14-day period of time for the trends view.</li>
+</ul>
+</li>
+<li>most (if not all) toggles and open/collapsed sections on all views (basics, trends, etc.), so that the user is not jarred/annoyed/confused by having to constantly reselect such choices when navigating between the views</li>
+</ul>
+<p><strong>Solution:</strong> Use <a href="http://redux.js.org/" title="Redux" target="_blank">redux</a> to store shared state in a single source of truth and transform this state with pure functions (&quot;reducers&quot;) via dispatched actions (one-way data flow).</p>
+<p>Note that in the process of slowly and iteratively porting code from <a href="https://github.com/tidepool-org/blip" target="_blank">blip</a> &amp; <a href="https://github.com/tidepool-org/tidline" target="_blank">tideline</a> into this repository, we will have stages where we are storing <em>more</em> than we would like in the redux state.</p>
+<p>For example, at present (November 2016), we are controlling hover state on slices in the CGM trends view via redux. Hover state is by definition ephemeral and not generally the kind of thing that belongs in the single, app-wide source of truth that is the redux store. However, because the components rendering the various parts of the CGM trends view are currently divided between blip and this repository, we are using the redux store as a &quot;bridge&quot; to share state across them more easily (and reduce the number of multi-repository code changes we need to make). As we move more visualization-related code from blip into viz, we should take care to reassess what is in the redux-controlled state and refactor anything that should not be controlled through redux (like hover state for CGM in trends slices) to be controlled through the appropriate container component state.</p>
+<h4 id="data-preprocessing">Data preprocessing</h4>
+<p>Some background documents particular to this problem area (Tidepool-internal):</p>
+<ul>
+<li><a href="https://docs.google.com/document/d/190mj_S9vYKvINPbU7cMajGekebyX6AJ-W6v3P-cCRWI/edit#" title="viz data preprocessing" target="_blank">early draft explanation and proposal</a> for Web Worker-based preprocessing</li>
+<li><a href="https://docs.google.com/document/d/14n4OyyTKKfBxz7DzX9DnKST3nVarfae7Fgl9HgG6BlY/edit" title="blip &amp; viz data flow" target="_blank">more detailed proposal</a> after some prototyping with Web Workers</li>
+</ul>
+<p><strong>Problem:</strong> Minimize the amount of <em>user</em> time spent on &quot;expensive&quot; data processing tasks, such as:</p>
+<ul>
+<li>client-side data validation<ul>
+<li>to filter out data that is perfectly legitimate according to the Tidepool data model (<code>basal</code> with zero duration) but is nevertheless not a target for visualization</li>
+<li>to filter out legacy or third-party data that is invalid according to the Tidepool data model (to prevent JavaScript runtime crashes that would negatively affect the end-user experience)</li>
+</ul>
+</li>
+<li>once-only data preprocessing (may move server-side)<ul>
+<li>to parse ISO 8601 string Zulu timestamps into hammertimes</li>
+</ul>
+</li>
+<li>timezone-sensitive data preprocessing (must be rerun if user changes display timezone preference)<ul>
+<li>to compute fields like the date and day of week in the local timezone</li>
+<li>to computer the number of milliseconds after timezone-determined midnight that the event occurred (necessary for binning data by time of day for trends view)</li>
+</ul>
+</li>
+</ul>
+<p><strong>Solution:</strong> Perform data preprocessing in a <a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers" target="_blank">Web Worker</a>. Experience has taught us that&#x2014;especially where timestamp parsing and timezone-relative calculations are involved&#x2014;it is very easy to accidentally cause a user-noticeable performance bottleneck in a JavaScript single-page application (SPA). Using a Web Worker in a separate thread that does not interrupt the responsiveness/interactivity of the SPA allows us &quot;breathing room&quot; to perform potentially expensive calculations. It is also more compatible with an application that updates itself when new user data comes in from the server (i.e., via data paging, real-time push updates, etc.) because the newly arrived data can be processed in the background as it comes in without affecting the end-user&apos;s experience.</p>
+<h4 id="data-filtering">Data filtering</h4>
+<p><strong>Problem:</strong> Centralize the logic for translating one date domain type (e.g., twenty-four hours, two weeks, most recent three calendar weeks, etc.) and location (i.e., timestamp(s) defining the edges and/or center) in one place and prevent performance bottlenecks due to executing complex filters (date range &amp; day of week selections) on large datasets.</p>
+<p>(Note: the performance bottleneck due to data filtering currently exists (resulting in a poor framerate of &lt; 20 fps) in tideline code on the daily view since the data filtering must be redone many times a second as the user scrolls.)</p>
+<p><strong>Solution:</strong> Define a set of redux actions for setting the date domain, location, and other filters in state and apply the filters with <a href="http://square.github.io/crossfilter/" title="Crossfilter" target="_blank">crossfilter</a> in the Web Worker (see above) to keep the filtering from affecting the end-user experience as far as possible.</p>
+<h4 id="data-munging">Data munging</h4>
+<p><strong>Problem:</strong> Centralize the logic for common statistical computations that appear in more than one view such as the basal:bolus ratio, average blood glucose, and time in range. Ensure that gaps in data are handled the same across all visualizations. Ensure that a robust test suite sits behind all statistical computations.</p>
+<p><strong>Solution:</strong> Factor out all statistical computations into utility modules that can easily be imported into a variety of components. Keep these utilities as purely functional and general as possible to allow for ease of test instrumentation as well as options for moving the code if performance on some of these computations becomes a user-facing issue/roadblock. For example, computations could be moved into <a href="https://github.com/reactjs/reselect" target="_blank">reselect</a>, a redux add-on library for computing derived state (with memoization) or into the Web Worker used for data preprocessing and filtering.</p>
+<h4 id="deep-linking">&quot;Deep linking&quot;</h4>
+<p><strong>Problem:</strong> Sync URL with the data visualization state in all the ways that would be useful to an end-user who wishes to share a data view they are currently viewing with another member of their care team.</p>
+<p><strong>Solution:</strong> Once data visualization state is being managed more-or-less completely via redux, enabling &quot;deep linking&quot; should be a relatively simple matter of syncing the URL with the redux state, translating various relevant pieces of state into (sub-)paths in the URL and/or query parameters.</p>
+<h4 id="modularity">Modularity</h4>
+<p><strong>Problem:</strong> Empower internal and external developers to develop and iterate quickly on all aspects of data visualizations. This should encompass both the ability to iterate easily on details of low-level rendering (i.e., what shape to draw for an extended bolus) without having to touch other code <em>and</em> the ability to build entirely new data &quot;views&quot; parallel to the daily, weekly, basics, trends, and device settings views currently available by composing existing rendering components for the pieces.</p>
+<p><strong>Solution:</strong> &quot;Componentize&quot; visualization code, adhering to React (and redux) best practices, including:</p>
+<ul>
+<li>only extending the React Component class where the lifecycle methods are necessary, in &quot;container&quot; components</li>
+<li>keeping rendering logic out of such container components</li>
+<li>keeping styling out of container components</li>
+<li>keeping animation logic (i.e., with <a href="https://github.com/chenglou/react-motion" title="react-motion" target="_blank">react-motion</a>) as a distinct layer that sits between container components and low-level rendering components</li>
+<li>keep complex interface rendering method (e.g., the scrolling interface for the daily view) separate from the low-level rendering of smbgs, cbgs, boluses, basal itnervals, etc. so that:<ul>
+<li>code for the low-level rendering is reusable across views</li>
+<li>the interface rendering method can be iterated on separately or swapped out entirely</li>
+</ul>
+</li>
+<li>do actual (i.e., visual) rendering in pure functional components with styling defined in accompanying CSS files (i.e., use CSS modules)</li>
+<li>refactor CSS continually to keep duplication of styles to a minimum</li>
+</ul>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../docs/FeatureOverview.html" class="navigation navigation-prev " aria-label="Previous page: overview of features"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../docs/DirectoryStructure.html" class="navigation navigation-next " aria-label="Next page: app &amp; directory structure"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../gitbook/app.js"></script>
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-sharing/buttons.js"></script>
+    
+
+    
+    <script src="../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        
+    </body>
+    
+</html>
