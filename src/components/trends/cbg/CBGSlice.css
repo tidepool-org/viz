@@ -15,6 +15,10 @@
  * == BSD2 LICENSE ==
  */
 
+.focused {
+  fill: transparent;
+}
+
 .cbgMedian {
   fill: var(--data-purple--dark);
 }

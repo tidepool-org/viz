@@ -46,6 +46,7 @@ import _ from 'lodash';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import { THREE_HRS } from '../../utils/datetime';
 import BackgroundWithTargetRange from '../../components/trends/common/BackgroundWithTargetRange';
+import CBGMeanPerDayDots from '../../components/trends/cbg/CBGMeanPerDayDots';
 import CBGSlicesAnimationContainer from './CBGSlicesAnimationContainer';
 import SMBGsByDateContainer from './SMBGsByDateContainer';
 import SMBGRangeAvgAnimationContainer from './SMBGRangeAvgAnimationContainer';
@@ -59,6 +60,14 @@ import XAxisTicks from '../../components/trends/common/XAxisTicks';
 import YAxisLabelsAndTicks from '../../components/trends/common/YAxisLabelsAndTicks';
 
 export class TrendsSVGContainer extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      focusedSliceDataGroupedByDay: null,
+    };
+  }
+
   componentWillMount() {
     const { containerHeight: height, containerWidth: width } = this.props;
     const { margins, smbgOpts, xScale, yScale } = this.props;
@@ -70,6 +79,18 @@ export class TrendsSVGContainer extends React.Component {
       height - margins.bottom - BUMPERS.bottom,
       margins.top + BUMPERS.top,
     ]);
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { cbgData, focusedSlice } = nextProps;
+    if (focusedSlice) {
+      const { msFrom, msTo } = focusedSlice.data;
+      const focusedSliceDataGroupedByDay = _.groupBy(
+        _.filter(cbgData, (d) => (d.msPer24 >= msFrom && d.msPer24 < msTo)),
+        (d) => (d.localDate)
+      );
+      this.setState({ focusedSliceDataGroupedByDay });
+    }
   }
 
   renderNoDataMessage(dataType) {
@@ -110,19 +131,35 @@ export class TrendsSVGContainer extends React.Component {
       }
 
       const { containerHeight: height, containerWidth: width } = this.props;
+      let focusedSlice = null;
+
+      if (this.props.focusedSlice) {
+        focusedSlice = (
+          <CBGMeanPerDayDots
+            bgBounds={this.props.bgBounds}
+            dataGroupedByDay={this.state.focusedSliceDataGroupedByDay}
+            focusedSlice={this.props.focusedSlice}
+            xScale={this.props.xScale}
+            yScale={this.props.yScale}
+          />
+        );
+      }
 
       return (
-        <CBGSlicesAnimationContainer
-          data={this.props.cbgData}
-          focusedSlice={this.props.focusedSlice}
-          focusSlice={this.props.focusSlice}
-          margins={this.props.margins}
-          svgDimensions={{ height, width }}
-          tooltipLeftThreshold={this.props.tooltipLeftThreshold}
-          unfocusSlice={this.props.unfocusSlice}
-          xScale={this.props.xScale}
-          yScale={this.props.yScale}
-        />
+        <g id="cbgTrends">
+          <CBGSlicesAnimationContainer
+            data={this.props.cbgData}
+            focusedSlice={this.props.focusedSlice}
+            focusSlice={this.props.focusSlice}
+            margins={this.props.margins}
+            svgDimensions={{ height, width }}
+            tooltipLeftThreshold={this.props.tooltipLeftThreshold}
+            unfocusSlice={this.props.unfocusSlice}
+            xScale={this.props.xScale}
+            yScale={this.props.yScale}
+          />
+          {focusedSlice}
+        </g>
       );
     }
     return null;
@@ -255,15 +292,20 @@ TrendsSVGContainer.propTypes = {
   cbgData: PropTypes.arrayOf(PropTypes.shape({
     // here only documenting the properties we actually use rather than the *whole* data model!
     id: PropTypes.string.isRequired,
+    localDate: PropTypes.string.isRequired,
     msPer24: PropTypes.number.isRequired,
     value: PropTypes.number.isRequired,
   })).isRequired,
   focusedSlice: PropTypes.shape({
     data: PropTypes.shape({
       firstQuartile: PropTypes.number.isRequired,
+      id: PropTypes.string.isRequired,
       max: PropTypes.number.isRequired,
       median: PropTypes.number.isRequired,
       min: PropTypes.number.isRequired,
+      msFrom: PropTypes.number.isRequired,
+      msTo: PropTypes.number.isRequired,
+      msX: PropTypes.number.isRequired,
       ninetiethQuantile: PropTypes.number.isRequired,
       tenthQuantile: PropTypes.number.isRequired,
       thirdQuartile: PropTypes.number.isRequired,

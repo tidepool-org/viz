@@ -30,7 +30,7 @@ const CBGSlice = (props) => {
 
   function getClass(category) {
     if (aSliceIsFocused) {
-      return isFocused ? styles[category] : styles[`${category}Backgrounded`];
+      return isFocused ? styles.focused : styles[category];
     }
     return styles[category];
   }
