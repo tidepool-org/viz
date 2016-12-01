@@ -17,6 +17,9 @@
 
 .focused {
   fill: transparent;
+  stroke: var(--data-purple--medium);
+  stroke-opacity: 0.75;
+  stroke-width: 1px;
 }
 
 .cbgMedian {
