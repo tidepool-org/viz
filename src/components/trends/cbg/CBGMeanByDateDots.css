@@ -15,6 +15,10 @@
  * == BSD2 LICENSE ==
  */
 
+.transparent {
+  fill: transparent;
+}
+
 .low {
   composes: bgLow from '../../../styles/diabetes.css';
 }

@@ -59,7 +59,7 @@ const CBGSlice = (props) => {
         key={`${category}-${datum.id}`}
         id={`${category}-${datum.id}`}
         onMouseOver={focus}
-        onMouseOut={unfocus}
+        // onMouseOut={unfocus}
         x={left - sliceCapRadius}
         width={2 * sliceCapRadius}
         y={yPositions[y2Accessor]}

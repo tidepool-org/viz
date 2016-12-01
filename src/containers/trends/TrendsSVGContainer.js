@@ -46,7 +46,8 @@ import _ from 'lodash';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import { THREE_HRS } from '../../utils/datetime';
 import BackgroundWithTargetRange from '../../components/trends/common/BackgroundWithTargetRange';
-import CBGMeanPerDayDots from '../../components/trends/cbg/CBGMeanPerDayDots';
+import CBGDayTrace from '../../components/trends/cbg/CBGDayTrace';
+import CBGMeanByDateDots from '../../components/trends/cbg/CBGMeanByDateDots';
 import CBGSlicesAnimationContainer from './CBGSlicesAnimationContainer';
 import SMBGsByDateContainer from './SMBGsByDateContainer';
 import SMBGRangeAvgAnimationContainer from './SMBGRangeAvgAnimationContainer';
@@ -64,8 +65,13 @@ export class TrendsSVGContainer extends React.Component {
     super(props);
 
     this.state = {
-      focusedSliceDataGroupedByDay: null,
+      focusedDateCbgData: null,
+      focusedMeanDate: null,
+      focusedSliceDataGroupedByDate: null,
     };
+
+    this.focusDate = this.focusDate.bind(this);
+    this.unfocusDate = this.unfocusDate.bind(this);
   }
 
   componentWillMount() {
@@ -85,12 +91,23 @@ export class TrendsSVGContainer extends React.Component {
     const { cbgData, focusedSlice } = nextProps;
     if (focusedSlice) {
       const { msFrom, msTo } = focusedSlice.data;
-      const focusedSliceDataGroupedByDay = _.groupBy(
+      const focusedSliceDataGroupedByDate = _.groupBy(
         _.filter(cbgData, (d) => (d.msPer24 >= msFrom && d.msPer24 < msTo)),
         (d) => (d.localDate)
       );
-      this.setState({ focusedSliceDataGroupedByDay });
+      this.setState({ focusedSliceDataGroupedByDate });
     }
+  }
+
+  focusDate(focusedMeanDate) {
+    this.setState({
+      focusedDateCbgData: _.filter(this.props.cbgData, { localDate: focusedMeanDate }),
+      focusedMeanDate,
+    });
+  }
+
+  unfocusDate() {
+    this.setState({ focusedDateCbgData: null, focusedMeanDate: null });
   }
 
   renderNoDataMessage(dataType) {
@@ -132,13 +149,29 @@ export class TrendsSVGContainer extends React.Component {
 
       const { containerHeight: height, containerWidth: width } = this.props;
       let focusedSlice = null;
+      let focusedDate = null;
 
       if (this.props.focusedSlice) {
         focusedSlice = (
-          <CBGMeanPerDayDots
+          <CBGMeanByDateDots
             bgBounds={this.props.bgBounds}
-            dataGroupedByDay={this.state.focusedSliceDataGroupedByDay}
+            dataGroupedByDay={this.state.focusedSliceDataGroupedByDate}
+            focusDate={this.focusDate}
+            focusedMeanDate={this.state.focusedMeanDate}
             focusedSlice={this.props.focusedSlice}
+            unfocusDate={this.unfocusDate}
+            xScale={this.props.xScale}
+            yScale={this.props.yScale}
+          />
+        );
+      }
+
+      if (this.state.focusedMeanDate) {
+        focusedDate = (
+          <CBGDayTrace
+            bgBounds={this.props.bgBounds}
+            data={this.state.focusedDateCbgData}
+            date={this.state.focusedMeanDate}
             xScale={this.props.xScale}
             yScale={this.props.yScale}
           />
@@ -159,6 +192,7 @@ export class TrendsSVGContainer extends React.Component {
             yScale={this.props.yScale}
           />
           {focusedSlice}
+          {focusedDate}
         </g>
       );
     }

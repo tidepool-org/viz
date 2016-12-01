@@ -21,21 +21,24 @@ import React, { PropTypes } from 'react';
 
 import { classifyBgValue } from '../../../utils/bloodglucose';
 
-import styles from './CBGMeanPerDayDots.css';
+import styles from './CBGMeanByDateDots.css';
 
-const CBGMeanPerDayDots = (props) => {
-  const { bgBounds, dataGroupedByDay, focusedSlice: { data: { msX } }, xScale, yScale } = props;
+const CBGMeanByDateDots = (props) => {
+  const { bgBounds, dataGroupedByDay, focusedMeanDate, focusedSlice: { data: { msX } } } = props;
   return (
     <g id="cbgMeansPerDay">
       {_.map(_.keys(dataGroupedByDay), (key) => {
         const dayData = dataGroupedByDay[key];
         const dayMean = mean(dayData, (d) => (d.value));
+        const isFocused = key === focusedMeanDate;
         return (
           <circle
-            className={styles[classifyBgValue(bgBounds, dayMean)]}
-            cx={xScale(msX)}
-            cy={yScale(dayMean)}
+            className={isFocused ? styles.transparent : styles[classifyBgValue(bgBounds, dayMean)]}
+            cx={props.xScale(msX)}
+            cy={props.yScale(dayMean)}
             key={key}
+            onMouseOver={_.partial(props.focusDate, key)}
+            onMouseOut={props.unfocusDate}
             r={5}
           />
         );
@@ -44,7 +47,7 @@ const CBGMeanPerDayDots = (props) => {
   );
 };
 
-CBGMeanPerDayDots.propTypes = {
+CBGMeanByDateDots.propTypes = {
   bgBounds: PropTypes.shape({
     veryHighThreshold: PropTypes.number.isRequired,
     targetUpperBound: PropTypes.number.isRequired,
@@ -52,6 +55,8 @@ CBGMeanPerDayDots.propTypes = {
     veryLowThreshold: PropTypes.number.isRequired,
   }).isRequired,
   dataGroupedByDay: PropTypes.object.isRequired,
+  focusDate: PropTypes.func.isRequired,
+  focusedMeanDate: PropTypes.string,
   focusedSlice: PropTypes.shape({
     data: PropTypes.shape({
       firstQuartile: PropTypes.number.isRequired,
@@ -80,8 +85,9 @@ CBGMeanPerDayDots.propTypes = {
       }).isRequired,
     }).isRequired,
   }).isRequired,
+  unfocusDate: PropTypes.func.isRequired,
   xScale: PropTypes.func.isRequired,
   yScale: PropTypes.func.isRequired,
 };
 
-export default CBGMeanPerDayDots;
+export default CBGMeanByDateDots;
