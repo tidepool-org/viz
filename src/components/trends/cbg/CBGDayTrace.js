@@ -29,6 +29,7 @@ const CBGDayTrace = (props) => {
       {_.map(data, (d) => (
         <circle
           className={styles[classifyBgValue(bgBounds, d.value)]}
+          // className={styles.white}
           cx={xScale(d.msPer24)}
           cy={yScale(d.value)}
           key={d.id}

@@ -15,8 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
-.transparent {
-  fill: transparent;
+.transparify {
+  fill-opacity: 0.3;
 }
 
 .low {

@@ -79,6 +79,18 @@ export class TrendsContainer extends React.Component {
     onSwitchBgDataSource: PropTypes.func.isRequired,
     // viz state
     trendsState: PropTypes.shape({
+      focusedCbgDateMean: PropTypes.shape({
+        data: PropTypes.shape({
+          date: PropTypes.string.isRequired,
+          mean: PropTypes.number.isRequired,
+          msX: PropTypes.number.isRequired,
+        }).isRequired,
+        position: PropTypes.shape({
+          left: PropTypes.number.isRequired,
+          tooltipLeft: PropTypes.bool.isRequired,
+          top: PropTypes.number.isRequired,
+        }).isRequired,
+      }),
       focusedCbgSlice: PropTypes.shape({
         data: PropTypes.shape({
           firstQuartile: PropTypes.number.isRequired,
@@ -92,7 +104,7 @@ export class TrendsContainer extends React.Component {
           ninetiethQuantile: PropTypes.number.isRequired,
           tenthQuantile: PropTypes.number.isRequired,
           thirdQuartile: PropTypes.number.isRequired,
-        }),
+        }).isRequired,
         position: PropTypes.shape({
           left: PropTypes.number.isRequired,
           tooltipLeft: PropTypes.bool.isRequired,
@@ -104,8 +116,8 @@ export class TrendsContainer extends React.Component {
             ninetiethQuantile: PropTypes.number.isRequired,
             tenthQuantile: PropTypes.number.isRequired,
             thirdQuartile: PropTypes.number.isRequired,
-          }),
-        }),
+          }).isRequired,
+        }).isRequired,
       }),
       focusedCbgSliceKeys: PropTypes.arrayOf(PropTypes.oneOf([
         'firstQuartile',
@@ -136,10 +148,12 @@ export class TrendsContainer extends React.Component {
       touched: PropTypes.bool.isRequired,
     }).isRequired,
     // actions
+    focusTrendsCbgDateMean: PropTypes.func.isRequired,
     focusTrendsCbgSlice: PropTypes.func.isRequired,
     focusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     focusTrendsSmbg: PropTypes.func.isRequired,
     markTrendsViewed: PropTypes.func.isRequired,
+    unfocusTrendsCbgDateMean: PropTypes.func.isRequired,
     unfocusTrendsCbgSlice: PropTypes.func.isRequired,
     unfocusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     unfocusTrendsSmbg: PropTypes.func.isRequired,
@@ -324,9 +338,11 @@ export class TrendsContainer extends React.Component {
         bgUnits={this.props.bgUnits}
         smbgData={this.state.currentSmbgData}
         cbgData={this.state.currentCbgData}
+        focusedCbgDateMean={this.props.trendsState.focusedCbgDateMean}
         focusedSlice={this.props.trendsState.focusedCbgSlice}
         focusedSliceKeys={this.props.trendsState.focusedCbgSliceKeys}
         focusedSmbg={this.props.trendsState.focusedSmbg}
+        focusDate={this.props.focusTrendsCbgDateMean}
         focusRange={this.props.focusTrendsSmbgRangeAvg}
         focusSmbg={this.props.focusTrendsSmbg}
         focusSlice={this.props.focusTrendsCbgSlice}
@@ -338,6 +354,7 @@ export class TrendsContainer extends React.Component {
         onSelectDay={this.selectDay()}
         xScale={this.state.xScale}
         yScale={this.state.yScale}
+        unfocusDate={this.props.unfocusTrendsCbgDateMean}
         unfocusRange={this.props.unfocusTrendsSmbgRangeAvg}
         unfocusSmbg={this.props.unfocusTrendsSmbg}
         unfocusSlice={this.props.unfocusTrendsCbgSlice}
@@ -355,6 +372,9 @@ export function mapStateToProps(state, ownProps) {
 
 export function mapDispatchToProps(dispatch, ownProps) {
   return bindActionCreators({
+    focusTrendsCbgDateMean: _.partial(
+      actions.focusTrendsCbgDateMean, ownProps.currentPatientInViewId
+    ),
     focusTrendsCbgSlice: _.partial(
       actions.focusTrendsCbgSlice, ownProps.currentPatientInViewId
     ),
@@ -366,6 +386,9 @@ export function mapDispatchToProps(dispatch, ownProps) {
     ),
     markTrendsViewed: _.partial(
       actions.markTrendsViewed, ownProps.currentPatientInViewId
+    ),
+    unfocusTrendsCbgDateMean: _.partial(
+      actions.unfocusTrendsCbgDateMean, ownProps.currentPatientInViewId
     ),
     unfocusTrendsCbgSlice: _.partial(
       actions.unfocusTrendsCbgSlice, ownProps.currentPatientInViewId

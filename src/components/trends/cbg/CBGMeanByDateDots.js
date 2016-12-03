@@ -17,6 +17,7 @@
 
 import _ from 'lodash';
 import { mean } from 'd3-array';
+import cx from 'classnames';
 import React, { PropTypes } from 'react';
 
 import { classifyBgValue } from '../../../utils/bloodglucose';
@@ -25,19 +26,32 @@ import styles from './CBGMeanByDateDots.css';
 
 const CBGMeanByDateDots = (props) => {
   const { bgBounds, dataGroupedByDay, focusedMeanDate, focusedSlice: { data: { msX } } } = props;
+  const { xScale, yScale } = props;
   return (
     <g id="cbgMeansPerDay">
       {_.map(_.keys(dataGroupedByDay), (key) => {
         const dayData = dataGroupedByDay[key];
         const dayMean = mean(dayData, (d) => (d.value));
         const isFocused = key === focusedMeanDate;
+        const circleClasses = cx({
+          [styles[classifyBgValue(bgBounds, dayMean)]]: true,
+          [styles.transparify]: (focusedMeanDate !== null) && !isFocused,
+        });
         return (
           <circle
-            className={isFocused ? styles.transparent : styles[classifyBgValue(bgBounds, dayMean)]}
-            cx={props.xScale(msX)}
-            cy={props.yScale(dayMean)}
+            className={circleClasses}
+            cx={xScale(msX)}
+            cy={yScale(dayMean)}
             key={key}
-            onMouseOver={_.partial(props.focusDate, key)}
+            onMouseOver={_.partial(props.focusDate, {
+              date: key,
+              mean: dayMean,
+              msX,
+            }, {
+              left: xScale(msX),
+              tooltipLeft: msX > props.tooltipLeftThreshold,
+              top: yScale(dayMean),
+            })}
             onMouseOut={props.unfocusDate}
             r={5}
           />
@@ -85,6 +99,7 @@ CBGMeanByDateDots.propTypes = {
       }).isRequired,
     }).isRequired,
   }).isRequired,
+  tooltipLeftThreshold: PropTypes.number.isRequired,
   unfocusDate: PropTypes.func.isRequired,
   xScale: PropTypes.func.isRequired,
   yScale: PropTypes.func.isRequired,

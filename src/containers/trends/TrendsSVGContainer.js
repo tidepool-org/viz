@@ -66,12 +66,8 @@ export class TrendsSVGContainer extends React.Component {
 
     this.state = {
       focusedDateCbgData: null,
-      focusedMeanDate: null,
       focusedSliceDataGroupedByDate: null,
     };
-
-    this.focusDate = this.focusDate.bind(this);
-    this.unfocusDate = this.unfocusDate.bind(this);
   }
 
   componentWillMount() {
@@ -88,26 +84,20 @@ export class TrendsSVGContainer extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { cbgData, focusedSlice } = nextProps;
+    const { cbgData, focusedCbgDateMean, focusedSlice } = nextProps;
+    const updates = {};
     if (focusedSlice) {
       const { msFrom, msTo } = focusedSlice.data;
       const focusedSliceDataGroupedByDate = _.groupBy(
         _.filter(cbgData, (d) => (d.msPer24 >= msFrom && d.msPer24 < msTo)),
         (d) => (d.localDate)
       );
-      this.setState({ focusedSliceDataGroupedByDate });
+      updates.focusedSliceDataGroupedByDate = focusedSliceDataGroupedByDate;
     }
-  }
-
-  focusDate(focusedMeanDate) {
-    this.setState({
-      focusedDateCbgData: _.filter(this.props.cbgData, { localDate: focusedMeanDate }),
-      focusedMeanDate,
-    });
-  }
-
-  unfocusDate() {
-    this.setState({ focusedDateCbgData: null, focusedMeanDate: null });
+    if (focusedCbgDateMean && focusedCbgDateMean !== this.props.focusedCbgDateMean) {
+      updates.focusedDateCbgData = _.filter(cbgData, { localDate: focusedCbgDateMean.data.date });
+    }
+    this.setState(updates);
   }
 
   renderNoDataMessage(dataType) {
@@ -147,6 +137,8 @@ export class TrendsSVGContainer extends React.Component {
         return this.renderNoDataMessage('cbg');
       }
 
+      const { focusedCbgDateMean } = this.props;
+      const focusedMeanDate = _.get(focusedCbgDateMean, ['data', 'date'], null);
       const { containerHeight: height, containerWidth: width } = this.props;
       let focusedSlice = null;
       let focusedDate = null;
@@ -156,22 +148,23 @@ export class TrendsSVGContainer extends React.Component {
           <CBGMeanByDateDots
             bgBounds={this.props.bgBounds}
             dataGroupedByDay={this.state.focusedSliceDataGroupedByDate}
-            focusDate={this.focusDate}
-            focusedMeanDate={this.state.focusedMeanDate}
+            focusDate={this.props.focusDate}
+            focusedMeanDate={focusedMeanDate}
             focusedSlice={this.props.focusedSlice}
-            unfocusDate={this.unfocusDate}
+            tooltipLeftThreshold={this.props.tooltipLeftThreshold}
+            unfocusDate={this.props.unfocusDate}
             xScale={this.props.xScale}
             yScale={this.props.yScale}
           />
         );
       }
 
-      if (this.state.focusedMeanDate) {
+      if (focusedMeanDate) {
         focusedDate = (
           <CBGDayTrace
             bgBounds={this.props.bgBounds}
             data={this.state.focusedDateCbgData}
-            date={this.state.focusedMeanDate}
+            date={focusedMeanDate}
             xScale={this.props.xScale}
             yScale={this.props.yScale}
           />
@@ -324,6 +317,18 @@ TrendsSVGContainer.propTypes = {
     msPer24: PropTypes.number.isRequired,
     value: PropTypes.number.isRequired,
   })).isRequired,
+  focusedCbgDateMean: PropTypes.shape({
+    data: PropTypes.shape({
+      date: PropTypes.string.isRequired,
+      mean: PropTypes.number.isRequired,
+      msX: PropTypes.number.isRequired,
+    }).isRequired,
+    position: PropTypes.shape({
+      left: PropTypes.number.isRequired,
+      tooltipLeft: PropTypes.bool.isRequired,
+      top: PropTypes.number.isRequired,
+    }).isRequired,
+  }),
   focusedSlice: PropTypes.shape({
     data: PropTypes.shape({
       firstQuartile: PropTypes.number.isRequired,
@@ -369,6 +374,7 @@ TrendsSVGContainer.propTypes = {
       left: PropTypes.number.isRequired,
     })),
   }),
+  focusDate: PropTypes.func.isRequired,
   focusRange: PropTypes.func.isRequired,
   focusSmbg: PropTypes.func.isRequired,
   focusSlice: PropTypes.func.isRequired,
@@ -389,6 +395,7 @@ TrendsSVGContainer.propTypes = {
   }).isRequired,
   smbgRangeOverlay: PropTypes.bool.isRequired,
   tooltipLeftThreshold: PropTypes.number.isRequired,
+  unfocusDate: PropTypes.func.isRequired,
   unfocusRange: PropTypes.func.isRequired,
   unfocusSmbg: PropTypes.func.isRequired,
   unfocusSlice: PropTypes.func.isRequired,

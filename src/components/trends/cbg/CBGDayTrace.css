@@ -20,17 +20,25 @@
   stroke-width: 0.5px;
 }
 
+.nonTarget {
+  pointer-events: none;
+}
+
 .low {
-  composes: border;
+  composes: border nonTarget;
   composes: bgLow from '../../../styles/diabetes.css';
 }
 
 .target {
-  composes: border;
+  composes: border nonTarget;
   composes: bgTarget from '../../../styles/diabetes.css';
 }
 
 .high {
-  composes: border;
+  composes: border nonTarget;
   composes: bgHigh from '../../../styles/diabetes.css';
+}
+
+.white {
+  fill: white;
 }

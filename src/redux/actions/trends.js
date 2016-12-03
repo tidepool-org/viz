@@ -17,6 +17,13 @@
 
 import * as actionTypes from '../constants/actionTypes';
 
+export function focusTrendsCbgDateMean(userId, dateMeanData, dateMeanPosition) {
+  return {
+    type: actionTypes.FOCUS_TRENDS_CBG_DATE_MEAN,
+    payload: { dateMeanData, dateMeanPosition, userId },
+  };
+}
+
 export function focusTrendsCbgSlice(userId, sliceData, slicePosition, focusedKeys) {
   return {
     type: actionTypes.FOCUS_TRENDS_CBG_SLICE,
@@ -41,6 +48,13 @@ export function focusTrendsSmbgRangeAvg(userId, rangeAvgData, rangeAvgPosition) 
 export function markTrendsViewed(userId) {
   return {
     type: actionTypes.MARK_TRENDS_VIEWED,
+    payload: { userId },
+  };
+}
+
+export function unfocusTrendsCbgDateMean(userId) {
+  return {
+    type: actionTypes.UNFOCUS_TRENDS_CBG_DATE_MEAN,
     payload: { userId },
   };
 }
