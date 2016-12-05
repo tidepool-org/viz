@@ -34,6 +34,7 @@ const CBGMeanByDateDots = (props) => {
         const dayMean = mean(dayData, (d) => (d.value));
         const isFocused = key === focusedMeanDate;
         const circleClasses = cx({
+          cbgMeanCircle: true, // for the CBGSlice mouseout event handler to detect
           [styles[classifyBgValue(bgBounds, dayMean)]]: true,
           [styles.transparify]: (focusedMeanDate !== null) && !isFocused,
         });

@@ -15,6 +15,7 @@
  * == BSD2 LICENSE ==
  */
 
+import { select } from 'd3-selection';
 import React, { PropTypes } from 'react';
 
 import styles from './CBGSlice.css';
@@ -55,11 +56,30 @@ const CBGSlice = (props) => {
     };
     return (
       <rect
-        className={getClass(category)}
+        className={`cbgSliceRect ${getClass(category)}`}
         key={`${category}-${datum.id}`}
         id={`${category}-${datum.id}`}
-        onMouseOver={focus}
-        // onMouseOut={unfocus}
+        onMouseOver={(e) => {
+          // ditto comments below
+          if (!e.relatedTarget) {
+            focus();
+          } else if (!select(e.relatedTarget).classed('cbgMeanCircle')) {
+            focus();
+          }
+        }}
+        onMouseOut={(e) => {
+          // when mouseout is triggered b/c the mouses "leaves" the slice
+          // to move onto a cbg mean circle *within* the slice
+          // the e.target will be the rect/slice and the relatedTarget
+          // will be the circle/mean, so we can suppress the call to unfocus()
+          // in this case
+          // TODO: fix arrow functions in props (=== bad/non-performant!)
+          if (!e.relatedTarget) {
+            unfocus();
+          } else if (!select(e.relatedTarget).classed('cbgMeanCircle')) {
+            unfocus();
+          }
+        }}
         x={left - sliceCapRadius}
         width={2 * sliceCapRadius}
         y={yPositions[y2Accessor]}
