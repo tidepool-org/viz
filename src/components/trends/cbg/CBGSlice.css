@@ -17,17 +17,21 @@
 
 .focused {
   fill: transparent;
-  stroke: var(--data-purple--medium);
+  stroke: var(--cbg-slice--hover);
   stroke-opacity: 0.75;
   stroke-width: 1px;
 }
 
-.cbgMedian {
-  fill: var(--data-purple--dark);
+.low {
+  composes: bgLow from '../../../styles/diabetes.css';
 }
-.cbgMedianBackgrounded {
-  composes: cbgMedian;
-  fill-opacity: 0.5;
+
+.target {
+  composes: bgTarget from '../../../styles/diabetes.css';
+}
+
+.high {
+  composes: bgHigh from '../../../styles/diabetes.css';
 }
 
 .noStroke {
@@ -39,27 +43,15 @@
   // and thus prevent flashing when mousing from slice to slice
   stroke: var(--bkgrnd-darkest);
   stroke-width: 1px;
-  fill: var(--data-purple--lightest);
-}
-.rangeSliceBackgrounded {
-  composes: rangeSlice;
-  fill-opacity: 0.5;
+  fill: var(--cbg-slice--100);
 }
 
 .outerSlice {
   composes: noStroke;
-  fill: var(--data-purple--light);
-}
-.outerSliceBackgrounded {
-  composes: outerSlice;
-  fill-opacity: 0.5;
+  fill: var(--cbg-slice--80);
 }
 
 .quartileSlice {
   composes: noStroke;
-  fill: var(--data-purple--medium);
-}
-.quartileSliceBackgrounded {
-  composes: quartileSlice;
-  fill-opacity: 0.5;
+  fill: var(--cbg-slice--50);
 }

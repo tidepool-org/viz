@@ -18,6 +18,10 @@
 :root {
   --basal: #19A0D7;
   --bolus: #7CD0F0;
+  --cbg-slice--100: #c3c4c6;
+  --cbg-slice--80: #e9e9e9;
+  --cbg-slice--50: #f5f5f5;
+  --cbg-slice--hover: #bcbec0;
   --collapsible--border: #EDEDED;
   --table-stripe--light: #F7F7F7;
   --table-stripe--dark: #ECECEC;

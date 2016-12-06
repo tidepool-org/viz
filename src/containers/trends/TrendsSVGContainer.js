@@ -174,6 +174,7 @@ export class TrendsSVGContainer extends React.Component {
       return (
         <g id="cbgTrends">
           <CBGSlicesAnimationContainer
+            bgBounds={this.props.bgBounds}
             data={this.props.cbgData}
             focusedSlice={this.props.focusedSlice}
             focusSlice={this.props.focusSlice}

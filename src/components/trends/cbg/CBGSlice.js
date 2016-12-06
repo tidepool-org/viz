@@ -18,6 +18,8 @@
 import { select } from 'd3-selection';
 import React, { PropTypes } from 'react';
 
+import { classifyBgValue } from '../../../utils/bloodglucose';
+
 import styles from './CBGSlice.css';
 
 const CBGSlice = (props) => {
@@ -25,15 +27,12 @@ const CBGSlice = (props) => {
   if (!datum) {
     return null;
   }
-  const { aSliceIsFocused, isFocused } = props;
+  const { bgBounds, isFocused } = props;
   const { medianRadius, sliceCapRadius, xScale, yPositions } = props;
   const { focusSlice, unfocusSlice: unfocus } = props;
 
   function getClass(category) {
-    if (aSliceIsFocused) {
-      return isFocused ? styles.focused : styles[category];
-    }
-    return styles[category];
+    return isFocused ? styles.focused : styles[category];
   }
 
   const focusMedian = () => {
@@ -96,15 +95,17 @@ const CBGSlice = (props) => {
         renderRoundedRect('rangeSlice', 'min', 'max'),
         renderRoundedRect('outerSlice', 'tenthQuantile', 'ninetiethQuantile'),
         renderRoundedRect('quartileSlice', 'firstQuartile', 'thirdQuartile'),
-        <circle
-          className={getClass('cbgMedian')}
+        <ellipse
+          className={isFocused ?
+            styles.focused : styles[classifyBgValue(bgBounds, datum.median)]}
           key={`individualMedian-${datum.id}`}
           id={`individualMedian-${datum.id}`}
           onMouseOver={focusMedian}
           onMouseOut={unfocus}
           cx={xScale(datum.msX)}
           cy={yPositions.median}
-          r={medianRadius}
+          rx={medianRadius}
+          ry={medianRadius - 1}
         />,
       ]}
     </g>
@@ -117,7 +118,12 @@ CBGSlice.defaultProps = {
 };
 
 CBGSlice.propTypes = {
-  aSliceIsFocused: PropTypes.bool.isRequired,
+  bgBounds: PropTypes.shape({
+    veryHighThreshold: PropTypes.number.isRequired,
+    targetUpperBound: PropTypes.number.isRequired,
+    targetLowerBound: PropTypes.number.isRequired,
+    veryLowThreshold: PropTypes.number.isRequired,
+  }).isRequired,
   // if there's a gap in data, a `datum` may not exist, so not required
   datum: PropTypes.shape({
     firstQuartile: PropTypes.number.isRequired,
