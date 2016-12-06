@@ -56,7 +56,7 @@ export default class CBGSlicesAnimationContainer extends React.Component {
       position: PropTypes.shape({
         left: PropTypes.number.isRequired,
         tooltipLeft: PropTypes.bool.isRequired,
-        topOptions: PropTypes.shape({
+        yPositions: PropTypes.shape({
           firstQuartile: PropTypes.number.isRequired,
           max: PropTypes.number.isRequired,
           median: PropTypes.number.isRequired,

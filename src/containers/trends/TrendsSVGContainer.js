@@ -147,7 +147,7 @@ export class TrendsSVGContainer extends React.Component {
         focusedSlice = (
           <CBGMeanByDateDots
             bgBounds={this.props.bgBounds}
-            dataGroupedByDay={this.state.focusedSliceDataGroupedByDate}
+            dataGroupedByDate={this.state.focusedSliceDataGroupedByDate}
             focusDate={this.props.focusDate}
             focusedMeanDate={focusedMeanDate}
             focusedSlice={this.props.focusedSlice}
@@ -346,7 +346,7 @@ TrendsSVGContainer.propTypes = {
     position: PropTypes.shape({
       left: PropTypes.number.isRequired,
       tooltipLeft: PropTypes.bool.isRequired,
-      topOptions: PropTypes.shape({
+      yPositions: PropTypes.shape({
         firstQuartile: PropTypes.number.isRequired,
         max: PropTypes.number.isRequired,
         median: PropTypes.number.isRequired,

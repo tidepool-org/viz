@@ -22,16 +22,16 @@ import { mount } from 'enzyme';
 import { formatClassesAsSelector } from '../../../helpers/cssmodules';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../../src/utils/constants';
-import FocusedSMBGRangeLabels
-  from '../../../../src/components/trends/smbg/FocusedSMBGRangeLabels';
+import FocusedRangeLabels
+  from '../../../../src/components/trends/common/FocusedRangeLabels';
 import styles
-  from '../../../../src/components/trends/smbg/FocusedSMBGRangeLabels.css';
+  from '../../../../src/components/trends/common/FocusedRangeLabels.css';
 
 // TODO: test the different classes added if tooltipLeft is true??
 // TODO: test BG display based on units?
 // TODO: test absolute positioning?
 
-describe('FocusedSMBGRangeLabels', () => {
+describe('FocusedRangeLabels', () => {
   const focusedRange = {
     data: {
       id: '81000000',
@@ -59,7 +59,7 @@ describe('FocusedSMBGRangeLabels', () => {
         bgUnits: MMOLL_UNITS,
       };
       const wrapper = mount(
-        <FocusedSMBGRangeLabels {...minimalProps} />
+        <FocusedRangeLabels {...minimalProps} />
       );
       expect(wrapper.html()).to.be.null;
     });
@@ -70,7 +70,7 @@ describe('FocusedSMBGRangeLabels', () => {
 
     before(() => {
       wrapper = mount(
-        <FocusedSMBGRangeLabels
+        <FocusedRangeLabels
           bgUnits={MGDL_UNITS}
           focusedRange={focusedRange}
         />

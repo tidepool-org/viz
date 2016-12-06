@@ -25,12 +25,12 @@ import { classifyBgValue } from '../../../utils/bloodglucose';
 import styles from './CBGMeanByDateDots.css';
 
 const CBGMeanByDateDots = (props) => {
-  const { bgBounds, dataGroupedByDay, focusedMeanDate, focusedSlice: { data: { msX } } } = props;
+  const { bgBounds, dataGroupedByDate, focusedMeanDate, focusedSlice: { data: { msX } } } = props;
   const { xScale, yScale } = props;
   return (
     <g id="cbgMeansPerDay">
-      {_.map(_.keys(dataGroupedByDay), (key) => {
-        const dayData = dataGroupedByDay[key];
+      {_.map(_.keys(dataGroupedByDate), (key) => {
+        const dayData = dataGroupedByDate[key];
         const dayMean = mean(dayData, (d) => (d.value));
         const isFocused = key === focusedMeanDate;
         const circleClasses = cx({
@@ -69,7 +69,7 @@ CBGMeanByDateDots.propTypes = {
     targetLowerBound: PropTypes.number.isRequired,
     veryLowThreshold: PropTypes.number.isRequired,
   }).isRequired,
-  dataGroupedByDay: PropTypes.object.isRequired,
+  dataGroupedByDate: PropTypes.object.isRequired,
   focusDate: PropTypes.func.isRequired,
   focusedMeanDate: PropTypes.string,
   focusedSlice: PropTypes.shape({
@@ -89,7 +89,7 @@ CBGMeanByDateDots.propTypes = {
     position: PropTypes.shape({
       left: PropTypes.number.isRequired,
       tooltipLeft: PropTypes.bool.isRequired,
-      topOptions: PropTypes.shape({
+      yPositions: PropTypes.shape({
         firstQuartile: PropTypes.number.isRequired,
         max: PropTypes.number.isRequired,
         median: PropTypes.number.isRequired,

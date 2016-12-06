@@ -40,7 +40,7 @@ const CBGSlice = (props) => {
     focusSlice(datum, {
       left,
       tooltipLeft: datum.msX > props.tooltipLeftThreshold,
-      topOptions: yPositions,
+      yPositions,
     }, ['median']);
   };
 
@@ -50,7 +50,7 @@ const CBGSlice = (props) => {
       focusSlice(datum, {
         left,
         tooltipLeft: datum.msX > props.tooltipLeftThreshold,
-        topOptions: yPositions,
+        yPositions,
       }, [y1Accessor, y2Accessor]);
     };
     return (
@@ -106,6 +106,7 @@ const CBGSlice = (props) => {
           cy={yPositions.median}
           rx={medianRadius}
           ry={medianRadius - 1}
+          style={{ pointerEvents: 'none' }}
         />,
       ]}
     </g>

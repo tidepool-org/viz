@@ -15,6 +15,12 @@
  * == BSD2 LICENSE ==
  */
 
+.date {
+  composes: highContrastText noWrap from '../../../styles/typography.css';
+  display: block;
+  padding: 5px;
+}
+
 .number {
-  composes: axisSize boldText highContrastText noWrap from '../../../styles/typography.css';
+  composes: boldText highContrastText noWrap largeSize from '../../../styles/typography.css';
 }

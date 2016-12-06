@@ -17,10 +17,10 @@
 
 require('./styles/colors.css');
 
-import FocusedCBGSliceMedianLabel from './components/trends/cbg/FocusedCBGSliceMedianLabel';
-import FocusedCBGSliceRangeLabels from './components/trends/cbg/FocusedCBGSliceRangeLabels';
+import CBGDayTraceLabels from './components/trends/cbg/CBGDayTraceLabels';
+import FocusedCBGSliceLabel from './components/trends/cbg/FocusedCBGSliceLabel';
+import FocusedRangeLabels from './components/trends/common/FocusedRangeLabels';
 import FocusedSMBGPointLabel from './components/trends/smbg/FocusedSMBGPointLabel';
-import FocusedSMBGRangeLabels from './components/trends/smbg/FocusedSMBGRangeLabels';
 
 import TwoOptionToggle from './components/common/controls/TwoOptionToggle';
 
@@ -30,10 +30,10 @@ import TrendsContainer from './containers/trends/TrendsContainer';
 import vizReducer from './redux/reducers/';
 
 const components = {
-  FocusedCBGSliceMedianLabel,
-  FocusedCBGSliceRangeLabels,
+  CBGDayTraceLabels,
+  FocusedCBGSliceLabel,
+  FocusedRangeLabels,
   FocusedSMBGPointLabel,
-  FocusedSMBGRangeLabels,
   TwoOptionToggle,
 };
 

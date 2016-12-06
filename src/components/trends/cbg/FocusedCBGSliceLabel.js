@@ -15,44 +15,66 @@
  * == BSD2 LICENSE ==
  */
 
-
+import _ from 'lodash';
 import React, { PropTypes } from 'react';
-
-import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
-import { displayBgValue } from '../../../utils/format';
 
 import Tooltip from '../../common/tooltips/Tooltip';
 
-import styles from './FocusedCBGSliceMedianLabel.css';
+import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
+import { displayBgValue } from '../../../utils/format';
+import { millisecondsAsTimeOfDay } from '../../../utils/datetime';
 
-const FocusedCBGSliceMedianLabel = (props) => {
-  const { focusedSlice } = props;
-  if (!focusedSlice) {
+import styles from './FocusedCBGSliceLabel.css';
+
+const FocusedCBGSliceLabel = (props) => {
+  const { focusedKeys, focusedSlice } = props;
+  if (_.isEmpty(focusedSlice) || _.isEmpty(focusedKeys) || focusedKeys.length === 1) {
     return null;
   }
-
-  const { bgUnits, focusedSlice: { data: { median }, position } } = props;
-
-  const leftOffset = position.tooltipLeft ? -props.leftOffset : props.leftOffset;
-
+  const { bgUnits, keysToPercentageLabelMap } = props;
+  const { data, position } = focusedSlice;
+  const timeFrom = millisecondsAsTimeOfDay(data.msFrom);
+  const timeTo = millisecondsAsTimeOfDay(data.msTo);
   return (
     <Tooltip
-      borderWidth={0}
-      content={<span className={styles.number}>{`middle ${displayBgValue(median, bgUnits)}`}</span>}
-      offset={{ left: leftOffset, top: 0 }}
-      position={{ left: position.left, top: position.topOptions.median }}
-      side={position.tooltipLeft ? 'left' : 'right'}
+      title={<span className={styles.titleText}>{timeFrom} - {timeTo}</span>}
+      content={
+        <span className={styles.explainerText}>
+          {`${keysToPercentageLabelMap[focusedKeys[0]]}% of readings are between
+           ${displayBgValue(data[focusedKeys[0]], bgUnits)} and
+            ${displayBgValue(data[focusedKeys[1]], bgUnits)}`}
+        </span>
+      }
+      offset={{ top: 0, left: position.tooltipLeft ? 10 : -10 }}
+      position={{ left: position.left, top: position.yPositions.median }}
+      side={position.tooltipLeft ? 'right' : 'left'}
       tail={false}
     />
   );
 };
 
-FocusedCBGSliceMedianLabel.defaultProps = {
-  leftOffset: 12,
+FocusedCBGSliceLabel.defaultProps = {
+  keysToPercentageLabelMap: {
+    firstQuartile: 50,
+    min: 100,
+    max: 100,
+    ninetiethQuantile: 80,
+    tenthQuantile: 80,
+    thirdQuartile: 50,
+  },
 };
 
-FocusedCBGSliceMedianLabel.propTypes = {
+FocusedCBGSliceLabel.propTypes = {
   bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
+  focusedKeys: PropTypes.arrayOf(PropTypes.oneOf([
+    'firstQuartile',
+    'max',
+    'median',
+    'min',
+    'ninetiethQuantile',
+    'tenthQuantile',
+    'thirdQuartile',
+  ])),
   focusedSlice: PropTypes.shape({
     data: PropTypes.shape({
       firstQuartile: PropTypes.number.isRequired,
@@ -70,7 +92,7 @@ FocusedCBGSliceMedianLabel.propTypes = {
     position: PropTypes.shape({
       left: PropTypes.number.isRequired,
       tooltipLeft: PropTypes.bool.isRequired,
-      topOptions: PropTypes.shape({
+      yPositions: PropTypes.shape({
         firstQuartile: PropTypes.number.isRequired,
         max: PropTypes.number.isRequired,
         median: PropTypes.number.isRequired,
@@ -81,7 +103,14 @@ FocusedCBGSliceMedianLabel.propTypes = {
       }).isRequired,
     }).isRequired,
   }),
-  leftOffset: PropTypes.number.isRequired,
+  keysToPercentageLabelMap: PropTypes.shape({
+    firstQuartile: PropTypes.number.isRequired,
+    max: PropTypes.number.isRequired,
+    min: PropTypes.number.isRequired,
+    ninetiethQuantile: PropTypes.number.isRequired,
+    tenthQuantile: PropTypes.number.isRequired,
+    thirdQuartile: PropTypes.number.isRequired,
+  }).isRequired,
 };
 
-export default FocusedCBGSliceMedianLabel;
+export default FocusedCBGSliceLabel;

@@ -68,7 +68,7 @@ const FocusedSMBGPointLabel = (props) => {
   if (lines) {
     focusedTooltip = (
       <Tooltip
-        title={<span className={styles.explainerText}>{lineDate}</span>}
+        title={<span className={styles.datetime}>{lineDate}</span>}
         position={position}
         side={side}
         offset={{
@@ -81,8 +81,8 @@ const FocusedSMBGPointLabel = (props) => {
     focusedTooltip = (
       <Tooltip
         title={<span className={styles.tipWrapper}>
-          <span className={styles.shortDate}>{shortDate}</span>
-          <span className={styles.shortTime}>{millisecondsAsTimeOfDay(data.msPer24)}</span>
+          <span className={styles.datetime}>{shortDate}</span>
+          <span className={styles.datetime}>{millisecondsAsTimeOfDay(data.msPer24)}</span>
         </span>
         }
         content={<span className={styles.tipWrapper}>

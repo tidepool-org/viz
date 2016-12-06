@@ -20,31 +20,30 @@
   top: 0px;
 }
 
+.baseText {
+  composes: highContrastText noWrap from '../../../styles/typography.css';
+}
+
 .number {
   composes: boldText highContrastText noWrap largeSize from '../../../styles/typography.css';
 }
 
-.explainerText {
-  composes: highContrastText noWrap from '../../../styles/typography.css';
+.textDisplay {
   display: block;
   padding: 5px;
 }
 
+.datetime {
+  composes: baseText textDisplay;
+}
+
 .detailNumber {
-  composes: explainerText number;
+  composes: number textDisplay;
   text-align: center;
 }
 
-.shortDate {
-  composes: explainerText;
-}
-
-.shortTime {
-  composes: explainerText;
-}
-
 .subType {
-  composes: explainerText;
+  composes: baseText textDisplay;
   font-style: italic;
 }
 
