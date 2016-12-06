@@ -15,6 +15,7 @@
  * == BSD2 LICENSE ==
  */
 
+import _ from 'lodash';
 import { select } from 'd3-selection';
 import React, { PropTypes } from 'react';
 
@@ -27,11 +28,14 @@ const CBGSlice = (props) => {
   if (!datum) {
     return null;
   }
-  const { bgBounds, isFocused } = props;
+  const { bgBounds, categoryToSliceKeysMap, focusedSliceKeys, isFocused } = props;
   const { medianRadius, sliceCapRadius, xScale, yPositions } = props;
   const { focusSlice, unfocusSlice: unfocus } = props;
 
   function getClass(category) {
+    if (isFocused && _.isEqual(categoryToSliceKeysMap[category], focusedSliceKeys)) {
+      return styles[`${category}Hovered`];
+    }
     return isFocused ? styles.focused : styles[category];
   }
 
@@ -114,6 +118,11 @@ const CBGSlice = (props) => {
 };
 
 CBGSlice.defaultProps = {
+  categoryToSliceKeysMap: {
+    rangeSlice: ['min', 'max'],
+    outerSlice: ['tenthQuantile', 'ninetiethQuantile'],
+    quartileSlice: ['firstQuartile', 'thirdQuartile'],
+  },
   medianRadius: 7,
   sliceCapRadius: 9,
 };
@@ -124,6 +133,11 @@ CBGSlice.propTypes = {
     targetUpperBound: PropTypes.number.isRequired,
     targetLowerBound: PropTypes.number.isRequired,
     veryLowThreshold: PropTypes.number.isRequired,
+  }).isRequired,
+  categoryToSliceKeysMap: PropTypes.shape({
+    rangeSlice: PropTypes.array.isRequired,
+    outerSlice: PropTypes.array.isRequired,
+    quartileSlice: PropTypes.array.isRequired,
   }).isRequired,
   // if there's a gap in data, a `datum` may not exist, so not required
   datum: PropTypes.shape({
@@ -139,6 +153,15 @@ CBGSlice.propTypes = {
     tenthQuantile: PropTypes.number.isRequired,
     thirdQuartile: PropTypes.number.isRequired,
   }),
+  focusedSliceKeys: PropTypes.arrayOf(PropTypes.oneOf([
+    'firstQuartile',
+    'max',
+    'median',
+    'min',
+    'ninetiethQuantile',
+    'tenthQuantile',
+    'thirdQuartile',
+  ])),
   focusSlice: PropTypes.func.isRequired,
   isFocused: PropTypes.bool.isRequired,
   medianRadius: PropTypes.number.isRequired,

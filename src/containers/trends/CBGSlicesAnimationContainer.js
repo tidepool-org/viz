@@ -67,6 +67,15 @@ export default class CBGSlicesAnimationContainer extends React.Component {
         }).isRequired,
       }).isRequired,
     }),
+    focusedSliceKeys: PropTypes.arrayOf(PropTypes.oneOf([
+      'firstQuartile',
+      'max',
+      'median',
+      'min',
+      'ninetiethQuantile',
+      'tenthQuantile',
+      'thirdQuartile',
+    ])),
     focusSlice: PropTypes.func.isRequired,
     margins: PropTypes.shape({
       top: PropTypes.number.isRequired,
@@ -161,6 +170,7 @@ export default class CBGSlicesAnimationContainer extends React.Component {
               <CBGSlice
                 bgBounds={this.props.bgBounds}
                 datum={dataById[config.key]}
+                focusedSliceKeys={this.props.focusedSliceKeys}
                 focusSlice={this.props.focusSlice}
                 isFocused={config.key === _.get(focusedSlice, ['data', 'id'], null)}
                 key={config.key}

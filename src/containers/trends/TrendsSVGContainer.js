@@ -177,6 +177,7 @@ export class TrendsSVGContainer extends React.Component {
             bgBounds={this.props.bgBounds}
             data={this.props.cbgData}
             focusedSlice={this.props.focusedSlice}
+            focusedSliceKeys={this.props.focusedSliceKeys}
             focusSlice={this.props.focusSlice}
             margins={this.props.margins}
             svgDimensions={{ height, width }}
@@ -357,6 +358,15 @@ TrendsSVGContainer.propTypes = {
       }).isRequired,
     }).isRequired,
   }),
+  focusedSliceKeys: PropTypes.arrayOf(PropTypes.oneOf([
+    'firstQuartile',
+    'max',
+    'median',
+    'min',
+    'ninetiethQuantile',
+    'tenthQuantile',
+    'thirdQuartile',
+  ])),
   focusedSmbg: PropTypes.shape({
     data: PropTypes.shape({
       value: PropTypes.number.isRequired,
