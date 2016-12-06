@@ -25,6 +25,7 @@ const FOCUSED_CBG_SLICE = 'focusedCbgSlice';
 const FOCUSED_CBG_KEYS = 'focusedCbgSliceKeys';
 const FOCUSED_SMBG = 'focusedSmbg';
 const FOCUSED_SMBG_RANGE_AVG = 'focusedSmbgRangeAvg';
+const SHOW_CBG_SLICE_LABELS = 'showingCbgSliceLabels';
 const TOUCHED = 'touched';
 
 const initialState = {
@@ -33,6 +34,7 @@ const initialState = {
   [FOCUSED_CBG_KEYS]: null,
   [FOCUSED_SMBG]: null,
   [FOCUSED_SMBG_RANGE_AVG]: null,
+  [SHOW_CBG_SLICE_LABELS]: true,
   [TOUCHED]: false,
 };
 
@@ -54,6 +56,7 @@ const trendsStateByUser = (state = {}, action) => {
         state,
         { [userId]: {
           [FOCUSED_CBG_DATE_MEAN]: { $set: { data, position } },
+          [SHOW_CBG_SLICE_LABELS]: { $set: false },
         } }
       );
     }
@@ -106,6 +109,7 @@ const trendsStateByUser = (state = {}, action) => {
         state,
         { [userId]: {
           [FOCUSED_CBG_DATE_MEAN]: { $set: null },
+          [SHOW_CBG_SLICE_LABELS]: { $set: true },
         } }
       );
     }
