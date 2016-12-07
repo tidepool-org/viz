@@ -27,5 +27,4 @@
 .explainerText {
   composes: highContrastText noWrap from '../../../styles/typography.css';
   display: block;
-  padding: 5px;
 }

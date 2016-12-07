@@ -67,7 +67,7 @@ const FocusedRangeLabels = (props) => {
         offset={{ top: -5, left: 0 }}
       />
       <Tooltip
-        title={<span className={styles.explainerText}>{timeFrom} - {timeTo}</span>}
+        title={isCbg ? null : <span className={styles.explainerText}>{timeFrom} - {timeTo}</span>}
         content={
           <span className={styles.number}>
             {isCbg ? 'Middle' : 'Average'} {displayBgValue(data[center], bgUnits)}
