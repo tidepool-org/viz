@@ -22,13 +22,13 @@ import React, { PropTypes } from 'react';
 
 import { classifyBgValue } from '../../../utils/bloodglucose';
 
-import styles from './CBGMeanByDateDots.css';
+import styles from './CBGsByDate.css';
 
-const CBGMeanByDateDots = (props) => {
+const CBGsByDate = (props) => {
   const { bgBounds, dataGroupedByDate, focusedMeanDate, focusedSlice: { data: { msX } } } = props;
   const { xScale, yScale } = props;
   return (
-    <g id="cbgMeansPerDay">
+    <g id="cbgDays">
       {_.map(_.keys(dataGroupedByDate), (key) => {
         const dayData = dataGroupedByDate[key];
         const dayMean = mean(dayData, (d) => (d.value));
@@ -39,30 +39,34 @@ const CBGMeanByDateDots = (props) => {
           [styles.transparify]: (focusedMeanDate !== null) && !isFocused,
         });
         return (
-          <circle
-            className={circleClasses}
-            cx={xScale(msX)}
-            cy={yScale(dayMean)}
-            key={key}
-            onMouseOver={_.partial(props.focusDate, {
-              date: key,
-              mean: dayMean,
-              msX,
-            }, {
-              left: xScale(msX),
-              tooltipLeft: msX > props.tooltipLeftThreshold,
-              top: yScale(dayMean),
-            })}
-            onMouseOut={props.unfocusDate}
-            r={5}
-          />
+          <g id={`cbgs-${key}`}>
+            {_.map(dayData, (d) => (
+              <circle
+                className={circleClasses}
+                cx={xScale(d.msPer24)}
+                cy={yScale(d.value)}
+                key={d.id}
+                onMouseOver={_.partial(props.focusDate, {
+                  date: key,
+                  mean: dayMean,
+                  msX,
+                }, {
+                  left: xScale(msX),
+                  tooltipLeft: msX > props.tooltipLeftThreshold,
+                  top: yScale(dayMean),
+                })}
+                onMouseOut={props.unfocusDate}
+                r={2.5}
+              />
+            ))}
+          </g>
         );
       })}
     </g>
   );
 };
 
-CBGMeanByDateDots.propTypes = {
+CBGsByDate.propTypes = {
   bgBounds: PropTypes.shape({
     veryHighThreshold: PropTypes.number.isRequired,
     targetUpperBound: PropTypes.number.isRequired,
@@ -106,4 +110,4 @@ CBGMeanByDateDots.propTypes = {
   yScale: PropTypes.func.isRequired,
 };
 
-export default CBGMeanByDateDots;
+export default CBGsByDate;

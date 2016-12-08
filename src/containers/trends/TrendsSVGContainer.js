@@ -47,7 +47,7 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import { THREE_HRS } from '../../utils/datetime';
 import BackgroundWithTargetRange from '../../components/trends/common/BackgroundWithTargetRange';
 import CBGDayTrace from '../../components/trends/cbg/CBGDayTrace';
-import CBGMeanByDateDots from '../../components/trends/cbg/CBGMeanByDateDots';
+import CBGsByDate from '../../components/trends/cbg/CBGsByDate';
 import CBGSlicesAnimationContainer from './CBGSlicesAnimationContainer';
 import SMBGsByDateContainer from './SMBGsByDateContainer';
 import SMBGRangeAvgAnimationContainer from './SMBGRangeAvgAnimationContainer';
@@ -145,7 +145,7 @@ export class TrendsSVGContainer extends React.Component {
 
       if (this.props.focusedSlice) {
         focusedSlice = (
-          <CBGMeanByDateDots
+          <CBGsByDate
             bgBounds={this.props.bgBounds}
             dataGroupedByDate={this.state.focusedSliceDataGroupedByDate}
             focusDate={this.props.focusDate}
