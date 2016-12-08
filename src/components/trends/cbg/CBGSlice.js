@@ -109,7 +109,7 @@ const CBGSlice = (props) => {
           cx={xScale(datum.msX)}
           cy={yPositions.median}
           rx={medianRadius}
-          ry={medianRadius - 1}
+          ry={medianRadius - 3}
           style={{ pointerEvents: 'none' }}
         />,
       ]}
