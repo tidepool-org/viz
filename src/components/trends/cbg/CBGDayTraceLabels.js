@@ -42,6 +42,8 @@ const CBGDayTraceLabels = (props) => {
     <div>
       <Tooltip
         content={<span className={styles.number}>{displayBgValue(value, bgUnits)}</span>}
+        backgroundColor={'transparent'}
+        borderColor={'transparent'}
         offset={{ top: 0, left: LEFT_OFFSET }}
         position={tooltipPosition}
         side={'right'}

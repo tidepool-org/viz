@@ -61,10 +61,11 @@ const FocusedRangeLabels = (props) => {
     <div className={styles.container}>
       <Tooltip
         content={<span className={styles.number}>{displayBgValue(data[top], bgUnits)}</span>}
+        backgroundColor={'transparent'}
+        borderColor={'transparent'}
         position={topPosition}
         side={'top'}
         tail={false}
-        offset={{ top: -5, left: 0 }}
       />
       {isCbg ? null : (
         <Tooltip
@@ -81,10 +82,11 @@ const FocusedRangeLabels = (props) => {
       )}
       <Tooltip
         content={<span className={styles.number}>{displayBgValue(data[bottom], bgUnits)}</span>}
+        backgroundColor={'transparent'}
+        borderColor={'transparent'}
         position={bottomPosition}
         side={'bottom'}
         tail={false}
-        offset={{ top: 5, left: 0 }}
       />
     </div>
   );

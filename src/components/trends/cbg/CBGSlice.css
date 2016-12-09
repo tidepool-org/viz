@@ -24,7 +24,7 @@
 
 .hoverTarget {
   fill-opacity: 0.5;
-  stroke: white;
+  stroke: black;
   stroke-opacity: 0.75;
   stroke-width: 1px;
 }
