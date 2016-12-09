@@ -25,21 +25,21 @@ import { classifyBgValue } from '../../../utils/bloodglucose';
 import styles from './CBGsByDate.css';
 
 const CBGsByDate = (props) => {
-  const { bgBounds, dataGroupedByDate, focusedMeanDate, focusedSlice: { data: { msX } } } = props;
+  const { bgBounds, dataGroupedByDate, focusedDate, focusedSlice: { data: { msX } } } = props;
   const { xScale, yScale } = props;
   return (
     <g id="cbgDays">
       {_.map(_.keys(dataGroupedByDate), (key) => {
         const dayData = dataGroupedByDate[key];
         const dayMean = mean(dayData, (d) => (d.value));
-        const isFocused = key === focusedMeanDate;
+        const isFocused = key === focusedDate;
         const circleClasses = cx({
-          cbgMeanCircle: true, // for the CBGSlice mouseout event handler to detect
+          cbgCircle: true, // for the CBGSlice mouseout event handler to detect
           [styles[classifyBgValue(bgBounds, dayMean)]]: true,
-          [styles.transparify]: (focusedMeanDate !== null) && !isFocused,
+          [styles.transparify]: (focusedDate !== null) && !isFocused,
         });
         return (
-          <g id={`cbgs-${key}`}>
+          <g id={`cbgs-${key}`} key={key}>
             {_.map(dayData, (d) => (
               <circle
                 className={circleClasses}
@@ -48,7 +48,7 @@ const CBGsByDate = (props) => {
                 key={d.id}
                 onMouseOver={_.partial(props.focusDate, {
                   date: key,
-                  mean: dayMean,
+                  value: d.value,
                   msX,
                 }, {
                   left: xScale(msX),
@@ -75,7 +75,7 @@ CBGsByDate.propTypes = {
   }).isRequired,
   dataGroupedByDate: PropTypes.object.isRequired,
   focusDate: PropTypes.func.isRequired,
-  focusedMeanDate: PropTypes.string,
+  focusedDate: PropTypes.string,
   focusedSlice: PropTypes.shape({
     data: PropTypes.shape({
       firstQuartile: PropTypes.number.isRequired,

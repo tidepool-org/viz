@@ -17,10 +17,10 @@
 
 import * as actionTypes from '../constants/actionTypes';
 
-export function focusTrendsCbgDateMean(userId, dateMeanData, dateMeanPosition) {
+export function focusTrendsCbgDate(userId, dateData, datePosition) {
   return {
-    type: actionTypes.FOCUS_TRENDS_CBG_DATE_MEAN,
-    payload: { dateMeanData, dateMeanPosition, userId },
+    type: actionTypes.FOCUS_TRENDS_CBG_DATE,
+    payload: { dateData, datePosition, userId },
   };
 }
 
@@ -52,9 +52,9 @@ export function markTrendsViewed(userId) {
   };
 }
 
-export function unfocusTrendsCbgDateMean(userId) {
+export function unfocusTrendsCbgDate(userId) {
   return {
-    type: actionTypes.UNFOCUS_TRENDS_CBG_DATE_MEAN,
+    type: actionTypes.UNFOCUS_TRENDS_CBG_DATE,
     payload: { userId },
   };
 }

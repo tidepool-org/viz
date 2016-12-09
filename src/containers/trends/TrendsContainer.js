@@ -79,10 +79,10 @@ export class TrendsContainer extends React.Component {
     onSwitchBgDataSource: PropTypes.func.isRequired,
     // viz state
     trendsState: PropTypes.shape({
-      focusedCbgDateMean: PropTypes.shape({
+      focusedCbgDate: PropTypes.shape({
         data: PropTypes.shape({
           date: PropTypes.string.isRequired,
-          mean: PropTypes.number.isRequired,
+          value: PropTypes.number.isRequired,
           msX: PropTypes.number.isRequired,
         }).isRequired,
         position: PropTypes.shape({
@@ -148,12 +148,12 @@ export class TrendsContainer extends React.Component {
       touched: PropTypes.bool.isRequired,
     }).isRequired,
     // actions
-    focusTrendsCbgDateMean: PropTypes.func.isRequired,
+    focusTrendsCbgDate: PropTypes.func.isRequired,
     focusTrendsCbgSlice: PropTypes.func.isRequired,
     focusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     focusTrendsSmbg: PropTypes.func.isRequired,
     markTrendsViewed: PropTypes.func.isRequired,
-    unfocusTrendsCbgDateMean: PropTypes.func.isRequired,
+    unfocusTrendsCbgDate: PropTypes.func.isRequired,
     unfocusTrendsCbgSlice: PropTypes.func.isRequired,
     unfocusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     unfocusTrendsSmbg: PropTypes.func.isRequired,
@@ -338,11 +338,11 @@ export class TrendsContainer extends React.Component {
         bgUnits={this.props.bgUnits}
         smbgData={this.state.currentSmbgData}
         cbgData={this.state.currentCbgData}
-        focusedCbgDateMean={this.props.trendsState.focusedCbgDateMean}
+        focusedCbgDate={this.props.trendsState.focusedCbgDate}
         focusedSlice={this.props.trendsState.focusedCbgSlice}
         focusedSliceKeys={this.props.trendsState.focusedCbgSliceKeys}
         focusedSmbg={this.props.trendsState.focusedSmbg}
-        focusDate={this.props.focusTrendsCbgDateMean}
+        focusDate={this.props.focusTrendsCbgDate}
         focusRange={this.props.focusTrendsSmbgRangeAvg}
         focusSmbg={this.props.focusTrendsSmbg}
         focusSlice={this.props.focusTrendsCbgSlice}
@@ -354,7 +354,7 @@ export class TrendsContainer extends React.Component {
         onSelectDay={this.selectDay()}
         xScale={this.state.xScale}
         yScale={this.state.yScale}
-        unfocusDate={this.props.unfocusTrendsCbgDateMean}
+        unfocusDate={this.props.unfocusTrendsCbgDate}
         unfocusRange={this.props.unfocusTrendsSmbgRangeAvg}
         unfocusSmbg={this.props.unfocusTrendsSmbg}
         unfocusSlice={this.props.unfocusTrendsCbgSlice}
@@ -372,8 +372,8 @@ export function mapStateToProps(state, ownProps) {
 
 export function mapDispatchToProps(dispatch, ownProps) {
   return bindActionCreators({
-    focusTrendsCbgDateMean: _.partial(
-      actions.focusTrendsCbgDateMean, ownProps.currentPatientInViewId
+    focusTrendsCbgDate: _.partial(
+      actions.focusTrendsCbgDate, ownProps.currentPatientInViewId
     ),
     focusTrendsCbgSlice: _.partial(
       actions.focusTrendsCbgSlice, ownProps.currentPatientInViewId
@@ -387,8 +387,8 @@ export function mapDispatchToProps(dispatch, ownProps) {
     markTrendsViewed: _.partial(
       actions.markTrendsViewed, ownProps.currentPatientInViewId
     ),
-    unfocusTrendsCbgDateMean: _.partial(
-      actions.unfocusTrendsCbgDateMean, ownProps.currentPatientInViewId
+    unfocusTrendsCbgDate: _.partial(
+      actions.unfocusTrendsCbgDate, ownProps.currentPatientInViewId
     ),
     unfocusTrendsCbgSlice: _.partial(
       actions.unfocusTrendsCbgSlice, ownProps.currentPatientInViewId

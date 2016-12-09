@@ -63,23 +63,22 @@ const CBGSlice = (props) => {
         key={`${category}-${datum.id}`}
         id={`${category}-${datum.id}`}
         onMouseOver={(e) => {
-          // ditto comments below
           if (!e.relatedTarget) {
             focus();
-          } else if (!select(e.relatedTarget).classed('cbgMeanCircle')) {
+          } else if (!select(e.relatedTarget).classed('cbgCircle')) {
             focus();
           }
         }}
         onMouseOut={(e) => {
           // when mouseout is triggered b/c the mouses "leaves" the slice
-          // to move onto a cbg mean circle *within* the slice
+          // to move onto a cbg circle *within* the slice
           // the e.target will be the rect/slice and the relatedTarget
-          // will be the circle/mean, so we can suppress the call to unfocus()
+          // will be the circle, so we can suppress the call to unfocus()
           // in this case
-          // TODO: fix arrow functions in props (=== bad/non-performant!)
+          // TODO: fix use of arrow functions in props!
           if (!e.relatedTarget) {
             unfocus();
-          } else if (!select(e.relatedTarget).classed('cbgMeanCircle')) {
+          } else if (!select(e.relatedTarget).classed('cbgCircle')) {
             unfocus();
           }
         }}

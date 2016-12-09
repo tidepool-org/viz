@@ -30,18 +30,18 @@ const TOP_OFFSET = -10;
 const LEFT_OFFSET = 15;
 
 const CBGDayTraceLabels = (props) => {
-  const { focusedCbgDateMean } = props;
-  if (!focusedCbgDateMean) {
+  const { focusedCbgDate } = props;
+  if (!focusedCbgDate) {
     return null;
   }
   const { bgUnits } = props;
-  const { data: { date, mean: dayMean }, position } = focusedCbgDateMean;
+  const { data: { date, value }, position } = focusedCbgDate;
   const tooltipPosition = { left: position.left, top: position.top };
 
   return (
     <div>
       <Tooltip
-        content={<span className={styles.number}>{displayBgValue(dayMean, bgUnits)}</span>}
+        content={<span className={styles.number}>{displayBgValue(value, bgUnits)}</span>}
         offset={{ top: 0, left: LEFT_OFFSET }}
         position={tooltipPosition}
         side={'right'}
@@ -63,10 +63,10 @@ const CBGDayTraceLabels = (props) => {
 
 CBGDayTraceLabels.propTypes = {
   bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
-  focusedCbgDateMean: PropTypes.shape({
+  focusedCbgDate: PropTypes.shape({
     data: PropTypes.shape({
       date: PropTypes.string.isRequired,
-      mean: PropTypes.number.isRequired,
+      value: PropTypes.number.isRequired,
       msX: PropTypes.number.isRequired,
     }).isRequired,
     position: PropTypes.shape({

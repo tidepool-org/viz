@@ -20,7 +20,7 @@ import update from 'react-addons-update';
 
 import * as actionTypes from '../constants/actionTypes';
 
-const FOCUSED_CBG_DATE_MEAN = 'focusedCbgDateMean';
+const FOCUSED_CBG_DATE = 'focusedCbgDate';
 const FOCUSED_CBG_SLICE = 'focusedCbgSlice';
 const FOCUSED_CBG_KEYS = 'focusedCbgSliceKeys';
 const FOCUSED_SMBG = 'focusedSmbg';
@@ -29,7 +29,7 @@ const SHOW_CBG_SLICE_LABELS = 'showingCbgSliceLabels';
 const TOUCHED = 'touched';
 
 const initialState = {
-  [FOCUSED_CBG_DATE_MEAN]: null,
+  [FOCUSED_CBG_DATE]: null,
   [FOCUSED_CBG_SLICE]: null,
   [FOCUSED_CBG_KEYS]: null,
   [FOCUSED_SMBG]: null,
@@ -50,12 +50,12 @@ const trendsStateByUser = (state = {}, action) => {
         { [userId]: { $set: _.assign({}, initialState) } }
       );
     }
-    case actionTypes.FOCUS_TRENDS_CBG_DATE_MEAN: {
-      const { dateMeanData: data, dateMeanPosition: position, userId } = action.payload;
+    case actionTypes.FOCUS_TRENDS_CBG_DATE: {
+      const { dateData: data, datePosition: position, userId } = action.payload;
       return update(
         state,
         { [userId]: {
-          [FOCUSED_CBG_DATE_MEAN]: { $set: { data, position } },
+          [FOCUSED_CBG_DATE]: { $set: { data, position } },
           [SHOW_CBG_SLICE_LABELS]: { $set: false },
         } }
       );
@@ -103,12 +103,12 @@ const trendsStateByUser = (state = {}, action) => {
         { [userId]: { [TOUCHED]: { $set: true } } }
       );
     }
-    case actionTypes.UNFOCUS_TRENDS_CBG_DATE_MEAN: {
+    case actionTypes.UNFOCUS_TRENDS_CBG_DATE: {
       const { userId } = action.payload;
       return update(
         state,
         { [userId]: {
-          [FOCUSED_CBG_DATE_MEAN]: { $set: null },
+          [FOCUSED_CBG_DATE]: { $set: null },
           [SHOW_CBG_SLICE_LABELS]: { $set: true },
         } }
       );

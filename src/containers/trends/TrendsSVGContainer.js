@@ -84,7 +84,7 @@ export class TrendsSVGContainer extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { cbgData, focusedCbgDateMean, focusedSlice } = nextProps;
+    const { cbgData, focusedCbgDate, focusedSlice } = nextProps;
     const updates = {};
     if (focusedSlice) {
       const { msFrom, msTo } = focusedSlice.data;
@@ -94,8 +94,8 @@ export class TrendsSVGContainer extends React.Component {
       );
       updates.focusedSliceDataGroupedByDate = focusedSliceDataGroupedByDate;
     }
-    if (focusedCbgDateMean && focusedCbgDateMean !== this.props.focusedCbgDateMean) {
-      updates.focusedDateCbgData = _.filter(cbgData, { localDate: focusedCbgDateMean.data.date });
+    if (focusedCbgDate && focusedCbgDate !== this.props.focusedCbgDate) {
+      updates.focusedDateCbgData = _.filter(cbgData, { localDate: focusedCbgDate.data.date });
     }
     this.setState(updates);
   }
@@ -137,11 +137,11 @@ export class TrendsSVGContainer extends React.Component {
         return this.renderNoDataMessage('cbg');
       }
 
-      const { focusedCbgDateMean } = this.props;
-      const focusedMeanDate = _.get(focusedCbgDateMean, ['data', 'date'], null);
+      const { focusedCbgDate } = this.props;
+      const focusedDate = _.get(focusedCbgDate, ['data', 'date'], null);
       const { containerHeight: height, containerWidth: width } = this.props;
       let focusedSlice = null;
-      let focusedDate = null;
+      let renderedDate = null;
 
       if (this.props.focusedSlice) {
         focusedSlice = (
@@ -149,7 +149,7 @@ export class TrendsSVGContainer extends React.Component {
             bgBounds={this.props.bgBounds}
             dataGroupedByDate={this.state.focusedSliceDataGroupedByDate}
             focusDate={this.props.focusDate}
-            focusedMeanDate={focusedMeanDate}
+            focusedDate={focusedDate}
             focusedSlice={this.props.focusedSlice}
             tooltipLeftThreshold={this.props.tooltipLeftThreshold}
             unfocusDate={this.props.unfocusDate}
@@ -159,12 +159,12 @@ export class TrendsSVGContainer extends React.Component {
         );
       }
 
-      if (focusedMeanDate) {
-        focusedDate = (
+      if (focusedDate) {
+        renderedDate = (
           <CBGDayTrace
             bgBounds={this.props.bgBounds}
             data={this.state.focusedDateCbgData}
-            date={focusedMeanDate}
+            date={focusedDate}
             xScale={this.props.xScale}
             yScale={this.props.yScale}
           />
@@ -187,7 +187,7 @@ export class TrendsSVGContainer extends React.Component {
             yScale={this.props.yScale}
           />
           {focusedSlice}
-          {focusedDate}
+          {renderedDate}
         </g>
       );
     }
@@ -318,10 +318,10 @@ TrendsSVGContainer.propTypes = {
     msPer24: PropTypes.number.isRequired,
     value: PropTypes.number.isRequired,
   })).isRequired,
-  focusedCbgDateMean: PropTypes.shape({
+  focusedCbgDate: PropTypes.shape({
     data: PropTypes.shape({
       date: PropTypes.string.isRequired,
-      mean: PropTypes.number.isRequired,
+      value: PropTypes.number.isRequired,
       msX: PropTypes.number.isRequired,
     }).isRequired,
     position: PropTypes.shape({
