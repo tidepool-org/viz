@@ -16,7 +16,7 @@
  */
 
 .focused {
-  fill: var(--bkgrnd-darkest);
+  fill: var(--bkgrnd);
   stroke: var(--cbg-slice--hover);
   stroke-opacity: 0.75;
   stroke-width: 1px;
