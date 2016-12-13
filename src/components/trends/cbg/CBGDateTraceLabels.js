@@ -23,10 +23,10 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
 import { displayBgValue } from '../../../utils/format';
 
-import styles from './CBGDayTraceLabels.css';
+import styles from './CBGDateTraceLabels.css';
 
 
-const CBGDayTraceLabels = (props) => {
+const CBGDateTraceLabels = (props) => {
   const { focusedCbgDate } = props;
   if (!focusedCbgDate) {
     return null;
@@ -59,7 +59,7 @@ const CBGDayTraceLabels = (props) => {
   );
 };
 
-CBGDayTraceLabels.propTypes = {
+CBGDateTraceLabels.propTypes = {
   bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
   focusedCbgDate: PropTypes.shape({
     data: PropTypes.shape({
@@ -76,4 +76,4 @@ CBGDayTraceLabels.propTypes = {
   }),
 };
 
-export default CBGDayTraceLabels;
+export default CBGDateTraceLabels;
