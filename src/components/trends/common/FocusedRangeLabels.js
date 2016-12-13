@@ -62,9 +62,9 @@ const FocusedRangeLabels = (props) => {
       {isCbg ? (
         <Tooltip
           title={<span className={styles.timeLabel}>{timeFrom} - {timeTo}</span>}
-          side={'bottom'}
           borderWidth={0}
           position={{ left: position.left, top: position.yPositions.topMargin }}
+          side={'bottom'}
           tail={false}
         />
       ) : null}

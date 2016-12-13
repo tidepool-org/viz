@@ -16,7 +16,6 @@
  */
 
 import _ from 'lodash';
-import { mean } from 'd3-array';
 import cx from 'classnames';
 import React, { PropTypes } from 'react';
 
@@ -25,25 +24,24 @@ import { classifyBgValue } from '../../../utils/bloodglucose';
 import styles from './CBGsByDate.css';
 
 const CBGsByDate = (props) => {
-  const { bgBounds, dataGroupedByDate, focusedDate, focusedSlice: { data: { msX } } } = props;
+  const { bgBounds, dataGroupedByDate, focusedDate } = props;
+  const { focusedSlice: { data: { msX }, position } } = props;
   const { xScale, yScale } = props;
   return (
     <g id="cbgDays">
       {_.map(_.keys(dataGroupedByDate), (key) => {
         const dayData = dataGroupedByDate[key];
-        const dayMean = mean(dayData, (d) => (d.value));
         const isFocused = key === focusedDate;
-        const circleClasses = cx({
-          cbgCircle: true, // for the CBGSlice mouseout event handler to detect
-          [styles[classifyBgValue(bgBounds, dayMean)]]: true,
-          [styles.invisible]: (focusedDate !== null) && isFocused,
-          [styles.transparify]: (focusedDate !== null) && !isFocused,
-        });
         return (
           <g id={`cbgs-${key}`} key={key}>
             {_.map(dayData, (d) => (
               <circle
-                className={circleClasses}
+                className={cx({
+                  cbgCircle: true, // for the CBGSlice mouseout event handler to detect
+                  [styles[classifyBgValue(bgBounds, d.value)]]: true,
+                  [styles.invisible]: (focusedDate !== null) && isFocused,
+                  [styles.transparify]: (focusedDate !== null) && !isFocused,
+                })}
                 cx={xScale(d.msPer24)}
                 cy={yScale(d.value)}
                 key={d.id}

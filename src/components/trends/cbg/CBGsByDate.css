@@ -15,31 +15,37 @@
  * == BSD2 LICENSE ==
  */
 
-.transparify {
-  fill-opacity: 0.3;
-}
 
 .border {
   stroke: white;
   stroke-width: 0.5px;
 }
 
+.clickable {
+  cursor: pointer;
+}
+
 .low {
-  composes: border;
+  composes: border clickable;
   composes: bgLow from '../../../styles/diabetes.css';
 }
 
 .target {
-  composes: border;
+  composes: border clickable;
   composes: bgTarget from '../../../styles/diabetes.css';
 }
 
 .high {
-  composes: border;
+  composes: border clickable;
   composes: bgHigh from '../../../styles/diabetes.css';
 }
 
 .invisible {
+  composes: clickable;
   stroke: none;
   fill: transparent;
+}
+
+.transparify {
+  fill-opacity: 0.3;
 }
