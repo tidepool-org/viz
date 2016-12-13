@@ -27,7 +27,7 @@ import styles from './CBGDayTraceLabels.css';
 
 // tooltip offsets
 const TOP_OFFSET = -10;
-const LEFT_OFFSET = 15;
+const LEFT_OFFSET = 5;
 
 const CBGDayTraceLabels = (props) => {
   const { focusedCbgDate } = props;
@@ -44,7 +44,7 @@ const CBGDayTraceLabels = (props) => {
         content={<span className={styles.number}>{displayBgValue(value, bgUnits)}</span>}
         backgroundColor={'transparent'}
         borderColor={'transparent'}
-        offset={{ top: 0, left: LEFT_OFFSET }}
+        offset={{ top: 0, left: 0 }}
         position={tooltipPosition}
         side={'right'}
         tail={false}
@@ -58,6 +58,7 @@ const CBGDayTraceLabels = (props) => {
         offset={{ top: TOP_OFFSET, left: -LEFT_OFFSET }}
         position={tooltipPosition}
         side={'left'}
+        tail={false}
       />
     </div>
   );

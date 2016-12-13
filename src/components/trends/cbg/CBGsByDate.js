@@ -57,9 +57,9 @@ const CBGsByDate = (props) => {
                   value: d.value,
                   msX,
                 }, {
-                  left: xScale(msX),
+                  left: xScale(d.msPer24),
                   tooltipLeft: msX > props.tooltipLeftThreshold,
-                  top: yScale(dayMean),
+                  top: yScale(d.value),
                 })}
                 onMouseOut={props.unfocusDate}
                 r={2.5}
