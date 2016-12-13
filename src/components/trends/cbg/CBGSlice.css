@@ -42,9 +42,7 @@
 }
 
 .rangeSlice {
-  // the stroke on this outermost slice is to blend in w/bkgrnd
-  // and thus prevent flashing when mousing from slice to slice
-  stroke: var(--bkgrnd-darkest);
+  stroke: var(--cbg-slice--100--border);
   stroke-width: 1px;
   fill: var(--cbg-slice--100);
 }

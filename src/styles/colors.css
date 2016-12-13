@@ -19,6 +19,7 @@
   --basal: #19A0D7;
   --bolus: #7CD0F0;
   --cbg-slice--100: transparent;
+  --cbg-slice--100--border: #E3E3E3;
   --cbg-slice--80: #E3E3E3;
   --cbg-slice--50: #D4D4D4;
   --cbg-slice--hover: #BCBEC0;
