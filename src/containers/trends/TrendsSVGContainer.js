@@ -151,8 +151,10 @@ export class TrendsSVGContainer extends React.Component {
             focusDate={this.props.focusDate}
             focusedDate={focusedDate}
             focusedSlice={this.props.focusedSlice}
+            onSelectDate={this.props.onSelectDate}
             tooltipLeftThreshold={this.props.tooltipLeftThreshold}
             unfocusDate={this.props.unfocusDate}
+            unfocusSlice={this.props.unfocusSlice}
             xScale={this.props.xScale}
             yScale={this.props.yScale}
           />
@@ -209,7 +211,7 @@ export class TrendsSVGContainer extends React.Component {
           unfocusSmbg={this.props.unfocusSmbg}
           lines={this.props.smbgLines}
           grouped={this.props.smbgGrouped}
-          onSelectDay={this.props.onSelectDay}
+          onSelectDate={this.props.onSelectDate}
           smbgOpts={this.props.smbgOpts}
           tooltipLeftThreshold={this.props.tooltipLeftThreshold}
         />
@@ -228,7 +230,7 @@ export class TrendsSVGContainer extends React.Component {
           unfocusSmbg={() => {}}
           lines={this.props.smbgLines}
           grouped={this.props.smbgGrouped}
-          onSelectDay={this.props.onSelectDay}
+          onSelectDate={this.props.onSelectDate}
           smbgOpts={this.props.smbgOpts}
           tooltipLeftThreshold={this.props.tooltipLeftThreshold}
           nonInteractive
@@ -394,7 +396,7 @@ TrendsSVGContainer.propTypes = {
     bottom: PropTypes.number.isRequired,
     left: PropTypes.number.isRequired,
   }).isRequired,
-  onSelectDay: PropTypes.func.isRequired,
+  onSelectDate: PropTypes.func.isRequired,
   showingCbg: PropTypes.bool.isRequired,
   showingSmbg: PropTypes.bool.isRequired,
   smbgGrouped: PropTypes.bool.isRequired,

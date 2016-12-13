@@ -75,7 +75,7 @@ export class TrendsContainer extends React.Component {
     smbgByDayOfWeek: PropTypes.object.isRequired,
     // handlers
     onDatetimeLocationChange: PropTypes.func.isRequired,
-    onSelectDay: PropTypes.func.isRequired,
+    onSelectDate: PropTypes.func.isRequired,
     onSwitchBgDataSource: PropTypes.func.isRequired,
     // viz state
     trendsState: PropTypes.shape({
@@ -261,7 +261,7 @@ export class TrendsContainer extends React.Component {
   }
 
   selectDay() {
-    return (date) => this.props.onSelectDay(datetime.midDayForDate(date, this.props.timePrefs));
+    return (date) => this.props.onSelectDate(datetime.midDayForDate(date, this.props.timePrefs));
   }
 
   goBack() {
@@ -351,7 +351,7 @@ export class TrendsContainer extends React.Component {
         smbgGrouped={this.props.smbgGrouped}
         smbgLines={this.props.smbgLines}
         smbgRangeOverlay={this.props.smbgRangeOverlay}
-        onSelectDay={this.selectDay()}
+        onSelectDate={this.selectDay()}
         xScale={this.state.xScale}
         yScale={this.state.yScale}
         unfocusDate={this.props.unfocusTrendsCbgDate}

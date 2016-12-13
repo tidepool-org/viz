@@ -38,3 +38,8 @@
   composes: border;
   composes: bgHigh from '../../../styles/diabetes.css';
 }
+
+.invisible {
+  stroke: none;
+  fill: transparent;
+}

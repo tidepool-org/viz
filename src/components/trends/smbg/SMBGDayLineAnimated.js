@@ -51,7 +51,7 @@ const SMBGDayLineAnimated = (props) => {
     focusLine,
     unfocusLine,
     focusedDay,
-    onSelectDay,
+    onSelectDate,
     nonInteractive } = props;
 
   const xPosition = (msPer24) => {
@@ -99,8 +99,8 @@ const SMBGDayLineAnimated = (props) => {
             className={classes}
             onMouseOver={() => { focusLine(data[0], positions[0], data, positions, date); }}
             onMouseOut={() => { unfocusLine(); }}
-            onDoubleClick={() => {
-              onSelectDay(date);
+            onClick={() => {
+              onSelectDate(date);
             }}
             pointerEvents={nonInteractive ? 'none' : 'stroke'}
           />
@@ -123,7 +123,7 @@ SMBGDayLineAnimated.propTypes = {
   unfocusLine: PropTypes.func.isRequired,
   grouped: PropTypes.bool.isRequired,
   focusedDay: PropTypes.string.isRequired,
-  onSelectDay: PropTypes.func.isRequired,
+  onSelectDate: PropTypes.func.isRequired,
   tooltipLeftThreshold: PropTypes.number.isRequired,
   nonInteractive: PropTypes.bool,
 };

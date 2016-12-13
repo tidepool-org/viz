@@ -36,7 +36,7 @@ const SMBGsByDateContainer = (props) => {
     unfocusSmbg,
     smbgOpts,
     tooltipLeftThreshold,
-    onSelectDay,
+    onSelectDate,
     nonInteractive } = props;
   const focusedDay = focusedSmbg ? focusedSmbg.date : '';
   const smbgsByDate = _.groupBy(data, 'localDate');
@@ -55,7 +55,7 @@ const SMBGsByDateContainer = (props) => {
           yScale={yScale}
           focusLine={focusSmbg}
           unfocusLine={unfocusSmbg}
-          onSelectDay={onSelectDay}
+          onSelectDate={onSelectDate}
           grouped={grouped}
           tooltipLeftThreshold={tooltipLeftThreshold}
           nonInteractive={nonInteractive}
@@ -72,7 +72,7 @@ const SMBGsByDateContainer = (props) => {
         yScale={yScale}
         focusLine={focusSmbg}
         unfocusLine={unfocusSmbg}
-        onSelectDay={onSelectDay}
+        onSelectDate={onSelectDate}
         grouped={grouped}
         tooltipLeftThreshold={tooltipLeftThreshold}
         nonInteractive={nonInteractive}
@@ -91,7 +91,7 @@ const SMBGsByDateContainer = (props) => {
         yScale={yScale}
         focusSmbg={focusSmbg}
         unfocusSmbg={unfocusSmbg}
-        onSelectDay={onSelectDay}
+        onSelectDate={onSelectDate}
         grouped={grouped}
         smbgOpts={smbgOpts}
         tooltipLeftThreshold={tooltipLeftThreshold}
@@ -143,7 +143,7 @@ SMBGsByDateContainer.propTypes = {
     })),
   }),
   focusSmbg: PropTypes.func.isRequired,
-  onSelectDay: PropTypes.func.isRequired,
+  onSelectDate: PropTypes.func.isRequired,
   smbgOpts: PropTypes.shape({
     maxR: PropTypes.number.isRequired,
     r: PropTypes.number.isRequired,

@@ -39,7 +39,7 @@ const SMBGDayPointsAnimated = (props) => {
     grouped,
     focusedDay,
     smbgOpts,
-    onSelectDay,
+    onSelectDate,
     nonInteractive } = props;
   const radius = (date === focusedDay) ? smbgOpts.maxR : smbgOpts.r;
   const xPosition = (msPer24) => {
@@ -69,8 +69,8 @@ const SMBGDayPointsAnimated = (props) => {
         const unfocus = () => {
           unfocusSmbg();
         };
-        const selectDay = () => {
-          onSelectDay(date);
+        const selectDate = () => {
+          onSelectDate(date);
         };
         const classes = cx({
           [styles.smbg]: true,
@@ -85,7 +85,7 @@ const SMBGDayPointsAnimated = (props) => {
                 id={`smbg-${smbg.id}`}
                 onMouseOver={focus}
                 onMouseOut={unfocus}
-                onDoubleClick={selectDay}
+                onClick={selectDate}
                 cx={interpolated.xPos}
                 cy={yScale(smbg.value)}
                 r={radius}
@@ -112,7 +112,7 @@ SMBGDayPointsAnimated.propTypes = {
   unfocusSmbg: PropTypes.func.isRequired,
   grouped: PropTypes.bool.isRequired,
   focusedDay: PropTypes.string.isRequired,
-  onSelectDay: PropTypes.func.isRequired,
+  onSelectDate: PropTypes.func.isRequired,
   smbgOpts: PropTypes.shape({
     maxR: PropTypes.number.isRequired,
     r: PropTypes.number.isRequired,

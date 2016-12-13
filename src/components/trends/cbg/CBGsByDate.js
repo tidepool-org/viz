@@ -36,6 +36,7 @@ const CBGsByDate = (props) => {
         const circleClasses = cx({
           cbgCircle: true, // for the CBGSlice mouseout event handler to detect
           [styles[classifyBgValue(bgBounds, dayMean)]]: true,
+          [styles.invisible]: (focusedDate !== null) && isFocused,
           [styles.transparify]: (focusedDate !== null) && !isFocused,
         });
         return (
@@ -46,6 +47,11 @@ const CBGsByDate = (props) => {
                 cx={xScale(d.msPer24)}
                 cy={yScale(d.value)}
                 key={d.id}
+                onClick={() => {
+                  props.onSelectDate(focusedDate);
+                  props.unfocusDate();
+                  props.unfocusSlice();
+                }}
                 onMouseOver={_.partial(props.focusDate, {
                   date: key,
                   value: d.value,
@@ -105,8 +111,10 @@ CBGsByDate.propTypes = {
       }).isRequired,
     }).isRequired,
   }).isRequired,
+  onSelectDate: PropTypes.func.isRequired,
   tooltipLeftThreshold: PropTypes.number.isRequired,
   unfocusDate: PropTypes.func.isRequired,
+  unfocusSlice: PropTypes.func.isRequired,
   xScale: PropTypes.func.isRequired,
   yScale: PropTypes.func.isRequired,
 };
