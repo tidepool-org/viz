@@ -59,10 +59,20 @@ const FocusedRangeLabels = (props) => {
   const centerSide = position.tooltipLeft ? 'left' : 'right';
   return (
     <div className={styles.container}>
+      {isCbg ? (
+        <Tooltip
+          title={<span className={styles.timeLabel}>{timeFrom} - {timeTo}</span>}
+          side={'bottom'}
+          borderWidth={0}
+          position={{ left: position.left, top: position.yPositions.topMargin }}
+          tail={false}
+        />
+      ) : null}
       <Tooltip
         content={<span className={styles.number}>{displayBgValue(data[top], bgUnits)}</span>}
         backgroundColor={'transparent'}
         borderColor={'transparent'}
+        offset={{ left: 0, top: isCbg ? props.numberOffsets.top : 0 }}
         position={topPosition}
         side={'top'}
         tail={false}
@@ -75,21 +85,29 @@ const FocusedRangeLabels = (props) => {
               {`Average ${displayBgValue(data[center], bgUnits)}`}
             </span>
           }
-          side={centerSide}
-          position={centerPosition}
           offset={{ top: 0, left: position.tooltipLeft ? -10 : 10 }}
+          position={centerPosition}
+          side={centerSide}
         />
       )}
       <Tooltip
         content={<span className={styles.number}>{displayBgValue(data[bottom], bgUnits)}</span>}
         backgroundColor={'transparent'}
         borderColor={'transparent'}
+        offset={{ left: 0, top: isCbg ? props.numberOffsets.bottom : 0 }}
         position={bottomPosition}
         side={'bottom'}
         tail={false}
       />
     </div>
   );
+};
+
+FocusedRangeLabels.defaultProps = {
+  numberOffsets: {
+    top: 7.5,
+    bottom: -7.5,
+  },
 };
 
 FocusedRangeLabels.propTypes = {
@@ -149,9 +167,14 @@ FocusedRangeLabels.propTypes = {
         ninetiethQuantile: PropTypes.number.isRequired,
         tenthQuantile: PropTypes.number.isRequired,
         thirdQuartile: PropTypes.number.isRequired,
+        topMargin: PropTypes.number.isRequired,
       }).isRequired,
     }).isRequired,
   }),
+  numberOffsets: PropTypes.shape({
+    top: PropTypes.number.isRequired,
+    bottom: PropTypes.number.isRequired,
+  }).isRequired,
   timePrefs: PropTypes.shape({
     timezoneAware: React.PropTypes.bool.isRequired,
     timezoneName: React.PropTypes.oneOfType([React.PropTypes.string, null]),

@@ -36,12 +36,12 @@
   font-size: 14px;
 }
 
-.largeSize {
-  font-size: 17px;
-}
-
 .defaultSize {
   font-size: 14px;
+}
+
+.largeSize {
+  font-size: 17px;
 }
 
 .mediumContrastText {

@@ -101,6 +101,7 @@ CBGsByDate.propTypes = {
         ninetiethQuantile: PropTypes.number.isRequired,
         tenthQuantile: PropTypes.number.isRequired,
         thirdQuartile: PropTypes.number.isRequired,
+        topMargin: PropTypes.number.isRequired,
       }).isRequired,
     }).isRequired,
   }).isRequired,

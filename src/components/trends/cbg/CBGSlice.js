@@ -176,6 +176,7 @@ CBGSlice.propTypes = {
     thirdQuartile: PropTypes.number.isRequired,
     ninetiethQuantile: PropTypes.number.isRequired,
     max: PropTypes.number.isRequired,
+    topMargin: PropTypes.number.isRequired,
   }).isRequired,
 };
 

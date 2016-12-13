@@ -134,17 +134,20 @@ export default class CBGSlicesAnimationContainer extends React.Component {
     _.each(mungedData, (d) => {
       yPositions.push({
         key: d.id,
-        style: _.mapValues(
-          _.pick(d, [
-            'min',
-            'median',
-            'max',
-            'tenthQuantile',
-            'ninetiethQuantile',
-            'firstQuartile',
-            'thirdQuartile',
-          ]),
-          (val) => (transform(val))
+        style: _.assign(
+          { topMargin: this.props.margins.top },
+          _.mapValues(
+            _.pick(d, [
+              'min',
+              'median',
+              'max',
+              'tenthQuantile',
+              'ninetiethQuantile',
+              'firstQuartile',
+              'thirdQuartile',
+            ]),
+            (val) => (transform(val))
+          )
         ),
       });
     });

@@ -28,3 +28,7 @@
   composes: highContrastText noWrap from '../../../styles/typography.css';
   display: block;
 }
+
+.timeLabel {
+  composes: highContrastText noWrap defaultSize from '../../../styles/typography.css';
+}
