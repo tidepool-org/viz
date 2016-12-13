@@ -25,9 +25,6 @@ import { displayBgValue } from '../../../utils/format';
 
 import styles from './CBGDayTraceLabels.css';
 
-// tooltip offsets
-const TOP_OFFSET = -10;
-const LEFT_OFFSET = 5;
 
 const CBGDayTraceLabels = (props) => {
   const { focusedCbgDate } = props;
@@ -36,28 +33,26 @@ const CBGDayTraceLabels = (props) => {
   }
   const { bgUnits } = props;
   const { data: { date, value }, position } = focusedCbgDate;
-  const tooltipPosition = { left: position.left, top: position.top };
 
   return (
     <div>
-      <Tooltip
-        content={<span className={styles.number}>{displayBgValue(value, bgUnits)}</span>}
-        backgroundColor={'transparent'}
-        borderColor={'transparent'}
-        offset={{ top: 0, left: 0 }}
-        position={tooltipPosition}
-        side={'right'}
-        tail={false}
-      />
       <Tooltip
         title={
           <span className={styles.date}>
             {moment(date, 'YYYY-MM-DD').format('dddd MMM D')}
           </span>
         }
-        offset={{ top: TOP_OFFSET, left: -LEFT_OFFSET }}
-        position={tooltipPosition}
-        side={'left'}
+        borderWidth={'0'}
+        position={{ left: position.left, top: position.topMargin }}
+        side={'bottom'}
+        tail={false}
+      />
+      <Tooltip
+        content={<span className={styles.number}>{displayBgValue(value, bgUnits)}</span>}
+        backgroundColor={'transparent'}
+        borderColor={'transparent'}
+        position={{ left: position.left, top: position.top }}
+        side={'right'}
         tail={false}
       />
     </div>
@@ -76,6 +71,7 @@ CBGDayTraceLabels.propTypes = {
       left: PropTypes.number.isRequired,
       tooltipLeft: PropTypes.bool.isRequired,
       top: PropTypes.number.isRequired,
+      topMargin: PropTypes.number.isRequired,
     }).isRequired,
   }),
 };

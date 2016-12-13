@@ -330,6 +330,7 @@ TrendsSVGContainer.propTypes = {
       left: PropTypes.number.isRequired,
       tooltipLeft: PropTypes.bool.isRequired,
       top: PropTypes.number.isRequired,
+      topMargin: PropTypes.number.isRequired,
     }).isRequired,
   }),
   focusedSlice: PropTypes.shape({
