@@ -42,7 +42,7 @@ const CBGDateTraceLabels = (props) => {
             {moment(date, 'YYYY-MM-DD').format('dddd MMM D')}
           </span>
         }
-        borderWidth={'0'}
+        borderWidth={0}
         position={{ left: position.left, top: position.topMargin }}
         side={'bottom'}
         tail={false}
