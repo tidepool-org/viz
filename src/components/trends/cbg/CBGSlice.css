@@ -29,6 +29,12 @@
   stroke-width: 1px;
 }
 
+.median {
+  stroke: white;
+  stroke-width: 1px;
+  pointer-events: none;
+}
+
 .low {
   composes: bgLow from '../../../styles/diabetes.css';
 }

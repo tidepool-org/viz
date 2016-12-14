@@ -29,7 +29,7 @@ const CBGSlice = (props) => {
     return null;
   }
   const { bgBounds, categoryToSliceKeysMap, focusedSliceKeys, isFocused } = props;
-  const { medianRadius, sliceCapRadius, xScale, yPositions } = props;
+  const { medianHeight, sliceCapRadius, xScale, yPositions } = props;
   const { focusSlice, unfocusSlice: unfocus } = props;
 
   function getClass(category) {
@@ -98,17 +98,24 @@ const CBGSlice = (props) => {
         renderRoundedRect('rangeSlice', 'min', 'max'),
         renderRoundedRect('outerSlice', 'tenthQuantile', 'ninetiethQuantile'),
         renderRoundedRect('quartileSlice', 'firstQuartile', 'thirdQuartile'),
-        <ellipse
+        <rect
           className={isFocused ?
-            styles.focused : styles[classifyBgValue(bgBounds, datum.median)]}
+            styles.focused :
+            `${styles.median} ${styles[classifyBgValue(bgBounds, datum.median)]}`}
           key={`individualMedian-${datum.id}`}
           id={`individualMedian-${datum.id}`}
           onMouseOver={focusMedian}
           onMouseOut={unfocus}
-          cx={xScale(datum.msX)}
-          cy={yPositions.median}
-          rx={medianRadius}
-          ry={medianRadius - 3}
+          // add one to account for stroke
+          // TODO: export stroke-width from CBGSlice.css if keeping
+          x={xScale(datum.msX) - sliceCapRadius + 1}
+          y={yPositions.median - medianHeight / 2}
+          // subtract two to account for stroke
+          // TODO: export stroke-width from CBGSlice.css if keeping
+          width={2 * sliceCapRadius - 2}
+          height={medianHeight}
+          rx={2}
+          ry={2}
           style={{ pointerEvents: 'none' }}
         />,
       ]}
@@ -122,7 +129,7 @@ CBGSlice.defaultProps = {
     outerSlice: ['tenthQuantile', 'ninetiethQuantile'],
     quartileSlice: ['firstQuartile', 'thirdQuartile'],
   },
-  medianRadius: 7,
+  medianHeight: 10,
   sliceCapRadius: 9,
 };
 
@@ -163,7 +170,7 @@ CBGSlice.propTypes = {
   ])),
   focusSlice: PropTypes.func.isRequired,
   isFocused: PropTypes.bool.isRequired,
-  medianRadius: PropTypes.number.isRequired,
+  medianHeight: PropTypes.number.isRequired,
   sliceCapRadius: PropTypes.number.isRequired,
   tooltipLeftThreshold: PropTypes.number.isRequired,
   unfocusSlice: PropTypes.func.isRequired,
