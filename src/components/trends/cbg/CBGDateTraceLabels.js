@@ -52,7 +52,7 @@ const CBGDateTraceLabels = (props) => {
         backgroundColor={'transparent'}
         borderColor={'transparent'}
         position={{ left: position.left, top: position.top }}
-        side={'right'}
+        side={'top'}
         tail={false}
       />
     </div>
