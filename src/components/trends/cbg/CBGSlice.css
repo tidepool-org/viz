@@ -48,7 +48,8 @@
 }
 
 .rangeSliceHovered {
-  composes: rangeSlice hoverTarget;
+  composes: hoverTarget;
+  fill: var(--cbg-slice--100);
 }
 
 .outerSlice {
