@@ -62,13 +62,7 @@ const CBGSlice = (props) => {
         className={`cbgSliceRect ${getClass(category)}`}
         key={`${category}-${datum.id}`}
         id={`${category}-${datum.id}`}
-        onMouseOver={(e) => {
-          if (!e.relatedTarget) {
-            focus();
-          } else if (!select(e.relatedTarget).classed('cbgCircle')) {
-            focus();
-          }
-        }}
+        onMouseOver={focus}
         onMouseOut={(e) => {
           // when mouseout is triggered b/c the mouses "leaves" the slice
           // to move onto a cbg circle *within* the slice
