@@ -23,7 +23,7 @@
 }
 
 .hoverTarget {
-  fill-opacity: 0.5;
+  fill: var(--bkgrnd);
   stroke: black;
   stroke-opacity: 0.75;
   stroke-width: 1px;
@@ -33,6 +33,10 @@
   stroke: white;
   stroke-width: 1px;
   pointer-events: none;
+}
+
+.medianBackgrounded {
+  fill: transparent;
 }
 
 .low {
@@ -55,7 +59,6 @@
 
 .rangeSliceHovered {
   composes: hoverTarget;
-  fill: var(--cbg-slice--100);
 }
 
 .outerSlice {
@@ -63,7 +66,7 @@
 }
 
 .outerSliceHovered {
-  composes: outerSlice hoverTarget;
+  composes: hoverTarget;
 }
 
 .quartileSlice {
@@ -71,5 +74,5 @@
 }
 
 .quartileSliceHovered {
-  composes: quartileSlice hoverTarget;
+  composes: hoverTarget;
 }

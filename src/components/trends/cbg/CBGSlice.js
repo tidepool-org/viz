@@ -16,6 +16,7 @@
  */
 
 import _ from 'lodash';
+import cx from 'classnames';
 import { select } from 'd3-selection';
 import React, { PropTypes } from 'react';
 
@@ -28,15 +29,35 @@ const CBGSlice = (props) => {
   if (!datum) {
     return null;
   }
-  const { bgBounds, categoryToSliceKeysMap, focusedSliceKeys, isFocused } = props;
-  const { medianHeight, sliceCapRadius, xScale, yPositions } = props;
+  const { aCbgDateIsFocused, bgBounds, cornerRadius, focusedSliceKeys, isFocused } = props;
+  const { medianHeight, sliceHalfWidth, xScale, yPositions } = props;
   const { focusSlice, unfocusSlice: unfocus } = props;
 
   function getClass(category) {
-    if (isFocused && _.isEqual(categoryToSliceKeysMap[category], focusedSliceKeys)) {
-      return styles[`${category}Hovered`];
+    if (isFocused) {
+      switch (focusedSliceKeys.join(' ')) {
+        case 'min max':
+          if (category === 'rangeSlice') {
+            return styles[`${category}Hovered`];
+          }
+          return styles[category];
+        case 'tenthQuantile ninetiethQuantile':
+          if (category === 'outerSlice') {
+            return styles[`${category}Hovered`];
+          } else if (category === 'quartileSlice') {
+            return styles.focused;
+          }
+          return styles[category];
+        case 'firstQuartile thirdQuartile':
+          if (category === 'quartileSlice') {
+            return styles[`${category}Hovered`];
+          }
+          return styles[category];
+        default:
+          return styles[category];
+      }
     }
-    return isFocused ? styles.focused : styles[category];
+    return styles[category];
   }
 
   const focusMedian = () => {
@@ -76,15 +97,21 @@ const CBGSlice = (props) => {
             unfocus();
           }
         }}
-        x={left - sliceCapRadius}
-        width={2 * sliceCapRadius}
+        x={left - sliceHalfWidth}
+        width={2 * sliceHalfWidth}
         y={yPositions[y2Accessor]}
         height={yPositions[y1Accessor] - yPositions[y2Accessor]}
-        rx={sliceCapRadius}
-        ry={sliceCapRadius}
+        rx={cornerRadius}
+        ry={cornerRadius}
       />
     );
   }
+
+  const medianClasses = cx({
+    [styles.median]: true,
+    [styles.medianBackgrounded]: aCbgDateIsFocused,
+    [styles[classifyBgValue(bgBounds, datum.median)]]: !aCbgDateIsFocused,
+  });
 
   return (
     <g id={`cbgSlice-${datum.id}`}>
@@ -92,42 +119,39 @@ const CBGSlice = (props) => {
         renderRoundedRect('rangeSlice', 'min', 'max'),
         renderRoundedRect('outerSlice', 'tenthQuantile', 'ninetiethQuantile'),
         renderRoundedRect('quartileSlice', 'firstQuartile', 'thirdQuartile'),
-        <rect
-          className={isFocused ?
-            styles.focused :
-            `${styles.median} ${styles[classifyBgValue(bgBounds, datum.median)]}`}
-          key={`individualMedian-${datum.id}`}
-          id={`individualMedian-${datum.id}`}
-          onMouseOver={focusMedian}
-          onMouseOut={unfocus}
-          // add one to account for stroke
-          // TODO: export stroke-width from CBGSlice.css if keeping
-          x={xScale(datum.msX) - sliceCapRadius + 1}
-          y={yPositions.median - medianHeight / 2}
-          // subtract two to account for stroke
-          // TODO: export stroke-width from CBGSlice.css if keeping
-          width={2 * sliceCapRadius - 2}
-          height={medianHeight}
-          rx={2}
-          ry={2}
-          style={{ pointerEvents: 'none' }}
-        />,
+        (isFocused && !_.isEqual(focusedSliceKeys, ['min', 'max'])) ? null : (
+          <rect
+            className={medianClasses}
+            key={`individualMedian-${datum.id}`}
+            id={`individualMedian-${datum.id}`}
+            onMouseOver={focusMedian}
+            onMouseOut={unfocus}
+            // add one to account for stroke
+            // TODO: export stroke-width from CBGSlice.css if keeping
+            x={xScale(datum.msX) - sliceHalfWidth + 1}
+            y={yPositions.median - medianHeight / 2}
+            // subtract two to account for stroke
+            // TODO: export stroke-width from CBGSlice.css if keeping
+            width={2 * sliceHalfWidth - 2}
+            height={medianHeight}
+            rx={cornerRadius}
+            ry={cornerRadius}
+            style={{ pointerEvents: 'none' }}
+          />
+        ),
       ]}
     </g>
   );
 };
 
 CBGSlice.defaultProps = {
-  categoryToSliceKeysMap: {
-    rangeSlice: ['min', 'max'],
-    outerSlice: ['tenthQuantile', 'ninetiethQuantile'],
-    quartileSlice: ['firstQuartile', 'thirdQuartile'],
-  },
+  cornerRadius: 2,
   medianHeight: 10,
-  sliceCapRadius: 9,
+  sliceHalfWidth: 8,
 };
 
 CBGSlice.propTypes = {
+  aCbgDateIsFocused: PropTypes.bool.isRequired,
   bgBounds: PropTypes.shape({
     veryHighThreshold: PropTypes.number.isRequired,
     targetUpperBound: PropTypes.number.isRequired,
@@ -139,6 +163,7 @@ CBGSlice.propTypes = {
     outerSlice: PropTypes.array.isRequired,
     quartileSlice: PropTypes.array.isRequired,
   }).isRequired,
+  cornerRadius: PropTypes.number.isRequired,
   // if there's a gap in data, a `datum` may not exist, so not required
   datum: PropTypes.shape({
     firstQuartile: PropTypes.number.isRequired,
@@ -165,7 +190,7 @@ CBGSlice.propTypes = {
   focusSlice: PropTypes.func.isRequired,
   isFocused: PropTypes.bool.isRequired,
   medianHeight: PropTypes.number.isRequired,
-  sliceCapRadius: PropTypes.number.isRequired,
+  sliceHalfWidth: PropTypes.number.isRequired,
   tooltipLeftThreshold: PropTypes.number.isRequired,
   unfocusSlice: PropTypes.func.isRequired,
   xScale: PropTypes.func.isRequired,

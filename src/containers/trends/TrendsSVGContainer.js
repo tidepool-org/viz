@@ -84,12 +84,15 @@ export class TrendsSVGContainer extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { cbgData, focusedCbgDate, focusedSlice } = nextProps;
+    const { cbgData, focusedCbgDate, focusedSlice, focusedSliceKeys } = nextProps;
     const updates = {};
     if (focusedSlice) {
       const { msFrom, msTo } = focusedSlice.data;
+      const filterFn = this.getFilterFnForFocusedCbgSegment(focusedSliceKeys, focusedSlice.data);
       const focusedSliceDataGroupedByDate = _.groupBy(
-        _.filter(cbgData, (d) => (d.msPer24 >= msFrom && d.msPer24 < msTo)),
+        _.filter(cbgData, (d) => (
+          d.msPer24 >= msFrom && d.msPer24 < msTo && filterFn(d)
+        )),
         (d) => (d.localDate)
       );
       updates.focusedSliceDataGroupedByDate = focusedSliceDataGroupedByDate;
@@ -98,6 +101,19 @@ export class TrendsSVGContainer extends React.Component {
       updates.focusedDateCbgData = _.filter(cbgData, { localDate: focusedCbgDate.data.date });
     }
     this.setState(updates);
+  }
+
+  getFilterFnForFocusedCbgSegment(focusedSliceKeys, datum) {
+    switch (focusedSliceKeys.join(' ')) {
+      case 'min max':
+        return (d) => (d.value > datum.ninetiethQuantile || d.value < datum.tenthQuantile);
+      case 'tenthQuantile ninetiethQuantile':
+        return (d) => (d.value >= datum.tenthQuantile && d.value <= datum.ninetiethQuantile);
+      case 'firstQuartile thirdQuartile':
+        return (d) => (d.value >= datum.firstQuartile && d.value <= datum.thirdQuartile);
+      default:
+        return () => (false);
+    }
   }
 
   renderNoDataMessage(dataType) {
@@ -176,6 +192,7 @@ export class TrendsSVGContainer extends React.Component {
       return (
         <g id="cbgTrends">
           <CBGSlicesAnimationContainer
+            aCbgDateIsFocused={Boolean(focusedDate)}
             bgBounds={this.props.bgBounds}
             data={this.props.cbgData}
             focusedSlice={this.props.focusedSlice}

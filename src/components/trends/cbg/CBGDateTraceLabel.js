@@ -20,19 +20,15 @@ import React, { PropTypes } from 'react';
 
 import Tooltip from '../../common/tooltips/Tooltip';
 
-import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
-import { displayBgValue } from '../../../utils/format';
-
-import styles from './CBGDateTraceLabels.css';
+import styles from './CBGDateTraceLabel.css';
 
 
-const CBGDateTraceLabels = (props) => {
+const CBGDateTraceLabel = (props) => {
   const { focusedCbgDate } = props;
   if (!focusedCbgDate) {
     return null;
   }
-  const { bgUnits } = props;
-  const { data: { date, value }, position } = focusedCbgDate;
+  const { data: { date }, position } = focusedCbgDate;
 
   return (
     <div>
@@ -47,20 +43,11 @@ const CBGDateTraceLabels = (props) => {
         side={'bottom'}
         tail={false}
       />
-      <Tooltip
-        content={<span className={styles.number}>{displayBgValue(value, bgUnits)}</span>}
-        backgroundColor={'transparent'}
-        borderColor={'transparent'}
-        position={{ left: position.left, top: position.top }}
-        side={'top'}
-        tail={false}
-      />
     </div>
   );
 };
 
-CBGDateTraceLabels.propTypes = {
-  bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
+CBGDateTraceLabel.propTypes = {
   focusedCbgDate: PropTypes.shape({
     data: PropTypes.shape({
       date: PropTypes.string.isRequired,
@@ -76,4 +63,4 @@ CBGDateTraceLabels.propTypes = {
   }),
 };
 
-export default CBGDateTraceLabels;
+export default CBGDateTraceLabel;

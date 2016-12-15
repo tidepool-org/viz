@@ -26,6 +26,7 @@ import CBGSlice from '../../components/trends/cbg/CBGSlice';
 
 export default class CBGSlicesAnimationContainer extends React.Component {
   static propTypes = {
+    aCbgDateIsFocused: PropTypes.bool.isRequired,
     bgBounds: PropTypes.shape({
       veryHighThreshold: PropTypes.number.isRequired,
       targetUpperBound: PropTypes.number.isRequired,
@@ -171,6 +172,7 @@ export default class CBGSlicesAnimationContainer extends React.Component {
           <g id="cbgAnimationContainer">
             {_.map(interpolated, (config) => (
               <CBGSlice
+                aCbgDateIsFocused={this.props.aCbgDateIsFocused}
                 bgBounds={this.props.bgBounds}
                 datum={dataById[config.key]}
                 focusedSliceKeys={this.props.focusedSliceKeys}
