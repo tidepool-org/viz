@@ -17,13 +17,13 @@
 
 import _ from 'lodash';
 import { TimelineMax } from 'gsap';
-import React, { Component, PropTypes } from 'react';
+import React, { PropTypes, PureComponent } from 'react';
 
 import { classifyBgValue } from '../../../utils/bloodglucose';
 
 import styles from './CBGDateTraceAnimated.css';
 
-class CBGDateTraceAnimated extends Component {
+class CBGDateTraceAnimated extends PureComponent {
   static defaultProps = {
     cbgRadius: 2.5,
   };
@@ -83,7 +83,7 @@ class CBGDateTraceAnimated extends Component {
             onClick={() => {
               this.props.onSelectDate(d.localDate);
             }}
-            onMouseOver={(e) => {
+            onMouseOver={() => {
               this.props.focusDateTrace(d, {
                 left: xScale(d.msPer24),
                 yPositions: {

@@ -19,34 +19,12 @@
   stroke: 2;
 }
 
-.thickStroke {
-  stroke-width: 2;
-}
-
 .pointAll {
   pointer-events: all;
 }
 
-.median {
-  stroke: white;
-  composes: thickStroke;
-  pointer-events: none;
-}
-
-.medianTransparent {
-  fill: transparent;
-}
-
-.low {
-  composes: bgLow from '../../../styles/diabetes.css';
-}
-
-.target {
-  composes: bgTarget from '../../../styles/diabetes.css';
-}
-
-.high {
-  composes: bgHigh from '../../../styles/diabetes.css';
+.thickStroke {
+  stroke-width: 2;
 }
 
 .rangeSegment {

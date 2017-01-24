@@ -16,15 +16,16 @@
  */
 
 import _ from 'lodash';
-import React, { PropTypes } from 'react';
+import React, { PropTypes, PureComponent } from 'react';
 import { range } from 'd3-array';
 
 import { THIRTY_MINS, TWENTY_FOUR_HRS } from '../../utils/datetime';
 import { findBinForTimeOfDay, calculateCbgStatsForBin } from '../../utils/trends/data';
 
+import CBGMedianAnimated from '../../components/trends/cbg/CBGMedianAnimated';
 import CBGSliceAnimated from '../../components/trends/cbg/CBGSliceAnimated';
 
-export default class CBGSlicesContainer extends React.Component {
+export default class CBGSlicesContainer extends PureComponent {
   static propTypes = {
     bgBounds: PropTypes.shape({
       veryHighThreshold: PropTypes.number.isRequired,
@@ -99,25 +100,30 @@ export default class CBGSlicesContainer extends React.Component {
 
     return (
       <g id="cbgSlices">
-        {_.map(mungedData, (bin) => {
-          const isFocused = bin.id === focusedSliceKey;
-          return (
+        {_.map(mungedData, (bin) => (
+          <g id={`cbgBin-${bin.id}`} key={bin.id}>
             <CBGSliceAnimated
               bgBounds={this.props.bgBounds}
               datum={bin}
               displayFlags={this.props.displayFlags}
               focusSlice={this.props.focusSlice}
-              isFocused={isFocused}
-              key={bin.id}
-              stickCbgDateTraces={isFocused ? this.props.stickCbgDateTraces : _.noop}
+              stickCbgDateTraces={this.props.stickCbgDateTraces}
               tooltipLeftThreshold={this.props.tooltipLeftThreshold}
               topMargin={this.props.topMargin}
               unfocusSlice={this.props.unfocusSlice}
               xScale={xScale}
               yScale={yScale}
             />
-          );
-        })}
+            <CBGMedianAnimated
+              bgBounds={this.props.bgBounds}
+              datum={bin}
+              displayingMedian={this.props.displayFlags.cbgMedianEnabled}
+              showingCbgDateTraces={Boolean(focusedSliceKey)}
+              xScale={xScale}
+              yScale={yScale}
+            />
+          </g>
+        ))}
       </g>
     );
   }
