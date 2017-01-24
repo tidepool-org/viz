@@ -165,7 +165,8 @@ export class TrendsSVGContainer extends PureComponent {
           bgBounds={this.props.bgBounds}
           data={this.props.cbgData}
           displayFlags={this.props.displayFlags}
-          focusedSliceKey={_.get(this.props.focusedSlice, ['data', 'id'], null)}
+          focusedSliceId={_.get(this.props.focusedSlice, ['data', 'id'], null)}
+          focusedSliceKeys={this.props.focusedSliceKeys}
           focusSlice={this.props.focusSlice}
           stickCbgDateTraces={!_.isEmpty(focusedDates) ?
             _.partial(this.props.stickCbgDateTraces, focusedDates) :

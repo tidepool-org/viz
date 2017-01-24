@@ -56,6 +56,7 @@ export class CBGSliceAnimated extends PureComponent {
       cbg50Enabled: PropTypes.bool.isRequired,
       cbgMedianEnabled: PropTypes.bool.isRequired,
     }).isRequired,
+    focusedSliceKeys: PropTypes.arrayOf(PropTypes.string),
     focusSlice: PropTypes.func.isRequired,
     sliceWidth: PropTypes.number.isRequired,
     stickCbgDateTraces: PropTypes.func.isRequired,
@@ -129,6 +130,7 @@ export class CBGSliceAnimated extends PureComponent {
       datum,
       defaultY,
       displayFlags,
+      focusedSliceKeys,
       focusSlice,
       sliceWidth,
       tooltipLeftThreshold,
@@ -234,9 +236,10 @@ export class CBGSliceAnimated extends PureComponent {
               {_.map(onlyNonZeros, (piece) => {
                 const { key, style } = piece;
                 const segment = renderPieces[key];
+                const isFocused = _.isEqual(segment.heightKeys, focusedSliceKeys);
                 return (
                   <rect
-                    className={segment.className}
+                    className={isFocused ? styles.focused : segment.className}
                     key={key}
                     id={`cbgSlice-${datum.id}-${key}`}
                     width={style.width}

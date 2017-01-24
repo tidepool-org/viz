@@ -27,14 +27,14 @@
   stroke-width: 2;
 }
 
+.focused {
+  opacity: 0;
+}
+
 .rangeSegment {
   stroke: var(--trends--light);
   composes: pointAll thickStroke;
   fill: transparent;
-}
-
-.rangeSegment:hover {
-  opacity: 0;
 }
 
 .outerSegment {
@@ -43,16 +43,8 @@
   fill: var(--trends--light);
 }
 
-.outerSegment:hover {
-  opacity: 0;
-}
-
 .innerQuartilesSegment {
   stroke: var(--trends--dark);
   composes: pointAll thickStroke;
   fill: var(--trends--dark);
-}
-
-.innerQuartilesSegment:hover {
-  opacity: 0;
 }
