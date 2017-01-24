@@ -455,164 +455,6 @@ describe('trendsStateByUser', () => {
     });
   });
 
-  describe('UNFOCUS_TRENDS_CBG_SLICE', () => {
-    it('should reset the focusedCbgSlice and focusedCbgSliceKeys state to `null`', () => {
-      const initialState = {
-        [USER_1]: {
-          cbgFlags: {
-            cbg100Enabled: false,
-            cbg80Enabled: true,
-            cbg50Enabled: true,
-            cbgMedianEnabled: true,
-          },
-          cbgStuckDateTraces: null,
-          focusedCbgSlice: { datum, position },
-          focusedCbgSliceKeys: ['median'],
-          focusedSmbg: null,
-          focusedSmbgRangeAvg: null,
-          touched: true,
-        },
-      };
-      const tracked = mutationTracker.trackObj(initialState);
-      expect(trendsStateByUser(initialState, {
-        type: actionTypes.UNFOCUS_TRENDS_CBG_SLICE,
-        payload: { userId: USER_1 },
-      })[USER_1]).to.deep.equal({
-        cbgFlags: {
-          cbg100Enabled: false,
-          cbg80Enabled: true,
-          cbg50Enabled: true,
-          cbgMedianEnabled: true,
-        },
-        cbgStuckDateTraces: null,
-        focusedCbgSlice: null,
-        focusedCbgSliceKeys: null,
-        focusedSmbg: null,
-        focusedSmbgRangeAvg: null,
-        touched: true,
-      });
-      expect(mutationTracker.hasMutated(tracked)).to.be.false;
-    });
-  });
-  describe('UNFOCUS_TRENDS_SMBG', () => {
-    it('should reset the focusedSmbg state to `null`', () => {
-      const initialState = {
-        [USER_1]: {
-          cbgFlags: {
-            cbg100Enabled: false,
-            cbg80Enabled: true,
-            cbg50Enabled: true,
-            cbgMedianEnabled: true,
-          },
-          cbgStuckDateTraces: null,
-          focusedCbgSlice: null,
-          focusedCbgSliceKeys: null,
-          focusedSmbg: { datum, position },
-          focusedSmbgRangeAvg: null,
-          touched: true,
-        },
-      };
-      const tracked = mutationTracker.trackObj(initialState);
-      expect(trendsStateByUser(initialState, {
-        type: actionTypes.UNFOCUS_TRENDS_SMBG,
-        payload: { userId: USER_1 },
-      })[USER_1]).to.deep.equal({
-        cbgFlags: {
-          cbg100Enabled: false,
-          cbg80Enabled: true,
-          cbg50Enabled: true,
-          cbgMedianEnabled: true,
-        },
-        cbgStuckDateTraces: null,
-        focusedCbgSlice: null,
-        focusedCbgSliceKeys: null,
-        focusedSmbg: null,
-        focusedSmbgRangeAvg: null,
-        touched: true,
-      });
-      expect(mutationTracker.hasMutated(tracked)).to.be.false;
-    });
-  });
-  describe('UNFOCUS_TRENDS_SMBG_RANGE_AVG', () => {
-    it('should reset the focusedSmbgRangeAvg state to `null`', () => {
-      const initialState = {
-        [USER_1]: {
-          cbgFlags: {
-            cbg100Enabled: false,
-            cbg80Enabled: true,
-            cbg50Enabled: true,
-            cbgMedianEnabled: true,
-          },
-          cbgStuckDateTraces: null,
-          focusedCbgSlice: null,
-          focusedCbgSliceKeys: null,
-          focusedSmbg: null,
-          focusedSmbgRangeAvg: { datum, position },
-          touched: true,
-        },
-      };
-      const tracked = mutationTracker.trackObj(initialState);
-      expect(trendsStateByUser(initialState, {
-        type: actionTypes.UNFOCUS_TRENDS_SMBG_RANGE_AVG,
-        payload: { userId: USER_1 },
-      })[USER_1]).to.deep.equal({
-        cbgFlags: {
-          cbg100Enabled: false,
-          cbg80Enabled: true,
-          cbg50Enabled: true,
-          cbgMedianEnabled: true,
-        },
-        cbgStuckDateTraces: null,
-        focusedCbgSlice: null,
-        focusedCbgSliceKeys: null,
-        focusedSmbg: null,
-        focusedSmbgRangeAvg: null,
-        touched: true,
-      });
-      expect(mutationTracker.hasMutated(tracked)).to.be.false;
-    });
-  });
-
-  describe('UNSTICK_CBG_DATE_TRACES', () => {
-    it('should reset the `cbgStuckDateTraces` to `null`', () => {
-      const initialState = {
-        [USER_1]: {
-          cbgFlags: {
-            cbg100Enabled: true,
-            cbg80Enabled: true,
-            cbg50Enabled: true,
-            cbgMedianEnabled: true,
-          },
-          cbgStuckDateTraces: ['2017-01-01', '2017-01-05'],
-          focusedCbgSlice: null,
-          focusedCbgSliceKeys: null,
-          focusedSmbg: null,
-          focusedSmbgRangeAvg: null,
-          touched: true,
-        },
-      };
-      const tracked = mutationTracker.trackObj(initialState);
-      expect(trendsStateByUser(initialState, {
-        type: actionTypes.UNSTICK_CBG_DATE_TRACES,
-        payload: { userId: USER_1 },
-      })[USER_1]).to.deep.equal({
-        cbgFlags: {
-          cbg100Enabled: true,
-          cbg80Enabled: true,
-          cbg50Enabled: true,
-          cbgMedianEnabled: true,
-        },
-        cbgStuckDateTraces: null,
-        focusedCbgSlice: null,
-        focusedCbgSliceKeys: null,
-        focusedSmbg: null,
-        focusedSmbgRangeAvg: null,
-        touched: true,
-      });
-      expect(mutationTracker.hasMutated(tracked)).to.be.false;
-    });
-  });
-
   describe('TURN_ON_CBG_RANGE', () => {
     it('should set the specified cbgFlag to true', () => {
       const initialState = {
@@ -679,6 +521,166 @@ describe('trendsStateByUser', () => {
         cbgFlags: {
           cbg100Enabled: false,
           cbg80Enabled: false,
+          cbg50Enabled: true,
+          cbgMedianEnabled: true,
+        },
+        cbgStuckDateTraces: null,
+        focusedCbgSlice: null,
+        focusedCbgSliceKeys: null,
+        focusedSmbg: null,
+        focusedSmbgRangeAvg: null,
+        touched: true,
+      });
+      expect(mutationTracker.hasMutated(tracked)).to.be.false;
+    });
+  });
+
+  describe('UNFOCUS_TRENDS_CBG_SLICE', () => {
+    it('should reset the focusedCbgSlice and focusedCbgSliceKeys state to `null`', () => {
+      const initialState = {
+        [USER_1]: {
+          cbgFlags: {
+            cbg100Enabled: false,
+            cbg80Enabled: true,
+            cbg50Enabled: true,
+            cbgMedianEnabled: true,
+          },
+          cbgStuckDateTraces: null,
+          focusedCbgSlice: { datum, position },
+          focusedCbgSliceKeys: ['median'],
+          focusedSmbg: null,
+          focusedSmbgRangeAvg: null,
+          touched: true,
+        },
+      };
+      const tracked = mutationTracker.trackObj(initialState);
+      expect(trendsStateByUser(initialState, {
+        type: actionTypes.UNFOCUS_TRENDS_CBG_SLICE,
+        payload: { userId: USER_1 },
+      })[USER_1]).to.deep.equal({
+        cbgFlags: {
+          cbg100Enabled: false,
+          cbg80Enabled: true,
+          cbg50Enabled: true,
+          cbgMedianEnabled: true,
+        },
+        cbgStuckDateTraces: null,
+        focusedCbgSlice: null,
+        focusedCbgSliceKeys: null,
+        focusedSmbg: null,
+        focusedSmbgRangeAvg: null,
+        touched: true,
+      });
+      expect(mutationTracker.hasMutated(tracked)).to.be.false;
+    });
+  });
+
+  describe('UNFOCUS_TRENDS_SMBG', () => {
+    it('should reset the focusedSmbg state to `null`', () => {
+      const initialState = {
+        [USER_1]: {
+          cbgFlags: {
+            cbg100Enabled: false,
+            cbg80Enabled: true,
+            cbg50Enabled: true,
+            cbgMedianEnabled: true,
+          },
+          cbgStuckDateTraces: null,
+          focusedCbgSlice: null,
+          focusedCbgSliceKeys: null,
+          focusedSmbg: { datum, position },
+          focusedSmbgRangeAvg: null,
+          touched: true,
+        },
+      };
+      const tracked = mutationTracker.trackObj(initialState);
+      expect(trendsStateByUser(initialState, {
+        type: actionTypes.UNFOCUS_TRENDS_SMBG,
+        payload: { userId: USER_1 },
+      })[USER_1]).to.deep.equal({
+        cbgFlags: {
+          cbg100Enabled: false,
+          cbg80Enabled: true,
+          cbg50Enabled: true,
+          cbgMedianEnabled: true,
+        },
+        cbgStuckDateTraces: null,
+        focusedCbgSlice: null,
+        focusedCbgSliceKeys: null,
+        focusedSmbg: null,
+        focusedSmbgRangeAvg: null,
+        touched: true,
+      });
+      expect(mutationTracker.hasMutated(tracked)).to.be.false;
+    });
+  });
+
+  describe('UNFOCUS_TRENDS_SMBG_RANGE_AVG', () => {
+    it('should reset the focusedSmbgRangeAvg state to `null`', () => {
+      const initialState = {
+        [USER_1]: {
+          cbgFlags: {
+            cbg100Enabled: false,
+            cbg80Enabled: true,
+            cbg50Enabled: true,
+            cbgMedianEnabled: true,
+          },
+          cbgStuckDateTraces: null,
+          focusedCbgSlice: null,
+          focusedCbgSliceKeys: null,
+          focusedSmbg: null,
+          focusedSmbgRangeAvg: { datum, position },
+          touched: true,
+        },
+      };
+      const tracked = mutationTracker.trackObj(initialState);
+      expect(trendsStateByUser(initialState, {
+        type: actionTypes.UNFOCUS_TRENDS_SMBG_RANGE_AVG,
+        payload: { userId: USER_1 },
+      })[USER_1]).to.deep.equal({
+        cbgFlags: {
+          cbg100Enabled: false,
+          cbg80Enabled: true,
+          cbg50Enabled: true,
+          cbgMedianEnabled: true,
+        },
+        cbgStuckDateTraces: null,
+        focusedCbgSlice: null,
+        focusedCbgSliceKeys: null,
+        focusedSmbg: null,
+        focusedSmbgRangeAvg: null,
+        touched: true,
+      });
+      expect(mutationTracker.hasMutated(tracked)).to.be.false;
+    });
+  });
+
+  describe('UNSTICK_CBG_DATE_TRACES', () => {
+    it('should reset the `cbgStuckDateTraces` to `null`', () => {
+      const initialState = {
+        [USER_1]: {
+          cbgFlags: {
+            cbg100Enabled: true,
+            cbg80Enabled: true,
+            cbg50Enabled: true,
+            cbgMedianEnabled: true,
+          },
+          cbgStuckDateTraces: ['2017-01-01', '2017-01-05'],
+          focusedCbgSlice: null,
+          focusedCbgSliceKeys: null,
+          focusedSmbg: null,
+          focusedSmbgRangeAvg: null,
+          touched: true,
+        },
+      };
+      const tracked = mutationTracker.trackObj(initialState);
+      expect(trendsStateByUser(initialState, {
+        type: actionTypes.UNSTICK_CBG_DATE_TRACES,
+        payload: { userId: USER_1 },
+      })[USER_1]).to.deep.equal({
+        cbgFlags: {
+          cbg100Enabled: true,
+          cbg80Enabled: true,
           cbg50Enabled: true,
           cbgMedianEnabled: true,
         },
