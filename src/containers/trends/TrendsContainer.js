@@ -163,12 +163,14 @@ export class TrendsContainer extends React.Component {
       touched: PropTypes.bool.isRequired,
     }).isRequired,
     // actions
+    focusTrendsCbgDateTrace: PropTypes.func.isRequired,
     focusTrendsCbgSlice: PropTypes.func.isRequired,
     focusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     focusTrendsSmbg: PropTypes.func.isRequired,
     markTrendsViewed: PropTypes.func.isRequired,
     stickCbgDateTraces: PropTypes.func.isRequired,
     unfocusTrendsCbgSlice: PropTypes.func.isRequired,
+    unfocusTrendsCbgDateTrace: PropTypes.func.isRequired,
     unfocusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     unfocusTrendsSmbg: PropTypes.func.isRequired,
     unstickCbgDateTraces: PropTypes.func.isRequired,
@@ -381,9 +383,10 @@ export class TrendsContainer extends React.Component {
         )}
         focusedSmbg={this.props.trendsState.focusedSmbg}
         displayFlags={this.props.trendsState.cbgFlags}
+        focusDateTrace={this.props.focusTrendsCbgDateTrace}
         focusRange={this.props.focusTrendsSmbgRangeAvg}
-        focusSmbg={this.props.focusTrendsSmbg}
         focusSlice={this.props.focusTrendsCbgSlice}
+        focusSmbg={this.props.focusTrendsSmbg}
         showingCbg={this.props.showingCbg}
         showingSmbg={this.props.showingSmbg}
         smbgGrouped={this.props.smbgGrouped}
@@ -396,9 +399,10 @@ export class TrendsContainer extends React.Component {
         onSelectDate={this.selectDay()}
         xScale={this.state.xScale}
         yScale={this.state.yScale}
+        unfocusDateTrace={this.props.unfocusTrendsCbgDateTrace}
         unfocusRange={this.props.unfocusTrendsSmbgRangeAvg}
-        unfocusSmbg={this.props.unfocusTrendsSmbg}
         unfocusSlice={this.props.unfocusTrendsCbgSlice}
+        unfocusSmbg={this.props.unfocusTrendsSmbg}
         unstickCbgDateTraces={this.props.unstickCbgDateTraces}
       />
     );
@@ -414,6 +418,9 @@ export function mapStateToProps(state, ownProps) {
 
 export function mapDispatchToProps(dispatch, ownProps) {
   return bindActionCreators({
+    focusTrendsCbgDateTrace: _.partial(
+      actions.focusTrendsCbgDateTrace, ownProps.currentPatientInViewId
+    ),
     focusTrendsCbgSlice: _.partial(
       actions.focusTrendsCbgSlice, ownProps.currentPatientInViewId
     ),
@@ -428,6 +435,9 @@ export function mapDispatchToProps(dispatch, ownProps) {
     ),
     stickCbgDateTraces: _.partial(
       actions.stickCbgDateTraces, ownProps.currentPatientInViewId
+    ),
+    unfocusTrendsCbgDateTrace: _.partial(
+      actions.unfocusTrendsCbgDateTrace, ownProps.currentPatientInViewId
     ),
     unfocusTrendsCbgSlice: _.partial(
       actions.unfocusTrendsCbgSlice, ownProps.currentPatientInViewId
