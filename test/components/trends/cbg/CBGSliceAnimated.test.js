@@ -37,6 +37,7 @@ import { CBGSliceAnimated } from '../../../../src/components/trends/cbg/CBGSlice
 describe('CBGSliceAnimated', () => {
   let wrapper;
   const focusSlice = sinon.spy();
+  const stickCbgDateTraces = sinon.spy();
   const unfocusSlice = sinon.spy();
   const datum = {
     id: '2700000',
@@ -63,6 +64,7 @@ describe('CBGSliceAnimated', () => {
     },
     focusSlice,
     isFocused: false,
+    stickCbgDateTraces,
     tooltipLeftThreshold: 6 * THREE_HRS,
     unfocusSlice,
     xScale,
@@ -84,7 +86,7 @@ describe('CBGSliceAnimated', () => {
     });
 
     it('should render the #median rect on top (i.e., last)', () => {
-      expect(wrapper.find('rect').last().prop('id')).to.equal('median');
+      expect(wrapper.find('rect').last().prop('id')).to.equal(`cbgSlice-${datum.id}-median`);
     });
 
     it('should vertically center the median rect on the value', () => {
@@ -110,6 +112,35 @@ describe('CBGSliceAnimated', () => {
         expect(CBGSliceAnimated.prototype.willLeave).to.exist;
       });
     });
+
+    describe('interactions', () => {
+      describe('onMouseOver', () => {
+        it('should fire the `focusSlice` function', () => {
+          const top10 = wrapper.find(`#cbgSlice-${datum.id}-top10`);
+          expect(props.focusSlice.callCount).to.equal(0);
+          top10.simulate('mouseover');
+          expect(props.focusSlice.callCount).to.equal(1);
+        });
+      });
+
+      describe('onMouseOut', () => {
+        it('should fire the `unfocusSlice` function', () => {
+          const top10 = wrapper.find(`#cbgSlice-${datum.id}-top10`);
+          expect(props.unfocusSlice.callCount).to.equal(0);
+          top10.simulate('mouseout');
+          expect(props.unfocusSlice.callCount).to.equal(1);
+        });
+      });
+
+      describe('onClick', () => {
+        it('should fire the `stickCbgDateTraces` function', () => {
+          const top10 = wrapper.find(`#cbgSlice-${datum.id}-top10`);
+          expect(props.stickCbgDateTraces.callCount).to.equal(0);
+          top10.simulate('click');
+          expect(props.stickCbgDateTraces.callCount).to.equal(1);
+        });
+      });
+    });
   });
 
   describe('when only `cbg100Enabled`', () => {
@@ -131,8 +162,8 @@ describe('CBGSliceAnimated', () => {
 
     it('should render #top10 and a #bottom10 <rect>s only', () => {
       expect(wrapper.find('rect').length).to.equal(2);
-      expect(wrapper.find('#top10').length).to.equal(1);
-      expect(wrapper.find('#bottom10').length).to.equal(1);
+      expect(wrapper.find(`#cbgSlice-${datum.id}-top10`).length).to.equal(1);
+      expect(wrapper.find(`#cbgSlice-${datum.id}-bottom10`).length).to.equal(1);
     });
   });
 
@@ -155,8 +186,8 @@ describe('CBGSliceAnimated', () => {
 
     it('should render #upper15 and a #lower15 <rect>s only', () => {
       expect(wrapper.find('rect').length).to.equal(2);
-      expect(wrapper.find('#upper15').length).to.equal(1);
-      expect(wrapper.find('#lower15').length).to.equal(1);
+      expect(wrapper.find(`#cbgSlice-${datum.id}-upper15`).length).to.equal(1);
+      expect(wrapper.find(`#cbgSlice-${datum.id}-lower15`).length).to.equal(1);
     });
   });
 
@@ -179,7 +210,7 @@ describe('CBGSliceAnimated', () => {
 
     it('should render a #innerQuartiles <rect> only', () => {
       expect(wrapper.find('rect').length).to.equal(1);
-      expect(wrapper.find('#innerQuartiles').length).to.equal(1);
+      expect(wrapper.find(`#cbgSlice-${datum.id}-innerQuartiles`).length).to.equal(1);
     });
   });
 
@@ -202,7 +233,7 @@ describe('CBGSliceAnimated', () => {
 
     it('should render a #median <rect> only', () => {
       expect(wrapper.find('rect').length).to.equal(1);
-      expect(wrapper.find('#median').length).to.equal(1);
+      expect(wrapper.find(`#cbgSlice-${datum.id}-median`).length).to.equal(1);
     });
   });
 

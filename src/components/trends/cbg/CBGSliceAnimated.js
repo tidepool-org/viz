@@ -65,6 +65,7 @@ export class CBGSliceAnimated extends Component {
     medianHeight: PropTypes.number.isRequired,
     medianWidth: PropTypes.number.isRequired,
     sliceWidth: PropTypes.number.isRequired,
+    stickCbgDateTraces: PropTypes.func.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
     topMargin: PropTypes.number.isRequired,
     unfocusSlice: PropTypes.func.isRequired,
@@ -279,12 +280,13 @@ export class CBGSliceAnimated extends Component {
                   <rect
                     className={segment.className}
                     key={key}
-                    id={key}
+                    id={`cbgSlice-${datum.id}-${key}`}
                     width={style.width}
                     height={style[renderPieces[key].height]}
                     x={style.binLeftX}
                     y={style[renderPieces[key].y]}
                     opacity={style.opacity}
+                    onClick={this.props.stickCbgDateTraces}
                     onMouseOver={() => {
                       focusSlice(datum, {
                         left: xScale(datum.msX),
