@@ -47,6 +47,7 @@ export default class CBGSlicesContainer extends React.Component {
     }).isRequired,
     focusedSliceKey: PropTypes.string,
     focusSlice: PropTypes.func.isRequired,
+    stickCbgDateTraces: PropTypes.func.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
     topMargin: PropTypes.number.isRequired,
     unfocusSlice: PropTypes.func.isRequired,
@@ -98,21 +99,25 @@ export default class CBGSlicesContainer extends React.Component {
 
     return (
       <g id="cbgSlices">
-        {_.map(mungedData, (bin) => (
-          <CBGSliceAnimated
-            bgBounds={this.props.bgBounds}
-            datum={bin}
-            displayFlags={this.props.displayFlags}
-            focusSlice={this.props.focusSlice}
-            isFocused={bin.id === focusedSliceKey}
-            key={bin.id}
-            tooltipLeftThreshold={this.props.tooltipLeftThreshold}
-            topMargin={this.props.topMargin}
-            unfocusSlice={this.props.unfocusSlice}
-            xScale={xScale}
-            yScale={yScale}
-          />
-        ))}
+        {_.map(mungedData, (bin) => {
+          const isFocused = bin.id === focusedSliceKey;
+          return (
+            <CBGSliceAnimated
+              bgBounds={this.props.bgBounds}
+              datum={bin}
+              displayFlags={this.props.displayFlags}
+              focusSlice={this.props.focusSlice}
+              isFocused={isFocused}
+              key={bin.id}
+              stickCbgDateTraces={isFocused ? this.props.stickCbgDateTraces : _.noop}
+              tooltipLeftThreshold={this.props.tooltipLeftThreshold}
+              topMargin={this.props.topMargin}
+              unfocusSlice={this.props.unfocusSlice}
+              xScale={xScale}
+              yScale={yScale}
+            />
+          );
+        })}
       </g>
     );
   }

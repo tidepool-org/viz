@@ -67,6 +67,7 @@ export class TrendsSVGContainer extends React.Component {
     this.state = {
       focusedSegmentDataGroupedByDate: null,
     };
+    this.handleClick = this.handleClick.bind(this);
   }
 
   componentWillMount() {
@@ -83,25 +84,37 @@ export class TrendsSVGContainer extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    const { cbgData, focusedSlice, focusedSliceKeys } = nextProps;
+    const { cbgData, focusedSlice, focusedSliceKeys, stuckCbgDateTraces } = nextProps;
+    const { focusedSegmentDataGroupedByDate: previousGrouped } = this.state;
+    if (_.isEmpty(stuckCbgDateTraces) && !focusedSlice && !previousGrouped) {
+      return;
+    }
+    let intersectingDates = [];
     if (focusedSlice) {
-      const intersectingDates = findDatesIntersectingWithCbgSliceSegment(
+      intersectingDates = findDatesIntersectingWithCbgSliceSegment(
         cbgData, focusedSlice, focusedSliceKeys
       );
-      const focusedSegmentDataGroupedByDate = _.groupBy(
-        _.filter(cbgData, (d) => (_.includes(intersectingDates, d.localDate))),
-        (d) => (d.localDate)
-      );
+    }
+    const allDates = _.union(intersectingDates, stuckCbgDateTraces);
+    if (_.isEmpty(allDates)) {
       this.setState({
-        focusedSegmentDataGroupedByDate,
+        focusedSegmentDataGroupedByDate: null,
       });
-    } else {
-      // only reset focusedSegmentDataGroupedByDate to null if previous props had a focused slice
-      // but nextProps do not! (i.e., you've just rolled off a segment and not onto another one)
-      if (this.props.focusedSlice) {
-        this.setState({
-          focusedSegmentDataGroupedByDate: null,
-        });
+      return;
+    }
+    const focusedSegmentDataGroupedByDate = _.groupBy(
+      _.filter(cbgData, (d) => (_.includes(allDates, d.localDate))),
+      (d) => (d.localDate)
+    );
+    this.setState({
+      focusedSegmentDataGroupedByDate,
+    });
+  }
+
+  handleClick(e) {
+    if (e.target.id.search('cbgSlice') === -1) {
+      if (!_.isEmpty(this.props.stuckCbgDateTraces)) {
+        this.props.unstickCbgDateTraces();
       }
     }
   }
@@ -145,6 +158,8 @@ export class TrendsSVGContainer extends React.Component {
 
   renderCbg() {
     if (this.props.showingCbg) {
+      const { focusedSegmentDataGroupedByDate } = this.state;
+      const focusedDates = _.keys(focusedSegmentDataGroupedByDate);
       const slices = (
         <CBGSlicesContainer
           bgBounds={this.props.bgBounds}
@@ -152,6 +167,10 @@ export class TrendsSVGContainer extends React.Component {
           displayFlags={this.props.displayFlags}
           focusedSliceKey={_.get(this.props.focusedSlice, ['data', 'id'], null)}
           focusSlice={this.props.focusSlice}
+          stickCbgDateTraces={!_.isEmpty(focusedDates) ?
+            _.partial(this.props.stickCbgDateTraces, focusedDates) :
+            _.noop
+          }
           tooltipLeftThreshold={this.props.tooltipLeftThreshold}
           topMargin={this.props.margins.top}
           unfocusSlice={this.props.unfocusSlice}
@@ -159,13 +178,11 @@ export class TrendsSVGContainer extends React.Component {
           yScale={this.props.yScale}
         />
       );
-
-      const { focusedSegmentDataGroupedByDate } = this.state;
       const dateTraces = (
         <CBGDateTracesAnimationContainer
           bgBounds={this.props.bgBounds}
           data={focusedSegmentDataGroupedByDate}
-          dates={_.keys(focusedSegmentDataGroupedByDate) || []}
+          dates={focusedDates || []}
           xScale={this.props.xScale}
           yScale={this.props.yScale}
         />
@@ -253,7 +270,7 @@ export class TrendsSVGContainer extends React.Component {
   render() {
     const { containerHeight: height, containerWidth: width } = this.props;
     return (
-      <svg height={height} width={width}>
+      <svg height={height} width={width} onClick={this.handleClick}>
         <Background
           linesAtThreeHrs
           margins={this.props.margins}
@@ -407,10 +424,13 @@ TrendsSVGContainer.propTypes = {
     r: PropTypes.number.isRequired,
   }).isRequired,
   smbgRangeOverlay: PropTypes.bool.isRequired,
+  stickCbgDateTraces: PropTypes.func.isRequired,
+  stuckCbgDateTraces: PropTypes.arrayOf(PropTypes.string),
   tooltipLeftThreshold: PropTypes.number.isRequired,
   unfocusRange: PropTypes.func.isRequired,
   unfocusSmbg: PropTypes.func.isRequired,
   unfocusSlice: PropTypes.func.isRequired,
+  unstickCbgDateTraces: PropTypes.func.isRequired,
   xScale: PropTypes.func.isRequired,
   yScale: PropTypes.func.isRequired,
 };

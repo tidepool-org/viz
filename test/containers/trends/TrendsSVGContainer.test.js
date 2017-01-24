@@ -61,7 +61,11 @@ describe('TrendsSVGContainer', () => {
     // normally provided by react-dimensions wrapper but we test w/o that
     containerWidth: 960,
     dates: [],
-    cbgData: [{ id: 'a2b3c4', localDate: '2017-01-01', msPer24: 6000, value: 180 }],
+    cbgData: [
+      { id: 'foo', localDate: '2017-01-01', msPer24: 6000, value: 180 },
+      { id: 'bar', localDate: '2017-01-05', msPer24: 5000, value: 60 },
+      { id: 'baz', localDate: '2017-01-05', msPer24: 1000, value: 175 },
+    ],
     smbgData: [{ id: 'a2b3c4', localDate: '2016-07-04', msPer24: 6000, value: 180 }],
     displayFlags: {
       cbg100Enabled: false,
@@ -78,10 +82,13 @@ describe('TrendsSVGContainer', () => {
     smbgGrouped: true,
     smbgLines: true,
     smbgRangeOverlay: true,
+    stickCbgDateTraces: () => {},
+    stuckCbgDateTraces: null,
     timezone: 'UTC',
     unfocusRange: () => {},
     unfocusSlice: () => {},
     unfocusSmbg: () => {},
+    unstickCbgDateTraces: () => {},
     xScale: makeScale(() => {}),
     yScale: makeScale(() => {}),
   };
@@ -115,12 +122,12 @@ describe('TrendsSVGContainer', () => {
 
   describe('componentWillReceiveProps', () => {
     let wrapper;
-    before(() => {
+    beforeEach(() => {
       wrapper = shallow(<TrendsSVGContainer {...props} />);
     });
 
-    describe('when you haven\'t focused a cbg slice segment', () => {
-      it('should do nothing in componentWillReceiveProps', () => {
+    describe('when you haven\'t focused a cbg slice segment and no stuck cbg dates', () => {
+      it('should do nothing if focusedSegmentDataGroupedByDate is already null', () => {
         sinon.spy(TrendsSVGContainer.prototype, 'componentWillReceiveProps');
         sinon.spy(TrendsSVGContainer.prototype, 'setState');
         expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(0);
@@ -163,7 +170,8 @@ describe('TrendsSVGContainer', () => {
         expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(1);
         expect(TrendsSVGContainer.prototype.setState.args[0][0]).to.deep.equal({
           focusedSegmentDataGroupedByDate: {
-            '2017-01-01': props.cbgData,
+            '2017-01-01': [props.cbgData[0]],
+            '2017-01-05': props.cbgData.slice(1, 3),
           },
         });
         TrendsSVGContainer.prototype.componentWillReceiveProps.restore();
@@ -171,17 +179,58 @@ describe('TrendsSVGContainer', () => {
       });
     });
 
-    describe('when you\'ve just stopped focusing a cbg slice segment', () => {
+    describe('when you\'ve stopped focusing a cbg slice segment and no stuck cbg dates', () => {
       it('should reset focusedSegmentDataGroupedByDate to `null` in state', () => {
         sinon.spy(TrendsSVGContainer.prototype, 'componentWillReceiveProps');
         sinon.spy(TrendsSVGContainer.prototype, 'setState');
         expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(0);
         expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
+        const focusedSlice = {
+          data: {
+            msFrom: 0,
+            msTo: 10000,
+            ninetiethQuantile: 200,
+            thirdQuartile: 75,
+          },
+        };
+        const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+        wrapper.setProps({ focusedSlice, focusedSliceKeys });
         wrapper.setProps({ focusedSlice: null, focusedSliceKeys: null });
-        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(1);
-        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(1);
-        expect(TrendsSVGContainer.prototype.setState.args[0][0]).to.deep.equal({
+        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(2);
+        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(2);
+        expect(TrendsSVGContainer.prototype.setState.args[1][0]).to.deep.equal({
           focusedSegmentDataGroupedByDate: null,
+        });
+        TrendsSVGContainer.prototype.componentWillReceiveProps.restore();
+        TrendsSVGContainer.prototype.setState.restore();
+      });
+    });
+
+    describe('when you\'ve stopped focusing a cbg slice segment but one date is stuck', () => {
+      it('should remove only the non-stuck dates from focusedSegmentDataGroupedByDate', () => {
+        sinon.spy(TrendsSVGContainer.prototype, 'componentWillReceiveProps');
+        sinon.spy(TrendsSVGContainer.prototype, 'setState');
+        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(0);
+        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
+        const focusedSlice = {
+          data: {
+            msFrom: 0,
+            msTo: 10000,
+            ninetiethQuantile: 200,
+            thirdQuartile: 75,
+          },
+        };
+        const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+        wrapper.setProps({ focusedSlice, focusedSliceKeys });
+        wrapper.setProps({
+          focusedSlice: null, focusedSliceKeys: null, stuckCbgDateTraces: ['2017-01-05'],
+        });
+        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(2);
+        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(2);
+        expect(TrendsSVGContainer.prototype.setState.args[1][0]).to.deep.equal({
+          focusedSegmentDataGroupedByDate: {
+            '2017-01-05': props.cbgData.slice(1, 3),
+          },
         });
         TrendsSVGContainer.prototype.componentWillReceiveProps.restore();
         TrendsSVGContainer.prototype.setState.restore();
@@ -192,7 +241,19 @@ describe('TrendsSVGContainer', () => {
       it('should calculate new focusedSegmentDataGroupedByDate object', () => {
         sinon.spy(TrendsSVGContainer.prototype, 'componentWillReceiveProps');
         sinon.spy(TrendsSVGContainer.prototype, 'setState');
+        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(0);
+        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
         const focusedSlice = {
+          data: {
+            msFrom: 0,
+            msTo: 10000,
+            ninetiethQuantile: 200,
+            thirdQuartile: 75,
+          },
+        };
+        const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+        wrapper.setProps({ focusedSlice, focusedSliceKeys });
+        const newFocusedSlice = {
           data: {
             msFrom: 0,
             msTo: 10000,
@@ -200,14 +261,14 @@ describe('TrendsSVGContainer', () => {
             thirdQuartile: 75,
           },
         };
-        const focusedSliceKeys = ['firstQuartile', 'thirdQuartile'];
-        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(0);
-        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
-        wrapper.setProps({ focusedSlice, focusedSliceKeys });
-        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(1);
-        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(1);
-        expect(TrendsSVGContainer.prototype.setState.args[0][0]).to.deep.equal({
-          focusedSegmentDataGroupedByDate: {},
+        const newFocusedSliceKeys = ['firstQuartile', 'thirdQuartile'];
+        wrapper.setProps({ focusedSlice: newFocusedSlice, focusedSliceKeys: newFocusedSliceKeys });
+        expect(TrendsSVGContainer.prototype.componentWillReceiveProps.callCount).to.equal(2);
+        expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(2);
+        expect(TrendsSVGContainer.prototype.setState.args[1][0]).to.deep.equal({
+          focusedSegmentDataGroupedByDate: {
+            '2017-01-05': props.cbgData.slice(1, 3),
+          },
         });
         TrendsSVGContainer.prototype.componentWillReceiveProps.restore();
         TrendsSVGContainer.prototype.setState.restore();
@@ -328,6 +389,25 @@ describe('TrendsSVGContainer', () => {
         const noDataWrapper = shallow(<TrendsSVGContainer {...noSMBGDataProps} />);
         expect(noDataWrapper.find(NoData)).to.have.length(1);
         expect(noDataWrapper.find(NoData).prop('dataType')).to.equal('smbg');
+      });
+    });
+
+    describe('interactions', () => {
+      describe('clicking on the SVG', () => {
+        it('should fire the click handler', () => {
+          // we have to stub here instead of spying because we're not doing a full mount
+          // and so the click handler's inspection of the event target will fail w/a spy
+          const clickStub = sinon.stub(TrendsSVGContainer.prototype, 'handleClick');
+          const stuckDatesProps = _.assign(
+            {}, props, { stuckCbgDateTraces: ['2017-01-01'] },
+          );
+          const stuckDatesWrapper = shallow(<TrendsSVGContainer {...stuckDatesProps} />);
+          expect(clickStub.callCount).to.equal(0);
+          const svg = stuckDatesWrapper.find('svg');
+          svg.simulate('click');
+          expect(clickStub.callCount).to.equal(1);
+          TrendsSVGContainer.prototype.handleClick.restore();
+        });
       });
     });
   });

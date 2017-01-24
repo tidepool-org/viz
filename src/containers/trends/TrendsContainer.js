@@ -85,6 +85,7 @@ export class TrendsContainer extends React.Component {
         cbg50Enabled: PropTypes.bool.isRequired,
         cbgMedianEnabled: PropTypes.bool.isRequired,
       }).isRequired,
+      cbgStuckDateTraces: PropTypes.arrayOf(PropTypes.string),
       focusedCbgSlice: PropTypes.shape({
         data: PropTypes.shape({
           firstQuartile: PropTypes.number.isRequired,
@@ -166,9 +167,11 @@ export class TrendsContainer extends React.Component {
     focusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     focusTrendsSmbg: PropTypes.func.isRequired,
     markTrendsViewed: PropTypes.func.isRequired,
+    stickCbgDateTraces: PropTypes.func.isRequired,
     unfocusTrendsCbgSlice: PropTypes.func.isRequired,
     unfocusTrendsSmbgRangeAvg: PropTypes.func.isRequired,
     unfocusTrendsSmbg: PropTypes.func.isRequired,
+    unstickCbgDateTraces: PropTypes.func.isRequired,
   };
 
   static defaultProps = {
@@ -386,12 +389,17 @@ export class TrendsContainer extends React.Component {
         smbgGrouped={this.props.smbgGrouped}
         smbgLines={this.props.smbgLines}
         smbgRangeOverlay={this.props.smbgRangeOverlay}
+        stickCbgDateTraces={this.props.stickCbgDateTraces}
+        stuckCbgDateTraces={_.get(
+          this.props, ['trendsState', 'cbgStuckDateTraces']
+        )}
         onSelectDay={this.selectDay()}
         xScale={this.state.xScale}
         yScale={this.state.yScale}
         unfocusRange={this.props.unfocusTrendsSmbgRangeAvg}
         unfocusSmbg={this.props.unfocusTrendsSmbg}
         unfocusSlice={this.props.unfocusTrendsCbgSlice}
+        unstickCbgDateTraces={this.props.unstickCbgDateTraces}
       />
     );
   }
@@ -418,6 +426,9 @@ export function mapDispatchToProps(dispatch, ownProps) {
     markTrendsViewed: _.partial(
       actions.markTrendsViewed, ownProps.currentPatientInViewId
     ),
+    stickCbgDateTraces: _.partial(
+      actions.stickCbgDateTraces, ownProps.currentPatientInViewId
+    ),
     unfocusTrendsCbgSlice: _.partial(
       actions.unfocusTrendsCbgSlice, ownProps.currentPatientInViewId
     ),
@@ -426,6 +437,9 @@ export function mapDispatchToProps(dispatch, ownProps) {
     ),
     unfocusTrendsSmbg: _.partial(
       actions.unfocusTrendsSmbg, ownProps.currentPatientInViewId
+    ),
+    unstickCbgDateTraces: _.partial(
+      actions.unstickCbgDateTraces, ownProps.currentPatientInViewId
     ),
   }, dispatch);
 }
