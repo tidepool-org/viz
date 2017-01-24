@@ -54,6 +54,20 @@ export function stickCbgDateTraces(userId, dates) {
   };
 }
 
+export function turnOffCbgRange(userId, range) {
+  return {
+    type: actionTypes.TURN_OFF_CBG_RANGE,
+    payload: { userId, range },
+  };
+}
+
+export function turnOnCbgRange(userId, range) {
+  return {
+    type: actionTypes.TURN_ON_CBG_RANGE,
+    payload: { userId, range },
+  };
+}
+
 export function unfocusTrendsCbgSlice(userId) {
   return {
     type: actionTypes.UNFOCUS_TRENDS_CBG_SLICE,
@@ -79,19 +93,5 @@ export function unstickCbgDateTraces(userId) {
   return {
     type: actionTypes.UNSTICK_CBG_DATE_TRACES,
     payload: { userId },
-  };
-}
-
-export function turnOnCbgRange(userId, range) {
-  return {
-    type: actionTypes.TURN_ON_CBG_RANGE,
-    payload: { userId, range },
-  };
-}
-
-export function turnOffCbgRange(userId, range) {
-  return {
-    type: actionTypes.TURN_OFF_CBG_RANGE,
-    payload: { userId, range },
   };
 }
