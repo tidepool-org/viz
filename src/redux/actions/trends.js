@@ -47,6 +47,13 @@ export function markTrendsViewed(userId) {
   };
 }
 
+export function stickCbgDateTraces(userId, dates) {
+  return {
+    type: actionTypes.STICK_CBG_DATE_TRACES,
+    payload: { userId, dates },
+  };
+}
+
 export function unfocusTrendsCbgSlice(userId) {
   return {
     type: actionTypes.UNFOCUS_TRENDS_CBG_SLICE,
@@ -64,6 +71,13 @@ export function unfocusTrendsSmbg(userId) {
 export function unfocusTrendsSmbgRangeAvg(userId) {
   return {
     type: actionTypes.UNFOCUS_TRENDS_SMBG_RANGE_AVG,
+    payload: { userId },
+  };
+}
+
+export function unstickCbgDateTraces(userId) {
+  return {
+    type: actionTypes.UNSTICK_CBG_DATE_TRACES,
     payload: { userId },
   };
 }

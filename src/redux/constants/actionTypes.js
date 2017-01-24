@@ -30,6 +30,9 @@ export const TURN_OFF_CBG_RANGE = 'TURN_OFF_CBG_RANGE';
 
 export const TOGGLE_SETTINGS_SECTION = 'TOGGLE_SETTINGS_SECTION';
 
+export const STICK_CBG_DATE_TRACES = 'STICK_CBG_DATE_TRACES';
+export const UNSTICK_CBG_DATE_TRACES = 'UNSTICK_CBG_DATE_TRACES';
+
 // from blip's redux implementation
 // TODO: how could we DRY this out??
 

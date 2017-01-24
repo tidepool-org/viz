@@ -20,6 +20,7 @@ import update from 'react-addons-update';
 
 import * as actionTypes from '../constants/actionTypes';
 
+const CBG_DATE_TRACES = 'cbgStuckDateTraces';
 const CBG_FLAGS = 'cbgFlags';
 const CBG_100_ENABLED = 'cbg100Enabled';
 const CBG_80_ENABLED = 'cbg80Enabled';
@@ -46,6 +47,7 @@ const initialState = {
     [CBG_50_ENABLED]: true,
     [CBG_MEDIAN_ENABLED]: true,
   },
+  [CBG_DATE_TRACES]: null,
   [FOCUSED_CBG_SLICE]: null,
   [FOCUSED_CBG_KEYS]: null,
   [FOCUSED_SMBG]: null,
@@ -110,6 +112,15 @@ const trendsStateByUser = (state = {}, action) => {
         { [userId]: { [TOUCHED]: { $set: true } } }
       );
     }
+    case actionTypes.STICK_CBG_DATE_TRACES: {
+      const { userId, dates: newDates } = action.payload;
+      const currentDates = _.get(state, [userId, CBG_DATE_TRACES], []);
+      const updatedDates = _.union(currentDates, newDates);
+      return update(
+        state,
+        { [userId]: { [CBG_DATE_TRACES]: { $set: updatedDates } } }
+      );
+    }
     case actionTypes.UNFOCUS_TRENDS_CBG_SLICE: {
       const { userId } = action.payload;
       return update(
@@ -136,6 +147,13 @@ const trendsStateByUser = (state = {}, action) => {
         { [userId]: {
           [FOCUSED_SMBG_RANGE_AVG]: { $set: null },
         } }
+      );
+    }
+    case actionTypes.UNSTICK_CBG_DATE_TRACES: {
+      const { userId } = action.payload;
+      return update(
+        state,
+        { [userId]: { [CBG_DATE_TRACES]: { $set: null } } }
       );
     }
     case actionTypes.TURN_ON_CBG_RANGE: {

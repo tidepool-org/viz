@@ -100,6 +100,22 @@ describe('trends action creators', () => {
     });
   });
 
+  describe('stickCbgDateTraces', () => {
+    const dates = ['2017-01-01', '2017-01-05'];
+    const action = actions.stickCbgDateTraces(userId, dates);
+
+    it('should be a TSA', () => {
+      expect(isTSA(action)).to.be.true;
+    });
+
+    it('should create an action to stick cbg date traces for a slice segment', () => {
+      expect(action).to.deep.equal({
+        type: actionTypes.STICK_CBG_DATE_TRACES,
+        payload: { userId, dates },
+      });
+    });
+  });
+
   describe('turnOnCbgRange', () => {
     const range = '100';
     const action = actions.turnOnCbgRange(userId, range);
@@ -172,6 +188,21 @@ describe('trends action creators', () => {
     it('should create an action to unfocus (all) trends smbg range averages', () => {
       expect(action).to.deep.equal({
         type: actionTypes.UNFOCUS_TRENDS_SMBG_RANGE_AVG,
+        payload: { userId },
+      });
+    });
+  });
+
+  describe('unstickCbgDateTraces', () => {
+    const action = actions.unstickCbgDateTraces(userId);
+
+    it('should be a TSA', () => {
+      expect(isTSA(action)).to.be.true;
+    });
+
+    it('should create an action to unstick cbg date traces for a slice segment', () => {
+      expect(action).to.deep.equal({
+        type: actionTypes.UNSTICK_CBG_DATE_TRACES,
         payload: { userId },
       });
     });
