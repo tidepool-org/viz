@@ -30,6 +30,7 @@ const FOCUSED_CBG_KEYS = 'focusedCbgSliceKeys';
 const FOCUSED_SMBG = 'focusedSmbg';
 const FOCUSED_SMBG_RANGE_AVG = 'focusedSmbgRangeAvg';
 const SHOW_CBG_SLICE_LABELS = 'showingCbgSliceLabels';
+const SHOW_CBG_DATE_TRACES = 'showingCbgDateTraces';
 const TOUCHED = 'touched';
 
 const CBG_FLAG_MAP = {
@@ -50,6 +51,7 @@ const initialState = {
   [FOCUSED_CBG_KEYS]: null,
   [FOCUSED_SMBG]: null,
   [FOCUSED_SMBG_RANGE_AVG]: null,
+  [SHOW_CBG_DATE_TRACES]: false,
   [SHOW_CBG_SLICE_LABELS]: true,
   [TOUCHED]: false,
 };
@@ -110,6 +112,13 @@ const trendsStateByUser = (state = {}, action) => {
         { [userId]: { [TOUCHED]: { $set: true } } }
       );
     }
+    case actionTypes.SHOW_CBG_DATE_TRACES: {
+      const { userId } = action.payload;
+      return update(
+        state,
+        { [userId]: { [SHOW_CBG_DATE_TRACES]: { $set: true } } }
+      );
+    }
     case actionTypes.UNFOCUS_TRENDS_CBG_SLICE: {
       const { userId } = action.payload;
       return update(
@@ -117,6 +126,7 @@ const trendsStateByUser = (state = {}, action) => {
         { [userId]: {
           [FOCUSED_CBG_SLICE]: { $set: null },
           [FOCUSED_CBG_KEYS]: { $set: null },
+          [SHOW_CBG_DATE_TRACES]: { $set: false },
         } }
       );
     }

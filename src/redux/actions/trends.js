@@ -47,6 +47,13 @@ export function markTrendsViewed(userId) {
   };
 }
 
+export function showCbgDateTraces(userId) {
+  return {
+    type: actionTypes.SHOW_CBG_DATE_TRACES,
+    payload: { userId },
+  };
+}
+
 export function unfocusTrendsCbgSlice(userId) {
   return {
     type: actionTypes.UNFOCUS_TRENDS_CBG_SLICE,

@@ -27,6 +27,7 @@ import PumpSettingsContainer from './containers/settings/PumpSettingsContainer';
 import TrendsContainer from './containers/trends/TrendsContainer';
 
 import vizReducer from './redux/reducers/';
+import { rootSaga } from './redux/actions/sagas';
 
 const components = {
   FocusedRangeLabels,
@@ -40,4 +41,4 @@ const containers = {
   TrendsContainer,
 };
 
-export { components, containers, vizReducer };
+export { components, containers, rootSaga, vizReducer };

@@ -83,6 +83,17 @@ export class TrendsSVGContainer extends PureComponent {
   }
 
   componentWillReceiveProps(nextProps) {
+    const { showingCbgDateTraces } = nextProps;
+    if (!showingCbgDateTraces) {
+      // if we just flipped the showingCbgDateTraces flag from true to false
+      // then we need to reset the focusedSegmentDataGroupedByDate to `null`
+      if (this.props.showingCbgDateTraces) {
+        this.setState({
+          focusedSegmentDataGroupedByDate: null,
+        });
+      }
+      return;
+    }
     const { cbgData, focusedSlice, focusedSliceKeys } = nextProps;
     if (focusedSlice) {
       const intersectingDates = findDatesIntersectingWithCbgSliceSegment(
@@ -399,6 +410,7 @@ TrendsSVGContainer.propTypes = {
   }).isRequired,
   onSelectDay: PropTypes.func.isRequired,
   showingCbg: PropTypes.bool.isRequired,
+  showingCbgDateTraces: PropTypes.bool.isRequired,
   showingSmbg: PropTypes.bool.isRequired,
   smbgGrouped: PropTypes.bool.isRequired,
   smbgLines: PropTypes.bool.isRequired,
