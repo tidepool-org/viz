@@ -29,6 +29,10 @@
   pointer-events: none;
 }
 
+.transparent {
+  fill: transparent;
+}
+
 @keyframes fadein {
   from {
     fill-opacity: 0.0;
