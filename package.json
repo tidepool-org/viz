@@ -24,10 +24,6 @@
     "type": "git",
     "url": "git+https://github.com/tidepool-org/viz.git"
   },
-  "engines": {
-    "node": "0.12.x",
-    "npm": "3.x"
-  },
   "license": "BSD-2-Clause",
   "bugs": {
     "url": "https://github.com/tidepool-org/viz/issues"
