@@ -6,7 +6,7 @@ node_js:
   - "0.12.7"
   - "stable"
 
-before_install: if [[ `npm -v` != 3* ]]; then npm i -g npm@3; fi
+before_install: if [[ `npm -v` != 3* ]]; then npm i -g npm@3.10.10; fi
 
 script:
   - npm test

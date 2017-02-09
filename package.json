@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "0.4.3-alpha",
+  "version": "0.4.6-alpha",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
@@ -23,10 +23,6 @@
   "repository": {
     "type": "git",
     "url": "git+https://github.com/tidepool-org/viz.git"
-  },
-  "engines": {
-    "node": "0.12.x",
-    "npm": "3.x"
   },
   "license": "BSD-2-Clause",
   "bugs": {
