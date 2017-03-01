@@ -37,7 +37,7 @@
         
     
     
-    <link rel="next" href="../docs/Moment.html" />
+    <link rel="next" href="../docs/GSAP.html" />
     
     
     <link rel="prev" href="../docs/Dependencies.html" />
@@ -53,7 +53,7 @@
         data-chapter-title="D3"
         data-filepath="docs/D3.md"
         data-basepath=".."
-        data-revision="Tue Feb 28 2017 22:22:44 GMT-0800 (PST)"
+        data-revision="Tue Feb 28 2017 22:28:49 GMT-0800 (PST)"
         data-innerlanguage="">
     
 
@@ -209,14 +209,29 @@
             
         </li>
     
-        <li class="chapter " data-level="2.2" data-path="docs/Moment.html">
+        <li class="chapter " data-level="2.2" data-path="docs/GSAP.html">
+            
+                
+                    <a href="../docs/GSAP.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.2.</b>
+                        
+                        GSAP
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.3" data-path="docs/Moment.html">
             
                 
                     <a href="../docs/Moment.html">
                 
                         <i class="fa fa-check"></i>
                         
-                            <b>2.2.</b>
+                            <b>2.3.</b>
                         
                         Moment
                     </a>
@@ -224,14 +239,14 @@
             
         </li>
     
-        <li class="chapter " data-level="2.3" data-path="docs/React.html">
+        <li class="chapter " data-level="2.4" data-path="docs/React.html">
             
                 
                     <a href="../docs/React.html">
                 
                         <i class="fa fa-check"></i>
                         
-                            <b>2.3.</b>
+                            <b>2.4.</b>
                         
                         React
                     </a>
@@ -239,14 +254,29 @@
             
         </li>
     
-        <li class="chapter " data-level="2.4" data-path="docs/Redux.html">
+        <li class="chapter " data-level="2.5" data-path="docs/ReactMotion.html">
+            
+                
+                    <a href="../docs/ReactMotion.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.5.</b>
+                        
+                        React Motion
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="2.6" data-path="docs/Redux.html">
             
                 
                     <a href="../docs/Redux.html">
                 
                         <i class="fa fa-check"></i>
                         
-                            <b>2.4.</b>
+                            <b>2.6.</b>
                         
                         Redux
                     </a>
@@ -254,14 +284,14 @@
             
         </li>
     
-        <li class="chapter " data-level="2.5" data-path="docs/Webpack.html">
+        <li class="chapter " data-level="2.7" data-path="docs/Webpack.html">
             
                 
                     <a href="../docs/Webpack.html">
                 
                         <i class="fa fa-check"></i>
                         
-                            <b>2.5.</b>
+                            <b>2.7.</b>
                         
                         webpack
                     </a>
@@ -344,7 +374,70 @@
                     <section class="normal" id="section-">
                     
                         <h2 id="tidepoolvizs-usage-of-d3">@tidepool/viz&apos;s usage of D3</h2>
-<p>Coming soon!</p>
+<p><a href="https://d3js.org/" title="D3" target="_blank">D3</a> is a JavaScript library often used for building interactive data visualizations. The name stands for <strong>D</strong>ata-<strong>d</strong>riven <strong>d</strong>ocuments and expresses a small part of D3&apos;s philosophy, which is to stay very close to web standards for HTML5 <em>documents</em> (i.e., the DOM) rather than including or relying on a D3-specific component framework or an external framework such as React, Angular, Ember, etc. The functionality included in the entirety of the D3 library can be roughly divided into two categories:</p>
+<ol>
+<li>a set of utilities for binding data to elements in the DOM and manipulating them, including adding, updating, transitioning (i.e., animating), and removing elements from the DOM<ul>
+<li>(While it is very common to render data visualization with inline <a href="https://developer.mozilla.org/en-US/docs/Web/SVG" title="MDN: SVG" target="_blank">SVG</a> elements using D3, D3 is in fact unopiniated about choice of rendering target, though a great deal of the data-binding power of D3 is lost when rendering to <a href="https://developer.mozilla.org/en-US/docs/Web/API/Canvas_API" title="MDN: Canvas API" target="_blank"><code>&lt;canvas&gt;</code></a> due to its nature as a raster (not vector) graphics system that lacks a 1-to-1 correspondence between DOM elements and data objects.)</li>
+</ul>
+</li>
+<li>all other utilities for working with data, independent of the DOM, including:<ul>
+<li>utilities for building and using scales to render data</li>
+<li>utilities for generating the proper data structures for rendering particular shapes in SVG&#x2014;e.g., <a href="https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths" title="MDN Tutorials: SVG Paths" target="_blank"><code>&lt;path&gt;</code> data strings</a> for everything from segmented lines to arcs and shapes</li>
+<li>simple statistics utilities&#x2014;e.g., calculating quantiles from an array of data</li>
+<li>some date &amp; time utilities<sup><a href="#fn_a" id="reffn_a">a</a></sup></li>
+<li>lots of geographic utilities such as map projections</li>
+</ul>
+</li>
+</ol>
+<h3 id="&#x1F47B;-history">&#x1F47B; History</h3>
+<p>Over the several years of Tidepool&apos;s history, we&apos;ve tried two strategies for incorporating D3 into our React codebase for blip. The root of the issue when combining D3 and React code is that <em>both</em> D3 and React expect to be in control of updates to the DOM&#x2014;that is, insertions and removals of elements based on application state, or in this case in particular the state of the data visualization, including filters and selections (such as a date range of data to display).</p>
+<h4 id="the-componentdidmount-strategy">The <code>componentDidMount</code> strategy</h4>
+<p>The first strategy, which dominates in the <a href="https://github.com/tidepool-org/tideline" title="GitHub: tideline" target="_blank">tideline</a> codebase<sup><a href="#fn_b" id="reffn_b">b</a></sup>, is a hand-off strategy. At the level of some container component for a data visualization, we pass the responsibility for rendering to the DOM from React to D3. This occurs in the <code>componentDidMount</code> lifecycle method of a React component, which fires after the component is rendered&#x2014;though the trick in this case is that we typically return <code>null</code> or render just a container <code>&lt;div&gt;</code> in the <code>render</code> method and then call our chart rendering function or functions in <code>componentDidMount</code> to have <em>D3</em> render the actual data SVG elements of the data visualization inside the container.</p>
+<p>Former Tidepool employee Nico Hery described this approach very well <a href="http://nicolashery.com/integrating-d3js-visualizations-in-a-react-app/" title="Nico Hery: Integrating D3.js visualizations in a React app" target="_blank">in a blog post</a>.</p>
+<p>There are three reasons why we&apos;re no longer using this approach, at least not as our preferred strategy in new code:</p>
+<ul>
+<li>The reliance on the <code>componentDidMount</code> lifecycle method as well as D3&apos;s tight integration with browser DOM APIs makes testing much more difficult than rendering inline SVG directly via React; the latter strategy does not necessarily require a browser environment to run effective unit tests, and tests for (often) purely functional React components are much simpler, easier &amp; faster to write, and easier to maintain.</li>
+<li>There are fewer best practices for writing DRY and stylistically similar D3 code than React code; <a href="http://misoproject.com/d3-chart/" title="Miso Project: d3.Chart" target="_blank">d3.Chart</a>, a lightweight &quot;framework&quot; for writing reusable D3 code, is the best example we&apos;ve seen (and used<sup><a href="#fn_c" id="reffn_c">c</a></sup>) of an attempt to solve this problem, but it <a href="https://github.com/misoproject/d3.chart/issues/121" title="GitHub: d3.chart issue #121" target="_blank">hasn&apos;t yet been updated to D3 v4.x</a> and support for and ongoing development of the project by its original authors has been spotty at best.</li>
+<li>Related to the second point: we are a React team with our own established subset of React best practices and stylistic choices that we follow. There is much less cognitive load for us to keep writing visualization code in React than to switch to the much more procedural, less functional approach that D3&apos;s API requires.</li>
+</ul>
+<h4 id="the-react-inline-svg-strategy">The React inline SVG strategy</h4>
+<p>The second strategy, which we have been using exclusively so far here in viz (our repository of new visualization code eventually to replace <a href="https://github.com/tidepool-org/tideline" title="Tidepool on GitHub: tideline" target="_blank">tideline</a>) is rendering the inline SVG for our data visualizations directly in React, as normal React components. What this ends up looking like is that we only use the second category of things provided in D3&apos;s functionality, outlined above. We use D3&apos;s <em>utilities</em> for building scales, crunching data, generating SVG path data, etc., but we don&apos;t use any of D3&apos;s rendering or animation functionality.</p>
+<p>The main advantages this strategy yields are those noted above: less cognitive dissonance for those of us who write a lot of React code in <a href="https://github.com/tidepool-org/blip" title="Tidepool on GitHub: blip" target="_blank">blip</a> and the <a href="https://github.com/tidepool-org/chrome-uploader" title="Tidepool on GitHub: chrome-uploader" target="_blank">uploader</a>, clearer best practices (that we already know, again from using React extensively elsewhere), and much easier and simpler testing capabilities.</p>
+<p>The main <em>disadvantage</em> of this strategy, on the other hand, is what we lose from D3&apos;s API when we&apos;re only using that second category of functionality. React provides a great replacement for the main parts of D3&apos;s selections and rendering: React&apos;s functional approach to UI components easily (and, in @jebeck&apos;s opinion, with a better, DRYer API) replaces D3&apos;s <code>enter</code>, <code>update</code>, and <code>exit</code> selection and rendering functions. But React provides no replacement for D3&apos;s animation functionality (provided by the <code>transition</code> function). Instead, we must look elsewhere for ways to animate the state transitions in our data visualizations, and in fact there doesn&apos;t seem to be a single library that fits all our use cases. So far, as of February 2017, we are using both <a href="https://github.com/chenglou/react-motion" title="GitHub: react-motion" target="_blank">react-motion</a> and <a href="https://greensock.com/gsap" title="GSAP, the standard for JavaScript HTML5 animation" target="_blank">GSAP</a>, as well as CSS3 animation, to fit all our animation use cases.</p>
+<h4 id="some-d3-history">Some D3 history</h4>
+<p>Prior to its version 4.x, D3 was distributed only as a single large JavaScript library. Part of the work in the move to the 4.x version involved splitting up the code into modules, each contained in their own GitHub repository, published to npm independently, and versioned independently. A developer using D3 therefore now has a choice of whether to include the entire library in a project&apos;s dependencies&#x2014;this is what would happen with <code>npm install --save d3</code>. The alternative is to depend on <em>only</em> the modules that you actually use and to pull in updates to each of these modules individually as desired. Partly because tideline still depends on the 3.x version of D3 (which would conflict with the 4.x version if we included both full dependencies) and partly because we just aren&apos;t using that large of a percentage of D3&apos;s functionality anymore, here in viz we only include the individual modules of D3 that we actually use in our dependencies.</p>
+<h3 id="&#x2728;-today-&#x2728;">&#x2728; Today &#x2728;</h3>
+<p>Our preferred strategy for new code is <a href="#the-react-inline-svg-strategy">the React inline SVG strategy</a> described above.</p>
+<p>We use react-motion as the default choice for animation since it follows React coding practices the closest.</p>
+<p>We resort to GSAP for animation when react-motion does not provide what we need&#x2014;but this essentially requires the same <code>componentDidMount</code> strategy as D3, though without some of the challenges that strategy presented for us with D3 since we don&apos;t extensively test animation code, as it&apos;s not critical functionality for our core purpose of accurately communicating our users&apos; medical data through various visualizations.</p>
+<p>Currently the only packages we&apos;re depending on from the modularized v4.x of D3 are:</p>
+<ul>
+<li>d3-array for some data-munging (in particular calculating things like mean, median, quartiles, and quantiles)</li>
+<li>d3-format for easy formatting of numerical values<sup><a href="#fn_d" id="reffn_d">d</a></sup></li>
+<li>d3-scale for linear scales</li>
+<li>d3-shape for generating path data for segmented lines, etc.</li>
+<li>d3-time for some of the date and time manipulation functions (only when we&apos;re manipulating based on UTC values&#x2014;<code>time</code> in our data model)</li>
+</ul>
+<h3 id="&#x1F680;-the-future">&#x1F680; The Future</h3>
+<p>While <a href="#the-react-inline-svg-strategy">the React inline SVG strategy</a> is our current preferred strategy, we do want to continue to evaluate the <em>best</em> strategy for each major new &quot;view&quot; that we code. It&apos;s possible that for some future view it may make more sense to return to <a href="#the-componentdidmount-strategy">the <code>componentDidMount</code> strategy</a>, to a combination of the two, or to some unforeseen third strategy.</p>
+<p>Some reasons that @jebeck can think of that <em>may</em> warrant a return to the <code>componentDidMount</code> strategy are:</p>
+<ul>
+<li>heavy use of one of D3&apos;s &quot;layout&quot;s such as <a href="https://github.com/d3/d3-force" title="GitHub: d3-force" target="_blank">a force layout</a> or a <a href="https://bost.ocks.org/mike/sankey/" title="bl.ocks.org: Sankey Diagrams" target="_blank">Sankey diagram</a></li>
+<li>visualizing geographic data (unlikely at Tidepool?)</li>
+</ul>
+<hr>
+<blockquote id="fn_a">
+<sup>a</sup>. Here&apos;s another place where D3&apos;s philosophy of adhering closing to existing web standards comes into play. Since JavaScript Date only supports browser-local (including Daylight Saving Time if applicable) or UTC datetime objects&#x2014;and <em>not</em> datetime objects in an arbitrary, specified timezone&#x2014;these are the only things D3 supports as well. Unfortunately for us at Tidepool, that means D3&apos;s datetime utilities (which in @jebeck&apos;s opinion have very intuitive, well-designed APIs) are only useful to us when we&apos;re manipulating UTC datetime objects since all of our timezone-relative datetime work needs to obey an arbitrary user-specified timezone. (Thus, <a href="Moment">we use Moment.js</a> for all our timezone-relative datetime manipulation.)<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
+<blockquote id="fn_b">
+<sup>b</sup>. Which we are gradually deprecating in favor of new visualization code in our <a href="https://github.com/tidepool-org/viz" title="GitHub: viz" target="_blank">viz</a> repository.<a href="#reffn_b" title="Jump back to footnote [b] in the text."> &#x21A9;</a>
+</blockquote>
+<blockquote id="fn_c">
+<sup>c</sup>. We used d3.Chart in the old tideline version of the Trends view code, which is still as of this writing in February, 2017, available in tideline <a href="https://github.com/tidepool-org/tideline/tree/master/plugins/blip/modalday" title="tideline: plugins/blip/modalday" target="_blank">in the <code>plugins/blip/modalday/</code> directory</a> for reference, though one day soon we may delete this now-dead code.<a href="#reffn_c" title="Jump back to footnote [c] in the text."> &#x21A9;</a>
+</blockquote>
+<blockquote id="fn_d">
+<sup>d</sup>. We largely use <a href="Moment">Moment.js</a> for our date &amp; time value formatting, due to our need to specify an arbitrary timezone.<a href="#reffn_d" title="Jump back to footnote [d] in the text."> &#x21A9;</a>
+</blockquote>
 
                     
                     </section>
@@ -358,7 +451,7 @@
         <a href="../docs/Dependencies.html" class="navigation navigation-prev " aria-label="Previous page: usage of dependencies"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../docs/Moment.html" class="navigation navigation-next " aria-label="Next page: Moment"><i class="fa fa-angle-right"></i></a>
+        <a href="../docs/GSAP.html" class="navigation navigation-next " aria-label="Next page: GSAP"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>

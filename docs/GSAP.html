@@ -5,7 +5,7 @@
         
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Redux | @tidepool/viz</title>
+        <title>GSAP | @tidepool/viz</title>
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
         <meta name="description" content="">
         <meta name="generator" content="GitBook 2.6.7">
@@ -37,10 +37,10 @@
         
     
     
-    <link rel="next" href="../docs/Webpack.html" />
+    <link rel="next" href="../docs/Moment.html" />
     
     
-    <link rel="prev" href="../docs/ReactMotion.html" />
+    <link rel="prev" href="../docs/D3.html" />
     
 
         
@@ -49,9 +49,9 @@
         
         
     <div class="book"
-        data-level="2.6"
-        data-chapter-title="Redux"
-        data-filepath="docs/Redux.md"
+        data-level="2.2"
+        data-chapter-title="GSAP"
+        data-filepath="docs/GSAP.md"
         data-basepath=".."
         data-revision="Tue Feb 28 2017 22:28:49 GMT-0800 (PST)"
         data-innerlanguage="">
@@ -209,7 +209,7 @@
             
         </li>
     
-        <li class="chapter " data-level="2.2" data-path="docs/GSAP.html">
+        <li class="chapter active" data-level="2.2" data-path="docs/GSAP.html">
             
                 
                     <a href="../docs/GSAP.html">
@@ -269,7 +269,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="2.6" data-path="docs/Redux.html">
+        <li class="chapter " data-level="2.6" data-path="docs/Redux.html">
             
                 
                     <a href="../docs/Redux.html">
@@ -373,9 +373,49 @@
                 
                     <section class="normal" id="section-">
                     
-                        <h2 id="tidepoolvizs-usage-of-redux">@tidepool/viz&apos;s usage of Redux</h2>
-<p>Aside from <a href="http://developer.tidepool.io/docs/front-end/react/index.html" title="Tidepool developer portal: React @ Tidepool" target="_blank">our general views on React best practices at Tidepool</a>, to develop code in this repository you should take a look at <a href="http://redux-form.com/6.2.0/" title="redux-form" target="_blank">redux-form</a>, the project that inspired how we&apos;re using redux in an internal dependency library.</p>
-<p>More to come!</p>
+                        <h2 id="tidepoolvizs-usage-of-gsap">@tidepool/viz&apos;s usage of GSAP</h2>
+<p><a href="https://greensock.com/" title="GreenSock.com: GSAP" target="_blank">GSAP (GreenSock Animation Platform)</a> is a powerful library for animating HTML5 documents with JavaScript (largely as an alternative to CSS3). GSAP as a product started with <a href="https://greensock.com/gsap-as" title="GSAP ActionScript" target="_blank">a similar animation library</a> for <a href="https://en.wikipedia.org/wiki/Adobe_Flash" title="Wikipedia: Adobe Flash" target="_blank">Flash</a><sup><a href="#fn_a" id="reffn_a">a</a></sup>. The now more widely used JavaScript library has an extensive and yet still fairly intuitive API that allows for finely-grained control of animations, including an API for sequencing within complex animations that is far over and above what can be accomplished with CSS3&apos;s <code>@keyframes</code>. The library is available in several separate modules (TweenLite, TweenMax, TimelineLite, TimelineMax) to keep file sizes small (choose what you need), and even the combination of TweenMax + TimelineMax is less than 200KB minified (that&apos;s about the size of React + ReactDOM but much less than Angular 2<sup><a href="#fn_b" id="reffn_b">b</a></sup>).</p>
+<h3 id="&#x1F4DA;-resources">&#x1F4DA; resources</h3>
+<ul>
+<li><a href="https://greensock.com/docs/#/HTML5/" title="GSAP Docs" target="_blank">GSAP docs</a></li>
+<li><a href="https://frontendmasters.com/courses/svg-animation/" title="Frontend Masters: Advanced SVG Animation" target="_blank">Advanced SVG Animation</a>, a Frontend Masters course by Sarah Drasner</li>
+</ul>
+<h3 id="&#x1F570;&#xFE0F;-when-we-use-gsap">&#x1F570;&#xFE0F; when we use GSAP</h3>
+<p>Our first choice for animating with React is <a href="ReactMotion.html">React Motion</a>, but we fall back to GSAP where React Motion&apos;s API doesn&apos;t provide what we need. So far the only circumstance that we&apos;ve needed to pull GSAP in for is a staggered animation on revealing the daily CGM sensor traces via hover over a CGM time-slice segment in the CGM Trends view. This is due to the fact that React Motion&apos;s <code>StaggeredMotion</code> component only serves a subset of stagger animations&#x2014;namely, those in which each value in the stagger is <strong>entirely</strong> dependent on the previous and next values. In the case of a CGM sensor trace for a day, while each value is <em>somewhat</em> dependent on its previous value, CGM values fail the <em>entirely dependent</em> criterion: while blood glucose can&apos;t jump from 68 mg/dL to 345 mg/dL in the space of a single five-minute span of time, all blood glucose values <em>do</em> fall within a certain &quot;delta&quot; of the previous value, though this delta varies (i.e., the previous and next values are <strong>not</strong> entirely dependent on each other).</p>
+<h3 id="&#x1F35D;-integrating-gsap-with-react">&#x1F35D; integrating GSAP with React</h3>
+<p>The strategy for using GSAP with React is very similar to the <code>componentDidMount</code> strategy for integrating <a href="D3.html#the-componentdidmount-strategy">React and D3</a> but perhaps a little less offensive to the React purist. Instead of <em>rendering</em> to the DOM in the <code>componentDidMount</code> lifecycle method (<strong>after</strong> React&apos;s render cycle), to integrate GSAP with React we first render the component inside a <code>ReactTransitionGroup</code> container. Then in the <code>componentWillEnter</code> method (which is provided by <code>ReactTransitionGroups</code> and fires at the same point in the React lifecycle as <code>componentDidMount</code>) we simply gather the <a href="https://facebook.github.io/react/docs/refs-and-the-dom.html" title="React docs: Refs and the DOM" target="_blank">references to DOM nodes</a> that have just been rendered by React and then pass them to GSAP as the target(s) for animation. We do the same on exit only inside the <code>componentWillLeave</code> method also provided by <code>ReactTransitionGroup</code>. In this way, we&apos;re only modifying the <em>appearance</em> of DOM nodes via GSAP and not disrupting React&apos;s control of rendering to the DOM. (In addition, since animations are more-or-less a nice-to-have<sup><a href="#fn_c" id="reffn_c">c</a></sup> and not absolutely essential to our data visualization functionality, we don&apos;t write tests around them, and so the difficulty of writing tests around things that happen inside React lifecycle methods does not come into play.)</p>
+<h3 id="&#x270D;&#xFE0F;-example">&#x270D;&#xFE0F; example</h3>
+<p>If your React component has rendered a series of SVG <code>&lt;circle&gt;</code>s that you want to reveal in a stagger animation, one-by-one, start with assigning a <code>ref</code> on each <code>&lt;circle&gt;</code> in the <code>render</code> method of the component:</p>
+<pre><code class="lang-js">render() {
+  return (
+    &lt;g id=&quot;a-gaggle-of-circles&quot;&gt;
+      {_.map(data, (d) =&gt; (
+        &lt;circle cx={5} cy={10} r={5} opacity={0} ref={(node) =&gt; { this[d.id] = node; }} /&gt;
+      ))}
+    &lt;/g&gt;
+  );
+}
+</code></pre>
+<p>Notice that we also render initially with opacity zero; the trick to this staggered render of <code>&lt;circle&gt;</code>s is to render all the <code>&lt;circle&gt;</code>s at the same time (in the React component&apos;s <code>render</code> method) and then stagger the animation to <em>full</em> opacity in <a href="https://facebook.github.io/react/docs/animation.html#componentwillenter" title="React Animation Add-Ons: componentWillEnter" target="_blank"><code>componentWillEnter</code></a>:</p>
+<pre><code class="lang-js">componentWillEnter(callback) {
+  <span class="hljs-keyword">const</span> { animationDuration, data } = <span class="hljs-keyword">this</span>.props;
+  <span class="hljs-keyword">const</span> targets = _.map(data, (d) =&gt; (<span class="hljs-keyword">this</span>[d.id]));
+  TweenMax.staggerTo(
+    targets, animationDuration, { opacity: <span class="hljs-number">1</span>, onComplete: callback }, animationDuration / targets.length
+  );
+}
+</code></pre>
+<p>Also note the callback argument provided to <code>componentWillEnter</code>, which we specify as the <code>onComplete</code> in the <code>TweenMax.staggerTo</code> configuration.</p>
+<hr>
+<blockquote id="fn_a">
+<sup>a</sup>. Link, of course, for the youngins soon to ask, &quot;What the hell is Flash?&quot; (Also, &#x1F3A9; to @krystophv for pointing out to @jebeck that GSAP <em>was</em> originally a Flash animation library.)<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
+<blockquote id="fn_b">
+<sup>b</sup>. Source for React + React DOM and Angular 2 sizes: <a href="https://gist.github.com/Restuta/cda69e50a853aa64912d" target="_blank">https://gist.github.com/Restuta/cda69e50a853aa64912d</a><a href="#reffn_b" title="Jump back to footnote [b] in the text."> &#x21A9;</a>
+</blockquote>
+<blockquote id="fn_c">
+<sup>c</sup>. Though very valuable for <a href="https://css-tricks.com/the-importance-of-context-shifting-in-ux-patterns/" title="CSS Tricks: The Importance of Context-Shifting in UX Patterns" target="_blank">context-shifting</a>, which is arguably even <em>more</em> important in data visualization than general application UX, because context-shifting with data aids in understanding changes and relationships in data, which is often (if not always!) the primary communicative purpose of a data visualization.<a href="#reffn_c" title="Jump back to footnote [c] in the text."> &#x21A9;</a>
+</blockquote>
 
                     
                     </section>
@@ -386,10 +426,10 @@
         </div>
 
         
-        <a href="../docs/ReactMotion.html" class="navigation navigation-prev " aria-label="Previous page: React Motion"><i class="fa fa-angle-left"></i></a>
+        <a href="../docs/D3.html" class="navigation navigation-prev " aria-label="Previous page: D3"><i class="fa fa-angle-left"></i></a>
         
         
-        <a href="../docs/Webpack.html" class="navigation navigation-next " aria-label="Next page: webpack"><i class="fa fa-angle-right"></i></a>
+        <a href="../docs/Moment.html" class="navigation navigation-next " aria-label="Next page: Moment"><i class="fa fa-angle-right"></i></a>
         
     </div>
 </div>
