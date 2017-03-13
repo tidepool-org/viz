@@ -81,12 +81,19 @@ const Tandem = (props) => {
     return null;
   }
 
+  function openSection(sectionName) {
+    if (printView) {
+      return true;
+    }
+    return _.get(openedSections, sectionName, false);
+  }
+
   const tables = _.map(schedules, (schedule) => (
     <div className="settings-table-container" key={schedule.name}>
       <CollapsibleContainer
         label={data.getScheduleLabel(schedule.name, pumpSettings.activeSchedule, deviceKey, true)}
         labelClass={styles.collapsibleLabel}
-        opened={_.get(openedSections, schedule.name, printView)}
+        opened={openSection(schedule.name)}
         toggleExpansion={_.partial(toggleProfileExpansion, schedule.name)}
         twoLineLabel={false}
       >

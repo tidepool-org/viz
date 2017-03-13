@@ -110,6 +110,13 @@ const NonTandem = (props) => {
     return null;
   }
 
+  function openSection(sectionName) {
+    if (printView) {
+      return true;
+    }
+    return _.get(openedSections, sectionName, false);
+  }
+
   function renderBasalsData() {
     const schedules = data.getScheduleNames(pumpSettings.basalSchedules);
 
@@ -120,7 +127,7 @@ const NonTandem = (props) => {
         pumpSettings.activeSchedule,
         deviceKey
       );
-      const scheduledIsExpanded = _.get(openedSections, scheduleName, printView);
+
       const toggleFn = _.partial(toggleBasalScheduleExpansion, scheduleName);
 
       if (scheduleName === pumpSettings.activeSchedule) {
@@ -129,7 +136,7 @@ const NonTandem = (props) => {
             <CollapsibleContainer
               label={label}
               labelClass={styles.twoLineBasalScheduleHeader}
-              opened={scheduledIsExpanded}
+              opened={openSection(scheduleName)}
               toggleExpansion={toggleFn}
               twoLineLabel
             >
@@ -150,7 +157,7 @@ const NonTandem = (props) => {
           <CollapsibleContainer
             label={label}
             labelClass={styles.singleLineBasalScheduleHeader}
-            opened={scheduledIsExpanded}
+            opened={openSection(scheduleName)}
             toggleExpansion={toggleFn}
           >
             <Table
@@ -245,6 +252,12 @@ const NonTandem = (props) => {
     );
   }
 
+  function renderBolusTitle() {
+    return (
+      BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[lookupKey]
+    );
+  }
+
   return (
     <div>
       <Header
@@ -253,21 +266,15 @@ const NonTandem = (props) => {
         printView={printView}
       />
       <div className={styles.settingsContainer}>
-        <div>
-          <div className={styles.basalSettingsContainer}>
-            <div className={styles.categoryTitle}>Basal Rates</div>
-            {renderBasalsData()}
-          </div>
+        <div className={styles.basalSettingsContainer}>
+          <div className={styles.categoryTitle}>Basal Rates</div>
+          {renderBasalsData()}
         </div>
-        <div>
-          <div className={styles.categoryTitle}>
-            {BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[lookupKey]}
-          </div>
-          <div className={styles.bolusSettingsContainer}>
-            {renderSensitivityData()}
-            {renderTargetData()}
-            {renderRatioData()}
-          </div>
+        <div className={styles.bolusSettingsContainer}>
+          <div className={styles.categoryTitle}>{renderBolusTitle()}</div>
+          {renderSensitivityData()}
+          {renderTargetData()}
+          {renderRatioData()}
         </div>
       </div>
     </div>
