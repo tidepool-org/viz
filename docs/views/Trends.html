@@ -1,0 +1,556 @@
+<!DOCTYPE HTML>
+<html lang="en" >
+    
+    <head>
+        
+        <meta charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <title>Trends view | @tidepool/viz</title>
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 2.6.7">
+        
+        
+        <meta name="HandheldFriendly" content="true"/>
+        <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-status-bar-style" content="black">
+        <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../gitbook/images/apple-touch-icon-precomposed-152.png">
+        <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
+        
+    <link rel="stylesheet" href="../../gitbook/style.css">
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-highlight/website.css">
+        
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-search/search.css">
+        
+    
+        
+        <link rel="stylesheet" href="../../gitbook/plugins/gitbook-plugin-fontsettings/website.css">
+        
+    
+    
+
+        
+    
+    
+    <link rel="next" href="../../docs/Dependencies.html" />
+    
+    
+    <link rel="prev" href="../../docs/views/index.html" />
+    
+
+        
+    </head>
+    <body>
+        
+        
+    <div class="book"
+        data-level="2.1"
+        data-chapter-title="Trends view"
+        data-filepath="docs/views/Trends.md"
+        data-basepath="../.."
+        data-revision="Tue Mar 14 2017 12:46:16 GMT-0700 (PDT)"
+        data-innerlanguage="">
+    
+
+<div class="book-summary">
+    <nav role="navigation">
+        <ul class="summary">
+            
+            
+            
+            
+
+            
+
+            
+    
+        <li class="chapter " data-level="0" data-path="index.html">
+            
+                
+                    <a href="../../index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                        Introduction
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1" data-path="docs/StartHere.html">
+            
+                
+                    <a href="../../docs/StartHere.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.</b>
+                        
+                        @tidepool/viz developer guide
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.1" data-path="docs/Background.html">
+            
+                
+                    <a href="../../docs/Background.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.1.</b>
+                        
+                        background
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="docs/FeatureOverview.html">
+            
+                
+                    <a href="../../docs/FeatureOverview.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.2.</b>
+                        
+                        overview of features
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="docs/Architecture.html">
+            
+                
+                    <a href="../../docs/Architecture.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.3.</b>
+                        
+                        planned architecture
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="docs/DirectoryStructure.html">
+            
+                
+                    <a href="../../docs/DirectoryStructure.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.4.</b>
+                        
+                        app &amp; directory structure
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="docs/CodeStyle.html">
+            
+                
+                    <a href="../../docs/CodeStyle.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>1.5.</b>
+                        
+                        code style
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="2" data-path="docs/views/index.html">
+            
+                
+                    <a href="../../docs/views/index.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.</b>
+                        
+                        per-view documentation
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter active" data-level="2.1" data-path="docs/views/Trends.html">
+            
+                
+                    <a href="../../docs/views/Trends.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>2.1.</b>
+                        
+                        Trends view
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="3" data-path="docs/Dependencies.html">
+            
+                
+                    <a href="../../docs/Dependencies.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.</b>
+                        
+                        usage of dependencies
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="3.1" data-path="docs/D3.html">
+            
+                
+                    <a href="../../docs/D3.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.1.</b>
+                        
+                        D3
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.2" data-path="docs/GSAP.html">
+            
+                
+                    <a href="../../docs/GSAP.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.2.</b>
+                        
+                        GSAP
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.3" data-path="docs/Moment.html">
+            
+                
+                    <a href="../../docs/Moment.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.3.</b>
+                        
+                        Moment
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.4" data-path="docs/React.html">
+            
+                
+                    <a href="../../docs/React.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.4.</b>
+                        
+                        React
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.5" data-path="docs/ReactMotion.html">
+            
+                
+                    <a href="../../docs/ReactMotion.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.5.</b>
+                        
+                        React Motion
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.6" data-path="docs/Redux.html">
+            
+                
+                    <a href="../../docs/Redux.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.6.</b>
+                        
+                        Redux
+                    </a>
+            
+            
+        </li>
+    
+        <li class="chapter " data-level="3.7" data-path="docs/Webpack.html">
+            
+                
+                    <a href="../../docs/Webpack.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>3.7.</b>
+                        
+                        webpack
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="4" data-path="docs/Misc.html">
+            
+                
+                    <a href="../../docs/Misc.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.</b>
+                        
+                        misc
+                    </a>
+            
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="4.1" data-path="docs/TimeRenderingModes.html">
+            
+                
+                    <a href="../../docs/TimeRenderingModes.html">
+                
+                        <i class="fa fa-check"></i>
+                        
+                            <b>4.1.</b>
+                        
+                        Time-rendering modes
+                    </a>
+            
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+
+            
+            <li class="divider"></li>
+            <li>
+                <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+                    Published with GitBook
+                </a>
+            </li>
+            
+        </ul>
+    </nav>
+</div>
+
+    <div class="book-body">
+        <div class="body-inner">
+            <div class="book-header" role="navigation">
+    <!-- Actions Left -->
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../../" >@tidepool/viz</a>
+    </h1>
+</div>
+
+            <div class="page-wrapper" tabindex="-1" role="main">
+                <div class="page-inner">
+                
+                
+                    <section class="normal" id="section-">
+                    
+                        <h2 id="trends-view">Trends view</h2>
+<p>Table of contents:</p>
+<ul>
+<li><a href="#user-experience">user experience</a></li>
+<li><a href="#architecture">architecture</a><ul>
+<li><a href="#component-hierarchy">component hierarchy</a></li>
+</ul>
+</li>
+<li><a href="#layout">layout</a></li>
+<li><a href="#tech-debt">tech debt</a></li>
+</ul>
+<h3 id="&#x1F471;&#x1F3FE;-user-experience">&#x1F471;&#x1F3FE; User experience</h3>
+<p>There are two versions of the Trends view, one for displaying trend information based on fingerstick blood glucose data and the other for displaying trend information based on CGM data. The BGM version was developed first, and the CGM version is a more recent addition. A 14-day span of data is the default for this view, although the user can toggle to 7 days or 28 days using selectors displayed in the upper left corner of the display. (In the upper right of the display, the user can toggle days of the week such as Monday, Tuesday, etc. or weekdays vs. weekends off and on.) Both the CGM and CGM versions group all data in the selected span of time by time of day in an effort to show how blood glucose varies for the PwD by time of day. On the BGM version where the data is quite sparse, the data is grouped into three-hour &quot;bins,&quot; and on the CGM version thirty-minute bins are used.</p>
+<p><strong>CGM Trends as of March, 2017</strong></p>
+<p><img src="images/cgm_trends.png" alt="CGM Trends"></p>
+<p><strong>BGM Trends as of March, 2017</strong></p>
+<p><img src="images/bgm_trends.png" alt="BGM Trends"></p>
+<p>Like on the Daily view, hovering over various items in the display will produce a tooltip with more information. In addition, hovering on a segment of a time slice on the CGM version will expose all of the CGM daily sensor traces that intersect with that segment after a short delay (i.e., the pointer must remain on the same segment for a threshold of milliseconds before the exposure of traces is triggered).</p>
+<p><strong>BGM Date Line Hover</strong></p>
+<p><img src="images/bgm_trends_date_line_hover.png" alt="BGM Date Line Hover"></p>
+<p><strong>BGM Individual <code>smbg</code> Hover</strong></p>
+<p><img src="images/bgm_trends_smbg_hover.png" alt="BGM Individual `smbg` Hover"></p>
+<p><strong>BGM Range Box Hover</strong></p>
+<p><img src="images/bgm_trends_range_hover.png" alt="BGM Range Box Hover"></p>
+<p><strong>CGM Segment Hover</strong></p>
+<p><img src="images/cgm_trends_segment_hover.gif" alt="CGM Segment Hover"></p>
+<p><strong>CGM Segment Hover + Hold</strong></p>
+<p><img src="images/cgm_trends_segment_hover_hold.png" alt="CGM Segment Hover + Hold"></p>
+<p><strong>CGM Segment Hover + Hold on <code>cbg</code></strong></p>
+<p><img src="images/cgm_trends_segment_hover_hold_cbg.png" alt="CGM Segment Hover + Hold on `cbg`"></p>
+<h3 id="&#x1F3DB;&#xFE0F;-architecture">&#x1F3DB;&#xFE0F; Architecture</h3>
+<p>Currently only the data visualization itself for the BGM and CGM versions of the Trends view are implemented in this repository: code in blip is still being used for the 7, 14, and 28 days domain size selectors, the day of the week selectors, and of course the visualization sub-header that provides navigation between the views and along the datetime dimension. This makes the interface(s) between the blip and viz code a bit messier than they should be.</p>
+<p><img src="images/trends_code_locations.png" alt="Trends view locations of code for elements"></p>
+<h4 id="component-hierarchy">Component hierarchy</h4>
+<p><strong>CGM Trends</strong></p>
+<pre><code>&#x2514;&#x2500;&#x2500; PatientData (Redux-connected)
+    &#x2514;&#x2500;&#x2500; Trends
+        &#x251C;&#x2500;&#x2500; TidelineHeader
+        &#x251C;&#x2500;&#x2500; TrendsSubNav
+        &#x251C;&#x2500;&#x2500; &lt;div className=&quot;patient-data-content&quot;&gt;
+        &#x2502;   &#x251C;&#x2500;&#x2500; &lt;div id=&quot;tidelineContainer&quot;&gt;
+        &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; TrendsContainer
+        &#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; TrendsSVGContainer (wrapped in DimensionsHOC)
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; Background
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; XAxisLabels
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; XAxisTicks
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; YAxisLabels
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; &lt;g id=&quot;cbgTrends&quot;&gt;
+        &#x2502;   &#x2502;           &#x2502;   &#x251C;&#x2500;&#x2500; CBGSlicesContainer
+        &#x2502;   &#x2502;           &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; &lt;g id=&quot;cbgSlices&quot;&gt;{48 CBGSliceAnimated, each wrapped in WithDefault HOC}&lt;/g&gt;
+        &#x2502;   &#x2502;           &#x2502;   &#x2514;&#x2500;&#x2500; CBGDateTracesAnimationContainer
+        &#x2502;   &#x2502;           &#x2502;       &#x2514;&#x2500;&#x2500; ReactTransitionGroupPlus
+        &#x2502;   &#x2502;           &#x2502;           &#x2514;&#x2500;&#x2500; &lt;g id=&quot;cbgDateTraces&quot;&gt;{n CBGDateTraceAnimated where n is number of exposed CGM sensor traces}&lt;/g&gt;
+        &#x2502;   &#x2502;           &#x2514;&#x2500;&#x2500; TargetRangeLines
+        &#x2502;   &#x251C;&#x2500;&#x2500; CBGDateTraceLabel
+        &#x2502;   &#x2514;&#x2500;&#x2500; FocusedRangeLabels
+        &#x2514;&#x2500;&#x2500; TidelineFooter
+</code></pre><p><strong>BGM Trends</strong></p>
+<pre><code>&#x2514;&#x2500;&#x2500; PatientData (Redux-connected)
+    &#x2514;&#x2500;&#x2500; Trends
+        &#x251C;&#x2500;&#x2500; TidelineHeader
+        &#x251C;&#x2500;&#x2500; TrendsSubNav
+        &#x251C;&#x2500;&#x2500; &lt;div className=&quot;patient-data-content&quot;&gt;
+        &#x2502;   &#x251C;&#x2500;&#x2500; &lt;div id=&quot;tidelineContainer&quot;&gt;
+        &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; TrendsContainer
+        &#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; TrendsSVGContainer (wrapped in DimensionsHOC)
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; Background
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; XAxisLabels
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; XAxisTicks
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; YAxisLabels
+        &#x2502;   &#x2502;           &#x251C;&#x2500;&#x2500; &lt;g id=&quot;smbgTrends&quot;&gt;
+        &#x2502;   &#x2502;           &#x2502;   &#x251C;&#x2500;&#x2500; SMBGRangeAvgContainer (for range behind smbgs)
+        &#x2502;   &#x2502;           &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; &lt;g className=&quot;smbgAggContainer&quot;&gt;{up to 8 SMBGRangeAnimated (per default 3-hr binning), each wrapped in WithDefault}&lt;/g&gt;
+        &#x2502;   &#x2502;           &#x2502;   &#x251C;&#x2500;&#x2500; SMBGsByDateContainer
+        &#x2502;   &#x2502;           &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; &lt;g id=&quot;smbgsByDateContainer&quot;&gt;{up to n each of SMBGDateLineAnimated and SMBGDatePointsAnimated where n is # of days in view; all of these components are Redux-connected}&lt;/g&gt;
+        &#x2502;   &#x2502;           &#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; &lt;g id=&quot;&quot;&gt;
+        &#x2502;   &#x2502;           &#x2502;   &#x2514;&#x2500;&#x2500; SMBGRangeAvgContainer (for avg in front of smbgs)
+        &#x2502;   &#x2502;           &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; &lt;g className=&quot;smbgAggContainer&quot;&gt;{up to 8 SMBGMeanAnimated (per default 3-hr binning), each wrapped in WithDefault}&lt;/g&gt;
+        &#x2502;   &#x2502;           &#x2514;&#x2500;&#x2500; TargetRangeLines
+        &#x2502;   &#x2514;&#x2500;&#x2500; FocusedRangeLabels
+        &#x2514;&#x2500;&#x2500; TidelineFooter
+</code></pre><h3 id="&#x1F4D0;-layout">&#x1F4D0; Layout</h3>
+<p>The variables involved in the layout of the data display inside the Trends view&#x2014;that is, the code for Trends view contained in this repository&#x2014;are as follows, all originating in the <code>TrendsSVGContainer</code>:</p>
+<ul>
+<li><code>containerHeight</code> and <code>containerWidth</code> are the dimensions of the <code>&lt;div id=&quot;tidelineContainer&quot;&gt;</code> that the data portion of every view is rendered within. These are provided on <code>TrendsSVGContainer</code> as props via the <code>Dimensions</code> higher-order component (HOC) that wraps the SVG container. This <code>Dimensions</code> HOC is an external dependency from the <a href="https://github.com/digidem/react-dimensions" title="GitHub: react-dimensions" target="_blank"><code>react-dimensions</code></a>.</li>
+<li>The <code>MARGINS</code> (a constant of <code>top</code>, <code>bottom</code>, <code>left</code>, and <code>right</code> properties) are the space outside the data display area (gray box) that provide padding around the data display area and space for the x- and y-axis ticks and labels.</li>
+<li>The <code>BUMPERS</code> (a constant of <code>top</code> and <code>bottom</code> properties) are the internal padding in the data display area.</li>
+</ul>
+<p>Altogether, in diagram form (though <strong>not to scale</strong>):</p>
+<p><img src="images/tidelineContainer@2x.png" alt="Trends layout" title="Trends layout"></p>
+<h3 id="&#x1F4A3;-tech-debt">&#x1F4A3; Tech Debt</h3>
+<ul>
+<li>Because of where they need to be rendered in the component hierarchy, the hover tooltip component(s) are currently being rendered in blip, and so as an expedient way to share the hover state between the viz code and the blip code, we are using Redux actions to represent the hover focus on element(s). Since hover state is <strong>not</strong> the kind of state that it makes sense to persist when a user navigates away from the visualization part of the app before coming back, the Redux store is not the appropriate place to store this state. Rather, this state should probably be contained in the React component state of a high-level container component in Trends.</li>
+<li>When you hover a date line on the smbg side of Trends, instead of properly pulling the line to the top we just render a second version of the line on top.</li>
+</ul>
+<h3 id="&#x1F680;-the-future">&#x1F680; The Future</h3>
+<p>At present the <code>&lt;div id=&quot;tidelineContainer&quot;&gt;</code> is given a fixed size via blip&apos;s styling, but as we introduce responsiveness in blip, we will be able to leverage the behavior of the <code>Dimensions</code> HOC to make the dataviz responsive. <code>Dimensions</code> will update the <code>containerHeight</code> and <code>containerWidth</code> props on <code>TrendsSVGContainer</code> on window resize, and then by implementing a <code>componentWillReceiveProps</code> on <code>TrendsSVGContainer</code> we will be able to adjust the dimensions of the rendered SVG and the ranges of the x and y scales created with D3 to respond to the new viewport size.</p>
+
+                    
+                    </section>
+                
+                
+                </div>
+            </div>
+        </div>
+
+        
+        <a href="../../docs/views/index.html" class="navigation navigation-prev " aria-label="Previous page: per-view documentation"><i class="fa fa-angle-left"></i></a>
+        
+        
+        <a href="../../docs/Dependencies.html" class="navigation navigation-next " aria-label="Next page: usage of dependencies"><i class="fa fa-angle-right"></i></a>
+        
+    </div>
+</div>
+
+        
+<script src="../../gitbook/app.js"></script>
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/lunr.min.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-search/search.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-sharing/buttons.js"></script>
+    
+
+    
+    <script src="../../gitbook/plugins/gitbook-plugin-fontsettings/buttons.js"></script>
+    
+
+<script>
+require(["gitbook"], function(gitbook) {
+    var config = {"highlight":{},"search":{"maxIndexSize":1000000},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2}};
+    gitbook.start(config);
+});
+</script>
+
+        
+    </body>
+    
+</html>
