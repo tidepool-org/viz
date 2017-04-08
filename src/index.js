@@ -29,6 +29,8 @@ import TrendsContainer from './containers/trends/TrendsContainer';
 
 import vizReducer from './redux/reducers/';
 
+import openDailyPrintView from './modules/print/daily.js';
+
 const components = {
   CBGDateTraceLabel,
   FocusedRangeLabels,
@@ -42,4 +44,4 @@ const containers = {
   TrendsContainer,
 };
 
-export { components, containers, vizReducer };
+export { components, containers, openDailyPrintView, vizReducer };
