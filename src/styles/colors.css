@@ -50,3 +50,9 @@
 
   --text-hover: #00D3D9;
 }
+
+:export {
+  low: #FF8B7C;
+  target: #76D3A6;
+  high: #BB9AE7;
+}
