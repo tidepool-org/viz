@@ -82,3 +82,21 @@ export function calcCbgTimeInCategories(data, bgBounds) {
 export function convertToMmolL(val) {
   return (val / 18.01559);
 }
+
+/**
+ * reshapeBgClassesToBgBounds
+ * @param {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
+ *
+ * @return {Object} bgBounds - @tidepool/viz-style bgBounds
+ */
+export function reshapeBgClassesToBgBounds(bgPrefs) {
+  const { bgClasses } = bgPrefs;
+  const bgBounds = {
+    veryHighThreshold: bgClasses.high.boundary,
+    targetUpperBound: bgClasses.target.boundary,
+    targetLowerBound: bgClasses.low.boundary,
+    veryLowThreshold: bgClasses['very-low'].boundary,
+  };
+
+  return bgBounds;
+}
