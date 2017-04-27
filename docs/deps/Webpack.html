@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>per-view documentation · GitBook</title>
+        <title>webpack · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="Trends.html" />
+    <link rel="next" href="../misc/" />
     
     
-    <link rel="prev" href="../CodeStyle.html" />
+    <link rel="prev" href="Redux.html" />
     
 
     </head>
@@ -186,9 +186,9 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3" data-path="./">
+        <li class="chapter " data-level="1.3" data-path="../views/">
             
-                <a href="./">
+                <a href="../views/">
             
                     
                     per-view documentation
@@ -200,9 +200,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.3.1" data-path="Trends.html">
+        <li class="chapter " data-level="1.3.1" data-path="../views/Trends.html">
             
-                <a href="Trends.html">
+                <a href="../views/Trends.html">
             
                     
                     Trends view
@@ -218,9 +218,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4" data-path="../deps/">
+        <li class="chapter " data-level="1.4" data-path="./">
             
-                <a href="../deps/">
+                <a href="./">
             
                     
                     usage of dependencies
@@ -232,9 +232,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.4.1" data-path="../deps/D3.html">
+        <li class="chapter " data-level="1.4.1" data-path="D3.html">
             
-                <a href="../deps/D3.html">
+                <a href="D3.html">
             
                     
                     D3
@@ -245,9 +245,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.2" data-path="../deps/GSAP.html">
+        <li class="chapter " data-level="1.4.2" data-path="GSAP.html">
             
-                <a href="../deps/GSAP.html">
+                <a href="GSAP.html">
             
                     
                     GSAP
@@ -258,9 +258,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.3" data-path="../deps/Moment.html">
+        <li class="chapter " data-level="1.4.3" data-path="Moment.html">
             
-                <a href="../deps/Moment.html">
+                <a href="Moment.html">
             
                     
                     Moment
@@ -271,9 +271,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.4" data-path="../deps/React.html">
+        <li class="chapter " data-level="1.4.4" data-path="React.html">
             
-                <a href="../deps/React.html">
+                <a href="React.html">
             
                     
                     React
@@ -284,9 +284,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.5" data-path="../deps/ReactMotion.html">
+        <li class="chapter " data-level="1.4.5" data-path="ReactMotion.html">
             
-                <a href="../deps/ReactMotion.html">
+                <a href="ReactMotion.html">
             
                     
                     React Motion
@@ -297,9 +297,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.6" data-path="../deps/Redux.html">
+        <li class="chapter " data-level="1.4.6" data-path="Redux.html">
             
-                <a href="../deps/Redux.html">
+                <a href="Redux.html">
             
                     
                     Redux
@@ -310,9 +310,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.7" data-path="../deps/Webpack.html">
+        <li class="chapter active" data-level="1.4.7" data-path="Webpack.html">
             
-                <a href="../deps/Webpack.html">
+                <a href="Webpack.html">
             
                     
                     webpack
@@ -390,7 +390,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="../.." >per-view documentation</a>
+        <a href="../.." >webpack</a>
     </h1>
 </div>
 
@@ -405,12 +405,12 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h2 id="per-view-documentation">per-view documentation</h2>
-<p>Following Tidepool&apos;s general <a href="http://developer.tidepool.io/docs/docs/guidelines.html" title="Tidepool Developer Portal: Docs Guideslines" target="_blank">documentation guidelines</a>, included here is documentation regarding the implementation of each major data &quot;view&quot; implemented in this repository for inclusion in Tidepool&apos;s web application blip.</p>
-<ul>
-<li>Device Settings view - <em>Coming soon!</em></li>
-<li><a href="Trends.html">Trends view</a></li>
-</ul>
+                                <h2 id="tidepoolvizs-usage-of-webpack">@tidepool/viz&apos;s usage of webpack</h2>
+<p>Our use of <a href="https://webpack.github.io/" title="webpack module bundler" target="_blank">webpack</a> in this repository is a bit different from our use of it in blip or the Tidepool uploader, where we&apos;re using it to build applications. Here we&apos;re using webpack to bundle our JavaScript, CSS, and JSON<sup><a href="#fn_a" id="reffn_a">a</a></sup> into a bundle that can be published to the <a href="http://npmjs.com/" title="npm" target="_blank">node package manager</a> and then included as a dependency in other projects like blip.</p>
+<p>While <a href="https://github.com/tidepool-org/viz/blob/master/webpack.config.js" title="GitHub: viz webpack.config.js" target="_blank">the development webpack configuration</a> is pretty similar to the configurations we used in blip and the uploader, <a href="https://github.com/tidepool-org/viz/blob/master/package.config.js" title="GitHub: viz package.config.js" target="_blank">the production packaging configuration</a> is different in that it specifies a <code>libraryTarget</code> and defines many of the dependencies as <code>externals</code> so that they don&apos;t get bundled twice (in both the viz JavaScript bundle and the blip bundle).</p>
+<blockquote id="fn_a">
+<sup>a</sup>. The timezone database that comes with <a href="http://momentjs.com/timezone/" title="Moment Timezone" target="_blank">moment-timezone</a> is JSON.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
 
                                 
                                 </section>
@@ -438,12 +438,12 @@
 
             
                 
-                <a href="../CodeStyle.html" class="navigation navigation-prev " aria-label="Previous page: code style">
+                <a href="Redux.html" class="navigation navigation-prev " aria-label="Previous page: Redux">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="Trends.html" class="navigation navigation-next " aria-label="Next page: Trends view">
+                <a href="../misc/" class="navigation navigation-next " aria-label="Next page: misc">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -454,7 +454,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"per-view documentation","level":"1.3","depth":1,"next":{"title":"Trends view","level":"1.3.1","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]},"previous":{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/views/README.md","mtime":"2017-04-27T23:17:44.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"webpack","level":"1.4.7","depth":2,"next":{"title":"misc","level":"1.5","depth":1,"path":"docs/misc/README.md","ref":"docs/misc/README.md","articles":[{"title":"Time-rendering modes","level":"1.5.1","depth":2,"path":"docs/misc/TimeRenderingModes.md","ref":"docs/misc/TimeRenderingModes.md","articles":[]}]},"previous":{"title":"Redux","level":"1.4.6","depth":2,"path":"docs/deps/Redux.md","ref":"docs/deps/Redux.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/deps/Webpack.md","mtime":"2017-04-27T23:17:44.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"../..","book":{"language":""}});
         });
     </script>
 </div>

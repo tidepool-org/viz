@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>per-view documentation · GitBook</title>
+        <title>Moment · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="Trends.html" />
+    <link rel="next" href="React.html" />
     
     
-    <link rel="prev" href="../CodeStyle.html" />
+    <link rel="prev" href="GSAP.html" />
     
 
     </head>
@@ -186,9 +186,9 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3" data-path="./">
+        <li class="chapter " data-level="1.3" data-path="../views/">
             
-                <a href="./">
+                <a href="../views/">
             
                     
                     per-view documentation
@@ -200,9 +200,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.3.1" data-path="Trends.html">
+        <li class="chapter " data-level="1.3.1" data-path="../views/Trends.html">
             
-                <a href="Trends.html">
+                <a href="../views/Trends.html">
             
                     
                     Trends view
@@ -218,9 +218,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4" data-path="../deps/">
+        <li class="chapter " data-level="1.4" data-path="./">
             
-                <a href="../deps/">
+                <a href="./">
             
                     
                     usage of dependencies
@@ -232,9 +232,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.4.1" data-path="../deps/D3.html">
+        <li class="chapter " data-level="1.4.1" data-path="D3.html">
             
-                <a href="../deps/D3.html">
+                <a href="D3.html">
             
                     
                     D3
@@ -245,9 +245,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.2" data-path="../deps/GSAP.html">
+        <li class="chapter " data-level="1.4.2" data-path="GSAP.html">
             
-                <a href="../deps/GSAP.html">
+                <a href="GSAP.html">
             
                     
                     GSAP
@@ -258,9 +258,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.3" data-path="../deps/Moment.html">
+        <li class="chapter active" data-level="1.4.3" data-path="Moment.html">
             
-                <a href="../deps/Moment.html">
+                <a href="Moment.html">
             
                     
                     Moment
@@ -271,9 +271,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.4" data-path="../deps/React.html">
+        <li class="chapter " data-level="1.4.4" data-path="React.html">
             
-                <a href="../deps/React.html">
+                <a href="React.html">
             
                     
                     React
@@ -284,9 +284,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.5" data-path="../deps/ReactMotion.html">
+        <li class="chapter " data-level="1.4.5" data-path="ReactMotion.html">
             
-                <a href="../deps/ReactMotion.html">
+                <a href="ReactMotion.html">
             
                     
                     React Motion
@@ -297,9 +297,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.6" data-path="../deps/Redux.html">
+        <li class="chapter " data-level="1.4.6" data-path="Redux.html">
             
-                <a href="../deps/Redux.html">
+                <a href="Redux.html">
             
                     
                     Redux
@@ -310,9 +310,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4.7" data-path="../deps/Webpack.html">
+        <li class="chapter " data-level="1.4.7" data-path="Webpack.html">
             
-                <a href="../deps/Webpack.html">
+                <a href="Webpack.html">
             
                     
                     webpack
@@ -390,7 +390,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="../.." >per-view documentation</a>
+        <a href="../.." >Moment</a>
     </h1>
 </div>
 
@@ -405,12 +405,10 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h2 id="per-view-documentation">per-view documentation</h2>
-<p>Following Tidepool&apos;s general <a href="http://developer.tidepool.io/docs/docs/guidelines.html" title="Tidepool Developer Portal: Docs Guideslines" target="_blank">documentation guidelines</a>, included here is documentation regarding the implementation of each major data &quot;view&quot; implemented in this repository for inclusion in Tidepool&apos;s web application blip.</p>
-<ul>
-<li>Device Settings view - <em>Coming soon!</em></li>
-<li><a href="Trends.html">Trends view</a></li>
-</ul>
+                                <h2 id="tidepoolvizs-usage-of-momentjs">@tidepool/viz&apos;s usage of Moment.js</h2>
+<p>We use <a href="http://momentjs.com/" title="Moment.js" target="_blank">moment</a> and <a href="http://momentjs.com/timezone/" title="Moment Timezone" target="_blank">moment-timezone</a> to handle datetime computations with arbitrary timezone support. (JavaScript&apos;s built-in <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Date" title="MDN: JavaScript Date" target="_blank"><code>Date</code></a>) only handles UTC or browser-local time natively and <em>does not</em> support datetimes in an arbitrary timezone (i.e., that may be different from the current browser timezone).</p>
+<p>Moment&apos;s APIs are rather complex and the differences between nearly identical methods can be subtle (but important!). This document is to record the biggest &quot;gotchas&quot; we&apos;ve run into with moment, or, in other words, to record what we&apos;ve derived as our moment best practices over our years of hard lessons using the library.</p>
+<p>More to come!</p>
 
                                 
                                 </section>
@@ -438,12 +436,12 @@
 
             
                 
-                <a href="../CodeStyle.html" class="navigation navigation-prev " aria-label="Previous page: code style">
+                <a href="GSAP.html" class="navigation navigation-prev " aria-label="Previous page: GSAP">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="Trends.html" class="navigation navigation-next " aria-label="Next page: Trends view">
+                <a href="React.html" class="navigation navigation-next " aria-label="Next page: React">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -454,7 +452,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"per-view documentation","level":"1.3","depth":1,"next":{"title":"Trends view","level":"1.3.1","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]},"previous":{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/views/README.md","mtime":"2017-04-27T23:17:44.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Moment","level":"1.4.3","depth":2,"next":{"title":"React","level":"1.4.4","depth":2,"path":"docs/deps/React.md","ref":"docs/deps/React.md","articles":[]},"previous":{"title":"GSAP","level":"1.4.2","depth":2,"path":"docs/deps/GSAP.md","ref":"docs/deps/GSAP.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/deps/Moment.md","mtime":"2017-04-27T23:17:44.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"../..","book":{"language":""}});
         });
     </script>
 </div>

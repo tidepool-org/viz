@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>per-view documentation · GitBook</title>
+        <title>Time-rendering modes · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,8 @@
     <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="Trends.html" />
     
-    
-    <link rel="prev" href="../CodeStyle.html" />
+    <link rel="prev" href="./" />
     
 
     </head>
@@ -186,9 +184,9 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.3" data-path="./">
+        <li class="chapter " data-level="1.3" data-path="../views/">
             
-                <a href="./">
+                <a href="../views/">
             
                     
                     per-view documentation
@@ -200,9 +198,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.3.1" data-path="Trends.html">
+        <li class="chapter " data-level="1.3.1" data-path="../views/Trends.html">
             
-                <a href="Trends.html">
+                <a href="../views/Trends.html">
             
                     
                     Trends view
@@ -328,9 +326,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="../misc/">
+        <li class="chapter " data-level="1.5" data-path="./">
             
-                <a href="../misc/">
+                <a href="./">
             
                     
                     misc
@@ -342,9 +340,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.5.1" data-path="../misc/TimeRenderingModes.html">
+        <li class="chapter active" data-level="1.5.1" data-path="TimeRenderingModes.html">
             
-                <a href="../misc/TimeRenderingModes.html">
+                <a href="TimeRenderingModes.html">
             
                     
                     Time-rendering modes
@@ -390,7 +388,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="../.." >per-view documentation</a>
+        <a href="../.." >Time-rendering modes</a>
     </h1>
 </div>
 
@@ -405,12 +403,31 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h2 id="per-view-documentation">per-view documentation</h2>
-<p>Following Tidepool&apos;s general <a href="http://developer.tidepool.io/docs/docs/guidelines.html" title="Tidepool Developer Portal: Docs Guideslines" target="_blank">documentation guidelines</a>, included here is documentation regarding the implementation of each major data &quot;view&quot; implemented in this repository for inclusion in Tidepool&apos;s web application blip.</p>
+                                <h2 id="time-rendering-modes">Time rendering modes</h2>
+<p>Tidepool supports two rendering &quot;modes&quot; for diabetes device data &amp; notes visualized via the code in this repository (as well as legacy <a href="https://github.com/tidepool-org/tideline" title="GitHub: @tidepool-org/tideline" target="_blank">tideline</a> code): the default timezone-aware rendering and timezone-na&#xEF;ve rendering. This document explains and demonstrates the difference(s) between these and the utility of each.</p>
+<h3 id="background-time-and-devicetime">Background: <code>time</code> and <code>deviceTime</code></h3>
+<p>Two of the time-related fields in the <a href="http://developer.tidepool.io/data-model/device-data/common.html" title="Tidepool data model docs: common fields" target="_blank">Tidepool data model for diabetes device data</a> are important to understand as background to the discussion presented in this document; these are <a href="http://developer.tidepool.io/data-model/device-data/common.html#time" title="Tidepool data model docs: time" target="_blank"><code>time</code></a> and <a href="http://developer.tidepool.io/data-model/device-data/common.html#devicetime" title="Tidepool data model docs: deviceTime" target="_blank"><code>deviceTime</code></a>.</p>
+<p><code>deviceTime</code> is what it sounds like: the display time on the diabetes device at the time the event occurred. For almost every current Tidepool data source, this is <em>the</em> (only) time value that we extract directly from a device&apos;s memory.<sup><a href="#fn_a" id="reffn_a">a</a></sup> In the base case, this should be an accurate representation of the clock time for the user&#x2014;that is, localized to the timezone the user is currently in or was in at the time of the event, assuming the user updates the device display time when switching timezones. Of course, since the display time settings on diabetes devices are subject to manual user control, user error can occur, occasionally with drastic results. We have seen cases where users have accidentally set the display time on their device to the wrong a.m. or p.m. (resulting in <code>deviceTime</code>s that are off by exactly twelve hours), to the wrong month, and&#x2014;more often than one might expect!&#x2014;to the wrong <em>year</em>.</p>
+<p><a href="http://developer.tidepool.io/chrome-uploader/docs/BootstrappingToUTC.html" target="_blank">Bootstrapping to UTC (BtUTC)</a> is the algorithm we have developed to correct for these types of user errors (as well as the more common challenge of handling the switch between Daylight Saving time and standard time) by inferring the UTC time for each event so that we can plot all the data from a user&apos;s many diabetes devices on the same scale with all the data properly aligned. This is the value stored in the <code>time</code> field.</p>
+<h3 id="timezone-aware-rendering">Timezone-aware rendering</h3>
+<p>The default rendering mode is timezone-aware. This means that all events are rendered on a UTC time scale using the <code>time</code> value to determine the placement along this scale. Whenever a time-related value needs to be surfaced to the user, we apply a timezone to this <code>time</code> value and surface the result, as this is our best guess at the corresponding local display time for the user (the exception is if the user was traveling in a different timezone for a span of data). Currently (as of November, 2016) we use the <code>timezone</code> from the user&apos;s most recent <a href="http://developer.tidepool.io/data-model/device-data/types/upload.html#timezone" title="Tidepool data model docs: upload.timezone" target="_blank">upload metadata</a> as the timezone to be applied to the <code>time</code> values across the entire history of the user&apos;s diabetes device data. This <em>does</em> adjust as expected for Daylight Saving time, but does <em>not</em> adjust for travel across timezones if the user changed their device display time when switching timezones. In the future, instead of pulling the display timezone from the most recent upload metadata we plan to support a &quot;default timezone for data display&quot; along with other display settings for each user persisted to Tidepool&apos;s servers, including preferred blood glucose units (mg/dL or mmol/L) and a user-defined target range for blood glucose values.</p>
+<p>Features of timezone-aware rendering:</p>
 <ul>
-<li>Device Settings view - <em>Coming soon!</em></li>
-<li><a href="Trends.html">Trends view</a></li>
+<li>no gaps or overlaps in data</li>
+<li>all data aligns <em>except</em> BGM data in cases of user error setting the BGM time or travel across timezones (because no BGM is currently bootstrap-able)</li>
 </ul>
+<h3 id="timezone-na&#xEF;ve-rendering">Timezone-na&#xEF;ve rendering</h3>
+<p>A second rendering mode is available (currently, as of November, 2016) by adding a query parameter to the URL: <code>?timezone=None</code> (any string that does not correspond to an actual <a href="https://www.iana.org/time-zones" title="IANA: Time Zone Database" target="_blank">IANA timezone</a> may take the place of <code>None</code> here as long as it is not a falsey value in JavaScript such as <code>null</code>). This rendering mode also renders the events on the same UTC time scale but using the <code>deviceTime</code> <em>as if it were a true UTC value</em>. In order to &quot;spoof&quot; a true UTC value from a <code>deviceTime</code>, we simply add the string suffix <code>Z</code> denoting UTC or &quot;Zulu&quot; time to the value&#x2014;that is, a <code>deviceTime</code> of <code>2016-03-15T12:00:00</code> with no timezone offset information becomes the UTC string <code>2016-03-15T12:00:00Z</code>. (The technical reason for performing this string transformation is demonstrated below.)</p>
+<p>To date, timezone-na&#xEF;ve mode has been most valuable as a debugging tool when investigating data quality issues reported by users. For users whose situations fall into edge cases that BtUTC does not handle, timezone-na&#xEF;ve rendering may also be the <em>only</em> method available to see all diabetes device data aligned.</p>
+<p>Features of timezone-na&#xEF;ve rendering:</p>
+<ul>
+<li>gaps and overlaps appear in the data whenever the user has made a significant (i.e., non-<a href="http://developer.tidepool.io/chrome-uploader/docs/BootstrappingToUTC.html#adjustments-for-clock-drift" title="BtUTC documentation: Adjustments for clock drift" target="_blank">&quot;clock drift&quot;</a>) change to the display time</li>
+<li>all data aligns as long as there were no user error(s) setting one or more device display times and the user consistently updated device display time across <em>all</em> devices when switching timezones and entering/exiting Daylight Saving time (if applicable)</li>
+</ul>
+<hr>
+<blockquote id="fn_a">
+<sup>a</sup>. The exception is Dexcom G5 data imported from HealthKit through one of Tidepool&apos;s iOS applications; in this case, we have <em>no</em> <code>deviceTime</code>, only a true UTC timestamp&#x2014;our <code>time</code> field&#x2014;extracted from the iOS HealthKit data model.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
 
                                 
                                 </section>
@@ -438,14 +455,10 @@
 
             
                 
-                <a href="../CodeStyle.html" class="navigation navigation-prev " aria-label="Previous page: code style">
+                <a href="./" class="navigation navigation-prev navigation-unique" aria-label="Previous page: misc">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
-                
-                <a href="Trends.html" class="navigation navigation-next " aria-label="Next page: Trends view">
-                    <i class="fa fa-angle-right"></i>
-                </a>
                 
             
         
@@ -454,7 +467,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"per-view documentation","level":"1.3","depth":1,"next":{"title":"Trends view","level":"1.3.1","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]},"previous":{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/views/README.md","mtime":"2017-04-27T23:17:44.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Time-rendering modes","level":"1.5.1","depth":2,"previous":{"title":"misc","level":"1.5","depth":1,"path":"docs/misc/README.md","ref":"docs/misc/README.md","articles":[{"title":"Time-rendering modes","level":"1.5.1","depth":2,"path":"docs/misc/TimeRenderingModes.md","ref":"docs/misc/TimeRenderingModes.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/misc/TimeRenderingModes.md","mtime":"2017-04-27T23:17:44.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"../..","book":{"language":""}});
         });
     </script>
 </div>
