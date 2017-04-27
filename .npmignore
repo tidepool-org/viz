@@ -2,7 +2,6 @@
 coverage/
 data/
 local/
-src/
 stories/
 storybook/
 test/
