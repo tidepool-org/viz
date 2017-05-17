@@ -1,0 +1,621 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Device Settings view · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="../../../docs/views/Trends.html" />
+    
+    
+    <link rel="prev" href="../../../docs/views/" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../../../">
+            
+                <a href="../../../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../../../docs/StartHere.html">
+            
+                <a href="../../../docs/StartHere.html">
+            
+                    
+                    @tidepool/viz developer guide
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../../../docs/Background.html">
+            
+                <a href="../../../docs/Background.html">
+            
+                    
+                    background
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../../../docs/FeatureOverview.html">
+            
+                <a href="../../../docs/FeatureOverview.html">
+            
+                    
+                    overview of features
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../../../docs/Architecture.html">
+            
+                <a href="../../../docs/Architecture.html">
+            
+                    
+                    planned architecture
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../../../docs/DirectoryStructure.html">
+            
+                <a href="../../../docs/DirectoryStructure.html">
+            
+                    
+                    app & directory structure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="../../../docs/CodeStyle.html">
+            
+                <a href="../../../docs/CodeStyle.html">
+            
+                    
+                    code style
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../../../docs/views/">
+            
+                <a href="../../../docs/views/">
+            
+                    
+                    per-view documentation
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter active" data-level="1.3.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Device Settings view
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../../../docs/views/Trends.html">
+            
+                <a href="../../../docs/views/Trends.html">
+            
+                    
+                    Trends view
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../../../docs/deps/">
+            
+                <a href="../../../docs/deps/">
+            
+                    
+                    usage of dependencies
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../../../docs/deps/D3.html">
+            
+                <a href="../../../docs/deps/D3.html">
+            
+                    
+                    D3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../../../docs/deps/GSAP.html">
+            
+                <a href="../../../docs/deps/GSAP.html">
+            
+                    
+                    GSAP
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../../../docs/deps/Moment.html">
+            
+                <a href="../../../docs/deps/Moment.html">
+            
+                    
+                    Moment
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../../../docs/deps/React.html">
+            
+                <a href="../../../docs/deps/React.html">
+            
+                    
+                    React
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../../../docs/deps/ReactMotion.html">
+            
+                <a href="../../../docs/deps/ReactMotion.html">
+            
+                    
+                    React Motion
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../../../docs/deps/Redux.html">
+            
+                <a href="../../../docs/deps/Redux.html">
+            
+                    
+                    Redux
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../../../docs/deps/Webpack.html">
+            
+                <a href="../../../docs/deps/Webpack.html">
+            
+                    
+                    webpack
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../../utils/">
+            
+                <a href="../../utils/">
+            
+                    
+                    utilities
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../../utils/apidocs/">
+            
+                <a href="../../utils/apidocs/">
+            
+                    
+                    API docs for utilities
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1.1" data-path="../../utils/apidocs/bloodglucose.html">
+            
+                <a href="../../utils/apidocs/bloodglucose.html">
+            
+                    
+                    blood glucose
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.2" data-path="../../utils/apidocs/bolus.html">
+            
+                <a href="../../utils/apidocs/bolus.html">
+            
+                    
+                    bolus
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.3" data-path="../../utils/apidocs/datetime.html">
+            
+                <a href="../../utils/apidocs/datetime.html">
+            
+                    
+                    datetime
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.4" data-path="../../utils/apidocs/format.html">
+            
+                <a href="../../utils/apidocs/format.html">
+            
+                    
+                    format
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.5" data-path="../../utils/apidocs/misc.html">
+            
+                <a href="../../utils/apidocs/misc.html">
+            
+                    
+                    misc
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../../../docs/misc/">
+            
+                <a href="../../../docs/misc/">
+            
+                    
+                    misc
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../../../docs/misc/TimeRenderingModes.html">
+            
+                <a href="../../../docs/misc/TimeRenderingModes.html">
+            
+                    
+                    Time-rendering modes
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../../.." >Device Settings view</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h2 id="device-settings-ie-insulin-pump-settings-utilities">Device settings (i.e., insulin pump settings) utilities</h2>
+<p>This directory contains the components required to visualize and also print device settings</p>
+<h3 id="print-view">Print view</h3>
+<p><em>Aim:</em>
+To keep our components as similar when viewed in the web app as when printed. Where variations occur, such as so we can show all settings in an open state, we have initially taken the approach outlined</p>
+<p><em>In the component:</em>
+Based on the mode the component is being viewed in we have a prop that is used to control various aspects of the appearance. In the settings instance it means showing all the settings sections expanded.</p>
+<pre><code>view: PropTypes.oneOf([DISPLAY_VIEW, PRINT_VIEW]).isRequired,
+</code></pre><p><em>In the css:</em>
+If there are any specific print styles these are contained in the section below. Of note are the <code>page-break</code>s. At this stage they have been done on a &quot;best guess&quot; and are specific to each component based on how we would ideally like the settings to be broken up when printing.</p>
+<pre><code>@media print {
+    ...
+}
+</code></pre><h3 id="copy-text">Copy text</h3>
+<p><em>Aim:</em>
+To enable the easy copy and pasting of the settings while also allowing the user to modify the table that has been copied. To do this we need to remove all styles and have a very simple text representation of the table while still keeping its basic format.</p>
+<p><em>In the component:</em>
+We are using <code>ClipboardButton</code> and then have built a text representation of the settings that essentially uses a command-line tool <code>text-table</code>. This is then embedded in a <code>&lt;pre&gt;..&lt;/pre&gt;</code> tag as we want to ensure no styles are copied. All of the work is done in <code>utils/settings/textData.js</code> to build the table.</p>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="../../../docs/views/" class="navigation navigation-prev " aria-label="Previous page: per-view documentation">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="../../../docs/views/Trends.html" class="navigation navigation-next " aria-label="Next page: Trends view">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Device Settings view","level":"1.3.1","depth":2,"next":{"title":"Trends view","level":"1.3.2","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]},"previous":{"title":"per-view documentation","level":"1.3","depth":1,"path":"docs/views/README.md","ref":"docs/views/README.md","articles":[{"title":"Device Settings view","level":"1.3.1","depth":2,"path":"src/components/settings/README.md","ref":"src/components/settings/README.md","articles":[]},{"title":"Trends view","level":"1.3.2","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/components/settings/README.md","mtime":"2017-05-11T21:29:22.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-17T00:04:26.596Z"},"basePath":"../../..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../../gitbook/gitbook.js"></script>
+    <script src="../../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

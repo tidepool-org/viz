@@ -1,0 +1,910 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>bolus · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.2">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../../../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../../../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../../../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../../../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../../../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="datetime.html" />
+    
+    
+    <link rel="prev" href="bloodglucose.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../../../">
+            
+                <a href="../../../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../../../docs/StartHere.html">
+            
+                <a href="../../../docs/StartHere.html">
+            
+                    
+                    @tidepool/viz developer guide
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.2.1" data-path="../../../docs/Background.html">
+            
+                <a href="../../../docs/Background.html">
+            
+                    
+                    background
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.2" data-path="../../../docs/FeatureOverview.html">
+            
+                <a href="../../../docs/FeatureOverview.html">
+            
+                    
+                    overview of features
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.3" data-path="../../../docs/Architecture.html">
+            
+                <a href="../../../docs/Architecture.html">
+            
+                    
+                    planned architecture
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.4" data-path="../../../docs/DirectoryStructure.html">
+            
+                <a href="../../../docs/DirectoryStructure.html">
+            
+                    
+                    app & directory structure
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2.5" data-path="../../../docs/CodeStyle.html">
+            
+                <a href="../../../docs/CodeStyle.html">
+            
+                    
+                    code style
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../../../docs/views/">
+            
+                <a href="../../../docs/views/">
+            
+                    
+                    per-view documentation
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.3.1" data-path="../../components/settings/">
+            
+                <a href="../../components/settings/">
+            
+                    
+                    Device Settings view
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="../../../docs/views/Trends.html">
+            
+                <a href="../../../docs/views/Trends.html">
+            
+                    
+                    Trends view
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../../../docs/deps/">
+            
+                <a href="../../../docs/deps/">
+            
+                    
+                    usage of dependencies
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.4.1" data-path="../../../docs/deps/D3.html">
+            
+                <a href="../../../docs/deps/D3.html">
+            
+                    
+                    D3
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.2" data-path="../../../docs/deps/GSAP.html">
+            
+                <a href="../../../docs/deps/GSAP.html">
+            
+                    
+                    GSAP
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.3" data-path="../../../docs/deps/Moment.html">
+            
+                <a href="../../../docs/deps/Moment.html">
+            
+                    
+                    Moment
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.4" data-path="../../../docs/deps/React.html">
+            
+                <a href="../../../docs/deps/React.html">
+            
+                    
+                    React
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.5" data-path="../../../docs/deps/ReactMotion.html">
+            
+                <a href="../../../docs/deps/ReactMotion.html">
+            
+                    
+                    React Motion
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.6" data-path="../../../docs/deps/Redux.html">
+            
+                <a href="../../../docs/deps/Redux.html">
+            
+                    
+                    Redux
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4.7" data-path="../../../docs/deps/Webpack.html">
+            
+                <a href="../../../docs/deps/Webpack.html">
+            
+                    
+                    webpack
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    utilities
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    API docs for utilities
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1.1" data-path="bloodglucose.html">
+            
+                <a href="bloodglucose.html">
+            
+                    
+                    blood glucose
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.5.1.2" data-path="bolus.html">
+            
+                <a href="bolus.html">
+            
+                    
+                    bolus
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.3" data-path="datetime.html">
+            
+                <a href="datetime.html">
+            
+                    
+                    datetime
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.4" data-path="format.html">
+            
+                <a href="format.html">
+            
+                    
+                    format
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.5" data-path="misc.html">
+            
+                <a href="misc.html">
+            
+                    
+                    misc
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../../../docs/misc/">
+            
+                <a href="../../../docs/misc/">
+            
+                    
+                    misc
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="../../../docs/misc/TimeRenderingModes.html">
+            
+                <a href="../../../docs/misc/TimeRenderingModes.html">
+            
+                    
+                    Time-rendering modes
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="../../.." >bolus</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <blockquote>
+<p>@tidepool/viz@0.8.1 apidocs /Users/jebeck/Tidepool/viz
+jsdoc2md &quot;src/utils/bolus.js&quot;</p>
+</blockquote>
+<h2 id="functions">Functions</h2>
+<dl>
+<dt><a href="#fixFloatingPoint">fixFloatingPoint(numeric)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>fixFloatingPoint</p>
+</dd>
+<dt><a href="#getBolusFromInsulinEvent">getBolusFromInsulinEvent(insulinEvent)</a> &#x21D2; <code>Object</code></dt>
+<dd><p>getBolusFromInsulinEvent</p>
+</dd>
+<dt><a href="#getProgrammed">getProgrammed(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getProgrammed</p>
+</dd>
+<dt><a href="#getRecommended">getRecommended(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getRecommended</p>
+</dd>
+<dt><a href="#getDelivered">getDelivered(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getDelivered</p>
+</dd>
+<dt><a href="#getDuration">getDuration(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getDuration</p>
+</dd>
+<dt><a href="#getExtended">getExtended(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getExtended</p>
+</dd>
+<dt><a href="#getMaxDuration">getMaxDuration(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getMaxDuration</p>
+</dd>
+<dt><a href="#getMaxValue">getMaxValue(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getMaxValue</p>
+</dd>
+<dt><a href="#hasExtended">hasExtended(insulinEvent)</a> &#x21D2; <code>Boolean</code></dt>
+<dd><p>hasExtended</p>
+</dd>
+<dt><a href="#isInterruptedBolus">isInterruptedBolus(insulinEvent)</a> &#x21D2; <code>Boolean</code></dt>
+<dd><p>isInterruptedBolus</p>
+</dd>
+<dt><a href="#isOverride">isOverride(insulinEvent)</a> &#x21D2; <code>Boolean</code></dt>
+<dd><p>isOverride</p>
+</dd>
+<dt><a href="#isUnderride">isUnderride(insulinEvent)</a> &#x21D2; <code>Boolean</code></dt>
+<dd><p>isUnderride</p>
+</dd>
+</dl>
+
+<p><a name="fixFloatingPoint"></a></p>
+<h2 id="fixfloatingpointnumeric-&#x21D2;-number">fixFloatingPoint(numeric) &#x21D2; <code>Number</code></h2>
+<p>fixFloatingPoint</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - numeric value rounded to 3 decimal places  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>numeric</td>
+<td><code>Number</code></td>
+<td>value</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getBolusFromInsulinEvent"></a></p>
+<h2 id="getbolusfrominsulineventinsulinevent-&#x21D2;-object">getBolusFromInsulinEvent(insulinEvent) &#x21D2; <code>Object</code></h2>
+<p>getBolusFromInsulinEvent</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Object</code> - a Tidepool bolus object  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool wizard or bolus object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getProgrammed"></a></p>
+<h2 id="getprogrammedinsulinevent-&#x21D2;-number">getProgrammed(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getProgrammed</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - value of insulin programmed for delivery in the given insulinEvent  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getRecommended"></a></p>
+<h2 id="getrecommendedinsulinevent-&#x21D2;-number">getRecommended(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getRecommended</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - total recommended insulin dose  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getDelivered"></a></p>
+<h2 id="getdeliveredinsulinevent-&#x21D2;-number">getDelivered(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getDelivered</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - units of insulin delivered in this insulinEvent  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getDuration"></a></p>
+<h2 id="getdurationinsulinevent-&#x21D2;-number">getDuration(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getDuration</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - duration value in milliseconds  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getExtended"></a></p>
+<h2 id="getextendedinsulinevent-&#x21D2;-number">getExtended(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getExtended</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - units of insulin delivered over an extended duration  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool wizard or bolus object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getMaxDuration"></a></p>
+<h2 id="getmaxdurationinsulinevent-&#x21D2;-number">getMaxDuration(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getMaxDuration</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - duration value in milliseconds  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="getMaxValue"></a></p>
+<h2 id="getmaxvalueinsulinevent-&#x21D2;-number">getMaxValue(insulinEvent) &#x21D2; <code>Number</code></h2>
+<p>getMaxValue</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - max programmed or recommended value wrt the insulinEvent  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="hasExtended"></a></p>
+<h2 id="hasextendedinsulinevent-&#x21D2;-boolean">hasExtended(insulinEvent) &#x21D2; <code>Boolean</code></h2>
+<p>hasExtended</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Boolean</code> - whether the bolus has an extended delivery portion  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="isInterruptedBolus"></a></p>
+<h2 id="isinterruptedbolusinsulinevent-&#x21D2;-boolean">isInterruptedBolus(insulinEvent) &#x21D2; <code>Boolean</code></h2>
+<p>isInterruptedBolus</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Boolean</code> - whether the bolus was interrupted or not  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="isOverride"></a></p>
+<h2 id="isoverrideinsulinevent-&#x21D2;-boolean">isOverride(insulinEvent) &#x21D2; <code>Boolean</code></h2>
+<p>isOverride</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Boolean</code> - whether the bolus programmed was larger than the calculated recommendation  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+<p><a name="isUnderride"></a></p>
+<h2 id="isunderrideinsulinevent-&#x21D2;-boolean">isUnderride(insulinEvent) &#x21D2; <code>Boolean</code></h2>
+<p>isUnderride</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Boolean</code> - whether the bolus programmed was smaller than the calculated recommendation  </p>
+<table>
+<thead>
+<tr>
+<th>Param</th>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>insulinEvent</td>
+<td><code>Object</code></td>
+<td>a Tidepool bolus or wizard object</td>
+</tr>
+</tbody>
+</table>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="bloodglucose.html" class="navigation navigation-prev " aria-label="Previous page: blood glucose">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="datetime.html" class="navigation navigation-next " aria-label="Next page: datetime">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"bolus","level":"1.5.1.2","depth":3,"next":{"title":"datetime","level":"1.5.1.3","depth":3,"path":"src/utils/apidocs/datetime.md","ref":"src/utils/apidocs/datetime.md","articles":[]},"previous":{"title":"blood glucose","level":"1.5.1.1","depth":3,"path":"src/utils/apidocs/bloodglucose.md","ref":"src/utils/apidocs/bloodglucose.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/bolus.md","mtime":"2017-05-16T23:59:21.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-17T00:04:26.596Z"},"basePath":"../../..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../../../gitbook/gitbook.js"></script>
+    <script src="../../../gitbook/theme.js"></script>
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../../../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

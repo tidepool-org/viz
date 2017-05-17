@@ -200,7 +200,20 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.3.1" data-path="views/Trends.html">
+        <li class="chapter " data-level="1.3.1" data-path="../src/components/settings/">
+            
+                <a href="../src/components/settings/">
+            
+                    
+                    Device Settings view
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3.2" data-path="views/Trends.html">
             
                 <a href="views/Trends.html">
             
@@ -328,7 +341,110 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="misc/">
+        <li class="chapter " data-level="1.5" data-path="../src/utils/">
+            
+                <a href="../src/utils/">
+            
+                    
+                    utilities
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1" data-path="../src/utils/apidocs/">
+            
+                <a href="../src/utils/apidocs/">
+            
+                    
+                    API docs for utilities
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.5.1.1" data-path="../src/utils/apidocs/bloodglucose.html">
+            
+                <a href="../src/utils/apidocs/bloodglucose.html">
+            
+                    
+                    blood glucose
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.2" data-path="../src/utils/apidocs/bolus.html">
+            
+                <a href="../src/utils/apidocs/bolus.html">
+            
+                    
+                    bolus
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.3" data-path="../src/utils/apidocs/datetime.html">
+            
+                <a href="../src/utils/apidocs/datetime.html">
+            
+                    
+                    datetime
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.4" data-path="../src/utils/apidocs/format.html">
+            
+                <a href="../src/utils/apidocs/format.html">
+            
+                    
+                    format
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5.1.5" data-path="../src/utils/apidocs/misc.html">
+            
+                <a href="../src/utils/apidocs/misc.html">
+            
+                    
+                    misc
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="misc/">
             
                 <a href="misc/">
             
@@ -342,7 +458,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.5.1" data-path="misc/TimeRenderingModes.html">
+        <li class="chapter " data-level="1.6.1" data-path="misc/TimeRenderingModes.html">
             
                 <a href="misc/TimeRenderingModes.html">
             
@@ -425,7 +541,7 @@
 <li><a href="#the-test-directory">The test directory</a></li>
 </ul>
 <hr>
-<p>As of November, 2016, the directory structure is as follows (although this may change as we continue to develop new code in this repository):</p>
+<p>As of May, 2017, the directory structure is as follows (although this may change as we continue to develop new code in this repository):</p>
 <!-- to generate the directory structure below use `tree -d --matchdirs -I '_book|coverage|dist|node_modules|web'` -->
 <pre><code>&#x251C;&#x2500;&#x2500; data
 &#x2502;   &#x2514;&#x2500;&#x2500; pumpSettings
@@ -434,48 +550,52 @@
 &#x2502;       &#x251C;&#x2500;&#x2500; omnipod
 &#x2502;       &#x2514;&#x2500;&#x2500; tandem
 &#x251C;&#x2500;&#x2500; docs
+&#x2502;   &#x251C;&#x2500;&#x2500; deps
+&#x2502;   &#x251C;&#x2500;&#x2500; misc
+&#x2502;   &#x2514;&#x2500;&#x2500; views
+&#x2502;       &#x2514;&#x2500;&#x2500; images
+&#x251C;&#x2500;&#x2500; local
 &#x251C;&#x2500;&#x2500; src
 &#x2502;   &#x251C;&#x2500;&#x2500; components
 &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; common
-&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; controls
+&#x2502;   &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; controls
+&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; tooltips
 &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; settings
 &#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; common
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; trends
 &#x2502;   &#x2502;       &#x251C;&#x2500;&#x2500; cbg
-&#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; common
-&#x2502;   &#x251C;&#x2500;&#x2500; containers
-&#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; settings
-&#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; trends
+&#x2502;   &#x2502;       &#x251C;&#x2500;&#x2500; common
+&#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; smbg
 &#x2502;   &#x251C;&#x2500;&#x2500; redux
 &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; actions
 &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; constants
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; reducers
 &#x2502;   &#x251C;&#x2500;&#x2500; styles
 &#x2502;   &#x2514;&#x2500;&#x2500; utils
+&#x2502;       &#x251C;&#x2500;&#x2500; apidocs
 &#x2502;       &#x251C;&#x2500;&#x2500; settings
 &#x2502;       &#x2514;&#x2500;&#x2500; trends
 &#x251C;&#x2500;&#x2500; stories
 &#x2502;   &#x251C;&#x2500;&#x2500; components
 &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; common
-&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; controls
+&#x2502;   &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; controls
+&#x2502;   &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; tooltips
 &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; settings
 &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; trends
 &#x2502;   &#x2502;       &#x2514;&#x2500;&#x2500; common
-&#x2502;   &#x2514;&#x2500;&#x2500; containers
-&#x2502;       &#x2514;&#x2500;&#x2500; trends
+&#x2502;   &#x2514;&#x2500;&#x2500; helpers
 &#x251C;&#x2500;&#x2500; storybook
 &#x2514;&#x2500;&#x2500; test
     &#x251C;&#x2500;&#x2500; components
     &#x2502;   &#x251C;&#x2500;&#x2500; common
-    &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; controls
+    &#x2502;   &#x2502;   &#x251C;&#x2500;&#x2500; controls
+    &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; tooltip
     &#x2502;   &#x251C;&#x2500;&#x2500; settings
     &#x2502;   &#x2502;   &#x2514;&#x2500;&#x2500; common
     &#x2502;   &#x2514;&#x2500;&#x2500; trends
     &#x2502;       &#x251C;&#x2500;&#x2500; cbg
-    &#x2502;       &#x2514;&#x2500;&#x2500; common
-    &#x251C;&#x2500;&#x2500; containers
-    &#x2502;   &#x251C;&#x2500;&#x2500; settings
-    &#x2502;   &#x2514;&#x2500;&#x2500; trends
+    &#x2502;       &#x251C;&#x2500;&#x2500; common
+    &#x2502;       &#x2514;&#x2500;&#x2500; smbg
     &#x251C;&#x2500;&#x2500; helpers
     &#x251C;&#x2500;&#x2500; redux
     &#x2502;   &#x251C;&#x2500;&#x2500; actions
@@ -487,27 +607,32 @@
 <p>All active, non-tooling code in the repository is contained in <code>src/</code>, and <code>src/</code> has the following structure:</p>
 <pre><code>&#x2514;&#x2500;&#x2500; src
     &#x251C;&#x2500;&#x2500; components
-    &#x251C;&#x2500;&#x2500; containers
     &#x251C;&#x2500;&#x2500; redux
     &#x251C;&#x2500;&#x2500; styles
     &#x2514;&#x2500;&#x2500; utils
 </code></pre><h3 id="redux-directories">Redux directories</h3>
 <pre><code>&#x2514;&#x2500;&#x2500; redux
     &#x251C;&#x2500;&#x2500; actions
+    &#x251C;&#x2500;&#x2500; constants
     &#x2514;&#x2500;&#x2500; reducers
 </code></pre><p>Within <code>src/redux/</code>, the <code>actions/</code> and <code>reducers/</code> contain the actions and reducers specific to the components in this component library. An <code>index.js</code> file in each of these directories exports the set of actions and a root reducer for a consuming application to import and consume via <code>connect()</code>ed components (in the case of actions) and by adding the reducer as a branch of the consuming application&apos;s state tree.</p>
 <p>In both <code>actions/</code> and <code>reducers/</code>, files should be grouped into sub-directories by <a href="#views">&quot;view&quot;</a> or located in a directory called <code>common/</code> if the action(s) or reducer(s) is relevant to more than one view.</p>
+<p>The <code>src/redux/constants/</code> directory at present contains just the <code>actionTypes.js</code> file, which exports (as individual named exports) the action type constants for every action defined in <code>actions/</code> as well as those of blip&apos;s actions that are relevant to the viz reducers.</p>
 <h3 id="react-component-directories">React component directories</h3>
-<p>Within <code>src/</code>, the <code>components/</code>, <code>containers/</code>, and (eventually) <code>views/</code> directories all contain the source for React components of various types and purposes.</p>
+<p>Within <code>src/</code>, the <code>components/</code> directory contains the source for React components of various types and purposes.</p>
 <p>Note that our convention for naming React component files is <a href="https://en.wikipedia.org/wiki/PascalCase" target="_blank">PascalCase</a>: <code>BGSlice</code>, <code>DailyContainer</code>, &amp;c.</p>
-<h4 id="components">components</h4>
-<p><code>components/</code> contains the lowest level of component. For the most part, these components should be stateless and (albeit with some rare exceptions) coded as <a href="https://facebook.github.io/react/blog/2015/10/07/react-v0.14.html#stateless-functional-components" target="_blank">stateless functional components</a> rather than ES6 classes extending <code>React.Component</code>.</p>
+<p>By convention, React components that meet most or all of the following criteria are considered &quot;container&quot; components and named as such&#x2014;e.g., <code>TrendsContainer</code> and <code>CBGDateTracesAnimationContainer</code>.</p>
+<ul>
+<li>implemented as a <code>class</code> extension of <code>React.Component</code> or <code>React.PureComponent</code> (rather than a pure functional component)</li>
+<li>needs only minimal or zero styles</li>
+<li>primarily performs data munging or other &quot;business logic&quot; (or animation logic) in response to data (i.e., props) changes, potentially storing internal derived state as a result</li>
+<li>renders other React components, <em>not</em> HTML or SVG elements</li>
+</ul>
+<p>The distinction between a &quot;container&quot; and a &quot;pure&quot; component is admittedly a bit fuzzy<sup><a href="#fn_a" id="reffn_a">a</a></sup>, but generally the purpose of a container is to perform logic to <em>prepare</em> for rendering and then pass the resulting state to one or more stateless functional components for pure rendering. For example, for the trends view, the <code>TrendsContainer</code> determines the blood glucose and time domains on mount and on every update, preserving the current time domain in view and arrays of <code>cbg</code> and <code>smbg</code> currently in view (given the time domain) in its state. At the next level down, the <code>TrendsSVGContainer</code> sets up the rendering &quot;canvas&quot; (actually an SVG element) and scales for rendering (given the dimensions of the &quot;canvas&quot;). Another hallmark of &quot;container&quot; components is that they often do <em>not</em> have any associated styles since their purpose is computation and set up, not rendering.</p>
+<p>For the most part, <em>non</em>-&quot;container&quot; components should be stateless and (albeit with some rare exceptions) coded as <a href="https://facebook.github.io/react/blog/2015/10/07/react-v0.14.html#stateless-functional-components" target="_blank">stateless functional components</a> rather than ES6 classes extending <code>React.Component</code> or <code>React.PureComponent</code>.</p>
 <p>Files should be grouped into sub-directories by <a href="#views">&quot;view&quot;</a> and where necessary (because of a large number of components) into further sub-directories by datatype.</p>
 <p>Components used in more than one view should be located in <code>common/</code>. Examples of common components are controls like the BGM &lt;-&gt; CGM toggle used in both the basics and trends views and, potentially, animation containers like the header + child component (proposed for new device settings and potentially useful as well for sections in the basics view) that will slide the child component in and out on click of the header.</p>
 <p>CSS particular to a component should be written using <a href="https://github.com/css-modules/css-modules" target="_blank">CSS modules</a> and contained in a file in the same directory and with the same name as the component, substituting the <code>.css</code> suffix for <code>.js</code>.</p>
-<h4 id="containers">containers</h4>
-<p><code>containers/</code> contains the mid-tier type of component. The distinction between a &quot;container&quot; and a &quot;component&quot; is a bit fuzzy, but generally the purpose of a container is to perform logic to <em>prepare</em> for rendering and then pass the resulting state to one or more stateless functional components for pure rendering. For example, for the trends view, the <code>TrendsContainer</code> determines the blood glucose and time domains on mount and on every update, preserving the current time domain in view and arrays of <code>cbg</code> and <code>smbg</code> currently in view (given the time domain) in its state. At the next level down, the <code>CBGTrendsContainer</code> sets up the rendering &quot;canvas&quot; (actually an SVG element) and scales for rendering (given the dimensions of the &quot;canvas&quot;). Another hallmark of &quot;container&quot; components is that they often do <em>not</em> have any associated styles since their purpose is computation and set up, not rendering.</p>
-<p>Files should be grouped into sub-directories by <a href="#views">&quot;view&quot;</a> or located in a directory called <code>common/</code> if applicable to more than one view.</p>
 <h4 id="views">views</h4>
 <p><code>views/</code> is a proposal for the eventual location of a top-level container component for each of blip&apos;s major data visualizations: (currently) basics, daily, weekly, trends, and device settings. A &quot;view&quot; will encompass more than just the rendered visualization; the navigation sub-header (currently containing links for navigating between views and arrows for navigating along the time dimension) and footer (containing options for some views like grouping for the <code>smbg</code> version of the trends view) will also be part of a top-level view component since some header and footer controls are specific to certain views or have specific behavior on certain views.</p>
 <h3 id="misc">Misc</h3>
@@ -521,6 +646,9 @@
 <p><code>storybook/</code> contains configuration files for React Storybook. This directory <strong>cannot</strong> be moved or renamed without changing React Storybook configuration options!</p>
 <h3 id="the-test-directory">The test directory</h3>
 <p>The <code>test/</code> directory mirrors the structure of <code>src/</code>. Our convention for naming test files is to use the same names but insert <code>.test</code> before the <code>.js</code> suffix. For example, the tests for a component <code>BGSlice.js</code> should be in a file named <code>BGSlice.test.js</code>. The tests for a <code>datetime.js</code> utility file should be in a file named <code>datetime.test.js</code>.</p>
+<blockquote id="fn_a">
+<sup>a</sup>. Hence our decision to give up on organizing containers in a <code>src/containers/</code> directory distinct from <code>src/components/</code>.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
 
                                 
                                 </section>
@@ -564,7 +692,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"app & directory structure","level":"1.2.4","depth":2,"next":{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]},"previous":{"title":"planned architecture","level":"1.2.3","depth":2,"path":"docs/Architecture.md","ref":"docs/Architecture.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/DirectoryStructure.md","mtime":"2017-04-24T01:10:26.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-04-27T23:23:44.196Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"app & directory structure","level":"1.2.4","depth":2,"next":{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]},"previous":{"title":"planned architecture","level":"1.2.3","depth":2,"path":"docs/Architecture.md","ref":"docs/Architecture.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/DirectoryStructure.md","mtime":"2017-05-11T21:29:22.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-17T00:04:26.596Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
