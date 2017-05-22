@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>blood glucose · GitBook</title>
+        <title>basal · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../../../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="bolus.html" />
+    <link rel="next" href="bloodglucose.html" />
     
     
-    <link rel="prev" href="basal.html" />
+    <link rel="prev" href="./" />
     
 
     </head>
@@ -382,7 +382,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.6.1.1" data-path="basal.html">
+        <li class="chapter active" data-level="1.6.1.1" data-path="basal.html">
             
                 <a href="basal.html">
             
@@ -395,7 +395,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.6.1.2" data-path="bloodglucose.html">
+        <li class="chapter " data-level="1.6.1.2" data-path="bloodglucose.html">
             
                 <a href="bloodglucose.html">
             
@@ -545,7 +545,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="../../.." >blood glucose</a>
+        <a href="../../.." >basal</a>
     </h1>
 </div>
 
@@ -562,28 +562,23 @@
                                 
                                 <blockquote>
 <p>@tidepool/viz@0.8.1 apidocs /Users/jebeck/Tidepool/viz
-jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
+jsdoc2md &quot;src/utils/basal.js&quot;</p>
 </blockquote>
 <h2 id="functions">Functions</h2>
 <dl>
-<dt><a href="#classifyBgValue">classifyBgValue(bgBounds, bgValue, classificationType)</a> &#x21D2; <code>String</code></dt>
-<dd><p>classifyBgValue</p>
+<dt><a href="#getBasalSequences">getBasalSequences(basals)</a> &#x21D2; <code>Array</code></dt>
+<dd><p>getBasalSequences</p>
 </dd>
-<dt><a href="#calcBgPercentInCategories">calcBgPercentInCategories(data, bgBounds)</a> &#x21D2; <code>Object</code></dt>
-<dd><p>calcBgPercentInCategories</p>
-</dd>
-<dt><a href="#convertToMmolL">convertToMmolL(bgVal)</a> &#x21D2; <code>Number</code></dt>
-<dd><p>convertToMmolL</p>
-</dd>
-<dt><a href="#reshapeBgClassesToBgBounds">reshapeBgClassesToBgBounds(bgPrefs)</a> &#x21D2; <code>Object</code></dt>
-<dd><p>reshapeBgClassesToBgBounds</p>
+<dt><a href="#getTotalBasal">getTotalBasal(basals)</a> &#x21D2; <code>Number</code></dt>
+<dd><p>getTotalBasal</p>
 </dd>
 </dl>
 
-<p><a name="classifyBgValue"></a></p>
-<h2 id="classifybgvaluebgbounds-bgvalue-classificationtype-&#x21D2;-string">classifyBgValue(bgBounds, bgValue, classificationType) &#x21D2; <code>String</code></h2>
-<p>classifyBgValue</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>String</code> - bgClassification - low, target, high  </p>
+<p><a name="getBasalSequences"></a></p>
+<h2 id="getbasalsequencesbasals-&#x21D2;-array">getBasalSequences(basals) &#x21D2; <code>Array</code></h2>
+<p>getBasalSequences</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Array</code> - Array of Arrays where each component Array is a sequence of basals
+                of the same subType to be rendered as a unit  </p>
 <table>
 <thead>
 <tr>
@@ -594,52 +589,16 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
 </thead>
 <tbody>
 <tr>
-<td>bgBounds</td>
-<td><code>Object</code></td>
-<td>object describing boundaries for blood glucose categories</td>
-</tr>
-<tr>
-<td>bgValue</td>
-<td><code>Number</code></td>
-<td>integer or float blood glucose value in either mg/dL or mmol/L</td>
-</tr>
-<tr>
-<td>classificationType</td>
-<td><code>String</code></td>
-<td>&apos;threeWay&apos; or &apos;fiveWay&apos;</td>
-</tr>
-</tbody>
-</table>
-<p><a name="calcBgPercentInCategories"></a></p>
-<h2 id="calcbgpercentincategoriesdata-bgbounds-&#x21D2;-object">calcBgPercentInCategories(data, bgBounds) &#x21D2; <code>Object</code></h2>
-<p>calcBgPercentInCategories</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Object</code> - bgPercentInCategories - object w/keys veryLow, low, target, high, veryHigh
-                 and 0.0 to 1.0 percentage values  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>data</td>
+<td>basals</td>
 <td><code>Array</code></td>
-<td>Array of Tidepool cbg or smbg data</td>
-</tr>
-<tr>
-<td>bgBounds</td>
-<td><code>Object</code></td>
-<td>object describing boundaries for blood glucose categories</td>
+<td>Array of preprocessed Tidepool basal objects</td>
 </tr>
 </tbody>
 </table>
-<p><a name="convertToMmolL"></a></p>
-<h2 id="converttommollbgval-&#x21D2;-number">convertToMmolL(bgVal) &#x21D2; <code>Number</code></h2>
-<p>convertToMmolL</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - convertedBgVal - blood glucose value in mmol/L, unrounded  </p>
+<p><a name="getTotalBasal"></a></p>
+<h2 id="gettotalbasalbasals-&#x21D2;-number">getTotalBasal(basals) &#x21D2; <code>Number</code></h2>
+<p>getTotalBasal</p>
+<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - total basal insulin in units  </p>
 <table>
 <thead>
 <tr>
@@ -650,29 +609,9 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
 </thead>
 <tbody>
 <tr>
-<td>bgVal</td>
-<td><code>Number</code></td>
-<td>blood glucose value in mg/dL</td>
-</tr>
-</tbody>
-</table>
-<p><a name="reshapeBgClassesToBgBounds"></a></p>
-<h2 id="reshapebgclassestobgboundsbgprefs-&#x21D2;-object">reshapeBgClassesToBgBounds(bgPrefs) &#x21D2; <code>Object</code></h2>
-<p>reshapeBgClassesToBgBounds</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Object</code> - bgBounds - @tidepool/viz-style bgBounds  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>bgPrefs</td>
-<td><code>Object</code></td>
-<td>bgPrefs object from blip containing tideline-style bgClasses</td>
+<td>basals</td>
+<td><code>Array</code></td>
+<td>Array of preprocessed Tidepool basal objects                         trimmed to fit within the timespan the total basal                         is being calculated over</td>
 </tr>
 </tbody>
 </table>
@@ -703,12 +642,12 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
 
             
                 
-                <a href="basal.html" class="navigation navigation-prev " aria-label="Previous page: basal">
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: API docs for utilities">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="bolus.html" class="navigation navigation-next " aria-label="Next page: bolus">
+                <a href="bloodglucose.html" class="navigation navigation-next " aria-label="Next page: blood glucose">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -719,7 +658,7 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"blood glucose","level":"1.6.1.2","depth":3,"next":{"title":"bolus","level":"1.6.1.3","depth":3,"path":"src/utils/apidocs/bolus.md","ref":"src/utils/apidocs/bolus.md","articles":[]},"previous":{"title":"basal","level":"1.6.1.1","depth":3,"path":"src/utils/apidocs/basal.md","ref":"src/utils/apidocs/basal.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/bloodglucose.md","mtime":"2017-05-22T22:44:37.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:03:33.193Z"},"basePath":"../../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"basal","level":"1.6.1.1","depth":3,"next":{"title":"blood glucose","level":"1.6.1.2","depth":3,"path":"src/utils/apidocs/bloodglucose.md","ref":"src/utils/apidocs/bloodglucose.md","articles":[]},"previous":{"title":"API docs for utilities","level":"1.6.1","depth":2,"path":"src/utils/apidocs/README.md","ref":"src/utils/apidocs/README.md","articles":[{"title":"basal","level":"1.6.1.1","depth":3,"path":"src/utils/apidocs/basal.md","ref":"src/utils/apidocs/basal.md","articles":[]},{"title":"blood glucose","level":"1.6.1.2","depth":3,"path":"src/utils/apidocs/bloodglucose.md","ref":"src/utils/apidocs/bloodglucose.md","articles":[]},{"title":"bolus","level":"1.6.1.3","depth":3,"path":"src/utils/apidocs/bolus.md","ref":"src/utils/apidocs/bolus.md","articles":[]},{"title":"datetime","level":"1.6.1.4","depth":3,"path":"src/utils/apidocs/datetime.md","ref":"src/utils/apidocs/datetime.md","articles":[]},{"title":"format","level":"1.6.1.5","depth":3,"path":"src/utils/apidocs/format.md","ref":"src/utils/apidocs/format.md","articles":[]},{"title":"misc","level":"1.6.1.6","depth":3,"path":"src/utils/apidocs/misc.md","ref":"src/utils/apidocs/misc.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/basal.md","mtime":"2017-05-22T22:44:12.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:03:33.193Z"},"basePath":"../../..","book":{"language":""}});
         });
     </script>
 </div>

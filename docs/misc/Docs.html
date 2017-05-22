@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>usage of dependencies · GitBook</title>
+        <title>Docs setup & publishing · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="D3.html" />
+    <link rel="next" href="TimeRenderingModes.html" />
     
     
-    <link rel="prev" href="../Storybook.html" />
+    <link rel="prev" href="./" />
     
 
     </head>
@@ -244,9 +244,9 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.5" data-path="./">
+        <li class="chapter " data-level="1.5" data-path="../deps/">
             
-                <a href="./">
+                <a href="../deps/">
             
                     
                     usage of dependencies
@@ -258,9 +258,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.5.1" data-path="D3.html">
+        <li class="chapter " data-level="1.5.1" data-path="../deps/D3.html">
             
-                <a href="D3.html">
+                <a href="../deps/D3.html">
             
                     
                     D3
@@ -271,9 +271,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.2" data-path="GSAP.html">
+        <li class="chapter " data-level="1.5.2" data-path="../deps/GSAP.html">
             
-                <a href="GSAP.html">
+                <a href="../deps/GSAP.html">
             
                     
                     GSAP
@@ -284,9 +284,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.3" data-path="Moment.html">
+        <li class="chapter " data-level="1.5.3" data-path="../deps/Moment.html">
             
-                <a href="Moment.html">
+                <a href="../deps/Moment.html">
             
                     
                     Moment
@@ -297,9 +297,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.4" data-path="React.html">
+        <li class="chapter " data-level="1.5.4" data-path="../deps/React.html">
             
-                <a href="React.html">
+                <a href="../deps/React.html">
             
                     
                     React
@@ -310,9 +310,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.5" data-path="ReactMotion.html">
+        <li class="chapter " data-level="1.5.5" data-path="../deps/ReactMotion.html">
             
-                <a href="ReactMotion.html">
+                <a href="../deps/ReactMotion.html">
             
                     
                     React Motion
@@ -323,9 +323,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.6" data-path="Redux.html">
+        <li class="chapter " data-level="1.5.6" data-path="../deps/Redux.html">
             
-                <a href="Redux.html">
+                <a href="../deps/Redux.html">
             
                     
                     Redux
@@ -336,9 +336,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.7" data-path="Webpack.html">
+        <li class="chapter " data-level="1.5.7" data-path="../deps/Webpack.html">
             
-                <a href="Webpack.html">
+                <a href="../deps/Webpack.html">
             
                     
                     webpack
@@ -470,9 +470,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" data-path="../misc/">
+        <li class="chapter " data-level="1.7" data-path="./">
             
-                <a href="../misc/">
+                <a href="./">
             
                     
                     misc
@@ -484,9 +484,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.7.1" data-path="../misc/Docs.html">
+        <li class="chapter active" data-level="1.7.1" data-path="Docs.html">
             
-                <a href="../misc/Docs.html">
+                <a href="Docs.html">
             
                     
                     Docs setup & publishing
@@ -497,9 +497,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.2" data-path="../misc/TimeRenderingModes.html">
+        <li class="chapter " data-level="1.7.2" data-path="TimeRenderingModes.html">
             
-                <a href="../misc/TimeRenderingModes.html">
+                <a href="TimeRenderingModes.html">
             
                     
                     Time-rendering modes
@@ -545,7 +545,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="../.." >usage of dependencies</a>
+        <a href="../.." >Docs setup & publishing</a>
     </h1>
 </div>
 
@@ -560,19 +560,30 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h2 id="dependencies">Dependencies</h2>
-<p>We use <a href="https://webpack.github.io/" title="webpack module bundler" target="_blank">webpack</a> to bundle the JavaScript, CSS, and JSON assets in this repository into a single JavaScript bundle from which blip can import the pieces (components, functions, etc.) needed.</p>
-<p>Some of the other dependencies we leverage in this repository are, like webpack, commonly used by many others building apps today with React, and some are a bit more unusual:</p>
+                                <h2 id="working-on-viz-docs">Working on viz docs</h2>
+<p>This repository&apos;s docs are set up like all of Tidepool&apos;s front-end and docs repos. For details on this setup, see the <a href="http://developer.tidepool.io/docs/docs/workflow.html" title="Tidepool docs setup &amp; workflow" target="_blank">general guidance for docs setup &amp; workflow</a>.</p>
+<h3 id="setup">Setup</h3>
+<p>To summarize briefly, the steps you will need to have done in order to use the <code>npm</code> scripts configured for docs work in the repository are:</p>
 <ul>
-<li><a href="https://d3js.org/" title="D3: Data-Driven Documents" target="_blank">D3</a> (<a href="D3.html">read more</a>)</li>
-<li><a href="https://greensock.com/" title="GreenSock" target="_blank">GSAP</a> (<a href="GSAP.html">read more</a>)</li>
-<li><a href="http://momentjs.com/" title="Moment.js" target="_blank">Moment</a> (<a href="Moment.html">read more</a>)</li>
-<li><a href="https://facebook.github.io/react/" title="React" target="_blank">React</a> (<a href="React.html">read more</a>)</li>
-<li><a href="https://github.com/chenglou/react-motion" title="GitHub: react-motion" target="_blank">react-motion</a> (see <a href="D3.html">D3 usage</a> as well as <a href="ReactMotion.html">React Motion</a>)</li>
-<li><a href="http://redux.js.org/" title="redux docs" target="_blank">Redux</a> (<a href="Redux.html">read more</a>)</li>
-<li><a href="https://webpack.github.io/" title="webpack module bundler" target="_blank">webpack</a> (<a href="Webpack.html">read more</a>)</li>
+<li>clone a second copy of this repository as a subdirectory <code>web/</code>; you can do this from your <code>viz/</code> directory with <code>git clone git@github.com:tidepool-org/viz.git web</code></li>
+<li>switch to the <code>gh-pages</code> branch in the embedded clone and delete the <code>master</code> branch</li>
 </ul>
-<p>Follow the &quot;read more&quot; link where available in this list of tools to learn more about the specifics of our usage of the tool in this repository.</p>
+<pre><code class="lang-bash">$ <span class="hljs-built_in">cd</span> web/
+$ git checkout gh-pages
+$ git branch <span class="hljs-_">-d</span> master
+</code></pre>
+<h3 id="regenerating">Regenerating</h3>
+<p>We generate Markdown documentation for the utilities in <code>src/utils/</code> from the <a href="http://usejsdoc.org/" title="JSDoc" target="_blank">JSDoc comments</a> included with all exports and/or functions. The <a href="../../src/utils/">README</a> in <code>src/utils/</code> documents how to regenerate these Markdown files; this regeneration should be performed whenever you&apos;ve added or updated a utility functon and/or the JSDoc for that utility.</p>
+<h3 id="publishing">Publishing</h3>
+<p>To publish revised docs and/or Storybooks, run the following from the root of the <code>viz/</code> directory:</p>
+<p>For updating just docs (including the <code>adidocs/</code> in <code>src/utils/</code>) by building the static <a href="https://www.gitbook.com/" title="GitBook" target="_blank">GitBook</a> site that we publish to GitHub Pages:</p>
+<pre><code class="lang-bash">$ npm run build-docs
+</code></pre>
+<p>Then <code>cd web/</code> and review the unstaged changes. Stage &amp; commit the changes you want to make. Finally, &quot;publish&quot; to GitHub pages by pushing to the upstream <code>gh-pages</code> branch.</p>
+<p>For updating the Storybooks (again from the root of <code>viz/</code>:</p>
+<pre><code class="lang-bash">$ npm run build-storybooks
+</code></pre>
+<p>Again navigate into the embedded <code>web/</code> directory to review, stage, commit, and push the changes upstream.</p>
 
                                 
                                 </section>
@@ -600,12 +611,12 @@
 
             
                 
-                <a href="../Storybook.html" class="navigation navigation-prev " aria-label="Previous page: use of React Storybook">
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: misc">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="D3.html" class="navigation navigation-next " aria-label="Next page: D3">
+                <a href="TimeRenderingModes.html" class="navigation navigation-next " aria-label="Next page: Time-rendering modes">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -616,7 +627,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"usage of dependencies","level":"1.5","depth":1,"next":{"title":"D3","level":"1.5.1","depth":2,"path":"docs/deps/D3.md","ref":"docs/deps/D3.md","articles":[]},"previous":{"title":"use of React Storybook","level":"1.4","depth":1,"path":"docs/Storybook.md","ref":"docs/Storybook.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/deps/README.md","mtime":"2017-05-11T21:29:22.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:03:33.193Z"},"basePath":"../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Docs setup & publishing","level":"1.7.1","depth":2,"next":{"title":"Time-rendering modes","level":"1.7.2","depth":2,"path":"docs/misc/TimeRenderingModes.md","ref":"docs/misc/TimeRenderingModes.md","articles":[]},"previous":{"title":"misc","level":"1.7","depth":1,"path":"docs/misc/README.md","ref":"docs/misc/README.md","articles":[{"title":"Docs setup & publishing","level":"1.7.1","depth":2,"path":"docs/misc/Docs.md","ref":"docs/misc/Docs.md","articles":[]},{"title":"Time-rendering modes","level":"1.7.2","depth":2,"path":"docs/misc/TimeRenderingModes.md","ref":"docs/misc/TimeRenderingModes.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/misc/Docs.md","mtime":"2017-05-22T22:42:00.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:03:33.193Z"},"basePath":"../..","book":{"language":""}});
         });
     </script>
 </div>

@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>code style · GitBook</title>
+        <title>use of React Storybook · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="views/" />
+    <link rel="next" href="deps/" />
     
     
-    <link rel="prev" href="DirectoryStructure.html" />
+    <link rel="prev" href="views/Trends.html" />
     
 
     </head>
@@ -168,7 +168,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.2.5" data-path="CodeStyle.html">
+        <li class="chapter " data-level="1.2.5" data-path="CodeStyle.html">
             
                 <a href="CodeStyle.html">
             
@@ -231,7 +231,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.4" data-path="Storybook.html">
+        <li class="chapter active" data-level="1.4" data-path="Storybook.html">
             
                 <a href="Storybook.html">
             
@@ -545,7 +545,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href=".." >code style</a>
+        <a href=".." >use of React Storybook</a>
     </h1>
 </div>
 
@@ -560,21 +560,38 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h2 id="code-style">Code style</h2>
-<p>In this repository&#x2014;our newest front-end repository at Tidepool&#x2014;our JavaScript style is <em>much</em> stricter than in our other repositories, largely because we started the work and continue to develop with a <a href="https://www.npmjs.com/package/eslint-config-airbnb" title="npm: eslint-config-airbnb" target="_blank">very strict ESLint configuration, borrowed from AirBnb</a>.</p>
-<p>It is not worth duplicating a description of the vast number of constraints that this configuration imposes. Our advice is to configure your editor to provide instant linting feedback as you code<sup><a href="#fn_a" id="reffn_a">a</a></sup>, and you will learn the constraints quite quickly &#x1F61C;</p>
-<p>To summarize in general the constraints that the AirBnb ESLint configuration imposes:</p>
-<ul>
-<li>ES2015/ES6 given preference over ES5 (so <code>const</code> and <code>let</code> over <code>var</code>, etc.)</li>
-<li>lots of general code quality/bug prevention constraints like no unused variables, no mutating arguments to functions, etc.</li>
-<li>React components that don&apos;t need a (substantive) constructor, any of the lifecycle methods, or component-internal state should be <a href="https://facebook.github.io/react/docs/components-and-props.html#functional-and-class-components" title="React docs: Functional and Class Components" target="_blank">pure functional components</a> instead of classes</li>
-<li>all React components should type-check the props used via <a href="https://facebook.github.io/react/docs/typechecking-with-proptypes.html" title="React docs: Typechecking with PropTypes" target="_blank">PropTypes</a></li>
-</ul>
-<p>We have also added an additional plug-in for enforcing a preference for <a href="https://lodash.com/docs/4.16.6" title="Lodash utility library" target="_blank">lodash</a> utility methods over their native implementations (e.g., lodash <code>_.map</code> instead of JavaScript <code>Array.map</code>).</p>
-<p>Also see the documentation on <a href="DirectoryStructure.html">directory structure</a> for our conventions around file naming, placement, and in particular our semantic division between &quot;containers&quot; and &quot;components.&quot;</p>
-<hr>
+                                <h2 id="use-of-react-storybook">use of React Storybook</h2>
+<p><a href="https://storybooks.js.org/" title="Storybook" target="_blank">React Storybook</a> is a UI component development tool that&apos;s very easy to set up and configure. It provides a way to render components outside of their full in-app context in many different states&#x2014;and even, with some addons, interactively. A Storybook can serve many purposes.</p>
+<ol>
+<li><p>As long as there is fake data available (or easily fabricated) to serve as the props for a component, Storybook can be used as a very fast developer environment<sup><a href="#fn_a" id="reffn_a">a</a></sup> for iterating on the design and implementation of the isolated component.</p>
+</li>
+<li><p>By fabricating the appropriate props for a component, Storybook can be used to design for or around rare edge cases or pathological inputs in the data driving a component.</p>
+</li>
+<li><p>When published as a static site, a Storybook can serve as great design and front-end engineering documentation for the components included.</p>
+</li>
+<li><p>When published as a static site, a Storybook can serve as a &quot;component catalog&quot; for third-party developers wanting to use some or all of the components in the library.</p>
+</li>
+</ol>
+<p>We use or plan to use Storybook for <em>all</em> of these purposes!</p>
+<h3 id="storybooks-x-2">Storybooks x 2</h3>
+<p>We have <strong>two</strong> Storybooks in viz:</p>
+<ol>
+<li><p>The <code>storiesDatatypes/</code> directory contains stories for the rendering of diabetes data types from the <a href="http://developer.tidepool.io/data-model/" title="Tidepool data model documentation" target="_blank">Tidepool data model</a>. As of May 2017, it contains a <code>Basal</code> component for representing (sequences of) <a href="http://developer.tidepool.io/data-model/device-data/types/basal/index.html" title="Tidepool data model: basal" target="_blank">basal rate intervals on insulin pumps</a> and a <code>Bolus</code> component for representing <a href="http://developer.tidepool.io/data-model/device-data/types/bolus/index.html &apos;Tidepool data model: bolus" target="_blank">bolus doses on insulin pumps</a>. Our ability to create a story for a component is often limited by our ability to snapshot (and anonymize) or fabricate fake data for it and/or the utility (or lack thereof) of the story in the case that we <em>can&apos;t</em> easily obtain or fabricate realistic-looking data. This is the reason why we don&apos;t have any stories for the Trends view components, for example.</p>
+</li>
+<li><p>The <code>stories/</code> directory is the default for all other components we&apos;re able to create stories for<sup><a href="#fn_b" id="reffn_b">b</a></sup>.</p>
+</li>
+</ol>
+<h3 id="running-the-storybooks">Running the storybooks</h3>
+<p>Each storybook has a command configured in the <code>package.json</code> <code>scripts</code> field. To run the diabetes datatype Storybook, run:</p>
+<pre><code class="lang-bash">$ npm run typestories
+</code></pre>
+<p>To run the default Storybook, run:</p>
+<pre><code class="lang-bash">$ npm run stories
+</code></pre>
+<h3 id="publishing-the-storybooks">Publishing the storybooks</h3>
+<p>Whenever you&apos;ve added or updated a story or stories as part of new development, you should update the viz documentation static site with new builds of the storybooks. In order to do this, you will need to make sure that your repository is set up for working on the docs static site for this repository <a href="misc/Docs.html">as explained on the docs page</a>, then follow the instructions there for bundling the GitHub Pages-appropriate static files of the Storybook.</p>
 <blockquote id="fn_a">
-<sup>a</sup>. And you don&apos;t even have to Google! Here&apos;s where to get started for <a href="http://www.sublimelinter.com/en/latest/" title="SublimeLinter 3" target="_blank">Sublime Text</a> and <a href="https://atom.io/packages/linter" title="Linter" target="_blank">Atom</a>.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+<sup>a</sup>. It includes Webpack&apos;s hot module reloading by default, which is &#x26A1;<em>awesome</em>&#x26A1;.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
 </blockquote>
 
                                 
@@ -603,12 +620,12 @@
 
             
                 
-                <a href="DirectoryStructure.html" class="navigation navigation-prev " aria-label="Previous page: app & directory structure">
+                <a href="views/Trends.html" class="navigation navigation-prev " aria-label="Previous page: Trends view">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="views/" class="navigation navigation-next " aria-label="Next page: per-view documentation">
+                <a href="deps/" class="navigation navigation-next " aria-label="Next page: usage of dependencies">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -619,7 +636,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"code style","level":"1.2.5","depth":2,"next":{"title":"per-view documentation","level":"1.3","depth":1,"path":"docs/views/README.md","ref":"docs/views/README.md","articles":[{"title":"Device Settings view","level":"1.3.1","depth":2,"path":"src/components/settings/README.md","ref":"src/components/settings/README.md","articles":[]},{"title":"Trends view","level":"1.3.2","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]}]},"previous":{"title":"app & directory structure","level":"1.2.4","depth":2,"path":"docs/DirectoryStructure.md","ref":"docs/DirectoryStructure.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/CodeStyle.md","mtime":"2017-05-11T21:29:22.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:03:33.193Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"use of React Storybook","level":"1.4","depth":1,"next":{"title":"usage of dependencies","level":"1.5","depth":1,"path":"docs/deps/README.md","ref":"docs/deps/README.md","articles":[{"title":"D3","level":"1.5.1","depth":2,"path":"docs/deps/D3.md","ref":"docs/deps/D3.md","articles":[]},{"title":"GSAP","level":"1.5.2","depth":2,"path":"docs/deps/GSAP.md","ref":"docs/deps/GSAP.md","articles":[]},{"title":"Moment","level":"1.5.3","depth":2,"path":"docs/deps/Moment.md","ref":"docs/deps/Moment.md","articles":[]},{"title":"React","level":"1.5.4","depth":2,"path":"docs/deps/React.md","ref":"docs/deps/React.md","articles":[]},{"title":"React Motion","level":"1.5.5","depth":2,"path":"docs/deps/ReactMotion.md","ref":"docs/deps/ReactMotion.md","articles":[]},{"title":"Redux","level":"1.5.6","depth":2,"path":"docs/deps/Redux.md","ref":"docs/deps/Redux.md","articles":[]},{"title":"webpack","level":"1.5.7","depth":2,"path":"docs/deps/Webpack.md","ref":"docs/deps/Webpack.md","articles":[]}]},"previous":{"title":"Trends view","level":"1.3.2","depth":2,"path":"docs/views/Trends.md","ref":"docs/views/Trends.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/Storybook.md","mtime":"2017-05-22T22:43:32.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:03:33.193Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
