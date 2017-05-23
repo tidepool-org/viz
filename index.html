@@ -598,8 +598,12 @@
 </code></pre>
 <p>Finally, back in your local blip repository, follow <a href="http://developer.tidepool.io/blip/#running-locally" title="Blip README: running locally" target="_blank">the instructions for starting blip locally</a>.</p>
 <h3 id="running-locally-in-react-storybook">Running locally in React Storybook</h3>
-<p>If you&apos;re working at the component or view level outside of blip, you can work on component and view rendering code with <a href="https://github.com/kadirahq/react-storybook" title="GitHub: react-storybook" target="_blank">React Storybook</a>. Just start up the storybook with:</p>
-<pre><code class="lang-bash">$ npm run storybook
+<p>If you&apos;re working at the component or view level outside of blip, you can work on component and view rendering code with <a href="https://github.com/kadirahq/react-storybook" title="GitHub: react-storybook" target="_blank">React Storybook</a>.</p>
+<p>If you&apos;re working on the diabetes data model rendering components, run:</p>
+<pre><code class="lang-bash">$ npm run typestories
+</code></pre>
+<p>If you&apos;re working on any other components or views, run:</p>
+<pre><code class="lang-bash">$ npm run stories
 </code></pre>
 <p>For more about the use of React Storybook in this repo, see <a href="http://developer.tidepool.io/viz/Storybook.html" title="@tidepool/viz docs: React Storybook" target="_blank">use of React Storybook</a>.</p>
 <h3 id="running-the-tests">Running the tests</h3>
@@ -619,17 +623,17 @@
 <p>Generally speaking, Tidepool developers configure linting to run continuously in their text editor of choice, and we recommend this approach for development. You can easily find instructions online for running ESLint continuously in all of the popular text editors&#x2014;SublimeText, Atom, Visual Studio Code, etc.</p>
 <h2 id="production">Production</h2>
 <h3 id="publishing-examples-to-github-pages-with-react-storybook">Publishing examples to GitHub Pages with React Storybook</h3>
-<p>Coming soon!</p>
+<p>See <a href="docs/misc/Docs.html#publishing">the publishing section</a> of the docs on docs.</p>
 <h3 id="building-and-publishing-to-npm">Building and publishing to <code>npm</code></h3>
 <p>When a new feature(s) is/are complete (i.e., branch is synchronized with master, reviewed with a sign-off from another developer), it&apos;s time to publish the package to npm! Since this is one of our most recently created repositories, any member of the &quot;developers&quot; team in the <code>@tidepool</code> npm organization will be able to publish the package using his or her npm login. Steps to publishing are as follows:</p>
 <ol>
 <li>create a tag on the approved pull request using the <code>mversion</code> tool with the <code>-m</code> option to auto-commit the version bump and tag (e.g., <code>$ mversion patch -m</code> for a patch version bump)</li>
 <li>push the new commit and tag to the GitHub remote with <code>$ git push origin &lt;branch-name&gt;</code> and <code>$ git push origin --tags</code></li>
 <li>check that the tag build has passed on <a href="https://travis-ci.org/tidepool-org/viz" target="_blank">TravisCI</a></li>
-<li><code>$ npm whoami</code> to check if you are logged in as yourself; if you are, skip to 8.</li>
+<li><code>$ npm whoami</code> to check if you are logged in as yourself; if you are, skip to 7.</li>
 <li>if you are logged in as <code>tidepool-robot</code>, log out with <code>$ npm logout</code></li>
 <li>then log in as yourself with <code>$ npm login</code></li>
-<li>publish the new version with <code>$ npm publish</code>; before the <em>actual</em> publish happens, the linter, tests, and packaging webpack build will run since we have set those up through the <code>prepublish</code> npm hook in the package.json</li>
+<li>publish the new version with <code>$ npm publish</code>; before the <em>actual</em> publish happens, the <code>yarn</code> install, linter, tests, and packaging webpack build will run since we have set those up through the <code>prepare</code> and <code>prepublishOnly</code> npm hooks in the package.json</li>
 <li>merge the approved pull request to master</li>
 <li>remember to bump the version appropriately in the package.json for the app (e.g., blip) requiring <code>@tidepool/viz</code> as a dependency!</li>
 </ol>
@@ -672,7 +676,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Introduction","level":"1.1","depth":1,"next":{"title":"@tidepool/viz developer guide","level":"1.2","depth":1,"path":"docs/StartHere.md","ref":"docs/StartHere.md","articles":[{"title":"background","level":"1.2.1","depth":2,"path":"docs/Background.md","ref":"docs/Background.md","articles":[]},{"title":"overview of features","level":"1.2.2","depth":2,"path":"docs/FeatureOverview.md","ref":"docs/FeatureOverview.md","articles":[]},{"title":"planned architecture","level":"1.2.3","depth":2,"path":"docs/Architecture.md","ref":"docs/Architecture.md","articles":[]},{"title":"app & directory structure","level":"1.2.4","depth":2,"path":"docs/DirectoryStructure.md","ref":"docs/DirectoryStructure.md","articles":[]},{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"README.md","mtime":"2017-05-22T20:13:28.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-22T23:19:32.432Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Introduction","level":"1.1","depth":1,"next":{"title":"@tidepool/viz developer guide","level":"1.2","depth":1,"path":"docs/StartHere.md","ref":"docs/StartHere.md","articles":[{"title":"background","level":"1.2.1","depth":2,"path":"docs/Background.md","ref":"docs/Background.md","articles":[]},{"title":"overview of features","level":"1.2.2","depth":2,"path":"docs/FeatureOverview.md","ref":"docs/FeatureOverview.md","articles":[]},{"title":"planned architecture","level":"1.2.3","depth":2,"path":"docs/Architecture.md","ref":"docs/Architecture.md","articles":[]},{"title":"app & directory structure","level":"1.2.4","depth":2,"path":"docs/DirectoryStructure.md","ref":"docs/DirectoryStructure.md","articles":[]},{"title":"code style","level":"1.2.5","depth":2,"path":"docs/CodeStyle.md","ref":"docs/CodeStyle.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"README.md","mtime":"2017-05-23T01:20:51.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-23T01:20:58.728Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
