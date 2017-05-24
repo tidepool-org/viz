@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>React · GitBook</title>
+        <title>Common props · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.2">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="ReactMotion.html" />
+    <link rel="next" href="Docs.html" />
     
     
-    <link rel="prev" href="Moment.html" />
+    <link rel="prev" href="./" />
     
 
     </head>
@@ -244,9 +244,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="./">
+        <li class="chapter " data-level="1.5" data-path="../deps/">
             
-                <a href="./">
+                <a href="../deps/">
             
                     
                     usage of dependencies
@@ -258,9 +258,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.5.1" data-path="D3.html">
+        <li class="chapter " data-level="1.5.1" data-path="../deps/D3.html">
             
-                <a href="D3.html">
+                <a href="../deps/D3.html">
             
                     
                     D3
@@ -271,9 +271,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.2" data-path="GSAP.html">
+        <li class="chapter " data-level="1.5.2" data-path="../deps/GSAP.html">
             
-                <a href="GSAP.html">
+                <a href="../deps/GSAP.html">
             
                     
                     GSAP
@@ -284,9 +284,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.3" data-path="Moment.html">
+        <li class="chapter " data-level="1.5.3" data-path="../deps/Moment.html">
             
-                <a href="Moment.html">
+                <a href="../deps/Moment.html">
             
                     
                     Moment
@@ -297,9 +297,9 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.5.4" data-path="React.html">
+        <li class="chapter " data-level="1.5.4" data-path="../deps/React.html">
             
-                <a href="React.html">
+                <a href="../deps/React.html">
             
                     
                     React
@@ -310,9 +310,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.5" data-path="ReactMotion.html">
+        <li class="chapter " data-level="1.5.5" data-path="../deps/ReactMotion.html">
             
-                <a href="ReactMotion.html">
+                <a href="../deps/ReactMotion.html">
             
                     
                     React Motion
@@ -323,9 +323,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.6" data-path="Redux.html">
+        <li class="chapter " data-level="1.5.6" data-path="../deps/Redux.html">
             
-                <a href="Redux.html">
+                <a href="../deps/Redux.html">
             
                     
                     Redux
@@ -336,9 +336,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5.7" data-path="Webpack.html">
+        <li class="chapter " data-level="1.5.7" data-path="../deps/Webpack.html">
             
-                <a href="Webpack.html">
+                <a href="../deps/Webpack.html">
             
                     
                     webpack
@@ -470,9 +470,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" data-path="../misc/">
+        <li class="chapter " data-level="1.7" data-path="./">
             
-                <a href="../misc/">
+                <a href="./">
             
                     
                     misc
@@ -484,9 +484,9 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.7.1" data-path="../misc/CommonProps.html">
+        <li class="chapter active" data-level="1.7.1" data-path="CommonProps.html">
             
-                <a href="../misc/CommonProps.html">
+                <a href="CommonProps.html">
             
                     
                     Common props
@@ -497,9 +497,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.2" data-path="../misc/Docs.html">
+        <li class="chapter " data-level="1.7.2" data-path="Docs.html">
             
-                <a href="../misc/Docs.html">
+                <a href="Docs.html">
             
                     
                     Docs setup & publishing
@@ -510,9 +510,9 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.3" data-path="../misc/TimeRenderingModes.html">
+        <li class="chapter " data-level="1.7.3" data-path="TimeRenderingModes.html">
             
-                <a href="../misc/TimeRenderingModes.html">
+                <a href="TimeRenderingModes.html">
             
                     
                     Time-rendering modes
@@ -558,7 +558,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="../.." >React</a>
+        <a href="../.." >Common props</a>
     </h1>
 </div>
 
@@ -573,12 +573,32 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h2 id="tidepoolvizs-usage-of-react">@tidepool/viz&apos;s usage of React</h2>
-<p>Aside from <a href="http://developer.tidepool.io/docs/front-end/react/index.html" title="Tidepool developer portal: React @ Tidepool" target="_blank">our general views on React best practices at Tidepool</a>, to develop code in this repository you should:</p>
+                                <h2 id="common-props-in-tidepool-data-visualization-code">Common props in Tidepool data visualization code</h2>
+<p>Several of the pieces of <a href="../FeatureOverview.html#shared-state">the state common to most, if not all, of Tidepool&apos;s data visualization views</a> are most often encountered in the code as props passed to React components. This page provides a quick reference describing the canonical forms of these pieces of state since they occur and are used (for example: as a parameter in a utility function) <strong>very</strong> frequently.</p>
 <ul>
-<li>understand our division between <a href="../DirectoryStructure.html#react-component-directories">components, &quot;container&quot; components, and views</a></li>
-<li>understand <a href="%27./D3.md%27">how we use D3 and React together</a></li>
+<li><a href="#bgPrefs"><code>bgPrefs</code></a></li>
+<li><a href="#timePrefs"><code>timePrefs</code></a></li>
 </ul>
+<h3 id="bgprefs"><code>bgPrefs</code></h3>
+<p><code>bgPrefs</code> is an object with two properties: <code>bgUnits</code> and <code>bgBounds</code>. Sometimes these component properties are passed around on their own, and sometimes <code>bgPrefs</code> is passed around as a whole. (As we increase our commitment to support for mmol/L as well as mg/dL blood glucose units, it will probably be necessary to access both <code>bgUnits</code> and <code>bgBounds</code> simultaneously most of the time, so it is probably a good idea to just get used to passing around <code>bgPrefs</code> as a whole.)</p>
+<p><code>bgUnits</code> is a String value that can be either <code>mg/dL</code> or <code>mmol/L</code>. To avoid typos and capitalization errors, we export a constant for each of these strings from src/utils/constants.js; use them with <code>import { MGDL_UNITS, MMOLL_UNITS } from &apos;path/to/utils/constants&apos;</code>.</p>
+<p><code>bgBounds</code> is an Object with five numerical fields:</p>
+<ul>
+<li><code>veryLowThreshold</code> encodes the threshold (logic is &lt;) for encoding a blood glucose value as &quot;very low&quot;</li>
+<li>(a value &gt;= <code>veryLowThreshold</code> and &lt; <code>targetLowerBound</code> is &quot;low&quot;)</li>
+<li><code>targetLowerBound</code> encodes the lower bound for the user&apos;s target blood glucose range; logic is &gt;= the threshold is &quot;target&quot;</li>
+<li><code>targetUpperBound</code> encodes the upper bound for the user&apos;s target blood glucose range; logic is &lt;= the threshold is &quot;target&quot;</li>
+<li>(a value &gt; <code>targetUpperBound</code> and &lt;= <code>veryHighThreshold</code> is &quot;high&quot;)</li>
+<li><code>veryHighThreshold</code> encodes the threshold (logic is &gt;) for encoding a blood glucose value as &quot;very high&quot;</li>
+<li><code>clampThreshold</code> encodes the value at which we clamp the blood glucose scale (logic is &gt;); read about clamping scales in <a href="https://github.com/d3/d3-scale#continuous_clamp" title="d3-scale: clamp()" target="_blank">the d3-scale documentation</a></li>
+</ul>
+<p>The function <code>classifyBgValue</code> exported from the blood glucose utilities in <code>src/utils/bloodglucose.js</code> will return the classification for any blood glucose value given the <code>value</code> and the <code>bgBounds</code>. (See also <a href="../../src/utils/apidocs/bloodglucose.html">all the API documentation for blood glucose utility functions</a>.)</p>
+<h3 id="timeprefs"><code>timePrefs</code></h3>
+<p><code>timePrefs</code> is an object with two properties: <code>timezoneAware</code> and <code>timezoneName</code>. The <code>timezoneAware</code> property is a simple Boolean indicating whether or not the user wants to view data in timezone-aware mode; <code>timezoneAware</code> defaults to <code>true</code>. Because the extraction of a named timezone depends in part on the value of <code>timezoneAware</code><sup><a href="#fn_a" id="reffn_a">a</a></sup>, <code>timePrefs</code> should <strong>always</strong> be passed around as an entire object, and the utility function <code>getTimezoneFromTimePrefs</code> exported from the datetime utilities in <code>src/utils/datetime.js</code> should be used to extract the timezone String when required. (See also <a href="../../src/utils/apidocs/datetime.html">all the API documentation for datetime utility functions</a>.)</p>
+<p><code>timezoneName</code> is a String timezone that the <a href="https://momentjs.com/" title="Moment.js" target="_blank">Moment.js</a> datetime utility library recognizes. Moment.js in turn recognizes all timezones from the <a href="https://www.iana.org/time-zones &apos;IANA Time Zone Database" target="_blank">IANA Time Zone Database</a>.</p>
+<blockquote id="fn_a">
+<sup>a</sup>. In brief, if <code>timezoneAware</code> is <code>false</code>, then <code>UTC</code> is used for the timezone String in all circumstances and methods where a timezoe String is required.<a href="#reffn_a" title="Jump back to footnote [a] in the text."> &#x21A9;</a>
+</blockquote>
 
                                 
                                 </section>
@@ -606,12 +626,12 @@
 
             
                 
-                <a href="Moment.html" class="navigation navigation-prev " aria-label="Previous page: Moment">
+                <a href="./" class="navigation navigation-prev " aria-label="Previous page: misc">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="ReactMotion.html" class="navigation navigation-next " aria-label="Next page: React Motion">
+                <a href="Docs.html" class="navigation navigation-next " aria-label="Next page: Docs setup & publishing">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -622,7 +642,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"React","level":"1.5.4","depth":2,"next":{"title":"React Motion","level":"1.5.5","depth":2,"path":"docs/deps/ReactMotion.md","ref":"docs/deps/ReactMotion.md","articles":[]},"previous":{"title":"Moment","level":"1.5.3","depth":2,"path":"docs/deps/Moment.md","ref":"docs/deps/Moment.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/deps/React.md","mtime":"2017-05-11T21:29:22.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-24T21:48:34.492Z"},"basePath":"../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Common props","level":"1.7.1","depth":2,"next":{"title":"Docs setup & publishing","level":"1.7.2","depth":2,"path":"docs/misc/Docs.md","ref":"docs/misc/Docs.md","articles":[]},"previous":{"title":"misc","level":"1.7","depth":1,"path":"docs/misc/README.md","ref":"docs/misc/README.md","articles":[{"title":"Common props","level":"1.7.1","depth":2,"path":"docs/misc/CommonProps.md","ref":"docs/misc/CommonProps.md","articles":[]},{"title":"Docs setup & publishing","level":"1.7.2","depth":2,"path":"docs/misc/Docs.md","ref":"docs/misc/Docs.md","articles":[]},{"title":"Time-rendering modes","level":"1.7.3","depth":2,"path":"docs/misc/TimeRenderingModes.md","ref":"docs/misc/TimeRenderingModes.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docs/misc/CommonProps.md","mtime":"2017-05-24T21:41:09.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-24T21:48:34.492Z"},"basePath":"../..","book":{"language":""}});
         });
     </script>
 </div>

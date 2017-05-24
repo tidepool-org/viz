@@ -484,7 +484,20 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.7.1" data-path="../../../docs/misc/Docs.html">
+        <li class="chapter " data-level="1.7.1" data-path="../../../docs/misc/CommonProps.html">
+            
+                <a href="../../../docs/misc/CommonProps.html">
+            
+                    
+                    Common props
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../../../docs/misc/Docs.html">
             
                 <a href="../../../docs/misc/Docs.html">
             
@@ -497,7 +510,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.2" data-path="../../../docs/misc/TimeRenderingModes.html">
+        <li class="chapter " data-level="1.7.3" data-path="../../../docs/misc/TimeRenderingModes.html">
             
                 <a href="../../../docs/misc/TimeRenderingModes.html">
             
@@ -572,9 +585,6 @@ jsdoc2md &quot;src/utils/bolus.js&quot;</p>
 <dt><a href="#getBolusFromInsulinEvent">getBolusFromInsulinEvent(insulinEvent)</a> &#x21D2; <code>Object</code></dt>
 <dd><p>getBolusFromInsulinEvent</p>
 </dd>
-<dt><a href="#getCarbs">getCarbs(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
-<dd><p>getCarbs</p>
-</dd>
 <dt><a href="#getProgrammed">getProgrammed(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
 <dd><p>getProgrammed</p>
 </dd>
@@ -590,23 +600,11 @@ jsdoc2md &quot;src/utils/bolus.js&quot;</p>
 <dt><a href="#getExtended">getExtended(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
 <dd><p>getExtended</p>
 </dd>
-<dt><a href="#getExtendedPercentage">getExtendedPercentage(insulinEvent)</a> &#x21D2; <code>String</code></dt>
-<dd><p>getExtendedPercentage</p>
-</dd>
 <dt><a href="#getMaxDuration">getMaxDuration(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
 <dd><p>getMaxDuration</p>
 </dd>
 <dt><a href="#getMaxValue">getMaxValue(insulinEvent)</a> &#x21D2; <code>Number</code></dt>
 <dd><p>getMaxValue</p>
-</dd>
-<dt><a href="#getNormalPercentage">getNormalPercentage(insulinEvent)</a> &#x21D2; <code>String</code></dt>
-<dd><p>getNormalPercentage</p>
-</dd>
-<dt><a href="#getTotalBolus">getTotalBolus(insulinEvents)</a> &#x21D2; <code>Number</code></dt>
-<dd><p>getTotalBolus</p>
-</dd>
-<dt><a href="#getTotalCarbs">getTotalCarbs(insulinEvents)</a> &#x21D2; <code>Number</code></dt>
-<dd><p>getTotalCarbs</p>
 </dd>
 <dt><a href="#hasExtended">hasExtended(insulinEvent)</a> &#x21D2; <code>Boolean</code></dt>
 <dd><p>hasExtended</p>
@@ -646,27 +644,6 @@ jsdoc2md &quot;src/utils/bolus.js&quot;</p>
 <h2 id="getbolusfrominsulineventinsulinevent-&#x21D2;-object">getBolusFromInsulinEvent(insulinEvent) &#x21D2; <code>Object</code></h2>
 <p>getBolusFromInsulinEvent</p>
 <p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Object</code> - a Tidepool bolus object  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>insulinEvent</td>
-<td><code>Object</code></td>
-<td>a Tidepool wizard or bolus object</td>
-</tr>
-</tbody>
-</table>
-<p><a name="getCarbs"></a></p>
-<h2 id="getcarbsinsulinevent-&#x21D2;-number">getCarbs(insulinEvent) &#x21D2; <code>Number</code></h2>
-<p>getCarbs</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - grams of carbs input into bolus calculator
-                 NaN if bolus calculator not used; null if no carbInput  </p>
 <table>
 <thead>
 <tr>
@@ -783,26 +760,6 @@ jsdoc2md &quot;src/utils/bolus.js&quot;</p>
 </tr>
 </tbody>
 </table>
-<p><a name="getExtendedPercentage"></a></p>
-<h2 id="getextendedpercentageinsulinevent-&#x21D2;-string">getExtendedPercentage(insulinEvent) &#x21D2; <code>String</code></h2>
-<p>getExtendedPercentage</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>String</code> - percentage of combo bolus delivered later  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>insulinEvent</td>
-<td><code>Object</code></td>
-<td>a Tidepool bolus or wizard object</td>
-</tr>
-</tbody>
-</table>
 <p><a name="getMaxDuration"></a></p>
 <h2 id="getmaxdurationinsulinevent-&#x21D2;-number">getMaxDuration(insulinEvent) &#x21D2; <code>Number</code></h2>
 <p>getMaxDuration</p>
@@ -840,66 +797,6 @@ jsdoc2md &quot;src/utils/bolus.js&quot;</p>
 <td>insulinEvent</td>
 <td><code>Object</code></td>
 <td>a Tidepool bolus or wizard object</td>
-</tr>
-</tbody>
-</table>
-<p><a name="getNormalPercentage"></a></p>
-<h2 id="getnormalpercentageinsulinevent-&#x21D2;-string">getNormalPercentage(insulinEvent) &#x21D2; <code>String</code></h2>
-<p>getNormalPercentage</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>String</code> - percentage of combo bolus delivered immediately  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>insulinEvent</td>
-<td><code>Object</code></td>
-<td>a Tidepool bolus or wizard object</td>
-</tr>
-</tbody>
-</table>
-<p><a name="getTotalBolus"></a></p>
-<h2 id="gettotalbolusinsulinevents-&#x21D2;-number">getTotalBolus(insulinEvents) &#x21D2; <code>Number</code></h2>
-<p>getTotalBolus</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - total bolus insulin in units  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>insulinEvents</td>
-<td><code>Array</code></td>
-<td>Array of Tidepool bolus or wizard objects</td>
-</tr>
-</tbody>
-</table>
-<p><a name="getTotalCarbs"></a></p>
-<h2 id="gettotalcarbsinsulinevents-&#x21D2;-number">getTotalCarbs(insulinEvents) &#x21D2; <code>Number</code></h2>
-<p>getTotalCarbs</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Number</code> - total of carbs input into bolus calculator  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>insulinEvents</td>
-<td><code>Array</code></td>
-<td>Array of Tidepool bolus or wizard objects</td>
 </tr>
 </tbody>
 </table>
@@ -1026,7 +923,7 @@ jsdoc2md &quot;src/utils/bolus.js&quot;</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"bolus","level":"1.6.1.3","depth":3,"next":{"title":"datetime","level":"1.6.1.4","depth":3,"path":"src/utils/apidocs/datetime.md","ref":"src/utils/apidocs/datetime.md","articles":[]},"previous":{"title":"blood glucose","level":"1.6.1.2","depth":3,"path":"src/utils/apidocs/bloodglucose.md","ref":"src/utils/apidocs/bloodglucose.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/bolus.md","mtime":"2017-05-23T01:20:51.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-23T01:20:58.728Z"},"basePath":"../../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"bolus","level":"1.6.1.3","depth":3,"next":{"title":"datetime","level":"1.6.1.4","depth":3,"path":"src/utils/apidocs/datetime.md","ref":"src/utils/apidocs/datetime.md","articles":[]},"previous":{"title":"blood glucose","level":"1.6.1.2","depth":3,"path":"src/utils/apidocs/bloodglucose.md","ref":"src/utils/apidocs/bloodglucose.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/bolus.md","mtime":"2017-05-24T21:41:09.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-24T21:48:34.492Z"},"basePath":"../../..","book":{"language":""}});
         });
     </script>
 </div>

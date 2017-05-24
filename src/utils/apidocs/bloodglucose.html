@@ -484,7 +484,20 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.7.1" data-path="../../../docs/misc/Docs.html">
+        <li class="chapter " data-level="1.7.1" data-path="../../../docs/misc/CommonProps.html">
+            
+                <a href="../../../docs/misc/CommonProps.html">
+            
+                    
+                    Common props
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="../../../docs/misc/Docs.html">
             
                 <a href="../../../docs/misc/Docs.html">
             
@@ -497,7 +510,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.2" data-path="../../../docs/misc/TimeRenderingModes.html">
+        <li class="chapter " data-level="1.7.3" data-path="../../../docs/misc/TimeRenderingModes.html">
             
                 <a href="../../../docs/misc/TimeRenderingModes.html">
             
@@ -566,11 +579,8 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
 </blockquote>
 <h2 id="functions">Functions</h2>
 <dl>
-<dt><a href="#classifyBgValue">classifyBgValue(bgBounds, bgValue, classificationType)</a> &#x21D2; <code>String</code></dt>
+<dt><a href="#classifyBgValue">classifyBgValue(bgBounds, bgValue)</a> &#x21D2; <code>String</code></dt>
 <dd><p>classifyBgValue</p>
-</dd>
-<dt><a href="#calcBgPercentInCategories">calcBgPercentInCategories(data, bgBounds)</a> &#x21D2; <code>Object</code></dt>
-<dd><p>calcBgPercentInCategories</p>
 </dd>
 <dt><a href="#convertToMmolL">convertToMmolL(bgVal)</a> &#x21D2; <code>Number</code></dt>
 <dd><p>convertToMmolL</p>
@@ -581,7 +591,7 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
 </dl>
 
 <p><a name="classifyBgValue"></a></p>
-<h2 id="classifybgvaluebgbounds-bgvalue-classificationtype-&#x21D2;-string">classifyBgValue(bgBounds, bgValue, classificationType) &#x21D2; <code>String</code></h2>
+<h2 id="classifybgvaluebgbounds-bgvalue-&#x21D2;-string">classifyBgValue(bgBounds, bgValue) &#x21D2; <code>String</code></h2>
 <p>classifyBgValue</p>
 <p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>String</code> - bgClassification - low, target, high  </p>
 <table>
@@ -602,37 +612,6 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
 <td>bgValue</td>
 <td><code>Number</code></td>
 <td>integer or float blood glucose value in either mg/dL or mmol/L</td>
-</tr>
-<tr>
-<td>classificationType</td>
-<td><code>String</code></td>
-<td>&apos;threeWay&apos; or &apos;fiveWay&apos;</td>
-</tr>
-</tbody>
-</table>
-<p><a name="calcBgPercentInCategories"></a></p>
-<h2 id="calcbgpercentincategoriesdata-bgbounds-&#x21D2;-object">calcBgPercentInCategories(data, bgBounds) &#x21D2; <code>Object</code></h2>
-<p>calcBgPercentInCategories</p>
-<p><strong>Kind</strong>: global function<br><strong>Returns</strong>: <code>Object</code> - bgPercentInCategories - object w/keys veryLow, low, target, high, veryHigh
-                 and 0.0 to 1.0 percentage values  </p>
-<table>
-<thead>
-<tr>
-<th>Param</th>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>data</td>
-<td><code>Array</code></td>
-<td>Array of Tidepool cbg or smbg data</td>
-</tr>
-<tr>
-<td>bgBounds</td>
-<td><code>Object</code></td>
-<td>object describing boundaries for blood glucose categories</td>
 </tr>
 </tbody>
 </table>
@@ -719,7 +698,7 @@ jsdoc2md &quot;src/utils/bloodglucose.js&quot;</p>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"blood glucose","level":"1.6.1.2","depth":3,"next":{"title":"bolus","level":"1.6.1.3","depth":3,"path":"src/utils/apidocs/bolus.md","ref":"src/utils/apidocs/bolus.md","articles":[]},"previous":{"title":"basal","level":"1.6.1.1","depth":3,"path":"src/utils/apidocs/basal.md","ref":"src/utils/apidocs/basal.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/bloodglucose.md","mtime":"2017-05-23T01:20:51.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-23T01:20:58.728Z"},"basePath":"../../..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"blood glucose","level":"1.6.1.2","depth":3,"next":{"title":"bolus","level":"1.6.1.3","depth":3,"path":"src/utils/apidocs/bolus.md","ref":"src/utils/apidocs/bolus.md","articles":[]},"previous":{"title":"basal","level":"1.6.1.1","depth":3,"path":"src/utils/apidocs/basal.md","ref":"src/utils/apidocs/basal.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":[],"pluginsConfig":{"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"src/utils/apidocs/bloodglucose.md","mtime":"2017-05-24T21:41:09.000Z","type":"markdown"},"gitbook":{"version":"3.2.2","time":"2017-05-24T21:48:34.492Z"},"basePath":"../../..","book":{"language":""}});
         });
     </script>
 </div>
