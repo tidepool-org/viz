@@ -1,13 +1,15 @@
 /* eslint-disable */
-import { configure, addDecorator } from '@storybook/react';
+import { configure, addDecorator, addParameters } from '@storybook/react';
 import { withNotes } from '@storybook/addon-notes';
 import { withKnobs } from '@storybook/addon-knobs';
-import { configureViewport, INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
+import { INITIAL_VIEWPORTS } from '@storybook/addon-viewport';
 
-configureViewport({
-  viewports: {
-    ...INITIAL_VIEWPORTS,
-  }
+addParameters({
+  viewport: {
+    viewports: {
+      ...INITIAL_VIEWPORTS,
+    },
+  },
 });
 
 addDecorator(withNotes);
