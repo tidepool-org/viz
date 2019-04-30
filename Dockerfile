@@ -23,6 +23,6 @@ RUN rm yarn.lock && \
 
 VOLUME /app
 
-EXPOSE 8081 8082
+EXPOSE 8082 8083
 
 CMD ["npm", "start"]

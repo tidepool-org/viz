@@ -13,14 +13,14 @@ import { MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
-export class DataUtil {
+export class StatUtil {
   /**
    * @param {Object} bgBounds - object describing boundaries for blood glucose categories
    * @param {Array} data Unfiltered tideline data
    * @param {Array} endpoints Array ISO strings [start, end]
    */
   constructor(data, opts = {}) {
-    this.log = bows('DataUtil');
+    this.log = bows('StatUtil');
 
     this.data = crossfilter(data);
     this._endpoints = opts.endpoints || [];
@@ -489,4 +489,4 @@ export class DataUtil {
   };
 }
 
-export default DataUtil;
+export default StatUtil;

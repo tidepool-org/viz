@@ -64,6 +64,19 @@ export function addDuration(startTime, duration) {
 }
 
 /**
+ * getOffset
+ * x@param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezoneName - valid timezoneName String
+ *
+ * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
+ *                  if utc is already local midnight, returns utc
+ */
+export function getOffset(utc, timezoneName) {
+  return moment.tz.zone(timezoneName).utcOffset(Date.parse(utc));
+}
+
+
+/**
  * getBrowserTimezone
  * @returns {String} browser-determined timezone name
  */
@@ -288,7 +301,7 @@ export function getHammertimeFromDatumWithTimePrefs(datum, timePrefs) {
 
 /**
  * getLocalizedCeiling
- * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * x@param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
  *
  * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
