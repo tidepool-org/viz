@@ -3,8 +3,9 @@ import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolv
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
-import { MS_IN_DAY } from './constants';
+import { DEFAULT_BG_BOUNDS, MS_IN_DAY, MGDL_UNITS } from './constants';
 import { getTimezoneFromTimePrefs } from './datetime';
+import { reshapeBgClassesToBgBounds } from './bloodglucose';
 
 /* eslint-disable lodash/prefer-lodash-method */
 
@@ -141,7 +142,7 @@ export class DataUtil {
     }
   }
 
-  setTimeZoneName = timePrefs => {
+  setTimeZoneName = (timePrefs = {}) => {
     this.timeZoneName = 'UTC';
 
     if (timePrefs.timezoneAware) {
@@ -149,12 +150,23 @@ export class DataUtil {
     }
   }
 
+  setBGPrefs = (bgPrefs = {}) => {
+    const {
+      bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
+      bgUnits = MGDL_UNITS,
+    } = bgPrefs;
+
+    this.bgBounds = bgBounds;
+    this.bgUnits = bgUnits;
+  }
+
   queryData = (query = {}) => {
     const {
       activeDays,
       endpoints,
       stats,
-      timePrefs = {},
+      timePrefs,
+      bgPrefs,
       types,
     } = query;
 
@@ -163,9 +175,8 @@ export class DataUtil {
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
     this.setTypes(types);
-
-
-    this.timeZoneName = getTimezoneFromTimePrefs(timePrefs);
+    this.setTimeZoneName(timePrefs);
+    this.setBGPrefs(bgPrefs);
 
     const data = {
       current: {},
@@ -175,21 +186,27 @@ export class DataUtil {
 
     _.each(_.keys(data), range => {
       if (this.endpoints[range]) {
+        // Filter the data set by date range
         this.filter.byEndpoints(this.endpoints[range]);
 
         data[range].range = this.endpoints[range];
         data[range].data = {};
 
+        // Filter out any inactive days of the week
         if (this.activeDays) this.filter.byActiveDays(this.activeDays);
 
-        _.each(this.types, ({ type, select, sort }) => {
+        _.each(this.types, ({ type, select, sort = {} }) => {
           const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
 
           data[range].data[type] = _.map(
             this.sort.byDate(this.filter.byType(type).top(Infinity)),
             d => _.pick(d, fields));
 
-          if (sort === 'desc') data[range].data[type].reverse();
+          if (sort.field && sort.field !== 'time') {
+            data[range].data[type] = _.sortBy(data[range].data[type], [sort.field]);
+          }
+
+          if (sort.order === 'desc') data[range].data[type].reverse();
         });
       }
     });
@@ -197,6 +214,7 @@ export class DataUtil {
     return {
       data,
       timeZoneName: this.timeZoneName,
+      BGUnits: this.BGUnits,
     };
   }
 }

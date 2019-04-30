@@ -27,9 +27,10 @@ const stories = storiesOf('DataUtil', module);
 stories.addDecorator(withKnobs);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
-const DATA_INPUTS = 'DATA INPUT';
-const DATA_QUERY = 'GENERATED QUERY';
-const DATA_FIELDS = 'FIELDS';
+const GROUP_INPUTS = 'INPUTS';
+const GROUP_QUERY = 'GENERATED QUERY';
+const GROUP_FIELDS = 'FIELDS';
+const GROUP_SORT = 'SORT';
 
 let data;
 try {
@@ -49,11 +50,11 @@ const Results = ({ results }) => (
   <pre>{JSON.stringify(results, null, 2)}</pre>
 );
 
-stories.add('dataUtil test', () => {
+stories.add('Query Generator', () => {
   const endMoment = moment.utc(data[0].time).startOf('day').add(1, 'd');
 
   const getEndDate = () => {
-    const endDate = date('End Date', endMoment.toDate(), DATA_INPUTS);
+    const endDate = date('End Date', endMoment.toDate(), GROUP_INPUTS);
     return moment.utc(endDate).toISOString();
   };
 
@@ -65,7 +66,7 @@ stories.add('dataUtil test', () => {
     step: 1,
   };
 
-  const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, DATA_INPUTS);
+  const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_INPUTS);
 
   const commonFields = {
     // _active: '_active',
@@ -174,21 +175,40 @@ stories.add('dataUtil test', () => {
   const arrayQueryFormat = { array: 'array' };
   const objectQueryFormat = { object: 'object' };
 
-  const getFieldsQueryFormat = () => options('Fields Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, DATA_FIELDS);
+  const getFieldsQueryFormat = () => options('Fields Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_FIELDS);
   const getFields = type => {
     const queryFormat = getFieldsQueryFormat();
-    const fields = options(type, fieldsByType[type], ['time'], { display: 'check' }, DATA_FIELDS);
+    const fields = options(type, fieldsByType[type], ['time'], { display: 'check' }, GROUP_FIELDS);
     return { select: queryFormat === 'string' ? fields.join(',') : fields };
   };
 
+  const sorts = {
+    asc: 'asc',
+    desc: 'desc',
+  };
 
-  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, DATA_INPUTS);
+  const getTypeSort = (type) => {
+    const getSortField = t => options(`${t} sort field`, fieldsByType[t], 'time', { display: 'select' }, GROUP_SORT);
+    const getSortOrder = t => options(`${t} sort order`, sorts, 'asc', { display: 'select' }, GROUP_SORT);
+
+    return {
+      sort: {
+        field: getSortField(type),
+        order: getSortOrder(type),
+      },
+    };
+  };
+
+  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_INPUTS);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
-    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, DATA_INPUTS);
+    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_INPUTS);
+
     return queryFormat === 'object'
-      ? _.zipObject(selectedTypes, _.map(selectedTypes, getFields))
-      : _.map(selectedTypes, type => ({ type, ...getFields(type) }));
+      ? _.zipObject(
+        selectedTypes,
+        _.map(selectedTypes, type => ({ ...getFields(type), ...getTypeSort(type) })))
+      : _.map(selectedTypes, type => ({ type, ...getFields(type), ...getTypeSort(type) }));
   };
 
   const activeDays = {
@@ -202,7 +222,7 @@ stories.add('dataUtil test', () => {
   };
 
   const getActiveDays = () => {
-    const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, DATA_INPUTS);
+    const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, GROUP_INPUTS);
     return (days.length === 7) ? undefined : _.map(days, _.toInteger);
   };
 
@@ -215,7 +235,7 @@ stories.add('dataUtil test', () => {
     activeDays: getActiveDays(),
   };
 
-  const query = () => object('Query', defaultQuery, DATA_QUERY);
+  const query = () => object('Query', defaultQuery, GROUP_QUERY);
 
   return <Results results={dataUtil.queryData(query())} />;
 }, { notes });
