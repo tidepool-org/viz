@@ -1,6 +1,6 @@
 import _ from 'lodash';
 
-import DataUtil from '../../src/utils/data';
+import DataUtil from '../../src/utils/statUtil';
 import Types from '../../data/types';
 import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS } from '../../src/utils/constants';
 
