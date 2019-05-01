@@ -202,11 +202,20 @@ export class DataUtil {
             this.sort.byDate(this.filter.byType(type).top(Infinity)),
             d => _.pick(d, fields));
 
-          if (sort.field && sort.field !== 'time') {
-            data[range].data[type] = _.sortBy(data[range].data[type], [sort.field]);
+          let sortOpts = sort;
+          if (_.isString(sortOpts)) {
+            const sortArray = _.map(sort.split(','), _.trim);
+            sortOpts = {
+              field: sortArray[0],
+              order: sortArray[1],
+            };
           }
 
-          if (sort.order === 'desc') data[range].data[type].reverse();
+          if (sortOpts.field && sortOpts.field !== 'time') {
+            data[range].data[type] = _.sortBy(data[range].data[type], [sortOpts.field]);
+          }
+
+          if (sortOpts.order === 'desc') data[range].data[type].reverse();
         });
       }
     });

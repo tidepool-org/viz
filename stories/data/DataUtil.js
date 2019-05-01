@@ -187,15 +187,21 @@ stories.add('Query Generator', () => {
     desc: 'desc',
   };
 
-  const getTypeSort = (type) => {
+
+  const getSortQueryFormat = () => options('Sort Query Format', { ...stringQueryFormat, ...objectQueryFormat }, 'string', { display: 'radio' }, GROUP_SORT);
+  const getTypeSort = type => {
+    const sortFormat = getSortQueryFormat();
+
     const getSortField = t => options(`${t} sort field`, fieldsByType[t], 'time', { display: 'select' }, GROUP_SORT);
     const getSortOrder = t => options(`${t} sort order`, sorts, 'asc', { display: 'select' }, GROUP_SORT);
 
     return {
-      sort: {
-        field: getSortField(type),
-        order: getSortOrder(type),
-      },
+      sort: sortFormat === 'string'
+        ? [getSortField(type), getSortOrder(type)].join(',')
+        : {
+          field: getSortField(type),
+          order: getSortOrder(type),
+        },
     };
   };
 
