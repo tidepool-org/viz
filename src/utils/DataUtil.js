@@ -13,12 +13,8 @@ export class DataUtil {
   /**
    * @param {Array} data Raw Tidepool data
    */
-  constructor(
-    data = [],
-    // timePrefs = {}
-  ) {
+  constructor(data = []) {
     this.log = bows('DataUtil');
-    // this.timeZoneName = getTimezoneFromTimePrefs(timePrefs);
     this.init(data);
   }
 
@@ -142,11 +138,11 @@ export class DataUtil {
     }
   }
 
-  setTimeZoneName = (timePrefs = {}) => {
-    this.timeZoneName = 'UTC';
+  setTimezoneName = (timePrefs = {}) => {
+    this.timezoneName = undefined;
 
     if (timePrefs.timezoneAware) {
-      this.timeZoneName = getTimezoneFromTimePrefs(timePrefs);
+      this.timezoneName = getTimezoneFromTimePrefs(timePrefs);
     }
   }
 
@@ -175,7 +171,7 @@ export class DataUtil {
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
     this.setTypes(types);
-    this.setTimeZoneName(timePrefs);
+    this.setTimezoneName(timePrefs);
     this.setBGPrefs(bgPrefs);
 
     const data = {
@@ -222,7 +218,7 @@ export class DataUtil {
 
     return {
       data,
-      timeZoneName: this.timeZoneName,
+      timezoneName: this.timezoneName,
       BGUnits: this.BGUnits,
     };
   }

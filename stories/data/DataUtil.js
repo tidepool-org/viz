@@ -27,8 +27,9 @@ const stories = storiesOf('DataUtil', module);
 stories.addDecorator(withKnobs);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
-const GROUP_INPUTS = 'INPUTS';
-const GROUP_QUERY = 'GENERATED QUERY';
+const GROUP_DATES = 'DATES';
+const GROUP_TYPES = 'TYPES';
+const GROUP_QUERY = 'QUERY';
 const GROUP_FIELDS = 'FIELDS';
 const GROUP_SORT = 'SORT';
 
@@ -54,7 +55,7 @@ stories.add('Query Generator', () => {
   const endMoment = moment.utc(data[0].time).startOf('day').add(1, 'd');
 
   const getEndDate = () => {
-    const endDate = date('End Date', endMoment.toDate(), GROUP_INPUTS);
+    const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
     return moment.utc(endDate).toISOString();
   };
 
@@ -66,7 +67,7 @@ stories.add('Query Generator', () => {
     step: 1,
   };
 
-  const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_INPUTS);
+  const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_DATES);
 
   const commonFields = {
     // _active: '_active',
@@ -82,7 +83,7 @@ stories.add('Query Generator', () => {
     // id: 'id',
     time: 'time',
     // timezoneOffset: 'timezoneOffset',
-    // uploadId: 'uploadId',
+    uploadId: 'uploadId',
   };
 
   const fieldsByType = {
@@ -187,7 +188,6 @@ stories.add('Query Generator', () => {
     desc: 'desc',
   };
 
-
   const getSortQueryFormat = () => options('Sort Query Format', { ...stringQueryFormat, ...objectQueryFormat }, 'string', { display: 'radio' }, GROUP_SORT);
   const getTypeSort = type => {
     const sortFormat = getSortQueryFormat();
@@ -205,10 +205,10 @@ stories.add('Query Generator', () => {
     };
   };
 
-  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_INPUTS);
+  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_TYPES);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
-    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_INPUTS);
+    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
 
     return queryFormat === 'object'
       ? _.zipObject(
@@ -228,8 +228,27 @@ stories.add('Query Generator', () => {
   };
 
   const getActiveDays = () => {
-    const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, GROUP_INPUTS);
+    const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, GROUP_DATES);
     return (days.length === 7) ? undefined : _.map(days, _.toInteger);
+  };
+
+  const timezones = {
+    'US/Eastern': 'US/Eastern',
+    'US/Central': 'US/Central',
+    'US/Mountain': 'US/Mountain',
+    'US/Pacific': 'US/Pacific',
+    UTC: 'UTC',
+    None: 'None',
+  };
+
+  const getTimePrefs = () => {
+    const timeZoneName = options('Time Zone', timezones, 'UTC', { display: 'select' }, GROUP_DATES);
+    const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
+
+    return {
+      timezoneName: selectedTimeZone,
+      timezoneAware: !!selectedTimeZone || undefined,
+    };
   };
 
   const defaultQuery = {
@@ -237,8 +256,9 @@ stories.add('Query Generator', () => {
       moment.utc(getEndDate()).subtract(getDaysInRange(), 'd').toISOString(),
       getEndDate(),
     ],
-    types: getTypes(),
+    timePrefs: getTimePrefs(),
     activeDays: getActiveDays(),
+    types: getTypes(),
   };
 
   const query = () => object('Query', defaultQuery, GROUP_QUERY);
