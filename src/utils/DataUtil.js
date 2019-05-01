@@ -5,7 +5,6 @@ import _ from 'lodash';
 
 import { DEFAULT_BG_BOUNDS, MS_IN_DAY, MGDL_UNITS } from './constants';
 import { getTimezoneFromTimePrefs } from './datetime';
-import { reshapeBgClassesToBgBounds } from './bloodglucose';
 
 /* eslint-disable lodash/prefer-lodash-method */
 
@@ -160,7 +159,7 @@ export class DataUtil {
     const {
       activeDays,
       endpoints,
-      stats,
+      // stats,
       timePrefs,
       bgPrefs,
       types,
