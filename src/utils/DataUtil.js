@@ -219,7 +219,7 @@ export class DataUtil {
     return {
       data,
       timezoneName: this.timezoneName,
-      BGUnits: this.BGUnits,
+      bgUnits: this.bgUnits,
     };
   }
 }

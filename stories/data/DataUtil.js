@@ -22,6 +22,7 @@ import { object, withKnobs, optionsKnob as options, date, number } from '@storyb
 import moment from 'moment';
 
 import DataUtil from '../../src/utils/DataUtil';
+import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 
 const stories = storiesOf('DataUtil', module);
 stories.addDecorator(withKnobs);
@@ -29,9 +30,10 @@ stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_DATES = 'DATES';
 const GROUP_TYPES = 'TYPES';
-const GROUP_QUERY = 'QUERY';
 const GROUP_FIELDS = 'FIELDS';
 const GROUP_SORT = 'SORT';
+const GROUP_UNITS = 'UNITS';
+const GROUP_QUERY = 'QUERY';
 
 let data;
 try {
@@ -251,14 +253,24 @@ stories.add('Query Generator', () => {
     };
   };
 
+  const getBGPrefs = () => {
+    const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS }, MGDL_UNITS, { display: 'select' }, GROUP_UNITS);
+
+    return {
+      bgUnits,
+      bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
+    };
+  };
+
   const defaultQuery = {
     endpoints: [
       moment.utc(getEndDate()).subtract(getDaysInRange(), 'd').toISOString(),
       getEndDate(),
     ],
-    timePrefs: getTimePrefs(),
     activeDays: getActiveDays(),
     types: getTypes(),
+    timePrefs: getTimePrefs(),
+    bgPrefs: getBGPrefs(),
   };
 
   const query = () => object('Query', defaultQuery, GROUP_QUERY);
