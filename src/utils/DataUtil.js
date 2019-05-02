@@ -11,6 +11,11 @@ import {
 } from './constants';
 
 import {
+  convertToMGDL,
+  convertToMmolL,
+} from './bloodglucose';
+
+import {
   addDuration,
   getMsPer24,
   getOffset,
@@ -18,8 +23,6 @@ import {
 } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method */
-
-
 /* global __DEV__ */
 
 export class DataUtil {
@@ -53,22 +56,6 @@ export class DataUtil {
     this.endTimer('addData');
   }
 
-  /**
-   * TODO: need to figure out if I should only normalize datums
-   * upon return
-   *
-   * Thinking this would be required for allowing the user to easily switch
-   * timezones on the fly in a future UI
-   *
-   * This would mean requiring the client to send timeprefs
-   * with the requests.
-   *
-   * It would also require possibly 'converting' the provided
-   * endpoints to UTC time before filtering via the timePrefs object
-   * (or sending them in UTC)
-   *
-   * This assumes that the data is stored in UTC -- need to confirm
-   */
   normalizeDatum = datum => {
     const d = { ...datum };
 
@@ -90,18 +77,20 @@ export class DataUtil {
       }
     }
 
-    switch (d.type) {
-      case 'basal':
-        d.normalEnd = addDuration(d.normalTime, d.duration);
-        break;
+    if (d.type === 'basal') {
+      d.normalEnd = addDuration(d.normalTime, d.duration);
+    }
 
-      case 'cbg':
-      case 'smbg':
-        d.msPer24 = getMsPer24(d.normalTime, this.timezoneName);
-        break;
+    if (d.type === 'cbg' || d.type === 'smbg') {
+      d.msPer24 = getMsPer24(d.normalTime, this.timezoneName);
 
-      default:
-        break;
+      if (d.units !== this.bgUnits) {
+        d.units = this.bgUnits;
+
+        d.value = this.bgUnits === MGDL_UNITS
+          ? convertToMGDL(d.value)
+          : convertToMmolL(d.value);
+      }
     }
 
     return d;

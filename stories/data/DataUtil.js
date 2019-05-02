@@ -274,19 +274,19 @@ stories.add('Query Generator', () => {
     const timeZoneName = options('Time Zone', timezones, 'UTC', { display: 'select' }, GROUP_DATES);
     const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
-    return {
+    return selectedTimeZone ? {
       timezoneName: selectedTimeZone,
-      timezoneAware: !!selectedTimeZone || undefined,
-    };
+      timezoneAware: true,
+    } : undefined;
   };
 
   const getBGPrefs = () => {
-    const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS }, MGDL_UNITS, { display: 'select' }, GROUP_UNITS);
+    const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS, ...noneOption }, MGDL_UNITS, { display: 'select' }, GROUP_UNITS);
 
-    return {
+    return bgUnits !== 'None' ? {
       bgUnits,
       bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
-    };
+    } : undefined;
   };
 
   const defaultQuery = {
