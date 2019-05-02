@@ -31,9 +31,9 @@ stories.addParameters({ options: { panelPosition: 'right' } });
 const GROUP_DATES = 'DATES';
 const GROUP_TYPES = 'TYPES';
 const GROUP_FIELDS = 'FIELDS';
-const GROUP_SORT = 'SORT';
+const GROUP_SORTS = 'SORTS';
 const GROUP_UNITS = 'UNITS';
-const GROUP_QUERY = 'QUERY';
+const GROUP_RESULTS = 'RESULTS';
 
 let data;
 try {
@@ -45,7 +45,7 @@ try {
 
 const notes = `Run \`window.downloadInputData()\` from the console on a Tidepool Web data view.
 Save the resulting file to the \`local/\` directory of viz as \`blip-input.json\`,
-and then use this story to iterate on the Basics Print PDF outside of Tidepool Web!`;
+and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
 const dataUtil = new DataUtil(data);
 
@@ -69,6 +69,10 @@ stories.add('Query Generator', () => {
     step: 1,
   };
 
+  const noneOption = {
+    None: 'None',
+  };
+
   const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_DATES);
 
   const commonFields = {
@@ -88,23 +92,35 @@ stories.add('Query Generator', () => {
     uploadId: 'uploadId',
   };
 
+  const computedFields = {
+    normalTime: 'normalTime',
+    displayOffset: 'displayOffset',
+    warning: 'warning',
+  };
+
   const fieldsByType = {
     smbg: {
       ...commonFields,
+      ...computedFields,
+      msPer24: 'msPer24',
       subType: 'subType',
       units: 'units',
       value: 'value',
     },
     cbg: {
       ...commonFields,
+      ...computedFields,
+      msPer24: 'msPer24',
       units: 'units',
       value: 'value',
     },
     basal: {
       ...commonFields,
+      ...computedFields,
       deliveryType: 'deliveryType',
       duration: 'duration',
       expectedDuration: 'expectedDuration',
+      normalEnd: 'normalEnd',
       percent: 'percent',
       previous: 'previous',
       rate: 'rate',
@@ -112,6 +128,7 @@ stories.add('Query Generator', () => {
     },
     bolus: {
       ...commonFields,
+      ...computedFields,
       subType: 'subType',
       normal: 'normal',
       expectedNormal: 'expectedNormal',
@@ -122,6 +139,7 @@ stories.add('Query Generator', () => {
     },
     wizard: {
       ...commonFields,
+      ...computedFields,
       bgInput: 'bgInput',
       bgTarget: 'bgTarget',
       bolus: 'bolus',
@@ -134,6 +152,7 @@ stories.add('Query Generator', () => {
     },
     upload: {
       ...commonFields,
+      ...computedFields,
       deviceManufacturers: 'deviceManufacturers',
       deviceModel: 'deviceModel',
       deviceSerialNumber: 'deviceSerialNumber',
@@ -141,6 +160,7 @@ stories.add('Query Generator', () => {
     },
     pumpSettings: {
       ...commonFields,
+      ...computedFields,
       activeSchedule: 'activeSchedule',
       basalSchedules: 'basalSchedules',
       bgTarget: 'bgTarget',
@@ -153,11 +173,13 @@ stories.add('Query Generator', () => {
     },
     cgmSettings: {
       ...commonFields,
+      ...computedFields,
       transmitterId: 'transmitterId',
       units: 'units',
     },
     deviceEvent: {
       ...commonFields,
+      ...computedFields,
       subType: 'subType',
     },
   };
@@ -181,7 +203,7 @@ stories.add('Query Generator', () => {
   const getFieldsQueryFormat = () => options('Fields Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_FIELDS);
   const getFields = type => {
     const queryFormat = getFieldsQueryFormat();
-    const fields = options(type, fieldsByType[type], ['time'], { display: 'check' }, GROUP_FIELDS);
+    const fields = options(type, fieldsByType[type], ['normalTime'], { display: 'check' }, GROUP_FIELDS);
     return { select: queryFormat === 'string' ? fields.join(',') : fields };
   };
 
@@ -190,27 +212,32 @@ stories.add('Query Generator', () => {
     desc: 'desc',
   };
 
-  const getSortQueryFormat = () => options('Sort Query Format', { ...stringQueryFormat, ...objectQueryFormat }, 'string', { display: 'radio' }, GROUP_SORT);
+  const getSortQueryFormat = () => options('Sort Query Format', { ...stringQueryFormat, ...objectQueryFormat }, 'string', { display: 'radio' }, GROUP_SORTS);
   const getTypeSort = type => {
     const sortFormat = getSortQueryFormat();
 
-    const getSortField = t => options(`${t} sort field`, fieldsByType[t], 'time', { display: 'select' }, GROUP_SORT);
-    const getSortOrder = t => options(`${t} sort order`, sorts, 'asc', { display: 'select' }, GROUP_SORT);
+    const getSortField = t => options(`${t} sort field`, { ...fieldsByType[t], ...noneOption }, 'normalTime', { display: 'select' }, GROUP_SORTS);
+    const getSortOrder = t => options(`${t} sort order`, sorts, 'asc', { display: 'select' }, GROUP_SORTS);
 
-    return {
+    const selectedSortField = getSortField(type);
+    const selectedSortOrder = getSortOrder(type);
+
+    return selectedSortField !== 'None' ? {
       sort: sortFormat === 'string'
-        ? [getSortField(type), getSortOrder(type)].join(',')
+        ? [selectedSortField, selectedSortOrder].join(',')
         : {
-          field: getSortField(type),
-          order: getSortOrder(type),
+          field: selectedSortField,
+          order: selectedSortOrder,
         },
-    };
+    } : undefined;
   };
 
   const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_TYPES);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
     const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
+
+    if (!selectedTypes.length) return undefined;
 
     return queryFormat === 'object'
       ? _.zipObject(
@@ -273,7 +300,7 @@ stories.add('Query Generator', () => {
     bgPrefs: getBGPrefs(),
   };
 
-  const query = () => object('Query', defaultQuery, GROUP_QUERY);
+  const query = () => object('Query', defaultQuery, GROUP_RESULTS);
 
   return <Results results={dataUtil.queryData(query())} />;
 }, { notes });

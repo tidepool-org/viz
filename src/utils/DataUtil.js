@@ -3,10 +3,24 @@ import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolv
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
-import { DEFAULT_BG_BOUNDS, MS_IN_DAY, MGDL_UNITS } from './constants';
-import { getTimezoneFromTimePrefs } from './datetime';
+import {
+  DEFAULT_BG_BOUNDS,
+  MS_IN_DAY,
+  MS_IN_MIN,
+  MGDL_UNITS,
+} from './constants';
+
+import {
+  addDuration,
+  getMsPer24,
+  getOffset,
+  getTimezoneFromTimePrefs,
+} from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method */
+
+
+/* global __DEV__ */
 
 export class DataUtil {
   /**
@@ -14,10 +28,13 @@ export class DataUtil {
    */
   constructor(data = []) {
     this.log = bows('DataUtil');
+    this.startTimer = __DEV__ ? name => console.time(name) : _.noop;
+    this.endTimer = __DEV__ ? name => console.timeEnd(name) : _.noop;
     this.init(data);
   }
 
   init = data => {
+    this.startTimer('init total');
     this.data = crossfilter([]);
     this.endpoints = {};
 
@@ -26,10 +43,14 @@ export class DataUtil {
     this.buildDimensions();
     this.buildFilters();
     this.buildSorts();
+    this.endTimer('init total');
   };
 
   addData = data => {
+    this.startTimer('addData');
+    this.log('addData', 'count', data.length);
     this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject)); // TODO: determine if lodash methods are performant enough
+    this.endTimer('addData');
   }
 
   /**
@@ -51,6 +72,38 @@ export class DataUtil {
   normalizeDatum = datum => {
     const d = { ...datum };
 
+    if (this.timezoneName) {
+      d.normalTime = d.time;
+      d.displayOffset = -getOffset(d.time, this.timezoneName);
+    } else {
+      // timezoneOffset is an optional attribute according to the Tidepool data model
+      if (d.timezoneOffset != null && d.conversionOffset != null) {
+        d.normalTime = addDuration(d.time, d.timezoneOffset * MS_IN_MIN + d.conversionOffset);
+      } else {
+        d.normalTime = _.isEmpty(d.deviceTime) ? d.time : `${d.deviceTime}.000Z`;
+      }
+
+      // displayOffset always 0 when not timezoneAware
+      d.displayOffset = 0;
+      if (d.deviceTime && d.normalTime.slice(0, -5) !== d.deviceTime) {
+        d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
+      }
+    }
+
+    switch (d.type) {
+      case 'basal':
+        d.normalEnd = addDuration(d.normalTime, d.duration);
+        break;
+
+      case 'cbg':
+      case 'smbg':
+        d.msPer24 = getMsPer24(d.normalTime, this.timezoneName);
+        break;
+
+      default:
+        break;
+    }
+
     return d;
   }
 
@@ -60,6 +113,7 @@ export class DataUtil {
   }
 
   buildDimensions = () => {
+    this.startTimer('buildDimensions');
     this.dimension = {};
     this.dimension.byDate = this.data.dimension(
       d => moment.utc(d.time).tz('UTC').toISOString()
@@ -70,22 +124,27 @@ export class DataUtil {
     );
 
     this.dimension.byType = this.data.dimension(d => d.type);
+    this.endTimer('buildDimensions');
   };
 
   buildFilters = () => {
+    this.startTimer('buildFilters');
     this.filter = {};
     this.filter.byActiveDays = activeDays => this.dimension.byDayOfWeek
       .filterFunction(d => _.includes(activeDays, d));
 
     this.filter.byEndpoints = endpoints => this.dimension.byDate.filterRange(endpoints);
     this.filter.byType = type => this.dimension.byType.filterExact(type);
+    this.endTimer('buildFilters');
   };
 
   buildSorts = () => {
+    this.startTimer('buildSorts');
     this.sort = {};
     this.sort.byDate = array => (
       crossfilter.quicksort.by(d => d.time)(array, 0, array.length)
     );
+    this.endTimer('buildSorts');
   };
 
   clearFilters = () => {
@@ -156,6 +215,7 @@ export class DataUtil {
   }
 
   queryData = (query = {}) => {
+    this.startTimer('queryData total');
     const {
       activeDays,
       endpoints,
@@ -185,35 +245,52 @@ export class DataUtil {
         this.filter.byEndpoints(this.endpoints[range]);
 
         data[range].range = this.endpoints[range];
-        data[range].data = {};
 
         // Filter out any inactive days of the week
         if (this.activeDays) this.filter.byActiveDays(this.activeDays);
 
-        _.each(this.types, ({ type, select, sort = {} }) => {
-          const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
+        // Populate requested data
+        if (this.types.length) {
+          data[range].data = {};
 
-          data[range].data[type] = _.map(
-            this.sort.byDate(this.filter.byType(type).top(Infinity)),
-            d => _.pick(d, fields));
+          _.each(this.types, ({ type, select, sort = {} }) => {
+            const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
+            let typeData = this.filter.byType(type).top(Infinity);
 
-          let sortOpts = sort;
-          if (_.isString(sortOpts)) {
-            const sortArray = _.map(sort.split(','), _.trim);
-            sortOpts = {
-              field: sortArray[0],
-              order: sortArray[1],
-            };
-          }
+            // Normalize data
+            this.startTimer(`normalize | ${type} | ${range}`);
+            typeData = _.map(typeData, this.normalizeDatum);
+            this.endTimer(`normalize | ${type} | ${range}`);
 
-          if (sortOpts.field && sortOpts.field !== 'time') {
-            data[range].data[type] = _.sortBy(data[range].data[type], [sortOpts.field]);
-          }
+            // Sort data
+            this.startTimer(`sort | ${type} | ${range}`);
+            let sortOpts = sort;
+            if (_.isString(sortOpts)) {
+              const sortArray = _.map(sort.split(','), _.trim);
+              sortOpts = {
+                field: sortArray[0],
+                order: sortArray[1],
+              };
+            }
 
-          if (sortOpts.order === 'desc') data[range].data[type].reverse();
-        });
+            if (sortOpts.field) {
+              typeData = _.sortBy(typeData, [sortOpts.field]);
+            }
+
+            if (sortOpts.order === 'desc') typeData.reverse();
+            this.endTimer(`sort | ${type} | ${range}`);
+
+            // Pick selected fields
+            this.startTimer(`select fields | ${type} | ${range}`);
+            typeData = _.map(typeData, d => _.pick(d, fields));
+            this.endTimer(`select fields | ${type} | ${range}`);
+
+            data[range].data[type] = typeData;
+          });
+        }
       }
     });
+    this.endTimer('queryData total');
 
     return {
       data,
