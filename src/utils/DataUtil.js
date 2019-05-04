@@ -54,7 +54,7 @@ export class DataUtil {
     this.log('addData', 'count', data.length);
     this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject)); // TODO: determine if lodash methods are performant enough
     this.endTimer('addData');
-  }
+  };
 
   normalizeDatum = datum => {
     const d = { ...datum };
@@ -94,12 +94,12 @@ export class DataUtil {
     }
 
     return d;
-  }
+  };
 
   removeData = predicate => {
     this.clearFilters();
     this.data.remove(predicate);
-  }
+  };
 
   buildDimensions = () => {
     this.startTimer('buildDimensions');
@@ -142,6 +142,21 @@ export class DataUtil {
     this.dimension.byType.filterAll();
   };
 
+  getBgSources = () => {
+    const bgSources = {
+      cbg: this.filter.byType('cbg').top(Infinity).length > 0,
+      smbg: this.filter.byType('smbg').top(Infinity).length > 0,
+    };
+
+    if (bgSources.cbg) {
+      bgSources.default = 'cbg';
+    } else if (bgSources.smbg) {
+      bgSources.default = 'smbg';
+    }
+
+    return bgSources;
+  };
+
   setEndpoints = endpoints => {
     this.endpoints = {};
 
@@ -172,7 +187,7 @@ export class DataUtil {
     if (daysInRange) {
       this.endpoints.activeDaysInRange = daysInRange / 7 * this.activeDays.length;
     }
-  }
+  };
 
   setTypes = types => {
     this.types = _.isArray(types) ? types : [];
@@ -183,7 +198,7 @@ export class DataUtil {
         ...value,
       }));
     }
-  }
+  };
 
   setTimezoneName = (timePrefs = {}) => {
     this.timezoneName = undefined;
@@ -191,7 +206,7 @@ export class DataUtil {
     if (timePrefs.timezoneAware) {
       this.timezoneName = getTimezoneFromTimePrefs(timePrefs);
     }
-  }
+  };
 
   setBGPrefs = (bgPrefs = {}) => {
     const {
@@ -201,7 +216,7 @@ export class DataUtil {
 
     this.bgBounds = bgBounds;
     this.bgUnits = bgUnits;
-  }
+  };
 
   queryData = (query = {}) => {
     this.startTimer('queryData total');
@@ -215,6 +230,8 @@ export class DataUtil {
     } = query;
 
     this.clearFilters();
+
+    const bgSources = this.getBgSources();
 
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
@@ -285,8 +302,9 @@ export class DataUtil {
       data,
       timezoneName: this.timezoneName,
       bgUnits: this.bgUnits,
+      bgSources,
     };
-  }
+  };
 }
 
 export default DataUtil;

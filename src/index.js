@@ -49,7 +49,7 @@ import {
   statBgSourceLabels,
   statFetchMethods,
 } from './utils/stat';
-import DataUtil from './utils/statUtil';
+import DataUtil from './utils/DataUtil';
 import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
