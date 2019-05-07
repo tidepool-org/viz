@@ -4,6 +4,8 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 
 import {
+  BGM_DATA_KEY,
+  CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
   MS_IN_DAY,
   MS_IN_MIN,
@@ -21,6 +23,10 @@ import {
   getOffset,
   getTimezoneFromTimePrefs,
 } from './datetime';
+
+import { getLatestPumpUpload } from './device';
+import StatUtil from './StatUtil';
+import { statFetchMethods } from './stat';
 
 /* eslint-disable lodash/prefer-lodash-method */
 /* global __DEV__ */
@@ -142,19 +148,37 @@ export class DataUtil {
     this.dimension.byType.filterAll();
   };
 
-  getBgSources = () => {
+  setBgSources = () => {
     const bgSources = {
-      cbg: this.filter.byType('cbg').top(Infinity).length > 0,
-      smbg: this.filter.byType('smbg').top(Infinity).length > 0,
+      cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
+      smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
     };
 
     if (bgSources.cbg) {
-      bgSources.default = 'cbg';
+      bgSources.default = CGM_DATA_KEY;
     } else if (bgSources.smbg) {
-      bgSources.default = 'smbg';
+      bgSources.default = BGM_DATA_KEY;
     }
 
-    return bgSources;
+    this.bgSources = bgSources;
+  };
+
+  setLatestPump = () => {
+    const uploadData = this.sort.byDate(this.filter.byType('upload').top(Infinity));
+    const latestPumpUpload = getLatestPumpUpload(uploadData);
+    const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
+
+    this.latestPump = {
+      deviceModel: _.get(latestPumpUpload, 'deviceModel', ''),
+      manufacturer: latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource,
+    };
+  };
+
+  setMetaData = () => {
+    this.startTimer('setMetaData');
+    this.setBgSources();
+    this.setLatestPump();
+    this.endTimer('setMetaData');
   };
 
   setEndpoints = endpoints => {
@@ -185,6 +209,7 @@ export class DataUtil {
 
     const { daysInRange } = this.endpoints;
     if (daysInRange) {
+      // TODO: this only works if we have a number of days divisible by 7
       this.endpoints.activeDaysInRange = daysInRange / 7 * this.activeDays.length;
     }
   };
@@ -223,15 +248,20 @@ export class DataUtil {
     const {
       activeDays,
       endpoints,
-      // stats,
+      stats,
       timePrefs,
       bgPrefs,
       types,
     } = query;
 
+    // TODO: Must ensure that we get the desired endpoints in UTC time so that when we display in
+    // the desired time zone, we have all the data.
+
+    // Clear all previous filters
     this.clearFilters();
 
-    const bgSources = this.getBgSources();
+    // TODO: set meta data based on the entire data set, or only current range?
+    this.setMetaData();
 
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
@@ -250,10 +280,29 @@ export class DataUtil {
         // Filter the data set by date range
         this.filter.byEndpoints(this.endpoints[range]);
 
-        data[range].range = this.endpoints[range];
-
         // Filter out any inactive days of the week
         if (this.activeDays) this.filter.byActiveDays(this.activeDays);
+
+        const activeDaysInRange = 12; // TODO: get count of actual active days
+
+        // Generate the stats for current range
+        if (range === 'current' && stats) {
+          this.startTimer('generate stats');
+          const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
+          data[range].stats = {};
+
+          this.statUtil = new StatUtil(this, this.endpoints[range]);
+          _.each(selectedStats, stat => {
+            const method = statFetchMethods[stat];
+            if (_.isFunction(this.statUtil[method])) {
+              data[range].stats[stat] = this.statUtil[method]();
+            }
+          });
+          delete this.statUtil;
+          this.endTimer('generate stats');
+        }
+
+        data[range].range = this.endpoints[range];
 
         // Populate requested data
         if (this.types.length) {
@@ -302,7 +351,10 @@ export class DataUtil {
       data,
       timezoneName: this.timezoneName,
       bgUnits: this.bgUnits,
-      bgSources,
+      metaData: {
+        latestPump: this.latestPump,
+        bgSources: this.bgSources,
+      },
     };
   };
 }

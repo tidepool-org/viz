@@ -18,10 +18,11 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
-import { object, withKnobs, optionsKnob as options, date, number } from '@storybook/addon-knobs';
+import { object, withKnobs, optionsKnob as options, date, number, boolean } from '@storybook/addon-knobs';
 import moment from 'moment';
 
 import DataUtil from '../../src/utils/DataUtil';
+import { commonStats } from '../../src/utils/stat';
 import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 
 const stories = storiesOf('DataUtil', module);
@@ -33,6 +34,7 @@ const GROUP_TYPES = 'TYPES';
 const GROUP_FIELDS = 'FIELDS';
 const GROUP_SORTS = 'SORTS';
 const GROUP_UNITS = 'UNITS';
+const GROUP_STATS = 'STATS';
 const GROUP_RESULTS = 'RESULTS';
 
 let data;
@@ -49,8 +51,11 @@ and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
 const dataUtil = new DataUtil(data);
 
-const Results = ({ results }) => (
-  <pre>{JSON.stringify(results, null, 2)}</pre>
+const Results = ({ results, renderRaw, renderStats }) => (
+  <div>
+    {renderStats && <pre>Stats here!!</pre>}
+    {renderRaw && <pre>{JSON.stringify(results, null, 2)}</pre>}
+  </div>
 );
 
 stories.add('Query Generator', () => {
@@ -289,6 +294,15 @@ stories.add('Query Generator', () => {
     } : undefined;
   };
 
+  const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
+  const getStats = () => {
+    const queryFormat = getStatsQueryFormat();
+    const selectedStats = options('Stats', commonStats, [commonStats.averageGlucose, commonStats.carbs], { display: 'check' }, GROUP_STATS);
+
+    if (!selectedStats.length) return undefined;
+    return queryFormat === 'string' ? selectedStats.join(',') : selectedStats;
+  };
+
   const defaultQuery = {
     endpoints: [
       moment.utc(getEndDate()).subtract(getDaysInRange(), 'd').toISOString(),
@@ -298,9 +312,16 @@ stories.add('Query Generator', () => {
     types: getTypes(),
     timePrefs: getTimePrefs(),
     bgPrefs: getBGPrefs(),
+    stats: getStats(),
   };
 
+  const renderRaw = () => boolean('Render Raw Data', true, GROUP_RESULTS);
+  const renderStats = () => boolean('Render Stats', true, GROUP_RESULTS);
   const query = () => object('Query', defaultQuery, GROUP_RESULTS);
 
-  return <Results results={dataUtil.queryData(query())} />;
+  return <Results
+    renderStats={renderStats()}
+    renderRaw={renderRaw()}
+    results={dataUtil.queryData(query())}
+  />;
 }, { notes });
