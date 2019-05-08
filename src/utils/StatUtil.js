@@ -49,7 +49,7 @@ export class StatUtil {
       ]);
 
       const previousBasalDatum = this.dataUtil.sort
-        .byDate(this.dataUtil.filter.byType('basal').top(Infinity))
+        .byTime(this.dataUtil.filter.byType('basal').top(Infinity))
         .reverse()[0];
 
       // Add to top of basal data array if it overlaps the start endpoint
@@ -82,7 +82,7 @@ export class StatUtil {
 
   getBasalBolusData = () => {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
-    const rawBasalData = this.dataUtil.sort.byDate(this.dataUtil.filter.byType('basal').top(Infinity).reverse());
+    const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity).reverse());
     const basalData = this.addBasalOverlappingStart(rawBasalData);
 
     const basalBolusData = {
@@ -280,7 +280,7 @@ export class StatUtil {
   };
 
   getTimeInAutoData = () => {
-    let basalData = this.dataUtil.sort.byDate(this.dataUtil.filter.byType('basal').top(Infinity));
+    let basalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     basalData = this.addBasalOverlappingStart(basalData);
 
     let durations = basalData.length

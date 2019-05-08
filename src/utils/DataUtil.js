@@ -58,11 +58,17 @@ export class DataUtil {
   addData = data => {
     this.startTimer('addData');
     this.log('addData', 'count', data.length);
-    this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject)); // TODO: determine if lodash methods are performant enough
+    _.each(data, this.setDatumHammerTime);
+    this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject));
     this.endTimer('addData');
   };
 
   /* eslint-disable no-param-reassign */
+  setDatumHammerTime = d => {
+    if (d.time) d.time = Date.parse(d.time);
+    if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
+  };
+
   normalizeDatum = d => {
     const { timezoneName } = this.timePrefs || {};
 
@@ -86,6 +92,7 @@ export class DataUtil {
 
     if (d.type === 'basal') {
       d.normalEnd = addDuration(d.normalTime, d.duration);
+      d.subType = d.deliveryType; // TODO: is this needed?
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
@@ -150,8 +157,15 @@ export class DataUtil {
   buildDimensions = () => {
     this.startTimer('buildDimensions');
     this.dimension = {};
-    this.dimension.byDate = this.data.dimension(
-      d => moment.utc(d.time).tz('UTC').toISOString()
+
+    this.dimension.byTime = this.data.dimension(
+      d => d.time
+      // d => moment.utc(d.time).tz('UTC').toISOString()
+    );
+
+    this.dimension.byDeviceTime = this.data.dimension(
+      d => d.deviceTime
+      // d => moment.utc(d.deviceTime).tz('UTC').toISOString()
     );
 
     this.dimension.byDayOfWeek = this.data.dimension(
@@ -168,7 +182,7 @@ export class DataUtil {
     this.filter.byActiveDays = activeDays => this.dimension.byDayOfWeek
       .filterFunction(d => _.includes(activeDays, d));
 
-    this.filter.byEndpoints = endpoints => this.dimension.byDate.filterRange(endpoints);
+    this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
     this.filter.byType = type => this.dimension.byType.filterExact(type);
     this.endTimer('buildFilters');
   };
@@ -176,14 +190,14 @@ export class DataUtil {
   buildSorts = () => {
     this.startTimer('buildSorts');
     this.sort = {};
-    this.sort.byDate = array => (
+    this.sort.byTime = array => (
       crossfilter.quicksort.by(d => d.time)(array, 0, array.length)
     );
     this.endTimer('buildSorts');
   };
 
   clearFilters = () => {
-    this.dimension.byDate.filterAll();
+    this.dimension.byTime.filterAll();
     this.dimension.byDayOfWeek.filterAll();
     this.dimension.byType.filterAll();
   };
@@ -204,7 +218,7 @@ export class DataUtil {
   };
 
   setLatestPump = () => {
-    const uploadData = this.sort.byDate(this.filter.byType('upload').top(Infinity));
+    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
     const latestPumpUpload = getLatestPumpUpload(uploadData);
     const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
 
@@ -227,7 +241,7 @@ export class DataUtil {
     if (endpoints) {
       const days = moment.utc(endpoints[1]).diff(moment.utc(endpoints[0])) / MS_IN_DAY;
       this.endpoints.current = {
-        range: _.map(endpoints, e => moment.utc(e).toISOString()),
+        range: _.map(endpoints, e => moment.utc(e).valueOf()),
         days,
         activeDays: days,
       };
@@ -235,13 +249,13 @@ export class DataUtil {
       this.endpoints.next = {
         range: [
           this.endpoints.current.range[1],
-          moment.utc(endpoints[1]).add(this.endpoints.current.days, 'days').toISOString(),
+          moment.utc(endpoints[1]).add(this.endpoints.current.days, 'days').valueOf(),
         ],
       };
 
       this.endpoints.prev = {
         range: [
-          moment.utc(endpoints[0]).subtract(this.endpoints.current.days, 'days').toISOString(),
+          moment.utc(endpoints[0]).subtract(this.endpoints.current.days, 'days').valueOf(),
           this.endpoints.current.range[0],
         ],
       };

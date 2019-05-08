@@ -88,15 +88,14 @@ const Results = ({ results, showRaw, showStats }) => {
 };
 
 stories.add('Query Generator', () => {
-  const endMoment = moment.utc(data[0].time).startOf('day').add(1, 'd');
-
+  const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
   const getEndDate = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
     return moment.utc(endDate).toISOString();
   };
 
-  // const daysInRange = 1;
-  const daysInRange = 30;
+  const daysInRange = 1;
+  // const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,
