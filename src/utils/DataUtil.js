@@ -62,12 +62,13 @@ export class DataUtil {
     this.endTimer('addData');
   };
 
-  normalizeDatum = datum => {
-    const d = { ...datum };
+  /* eslint-disable no-param-reassign */
+  normalizeDatum = d => {
+    const { timezoneName } = this.timePrefs || {};
 
-    if (this.timezoneName) {
+    if (timezoneName) {
       d.normalTime = d.time;
-      d.displayOffset = -getOffset(d.time, this.timezoneName);
+      d.displayOffset = -getOffset(d.time, timezoneName);
     } else {
       // timezoneOffset is an optional attribute according to the Tidepool data model
       if (d.timezoneOffset != null && d.conversionOffset != null) {
@@ -88,19 +89,58 @@ export class DataUtil {
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
-      d.msPer24 = getMsPer24(d.normalTime, this.timezoneName);
+      this.normalizeDatumBgUnits(d);
 
-      if (d.units !== this.bgUnits) {
-        d.units = this.bgUnits;
+      d.msPer24 = getMsPer24(d.normalTime, timezoneName); // TODO: This is the SLOOOWWW one
 
-        d.value = this.bgUnits === MGDL_UNITS
-          ? convertToMGDL(d.value)
-          : convertToMmolL(d.value);
-      }
+      // const date = new Date(d.normalTime);
+      // const utcDate = new Date(Date.UTC(
+      //   date.getUTCFullYear(),
+      //   date.getUTCMonth(),
+      //   date.getUTCDay(),
+      //   date.getUTCHours(),
+      //   date.getUTCMinutes(),
+      //   date.getUTCSeconds(),
+      //   date.getUTCMilliseconds(),
+      // ));
+      // const dateFloor = new Date(Date.UTC(
+      //   date.getUTCFullYear(),
+      //   date.getUTCMonth(),
+      //   date.getUTCDay()
+      // ));
+
+      // const dateFloor = new Date(utcDate.getTime());
+      // const offsetMS = d.displayOffset * 60000;
+
+
+      // const normalDate = new Date(d.normalTime);
+      // const dateFloor = new Date(normalDate.getTime());
+      // dateFloor.setUTCHours(0);
+      // dateFloor.setUTCMinutes(0);
+      // dateFloor.setUTCSeconds(0);
+      // dateFloor.setUTCMilliseconds(0);
+      // d.msPer24 = normalDate - dateFloor;
+
+
+      // d.msPer24b = normalDate - dateFloor;
+      // d.msPer24b = utcDate - dateFloor;
+
+      // if (!this.mismatchThrown1 && d.msPer24 !== d.msPer24b + offsetMS) {
+      //   console.error('msPer24 mismatch!', d.msPer24, d.msPer24b, offsetMS, d.msPer24b + offsetMS);
+      //   this.mismatchThrown1 = true;
+      // }
     }
-
-    return d;
   };
+
+  normalizeDatumBgUnits = d => {
+    const bgUnits = _.get(this.bgPrefs, 'bgUnits');
+
+    if (d.units !== bgUnits) {
+      d.units = bgUnits;
+      d.value = bgUnits === MGDL_UNITS ? convertToMGDL(d.value) : convertToMmolL(d.value);
+    }
+  };
+  /* eslint-enable no-param-reassign */
 
   removeData = predicate => {
     this.clearFilters();
@@ -155,9 +195,9 @@ export class DataUtil {
     };
 
     if (bgSources.cbg) {
-      bgSources.default = CGM_DATA_KEY;
+      bgSources.current = CGM_DATA_KEY;
     } else if (bgSources.smbg) {
-      bgSources.default = BGM_DATA_KEY;
+      bgSources.current = BGM_DATA_KEY;
     }
 
     this.bgSources = bgSources;
@@ -185,33 +225,38 @@ export class DataUtil {
     this.endpoints = {};
 
     if (endpoints) {
-      this.endpoints.current = _.map(endpoints, e => moment.utc(e).toISOString());
+      const days = moment.utc(endpoints[1]).diff(moment.utc(endpoints[0])) / MS_IN_DAY;
+      this.endpoints.current = {
+        range: _.map(endpoints, e => moment.utc(e).toISOString()),
+        days,
+        activeDays: days,
+      };
 
-      this.endpoints.daysInRange = moment.utc(endpoints[1])
-        .diff(moment.utc(endpoints[0])) / MS_IN_DAY;
+      this.endpoints.next = {
+        range: [
+          this.endpoints.current.range[1],
+          moment.utc(endpoints[1]).add(this.endpoints.current.days, 'days').toISOString(),
+        ],
+      };
 
-      this.endpoints.activeDaysInRange = this.endpoints.daysInRange;
-
-      this.endpoints.next = [
-        this.endpoints.current[1],
-        moment.utc(endpoints[1]).add(this.endpoints.daysInRange, 'days').toISOString(),
-      ];
-
-      this.endpoints.prev = [
-        moment.utc(endpoints[0]).subtract(this.endpoints.daysInRange, 'days').toISOString(),
-        this.endpoints.current[0],
-      ];
+      this.endpoints.prev = {
+        range: [
+          moment.utc(endpoints[0]).subtract(this.endpoints.current.days, 'days').toISOString(),
+          this.endpoints.current.range[0],
+        ],
+      };
     }
   };
 
   setActiveDays = activeDays => {
     this.activeDays = activeDays || [0, 1, 2, 3, 4, 5, 6];
 
-    const { daysInRange } = this.endpoints;
-    if (daysInRange) {
-      // TODO: this only works if we have a number of days divisible by 7
-      this.endpoints.activeDaysInRange = daysInRange / 7 * this.activeDays.length;
-    }
+    _.each(_.keys(this.endpoints), range => {
+      if (range.days) {
+        // TODO: this only works if we have a number of days divisible by 7
+        this.endpoints[range].activeDays = range.days / 7 * this.activeDays.length;
+      }
+    });
   };
 
   setTypes = types => {
@@ -225,12 +270,21 @@ export class DataUtil {
     }
   };
 
-  setTimezoneName = (timePrefs = {}) => {
-    this.timezoneName = undefined;
+  setTimePrefs = (timePrefs = {}) => {
+    const {
+      timezoneAware = false,
+    } = timePrefs;
 
-    if (timePrefs.timezoneAware) {
-      this.timezoneName = getTimezoneFromTimePrefs(timePrefs);
+    let timezoneName = timePrefs.timezoneName || undefined;
+
+    if (timezoneAware) {
+      timezoneName = getTimezoneFromTimePrefs(timePrefs);
     }
+
+    this.timePrefs = {
+      timezoneAware,
+      timezoneName,
+    };
   };
 
   setBGPrefs = (bgPrefs = {}) => {
@@ -239,8 +293,10 @@ export class DataUtil {
       bgUnits = MGDL_UNITS,
     } = bgPrefs;
 
-    this.bgBounds = bgBounds;
-    this.bgUnits = bgUnits;
+    this.bgPrefs = {
+      bgBounds,
+      bgUnits,
+    };
   };
 
   queryData = (query = {}) => {
@@ -266,7 +322,7 @@ export class DataUtil {
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
     this.setTypes(types);
-    this.setTimezoneName(timePrefs);
+    this.setTimePrefs(timePrefs);
     this.setBGPrefs(bgPrefs);
 
     const data = {
@@ -278,12 +334,12 @@ export class DataUtil {
     _.each(_.keys(data), range => {
       if (this.endpoints[range]) {
         // Filter the data set by date range
-        this.filter.byEndpoints(this.endpoints[range]);
+        this.filter.byEndpoints(this.endpoints[range].range);
 
         // Filter out any inactive days of the week
         if (this.activeDays) this.filter.byActiveDays(this.activeDays);
 
-        const activeDaysInRange = 12; // TODO: get count of actual active days
+        const activeDays = 1; // TODO: get count of actual active days
 
         // Generate the stats for current range
         if (range === 'current' && stats) {
@@ -294,15 +350,18 @@ export class DataUtil {
           this.statUtil = new StatUtil(this, this.endpoints[range]);
           _.each(selectedStats, stat => {
             const method = statFetchMethods[stat];
+
             if (_.isFunction(this.statUtil[method])) {
+              this.startTimer(`stat | ${stat}`);
               data[range].stats[stat] = this.statUtil[method]();
+              this.endTimer(`stat | ${stat}`);
             }
           });
           delete this.statUtil;
           this.endTimer('generate stats');
         }
 
-        data[range].range = this.endpoints[range];
+        data[range].endpoints = this.endpoints[range];
 
         // Populate requested data
         if (this.types.length) {
@@ -314,7 +373,7 @@ export class DataUtil {
 
             // Normalize data
             this.startTimer(`normalize | ${type} | ${range}`);
-            typeData = _.map(typeData, this.normalizeDatum);
+            _.each(typeData, this.normalizeDatum);
             this.endTimer(`normalize | ${type} | ${range}`);
 
             // Sort data
@@ -349,8 +408,8 @@ export class DataUtil {
 
     return {
       data,
-      timezoneName: this.timezoneName,
-      bgUnits: this.bgUnits,
+      timePrefs: this.timePrefs,
+      bgPrefs: this.bgPrefs,
       metaData: {
         latestPump: this.latestPump,
         bgSources: this.bgSources,

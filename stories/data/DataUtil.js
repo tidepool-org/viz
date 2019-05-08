@@ -22,7 +22,8 @@ import { object, withKnobs, optionsKnob as options, date, number, boolean } from
 import moment from 'moment';
 
 import DataUtil from '../../src/utils/DataUtil';
-import { commonStats } from '../../src/utils/stat';
+import Stat from '../../src/components/common/stat/Stat';
+import { commonStats, getStatDefinition } from '../../src/utils/stat';
 import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 
 const stories = storiesOf('DataUtil', module);
@@ -51,12 +52,40 @@ and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
 const dataUtil = new DataUtil(data);
 
-const Results = ({ results, renderRaw, renderStats }) => (
-  <div>
-    {renderStats && <pre>Stats here!!</pre>}
-    {renderRaw && <pre>{JSON.stringify(results, null, 2)}</pre>}
-  </div>
-);
+const Results = ({ results, showRaw, showStats }) => {
+  const statData = _.get(results, 'data.current.stats');
+  const days = _.get(results, 'data.current.endpoints.daysInRange', 1);
+  const allStats = [];
+
+  const wrapperStyles = {
+    padding: '20px 0 0',
+  };
+
+  const statStyles = {
+    margin: '0 0 10px',
+  };
+
+  const renderStats = (stats, bgPrefs) => (_.map(stats, stat => (
+    <div style={statStyles} id={`Stat--${stat.id}`} key={stat.id}>
+      <Stat bgPrefs={bgPrefs} {...stat} />
+    </div>
+  )));
+
+  _.each(_.keys(statData), stat => {
+    allStats.push(getStatDefinition(statData[stat], stat, {
+      days,
+      bgPrefs: results.bgPrefs,
+      bgSource: _.get(results, 'metaData.bgSources.current'),
+    }));
+  });
+
+  return (
+    <div>
+      {showStats && <div style={wrapperStyles}>{renderStats(allStats, results.bgPrefs)}</div>}
+      {showRaw && <pre>{JSON.stringify(results, null, 2)}</pre>}
+    </div>
+  );
+};
 
 stories.add('Query Generator', () => {
   const endMoment = moment.utc(data[0].time).startOf('day').add(1, 'd');
@@ -66,7 +95,8 @@ stories.add('Query Generator', () => {
     return moment.utc(endDate).toISOString();
   };
 
-  const daysInRange = 1;
+  // const daysInRange = 1;
+  const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,
@@ -208,7 +238,8 @@ stories.add('Query Generator', () => {
   const getFieldsQueryFormat = () => options('Fields Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_FIELDS);
   const getFields = type => {
     const queryFormat = getFieldsQueryFormat();
-    const fields = options(type, fieldsByType[type], ['normalTime'], { display: 'check' }, GROUP_FIELDS);
+    const fields = options(type, fieldsByType[type], ['normalTime', 'msPer24'], { display: 'check' }, GROUP_FIELDS);
+    // const fields = options(type, fieldsByType[type], ['normalTime'], { display: 'check' }, GROUP_FIELDS);
     return { select: queryFormat === 'string' ? fields.join(',') : fields };
   };
 
@@ -240,7 +271,8 @@ stories.add('Query Generator', () => {
   const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_TYPES);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
-    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
+    // const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
+    const selectedTypes = options('Types', types, ['smbg', 'cbg', 'basal', 'bolus'], { display: 'check' }, GROUP_TYPES);
 
     if (!selectedTypes.length) return undefined;
 
@@ -297,7 +329,8 @@ stories.add('Query Generator', () => {
   const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
   const getStats = () => {
     const queryFormat = getStatsQueryFormat();
-    const selectedStats = options('Stats', commonStats, [commonStats.averageGlucose, commonStats.carbs], { display: 'check' }, GROUP_STATS);
+    const selectedStats = options('Stats', commonStats, _.values(commonStats), { display: 'check' }, GROUP_STATS);
+    // const selectedStats = options('Stats', commonStats, [commonStats.carbs], { display: 'check' }, GROUP_STATS);
 
     if (!selectedStats.length) return undefined;
     return queryFormat === 'string' ? selectedStats.join(',') : selectedStats;
@@ -315,13 +348,13 @@ stories.add('Query Generator', () => {
     stats: getStats(),
   };
 
-  const renderRaw = () => boolean('Render Raw Data', true, GROUP_RESULTS);
-  const renderStats = () => boolean('Render Stats', true, GROUP_RESULTS);
+  const showRaw = () => boolean('Render Raw Data', true, GROUP_RESULTS);
+  const showStats = () => boolean('Render Stats', true, GROUP_RESULTS);
   const query = () => object('Query', defaultQuery, GROUP_RESULTS);
 
   return <Results
-    renderStats={renderStats()}
-    renderRaw={renderRaw()}
+    showStats={showStats()}
+    showRaw={showRaw()}
     results={dataUtil.queryData(query())}
   />;
 }, { notes });

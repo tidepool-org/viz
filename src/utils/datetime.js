@@ -65,7 +65,7 @@ export function addDuration(startTime, duration) {
 
 /**
  * getMsPer24
- * x@param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {String} timezoneName - valid timezoneName String
  * @returns
  */

@@ -19,24 +19,27 @@ export class StatUtil {
   constructor(dataUtil, opts = {}) {
     this.log = bows('StatUtil');
     this.init(dataUtil, opts);
+    this.normalizeDatum = this.dataUtil.normalizeDatum.bind(this.dataUtil);
+    this.normalizeDatumBgUnits = this.dataUtil.normalizeDatumBgUnits.bind(this.dataUtil);
   }
 
   init = (dataUtil, endpoints) => {
     this.dataUtil = dataUtil;
-    this.bgBounds = dataUtil.bgBounds;
-    this.bgUnits = dataUtil.bgUnits;
-    this.days = dataUtil.endpoints.activeDaysInRange;
-    this.daysInRange = dataUtil.endpoints.daysInRange;
-    this.bgSource = _.get(dataUtil, 'bgSource.default', CGM_DATA_KEY);
-    this.endpoints = endpoints;
+    this.bgBounds = _.get(dataUtil, 'bgPrefs.bgBounds');
+    this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
+    this.days = endpoints.days;
+    this.activeDays = endpoints.activeDays;
+    this.bgSource = _.get(dataUtil, 'metadata.bgSources.current', CGM_DATA_KEY);
+    this.endpoints = endpoints.range;
 
     this.log('days', this.days);
+    this.log('activeDays', this.activeDays);
     this.log('bgSource', this.bgSource);
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
   };
 
-  addBasalOverlappingStart = (rawBasalData) => {
-    const basalData = _.map(rawBasalData, this.dataUtil.normalizeDatum);
+  addBasalOverlappingStart = (basalData) => {
+    _.each(basalData, this.normalizeDatum);
 
     if (basalData.length && basalData[0].normalTime > this.endpoints[0]) {
       // Fetch last basal from previous day
@@ -63,6 +66,7 @@ export class StatUtil {
 
   getAverageGlucoseData = (returnBgData = false) => {
     const bgData = this.dataUtil.filter.byType(this.bgSource).top(Infinity);
+    _.each(bgData, this.normalizeDatumBgUnits);
 
     const data = {
       averageGlucose: _.meanBy(bgData, 'value'),
@@ -78,8 +82,8 @@ export class StatUtil {
 
   getBasalBolusData = () => {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
-    let basalData = this.dataUtil.sort.byDate(this.dataUtil.filter.byType('basal').top(Infinity).reverse());
-    basalData = this.addBasalOverlappingStart(basalData);
+    const rawBasalData = this.dataUtil.sort.byDate(this.dataUtil.filter.byType('basal').top(Infinity).reverse());
+    const basalData = this.addBasalOverlappingStart(rawBasalData);
 
     const basalBolusData = {
       basal: basalData.length
@@ -88,9 +92,9 @@ export class StatUtil {
       bolus: bolusData.length ? getTotalBolus(bolusData) : NaN,
     };
 
-    if (this.days > 1) {
-      basalBolusData.basal = basalBolusData.basal / this.days;
-      basalBolusData.bolus = basalBolusData.bolus / this.days;
+    if (this.activeDays > 1) {
+      basalBolusData.basal = basalBolusData.basal / this.activeDays;
+      basalBolusData.bolus = basalBolusData.bolus / this.activeDays;
     }
 
     return basalBolusData;
@@ -114,8 +118,8 @@ export class StatUtil {
 
     let carbs = wizardCarbs + foodCarbs;
 
-    if (this.days > 1) {
-      carbs = carbs / this.days;
+    if (this.activeDays > 1) {
+      carbs = carbs / this.activeDays;
     }
 
     return {
@@ -149,7 +153,7 @@ export class StatUtil {
 
     _.each(clone, (value, key) => {
       if (key !== 'total') {
-        clone[key] = value / this.days;
+        clone[key] = value / this.activeDays;
       }
     });
 
@@ -182,7 +186,7 @@ export class StatUtil {
     );
 
     const insufficientData = this.bgSource === 'smbg'
-      || this.daysInRange < 14
+      || this.days < 14
       || getTotalCbgDuration() < 14 * MS_IN_DAY * 0.7;
 
     if (insufficientData) {
@@ -205,8 +209,11 @@ export class StatUtil {
   };
 
   getReadingsInRangeData = () => {
-    let smbgData = _.reduce(
-      this.dataUtil.filter.byType('smbg').top(Infinity),
+    const smbgData = this.dataUtil.filter.byType('smbg').top(Infinity);
+    _.each(smbgData, this.normalizeDatumBgUnits);
+
+    let readingsInRange = _.reduce(
+      smbgData,
       (result, datum) => {
         const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
         result[classification]++;
@@ -223,11 +230,11 @@ export class StatUtil {
       }
     );
 
-    if (this.days > 1) {
-      smbgData = this.getDailyAverageSums(smbgData);
+    if (this.activeDays > 1) {
+      readingsInRange = this.getDailyAverageSums(readingsInRange);
     }
 
-    return smbgData;
+    return readingsInRange;
   };
 
   getSensorUsage = () => {
@@ -242,7 +249,7 @@ export class StatUtil {
       0
     );
 
-    const total = this.days * MS_IN_DAY;
+    const total = this.activeDays * MS_IN_DAY;
 
     return {
       sensorUsage: duration,
@@ -287,7 +294,7 @@ export class StatUtil {
       )
       : NaN;
 
-    if (this.days > 1 && !_.isNaN(durations)) {
+    if (this.activeDays > 1 && !_.isNaN(durations)) {
       durations = this.getDailyAverageDurations(durations);
     }
 
@@ -296,6 +303,7 @@ export class StatUtil {
 
   getTimeInRangeData = () => {
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    _.each(cbgData, this.normalizeDatumBgUnits);
 
     let durations = _.reduce(
       cbgData,
@@ -316,7 +324,7 @@ export class StatUtil {
       }
     );
 
-    if (this.days > 1) {
+    if (this.activeDays > 1) {
       durations = this.getDailyAverageDurations(durations);
     }
 
