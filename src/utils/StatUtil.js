@@ -4,8 +4,7 @@ import bows from 'bows';
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
 import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
-import { addDuration } from './datetime';
-import { CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
+import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -16,21 +15,19 @@ export class StatUtil {
    * @param {Array} data - raw data from DataUtil
    * @param {Object} opts - object containing bgBounds, bgUnits, days, and bgSource properties
    */
-  constructor(dataUtil, opts = {}) {
+  constructor(dataUtil) {
     this.log = bows('StatUtil');
-    this.init(dataUtil, opts);
-    this.normalizeDatum = this.dataUtil.normalizeDatum.bind(this.dataUtil);
-    this.normalizeDatumBgUnits = this.dataUtil.normalizeDatumBgUnits.bind(this.dataUtil);
+    this.init(dataUtil);
   }
 
-  init = (dataUtil, endpoints) => {
+  init = (dataUtil) => {
     this.dataUtil = dataUtil;
     this.bgBounds = _.get(dataUtil, 'bgPrefs.bgBounds');
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
-    this.days = endpoints.days;
-    this.activeDays = endpoints.activeDays;
-    this.bgSource = _.get(dataUtil, 'metadata.bgSources.current', CGM_DATA_KEY);
-    this.endpoints = endpoints.range;
+    this.days = dataUtil.activeEndpoints.days;
+    this.activeDays = dataUtil.activeEndpoints.activeDays;
+    this.bgSource = _.get(dataUtil, 'bgSources.current', BGM_DATA_KEY);
+    this.endpoints = dataUtil.activeEndpoints.range;
 
     this.log('days', this.days);
     this.log('activeDays', this.activeDays);
@@ -38,35 +35,9 @@ export class StatUtil {
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
   };
 
-  addBasalOverlappingStart = (basalData) => {
-    _.each(basalData, this.normalizeDatum);
-
-    if (basalData.length && basalData[0].normalTime > this.endpoints[0]) {
-      // Fetch last basal from previous day
-      this.dataUtil.filter.byEndpoints([
-        addDuration(this.endpoints[0], -MS_IN_DAY),
-        this.endpoints[0],
-      ]);
-
-      const previousBasalDatum = this.dataUtil.sort
-        .byTime(this.dataUtil.filter.byType('basal').top(Infinity))
-        .reverse()[0];
-
-      // Add to top of basal data array if it overlaps the start endpoint
-      const datumOverlapsStart = previousBasalDatum
-        && previousBasalDatum.normalTime < this.endpoints[0]
-        && previousBasalDatum.normalEnd > this.endpoints[0];
-
-      if (datumOverlapsStart) {
-        basalData.unshift(previousBasalDatum);
-      }
-    }
-    return basalData;
-  };
-
   getAverageGlucoseData = (returnBgData = false) => {
     const bgData = this.dataUtil.filter.byType(this.bgSource).top(Infinity);
-    _.each(bgData, this.normalizeDatumBgUnits);
+    _.each(bgData, this.dataUtil.normalizeDatumBgUnits);
 
     const data = {
       averageGlucose: _.meanBy(bgData, 'value'),
@@ -83,7 +54,7 @@ export class StatUtil {
   getBasalBolusData = () => {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity).reverse());
-    const basalData = this.addBasalOverlappingStart(rawBasalData);
+    const basalData = this.dataUtil.addBasalOverlappingStart(rawBasalData);
 
     const basalBolusData = {
       basal: basalData.length
@@ -210,7 +181,7 @@ export class StatUtil {
 
   getReadingsInRangeData = () => {
     const smbgData = this.dataUtil.filter.byType('smbg').top(Infinity);
-    _.each(smbgData, this.normalizeDatumBgUnits);
+    _.each(smbgData, this.dataUtil.normalizeDatumBgUnits);
 
     let readingsInRange = _.reduce(
       smbgData,
@@ -281,7 +252,7 @@ export class StatUtil {
 
   getTimeInAutoData = () => {
     let basalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
-    basalData = this.addBasalOverlappingStart(basalData);
+    basalData = this.dataUtil.addBasalOverlappingStart(basalData);
 
     let durations = basalData.length
       ? _.transform(
@@ -303,7 +274,7 @@ export class StatUtil {
 
   getTimeInRangeData = () => {
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    _.each(cbgData, this.normalizeDatumBgUnits);
+    _.each(cbgData, this.dataUtil.normalizeDatumBgUnits);
 
     let durations = _.reduce(
       cbgData,

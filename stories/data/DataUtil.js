@@ -94,8 +94,8 @@ stories.add('Query Generator', () => {
     return moment.utc(endDate).toISOString();
   };
 
-  const daysInRange = 1;
-  // const daysInRange = 30;
+  // const daysInRange = 1;
+  const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,
@@ -118,7 +118,7 @@ stories.add('Query Generator', () => {
     // conversionOffset: 'conversionOffset',
     // createdTime: 'createdTime',
     deviceId: 'deviceId',
-    // deviceTime: 'deviceTime',
+    deviceTime: 'deviceTime',
     // guid: 'guid',
     // id: 'id',
     time: 'time',
@@ -325,6 +325,12 @@ stories.add('Query Generator', () => {
     } : undefined;
   };
 
+  const getBGSource = () => {
+    const bgSource = options('Stats BG Source', { ..._.pick(types, ['cbg', 'smbg']), ...noneOption }, 'None', { display: 'select' }, GROUP_STATS);
+
+    return bgSource !== 'None' ? bgSource : undefined;
+  };
+
   const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
   const getStats = () => {
     const queryFormat = getStatsQueryFormat();
@@ -344,6 +350,7 @@ stories.add('Query Generator', () => {
     types: getTypes(),
     timePrefs: getTimePrefs(),
     bgPrefs: getBGPrefs(),
+    bgSource: getBGSource(),
     stats: getStats(),
   };
 

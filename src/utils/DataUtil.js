@@ -191,6 +191,7 @@ export class DataUtil {
     this.startTimer('buildSorts');
     this.sort = {};
     this.sort.byTime = array => (
+      // TODO: sort by deviceTime if !timezoneAware?
       crossfilter.quicksort.by(d => d.time)(array, 0, array.length)
     );
     this.endTimer('buildSorts');
@@ -202,16 +203,19 @@ export class DataUtil {
     this.dimension.byType.filterAll();
   };
 
-  setBgSources = () => {
+  setBgSources = (current) => {
     const bgSources = {
       cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
       smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
+      current,
     };
 
-    if (bgSources.cbg) {
-      bgSources.current = CGM_DATA_KEY;
-    } else if (bgSources.smbg) {
-      bgSources.current = BGM_DATA_KEY;
+    if (!bgSources.current) {
+      if (bgSources.cbg) {
+        bgSources.current = CGM_DATA_KEY;
+      } else if (bgSources.smbg) {
+        bgSources.current = BGM_DATA_KEY;
+      }
     }
 
     this.bgSources = bgSources;
@@ -228,9 +232,9 @@ export class DataUtil {
     };
   };
 
-  setMetaData = () => {
+  setMetaData = ({ bgSource }) => {
     this.startTimer('setMetaData');
-    this.setBgSources();
+    this.setBgSources(bgSource);
     this.setLatestPump();
     this.endTimer('setMetaData');
   };
@@ -321,6 +325,7 @@ export class DataUtil {
       stats,
       timePrefs,
       bgPrefs,
+      bgSource,
       types,
     } = query;
 
@@ -331,13 +336,15 @@ export class DataUtil {
     this.clearFilters();
 
     // TODO: set meta data based on the entire data set, or only current range?
-    this.setMetaData();
+    this.setMetaData({ bgSource });
 
+    this.setTypes(types);
+    this.setBGPrefs(bgPrefs);
+    this.setTimePrefs(timePrefs);
+
+    // TODO: need to adjust endpoints based on timePrefs before filtering
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
-    this.setTypes(types);
-    this.setTimePrefs(timePrefs);
-    this.setBGPrefs(bgPrefs);
 
     const data = {
       current: {},
@@ -347,8 +354,10 @@ export class DataUtil {
 
     _.each(_.keys(data), range => {
       if (this.endpoints[range]) {
+        this.activeEndpoints = this.endpoints[range];
+
         // Filter the data set by date range
-        this.filter.byEndpoints(this.endpoints[range].range);
+        this.filter.byEndpoints(this.activeEndpoints.range);
 
         // Filter out any inactive days of the week
         if (this.activeDays) this.filter.byActiveDays(this.activeDays);
@@ -361,7 +370,7 @@ export class DataUtil {
           const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
           data[range].stats = {};
 
-          this.statUtil = new StatUtil(this, this.endpoints[range]);
+          this.statUtil = new StatUtil(this);
           _.each(selectedStats, stat => {
             const method = statFetchMethods[stat];
 
@@ -375,7 +384,7 @@ export class DataUtil {
           this.endTimer('generate stats');
         }
 
-        data[range].endpoints = this.endpoints[range];
+        data[range].endpoints = this.activeEndpoints;
 
         // Populate requested data
         if (this.types.length) {
@@ -429,6 +438,40 @@ export class DataUtil {
         bgSources: this.bgSources,
       },
     };
+  };
+
+  addBasalOverlappingStart = (basalData) => {
+    _.each(basalData, this.normalizeDatum);
+
+    if (basalData.length && basalData[0].normalTime > this.endpoints[0]) {
+      // We need to ensure all the days of the week are active to ensure we get all basals
+      this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
+
+      // Set the endpoints filter to the previous day
+      this.filter.byEndpoints([
+        addDuration(this.endpoints[0], -MS_IN_DAY),
+        this.endpoints[0],
+      ]);
+
+      // Fetch last basal from previous day
+      const previousBasalDatum = this.sort
+        .byTime(this.filter.byType('basal').top(Infinity))
+        .reverse()[0];
+
+      // Add to top of basal data array if it overlaps the start endpoint
+      const datumOverlapsStart = previousBasalDatum
+        && previousBasalDatum.normalTime < this.endpoints[0]
+        && previousBasalDatum.normalEnd > this.endpoints[0];
+
+      if (datumOverlapsStart) {
+        basalData.unshift(previousBasalDatum);
+      }
+
+      // Reset the endpoints and activeDays filters to the back to what they were
+      this.filter.byEndpoints(this.activeEndpoints.range);
+      this.filter.byActiveDays(this.activeDays);
+    }
+    return basalData;
   };
 }
 
