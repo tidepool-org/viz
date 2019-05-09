@@ -58,18 +58,34 @@ export class DataUtil {
   addData = data => {
     this.startTimer('addData');
     this.log('addData', 'count', data.length);
-    _.each(data, this.setDatumHammerTime);
-    this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject));
+    _.each(data, this.normalizeDatumIn);
+    this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject)); // TODO: custom validation to reject invalid datums by type?
     this.endTimer('addData');
   };
 
   /* eslint-disable no-param-reassign */
-  setDatumHammerTime = d => {
+  // TODO: add any needed nurseshark munging
+  normalizeDatumIn = d => {
     if (d.time) d.time = Date.parse(d.time);
     if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
+
+    if (d.type === 'basal') {
+      if (!d.duration) {
+        d.errorMessage = new Error('Basal with null/zero duration.').message;
+        return d;
+      }
+
+      if (!d.rate && d.deliveryType === 'suspend') {
+        d.rate = 0.0;
+      }
+
+      if (d.suppressed) {
+        this.normalizeSuppressedBasal(d);
+      }
+    }
   };
 
-  normalizeDatum = d => {
+  normalizeDatumOut = d => {
     const { timezoneName } = this.timePrefs || {};
 
     if (timezoneName) {
@@ -145,6 +161,26 @@ export class DataUtil {
     if (d.units !== bgUnits) {
       d.units = bgUnits;
       d.value = bgUnits === MGDL_UNITS ? convertToMGDL(d.value) : convertToMmolL(d.value);
+    }
+  };
+
+  normalizeSuppressedBasal = d => {
+    if (d.suppressed.deliveryType === 'temp' && !d.suppressed.rate) {
+      if (d.suppressed.percent && d.suppressed.suppressed &&
+        d.suppressed.suppressed.deliveryType === 'scheduled' &&
+        d.suppressed.suppressed.rate >= 0) {
+        d.suppressed.rate = d.suppressed.percent * d.suppressed.suppressed.rate;
+      }
+    }
+
+    // A suppressed should share these attributes with its parent
+    d.suppressed.duration = d.duration;
+    d.suppressed.time = d.time;
+    d.suppressed.deviceTime = d.deviceTime;
+
+    // Recurse as needed
+    if (d.suppressed.suppressed) {
+      this.normalizeSuppressedBasal(d.suppressed);
     }
   };
   /* eslint-enable no-param-reassign */
@@ -396,7 +432,7 @@ export class DataUtil {
 
             // Normalize data
             this.startTimer(`normalize | ${type} | ${range}`);
-            _.each(typeData, this.normalizeDatum);
+            _.each(typeData, this.normalizeDatumOut);
             this.endTimer(`normalize | ${type} | ${range}`);
 
             // Sort data
@@ -441,7 +477,7 @@ export class DataUtil {
   };
 
   addBasalOverlappingStart = (basalData) => {
-    _.each(basalData, this.normalizeDatum);
+    _.each(basalData, this.normalizeDatumOut);
 
     if (basalData.length && basalData[0].normalTime > this.endpoints[0]) {
       // We need to ensure all the days of the week are active to ensure we get all basals

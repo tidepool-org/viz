@@ -95,7 +95,8 @@ stories.add('Query Generator', () => {
   };
 
   // const daysInRange = 1;
-  const daysInRange = 30;
+  const daysInRange = 2;
+  // const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,

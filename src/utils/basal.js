@@ -195,6 +195,7 @@ export function getTotalBasalFromEndpoints(data, endpoints) {
       // handle last segment, which may go past the end endpoint
       duration = _.min([end - new Date(datum.normalTime), datum.duration]);
     }
+
     dose += getSegmentDose(duration, datum.rate);
   });
 
