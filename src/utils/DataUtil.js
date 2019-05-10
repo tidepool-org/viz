@@ -64,7 +64,13 @@ export class DataUtil {
   };
 
   /* eslint-disable no-param-reassign */
-  // TODO: add any needed nurseshark munging
+  // TODO: add any one-time nurseshark munging
+  // annotate basals
+  // join boluses and wizard events
+  // reshape messages (if we decide to include them)
+  // Medtronic/carelink upload source fix
+  // don't add parts that translate BGs, as we do that on the way out as needed
+  // probably more...
   normalizeDatumIn = d => {
     if (d.time) d.time = Date.parse(d.time);
     if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
@@ -72,7 +78,6 @@ export class DataUtil {
     if (d.type === 'basal') {
       if (!d.duration) {
         d.errorMessage = new Error('Basal with null/zero duration.').message;
-        return d;
       }
 
       if (!d.rate && d.deliveryType === 'suspend') {
@@ -81,6 +86,12 @@ export class DataUtil {
 
       if (d.suppressed) {
         this.normalizeSuppressedBasal(d);
+      }
+    }
+
+    if (d.type === 'deviceEvent') {
+      if (_.find(d.annotations, { code: 'status/unknown-previous' })) {
+        d.errorMessage = new Error('Bad pump status deviceEvent.').message;
       }
     }
   };
