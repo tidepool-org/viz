@@ -64,6 +64,7 @@ export class DataUtil {
   };
 
   /* eslint-disable no-param-reassign */
+  // TODO: add validation, such as djv?
   // TODO: add any one-time nurseshark munging
   // annotate basals
   // join boluses and wizard events
@@ -201,20 +202,23 @@ export class DataUtil {
     this.data.remove(predicate);
   };
 
+  // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
+  // where performance will drop as per crossfilter docs.
   buildDimensions = () => {
     this.startTimer('buildDimensions');
     this.dimension = {};
 
     this.dimension.byTime = this.data.dimension(
       d => d.time
-      // d => moment.utc(d.time).tz('UTC').toISOString()
     );
 
+    // TODO: should this be created on demand instead, if !this.timePrefs.timezoneAware?
     this.dimension.byDeviceTime = this.data.dimension(
       d => d.deviceTime
-      // d => moment.utc(d.deviceTime).tz('UTC').toISOString()
     );
 
+    // TODO: create on-demand, with known timezone?
+    // Would only be needed if activeDays is less than all.
     this.dimension.byDayOfWeek = this.data.dimension(
       d => moment.utc(d.time).tz('UTC').day()
     );
@@ -229,7 +233,10 @@ export class DataUtil {
     this.filter.byActiveDays = activeDays => this.dimension.byDayOfWeek
       .filterFunction(d => _.includes(activeDays, d));
 
+    // TODO: dynamically choose to filter by time or deviceTime
+    // based on this.timePrefs.timezoneAware?
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
+
     this.filter.byType = type => this.dimension.byType.filterExact(type);
     this.endTimer('buildFilters');
   };
@@ -376,7 +383,7 @@ export class DataUtil {
       types,
     } = query;
 
-    // TODO: Must ensure that we get the desired endpoints in UTC time so that when we display in
+    // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
     // the desired time zone, we have all the data.
 
     // Clear all previous filters
@@ -407,6 +414,7 @@ export class DataUtil {
         this.filter.byEndpoints(this.activeEndpoints.range);
 
         // Filter out any inactive days of the week
+        // TODO: revisit this. Will always be true, as-is
         if (this.activeDays) this.filter.byActiveDays(this.activeDays);
 
         const activeDays = 1; // TODO: get count of actual active days
