@@ -27,6 +27,7 @@ import {
 import { getLatestPumpUpload } from './device';
 import StatUtil from './StatUtil';
 import { statFetchMethods } from './stat';
+import Validator from './validation/schema';
 
 /* eslint-disable lodash/prefer-lodash-method */
 /* global __DEV__ */
@@ -57,14 +58,17 @@ export class DataUtil {
 
   addData = data => {
     this.startTimer('addData');
-    this.log('addData', 'count', data.length);
     _.each(data, this.normalizeDatumIn);
-    this.data.add(_.filter(_.uniqBy(data, 'id'), _.isPlainObject)); // TODO: custom validation to reject invalid datums by type?
+
+    const validData = _.reject(_.uniqBy(data, 'id'), 'reject');
+    this.data.add(validData);
+
+    this.log('addData', validData.length, 'of', data.length);
     this.endTimer('addData');
   };
 
   /* eslint-disable no-param-reassign */
-  // TODO: add validation, such as djv?
+  // TODO: add all validations by type, not just checkCommon
   // TODO: add any one-time nurseshark munging
   // annotate basals
   // join boluses and wizard events
@@ -73,6 +77,17 @@ export class DataUtil {
   // don't add parts that translate BGs, as we do that on the way out as needed
   // probably more...
   normalizeDatumIn = d => {
+    const check = Validator.checkCommon(d);
+    if (check !== true) {
+      this.validateErrorsThrown = this.validateErrorsThrown || 0;
+      if (this.validateErrorsThrown < 10) {
+        this.log('validation fail', check, d);
+        ++this.validateErrorsThrown;
+      }
+      d.reject = true;
+      return;
+    }
+
     if (d.time) d.time = Date.parse(d.time);
     if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
 
