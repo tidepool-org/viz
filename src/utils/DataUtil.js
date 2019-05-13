@@ -58,6 +58,7 @@ export class DataUtil {
 
   addData = data => {
     this.startTimer('addData');
+    this.validateErrorCount = 0;
     _.each(data, this.normalizeDatumIn);
 
     const validData = _.reject(_.uniqBy(data, 'id'), 'reject');
@@ -77,20 +78,6 @@ export class DataUtil {
   // don't add parts that translate BGs, as we do that on the way out as needed
   // probably more...
   normalizeDatumIn = d => {
-    const check = Validator.checkCommon(d);
-    if (check !== true) {
-      this.validateErrorsThrown = this.validateErrorsThrown || 0;
-      if (this.validateErrorsThrown < 10) {
-        this.log('validation fail', check, d);
-        ++this.validateErrorsThrown;
-      }
-      d.reject = true;
-      return;
-    }
-
-    if (d.time) d.time = Date.parse(d.time);
-    if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
-
     if (d.type === 'basal') {
       if (!d.duration) {
         d.errorMessage = new Error('Basal with null/zero duration.').message;
@@ -110,6 +97,20 @@ export class DataUtil {
         d.errorMessage = new Error('Bad pump status deviceEvent.').message;
       }
     }
+
+    const validator = Validator[`check${_.capitalize(d.type)}`] || Validator.checkCommon;
+    const validateResult = validator(d);
+    if (validateResult !== true) {
+      if (this.validateErrorCount < 10) {
+        this.log('validation fail', validateResult, d);
+        ++this.validateErrorCount;
+      }
+      d.reject = true;
+      return;
+    }
+
+    d.time = Date.parse(d.time);
+    if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
   };
 
   normalizeDatumOut = d => {
