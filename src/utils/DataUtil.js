@@ -98,6 +98,18 @@ export class DataUtil {
       }
     }
 
+    // We validate datums before converting the time and deviceTime to hammerTime integers,
+    // as we want to validate that they are valid ISO date strings
+    this.validateDatumIn(d);
+    if (d.reject) return;
+
+    // Convert the time and deviceTime properties to hammertime,
+    // which improves dimension filtering performance significantly over using ISO strings
+    d.time = Date.parse(d.time);
+    if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
+  };
+
+  validateDatumIn = d => {
     const validator = Validator[`check${_.capitalize(d.type)}`] || Validator.checkCommon;
     const validateResult = validator(d);
     if (validateResult !== true) {
@@ -106,11 +118,7 @@ export class DataUtil {
         ++this.validateErrorCount;
       }
       d.reject = true;
-      return;
     }
-
-    d.time = Date.parse(d.time);
-    if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
   };
 
   normalizeDatumOut = d => {
