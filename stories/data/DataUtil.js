@@ -25,6 +25,7 @@ import DataUtil from '../../src/utils/DataUtil';
 import Stat from '../../src/components/common/stat/Stat';
 import { commonStats, getStatDefinition } from '../../src/utils/stat';
 import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
+import { getOffset } from '../../src/utils/datetime';
 
 const stories = storiesOf('DataUtil', module);
 stories.addDecorator(withKnobs);
@@ -90,9 +91,9 @@ const Results = ({ results, showRaw, showStats }) => {
 stories.add('Query Generator', () => {
   // const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
   const endMoment = moment.utc('2018-03-28').startOf('day').add(1, 'd');
-  const getEndDate = () => {
+  const getEndMoment = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
-    return moment.utc(endDate).toISOString();
+    return moment.utc(endDate);
   };
 
   const daysInRange = 1;
@@ -343,14 +344,23 @@ stories.add('Query Generator', () => {
     return queryFormat === 'string' ? selectedStats.join(',') : selectedStats;
   };
 
+  const timePrefs = getTimePrefs();
+  const endDate = getEndMoment();
+  const endpoints = [
+    endDate.clone().subtract(getDaysInRange(), 'd').add().toISOString(),
+    endDate.toISOString(),
+  ];
+
+  _.each(endpoints, (endpoint, i) => {
+    const offset = timePrefs.timezoneAware ? getOffset(endpoint, timePrefs.timezoneName) : 0;
+    endpoints[i] = moment.utc(endpoints[i]).add(offset, 'minutes').toISOString();
+  });
+
   const defaultQuery = {
-    endpoints: [
-      moment.utc(getEndDate()).subtract(getDaysInRange(), 'd').toISOString(),
-      getEndDate(),
-    ],
+    endpoints,
     activeDays: getActiveDays(),
     types: getTypes(),
-    timePrefs: getTimePrefs(),
+    timePrefs,
     bgPrefs: getBGPrefs(),
     bgSource: getBGSource(),
     stats: getStats(),
