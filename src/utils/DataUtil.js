@@ -332,9 +332,9 @@ export class DataUtil {
     this.activeDays = activeDays || [0, 1, 2, 3, 4, 5, 6];
 
     _.each(_.keys(this.endpoints), range => {
-      if (range.days) {
+      if (this.endpoints[range].days) {
         // TODO: this only works if we have a number of days divisible by 7
-        this.endpoints[range].activeDays = range.days / 7 * this.activeDays.length;
+        this.endpoints[range].activeDays = this.endpoints[range].days / 7 * this.activeDays.length;
       }
     });
   };

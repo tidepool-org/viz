@@ -90,14 +90,14 @@ const Results = ({ results, showRaw, showStats }) => {
 
 stories.add('Query Generator', () => {
   // const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
-  const endMoment = moment.utc('2018-03-28').startOf('day').add(1, 'd');
+  const endMoment = moment.utc('2018-03-27').startOf('day').add(1, 'd');
   const getEndMoment = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
     return moment.utc(endDate);
   };
 
-  const daysInRange = 1;
-  // const daysInRange = 2;
+  // const daysInRange = 1;
+  const daysInRange = 14;
   // const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
