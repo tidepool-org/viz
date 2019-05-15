@@ -352,7 +352,7 @@ stories.add('Query Generator', () => {
   ];
 
   _.each(endpoints, (endpoint, i) => {
-    const offset = timePrefs.timezoneAware ? getOffset(endpoint, timePrefs.timezoneName) : 0;
+    const offset = _.get(timePrefs, 'timezoneAware') ? getOffset(endpoint, timePrefs.timezoneName) : 0;
     endpoints[i] = moment.utc(endpoints[i]).add(offset, 'minutes').toISOString();
   });
 

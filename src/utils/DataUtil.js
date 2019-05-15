@@ -230,24 +230,10 @@ export class DataUtil {
   // where performance will drop as per crossfilter docs.
   buildDimensions = () => {
     this.startTimer('buildDimensions');
-    this.dimension = {};
-
-    this.dimension.byTime = this.data.dimension(
-      d => d.time
-    );
-
-    // TODO: should this be created on demand instead, if !this.timePrefs.timezoneAware?
-    this.dimension.byDeviceTime = this.data.dimension(
-      d => d.deviceTime
-    );
-
-    // TODO: create on-demand, with known timezone?
-    // Would only be needed if activeDays is less than all.
-    this.dimension.byDayOfWeek = this.data.dimension(
-      d => moment.utc(d.time).tz('UTC').day()
-    );
-
-    this.dimension.byType = this.data.dimension(d => d.type);
+    this.dimension = {
+      byTime: this.data.dimension(d => d.time),
+      byType: this.data.dimension(d => d.type),
+    };
     this.endTimer('buildDimensions');
   };
 
@@ -257,8 +243,6 @@ export class DataUtil {
     this.filter.byActiveDays = activeDays => this.dimension.byDayOfWeek
       .filterFunction(d => _.includes(activeDays, d));
 
-    // TODO: dynamically choose to filter by time or deviceTime
-    // based on this.timePrefs.timezoneAware?
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
 
     this.filter.byType = type => this.dimension.byType.filterExact(type);
@@ -268,16 +252,16 @@ export class DataUtil {
   buildSorts = () => {
     this.startTimer('buildSorts');
     this.sort = {};
-    this.sort.byTime = array => (
-      // TODO: sort by deviceTime if !timezoneAware?
-      crossfilter.quicksort.by(d => d.time)(array, 0, array.length)
-    );
+    this.sort.byTime = array => {
+      const timeField = _.get(this, 'timePrefs.timezoneAware') ? 'time' : 'deviceTime';
+      return crossfilter.quicksort.by(d => d[timeField])(array, 0, array.length);
+    };
     this.endTimer('buildSorts');
   };
 
   clearFilters = () => {
     this.dimension.byTime.filterAll();
-    this.dimension.byDayOfWeek.filterAll();
+    if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.filterAll();
     this.dimension.byType.filterAll();
   };
 
@@ -377,6 +361,33 @@ export class DataUtil {
       timezoneName = getTimezoneFromTimePrefs(timePrefs);
     }
 
+    const prevTimezoneName = _.get(this, 'timePrefs.timezoneName');
+    const timezoneNameChanged = timezoneName !== prevTimezoneName;
+
+    const prevTimezoneAware = _.get(this, 'timePrefs.timezoneAware');
+    const timezoneAwareChanged = timezoneAware !== prevTimezoneAware;
+
+    if (timezoneNameChanged) {
+      this.log('Timezone Change', prevTimezoneName, 'to', timezoneName);
+
+      // Recreate the byDayOfWeek dimension to account for the new timezone.
+      if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.dispose();
+
+      this.dimension.byDayOfWeek = this.data.dimension(
+        d => moment.utc(d.time).tz(timezoneName || 'UTC').day()
+      );
+    }
+
+    if (timezoneAwareChanged) {
+      const timeField = timezoneAware ? 'time' : 'deviceTime';
+      this.log('Time Field Change', timeField === 'time' ? 'deviceTime' : 'time', 'to', timeField);
+
+      this.dimension.byTime.dispose();
+      this.dimension.byTime = this.data.dimension(
+        d => d[timeField]
+      );
+    }
+
     this.timePrefs = {
       timezoneAware,
       timezoneName,
@@ -419,8 +430,6 @@ export class DataUtil {
     this.setTypes(types);
     this.setBGPrefs(bgPrefs);
     this.setTimePrefs(timePrefs);
-
-    // TODO: need to adjust endpoints based on timePrefs before filtering
     this.setEndpoints(endpoints);
     this.setActiveDays(activeDays);
 
@@ -438,8 +447,7 @@ export class DataUtil {
         this.filter.byEndpoints(this.activeEndpoints.range);
 
         // Filter out any inactive days of the week
-        // TODO: revisit this. Will always be true, as-is
-        if (this.activeDays) this.filter.byActiveDays(this.activeDays);
+        this.filter.byActiveDays(this.activeDays);
 
         const activeDays = 1; // TODO: get count of actual active days
 
@@ -508,7 +516,7 @@ export class DataUtil {
     });
     this.endTimer('queryData total');
 
-    return {
+    const result = {
       data,
       timePrefs: this.timePrefs,
       bgPrefs: this.bgPrefs,
@@ -517,6 +525,10 @@ export class DataUtil {
         bgSources: this.bgSources,
       },
     };
+
+    this.log('Query, Result', query, result);
+
+    return result;
   };
 
   addBasalOverlappingStart = (basalData) => {
