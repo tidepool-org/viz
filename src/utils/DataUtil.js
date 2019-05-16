@@ -261,8 +261,8 @@ export class DataUtil {
 
   clearFilters = () => {
     this.dimension.byTime.filterAll();
-    if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.filterAll();
     this.dimension.byType.filterAll();
+    if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.filterAll();
   };
 
   setBgSources = (current) => {
@@ -317,6 +317,8 @@ export class DataUtil {
           this.endpoints.current.range[1],
           moment.utc(endpoints[1]).add(this.endpoints.current.days, 'days').valueOf(),
         ],
+        days,
+        activeDays: days,
       };
 
       this.endpoints.prev = {
@@ -324,6 +326,8 @@ export class DataUtil {
           moment.utc(endpoints[0]).subtract(this.endpoints.current.days, 'days').valueOf(),
           this.endpoints.current.range[0],
         ],
+        days,
+        activeDays: days,
       };
     }
   };
@@ -367,25 +371,23 @@ export class DataUtil {
     const prevTimezoneAware = _.get(this, 'timePrefs.timezoneAware');
     const timezoneAwareChanged = timezoneAware !== prevTimezoneAware;
 
+    const timeField = timezoneAware ? 'time' : 'deviceTime';
+
     if (timezoneNameChanged) {
       this.log('Timezone Change', prevTimezoneName, 'to', timezoneName);
 
       // Recreate the byDayOfWeek dimension to account for the new timezone.
       if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.dispose();
-
       this.dimension.byDayOfWeek = this.data.dimension(
-        d => moment.utc(d.time).tz(timezoneName || 'UTC').day()
+        d => moment.utc(d[timeField]).tz(timezoneName || 'UTC').day()
       );
     }
 
     if (timezoneAwareChanged) {
-      const timeField = timezoneAware ? 'time' : 'deviceTime';
       this.log('Time Field Change', timeField === 'time' ? 'deviceTime' : 'time', 'to', timeField);
 
       this.dimension.byTime.dispose();
-      this.dimension.byTime = this.data.dimension(
-        d => d[timeField]
-      );
+      this.dimension.byTime = this.data.dimension(d => d[timeField]);
     }
 
     this.timePrefs = {
@@ -449,7 +451,24 @@ export class DataUtil {
         // Filter out any inactive days of the week
         this.filter.byActiveDays(this.activeDays);
 
-        const activeDays = 1; // TODO: get count of actual active days
+        // Set the count of active days each each range
+        this.endpoints[range].activeDays = _.filter(
+          _.reduce([
+            this.endpoints[range].range[0],
+            ...(new Array(this.endpoints[range].days - 1)),
+          ], (acc, date, index) => {
+            let day;
+            if (index === 0) {
+              day = moment.utc(date).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day();
+            } else {
+              const nextDay = acc[index - 1] + 1;
+              day = nextDay > 6 ? nextDay - 7 : nextDay;
+            }
+            acc.push(day);
+            return acc;
+          }, []),
+          dayOfWeek => _.includes(this.activeDays, dayOfWeek)
+        ).length;
 
         // Generate the stats for current range
         if (range === 'current' && stats) {

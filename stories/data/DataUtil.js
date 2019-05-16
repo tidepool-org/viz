@@ -97,7 +97,8 @@ stories.add('Query Generator', () => {
   };
 
   // const daysInRange = 1;
-  const daysInRange = 14;
+  const daysInRange = 13;
+  // const daysInRange = 14;
   // const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
@@ -273,8 +274,8 @@ stories.add('Query Generator', () => {
   const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_TYPES);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
-    // const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
-    const selectedTypes = options('Types', types, ['smbg', 'cbg', 'basal', 'bolus'], { display: 'check' }, GROUP_TYPES);
+    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
+    // const selectedTypes = options('Types', types, ['smbg', 'cbg', 'basal', 'bolus'], { display: 'check' }, GROUP_TYPES);
 
     if (!selectedTypes.length) return undefined;
 
@@ -296,7 +297,8 @@ stories.add('Query Generator', () => {
   };
 
   const getActiveDays = () => {
-    const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, GROUP_DATES);
+    const days = options('Active Days', activeDays, _.filter(_.values(activeDays), d => d !== '3'), { display: 'check' }, GROUP_DATES);
+    // const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, GROUP_DATES);
     return (days.length === 7) ? undefined : _.map(days, _.toInteger);
   };
 
