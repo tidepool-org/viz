@@ -4685,13 +4685,6 @@ cross-spawn@^5.0.1:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
-crossfilter2@1.4.0-alpha.6:
-  version "1.4.0-alpha.6"
-  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.0-alpha.6.tgz#f0197c6fab2d6a583b51254bfc6357093f80521b"
-  integrity sha1-8Bl8b6stalg7USVL/GNXCT+AUhs=
-  dependencies:
-    lodash.result "^4.4.0"
-
 crossfilter2@1.4.6:
   version "1.4.6"
   resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.6.tgz#c173f0d75a04344ad226b1f8ae747f0386f98750"
@@ -10292,7 +10285,7 @@ q@1.5.0:
   version "1.5.0"
   resolved "https://registry.yarnpkg.com/q/-/q-1.5.0.tgz#dd01bac9d06d30e6f219aecb8253ee9ebdc308f1"
 
-q@^1.1.2, q@^1.4.1:
+q@^1.1.2:
   version "1.5.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.5.1.tgz#7e32f75b41381291d04611f1bf14109ac00651d7"
   integrity sha1-fjL3W0E4EpHQRhHxvxQQmsAGUdc=
@@ -11044,7 +11037,7 @@ reduce-without@^1.0.1:
   dependencies:
     test-value "^2.0.0"
 
-reductio@^0.6.2:
+reductio@0.6.3:
   version "0.6.3"
   resolved "https://registry.yarnpkg.com/reductio/-/reductio-0.6.3.tgz#292b2f66964a08abe0d061fe04d3eae974e41d83"
   integrity sha1-KSsvZpZKCKvg0GH+BNPq6XTkHYM=
@@ -12943,15 +12936,6 @@ unist-util-visit@^1.1.0, unist-util-visit@^1.3.0:
 universalify@^0.1.0:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/universalify/-/universalify-0.1.2.tgz#b646f69be3942dabcecc9d6639c80dc105efaa66"
-
-universe@0.8.1:
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/universe/-/universe-0.8.1.tgz#71379bc3af9ef4a1902b317458ffe4ac5efa9b3a"
-  integrity sha1-cTebw6+e9KGQKzF0WP/krF76mzo=
-  dependencies:
-    crossfilter2 "1.4.0-alpha.6"
-    q "^1.4.1"
-    reductio "^0.6.2"
 
 unpipe@1.0.0, unpipe@~1.0.0:
   version "1.0.0"
