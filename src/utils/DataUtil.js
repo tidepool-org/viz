@@ -452,6 +452,7 @@ export class DataUtil {
         this.filter.byActiveDays(this.activeDays);
 
         // Set the count of active days each each range
+        // TODO: move to separate method
         this.endpoints[range].activeDays = _.filter(
           _.reduce([
             this.endpoints[range].range[0],
@@ -471,6 +472,7 @@ export class DataUtil {
         ).length;
 
         // Generate the stats for current range
+        // TODO: move to separate method
         if (range === 'current' && stats) {
           this.startTimer('generate stats');
           const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
@@ -493,6 +495,7 @@ export class DataUtil {
         data[range].endpoints = this.activeEndpoints;
 
         // Populate requested data
+        // TODO: move to separate method
         if (this.types.length) {
           data[range].data = {};
 

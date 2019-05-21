@@ -24,7 +24,14 @@ const basal = {
   rate: { type: 'number', min: 0 },
 };
 
+const bg = {
+  ...common,
+  value: { type: 'number', min: 0 },
+};
+
 export default {
   checkCommon: v.compile(common),
   checkBasal: v.compile(basal),
+  checkSmbg: v.compile(bg),
+  checkCbg: v.compile(bg),
 };
