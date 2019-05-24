@@ -337,8 +337,23 @@ export class DataUtil {
 
     _.each(_.keys(this.endpoints), range => {
       if (this.endpoints[range].days) {
-        // TODO: this only works if we have a number of days divisible by 7
-        this.endpoints[range].activeDays = this.endpoints[range].days / 7 * this.activeDays.length;
+        this.endpoints[range].activeDays = _.filter(
+          _.reduce([
+            this.endpoints[range].range[0],
+            ...(new Array(this.endpoints[range].days - 1)),
+          ], (acc, date, index) => {
+            let day;
+            if (index === 0) {
+              day = moment.utc(date).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day();
+            } else {
+              const nextDay = acc[index - 1] + 1;
+              day = nextDay > 6 ? nextDay - 7 : nextDay;
+            }
+            acc.push(day);
+            return acc;
+          }, []),
+          dayOfWeek => _.includes(this.activeDays, dayOfWeek)
+        ).length;
       }
     });
   };
@@ -443,6 +458,7 @@ export class DataUtil {
 
     _.each(_.keys(data), range => {
       if (this.endpoints[range]) {
+        this.activeRange = range;
         this.activeEndpoints = this.endpoints[range];
 
         // Filter the data set by date range
@@ -451,88 +467,16 @@ export class DataUtil {
         // Filter out any inactive days of the week
         this.filter.byActiveDays(this.activeDays);
 
-        // Set the count of active days each each range
-        // TODO: move to separate method
-        this.endpoints[range].activeDays = _.filter(
-          _.reduce([
-            this.endpoints[range].range[0],
-            ...(new Array(this.endpoints[range].days - 1)),
-          ], (acc, date, index) => {
-            let day;
-            if (index === 0) {
-              day = moment.utc(date).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day();
-            } else {
-              const nextDay = acc[index - 1] + 1;
-              day = nextDay > 6 ? nextDay - 7 : nextDay;
-            }
-            acc.push(day);
-            return acc;
-          }, []),
-          dayOfWeek => _.includes(this.activeDays, dayOfWeek)
-        ).length;
-
         // Generate the stats for current range
-        // TODO: move to separate method
         if (range === 'current' && stats) {
-          this.startTimer('generate stats');
-          const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
-          data[range].stats = {};
-
-          this.statUtil = new StatUtil(this);
-          _.each(selectedStats, stat => {
-            const method = statFetchMethods[stat];
-
-            if (_.isFunction(this.statUtil[method])) {
-              this.startTimer(`stat | ${stat}`);
-              data[range].stats[stat] = this.statUtil[method]();
-              this.endTimer(`stat | ${stat}`);
-            }
-          });
-          delete this.statUtil;
-          this.endTimer('generate stats');
+          data[range].stats = this.generateStats(stats);
         }
 
         data[range].endpoints = this.activeEndpoints;
 
         // Populate requested data
-        // TODO: move to separate method
         if (this.types.length) {
-          data[range].data = {};
-
-          _.each(this.types, ({ type, select, sort = {} }) => {
-            const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
-            let typeData = this.filter.byType(type).top(Infinity);
-
-            // Normalize data
-            this.startTimer(`normalize | ${type} | ${range}`);
-            _.each(typeData, this.normalizeDatumOut);
-            this.endTimer(`normalize | ${type} | ${range}`);
-
-            // Sort data
-            this.startTimer(`sort | ${type} | ${range}`);
-            let sortOpts = sort;
-            if (_.isString(sortOpts)) {
-              const sortArray = _.map(sort.split(','), _.trim);
-              sortOpts = {
-                field: sortArray[0],
-                order: sortArray[1],
-              };
-            }
-
-            if (sortOpts.field) {
-              typeData = _.sortBy(typeData, [sortOpts.field]);
-            }
-
-            if (sortOpts.order === 'desc') typeData.reverse();
-            this.endTimer(`sort | ${type} | ${range}`);
-
-            // Pick selected fields
-            this.startTimer(`select fields | ${type} | ${range}`);
-            typeData = _.map(typeData, d => _.pick(d, fields));
-            this.endTimer(`select fields | ${type} | ${range}`);
-
-            data[range].data[type] = typeData;
-          });
+          data[range].data = this.generateTypeData(this.types);
         }
       }
     });
@@ -551,6 +495,67 @@ export class DataUtil {
     this.log('Query, Result', query, result);
 
     return result;
+  };
+
+  generateStats = (stats) => {
+    this.startTimer('generate stats');
+    const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
+    const generatedStats = {};
+
+    this.statUtil = new StatUtil(this);
+    _.each(selectedStats, stat => {
+      const method = statFetchMethods[stat];
+
+      if (_.isFunction(this.statUtil[method])) {
+        this.startTimer(`stat | ${stat}`);
+        generatedStats[stat] = this.statUtil[method]();
+        this.endTimer(`stat | ${stat}`);
+      }
+    });
+    delete this.statUtil;
+    this.endTimer('generate stats');
+    return generatedStats;
+  };
+
+  generateTypeData = (types) => {
+    const generatedData = {};
+
+    _.each(types, ({ type, select, sort = {} }) => {
+      const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
+      let typeData = this.filter.byType(type).top(Infinity);
+
+      // Normalize data
+      this.startTimer(`normalize | ${type} | ${this.activeRange}`);
+      _.each(typeData, this.normalizeDatumOut);
+      this.endTimer(`normalize | ${type} | ${this.activeRange}`);
+
+      // Sort data
+      this.startTimer(`sort | ${type} | ${this.activeRange}`);
+      let sortOpts = sort;
+      if (_.isString(sortOpts)) {
+        const sortArray = _.map(sort.split(','), _.trim);
+        sortOpts = {
+          field: sortArray[0],
+          order: sortArray[1],
+        };
+      }
+
+      if (sortOpts.field) {
+        typeData = _.sortBy(typeData, [sortOpts.field]);
+      }
+
+      if (sortOpts.order === 'desc') typeData.reverse();
+      this.endTimer(`sort | ${type} | ${this.activeRange}`);
+
+      // Pick selected fields
+      this.startTimer(`select fields | ${type} | ${this.activeRange}`);
+      typeData = _.map(typeData, d => _.pick(d, fields));
+      this.endTimer(`select fields | ${type} | ${this.activeRange}`);
+
+      generatedData[type] = typeData;
+    });
+
+    return generatedData;
   };
 
   addBasalOverlappingStart = (basalData) => {
