@@ -144,50 +144,12 @@ export class DataUtil {
 
     if (d.type === 'basal') {
       d.normalEnd = addDuration(d.normalTime, d.duration);
-      d.subType = d.deliveryType; // TODO: is this needed?
+      d.subType = d.deliveryType;
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
       this.normalizeDatumBgUnits(d);
-
-      d.msPer24 = getMsPer24(d.normalTime, timezoneName); // TODO: This is the SLOOOWWW one
-
-      // const date = new Date(d.normalTime);
-      // const utcDate = new Date(Date.UTC(
-      //   date.getUTCFullYear(),
-      //   date.getUTCMonth(),
-      //   date.getUTCDay(),
-      //   date.getUTCHours(),
-      //   date.getUTCMinutes(),
-      //   date.getUTCSeconds(),
-      //   date.getUTCMilliseconds(),
-      // ));
-      // const dateFloor = new Date(Date.UTC(
-      //   date.getUTCFullYear(),
-      //   date.getUTCMonth(),
-      //   date.getUTCDay()
-      // ));
-
-      // const dateFloor = new Date(utcDate.getTime());
-      // const offsetMS = d.displayOffset * 60000;
-
-
-      // const normalDate = new Date(d.normalTime);
-      // const dateFloor = new Date(normalDate.getTime());
-      // dateFloor.setUTCHours(0);
-      // dateFloor.setUTCMinutes(0);
-      // dateFloor.setUTCSeconds(0);
-      // dateFloor.setUTCMilliseconds(0);
-      // d.msPer24 = normalDate - dateFloor;
-
-
-      // d.msPer24b = normalDate - dateFloor;
-      // d.msPer24b = utcDate - dateFloor;
-
-      // if (!this.mismatchThrown1 && d.msPer24 !== d.msPer24b + offsetMS) {
-      //   console.error('msPer24 mismatch!', d.msPer24, d.msPer24b, offsetMS, d.msPer24b + offsetMS);
-      //   this.mismatchThrown1 = true;
-      // }
+      d.msPer24 = getMsPer24(d.normalTime, timezoneName);
     }
   };
 

@@ -331,7 +331,14 @@ stories.add('Query Generator', () => {
   };
 
   const getTimePrefs = () => {
-    const timeZoneName = options('Time Zone', timezones, 'UTC', { display: 'select' }, GROUP_DATES);
+    const timeZoneName = options(
+      'Time Zone',
+      timezones,
+      // 'UTC',
+      'US/Eastern',
+      { display: 'select' },
+      GROUP_DATES,
+    );
     const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
     return selectedTimeZone ? {
