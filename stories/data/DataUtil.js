@@ -97,9 +97,9 @@ stories.add('Query Generator', () => {
   };
 
   // const daysInRange = 1;
-  const daysInRange = 13;
+  // const daysInRange = 13;
   // const daysInRange = 14;
-  // const daysInRange = 30;
+  const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,
@@ -241,8 +241,14 @@ stories.add('Query Generator', () => {
   const getFieldsQueryFormat = () => options('Fields Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_FIELDS);
   const getFields = type => {
     const queryFormat = getFieldsQueryFormat();
-    const fields = options(type, fieldsByType[type], ['normalTime', 'msPer24'], { display: 'check' }, GROUP_FIELDS);
-    // const fields = options(type, fieldsByType[type], ['normalTime'], { display: 'check' }, GROUP_FIELDS);
+    const fields = options(
+      type,
+      fieldsByType[type],
+      ['normalTime', 'msPer24'],
+      // ['normalTime'],
+      { display: 'check' },
+      GROUP_FIELDS
+    );
     return { select: queryFormat === 'string' ? fields.join(',') : fields };
   };
 
@@ -274,8 +280,15 @@ stories.add('Query Generator', () => {
   const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_TYPES);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
-    const selectedTypes = options('Types', types, ['smbg'], { display: 'check' }, GROUP_TYPES);
-    // const selectedTypes = options('Types', types, ['smbg', 'cbg', 'basal', 'bolus'], { display: 'check' }, GROUP_TYPES);
+    const selectedTypes = options(
+      'Types',
+      types,
+      // ['smbg'],
+      // ['smbg', 'cbg', 'basal', 'bolus'],
+      _.values(types),
+      { display: 'check' },
+      GROUP_TYPES,
+    );
 
     if (!selectedTypes.length) return undefined;
 
@@ -297,8 +310,14 @@ stories.add('Query Generator', () => {
   };
 
   const getActiveDays = () => {
-    const days = options('Active Days', activeDays, _.filter(_.values(activeDays), d => d !== '3'), { display: 'check' }, GROUP_DATES);
-    // const days = options('Active Days', activeDays, _.values(activeDays), { display: 'check' }, GROUP_DATES);
+    const days = options(
+      'Active Days',
+      activeDays,
+      _.values(activeDays),
+      // _.filter(_.values(activeDays), d => d !== '3'),
+      { display: 'check' },
+      GROUP_DATES,
+    );
     return (days.length === 7) ? undefined : _.map(days, _.toInteger);
   };
 
@@ -339,8 +358,14 @@ stories.add('Query Generator', () => {
   const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
   const getStats = () => {
     const queryFormat = getStatsQueryFormat();
-    const selectedStats = options('Stats', commonStats, _.values(commonStats), { display: 'check' }, GROUP_STATS);
-    // const selectedStats = options('Stats', commonStats, [commonStats.carbs], { display: 'check' }, GROUP_STATS);
+    const selectedStats = options(
+      'Stats',
+      commonStats,
+      _.values(commonStats),
+      // [commonStats.carbs]
+      { display: 'check' },
+      GROUP_STATS,
+    );
 
     if (!selectedStats.length) return undefined;
     return queryFormat === 'string' ? selectedStats.join(',') : selectedStats;
@@ -375,6 +400,6 @@ stories.add('Query Generator', () => {
   return <Results
     showStats={showStats()}
     showRaw={showRaw()}
-    results={dataUtil.queryData(query())}
+    results={dataUtil.query(query())}
   />;
 }, { notes });

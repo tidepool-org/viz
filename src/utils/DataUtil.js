@@ -337,10 +337,11 @@ export class DataUtil {
 
     _.each(_.keys(this.endpoints), range => {
       if (this.endpoints[range].days) {
+        this.log('this.endpoints[range].days', this.endpoints[range].days);
         this.endpoints[range].activeDays = _.filter(
           _.reduce([
             this.endpoints[range].range[0],
-            ...(new Array(this.endpoints[range].days - 1)),
+            ...(new Array(Math.round(this.endpoints[range].days) - 1)),
           ], (acc, date, index) => {
             let day;
             if (index === 0) {
@@ -423,8 +424,8 @@ export class DataUtil {
     };
   };
 
-  queryData = (query = {}) => {
-    this.startTimer('queryData total');
+  query = (query = {}) => {
+    this.startTimer('query total');
     const {
       activeDays,
       endpoints,
@@ -474,13 +475,13 @@ export class DataUtil {
 
         data[range].endpoints = this.activeEndpoints;
 
-        // Populate requested data
+        // Generate the requested data
         if (this.types.length) {
           data[range].data = this.generateTypeData(this.types);
         }
       }
     });
-    this.endTimer('queryData total');
+    this.endTimer('query total');
 
     const result = {
       data,
