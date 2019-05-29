@@ -126,6 +126,7 @@ stories.add('Query Generator', () => {
     // guid: 'guid',
     // id: 'id',
     time: 'time',
+    // type: 'type',
     // timezoneOffset: 'timezoneOffset',
     uploadId: 'uploadId',
   };
@@ -220,6 +221,12 @@ stories.add('Query Generator', () => {
       ...computedFields,
       subType: 'subType',
     },
+    message: {
+      time: 'time',
+      ...computedFields,
+      messageText: 'messageText',
+      parentMessage: 'parentMessage',
+    },
   };
 
   const types = {
@@ -232,6 +239,7 @@ stories.add('Query Generator', () => {
     pumpSettings: 'pumpSettings',
     cgmSettings: 'cgmSettings',
     deviceEvent: 'deviceEvent',
+    message: 'message',
   };
 
   const stringQueryFormat = { string: 'string' };

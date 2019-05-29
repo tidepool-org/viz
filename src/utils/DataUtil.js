@@ -29,7 +29,6 @@ import StatUtil from './StatUtil';
 import { statFetchMethods } from './stat';
 import Validator from './validation/schema';
 
-/* eslint-disable lodash/prefer-lodash-method */
 /* global __DEV__ */
 
 export class DataUtil {
@@ -69,14 +68,13 @@ export class DataUtil {
   };
 
   /* eslint-disable no-param-reassign */
-  // TODO: add all validations by type, not just checkCommon
+  // TODO: add all validations by type
   // TODO: add any one-time nurseshark munging
   // annotate basals
   // join boluses and wizard events
-  // reshape messages (if we decide to include them)
   // Medtronic/carelink upload source fix
   // don't add parts that translate BGs, as we do that on the way out as needed
-  // probably more...
+  // probably more... see brainstorm doc: https://docs.google.com/document/d/167TsKkWcay9uAA260Iufx0zVu3E6wxXDeTrDttcoMAk
   normalizeDatumIn = d => {
     if (d.type === 'basal') {
       if (!d.duration) {
@@ -98,6 +96,13 @@ export class DataUtil {
       }
     }
 
+    if (d.messagetext) {
+      d.type = 'message';
+      d.messageText = d.messagetext;
+      d.parentMessage = d.parentmessage || null;
+      d.time = d.timestamp;
+    }
+
     // We validate datums before converting the time and deviceTime to hammerTime integers,
     // as we want to validate that they are valid ISO date strings
     this.validateDatumIn(d);
@@ -110,14 +115,26 @@ export class DataUtil {
   };
 
   validateDatumIn = d => {
-    const validator = Validator[`check${_.capitalize(d.type)}`] || Validator.checkCommon;
-    const validateResult = validator(d);
-    if (validateResult !== true) {
+    let validator = Validator[d.type] || Validator.common;
+
+    if (_.isFunction(validator)) validator = [validator];
+
+    // Run all validators and store the results in an array
+    const validateResult = [];
+    _.each(validator, (validationMethod, i) => {
+      // only run validationMethod if it's the first or previous validations have all failed
+      if (i === 0 || validateResult.indexOf(true) === -1) {
+        validateResult.push(validationMethod(d));
+      }
+    });
+
+    // Reject datum if none of the validators pass
+    if (validateResult.indexOf(true) === -1) {
+      d.reject = true;
       if (this.validateErrorCount < 10) {
         this.log('validation fail', validateResult, d);
         ++this.validateErrorCount;
       }
-      d.reject = true;
     }
   };
 
@@ -405,6 +422,10 @@ export class DataUtil {
     this.clearFilters();
 
     // TODO: set meta data based on the entire data set, or only current range?
+    // TODO: thinking this should be performed when addData happens, rather than on every query
+    // because it's wasteful to set latestPump each time.  Also, would be nice not to have to set
+    // bgSource explitly in each query (though, I suppose for weekly view we will want to do that,
+    // and we do want the other views to use a sensible default...)
     this.setMetaData({ bgSource });
 
     this.setTypes(types);
