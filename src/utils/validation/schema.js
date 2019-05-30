@@ -112,11 +112,7 @@ const extendedBolus = {
   extended: minZero,
   expectedExtended: {
     type: 'withDependantFields',
-    schema: {
-      type: 'number',
-      min: 0,
-      ...optional,
-    },
+    schema: { ...minZero, ...optional },
     fields: ['extended', 'duration', 'expectedDuration'],
     ...optional,
   },
@@ -262,6 +258,21 @@ const pumpSettingsTandem = {
 
 const wizard = {
   ...common,
+  bgInput: { ...minZero, ...optional },
+  bolus: { type: 'string', pattern: patterns.id },
+  carbInput: { ...minZero, ...optional },
+  insulinCarbRatio: { ...minZero, ...optional },
+  insulinOnBoard: { ...minZero, ...optional },
+  insulinSensitivity: { ...minZero, ...optional },
+  recommended: {
+    type: 'object',
+    props: {
+      carb: { ...minZero, ...optional },
+      correction: { type: 'number', ...optional },
+      net: { type: 'number', ...optional },
+    },
+    ...optional,
+  },
 };
 
 export default {
