@@ -1,6 +1,6 @@
 import Validator from 'fastest-validator';
 import _ from 'lodash';
-import { MGDL_UNITS, MMOLL_UNITS } from '../constants.js';
+import { MGDL_UNITS, MMOLL_UNITS, MS_IN_DAY } from '../constants.js';
 
 const v = new Validator({
   messages: {
@@ -25,13 +25,22 @@ v.add('withDependantFields', (value, schema, fieldName, object) => {
   return v.checkSchemaRule(object[fieldName], compiledSchemaRule, fieldName);
 });
 
-const optional = {
-  optional: true,
-};
+v.add('objectWithUnknownKeys', (value, schema, fieldName, object) => {
+  const compiledSchemaRule = v.compileSchemaRule(schema.schema);
+  const fieldValues = _.valuesIn(object[fieldName]);
+  const errors = [];
 
-const forbidden = {
-  type: 'forbidden',
-};
+  _.each(fieldValues, fieldValue => {
+    const result = v.checkSchemaRule(fieldValue, compiledSchemaRule, fieldName);
+    if (result !== true) errors.push(result);
+  });
+
+  return errors.length ? errors : true;
+});
+
+const optional = { optional: true };
+const forbidden = { type: 'forbidden' };
+const minZero = { type: 'number', min: 0 };
 
 const patterns = {
   id: /^[A-Za-z0-9\-_]+$/,
@@ -67,8 +76,8 @@ const common = {
 
 const basalCommon = {
   deliveryType: { type: 'string', enum: ['scheduled', 'suspend', 'temp', 'automated'] },
-  duration: { type: 'number', min: 0, ...optional },
-  rate: { type: 'number', min: 0 },
+  duration: { ...minZero, ...optional },
+  rate: minZero,
 };
 
 const basal = {
@@ -79,7 +88,7 @@ const basal = {
 
 const normalBolus = {
   ...common,
-  normal: { type: 'number', min: 0 },
+  normal: minZero,
   expectedNormal: {
     type: 'withDependantFields',
     schema: {
@@ -98,9 +107,9 @@ const normalBolus = {
 
 const extendedBolus = {
   ...common,
-  duration: { type: 'number', min: 0 },
-  expectedDuration: { type: 'number', min: 0, ...optional },
-  extended: { type: 'number', min: 0 },
+  duration: minZero,
+  expectedDuration: { ...minZero, ...optional },
+  extended: minZero,
   expectedExtended: {
     type: 'withDependantFields',
     schema: {
@@ -111,7 +120,7 @@ const extendedBolus = {
     fields: ['extended', 'duration', 'expectedDuration'],
     ...optional,
   },
-  normal: { type: 'number', min: 0, ...optional },
+  normal: { ...minZero, ...optional },
   expectedNormal: {
     type: 'withDependantFields',
     schema: {
@@ -127,7 +136,7 @@ const extendedBolus = {
 
 const bg = {
   ...common,
-  value: { type: 'number', min: 0 },
+  value: minZero,
   units: { type: 'string', enum: [MGDL_UNITS, MMOLL_UNITS] },
 };
 
@@ -140,8 +149,115 @@ const message = {
   ],
 };
 
-const pumpSettings = {
+const settingsScheduleStart = {
+  start: { ...minZero, max: MS_IN_DAY },
+};
+
+const carbRatio = {
+  type: 'array',
+  items: {
+    type: 'object',
+    props: {
+      amount: minZero,
+      ...settingsScheduleStart,
+    },
+  },
+};
+
+const insulinSensitivity = {
+  type: 'array',
+  items: {
+    type: 'object',
+    props: {
+      amount: minZero,
+      ...settingsScheduleStart,
+    },
+  },
+};
+
+const pumpSettingsAnimus = {
   ...common,
+  bgTarget: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        ...settingsScheduleStart,
+        target: minZero,
+        range: minZero,
+        low: forbidden,
+        high: forbidden,
+      },
+    },
+  },
+  carbRatio,
+  insulinSensitivity,
+};
+
+const pumpSettingsMedtronic = {
+  ...common,
+  bgTarget: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        ...settingsScheduleStart,
+        target: forbidden,
+        range: forbidden,
+        low: minZero,
+        high: minZero,
+      },
+    },
+  },
+  carbRatio,
+  insulinSensitivity,
+};
+
+const pumpSettingsOmnipod = {
+  ...common,
+  bgTarget: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        ...settingsScheduleStart,
+        target: minZero,
+        range: forbidden,
+        low: forbidden,
+        high: minZero,
+      },
+    },
+  },
+  carbRatio,
+  insulinSensitivity,
+};
+
+const pumpSettingsTandem = {
+  ...common,
+  bgTargets: {
+    type: 'objectWithUnknownKeys',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        props: {
+          ...settingsScheduleStart,
+          target: minZero,
+          range: forbidden,
+          low: forbidden,
+          high: forbidden,
+        },
+      },
+    },
+  },
+  carbRatios: {
+    type: 'objectWithUnknownKeys',
+    schema: carbRatio,
+  },
+  insulinSensitivities: {
+    type: 'objectWithUnknownKeys',
+    schema: insulinSensitivity,
+  },
 };
 
 const wizard = {
@@ -157,7 +273,12 @@ export default {
   cbg: v.compile(bg),
   common: v.compile(common),
   message: v.compile(message),
-  pumpSettings: v.compile(pumpSettings),
+  pumpSettings: [
+    v.compile(pumpSettingsAnimus),
+    v.compile(pumpSettingsMedtronic),
+    v.compile(pumpSettingsOmnipod),
+    v.compile(pumpSettingsTandem),
+  ],
   smbg: v.compile(bg),
   wizard: v.compile(wizard),
 };
