@@ -15,6 +15,7 @@
  * == BSD2 LICENSE ==
  */
 
+/* eslint-disable no-bitwise, no-mixed-operators */
 import _ from 'lodash';
 
 import { addDuration } from '../src/utils/datetime';
@@ -176,7 +177,7 @@ export class Settings extends Common {
     super(opts);
 
     _.defaults(opts, {
-      activeBasalSchedule: 'standard',
+      activeSchedule: 'standard',
       basalSchedules: [{
         name: 'standard',
         value: [{
@@ -206,7 +207,7 @@ export class Settings extends Common {
 
     this.type = 'settings';
 
-    this.activeBasalSchedule = opts.activeBasalSchedule;
+    this.activeSchedule = opts.activeSchedule;
     this.basalSchedules = opts.basalSchedules;
     this.bgTarget = opts.bgTarget;
     this.carbRatio = opts.carbRatio;

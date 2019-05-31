@@ -96,10 +96,10 @@ stories.add('Query Generator', () => {
     return moment.utc(endDate);
   };
 
-  // const daysInRange = 1;
+  const daysInRange = 1;
   // const daysInRange = 13;
   // const daysInRange = 14;
-  const daysInRange = 30;
+  // const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,
@@ -252,7 +252,8 @@ stories.add('Query Generator', () => {
     const fields = options(
       type,
       fieldsByType[type],
-      ['normalTime', 'msPer24'],
+      ['basalSchedules'],
+      // ['units', 'value', 'bgTarget', 'bgTargets', 'insulinSensitivity', 'insulinSensitivities'],
       // ['normalTime'],
       { display: 'check' },
       GROUP_FIELDS
@@ -291,9 +292,9 @@ stories.add('Query Generator', () => {
     const selectedTypes = options(
       'Types',
       types,
-      // ['smbg'],
+      ['pumpSettings', 'smbg'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
-      _.values(types),
+      // _.values(types),
       { display: 'check' },
       GROUP_TYPES,
     );
@@ -376,8 +377,8 @@ stories.add('Query Generator', () => {
     const selectedStats = options(
       'Stats',
       commonStats,
-      _.values(commonStats),
-      // [commonStats.carbs]
+      // _.values(commonStats),
+      [commonStats.carbs],
       { display: 'check' },
       GROUP_STATS,
     );

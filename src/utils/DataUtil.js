@@ -14,7 +14,6 @@ import {
 
 import {
   convertToMGDL,
-  convertToMmolL,
 } from './bloodglucose';
 
 import {
@@ -68,14 +67,12 @@ export class DataUtil {
   };
 
   /* eslint-disable no-param-reassign */
-  // TODO: add all validations by type
   // TODO: add any one-time nurseshark munging
   // annotate basals
-  // join boluses and wizard events
   // Medtronic/carelink upload source fix
-  // don't add parts that translate BGs, as we do that on the way out as needed
   // probably more... see brainstorm doc: https://docs.google.com/document/d/167TsKkWcay9uAA260Iufx0zVu3E6wxXDeTrDttcoMAk
   normalizeDatumIn = d => {
+    // Pre-process datums by type
     if (d.type === 'basal') {
       if (!d.duration) {
         d.errorMessage = new Error('Basal with null/zero duration.').message;
@@ -141,6 +138,7 @@ export class DataUtil {
   normalizeDatumOut = d => {
     const { timezoneName } = this.timePrefs || {};
 
+    // Normal time post-processing
     if (timezoneName) {
       d.normalTime = d.time;
       d.displayOffset = -getOffset(d.time, timezoneName);
@@ -159,6 +157,7 @@ export class DataUtil {
       }
     }
 
+    // Additional post-processing by type
     if (d.type === 'basal') {
       d.normalEnd = addDuration(d.normalTime, d.duration);
       d.subType = d.deliveryType;
@@ -168,14 +167,58 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d);
       d.msPer24 = getMsPer24(d.normalTime, timezoneName);
     }
+
+    if (d.type === 'pumpSettings') {
+      this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
+      this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
+      // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
+      d.basalSchedules = _.flatten(_.partition(
+        _.sortBy(_.map(d.basalSchedules, (value, name) => ({ name, value })), 'name'),
+        ({ name }) => (name === 'standard')
+      ));
+    }
+
+    if (d.type === 'wizard') {
+      // replace bolus ID reference with bolus datums
+      if (_.isString(d.bolus)) {
+        const bolus = this.filter.byId(d.bolus).top(1)[0];
+        this.normalizeDatumOut(bolus);
+        d.bolus = bolus;
+      }
+    }
   };
 
-  normalizeDatumBgUnits = d => {
-    const bgUnits = _.get(this.bgPrefs, 'bgUnits');
+  normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
+    // BG units are always stored in mmol/L in the backend, so we only need to convert to mg/dL
+    if (_.get(this.bgPrefs, 'bgUnits') === MGDL_UNITS) {
+      if (d.units) {
+        d.units = MGDL_UNITS;
+      }
 
-    if (d.units !== bgUnits) {
-      d.units = bgUnits;
-      d.value = bgUnits === MGDL_UNITS ? convertToMGDL(d.value) : convertToMmolL(d.value);
+      const normalizeAtPath = path => {
+        const pathValue = path ? _.get(d, path) : d;
+
+        if (_.isPlainObject(pathValue)) {
+          _.each(keys, (key) => {
+            if (_.isNumber(pathValue[key])) {
+              const setPath = _.reject([path, key], _.isEmpty);
+              _.set(d, setPath, convertToMGDL(pathValue[key]));
+            } else if (_.isPlainObject(pathValue)) {
+              this.normalizeDatumBgUnits(pathValue, _.keys(pathValue), [key]);
+            }
+          });
+        } else if (_.isArray(pathValue)) {
+          _.each(pathValue, (item) => {
+            this.normalizeDatumBgUnits(item, [], keys);
+          });
+        }
+      };
+
+      if (keysPaths.length) {
+        _.each(keysPaths, normalizeAtPath);
+      } else {
+        normalizeAtPath();
+      }
     }
   };
 
@@ -212,6 +255,8 @@ export class DataUtil {
     this.dimension = {
       byTime: this.data.dimension(d => d.time),
       byType: this.data.dimension(d => d.type),
+      byId: this.data.dimension(d => d.id),
+      byDayOfWeek: null, // (re)created in `setTimePrefs` whenever the timezone is set or changed
     };
     this.endTimer('buildDimensions');
   };
@@ -225,6 +270,7 @@ export class DataUtil {
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
 
     this.filter.byType = type => this.dimension.byType.filterExact(type);
+    this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
 
@@ -241,6 +287,7 @@ export class DataUtil {
   clearFilters = () => {
     this.dimension.byTime.filterAll();
     this.dimension.byType.filterAll();
+    this.dimension.byId.filterAll();
     if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.filterAll();
   };
 
@@ -507,6 +554,12 @@ export class DataUtil {
     _.each(types, ({ type, select, sort = {} }) => {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
       let typeData = this.filter.byType(type).top(Infinity);
+
+      if (type === 'wizard') {
+        // For wizard datums, we now set the type filter to 'bolus' so we can add bolus info to
+        // wizards in the `normalizeDatumOut` method.
+        this.filter.byType('bolus');
+      }
 
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
