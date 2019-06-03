@@ -14,7 +14,6 @@ import {
 
 import {
   convertToMGDL,
-  convertToMmolL,
 } from './bloodglucose';
 
 import {
@@ -186,9 +185,8 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
       // replace bolus ID reference with bolus datums
       if (_.isString(d.bolus)) {
-        const bolus = this.filter.byId(d.bolus).top(1)[0];
-        this.normalizeDatumOut(bolus);
-        d.bolus = bolus;
+        d.bolus = this.filter.byId(d.bolus).top(1)[0];
+        this.normalizeDatumOut(d.bolus);
       }
     }
   };
@@ -576,6 +574,12 @@ export class DataUtil {
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
       _.each(typeData, this.normalizeDatumOut);
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
+
+      if (type === 'wizard') {
+        // For wizard datums, we now unset the byId filter that was set when adding the 'bolus' info
+        // to wizards in the `normalizeDatumOut` method.
+        this.dimension.byId.filterAll();
+      }
 
       // Sort data
       this.startTimer(`sort | ${type} | ${this.activeRange}`);
