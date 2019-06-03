@@ -252,7 +252,7 @@ stories.add('Query Generator', () => {
     const fields = options(
       type,
       fieldsByType[type],
-      ['basalSchedules'],
+      ['units', 'value', 'bgInput', 'bgTarget', 'insulinSensitivity'],
       // ['units', 'value', 'bgTarget', 'bgTargets', 'insulinSensitivity', 'insulinSensitivities'],
       // ['normalTime'],
       { display: 'check' },
@@ -292,7 +292,9 @@ stories.add('Query Generator', () => {
     const selectedTypes = options(
       'Types',
       types,
-      ['pumpSettings', 'smbg'],
+      // ['smbg', 'pumpSettings'],
+      // ['pumpSettings'],
+      ['wizard', 'smbg'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
       // _.values(types),
       { display: 'check' },

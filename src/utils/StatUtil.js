@@ -36,8 +36,8 @@ export class StatUtil {
   };
 
   getAverageGlucoseData = (returnBgData = false) => {
-    const bgData = this.dataUtil.filter.byType(this.bgSource).top(Infinity);
-    _.each(bgData, this.dataUtil.normalizeDatumBgUnits);
+    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const data = {
       averageGlucose: _.meanBy(bgData, 'value'),
@@ -180,8 +180,8 @@ export class StatUtil {
   };
 
   getReadingsInRangeData = () => {
-    const smbgData = this.dataUtil.filter.byType('smbg').top(Infinity);
-    _.each(smbgData, this.dataUtil.normalizeDatumBgUnits);
+    const smbgData = _.cloneDeep(this.dataUtil.filter.byType('smbg').top(Infinity));
+    _.each(smbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     let readingsInRange = _.reduce(
       smbgData,
@@ -273,8 +273,8 @@ export class StatUtil {
   };
 
   getTimeInRangeData = () => {
-    const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    _.each(cbgData, this.dataUtil.normalizeDatumBgUnits);
+    const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
+    _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     let durations = _.reduce(
       cbgData,

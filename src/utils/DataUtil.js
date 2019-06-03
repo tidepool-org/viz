@@ -14,6 +14,7 @@ import {
 
 import {
   convertToMGDL,
+  convertToMmolL,
 } from './bloodglucose';
 
 import {
@@ -54,9 +55,10 @@ export class DataUtil {
     this.endTimer('init total');
   };
 
-  addData = data => {
+  addData = rawData => {
     this.startTimer('addData');
     this.validateErrorCount = 0;
+    const data = _.cloneDeep(rawData);
     _.each(data, this.normalizeDatumIn);
 
     const validData = _.reject(_.uniqBy(data, 'id'), 'reject');
@@ -179,6 +181,9 @@ export class DataUtil {
     }
 
     if (d.type === 'wizard') {
+      this.normalizeDatumBgUnits(d, [], ['bgInput']);
+      this.normalizeDatumBgUnits(d, ['bgTarget'], ['target', 'range', 'low', 'high']);
+      this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
       // replace bolus ID reference with bolus datums
       if (_.isString(d.bolus)) {
         const bolus = this.filter.byId(d.bolus).top(1)[0];
@@ -192,7 +197,10 @@ export class DataUtil {
     // BG units are always stored in mmol/L in the backend, so we only need to convert to mg/dL
     if (_.get(this.bgPrefs, 'bgUnits') === MGDL_UNITS) {
       if (d.units) {
-        d.units = MGDL_UNITS;
+        d.units = _.isPlainObject(d.units) ? {
+          ...d.units,
+          bg: MGDL_UNITS,
+        } : MGDL_UNITS;
       }
 
       const normalizeAtPath = path => {
@@ -264,6 +272,9 @@ export class DataUtil {
   buildFilters = () => {
     this.startTimer('buildFilters');
     this.filter = {};
+
+    // TODO: Can we pass in exact values for better efficiency here?
+    // see https://github.com/crossfilter/crossfilter/wiki/Crossfilter-Gotchas#reduced-efficiency-of-filterfunction
     this.filter.byActiveDays = activeDays => this.dimension.byDayOfWeek
       .filterFunction(d => _.includes(activeDays, d));
 
@@ -553,7 +564,7 @@ export class DataUtil {
 
     _.each(types, ({ type, select, sort = {} }) => {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
-      let typeData = this.filter.byType(type).top(Infinity);
+      let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
 
       if (type === 'wizard') {
         // For wizard datums, we now set the type filter to 'bolus' so we can add bolus info to
@@ -591,6 +602,8 @@ export class DataUtil {
 
       generatedData[type] = typeData;
     });
+
+    this.log(this.data.allFiltered()); // TODO: Remove later
 
     return generatedData;
   };
