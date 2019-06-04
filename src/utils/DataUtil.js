@@ -44,26 +44,31 @@ export class DataUtil {
   init = data => {
     this.startTimer('init total');
     this.data = crossfilter([]);
+    this.rejectedData = [];
     this.endpoints = {};
-
-    this.addData(data);
 
     this.buildDimensions();
     this.buildFilters();
     this.buildSorts();
+
+    this.addData(data);
     this.endTimer('init total');
   };
 
   addData = rawData => {
     this.startTimer('addData');
-    this.validateErrorCount = 0;
     const data = _.cloneDeep(rawData);
     _.each(data, this.normalizeDatumIn);
 
-    const validData = _.reject(_.uniqBy(data, 'id'), 'reject');
+    const validData = _.uniqBy(data, 'id');
+    const rejectedData = _.remove(validData, 'reject');
     this.data.add(validData);
+    this.rejectedData.push(...rejectedData);
 
     this.log('addData', validData.length, 'of', data.length);
+    if (this.rejectedData.length) this.log('rejectedData', this.rejectedData);
+
+    this.setMetaData();
     this.endTimer('addData');
   };
 
@@ -75,10 +80,6 @@ export class DataUtil {
   normalizeDatumIn = d => {
     // Pre-process datums by type
     if (d.type === 'basal') {
-      if (!d.duration) {
-        d.errorMessage = new Error('Basal with null/zero duration.').message;
-      }
-
       if (!d.rate && d.deliveryType === 'suspend') {
         d.rate = 0.0;
       }
@@ -90,6 +91,7 @@ export class DataUtil {
 
     if (d.type === 'deviceEvent') {
       if (_.find(d.annotations, { code: 'status/unknown-previous' })) {
+        // TODO: handle with schema validation
         d.errorMessage = new Error('Bad pump status deviceEvent.').message;
       }
     }
@@ -129,10 +131,7 @@ export class DataUtil {
     // Reject datum if none of the validators pass
     if (validateResult.indexOf(true) === -1) {
       d.reject = true;
-      if (this.validateErrorCount < 10) {
-        this.log('validation fail', validateResult, d);
-        ++this.validateErrorCount;
-      }
+      d.rejectReason = validateResult;
     }
   };
 
@@ -157,6 +156,12 @@ export class DataUtil {
         d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
       }
     }
+
+    // Add source and serial number metadata
+    if (d.uploadId) {
+      d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
+    }
+    if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
 
     // Additional post-processing by type
     if (d.type === 'basal') {
@@ -271,8 +276,6 @@ export class DataUtil {
     this.startTimer('buildFilters');
     this.filter = {};
 
-    // TODO: Can we pass in exact values for better efficiency here?
-    // see https://github.com/crossfilter/crossfilter/wiki/Crossfilter-Gotchas#reduced-efficiency-of-filterfunction
     this.filter.byActiveDays = activeDays => this.dimension.byDayOfWeek
       .filterFunction(d => _.includes(activeDays, d));
 
@@ -329,10 +332,58 @@ export class DataUtil {
     };
   };
 
-  setMetaData = ({ bgSource }) => {
+  setLatestPump = () => {
+    this.startTimer('setLatestPump');
+    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
+    const latestPumpUpload = getLatestPumpUpload(uploadData);
+    const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
+
+    this.latestPump = {
+      deviceModel: _.get(latestPumpUpload, 'deviceModel', ''),
+      manufacturer: latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource,
+    };
+    this.endTimer('setLatestPump');
+  };
+
+  setUploadMap = () => {
+    this.startTimer('setUploadMap');
+    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
+    const pumpSettingsData = this.filter.byType('pumpSettings').top(Infinity);
+
+    this.uploadMap = {};
+
+    _.each(uploadData, upload => {
+      let source = 'Unknown';
+
+      if (_.has(upload, 'source')) {
+        source = upload.source;
+      } else if (_.isArray(upload.deviceManufacturers) && !_.isEmpty(upload.deviceManufacturers)) {
+        // Uploader does not specify `source` for CareLink uploads, so they incorrectly get set to
+        // `Medtronic`, which should only be used for Medtronic Direct uploads. Check if
+        // manufacturer equals Medtronic, then check pumpSettings array for uploads with that upload
+        // ID and a source of `carelink`, then override appropriately.
+        if (upload.deviceManufacturers[0] === 'Medtronic' && _.filter(pumpSettingsData, {
+          uploadId: upload.uploadId,
+          source: 'carelink',
+        }).length) {
+          source = 'carelink';
+        } else {
+          source = upload.deviceManufacturers[0];
+        }
+      }
+
+      this.uploadMap[upload.uploadId] = {
+        source,
+        deviceSerialNumber: upload.deviceSerialNumber || 'Unknown',
+      };
+    });
+    this.endTimer('setUploadMap');
+  }
+
+  setMetaData = () => {
     this.startTimer('setMetaData');
-    this.setBgSources(bgSource);
     this.setLatestPump();
+    this.setUploadMap();
     this.endTimer('setMetaData');
   };
 
@@ -477,13 +528,7 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    // TODO: set meta data based on the entire data set, or only current range?
-    // TODO: thinking this should be performed when addData happens, rather than on every query
-    // because it's wasteful to set latestPump each time.  Also, would be nice not to have to set
-    // bgSource explitly in each query (though, I suppose for weekly view we will want to do that,
-    // and we do want the other views to use a sensible default...)
-    this.setMetaData({ bgSource });
-
+    this.setBgSources(bgSource);
     this.setTypes(types);
     this.setBGPrefs(bgPrefs);
     this.setTimePrefs(timePrefs);
@@ -606,8 +651,6 @@ export class DataUtil {
 
       generatedData[type] = typeData;
     });
-
-    this.log(this.data.allFiltered()); // TODO: Remove later
 
     return generatedData;
   };
