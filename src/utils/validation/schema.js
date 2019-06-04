@@ -41,6 +41,7 @@ v.add('objectWithUnknownKeys', (value, schema, fieldName, object) => {
 const optional = { optional: true };
 const forbidden = { type: 'forbidden' };
 const minZero = { type: 'number', min: 0 };
+const postiveNumber = { type: 'number', positive: true };
 
 const patterns = {
   id: /^[A-Za-z0-9\-_]+$/,
@@ -76,7 +77,7 @@ const common = {
 
 const basalCommon = {
   deliveryType: { type: 'string', enum: ['scheduled', 'suspend', 'temp', 'automated'] },
-  duration: { ...minZero, ...optional },
+  duration: { ...postiveNumber, ...optional },
   rate: minZero,
 };
 
