@@ -47,6 +47,7 @@ const patterns = {
   id: /^[A-Za-z0-9\-_]+$/,
   ISODate: /^(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))$/,
   deviceTime: /^(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)$/,
+  rejectBadDeviceStatus: /^(?!status\/unknown-previous).*$/,
 };
 
 const validTypes = [
@@ -135,6 +136,20 @@ const bg = {
   ...common,
   value: minZero,
   units: { type: 'string', enum: [MGDL_UNITS, MMOLL_UNITS] },
+};
+
+const deviceEvent = {
+  ...common,
+  annotations: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        code: { type: 'string', pattern: patterns.rejectBadDeviceStatus },
+      },
+    },
+    ...optional,
+  },
 };
 
 const message = {
@@ -284,6 +299,7 @@ export default {
   ],
   cbg: v.compile(bg),
   common: v.compile(common),
+  deviceEvent: v.compile(deviceEvent),
   message: v.compile(message),
   pumpSettings: [
     v.compile(pumpSettingsAnimus),

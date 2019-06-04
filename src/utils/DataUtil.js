@@ -89,13 +89,6 @@ export class DataUtil {
       }
     }
 
-    if (d.type === 'deviceEvent') {
-      if (_.find(d.annotations, { code: 'status/unknown-previous' })) {
-        // TODO: handle with schema validation
-        d.errorMessage = new Error('Bad pump status deviceEvent.').message;
-      }
-    }
-
     if (d.messagetext) {
       d.type = 'message';
       d.messageText = d.messagetext;
