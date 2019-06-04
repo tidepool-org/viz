@@ -135,6 +135,8 @@ stories.add('Query Generator', () => {
     normalTime: 'normalTime',
     displayOffset: 'displayOffset',
     warning: 'warning',
+    deviceSerialNumber: 'deviceSerialNumber',
+    source: 'source',
   };
 
   const fieldsByType = {
