@@ -35,8 +35,10 @@ export class DataUtil {
    */
   constructor(data = []) {
     this.log = bows('DataUtil');
+    /* eslint-disable no-console */
     this.startTimer = __DEV__ ? name => console.time(name) : _.noop;
     this.endTimer = __DEV__ ? name => console.timeEnd(name) : _.noop;
+    /* eslint-enable no-console */
     this.init(data);
   }
 
