@@ -129,23 +129,7 @@ export class DataUtil {
     const { timezoneName } = this.timePrefs || {};
 
     // Normal time post-processing
-    if (timezoneName) {
-      d.normalTime = d.time;
-      d.displayOffset = -getOffset(d.time, timezoneName);
-    } else {
-      // timezoneOffset is an optional attribute according to the Tidepool data model
-      if (d.timezoneOffset != null && d.conversionOffset != null) {
-        d.normalTime = d.time + (d.timezoneOffset * MS_IN_MIN + d.conversionOffset);
-      } else {
-        d.normalTime = !_.isEmpty(d.deviceTime) ? d.deviceTime : d.time;
-      }
-
-      // displayOffset always 0 when not timezoneAware
-      d.displayOffset = 0;
-      if (d.deviceTime && d.normalTime !== d.deviceTime) {
-        d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
-      }
-    }
+    this.normalizeDatumTime(d);
 
     // Add source and serial number metadata
     if (d.uploadId) {
@@ -201,6 +185,31 @@ export class DataUtil {
     }
   };
 
+  normalizeDatumTime = d => {
+    const { timezoneName } = this.timePrefs || {};
+
+    if (timezoneName) {
+      d.normalTime = d.time;
+      d.displayOffset = -getOffset(d.time, timezoneName);
+    } else {
+      // TimezoneOffset is an optional attribute according to the Tidepool data model
+      if (d.timezoneOffset != null && d.conversionOffset != null) {
+        d.normalTime = d.time + (d.timezoneOffset * MS_IN_MIN + d.conversionOffset);
+      } else {
+        d.normalTime = !_.isEmpty(d.deviceTime) ? d.deviceTime : d.time;
+      }
+
+      // DisplayOffset always 0 when not timezoneAware
+      d.displayOffset = 0;
+      if (d.deviceTime && d.normalTime !== d.deviceTime) {
+        d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
+      }
+    }
+
+    // Recurse as needed for suppressed basals
+    if (d.suppressed) this.normalizeDatumTime(d.suppressed);
+  };
+
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
     // BG units are always stored in mmol/L in the backend, so we only need to convert to mg/dL
     if (_.get(this.bgPrefs, 'bgUnits') === MGDL_UNITS) {
@@ -249,8 +258,8 @@ export class DataUtil {
 
     // A suppressed should share these attributes with its parent
     d.suppressed.duration = d.duration;
-    d.suppressed.time = d.time;
-    d.suppressed.deviceTime = d.deviceTime;
+    d.suppressed.time = Date.parse(d.time);
+    if (d.deviceTime) d.suppressed.deviceTime = Date.parse(d.deviceTime);
 
     // Recurse as needed
     if (d.suppressed.suppressed) {
