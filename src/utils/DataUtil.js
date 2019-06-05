@@ -127,17 +127,17 @@ export class DataUtil {
     }
   };
 
-  normalizeDatumOut = d => {
+  normalizeDatumOut = (d, fields = []) => {
     const { timezoneName } = this.timePrefs || {};
 
     // Normal time post-processing
-    this.normalizeDatumTime(d);
+    this.normalizeDatumOutTime(d, fields);
 
     // Add source and serial number metadata
-    if (d.uploadId) {
+    if (d.uploadId && _.includes(fields, 'deviceSerialNumber')) {
       d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
     }
-    if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
+    if (!d.source && _.includes(fields, 'source')) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
 
     // Additional post-processing by type
     if (d.type === 'basal') {
@@ -145,34 +145,42 @@ export class DataUtil {
       d.subType = d.deliveryType;
 
       // Annotate any incomplete suspends
-      const intersectsIncompleteSuspend = _.some(
-        this.incompleteSuspends,
-        suspend => {
-          const suspendStart = suspend[this.activeTimeField];
-          return d.normalTime <= suspendStart && suspendStart <= d.normalEnd;
-        }
-      );
+      if (_.includes(fields, 'annotations')) {
+        const intersectsIncompleteSuspend = _.some(
+          this.incompleteSuspends,
+          suspend => {
+            const suspendStart = suspend[this.activeTimeField];
+            return d.normalTime <= suspendStart && suspendStart <= d.normalEnd;
+          }
+        );
 
-      if (intersectsIncompleteSuspend) {
-        d.annotations = d.annotations || [];
-        d.annotations.push({ code: 'basal/intersects-incomplete-suspend' });
-        this.log('intersectsIncompleteSuspend', d.id);
+        if (intersectsIncompleteSuspend) {
+          d.annotations = d.annotations || [];
+          d.annotations.push({ code: 'basal/intersects-incomplete-suspend' });
+          this.log('intersectsIncompleteSuspend', d.id);
+        }
       }
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
       this.normalizeDatumBgUnits(d);
-      d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+
+      if (_.includes(fields, 'msPer24')) d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+      if (_.includes(fields, 'localDate')) {
+        d.localDate = moment.utc(d[this.activeTimeField]).tz(timezoneName).format('YYYY-MM-DD');
+      }
     }
 
     if (d.type === 'pumpSettings') {
       this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
       this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
       // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
-      d.basalSchedules = _.flatten(_.partition(
-        _.sortBy(_.map(d.basalSchedules, (value, name) => ({ name, value })), 'name'),
-        ({ name }) => (name === 'standard')
-      ));
+      if (_.includes(fields, 'basalSchedules')) {
+        d.basalSchedules = _.flatten(_.partition(
+          _.sortBy(_.map(d.basalSchedules, (value, name) => ({ name, value })), 'name'),
+          ({ name }) => (name === 'standard')
+        ));
+      }
     }
 
     if (d.type === 'wizard') {
@@ -187,7 +195,7 @@ export class DataUtil {
     }
   };
 
-  normalizeDatumTime = d => {
+  normalizeDatumOutTime = (d, fields = []) => {
     const { timezoneName } = this.timePrefs || {};
 
     if (timezoneName) {
@@ -209,7 +217,7 @@ export class DataUtil {
     }
 
     // Recurse as needed for suppressed basals
-    if (d.suppressed) this.normalizeDatumTime(d.suppressed);
+    if (d.suppressed && _.includes(fields, 'suppressed')) this.normalizeDatumOutTime(d.suppressed);
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
@@ -633,7 +641,7 @@ export class DataUtil {
 
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
-      _.each(typeData, this.normalizeDatumOut);
+      _.each(typeData, d => this.normalizeDatumOut(d, fields));
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
 
       if (type === 'wizard') {
