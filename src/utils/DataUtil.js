@@ -17,7 +17,6 @@ import {
 } from './bloodglucose';
 
 import {
-  addDuration,
   getMsPer24,
   getOffset,
   getTimezoneFromTimePrefs,
@@ -57,26 +56,24 @@ export class DataUtil {
 
   addData = rawData => {
     this.startTimer('addData');
+
+    // We first clone the raw data so we don't mutate it at the source
     const data = _.cloneDeep(rawData);
     _.each(data, this.normalizeDatumIn);
 
+    // Filter out any data that failed validation, and and duplicates by `id`
     const validData = _.uniqBy(data, 'id');
     const rejectedData = _.remove(validData, 'reject');
     this.data.add(validData);
-    this.rejectedData.push(...rejectedData);
 
-    this.log('addData', validData.length, 'of', data.length);
-    if (this.rejectedData.length) this.log('rejectedData', this.rejectedData);
+    this.log('validData', validData.length, 'of', data.length);
+    if (rejectedData.length) this.log('rejectedData', rejectedData);
 
     this.setMetaData();
     this.endTimer('addData');
   };
 
   /* eslint-disable no-param-reassign */
-  // TODO: add any one-time nurseshark munging
-  // annotate basals
-  // Medtronic/carelink upload source fix
-  // probably more... see brainstorm doc: https://docs.google.com/document/d/167TsKkWcay9uAA260Iufx0zVu3E6wxXDeTrDttcoMAk
   normalizeDatumIn = d => {
     // Pre-process datums by type
     if (d.type === 'basal') {
@@ -138,14 +135,14 @@ export class DataUtil {
     } else {
       // timezoneOffset is an optional attribute according to the Tidepool data model
       if (d.timezoneOffset != null && d.conversionOffset != null) {
-        d.normalTime = addDuration(d.time, d.timezoneOffset * MS_IN_MIN + d.conversionOffset);
+        d.normalTime = d.time + (d.timezoneOffset * MS_IN_MIN + d.conversionOffset);
       } else {
-        d.normalTime = _.isEmpty(d.deviceTime) ? d.time : `${d.deviceTime}.000Z`;
+        d.normalTime = !_.isEmpty(d.deviceTime) ? d.deviceTime : d.time;
       }
 
       // displayOffset always 0 when not timezoneAware
       d.displayOffset = 0;
-      if (d.deviceTime && d.normalTime.slice(0, -5) !== d.deviceTime) {
+      if (d.deviceTime && d.normalTime !== d.deviceTime) {
         d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
       }
     }
@@ -158,8 +155,23 @@ export class DataUtil {
 
     // Additional post-processing by type
     if (d.type === 'basal') {
-      d.normalEnd = addDuration(d.normalTime, d.duration);
+      d.normalEnd = d.normalTime + d.duration;
       d.subType = d.deliveryType;
+
+      // Annotate any incomplete suspends
+      const intersectsIncompleteSuspend = _.some(
+        this.incompleteSuspends,
+        suspend => {
+          const suspendStart = suspend[this.activeTimeField];
+          return d.normalTime <= suspendStart && suspendStart <= d.normalEnd;
+        }
+      );
+
+      if (intersectsIncompleteSuspend) {
+        d.annotations = d.annotations || [];
+        d.annotations.push({ code: 'basal/intersects-incomplete-suspend' });
+        this.log('intersectsIncompleteSuspend', d.id);
+      }
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
@@ -315,17 +327,6 @@ export class DataUtil {
   };
 
   setLatestPump = () => {
-    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
-    const latestPumpUpload = getLatestPumpUpload(uploadData);
-    const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
-
-    this.latestPump = {
-      deviceModel: _.get(latestPumpUpload, 'deviceModel', ''),
-      manufacturer: latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource,
-    };
-  };
-
-  setLatestPump = () => {
     this.startTimer('setLatestPump');
     const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
     const latestPumpUpload = getLatestPumpUpload(uploadData);
@@ -371,12 +372,23 @@ export class DataUtil {
       };
     });
     this.endTimer('setUploadMap');
-  }
+  };
+
+  setIncompleteSuspends = () => {
+    this.startTimer('setIncompleteSuspends');
+    const deviceEventData = this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity));
+    this.incompleteSuspends = _.filter(
+      deviceEventData,
+      ({ annotations = [] }) => _.find(annotations, { code: 'status/incomplete-tuple' })
+    );
+    this.endTimer('setIncompleteSuspends');
+  };
 
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setLatestPump();
     this.setUploadMap();
+    this.setIncompleteSuspends();
     this.endTimer('setMetaData');
   };
 
@@ -466,7 +478,7 @@ export class DataUtil {
     const prevTimezoneAware = _.get(this, 'timePrefs.timezoneAware');
     const timezoneAwareChanged = timezoneAware !== prevTimezoneAware;
 
-    const timeField = timezoneAware ? 'time' : 'deviceTime';
+    this.activeTimeField = timezoneAware ? 'time' : 'deviceTime';
 
     if (timezoneNameChanged) {
       this.log('Timezone Change', prevTimezoneName, 'to', timezoneName);
@@ -474,15 +486,15 @@ export class DataUtil {
       // Recreate the byDayOfWeek dimension to account for the new timezone.
       if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.dispose();
       this.dimension.byDayOfWeek = this.data.dimension(
-        d => moment.utc(d[timeField]).tz(timezoneName || 'UTC').day()
+        d => moment.utc(d[this.activeTimeField]).tz(timezoneName || 'UTC').day()
       );
     }
 
     if (timezoneAwareChanged) {
-      this.log('Time Field Change', timeField === 'time' ? 'deviceTime' : 'time', 'to', timeField);
+      this.log('Time Field Change', this.activeTimeField === 'time' ? 'deviceTime' : 'time', 'to', this.activeTimeField);
 
       this.dimension.byTime.dispose();
-      this.dimension.byTime = this.data.dimension(d => d[timeField]);
+      this.dimension.byTime = this.data.dimension(d => d[this.activeTimeField]);
     }
 
     this.timePrefs = {
@@ -651,14 +663,14 @@ export class DataUtil {
   addBasalOverlappingStart = (basalData) => {
     _.each(basalData, this.normalizeDatumOut);
 
-    if (basalData.length && basalData[0].normalTime > this.endpoints[0]) {
+    if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {
       // We need to ensure all the days of the week are active to ensure we get all basals
       this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
       // Set the endpoints filter to the previous day
       this.filter.byEndpoints([
-        addDuration(this.endpoints[0], -MS_IN_DAY),
-        this.endpoints[0],
+        this.activeEndpoints.range[0] - MS_IN_DAY,
+        this.activeEndpoints.range[0],
       ]);
 
       // Fetch last basal from previous day
@@ -668,8 +680,8 @@ export class DataUtil {
 
       // Add to top of basal data array if it overlaps the start endpoint
       const datumOverlapsStart = previousBasalDatum
-        && previousBasalDatum.normalTime < this.endpoints[0]
-        && previousBasalDatum.normalEnd > this.endpoints[0];
+        && previousBasalDatum.normalTime < this.activeEndpoints.range[0]
+        && previousBasalDatum.normalEnd > this.activeEndpoints.range[0];
 
       if (datumOverlapsStart) {
         basalData.unshift(previousBasalDatum);
