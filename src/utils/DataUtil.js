@@ -103,7 +103,7 @@ export class DataUtil {
     // Convert the time and deviceTime properties to hammertime,
     // which improves dimension filtering performance significantly over using ISO strings
     d.time = Date.parse(d.time);
-    if (d.deviceTime) d.deviceTime = Date.parse(d.deviceTime);
+    d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
   };
 
   validateDatumIn = d => {
@@ -283,16 +283,51 @@ export class DataUtil {
     this.data.remove(predicate);
   };
 
+  updateDatum = updatedDatum => {
+    this.log('Updating Datum', updatedDatum);
+    this.clearFilters();
+
+    const existingDatum = this.filter.byId(updatedDatum.id).top(1)[0];
+    const updateDatumClone = _.cloneDeep(updatedDatum);
+
+    // Attempt to update existing datum with normalized and validated update datum
+    this.normalizeDatumIn(updateDatumClone);
+    if (existingDatum && !updateDatumClone.reject) _.assign(existingDatum, updateDatumClone);
+
+    // Reset the byId filter
+    this.dimension.byId.filterAll();
+
+    // Update the byTime dimension in case the time field was changed
+    this.buildByTimeDimension();
+  };
+
+  buildByDayOfWeekDimension = () => {
+    this.dimension.byDayOfWeek = this.data.dimension(
+      d => moment.utc(d[this.activeTimeField]).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day()
+    );
+  };
+
+  buildByIdDimension = () => {
+    this.dimension.byId = this.data.dimension(d => d.id);
+  };
+
+  buildByTimeDimension = () => {
+    this.dimension.byTime = this.data.dimension(d => d[this.activeTimeField || 'time']);
+  };
+
+  buildByTypeDimension = () => {
+    this.dimension.byType = this.data.dimension(d => d.type);
+  };
+
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
   // where performance will drop as per crossfilter docs.
   buildDimensions = () => {
     this.startTimer('buildDimensions');
-    this.dimension = {
-      byTime: this.data.dimension(d => d.time),
-      byType: this.data.dimension(d => d.type),
-      byId: this.data.dimension(d => d.id),
-      byDayOfWeek: null, // (re)created in `setTimePrefs` whenever the timezone is set or changed
-    };
+    this.dimension = {};
+    this.buildByDayOfWeekDimension();
+    this.buildByIdDimension();
+    this.buildByTimeDimension();
+    this.buildByTypeDimension();
     this.endTimer('buildDimensions');
   };
 
@@ -497,29 +532,24 @@ export class DataUtil {
     const prevTimezoneAware = _.get(this, 'timePrefs.timezoneAware');
     const timezoneAwareChanged = timezoneAware !== prevTimezoneAware;
 
+    this.timePrefs = {
+      timezoneAware,
+      timezoneName,
+    };
+
     this.activeTimeField = timezoneAware ? 'time' : 'deviceTime';
 
     if (timezoneNameChanged) {
       this.log('Timezone Change', prevTimezoneName, 'to', timezoneName);
 
       // Recreate the byDayOfWeek dimension to account for the new timezone.
-      if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.dispose();
-      this.dimension.byDayOfWeek = this.data.dimension(
-        d => moment.utc(d[this.activeTimeField]).tz(timezoneName || 'UTC').day()
-      );
+      this.buildByDayOfWeekDimension();
     }
 
     if (timezoneAwareChanged) {
       this.log('Time Field Change', this.activeTimeField === 'time' ? 'deviceTime' : 'time', 'to', this.activeTimeField);
-
-      this.dimension.byTime.dispose();
-      this.dimension.byTime = this.data.dimension(d => d[this.activeTimeField]);
+      this.buildByTimeDimension();
     }
-
-    this.timePrefs = {
-      timezoneAware,
-      timezoneName,
-    };
   };
 
   setBGPrefs = (bgPrefs = {}) => {

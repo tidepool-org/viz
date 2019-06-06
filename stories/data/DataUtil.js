@@ -18,7 +18,17 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
-import { object, withKnobs, optionsKnob as options, date, number, boolean } from '@storybook/addon-knobs';
+
+import {
+  object,
+  withKnobs,
+  optionsKnob as options,
+  date,
+  number,
+  boolean,
+  button,
+} from '@storybook/addon-knobs';
+
 import moment from 'moment';
 
 import DataUtil from '../../src/utils/DataUtil';
@@ -51,9 +61,9 @@ const notes = `Run \`window.downloadInputData()\` from the console on a Tidepool
 Save the resulting file to the \`local/\` directory of viz as \`blip-input.json\`,
 and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
-const dataUtil = new DataUtil(data);
+// const dataUtil = new DataUtil(data);
 
-const Results = ({ results, showRaw, showStats }) => {
+const Results = ({ results, showData, showStats }) => {
   const statData = _.get(results, 'data.current.stats');
   const days = _.get(results, 'data.current.endpoints.daysInRange', 1);
   const allStats = [];
@@ -83,11 +93,12 @@ const Results = ({ results, showRaw, showStats }) => {
   return (
     <div>
       {showStats && <div style={wrapperStyles}>{renderStats(allStats, results.bgPrefs)}</div>}
-      {showRaw && <pre>{JSON.stringify(results, null, 2)}</pre>}
+      {showData && <pre>{JSON.stringify(results, null, 2)}</pre>}
     </div>
   );
 };
 
+const dataUtil = new DataUtil(data);
 stories.add('Query Generator', () => {
   // const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
   const endMoment = moment.utc('2018-03-27').startOf('day').add(1, 'd');
@@ -96,10 +107,10 @@ stories.add('Query Generator', () => {
     return moment.utc(endDate);
   };
 
-  // const daysInRange = 1;
+  const daysInRange = 1;
   // const daysInRange = 13;
   // const daysInRange = 14;
-  const daysInRange = 30;
+  // const daysInRange = 30;
   const daysInRangeOptions = {
     range: true,
     min: 1,
@@ -256,9 +267,9 @@ stories.add('Query Generator', () => {
     const fields = options(
       type,
       fieldsByType[type],
-      [..._.values(commonFields), ..._.values(computedFields), 'msPer24', 'suppressed'],
+      // [..._.values(commonFields), ..._.values(computedFields), 'msPer24', 'suppressed'],
       // ['units', 'value', 'bgInput', 'bgTarget', 'insulinSensitivity'],
-      // ['msPer24'],
+      ['messageText', 'id', 'normalTime'],
       // ['normalTime', 'normalEnd', 'deviceTime', 'annotations', 'id'],
       { display: 'check' },
       GROUP_FIELDS
@@ -297,10 +308,10 @@ stories.add('Query Generator', () => {
     const selectedTypes = options(
       'Types',
       types,
-      _.values(types),
+      // _.values(types),
       // ['smbg', 'pumpSettings'],
       // ['pumpSettings'],
-      // ['cbg'],
+      ['message'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
       GROUP_TYPES,
@@ -384,8 +395,8 @@ stories.add('Query Generator', () => {
     const selectedStats = options(
       'Stats',
       commonStats,
-      _.values(commonStats),
-      // [commonStats.averageGlucose],
+      // _.values(commonStats),
+      [commonStats.averageGlucose],
       { display: 'check' },
       GROUP_STATS,
     );
@@ -416,13 +427,52 @@ stories.add('Query Generator', () => {
     stats: getStats(),
   };
 
-  const showRaw = () => boolean('Render Raw Data', true, GROUP_RESULTS);
+  const showData = () => boolean('Render Data', true, GROUP_RESULTS);
   const showStats = () => boolean('Render Stats', true, GROUP_RESULTS);
   const query = () => object('Query', defaultQuery, GROUP_RESULTS);
 
   return <Results
     showStats={showStats()}
-    showRaw={showRaw()}
+    showData={showData()}
     results={dataUtil.query(query())}
   />;
 }, { notes });
+
+const message = {
+  id: '5cee9af2cb5d8e0011101c33',
+  guid: '8966e5c6-5b60-4f47-a937-c461eff4f624',
+  parentmessage: null,
+  userid: '991e1a7ef0',
+  groupid: 'a481e64684',
+  timestamp: '2018-03-27T19:34:38-04:00',
+  createdtime: '2019-05-26T14:45:06+00:00',
+  messagetext: 'Parent Note for testing',
+  user: {
+    fullName: 'Jill Jellyfish',
+  },
+};
+const messageDataUtil = new DataUtil([_.cloneDeep(message)]);
+
+stories.add('Update Message', () => {
+  const defaultQuery = {
+    endpoints: [
+      '2018-03-27T05:00:00.000Z',
+      '2018-03-28T05:00:00.000Z',
+    ],
+    types: {
+      message: {
+        select: 'messageText, id, normalTime',
+      },
+    },
+  };
+
+  const query = () => object('Query', defaultQuery, GROUP_RESULTS);
+  const datum = () => object('Message', _.cloneDeep(message), GROUP_RESULTS);
+  const updateButton = () => button('Update Message', () => messageDataUtil.updateDatum(datum()), GROUP_RESULTS);
+  return <Results
+    showData
+    results={messageDataUtil.query(query())}
+    datum={datum()}
+    button={updateButton()}
+  />;
+});
