@@ -53,8 +53,8 @@ export class StatUtil {
 
   getBasalBolusData = () => {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
-    const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity).reverse());
-    const basalData = this.dataUtil.addBasalOverlappingStart(rawBasalData);
+    const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
+    const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
 
     const basalBolusData = {
       basal: basalData.length
@@ -251,8 +251,8 @@ export class StatUtil {
   };
 
   getTimeInAutoData = () => {
-    let basalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
-    basalData = this.dataUtil.addBasalOverlappingStart(basalData);
+    const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
+    const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
 
     let durations = basalData.length
       ? _.transform(

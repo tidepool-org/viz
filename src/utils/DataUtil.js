@@ -22,9 +22,9 @@ import {
   getTimezoneFromTimePrefs,
 } from './datetime';
 
-import { getLatestPumpUpload } from './device';
+import { getLatestPumpUpload, getLastManualBasalSchedule, isAutomatedBasalDevice } from './device';
 import StatUtil from './StatUtil';
-import { statFetchMethods } from './stat';
+import { statFetchMethods, commonStats } from './stat';
 import Validator from './validation/schema';
 
 /* global __DEV__ */
@@ -45,8 +45,8 @@ export class DataUtil {
   init = data => {
     this.startTimer('init total');
     this.data = crossfilter([]);
-    this.rejectedData = [];
-    this.endpoints = {};
+    // this.rejectedData = [];
+    // this.endpoints = {};
 
     this.buildDimensions();
     this.buildFilters();
@@ -137,7 +137,7 @@ export class DataUtil {
     if (d.uploadId && _.includes(fields, 'deviceSerialNumber')) {
       d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
     }
-    if (!d.source && _.includes(fields, 'source')) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
+    if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
 
     // Additional post-processing by type
     if (d.type === 'basal') {
@@ -359,10 +359,12 @@ export class DataUtil {
     this.dimension.byTime.filterAll();
     this.dimension.byType.filterAll();
     this.dimension.byId.filterAll();
-    if (this.dimension.byDayOfWeek) this.dimension.byDayOfWeek.filterAll();
+    this.dimension.byDayOfWeek.filterAll();
   };
 
   setBgSources = (current) => {
+    this.clearFilters();
+
     const bgSources = {
       cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
       smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
@@ -382,20 +384,45 @@ export class DataUtil {
 
   setLatestPump = () => {
     this.startTimer('setLatestPump');
-    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
-    const latestPumpUpload = getLatestPumpUpload(uploadData);
-    const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
+    this.clearFilters();
 
-    this.latestPump = {
-      deviceModel: _.get(latestPumpUpload, 'deviceModel', ''),
-      manufacturer: latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource,
-    };
+    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
+    const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+
+    if (latestPumpUpload) {
+      this.normalizeDatumOut(latestPumpUpload);
+      const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
+
+      const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
+      const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
+
+      const pumpSettingsData = this.sort.byTime(this.filter.byType('pumpSettings').top(Infinity));
+      const latestPumpSettings = _.cloneDeep(_.findLast(pumpSettingsData));
+
+      if (latestPumpSettings) {
+        this.normalizeDatumOut(latestPumpSettings);
+
+        if (pumpIsAutomatedBasalDevice) {
+          const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
+          latestPumpSettings.lastManualBasalSchedule = getLastManualBasalSchedule(basalData);
+        }
+      }
+
+      this.latestPump = {
+        deviceModel,
+        isAutomatedBasalDevice: pumpIsAutomatedBasalDevice,
+        manufacturer,
+        settings: latestPumpSettings,
+      };
+    }
     this.endTimer('setLatestPump');
   };
 
   setUploadMap = () => {
     this.startTimer('setUploadMap');
-    const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
+    this.clearFilters();
+    const uploadData = this.filter.byType('upload').top(Infinity);
     const pumpSettingsData = this.filter.byType('pumpSettings').top(Infinity);
 
     this.uploadMap = {};
@@ -430,6 +457,7 @@ export class DataUtil {
 
   setIncompleteSuspends = () => {
     this.startTimer('setIncompleteSuspends');
+    this.clearFilters();
     const deviceEventData = this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity));
     this.incompleteSuspends = _.filter(
       deviceEventData,
@@ -440,14 +468,22 @@ export class DataUtil {
 
   setMetaData = () => {
     this.startTimer('setMetaData');
-    this.setLatestPump();
+    this.setBGPrefs();
+    this.setBgSources();
+    this.setTimePrefs();
+    this.setEndpoints();
+    this.setActiveDays();
+    this.setTypes();
     this.setUploadMap();
+    this.setLatestPump();
     this.setIncompleteSuspends();
     this.endTimer('setMetaData');
   };
 
   setEndpoints = endpoints => {
-    this.endpoints = {};
+    this.endpoints = {
+      current: { range: [0, Infinity] },
+    };
 
     if (endpoints) {
       const days = moment.utc(endpoints[1]).diff(moment.utc(endpoints[0])) / MS_IN_DAY;
@@ -562,17 +598,20 @@ export class DataUtil {
       bgBounds,
       bgUnits,
     };
+
+    this.setLatestPump();
   };
 
   query = (query = {}) => {
     this.startTimer('query total');
     const {
       activeDays,
-      endpoints,
-      stats,
-      timePrefs,
       bgPrefs,
       bgSource,
+      endpoints,
+      metaData,
+      stats,
+      timePrefs,
       types,
     } = query;
 
@@ -582,41 +621,36 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    this.setBgSources(bgSource);
-    this.setTypes(types);
-    this.setBGPrefs(bgPrefs);
-    this.setTimePrefs(timePrefs);
-    this.setEndpoints(endpoints);
-    this.setActiveDays(activeDays);
+    if (bgSource) this.setBgSources(bgSource);
+    if (types) this.setTypes(types);
+    if (bgPrefs) this.setBGPrefs(bgPrefs);
+    if (timePrefs) this.setTimePrefs(timePrefs);
+    if (endpoints) this.setEndpoints(endpoints);
+    if (activeDays) this.setActiveDays(activeDays);
 
-    const data = {
-      current: {},
-      next: {},
-      prev: {},
-    };
+    const data = {};
 
-    _.each(_.keys(data), range => {
-      if (this.endpoints[range]) {
-        this.activeRange = range;
-        this.activeEndpoints = this.endpoints[range];
+    _.each(this.endpoints, (rangeEndpoints, rangeKey) => {
+      this.activeRange = rangeKey;
+      this.activeEndpoints = rangeEndpoints;
+      data[rangeKey] = {};
 
-        // Filter the data set by date range
-        this.filter.byEndpoints(this.activeEndpoints.range);
+      // Filter the data set by date range
+      this.filter.byEndpoints(this.activeEndpoints.range);
 
-        // Filter out any inactive days of the week
-        this.filter.byActiveDays(this.activeDays);
+      // Filter out any inactive days of the week
+      this.filter.byActiveDays(this.activeDays);
 
-        // Generate the stats for current range
-        if (range === 'current' && stats) {
-          data[range].stats = this.generateStats(stats);
-        }
+      // Generate the stats for current range
+      if (rangeKey === 'current' && stats) {
+        data[rangeKey].stats = this.getStats(stats);
+      }
 
-        data[range].endpoints = this.activeEndpoints;
+      data[rangeKey].endpoints = this.activeEndpoints;
 
-        // Generate the requested data
-        if (this.types.length) {
-          data[range].data = this.generateTypeData(this.types);
-        }
+      // Generate the requested data
+      if (this.types.length) {
+        data[rangeKey].data = this.getTypeData(this.types);
       }
     });
     this.endTimer('query total');
@@ -625,18 +659,16 @@ export class DataUtil {
       data,
       timePrefs: this.timePrefs,
       bgPrefs: this.bgPrefs,
-      metaData: {
-        latestPump: this.latestPump,
-        bgSources: this.bgSources,
-      },
     };
 
-    this.log('Query, Result', query, result);
+    if (metaData) result.metaData = this.getMetaData(metaData);
+
+    this.log('Query, Result', query, result, this);
 
     return result;
   };
 
-  generateStats = (stats) => {
+  getStats = (stats) => {
     this.startTimer('generate stats');
     const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
     const generatedStats = {};
@@ -656,7 +688,24 @@ export class DataUtil {
     return generatedStats;
   };
 
-  generateTypeData = (types) => {
+  getMetaData = (metaData) => {
+    this.startTimer('generate metaData');
+    const allowedMetaData = [
+      'latestPump',
+      'bgSources',
+    ];
+
+    const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
+
+    const selectedMetaData = _.pick(
+      this,
+      _.intersection(allowedMetaData, requestedMetaData),
+    );
+    this.endTimer('generate metaData');
+    return selectedMetaData;
+  };
+
+  getTypeData = (types) => {
     const generatedData = {};
 
     _.each(types, ({ type, select, sort = {} }) => {

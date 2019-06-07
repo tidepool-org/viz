@@ -42,7 +42,7 @@ stories.addDecorator(withKnobs);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_DATES = 'DATES';
-const GROUP_TYPES = 'TYPES';
+const GROUP_DATA = 'DATA';
 const GROUP_FIELDS = 'FIELDS';
 const GROUP_SORTS = 'SORTS';
 const GROUP_UNITS = 'UNITS';
@@ -302,7 +302,7 @@ stories.add('Query Generator', () => {
     } : undefined;
   };
 
-  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_TYPES);
+  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_DATA);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
     const selectedTypes = options(
@@ -314,7 +314,7 @@ stories.add('Query Generator', () => {
       ['message'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
-      GROUP_TYPES,
+      GROUP_DATA,
     );
 
     if (!selectedTypes.length) return undefined;
@@ -324,6 +324,31 @@ stories.add('Query Generator', () => {
         selectedTypes,
         _.map(selectedTypes, type => ({ ...getFields(type), ...getTypeSort(type) })))
       : _.map(selectedTypes, type => ({ type, ...getFields(type), ...getTypeSort(type) }));
+  };
+
+  const metadata = {
+    latestPump: 'latestPump',
+    bgSources: 'bgSources',
+  };
+
+  const getMetaDataQueryFormat = () => options('MetaData Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_DATA);
+  const getMetaData = () => {
+    const queryFormat = getMetaDataQueryFormat();
+    const selectedMetaData = options(
+      'MetaData',
+      metadata,
+      // _.values(metadata),
+      // ['smbg', 'pumpSettings'],
+      // ['pumpSettings'],
+      ['latestPump'],
+      // ['smbg', 'cbg', 'basal', 'bolus'],
+      { display: 'check' },
+      GROUP_DATA,
+    );
+
+    if (!selectedMetaData.length) return undefined;
+
+    return queryFormat === 'string' ? selectedMetaData.join(',') : selectedMetaData;
   };
 
   const activeDays = {
@@ -425,6 +450,7 @@ stories.add('Query Generator', () => {
     bgPrefs: getBGPrefs(),
     bgSource: getBGSource(),
     stats: getStats(),
+    metaData: getMetaData(),
   };
 
   const showData = () => boolean('Render Data', true, GROUP_RESULTS);
