@@ -606,6 +606,7 @@ export class DataUtil {
     this.startTimer('query total');
     const {
       activeDays,
+      aggregationsByDate,
       bgPrefs,
       bgSource,
       endpoints,
@@ -645,6 +646,8 @@ export class DataUtil {
       if (rangeKey === 'current' && stats) {
         data[rangeKey].stats = this.getStats(stats);
       }
+
+      data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
 
       data[rangeKey].endpoints = this.activeEndpoints;
 
@@ -686,6 +689,75 @@ export class DataUtil {
     delete this.statUtil;
     this.endTimer('generate stats');
     return generatedStats;
+  };
+
+  getAggregationsByDate = (aggregationsByDate) => {
+    this.startTimer('generate aggregationsByDate');
+    const selectedAggregationsByDate = _.isString(aggregationsByDate) ? _.map(aggregationsByDate.split(','), _.trim) : aggregationsByDate;
+    const generatedAggregationsByDate = {};
+
+    _.each(selectedAggregationsByDate, aggregationType => {
+      if (aggregationType === 'basals') {
+        generatedAggregationsByDate[aggregationType] = {
+          type: 'basal',
+          // dimensions: [
+          //   { key: 'total', label: t('Basal Events'), primary: true },
+          //   { key: 'temp', label: t('Temp Basals') },
+          //   { key: 'suspend', label: t('Suspends') },
+          //   {
+          //     key: 'automatedStop',
+          //     label: t('{{automatedLabel}} Exited', {
+          //       automatedLabel: deviceLabels[AUTOMATED_DELIVERY],
+          //     }),
+          //     hideEmpty: true,
+          //   },
+          // ],
+        };
+      }
+
+      if (aggregationType === 'boluses') {
+        generatedAggregationsByDate[aggregationType] = {
+          type: 'bolus',
+          // dimensions: [
+          //   { key: 'total', label: t('Avg per day'), average: true, primary: true },
+          //   { key: 'wizard', label: t('Calculator'), percentage: true },
+          //   { key: 'correction', label: t('Correction'), percentage: true },
+          //   { key: 'extended', label: t('Extended'), percentage: true },
+          //   { key: 'interrupted', label: t('Interrupted'), percentage: true },
+          //   { key: 'override', label: t('Override'), percentage: true },
+          //   { key: 'underride', label: t('Underride'), percentage: true },
+          // ],
+        };
+      }
+
+      if (aggregationType === 'fingersticks') {
+        generatedAggregationsByDate.smbg = {
+          type: 'smbg',
+          // dimensions: [
+          //   { path: 'smbg', key: 'total', label: t('Avg per day'), average: true, primary: true },
+          //   { path: 'smbg', key: 'meter', label: t('Meter'), percentage: true },
+          //   { path: 'smbg', key: 'manual', label: t('Manual'), percentage: true },
+          //   { path: 'smbg', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
+          //   { path: 'smbg', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
+          // ],
+        };
+        generatedAggregationsByDate.calibration = {
+          type: 'deviceEvent',
+          subType: 'calibration',
+          // dimensions: [
+          //   { path: 'calibration', key: 'total', label: t('Calibrations') },
+          // ],
+        };
+      }
+
+      if (aggregationType === 'siteChanges') {
+        generatedAggregationsByDate[aggregationType] = {
+          type: null, // TODO: Still to be set by `processInfusionSiteHistory` in basics data util?
+        };
+      }
+    });
+    this.endTimer('generate aggregationsByDate');
+    return generatedAggregationsByDate;
   };
 
   getMetaData = (metaData) => {

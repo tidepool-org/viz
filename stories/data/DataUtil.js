@@ -340,7 +340,7 @@ stories.add('Query Generator', () => {
       // _.values(metadata),
       // ['smbg', 'pumpSettings'],
       // ['pumpSettings'],
-      ['latestPump'],
+      ['bgSources'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
       GROUP_DATA,
@@ -430,6 +430,29 @@ stories.add('Query Generator', () => {
     return queryFormat === 'string' ? selectedStats.join(',') : selectedStats;
   };
 
+  const aggregationsByDate = {
+    basals: 'basals',
+    boluses: 'boluses',
+    fingersticks: 'fingersticks',
+    siteChanges: 'siteChanges',
+  };
+
+  const getAggregationsByDateQueryFormat = () => options('Aggregations By Date Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
+  const getAggregationsByDate = () => {
+    const queryFormat = getAggregationsByDateQueryFormat();
+    const selectedAggregationsByDate = options(
+      'Aggregations By Date',
+      aggregationsByDate,
+      _.values(aggregationsByDate),
+      // [aggregationsByDate.basals],
+      { display: 'check' },
+      GROUP_STATS,
+    );
+
+    if (!selectedAggregationsByDate.length) return undefined;
+    return queryFormat === 'string' ? selectedAggregationsByDate.join(',') : selectedAggregationsByDate;
+  };
+
   const timePrefs = getTimePrefs();
   const endDate = getEndMoment();
   const endpoints = [
@@ -450,6 +473,7 @@ stories.add('Query Generator', () => {
     bgPrefs: getBGPrefs(),
     bgSource: getBGSource(),
     stats: getStats(),
+    aggregationsByDate: getAggregationsByDate(),
     metaData: getMetaData(),
   };
 
