@@ -107,8 +107,8 @@ stories.add('Query Generator', () => {
     return moment.utc(endDate);
   };
 
-  const daysInRange = 1;
-  // const daysInRange = 13;
+  // const daysInRange = 1;
+  const daysInRange = 2;
   // const daysInRange = 14;
   // const daysInRange = 30;
   const daysInRangeOptions = {

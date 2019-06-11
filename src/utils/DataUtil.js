@@ -1,7 +1,13 @@
 import bows from 'bows';
+import reductio from 'reductio';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
 import _ from 'lodash';
+
+import { postProcessBasalAggregations } from './basal';
+
+// Register reductio aggregation post-processors
+reductio.registerPostProcessor('postProcessBasals', postProcessBasalAggregations);
 
 import {
   BGM_DATA_KEY,
@@ -24,7 +30,7 @@ import {
 
 import { getLatestPumpUpload, getLastManualBasalSchedule, isAutomatedBasalDevice } from './device';
 import StatUtil from './StatUtil';
-import { statFetchMethods, commonStats } from './stat';
+import { statFetchMethods } from './stat';
 import Validator from './validation/schema';
 
 /* global __DEV__ */
@@ -307,8 +313,18 @@ export class DataUtil {
     );
   };
 
+  buildByDateDimension = () => {
+    this.dimension.byDate = this.data.dimension(
+      d => moment.utc(d[this.activeTimeField]).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).format('YYYY-MM-DD')
+    );
+  };
+
   buildByIdDimension = () => {
     this.dimension.byId = this.data.dimension(d => d.id);
+  };
+
+  buildBySubTypeDimension = () => {
+    this.dimension.bySubType = this.data.dimension(d => d.subType || '');
   };
 
   buildByTimeDimension = () => {
@@ -325,7 +341,9 @@ export class DataUtil {
     this.startTimer('buildDimensions');
     this.dimension = {};
     this.buildByDayOfWeekDimension();
+    this.buildByDateDimension();
     this.buildByIdDimension();
+    this.buildBySubTypeDimension();
     this.buildByTimeDimension();
     this.buildByTypeDimension();
     this.endTimer('buildDimensions');
@@ -358,8 +376,10 @@ export class DataUtil {
   clearFilters = () => {
     this.dimension.byTime.filterAll();
     this.dimension.byType.filterAll();
+    this.dimension.bySubType.filterAll();
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
+    // this.dimension.byDate.filterAll();
   };
 
   setBgSources = (current) => {
@@ -578,8 +598,9 @@ export class DataUtil {
     if (timezoneNameChanged) {
       this.log('Timezone Change', prevTimezoneName, 'to', timezoneName);
 
-      // Recreate the byDayOfWeek dimension to account for the new timezone.
+      // Recreate the byDayOfWeek and byDayOfYear dimensions to account for the new timezone.
       this.buildByDayOfWeekDimension();
+      this.buildByDateDimension();
     }
 
     if (timezoneAwareChanged) {
@@ -637,17 +658,23 @@ export class DataUtil {
       data[rangeKey] = {};
 
       // Filter the data set by date range
-      this.filter.byEndpoints(this.activeEndpoints.range);
+      if (endpoints) {
+        this.filter.byEndpoints(this.activeEndpoints.range);
+      }
 
       // Filter out any inactive days of the week
-      this.filter.byActiveDays(this.activeDays);
+      if (activeDays) {
+        this.filter.byActiveDays(this.activeDays);
+      }
 
       // Generate the stats for current range
-      if (rangeKey === 'current' && stats) {
+      if (stats && rangeKey === 'current') {
         data[rangeKey].stats = this.getStats(stats);
       }
 
-      data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
+      if (aggregationsByDate) {
+        data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
+      }
 
       data[rangeKey].endpoints = this.activeEndpoints;
 
@@ -695,24 +722,31 @@ export class DataUtil {
     this.startTimer('generate aggregationsByDate');
     const selectedAggregationsByDate = _.isString(aggregationsByDate) ? _.map(aggregationsByDate.split(','), _.trim) : aggregationsByDate;
     const generatedAggregationsByDate = {};
+    const groupByDate = this.dimension.byDate.group();
 
+    /* eslint-disable lodash/prefer-lodash-method */
     _.each(selectedAggregationsByDate, aggregationType => {
+      let result;
+
       if (aggregationType === 'basals') {
-        generatedAggregationsByDate[aggregationType] = {
-          type: 'basal',
-          // dimensions: [
-          //   { key: 'total', label: t('Basal Events'), primary: true },
-          //   { key: 'temp', label: t('Temp Basals') },
-          //   { key: 'suspend', label: t('Suspends') },
-          //   {
-          //     key: 'automatedStop',
-          //     label: t('{{automatedLabel}} Exited', {
-          //       automatedLabel: deviceLabels[AUTOMATED_DELIVERY],
-          //     }),
-          //     hideEmpty: true,
-          //   },
-          // ],
-        };
+        this.filter.byType('basal');
+
+        const reducer = reductio();
+        reducer.dataList(true);
+
+        reducer
+          .value('temp')
+          .count(true)
+          .filter(d => d.deliveryType === 'temp');
+
+        reducer
+          .value('suspend')
+          .count(true)
+          .filter(d => d.deliveryType === 'suspend');
+
+        reducer(groupByDate);
+
+        result = groupByDate.post().postProcessBasals()();
       }
 
       if (aggregationType === 'boluses') {
@@ -755,7 +789,14 @@ export class DataUtil {
           type: null, // TODO: Still to be set by `processInfusionSiteHistory` in basics data util?
         };
       }
+
+      generatedAggregationsByDate[aggregationType] = result;
     });
+    /* eslint-enable lodash/prefer-lodash-method */
+
+
+    groupByDate.dispose();
+
     this.endTimer('generate aggregationsByDate');
     return generatedAggregationsByDate;
   };

@@ -29,6 +29,11 @@ import {
 } from '../bloodglucose';
 
 import {
+  countAutomatedBasalEvents,
+  countDistinctSuspends,
+} from '../basal';
+
+import {
   BGM_DATA_KEY,
   CGM_DATA_KEY,
   MS_IN_DAY,
@@ -50,8 +55,6 @@ import {
   MEDTRONIC,
   pumpVocabulary,
 } from '../constants';
-
-import { getBasalPathGroups } from '../basal';
 
 const t = i18next.t.bind(i18next);
 
@@ -535,58 +538,6 @@ export function reduceByDay(data, bgPrefs) {
     p + typeObj.dataByDate[date].total
   );
 
-  /* eslint-disable no-param-reassign */
-  const countAutomatedBasalEventsForDay = (dataForDate) => {
-    // Get the path groups, and remove the first group, as we only want to
-    // track changes into and out of automated delivery
-    const basalPathGroups = getBasalPathGroups(dataForDate.data);
-    basalPathGroups.shift();
-
-    const events = {
-      automatedStop: 0,
-    };
-
-    _.reduce(basalPathGroups, (acc, group) => {
-      const subType = _.get(group[0], 'subType', group[0].deliveryType);
-      const event = subType === 'automated' ? 'automatedStart' : 'automatedStop';
-      // For now, we're only tracking `automatedStop` events
-      if (event === 'automatedStop') {
-        acc[event]++;
-      }
-      return acc;
-    }, events);
-
-    _.assign(dataForDate.subtotals, events);
-    dataForDate.total += events.automatedStop;
-  };
-  /* eslint-enable no-param-reassign */
-
-  /* eslint-disable no-param-reassign */
-  const countDistinctSuspendsForDay = (dataForDate) => {
-    const suspends = _.filter(dataForDate.data, d => d.deliveryType === 'suspend');
-
-    const result = {
-      prev: {},
-      distinct: 0,
-      skipped: 0,
-    };
-
-    _.reduce(suspends, (acc, datum) => {
-      // We only want to track non-contiguous suspends as distinct
-      if (_.get(acc.prev, 'normalEnd') === datum.normalTime) {
-        acc.skipped++;
-      } else {
-        acc.distinct++;
-      }
-      acc.prev = datum;
-      return acc;
-    }, result);
-
-    dataForDate.subtotals.suspend = result.distinct;
-    dataForDate.total -= result.skipped;
-  };
-  /* eslint-enable no-param-reassign */
-
   const mostRecentDay = _.find(basicsData.days, { type: 'mostRecent' }).date;
 
   _.each(basicsData.data, (value, type) => {
@@ -600,8 +551,8 @@ export function reduceByDay(data, bgPrefs) {
     }
 
     if (type === 'basal') {
-      _.each(typeObj.dataByDate, countAutomatedBasalEventsForDay);
-      _.each(typeObj.dataByDate, countDistinctSuspendsForDay);
+      _.each(typeObj.dataByDate, countAutomatedBasalEvents);
+      _.each(typeObj.dataByDate, countDistinctSuspends);
     }
 
     if (_.includes(['calibration', 'smbg'], type)) {

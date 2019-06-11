@@ -231,3 +231,97 @@ export function getBasalGroupDurationsFromEndpoints(data, endpoints) {
 
   return durations;
 }
+
+export const countAutomatedBasalEvents = (data) => {
+  const returnData = _.cloneDeep(data);
+
+  // Get the path groups, and remove the first group, as we only want to
+  // track changes into and out of automated delivery
+  const basalPathGroups = getBasalPathGroups(returnData.data);
+  basalPathGroups.shift();
+
+  const events = {
+    automatedStop: 0,
+  };
+
+  _.reduce(basalPathGroups, (acc, group) => {
+    const subType = _.get(group[0], 'subType', group[0].deliveryType);
+    const event = subType === 'automated' ? 'automatedStart' : 'automatedStop';
+    // For now, we're only tracking `automatedStop` events
+    if (event === 'automatedStop') {
+      acc[event]++;
+    }
+    return acc;
+  }, events);
+
+  _.assign(returnData.subtotals, events);
+  returnData.total += events.automatedStop;
+
+  return returnData;
+};
+
+export const countDistinctSuspends = (data) => {
+  const returnData = _.cloneDeep(data);
+
+  const suspends = _.filter(returnData.data, d => d.deliveryType === 'suspend');
+
+  const result = {
+    prev: {},
+    distinct: 0,
+    skipped: 0,
+  };
+
+  _.reduce(suspends, (acc, datum) => {
+    // We only want to track non-contiguous suspends as distinct
+    if (_.get(acc.prev, 'normalEnd') === datum.normalTime) {
+      acc.skipped++;
+    } else {
+      acc.distinct++;
+    }
+    acc.prev = datum;
+    return acc;
+  }, result);
+
+  returnData.subtotals.suspend = result.distinct;
+  returnData.total -= result.skipped;
+
+  return returnData;
+};
+
+export const postProcessBasalAggregations = priorResults => () => {
+  const data = _.filter(
+    _.cloneDeep(priorResults()),
+    ({ value: { dataList } }) => !_.isEmpty(dataList)
+  );
+
+  const processedData = {};
+
+  _.each(data, dataForDay => {
+    const {
+      value: {
+        suspend,
+        temp,
+        dataList,
+      },
+    } = dataForDay;
+
+    processedData[dataForDay.key] = {
+      data: dataList,
+      total: _.reduce([suspend, temp], (acc, { count = 0 }) => acc + count, 0),
+      subtotals: {
+        suspend: suspend.count,
+        temp: temp.count,
+      },
+    };
+
+    _.assign(
+      processedData[dataForDay.key],
+      countAutomatedBasalEvents(processedData[dataForDay.key])
+    );
+
+    // No need to return the data - we only want the aggregations
+    delete processedData[dataForDay.key].data;
+  });
+
+  return processedData;
+};
