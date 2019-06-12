@@ -142,7 +142,7 @@ const extendedBolus = {
 
 const bg = {
   ...common,
-  value: minZero,
+  value: postiveNumber,
   units: { type: 'string', enum: [MGDL_UNITS, MMOLL_UNITS] },
 };
 
