@@ -342,3 +342,34 @@ export function getAnnotations(insulinEvent) {
   const annotations = _.get(bolus, 'annotations', []);
   return annotations;
 }
+
+export const postProcessBolusAggregations = priorResults => () => {
+  const data = _.filter(
+    _.cloneDeep(priorResults()),
+    ({ value: { dataList } }) => !_.isEmpty(dataList)
+  );
+
+  const processedData = {};
+
+  _.each(data, dataForDay => {
+    const {
+      value: {
+        override,
+        underride,
+      },
+    } = dataForDay;
+
+    processedData[dataForDay.key] = {
+      total: _.reduce([override, underride], (acc, { count = 0 }) => acc + count, 0),
+      subtotals: {
+        override: override.count,
+        underride: underride.count,
+      },
+    };
+
+    // No need to return the data - we only want the aggregations
+    delete processedData[dataForDay.key].data;
+  });
+
+  return processedData;
+};

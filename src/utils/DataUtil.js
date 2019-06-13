@@ -5,9 +5,11 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 
 import { postProcessBasalAggregations } from './basal';
+import { isOverride, isUnderride, postProcessBolusAggregations } from './bolus';
 
 // Register reductio aggregation post-processors
-reductio.registerPostProcessor('postProcessBasals', postProcessBasalAggregations);
+reductio.registerPostProcessor('postProcessBasalAggregations', postProcessBasalAggregations);
+reductio.registerPostProcessor('postProcessBolusAggregations', postProcessBolusAggregations);
 
 import {
   BGM_DATA_KEY,
@@ -51,8 +53,6 @@ export class DataUtil {
   init = data => {
     this.startTimer('init total');
     this.data = crossfilter([]);
-    // this.rejectedData = [];
-    // this.endpoints = {};
 
     this.buildDimensions();
     this.buildFilters();
@@ -64,10 +64,16 @@ export class DataUtil {
 
   addData = rawData => {
     this.startTimer('addData');
+    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
+    this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
 
     // We first clone the raw data so we don't mutate it at the source
     const data = _.cloneDeep(rawData);
     _.each(data, this.normalizeDatumIn);
+
+    // Join wizard and bolus datums
+    _.each(data, this.joinWizardAndBolus);
 
     // Filter out any data that failed validation, and and duplicates by `id`
     const validData = _.uniqBy(data, 'id');
@@ -110,6 +116,26 @@ export class DataUtil {
     // which improves dimension filtering performance significantly over using ISO strings
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
+
+    // Populate mappings to be used for 2-way join of boluses and wizards
+    if (d.type === 'wizard' && _.isString(d.bolus)) {
+      this.wizardDatumsByIdMap[d.id] = d;
+      this.bolusToWizardIdMap[d.bolus] = d.id;
+    }
+    if (d.type === 'bolus') {
+      this.bolusDatumsByIdMap[d.id] = d;
+    }
+  };
+
+  joinWizardAndBolus = d => {
+    if (_.includes(['bolus', 'wizard'], d.type)) {
+      const isWizard = d.type === 'wizard';
+      const fieldToPopulate = isWizard ? 'bolus' : 'wizard';
+      const idMap = isWizard ? _.invert(this.bolusToWizardIdMap) : this.bolusToWizardIdMap;
+      const datumMap = isWizard ? this.bolusDatumsByIdMap : this.wizardDatumsByIdMap;
+
+      if (idMap[d.id]) d[fieldToPopulate] = _.omit(datumMap[idMap[d.id]], d.type);
+    }
   };
 
   validateDatumIn = d => {
@@ -193,11 +219,12 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, [], ['bgInput']);
       this.normalizeDatumBgUnits(d, ['bgTarget'], ['target', 'range', 'low', 'high']);
       this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
-      // replace bolus ID reference with bolus datums
-      if (_.isString(d.bolus)) {
-        d.bolus = this.filter.byId(d.bolus).top(1)[0];
-        this.normalizeDatumOut(d.bolus);
-      }
+
+      if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus);
+    }
+
+    if (d.type === 'bolus') {
+      if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard);
     }
   };
 
@@ -357,7 +384,6 @@ export class DataUtil {
       .filterFunction(d => _.includes(activeDays, d));
 
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
-
     this.filter.byType = type => this.dimension.byType.filterExact(type);
     this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
@@ -746,22 +772,41 @@ export class DataUtil {
 
         reducer(groupByDate);
 
-        result = groupByDate.post().postProcessBasals()();
+        result = groupByDate.post().postProcessBasalAggregations()();
       }
 
       if (aggregationType === 'boluses') {
-        generatedAggregationsByDate[aggregationType] = {
-          type: 'bolus',
-          // dimensions: [
-          //   { key: 'total', label: t('Avg per day'), average: true, primary: true },
-          //   { key: 'wizard', label: t('Calculator'), percentage: true },
-          //   { key: 'correction', label: t('Correction'), percentage: true },
-          //   { key: 'extended', label: t('Extended'), percentage: true },
-          //   { key: 'interrupted', label: t('Interrupted'), percentage: true },
-          //   { key: 'override', label: t('Override'), percentage: true },
-          //   { key: 'underride', label: t('Underride'), percentage: true },
-          // ],
-        };
+        this.filter.byType('wizard');
+
+        const reducer = reductio();
+        reducer.dataList(true);
+
+        reducer
+          .value('override')
+          .count(true)
+          .filter(d => isOverride(d));
+
+        reducer
+          .value('underride')
+          .count(true)
+          .filter(d => isUnderride(d));
+
+        reducer(groupByDate);
+
+        result = groupByDate.post().postProcessBolusAggregations()();
+        console.log('result', result);
+        // generatedAggregationsByDate[aggregationType] = {
+        //   type: 'bolus',
+        //   // dimensions: [
+        //   //   { key: 'total', label: t('Avg per day'), average: true, primary: true },
+        //   //   { key: 'wizard', label: t('Calculator'), percentage: true },
+        //   //   { key: 'correction', label: t('Correction'), percentage: true },
+        //   //   { key: 'extended', label: t('Extended'), percentage: true },
+        //   //   { key: 'interrupted', label: t('Interrupted'), percentage: true },
+        //   //   { key: 'override', label: t('Override'), percentage: true },
+        //   //   { key: 'underride', label: t('Underride'), percentage: true },
+        //   // ],
+        // };
       }
 
       if (aggregationType === 'fingersticks') {
@@ -825,22 +870,10 @@ export class DataUtil {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
 
-      if (type === 'wizard') {
-        // For wizard datums, we now set the type filter to 'bolus' so we can add bolus info to
-        // wizards in the `normalizeDatumOut` method.
-        this.filter.byType('bolus');
-      }
-
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
       _.each(typeData, d => this.normalizeDatumOut(d, fields));
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
-
-      if (type === 'wizard') {
-        // For wizard datums, we now unset the byId filter that was set when adding the 'bolus' info
-        // to wizards in the `normalizeDatumOut` method.
-        this.dimension.byId.filterAll();
-      }
 
       // Sort data
       this.startTimer(`sort | ${type} | ${this.activeRange}`);

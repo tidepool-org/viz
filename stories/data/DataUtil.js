@@ -189,6 +189,7 @@ stories.add('Query Generator', () => {
       extended: 'extended',
       expectedExtended: 'expectedExtended',
       duration: 'duration',
+      wizard: 'wizard',
       expectedDuration: 'expectedDuration',
     },
     wizard: {
@@ -269,7 +270,7 @@ stories.add('Query Generator', () => {
       fieldsByType[type],
       // [..._.values(commonFields), ..._.values(computedFields), 'msPer24', 'suppressed'],
       // ['units', 'value', 'bgInput', 'bgTarget', 'insulinSensitivity'],
-      ['messageText', 'id', 'normalTime'],
+      ['id', 'normalTime', 'bolus', 'wizard'],
       // ['normalTime', 'normalEnd', 'deviceTime', 'annotations', 'id'],
       { display: 'check' },
       GROUP_FIELDS
@@ -311,7 +312,7 @@ stories.add('Query Generator', () => {
       // _.values(types),
       // ['smbg', 'pumpSettings'],
       // ['pumpSettings'],
-      ['message'],
+      ['bolus', 'wizard'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
       GROUP_DATA,
