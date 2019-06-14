@@ -80,7 +80,10 @@ export class DataUtil {
     _.each(data, this.normalizeDatumIn);
 
     // Join wizard and bolus datums
+    this.startTimer('processNormalizedData');
     _.each(data, this.joinWizardAndBolus);
+    _.each(data, this.tagDatum);
+    this.endTimer('processNormalizedData');
 
     // Filter out any data that failed validation, and and duplicates by `id`
     const validData = _.uniqBy(data, 'id');
@@ -142,6 +145,24 @@ export class DataUtil {
       const datumMap = isWizard ? this.bolusDatumsByIdMap : this.wizardDatumsByIdMap;
 
       if (idMap[d.id]) d[fieldToPopulate] = _.omit(datumMap[idMap[d.id]], d.type);
+    }
+  };
+
+  tagDatum = d => {
+    d.tags = {};
+    if (d.type === 'basal') {
+      d.tags.suspend = d.deliveryType === 'suspend';
+      d.tags.temp = d.deliveryType === 'temp';
+    }
+
+    if (d.type === 'bolus') {
+      d.tags.correction = isCorrection(d);
+      d.tags.extended = hasExtended(d);
+      d.tags.interrupted = isInterruptedBolus(d);
+      d.tags.manual = !d.wizard;
+      d.tags.override = isOverride(d);
+      d.tags.underride = isUnderride(d);
+      d.tags.wizard = !!d.wizard;
     }
   };
 
@@ -758,6 +779,13 @@ export class DataUtil {
     const groupByDate = this.dimension.byDate.group();
 
     /* eslint-disable lodash/prefer-lodash-method */
+    const reduceByTag = (tag, reducer) => {
+      reducer
+        .value(tag)
+        .count(true)
+        .filter(d => d.tags[tag]);
+    };
+
     _.each(selectedAggregationsByDate, aggregationType => {
       let result;
 
@@ -767,15 +795,12 @@ export class DataUtil {
         const reducer = reductio();
         reducer.dataList(true);
 
-        reducer
-          .value('suspend')
-          .count(true)
-          .filter(d => d.deliveryType === 'suspend');
+        const tags = [
+          'suspend',
+          'temp',
+        ];
 
-        reducer
-          .value('temp')
-          .count(true)
-          .filter(d => d.deliveryType === 'temp');
+        _.each(tags, tag => reduceByTag(tag, reducer));
 
         reducer(groupByDate);
 
@@ -788,40 +813,17 @@ export class DataUtil {
         const reducer = reductio();
         reducer.dataList(true);
 
-        reducer
-          .value('correction')
-          .count(true)
-          .filter(d => isCorrection(d));
+        const tags = [
+          'correction',
+          'extended',
+          'interrupted',
+          'manual',
+          'override',
+          'underride',
+          'wizard',
+        ];
 
-        reducer
-          .value('extended')
-          .count(true)
-          .filter(d => hasExtended(d));
-
-        reducer
-          .value('interrupted')
-          .count(true)
-          .filter(d => isInterruptedBolus(d));
-
-        reducer
-          .value('manual')
-          .count(true)
-          .filter(d => !d.wizard);
-
-        reducer
-          .value('override')
-          .count(true)
-          .filter(d => isOverride(d));
-
-        reducer
-          .value('underride')
-          .count(true)
-          .filter(d => isUnderride(d));
-
-        reducer
-          .value('wizard')
-          .count(true)
-          .filter(d => d.wizard);
+        _.each(tags, tag => reduceByTag(tag, reducer));
 
         reducer(groupByDate);
 
