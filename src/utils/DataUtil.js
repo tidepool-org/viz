@@ -782,6 +782,11 @@ export class DataUtil {
         reducer.dataList(true);
 
         reducer
+          .value('wizard')
+          .count(true)
+          .filter(d => d.wizard);
+
+        reducer
           .value('override')
           .count(true)
           .filter(d => isOverride(d));

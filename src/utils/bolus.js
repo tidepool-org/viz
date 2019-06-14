@@ -356,14 +356,16 @@ export const postProcessBolusAggregations = priorResults => () => {
       value: {
         override,
         underride,
+        wizard,
       },
     } = dataForDay;
 
     processedData[dataForDay.key] = {
-      total: _.reduce([override, underride], (acc, { count = 0 }) => acc + count, 0),
+      total: _.reduce([override, underride, wizard], (acc, { count = 0 }) => acc + count, 0),
       subtotals: {
         override: override.count,
         underride: underride.count,
+        wizard: wizard.count,
       },
     };
 
