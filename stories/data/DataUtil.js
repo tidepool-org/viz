@@ -108,7 +108,7 @@ stories.add('Query Generator', () => {
   };
 
   // const daysInRange = 1;
-  const daysInRange = 2;
+  const daysInRange = 5;
   // const daysInRange = 14;
   // const daysInRange = 30;
   const daysInRangeOptions = {
@@ -312,7 +312,8 @@ stories.add('Query Generator', () => {
       // _.values(types),
       // ['smbg', 'pumpSettings'],
       // ['pumpSettings'],
-      ['bolus', 'wizard'],
+      ['message'],
+      // ['bolus', 'wizard'],
       // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
       GROUP_DATA,
@@ -444,8 +445,8 @@ stories.add('Query Generator', () => {
     const selectedAggregationsByDate = options(
       'Aggregations By Date',
       aggregationsByDate,
-      _.values(aggregationsByDate),
-      // [aggregationsByDate.basals],
+      // _.values(aggregationsByDate),
+      [aggregationsByDate.boluses],
       { display: 'check' },
       GROUP_STATS,
     );

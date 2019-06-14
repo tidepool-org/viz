@@ -318,7 +318,7 @@ export function isInterruptedBolus(insulinEvent) {
  * @return {Boolean} whether the bolus programmed was larger than the calculated recommendation
  */
 export function isOverride(insulinEvent) {
-  return getRecommended(insulinEvent) < getProgrammed(insulinEvent);
+  return getRecommended(insulinEvent.wizard || insulinEvent) < getProgrammed(insulinEvent);
 }
 
 /**
@@ -328,7 +328,7 @@ export function isOverride(insulinEvent) {
  * @return {Boolean} whether the bolus programmed was smaller than the calculated recommendation
  */
 export function isUnderride(insulinEvent) {
-  return getRecommended(insulinEvent) > getProgrammed(insulinEvent);
+  return getRecommended(insulinEvent.wizard || insulinEvent) > getProgrammed(insulinEvent);
 }
 
 /**

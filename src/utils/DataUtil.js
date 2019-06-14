@@ -776,7 +776,7 @@ export class DataUtil {
       }
 
       if (aggregationType === 'boluses') {
-        this.filter.byType('wizard');
+        this.filter.byType('bolus');
 
         const reducer = reductio();
         reducer.dataList(true);
@@ -803,8 +803,8 @@ export class DataUtil {
         //   //   { key: 'correction', label: t('Correction'), percentage: true },
         //   //   { key: 'extended', label: t('Extended'), percentage: true },
         //   //   { key: 'interrupted', label: t('Interrupted'), percentage: true },
-        //   //   { key: 'override', label: t('Override'), percentage: true },
-        //   //   { key: 'underride', label: t('Underride'), percentage: true },
+        //   //   { key: 'override', label: t('Override'), percentage: true }, ...DONE
+        //   //   { key: 'underride', label: t('Underride'), percentage: true }, ...DONE
         //   // ],
         // };
       }
