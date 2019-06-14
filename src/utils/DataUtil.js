@@ -5,7 +5,14 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 
 import { postProcessBasalAggregations } from './basal';
-import { isOverride, isUnderride, postProcessBolusAggregations } from './bolus';
+import {
+  hasExtended,
+  isCorrection,
+  isInterruptedBolus,
+  isOverride,
+  isUnderride,
+  postProcessBolusAggregations,
+} from './bolus';
 
 // Register reductio aggregation post-processors
 reductio.registerPostProcessor('postProcessBasalAggregations', postProcessBasalAggregations);
@@ -761,14 +768,14 @@ export class DataUtil {
         reducer.dataList(true);
 
         reducer
-          .value('temp')
-          .count(true)
-          .filter(d => d.deliveryType === 'temp');
-
-        reducer
           .value('suspend')
           .count(true)
           .filter(d => d.deliveryType === 'suspend');
+
+        reducer
+          .value('temp')
+          .count(true)
+          .filter(d => d.deliveryType === 'temp');
 
         reducer(groupByDate);
 
@@ -782,9 +789,24 @@ export class DataUtil {
         reducer.dataList(true);
 
         reducer
-          .value('wizard')
+          .value('correction')
           .count(true)
-          .filter(d => d.wizard);
+          .filter(d => isCorrection(d));
+
+        reducer
+          .value('extended')
+          .count(true)
+          .filter(d => hasExtended(d));
+
+        reducer
+          .value('interrupted')
+          .count(true)
+          .filter(d => isInterruptedBolus(d));
+
+        reducer
+          .value('manual')
+          .count(true)
+          .filter(d => !d.wizard);
 
         reducer
           .value('override')
@@ -796,22 +818,14 @@ export class DataUtil {
           .count(true)
           .filter(d => isUnderride(d));
 
+        reducer
+          .value('wizard')
+          .count(true)
+          .filter(d => d.wizard);
+
         reducer(groupByDate);
 
         result = groupByDate.post().postProcessBolusAggregations()();
-        console.log('result', result);
-        // generatedAggregationsByDate[aggregationType] = {
-        //   type: 'bolus',
-        //   // dimensions: [
-        //   //   { key: 'total', label: t('Avg per day'), average: true, primary: true },
-        //   //   { key: 'wizard', label: t('Calculator'), percentage: true },
-        //   //   { key: 'correction', label: t('Correction'), percentage: true },
-        //   //   { key: 'extended', label: t('Extended'), percentage: true },
-        //   //   { key: 'interrupted', label: t('Interrupted'), percentage: true },
-        //   //   { key: 'override', label: t('Override'), percentage: true }, ...DONE
-        //   //   { key: 'underride', label: t('Underride'), percentage: true }, ...DONE
-        //   // ],
-        // };
       }
 
       if (aggregationType === 'fingersticks') {

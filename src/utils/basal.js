@@ -288,6 +288,14 @@ export const countDistinctSuspends = (data) => {
   return returnData;
 };
 
+/**
+ * postProcessBasalAggregations
+ *
+ * Post processor for crossfilter reductio basal aggregations
+ *
+ * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+ * @returns {Object} formatted total and subtotal data for basal aggregations
+ */
 export const postProcessBasalAggregations = priorResults => () => {
   const data = _.filter(
     _.cloneDeep(priorResults()),
@@ -299,9 +307,9 @@ export const postProcessBasalAggregations = priorResults => () => {
   _.each(data, dataForDay => {
     const {
       value: {
+        dataList,
         suspend,
         temp,
-        dataList,
       },
     } = dataForDay;
 

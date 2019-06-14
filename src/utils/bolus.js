@@ -332,6 +332,17 @@ export function isUnderride(insulinEvent) {
 }
 
 /**
+ * isCorrection
+ * @param {Object} insulinEvent - a Tidepool bolus or wizard object
+ *
+ * @return {Boolean} whether the bolus programmed a recommended bg correction without carb entry
+ */
+export function isCorrection(insulinEvent) {
+  const recommended = _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
+  return recommended && recommended.correction > 0 && recommended.carb === 0;
+}
+
+/**
  * getAnnoations
  * @param {Object} insulinEvent - a Tidebool bolus or wizard object
  *
@@ -343,6 +354,14 @@ export function getAnnotations(insulinEvent) {
   return annotations;
 }
 
+/**
+ * postProcessBolusAggregations
+ *
+ * Post processor for crossfilter reductio bolus aggregations
+ *
+ * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+ * @returns {Object} formatted total and subtotal data for bolus aggregations
+ */
 export const postProcessBolusAggregations = priorResults => () => {
   const data = _.filter(
     _.cloneDeep(priorResults()),
@@ -354,6 +373,11 @@ export const postProcessBolusAggregations = priorResults => () => {
   _.each(data, dataForDay => {
     const {
       value: {
+        correction,
+        dataList,
+        extended,
+        interrupted,
+        manual,
         override,
         underride,
         wizard,
@@ -361,8 +385,12 @@ export const postProcessBolusAggregations = priorResults => () => {
     } = dataForDay;
 
     processedData[dataForDay.key] = {
-      total: _.reduce([override, underride, wizard], (acc, { count = 0 }) => acc + count, 0),
+      total: dataList.length,
       subtotals: {
+        correction: correction.count,
+        extended: extended.count,
+        interrupted: interrupted.count,
+        manual: manual.count,
         override: override.count,
         underride: underride.count,
         wizard: wizard.count,

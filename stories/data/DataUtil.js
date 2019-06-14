@@ -101,14 +101,16 @@ const Results = ({ results, showData, showStats }) => {
 const dataUtil = new DataUtil(data);
 stories.add('Query Generator', () => {
   // const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
-  const endMoment = moment.utc('2018-03-27').startOf('day').add(1, 'd');
+  // const endMoment = moment.utc('2018-03-27').startOf('day').add(1, 'd');
+  const endMoment = moment.utc('2019-04-10').startOf('day').add(1, 'd');
   const getEndMoment = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
     return moment.utc(endDate);
   };
 
   // const daysInRange = 1;
-  const daysInRange = 16;
+  // const daysInRange = 16;
+  const daysInRange = 17;
   // const daysInRange = 14;
   // const daysInRange = 30;
   const daysInRangeOptions = {
