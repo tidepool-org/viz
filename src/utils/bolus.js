@@ -401,5 +401,17 @@ export const postProcessBolusAggregations = priorResults => () => {
     delete processedData[dataForDay.key].data;
   });
 
-  return processedData;
+  return {
+    summary: {
+      total: _.sumBy(_.values(processedData), dateData => dateData.total),
+      subtotals: _.reduce(_.map(_.values(processedData), 'subtotals'), (acc, subtotals) => {
+        const tags = _.keysIn(subtotals);
+        _.each(tags, tag => {
+          acc[tag] = (acc[tag] || 0) + subtotals[tag];
+        });
+        return acc;
+      }, {}),
+    },
+    byDate: processedData,
+  };
 };
