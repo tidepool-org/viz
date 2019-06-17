@@ -448,8 +448,8 @@ stories.add('Query Generator', () => {
       'Aggregations By Date',
       aggregationsByDate,
       // _.values(aggregationsByDate),
-      [aggregationsByDate.basals, aggregationsByDate.boluses, aggregationsByDate.fingersticks],
-      // [aggregationsByDate.fingersticks],
+      // [aggregationsByDate.basals, aggregationsByDate.boluses, aggregationsByDate.fingersticks],
+      [aggregationsByDate.basals],
       { display: 'check' },
       GROUP_STATS,
     );

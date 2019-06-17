@@ -4,13 +4,10 @@ import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolv
 import moment from 'moment-timezone';
 import _ from 'lodash';
 
-import { postProcessBasalAggregations } from './basal';
-
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isAutomatedBasalDevice,
-  postProcessCalibrationAggregations,
 } from './device';
 
 import {
@@ -19,20 +16,12 @@ import {
   isInterruptedBolus,
   isOverride,
   isUnderride,
-  postProcessBolusAggregations,
 } from './bolus';
 
 import {
   classifyBgValue,
   convertToMGDL,
-  postProcessSMBGAggregations,
 } from './bloodglucose';
-
-// Register reductio aggregation post-processors
-reductio.registerPostProcessor('postProcessBasalAggregations', postProcessBasalAggregations);
-reductio.registerPostProcessor('postProcessBolusAggregations', postProcessBolusAggregations);
-reductio.registerPostProcessor('postProcessSMBGAggregations', postProcessSMBGAggregations);
-reductio.registerPostProcessor('postProcessCalibrationAggregations', postProcessCalibrationAggregations);
 
 import {
   BGM_DATA_KEY,
@@ -51,6 +40,7 @@ import {
 
 
 import StatUtil from './StatUtil';
+import AggregationUtil from './AggregationUtil';
 import { statFetchMethods } from './stat';
 import Validator from './validation/schema';
 
@@ -806,110 +796,21 @@ export class DataUtil {
     const generatedAggregationsByDate = {};
     const groupByDate = this.dimension.byDate.group();
 
-    /* eslint-disable lodash/prefer-lodash-method */
-    const reduceByTag = (tag, type, reducer) => {
-      reducer
-        .value(tag)
-        .count(true)
-        .filter(d => d.type === type && d.tags[tag]);
-    };
-
-    const reduceByBgClassification = (bgClass, type, reducer) => {
-      reducer
-        .value(bgClass)
-        .count(true)
-        .filter(d => {
-          if (d.type !== type) return false;
-          const datum = _.clone(d);
-          this.normalizeDatumBgUnits(datum);
-          return classifyBgValue(this.bgPrefs.bgBounds, datum.value, 'fiveWay') === bgClass;
-        });
-    };
+    this.aggregationUtil = new AggregationUtil(this);
 
     _.each(selectedAggregationsByDate, aggregationType => {
       let result;
 
       if (aggregationType === 'basals') {
-        this.filter.byType('basal');
-
-        const reducer = reductio();
-        reducer.dataList(true);
-
-        const tags = [
-          'suspend',
-          'temp',
-        ];
-
-        _.each(tags, tag => reduceByTag(tag, 'basal', reducer));
-
-        reducer(groupByDate);
-
-        result = groupByDate.post().postProcessBasalAggregations()();
+        result = this.aggregationUtil.aggregateBasals(groupByDate);
       }
 
       if (aggregationType === 'boluses') {
-        this.filter.byType('bolus');
-
-        const reducer = reductio();
-        reducer.dataList(true);
-
-        const tags = [
-          'correction',
-          'extended',
-          'interrupted',
-          'manual',
-          'override',
-          'underride',
-          'wizard',
-        ];
-
-        _.each(tags, tag => reduceByTag(tag, 'bolus', reducer));
-
-        reducer(groupByDate);
-
-        result = groupByDate.post().postProcessBolusAggregations()();
+        result = this.aggregationUtil.aggregateBoluses(groupByDate);
       }
 
       if (aggregationType === 'fingersticks') {
-        this.filter.byType('smbg');
-
-        let reducer = reductio();
-        reducer.dataList(true);
-
-        let tags = [
-          'manual',
-          'meter',
-        ];
-
-        _.each(tags, tag => reduceByTag(tag, 'smbg', reducer));
-
-        const bgClasses = [
-          'veryLow',
-          'veryHigh',
-        ];
-
-        _.each(bgClasses, bgClass => reduceByBgClassification(bgClass, 'smbg', reducer));
-
-        reducer(groupByDate);
-
-        result = {
-          smbg: groupByDate.post().postProcessSMBGAggregations()(),
-        };
-
-        this.filter.byType('deviceEvent');
-
-        reducer = reductio();
-        reducer.dataList(true);
-
-        tags = [
-          'calibration',
-        ];
-
-        _.each(tags, tag => reduceByTag(tag, 'deviceEvent', reducer));
-
-        reducer(groupByDate);
-
-        result.calibration = groupByDate.post().postProcessCalibrationAggregations()();
+        result = this.aggregationUtil.aggregateFingersticks(groupByDate);
       }
 
       if (aggregationType === 'siteChanges') {
@@ -920,10 +821,10 @@ export class DataUtil {
 
       generatedAggregationsByDate[aggregationType] = result;
     });
-    /* eslint-enable lodash/prefer-lodash-method */
 
 
     groupByDate.dispose();
+    delete this.aggregationUtil;
 
     this.endTimer('generate aggregationsByDate');
     return generatedAggregationsByDate;
