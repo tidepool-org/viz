@@ -7,7 +7,9 @@ import {
   countDistinctSuspends,
 } from './basal';
 
+import { formatLocalizedFromUTC } from './datetime';
 import { classifyBgValue } from './bloodglucose';
+import { MS_IN_DAY } from './constants';
 
 export class AggregationUtil {
   /**
@@ -284,15 +286,48 @@ export class AggregationUtil {
   postProcessSiteChangeAggregations = priorResults => () => {
     const data = _.filter(
       _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
+      ({ value: { dataList } }) => _.some(
+        dataList,
+        d => _.includes(['prime', 'reservoirChange'], d.subType)
+      ),
     );
 
+    const siteChangeTypes = [
+      'cannulaPrime',
+      'reservoirChange',
+      'tubingPrime',
+    ];
+
     const processedData = {};
+    let previousSiteChangeDates;
+
+    if (data.length) {
+      const firstDatum = _.first(
+        _.sortBy(
+          _.filter(data[0].value.dataList, d => _.includes(['prime', 'reservoirChange'], d.subType)),
+          this.dataUtil.activeTimeField
+        )
+      );
+
+      const previousSiteChangeDatums = this.dataUtil.getPreviousSiteChangeDatums(firstDatum);
+      const dateFormat = 'YYYY-MM-DD';
+
+      previousSiteChangeDates = {};
+
+      _.each(siteChangeTypes, type => {
+        if (previousSiteChangeDatums[type]) {
+          previousSiteChangeDates[type] = formatLocalizedFromUTC(
+            previousSiteChangeDatums.reservoirChange[this.dataUtil.activeTimeField],
+            this.dataUtil.timePrefs,
+            dateFormat
+          );
+        }
+      });
+    }
 
     _.each(data, dataForDay => {
       const {
         value: {
-          dataList,
           cannulaPrime,
           reservoirChange,
           tubingPrime,
@@ -300,16 +335,32 @@ export class AggregationUtil {
       } = dataForDay;
 
       processedData[dataForDay.key] = {
-        total: dataList.length,
+        summary: {
+          daysSince: {},
+        },
         subtotals: {
           cannulaPrime: cannulaPrime.count,
           reservoirChange: reservoirChange.count,
           tubingPrime: tubingPrime.count,
         },
       };
+
+      _.each(siteChangeTypes, type => {
+        if (processedData[dataForDay.key].subtotals[type]) {
+          if (previousSiteChangeDates[type]) {
+            const dateDiff = Date.parse(dataForDay.key) - Date.parse(previousSiteChangeDates[type]);
+            processedData[dataForDay.key].summary.daysSince[type] = dateDiff / MS_IN_DAY;
+          }
+
+          previousSiteChangeDates[type] = dataForDay.key;
+        }
+      });
     });
 
-    return this.summarizeProcessedData(processedData);
+
+    return {
+      byDate: processedData,
+    };
   };
 
   /**

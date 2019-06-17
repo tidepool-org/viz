@@ -430,6 +430,7 @@ export class DataUtil {
 
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
     this.filter.byType = type => this.dimension.byType.filterExact(type);
+    this.filter.bySubType = subType => this.dimension.bySubType.filterExact(subType);
     this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
@@ -450,7 +451,6 @@ export class DataUtil {
     this.dimension.bySubType.filterAll();
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
-    // this.dimension.byDate.filterAll();
   };
 
   setBgSources = (current) => {
@@ -836,6 +836,42 @@ export class DataUtil {
     );
     this.endTimer('generate metaData');
     return selectedMetaData;
+  };
+
+  getPreviousSiteChangeDatums = (datum) => {
+    // We need to ensure all the days of the week are active to ensure we get all siteChanges
+    this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
+
+    // Set the endpoints filter catch all previous datums
+    this.filter.byEndpoints([
+      0,
+      datum[this.activeTimeField],
+    ]);
+
+    this.filter.byType('deviceEvent');
+
+    // Fetch previous prime and reservoirChange data
+    const previousPrimeData = this.sort
+      .byTime(_.cloneDeep(this.filter.bySubType('prime').top(Infinity)))
+      .reverse();
+
+    const previousReservoirChangeData = this.sort
+      .byTime(_.cloneDeep(this.filter.bySubType('reservoirChange').top(Infinity)))
+      .reverse();
+
+    const previousSiteChangeDatums = {
+      cannulaPrime: _.find(previousPrimeData, { primeTarget: 'cannula' }),
+      tubingPrime: _.find(previousPrimeData, { primeTarget: 'tubing' }),
+      reservoirChange: previousReservoirChangeData[0],
+    };
+
+    // Reset the endpoints, activeDays, type, and subType filters to the back to what they were
+    this.filter.byEndpoints(this.activeEndpoints.range);
+    this.filter.byActiveDays(this.activeDays);
+
+    this.filter.bySubType(this.activeSubType);
+
+    return previousSiteChangeDatums;
   };
 
   getTypeData = (types) => {
