@@ -176,6 +176,9 @@ export class DataUtil {
     if (d.type === 'deviceEvent') {
       d.tags = {
         calibration: d.subType === 'calibration',
+        reservoirChange: d.subType === 'reservoirChange',
+        cannulaPrime: d.subType === 'prime' && d.primeTarget === 'cannula',
+        tubingPrime: d.subType === 'prime' && d.primeTarget === 'tubing',
       };
     }
   };
@@ -792,32 +795,24 @@ export class DataUtil {
     const generatedAggregationsByDate = {};
     const groupByDate = this.dimension.byDate.group();
 
+    const aggregationMethods = {
+      basals: 'aggregateBasals',
+      boluses: 'aggregateBoluses',
+      fingersticks: 'aggregateFingersticks',
+      siteChanges: 'aggregateSiteChanges',
+    };
+
     this.aggregationUtil = new AggregationUtil(this);
 
     _.each(selectedAggregationsByDate, aggregationType => {
-      let result;
+      const method = aggregationMethods[aggregationType];
 
-      if (aggregationType === 'basals') {
-        result = this.aggregationUtil.aggregateBasals(groupByDate);
+      if (_.isFunction(this.aggregationUtil[method])) {
+        this.startTimer(`aggregation | ${aggregationType}`);
+        generatedAggregationsByDate[aggregationType] = this.aggregationUtil[method](groupByDate);
+        this.endTimer(`aggregation | ${aggregationType}`);
       }
-
-      if (aggregationType === 'boluses') {
-        result = this.aggregationUtil.aggregateBoluses(groupByDate);
-      }
-
-      if (aggregationType === 'fingersticks') {
-        result = this.aggregationUtil.aggregateFingersticks(groupByDate);
-      }
-
-      if (aggregationType === 'siteChanges') {
-        generatedAggregationsByDate[aggregationType] = {
-          type: null, // TODO: Still to be set by `processInfusionSiteHistory` in basics data util?
-        };
-      }
-
-      generatedAggregationsByDate[aggregationType] = result;
     });
-
 
     groupByDate.dispose();
     delete this.aggregationUtil;

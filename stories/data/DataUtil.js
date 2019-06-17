@@ -449,7 +449,7 @@ stories.add('Query Generator', () => {
       aggregationsByDate,
       // _.values(aggregationsByDate),
       // [aggregationsByDate.basals, aggregationsByDate.boluses, aggregationsByDate.fingersticks],
-      [aggregationsByDate.basals],
+      [aggregationsByDate.siteChanges],
       { display: 'check' },
       GROUP_STATS,
     );

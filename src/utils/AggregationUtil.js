@@ -27,8 +27,9 @@ export class AggregationUtil {
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
     reductio.registerPostProcessor('postProcessBolusAggregations', this.postProcessBolusAggregations);
-    reductio.registerPostProcessor('postProcessSMBGAggregations', this.postProcessSMBGAggregations);
     reductio.registerPostProcessor('postProcessCalibrationAggregations', this.postProcessCalibrationAggregations);
+    reductio.registerPostProcessor('postProcessSiteChangeAggregations', this.postProcessSiteChangeAggregations);
+    reductio.registerPostProcessor('postProcessSMBGAggregations', this.postProcessSMBGAggregations);
   };
 
   aggregateBasals = group => {
@@ -116,6 +117,25 @@ export class AggregationUtil {
     return result;
   };
 
+  aggregateSiteChanges = group => {
+    this.dataUtil.filter.byType('deviceEvent');
+
+    const reducer = reductio();
+    reducer.dataList(true);
+
+    const tags = [
+      'cannulaPrime',
+      'reservoirChange',
+      'tubingPrime',
+    ];
+
+    _.each(tags, tag => this.reduceByTag(tag, 'deviceEvent', reducer));
+
+    reducer(group);
+
+    return group.post().postProcessSiteChangeAggregations()();
+  };
+
   /**
    * postProcessBasalAggregations
    *
@@ -144,7 +164,7 @@ export class AggregationUtil {
       _.each(dataList, this.dataUtil.normalizeDatumOut);
 
       processedData[dataForDay.key] = {
-        data: dataList,
+        data: _.sortBy(dataList, this.dataUtil.activeTimeField),
         total: _.reduce([suspend, temp], (acc, { count = 0 }) => acc + count, 0),
         subtotals: {
           suspend: suspend.count,
@@ -238,7 +258,7 @@ export class AggregationUtil {
     _.each(data, dataForDay => {
       const {
         value: {
-          calibration,
+          calibration, // TODO: check consistency w/ tideline
         },
       } = dataForDay;
 
@@ -246,6 +266,45 @@ export class AggregationUtil {
         total: calibration.count,
         subtotals: {
           calibration: calibration.count,
+        },
+      };
+    });
+
+    return this.summarizeProcessedData(processedData);
+  };
+
+  /**
+   * postProcessSiteChangeAggregations
+   *
+   * Post processor for crossfilter reductio siteChange aggregations
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} formatted total and subtotal data for siteChange aggregations
+   */
+  postProcessSiteChangeAggregations = priorResults => () => {
+    const data = _.filter(
+      _.cloneDeep(priorResults()),
+      ({ value: { dataList } }) => !_.isEmpty(dataList)
+    );
+
+    const processedData = {};
+
+    _.each(data, dataForDay => {
+      const {
+        value: {
+          dataList,
+          cannulaPrime,
+          reservoirChange,
+          tubingPrime,
+        },
+      } = dataForDay;
+
+      processedData[dataForDay.key] = {
+        total: dataList.length,
+        subtotals: {
+          cannulaPrime: cannulaPrime.count,
+          reservoirChange: reservoirChange.count,
+          tubingPrime: tubingPrime.count,
         },
       };
     });
