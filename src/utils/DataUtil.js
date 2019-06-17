@@ -1,5 +1,4 @@
 import bows from 'bows';
-import reductio from 'reductio';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
 import _ from 'lodash';
@@ -18,10 +17,7 @@ import {
   isUnderride,
 } from './bolus';
 
-import {
-  classifyBgValue,
-  convertToMGDL,
-} from './bloodglucose';
+import { convertToMGDL } from './bloodglucose';
 
 import {
   BGM_DATA_KEY,
