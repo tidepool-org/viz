@@ -189,3 +189,56 @@ export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
   return deviceId.indexOf('AbbottFreeStyleLibre') === 0 ? 15 * MS_IN_MIN : 5 * MS_IN_MIN;
 }
+
+/**
+ * postProcessBolusAggregations
+ *
+ * Post processor for crossfilter reductio bolus aggregations
+ *
+ * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+ * @returns {Object} formatted total and subtotal data for bolus aggregations
+ */
+export const postProcessSMBGAggregations = priorResults => () => {
+  const data = _.filter(
+    _.cloneDeep(priorResults()),
+    ({ value: { dataList } }) => !_.isEmpty(dataList)
+  );
+
+  const processedData = {};
+
+  _.each(data, dataForDay => {
+    const {
+      value: {
+        dataList,
+        manual,
+        meter,
+        veryHigh,
+        veryLow,
+      },
+    } = dataForDay;
+
+    processedData[dataForDay.key] = {
+      total: dataList.length,
+      subtotals: {
+        manual: manual.count,
+        meter: meter.count,
+        veryHigh: veryHigh.count,
+        veryLow: veryLow.count,
+      },
+    };
+  });
+
+  return {
+    summary: {
+      total: _.sumBy(_.values(processedData), dateData => dateData.total),
+      subtotals: _.reduce(_.map(_.values(processedData), 'subtotals'), (acc, subtotals) => {
+        const tags = _.keysIn(subtotals);
+        _.each(tags, tag => {
+          acc[tag] = (acc[tag] || 0) + subtotals[tag];
+        });
+        return acc;
+      }, {}),
+    },
+    byDate: processedData,
+  };
+};

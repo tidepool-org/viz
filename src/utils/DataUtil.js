@@ -5,6 +5,14 @@ import moment from 'moment-timezone';
 import _ from 'lodash';
 
 import { postProcessBasalAggregations } from './basal';
+
+import {
+  getLatestPumpUpload,
+  getLastManualBasalSchedule,
+  isAutomatedBasalDevice,
+  postProcessCalibrationAggregations,
+} from './device';
+
 import {
   hasExtended,
   isCorrection,
@@ -14,9 +22,17 @@ import {
   postProcessBolusAggregations,
 } from './bolus';
 
+import {
+  classifyBgValue,
+  convertToMGDL,
+  postProcessSMBGAggregations,
+} from './bloodglucose';
+
 // Register reductio aggregation post-processors
 reductio.registerPostProcessor('postProcessBasalAggregations', postProcessBasalAggregations);
 reductio.registerPostProcessor('postProcessBolusAggregations', postProcessBolusAggregations);
+reductio.registerPostProcessor('postProcessSMBGAggregations', postProcessSMBGAggregations);
+reductio.registerPostProcessor('postProcessCalibrationAggregations', postProcessCalibrationAggregations);
 
 import {
   BGM_DATA_KEY,
@@ -28,16 +44,12 @@ import {
 } from './constants';
 
 import {
-  convertToMGDL,
-} from './bloodglucose';
-
-import {
   getMsPer24,
   getOffset,
   getTimezoneFromTimePrefs,
 } from './datetime';
 
-import { getLatestPumpUpload, getLastManualBasalSchedule, isAutomatedBasalDevice } from './device';
+
 import StatUtil from './StatUtil';
 import { statFetchMethods } from './stat';
 import Validator from './validation/schema';
@@ -149,20 +161,36 @@ export class DataUtil {
   };
 
   tagDatum = d => {
-    d.tags = {};
     if (d.type === 'basal') {
-      d.tags.suspend = d.deliveryType === 'suspend';
-      d.tags.temp = d.deliveryType === 'temp';
+      d.tags = {
+        suspend: d.deliveryType === 'suspend',
+        temp: d.deliveryType === 'temp',
+      };
     }
 
     if (d.type === 'bolus') {
-      d.tags.correction = isCorrection(d);
-      d.tags.extended = hasExtended(d);
-      d.tags.interrupted = isInterruptedBolus(d);
-      d.tags.manual = !d.wizard;
-      d.tags.override = isOverride(d);
-      d.tags.underride = isUnderride(d);
-      d.tags.wizard = !!d.wizard;
+      d.tags = {
+        correction: isCorrection(d),
+        extended: hasExtended(d),
+        interrupted: isInterruptedBolus(d),
+        manual: !d.wizard,
+        override: isOverride(d),
+        underride: isUnderride(d),
+        wizard: !!d.wizard,
+      };
+    }
+
+    if (d.type === 'smbg') {
+      d.tags = {
+        manual: d.subType === 'manual',
+        meter: d.subType !== 'manual',
+      };
+    }
+
+    if (d.type === 'deviceEvent') {
+      d.tags = {
+        calibration: d.subType === 'calibration',
+      };
     }
   };
 
@@ -779,11 +807,23 @@ export class DataUtil {
     const groupByDate = this.dimension.byDate.group();
 
     /* eslint-disable lodash/prefer-lodash-method */
-    const reduceByTag = (tag, reducer) => {
+    const reduceByTag = (tag, type, reducer) => {
       reducer
         .value(tag)
         .count(true)
-        .filter(d => d.tags[tag]);
+        .filter(d => d.type === type && d.tags[tag]);
+    };
+
+    const reduceByBgClassification = (bgClass, type, reducer) => {
+      reducer
+        .value(bgClass)
+        .count(true)
+        .filter(d => {
+          if (d.type !== type) return false;
+          const datum = _.clone(d);
+          this.normalizeDatumBgUnits(datum);
+          return classifyBgValue(this.bgPrefs.bgBounds, datum.value, 'fiveWay') === bgClass;
+        });
     };
 
     _.each(selectedAggregationsByDate, aggregationType => {
@@ -800,7 +840,7 @@ export class DataUtil {
           'temp',
         ];
 
-        _.each(tags, tag => reduceByTag(tag, reducer));
+        _.each(tags, tag => reduceByTag(tag, 'basal', reducer));
 
         reducer(groupByDate);
 
@@ -823,7 +863,7 @@ export class DataUtil {
           'wizard',
         ];
 
-        _.each(tags, tag => reduceByTag(tag, reducer));
+        _.each(tags, tag => reduceByTag(tag, 'bolus', reducer));
 
         reducer(groupByDate);
 
@@ -831,23 +871,45 @@ export class DataUtil {
       }
 
       if (aggregationType === 'fingersticks') {
-        generatedAggregationsByDate.smbg = {
-          type: 'smbg',
-          // dimensions: [
-          //   { path: 'smbg', key: 'total', label: t('Avg per day'), average: true, primary: true },
-          //   { path: 'smbg', key: 'meter', label: t('Meter'), percentage: true },
-          //   { path: 'smbg', key: 'manual', label: t('Manual'), percentage: true },
-          //   { path: 'smbg', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
-          //   { path: 'smbg', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
-          // ],
+        this.filter.byType('smbg');
+
+        let reducer = reductio();
+        reducer.dataList(true);
+
+        let tags = [
+          'manual',
+          'meter',
+        ];
+
+        _.each(tags, tag => reduceByTag(tag, 'smbg', reducer));
+
+        const bgClasses = [
+          'veryLow',
+          'veryHigh',
+        ];
+
+        _.each(bgClasses, bgClass => reduceByBgClassification(bgClass, 'smbg', reducer));
+
+        reducer(groupByDate);
+
+        result = {
+          smbg: groupByDate.post().postProcessSMBGAggregations()(),
         };
-        generatedAggregationsByDate.calibration = {
-          type: 'deviceEvent',
-          subType: 'calibration',
-          // dimensions: [
-          //   { path: 'calibration', key: 'total', label: t('Calibrations') },
-          // ],
-        };
+
+        this.filter.byType('deviceEvent');
+
+        reducer = reductio();
+        reducer.dataList(true);
+
+        tags = [
+          'calibration',
+        ];
+
+        _.each(tags, tag => reduceByTag(tag, 'deviceEvent', reducer));
+
+        reducer(groupByDate);
+
+        result.calibration = groupByDate.post().postProcessCalibrationAggregations()();
       }
 
       if (aggregationType === 'siteChanges') {
