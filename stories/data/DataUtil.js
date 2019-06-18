@@ -447,9 +447,9 @@ stories.add('Query Generator', () => {
     const selectedAggregationsByDate = options(
       'Aggregations By Date',
       aggregationsByDate,
-      // _.values(aggregationsByDate),
+      _.values(aggregationsByDate),
       // [aggregationsByDate.basals, aggregationsByDate.boluses, aggregationsByDate.fingersticks],
-      [aggregationsByDate.siteChanges],
+      // [aggregationsByDate.siteChanges],
       { display: 'check' },
       GROUP_STATS,
     );

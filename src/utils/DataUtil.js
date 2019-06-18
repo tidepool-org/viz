@@ -743,7 +743,8 @@ export class DataUtil {
         data[rangeKey].stats = this.getStats(stats);
       }
 
-      if (aggregationsByDate) {
+      // Generate the aggregations for current range
+      if (aggregationsByDate && rangeKey === 'current') {
         data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
       }
 
