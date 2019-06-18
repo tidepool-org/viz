@@ -427,19 +427,24 @@ export class AggregationUtil {
   };
   /* eslint-enable lodash/prefer-lodash-method */
 
-  summarizeProcessedData = (processedData) => ({
-    summary: {
-      total: _.sumBy(_.values(processedData), dateData => dateData.total),
-      subtotals: _.reduce(_.map(_.values(processedData), 'subtotals'), (acc, subtotals) => {
-        const tags = _.keysIn(subtotals);
-        _.each(tags, tag => {
-          acc[tag] = (acc[tag] || 0) + subtotals[tag];
-        });
-        return acc;
-      }, {}),
-    },
-    byDate: processedData,
-  });
+  summarizeProcessedData = (processedData) => {
+    const total = _.sumBy(_.values(processedData), dateData => dateData.total);
+    const avgPerDay = total / this.dataUtil.activeEndpoints.activeDays; // TODO: exclude most recent
+    return {
+      summary: {
+        avgPerDay,
+        total,
+        subtotals: _.reduce(_.map(_.values(processedData), 'subtotals'), (acc, subtotals) => {
+          const tags = _.keysIn(subtotals);
+          _.each(tags, tag => {
+            acc[tag] = (acc[tag] || 0) + subtotals[tag];
+          });
+          return acc;
+        }, {}),
+      },
+      byDate: processedData,
+    };
+  };
 }
 
 export default AggregationUtil;
