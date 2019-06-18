@@ -437,7 +437,12 @@ export class AggregationUtil {
         subtotals: _.reduce(_.map(_.values(processedData), 'subtotals'), (acc, subtotals) => {
           const tags = _.keysIn(subtotals);
           _.each(tags, tag => {
-            acc[tag] = (acc[tag] || 0) + subtotals[tag];
+            const count = _.get(acc, [tag, 'count'], 0) + subtotals[tag];
+            const percentage = count / total;
+            acc[tag] = {
+              count,
+              percentage,
+            };
           });
           return acc;
         }, {}),
