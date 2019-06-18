@@ -317,7 +317,7 @@ export class AggregationUtil {
       _.each(siteChangeTypes, type => {
         if (previousSiteChangeDatums[type]) {
           previousSiteChangeDates[type] = formatLocalizedFromUTC(
-            previousSiteChangeDatums.reservoirChange[this.dataUtil.activeTimeField],
+            previousSiteChangeDatums[type][this.dataUtil.activeTimeField],
             this.dataUtil.timePrefs,
             dateFormat
           );
