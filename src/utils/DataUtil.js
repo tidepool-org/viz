@@ -72,6 +72,7 @@ export class DataUtil {
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
+    this.latestDatumByType = this.latestDatumByType || {};
 
     // We first clone the raw data so we don't mutate it at the source
     const data = _.cloneDeep(rawData);
@@ -124,6 +125,8 @@ export class DataUtil {
     // which improves dimension filtering performance significantly over using ISO strings
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
+
+    if (d.time > _.get(this.latestDatumByType, [d.type, 'time'], 0)) this.latestDatumByType[d.type] = d;
 
     // Populate mappings to be used for 2-way join of boluses and wizards
     if (d.type === 'wizard' && _.isString(d.bolus)) {
@@ -473,41 +476,35 @@ export class DataUtil {
     this.bgSources = bgSources;
   };
 
-  setLatestPump = () => {
-    this.startTimer('setLatestPump');
+  setLatestPumpUpload = () => {
+    this.startTimer('setLatestPumpUpload');
     this.clearFilters();
 
     const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
     const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
 
     if (latestPumpUpload) {
-      this.normalizeDatumOut(latestPumpUpload);
       const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
 
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
 
-      const pumpSettingsData = this.sort.byTime(this.filter.byType('pumpSettings').top(Infinity));
-      const latestPumpSettings = _.cloneDeep(_.findLast(pumpSettingsData));
+      const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
 
-      if (latestPumpSettings) {
-        this.normalizeDatumOut(latestPumpSettings);
-
-        if (pumpIsAutomatedBasalDevice) {
-          const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
-          latestPumpSettings.lastManualBasalSchedule = getLastManualBasalSchedule(basalData);
-        }
+      if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
+        const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
+        latestPumpSettings.lastManualBasalSchedule = getLastManualBasalSchedule(basalData);
       }
 
-      this.latestPump = {
+      this.latestPumpUpload = {
         deviceModel,
         isAutomatedBasalDevice: pumpIsAutomatedBasalDevice,
         manufacturer,
         settings: latestPumpSettings,
       };
     }
-    this.endTimer('setLatestPump');
+    this.endTimer('setLatestPumpUpload');
   };
 
   setUploadMap = () => {
@@ -566,7 +563,7 @@ export class DataUtil {
     this.setActiveDays();
     this.setTypes();
     this.setUploadMap();
-    this.setLatestPump();
+    this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.endTimer('setMetaData');
   };
@@ -690,8 +687,6 @@ export class DataUtil {
       bgBounds,
       bgUnits,
     };
-
-    this.setLatestPump();
   };
 
   query = (query = {}) => {
@@ -825,16 +820,24 @@ export class DataUtil {
   getMetaData = (metaData) => {
     this.startTimer('generate metaData');
     const allowedMetaData = [
-      'latestPump',
+      'latestPumpUpload',
+      'latestDatumByType',
       'bgSources',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
 
-    const selectedMetaData = _.pick(
+    const selectedMetaData = _.cloneDeep(_.pick(
       this,
       _.intersection(allowedMetaData, requestedMetaData),
-    );
+    ));
+
+    _.each(selectedMetaData.latestDatumByType, this.normalizeDatumOut);
+
+    if (_.get(selectedMetaData, 'latestPumpUpload.settings')) {
+      this.normalizeDatumOut(selectedMetaData.latestPumpUpload.settings);
+    }
+
     this.endTimer('generate metaData');
     return selectedMetaData;
   };
