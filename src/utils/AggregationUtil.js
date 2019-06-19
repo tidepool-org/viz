@@ -165,27 +165,31 @@ export class AggregationUtil {
 
       _.each(dataList, this.dataUtil.normalizeDatumOut);
 
-      processedData[dataForDay.key] = {
-        data: _.sortBy(dataList, this.dataUtil.activeTimeField),
-        total: _.reduce([suspend, temp], (acc, { count = 0 }) => acc + count, 0),
-        subtotals: {
-          suspend: suspend.count,
-          temp: temp.count,
-        },
-      };
+      const total = _.reduce([suspend, temp], (acc, { count = 0 }) => acc + count, 0);
 
-      _.assign(
-        processedData[dataForDay.key],
-        countAutomatedBasalEvents(processedData[dataForDay.key]),
-      );
+      if (total) {
+        processedData[dataForDay.key] = {
+          data: _.sortBy(dataList, this.dataUtil.activeTimeField),
+          total,
+          subtotals: {
+            suspend: suspend.count,
+            temp: temp.count,
+          },
+        };
 
-      _.assign(
-        processedData[dataForDay.key],
-        countDistinctSuspends(processedData[dataForDay.key]),
-      );
+        _.assign(
+          processedData[dataForDay.key],
+          countAutomatedBasalEvents(processedData[dataForDay.key]),
+        );
 
-      // No need to return the data - we only want the aggregations
-      delete processedData[dataForDay.key].data;
+        _.assign(
+          processedData[dataForDay.key],
+          countDistinctSuspends(processedData[dataForDay.key]),
+        );
+
+        // No need to return the data - we only want the aggregations
+        delete processedData[dataForDay.key].data;
+      }
     });
 
     return this.summarizeProcessedData(processedData);
@@ -221,21 +225,22 @@ export class AggregationUtil {
         },
       } = dataForDay;
 
-      processedData[dataForDay.key] = {
-        total: dataList.length,
-        subtotals: {
-          correction: correction.count,
-          extended: extended.count,
-          interrupted: interrupted.count,
-          manual: manual.count,
-          override: override.count,
-          underride: underride.count,
-          wizard: wizard.count,
-        },
-      };
+      const total = dataList.length;
 
-      // No need to return the data - we only want the aggregations
-      delete processedData[dataForDay.key].data;
+      if (total) {
+        processedData[dataForDay.key] = {
+          total,
+          subtotals: {
+            correction: correction.count,
+            extended: extended.count,
+            interrupted: interrupted.count,
+            manual: manual.count,
+            override: override.count,
+            underride: underride.count,
+            wizard: wizard.count,
+          },
+        };
+      }
     });
 
     return this.summarizeProcessedData(processedData);
@@ -260,16 +265,20 @@ export class AggregationUtil {
     _.each(data, dataForDay => {
       const {
         value: {
-          calibration, // TODO: check consistency w/ tideline
+          calibration,
         },
       } = dataForDay;
 
-      processedData[dataForDay.key] = {
-        total: calibration.count,
-        subtotals: {
-          calibration: calibration.count,
-        },
-      };
+      const total = calibration.count;
+
+      if (total) {
+        processedData[dataForDay.key] = {
+          total,
+          subtotals: {
+            calibration: calibration.count,
+          },
+        };
+      }
     });
 
     return this.summarizeProcessedData(processedData);
@@ -390,15 +399,19 @@ export class AggregationUtil {
         },
       } = dataForDay;
 
-      processedData[dataForDay.key] = {
-        total: dataList.length,
-        subtotals: {
-          manual: manual.count,
-          meter: meter.count,
-          veryHigh: veryHigh.count,
-          veryLow: veryLow.count,
-        },
-      };
+      const total = dataList.length;
+
+      if (total) {
+        processedData[dataForDay.key] = {
+          total,
+          subtotals: {
+            manual: manual.count,
+            meter: meter.count,
+            veryHigh: veryHigh.count,
+            veryLow: veryLow.count,
+          },
+        };
+      }
     });
 
     return this.summarizeProcessedData(processedData);
@@ -429,7 +442,7 @@ export class AggregationUtil {
 
   summarizeProcessedData = (processedData) => {
     const total = _.sumBy(_.values(processedData), dateData => dateData.total);
-    const avgPerDay = total / this.dataUtil.activeEndpoints.activeDays; // TODO: exclude most recent
+    const avgPerDay = total / this.dataUtil.activeEndpoints.activeDays;
     return {
       summary: {
         avgPerDay,
