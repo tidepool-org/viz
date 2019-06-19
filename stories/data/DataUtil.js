@@ -108,9 +108,9 @@ stories.add('Query Generator', () => {
     return moment.utc(endDate);
   };
 
-  // const daysInRange = 1;
+  const daysInRange = 1;
   // const daysInRange = 18;
-  const daysInRange = 17;
+  // const daysInRange = 17;
   // const daysInRange = 14;
   // const daysInRange = 30;
   const daysInRangeOptions = {
@@ -331,7 +331,8 @@ stories.add('Query Generator', () => {
   };
 
   const metadata = {
-    latestPump: 'latestPump',
+    latestPumpUpload: 'latestPumpUpload',
+    latestDatumByType: 'latestDatumByType',
     bgSources: 'bgSources',
   };
 
@@ -342,10 +343,7 @@ stories.add('Query Generator', () => {
       'MetaData',
       metadata,
       // _.values(metadata),
-      // ['smbg', 'pumpSettings'],
-      // ['pumpSettings'],
       ['bgSources'],
-      // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
       GROUP_DATA,
     );

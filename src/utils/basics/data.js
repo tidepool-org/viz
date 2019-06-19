@@ -655,7 +655,7 @@ export function generateCalendarDayLabels(days) {
  * Set the availability of basics sections
  *
  * @export
- * @param {any} sections
+ * @param {Object} Provided data with empty sections disabled and empty text statements provided
  */
 export function disableEmptySections(data) {
   const basicsData = _.cloneDeep(data);
@@ -751,4 +751,44 @@ export function disableEmptySections(data) {
   });
 
   return basicsData;
+}
+
+/**
+ * Get a keyed list of dates in range, designated as future, past, or most recent
+ * @param {Array} range - The start and end points (Zulu timestamp or integer hammertime)
+ * @param {String} timezone - A valid timezone, UTC if undefined
+ * @returns {Object} Map of objects keyed by date
+ */
+export function findBasicsDays(range, timezone = 'UTC') {
+  let currentDate = new Date(range[0]);
+  const days = [];
+  const dateOfUpload = moment.utc(Date.parse(range[1])).tz(timezone).format('YYYY-MM-DD');
+  while (currentDate < moment.utc(Date.parse(range[1])).tz(timezone).endOf('isoWeek')) {
+    const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
+    const dateObj = { date };
+    if (date < dateOfUpload) {
+      dateObj.type = 'past';
+    } else if (date === dateOfUpload) {
+      dateObj.type = 'mostRecent';
+    } else {
+      dateObj.type = 'future';
+    }
+    days.push(dateObj);
+    currentDate = moment.utc(currentDate).tz(timezone).add(1, 'days').toDate();
+  }
+  return days;
+}
+
+/**
+ * Find the appropriate start endpoint for basics calendars given the timestamp of the latest datum
+ * @param {String} timestamp - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezone - A valid timezone, UTC if undefined
+ * @returns {String} ISO date string relative to provided timezone
+ */
+export function findBasicsStart(timestamp, timezone = 'UTC') {
+  return moment.utc(Date.parse(timestamp)).tz(timezone)
+    .startOf('isoWeek')
+    .subtract(14, 'days')
+    .toDate()
+    .toISOString();
 }
