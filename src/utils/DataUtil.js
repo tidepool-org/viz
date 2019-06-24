@@ -24,6 +24,7 @@ import {
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
   MS_IN_DAY,
+  MS_IN_HOUR,
   MS_IN_MIN,
   MGDL_UNITS,
 } from './constants';
@@ -274,6 +275,31 @@ export class DataUtil {
     if (d.type === 'bolus') {
       if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard);
     }
+
+    if (d.type === 'fill') {
+      const colorsByHour = {
+        0: 'darkest',
+        3: 'dark',
+        6: 'lighter',
+        9: 'light',
+        12: 'lightest',
+        15: 'lighter',
+        18: 'dark',
+        21: 'darker',
+      };
+
+      const localTime = d.normalTime + (d.displayOffset * MS_IN_MIN);
+      const hourOfDay = +moment.utc(localTime).format('H');
+      const isoDate = moment.utc(d.normalTime).toISOString();
+
+      d.fillDate = isoDate.slice(0, 10);
+      d.id = `fill_${isoDate.replace(/[^\w\s]|_/g, '')}`;
+      d.normalEnd = d.normalTime + d.duration;
+      d.fillColor = colorsByHour[hourOfDay];
+      d.startsAtMidnight = hourOfDay === 0;
+
+      if (_.includes(fields, 'msPer24')) d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+    }
   };
 
   normalizeDatumOutTime = (d, fields = []) => {
@@ -456,7 +482,7 @@ export class DataUtil {
     this.dimension.byDayOfWeek.filterAll();
   };
 
-  setBgSources = (current) => {
+  setBgSources = current => {
     this.clearFilters();
 
     const bgSources = {
@@ -697,6 +723,7 @@ export class DataUtil {
       bgPrefs,
       bgSource,
       endpoints,
+      fillData,
       metaData,
       stats,
       timePrefs,
@@ -749,6 +776,11 @@ export class DataUtil {
       if (this.types.length) {
         data[rangeKey].data = this.getTypeData(this.types);
       }
+
+      // Generate the requested fillData
+      if (fillData) {
+        data[rangeKey].fillData = this.getFillData(this.activeEndpoints.range, fillData);
+      }
     });
     this.endTimer('query total');
 
@@ -765,7 +797,7 @@ export class DataUtil {
     return result;
   };
 
-  getStats = (stats) => {
+  getStats = stats => {
     this.startTimer('generate stats');
     const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
     const generatedStats = {};
@@ -785,7 +817,7 @@ export class DataUtil {
     return generatedStats;
   };
 
-  getAggregationsByDate = (aggregationsByDate) => {
+  getAggregationsByDate = aggregationsByDate => {
     this.startTimer('generate aggregationsByDate');
     const selectedAggregationsByDate = _.isString(aggregationsByDate) ? _.map(aggregationsByDate.split(','), _.trim) : aggregationsByDate;
     const generatedAggregationsByDate = {};
@@ -817,7 +849,38 @@ export class DataUtil {
     return generatedAggregationsByDate;
   };
 
-  getMetaData = (metaData) => {
+  getFillData = (endpoints, opts) => {
+    this.startTimer('generate fillData');
+    const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
+    const duration = 3 * MS_IN_HOUR;
+    let start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
+    const end = start + this.activeEndpoints.days * MS_IN_DAY;
+    const bins = [];
+
+    while (end > start) {
+      bins.push({
+        type: 'fill',
+        time: start,
+        duration,
+      });
+
+      start += duration;
+    }
+
+    const fields = [];
+
+    if (opts.adjustForDSTChanges) {
+      fields.push('msPer24');
+      // TODO: Fix gaps and overlaps resulting from DST changeovers
+    }
+
+    _.each(bins, d => this.normalizeDatumOut(d, fields));
+
+    this.endTimer('generate fillData');
+    return bins;
+  }
+
+  getMetaData = metaData => {
     this.startTimer('generate metaData');
     const allowedMetaData = [
       'latestPumpUpload',
@@ -842,7 +905,7 @@ export class DataUtil {
     return selectedMetaData;
   };
 
-  getPreviousSiteChangeDatums = (datum) => {
+  getPreviousSiteChangeDatums = datum => {
     // We need to ensure all the days of the week are active to ensure we get all siteChanges
     this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
@@ -878,7 +941,7 @@ export class DataUtil {
     return previousSiteChangeDatums;
   };
 
-  getTypeData = (types) => {
+  getTypeData = types => {
     const generatedData = {};
 
     _.each(types, ({ type, select, sort = {} }) => {
@@ -919,7 +982,7 @@ export class DataUtil {
     return generatedData;
   };
 
-  addBasalOverlappingStart = (basalData) => {
+  addBasalOverlappingStart = basalData => {
     _.each(basalData, this.normalizeDatumOut);
 
     if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {

@@ -336,11 +336,11 @@ stories.add('Query Generator', () => {
     bgSources: 'bgSources',
   };
 
-  const getMetaDataQueryFormat = () => options('MetaData Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_DATA);
+  const getMetaDataQueryFormat = () => options('Metadata Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_DATA);
   const getMetaData = () => {
     const queryFormat = getMetaDataQueryFormat();
     const selectedMetaData = options(
-      'MetaData',
+      'Metadata',
       metadata,
       // _.values(metadata),
       ['bgSources'],
@@ -352,6 +352,9 @@ stories.add('Query Generator', () => {
 
     return queryFormat === 'string' ? selectedMetaData.join(',') : selectedMetaData;
   };
+
+  const getFillData = () => boolean('Generate Fill Data', true, GROUP_DATA);
+  const adjustForDSTChanges = () => boolean('Adjust Fill Data for DST Changes', true, GROUP_DATA);
 
   const activeDays = {
     sunday: '0',
@@ -479,6 +482,10 @@ stories.add('Query Generator', () => {
     aggregationsByDate: getAggregationsByDate(),
     metaData: getMetaData(),
   };
+
+  if (getFillData()) {
+    defaultQuery.fillData = { adjustForDSTChanges: adjustForDSTChanges() };
+  }
 
   const showData = () => boolean('Render Data', true, GROUP_RESULTS);
   const showStats = () => boolean('Render Stats', true, GROUP_RESULTS);
