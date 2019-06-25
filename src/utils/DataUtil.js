@@ -424,7 +424,7 @@ export class DataUtil {
   };
 
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
-  // where performance will drop as per crossfilter docs.
+  // which would introduce additional performance overhead as per crossfilter docs.
   buildDimensions = () => {
     this.startTimer('buildDimensions');
     this.dimension = {};
@@ -686,6 +686,8 @@ export class DataUtil {
 
     if (timezoneAwareChanged) {
       this.log('Time Field Change', this.activeTimeField === 'time' ? 'deviceTime' : 'time', 'to', this.activeTimeField);
+
+      // Recreate the byTime dimension to index on the proper time field.
       this.buildByTimeDimension();
     }
   };
