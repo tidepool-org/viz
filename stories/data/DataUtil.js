@@ -101,8 +101,13 @@ const Results = ({ results, showData, showStats }) => {
 const dataUtil = new DataUtil(data);
 stories.add('Query Generator', () => {
   // const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
-  // const endMoment = moment.utc('2018-03-29').startOf('day').add(1, 'd');
   const endMoment = moment.utc('2019-04-10').startOf('day').add(1, 'd');
+  // const endMoment = moment.utc('2018-03-29').startOf('day').add(1, 'd');
+
+  // DST Changeovers
+  // const endMoment = moment.utc('2019-03-10').startOf('day').add(1, 'd');
+  // const endMoment = moment.utc('2018-11-04').startOf('day').add(1, 'd');
+
   const getEndMoment = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
     return moment.utc(endDate);

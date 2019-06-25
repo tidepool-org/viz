@@ -1,6 +1,7 @@
 import bows from 'bows';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
+import { utcHour } from 'd3-time';
 import _ from 'lodash';
 
 import {
@@ -277,28 +278,14 @@ export class DataUtil {
     }
 
     if (d.type === 'fill') {
-      const colorsByHour = {
-        0: 'darkest',
-        3: 'dark',
-        6: 'lighter',
-        9: 'light',
-        12: 'lightest',
-        15: 'lighter',
-        18: 'dark',
-        21: 'darker',
-      };
+      const localTime = d.normalTime + d.displayOffset * MS_IN_MIN;
+      const normalTimeISO = moment.utc(d.normalTime).toISOString();
 
-      const localTime = d.normalTime + (d.displayOffset * MS_IN_MIN);
-      const hourOfDay = +moment.utc(localTime).format('H');
-      const isoDate = moment.utc(d.normalTime).toISOString();
-
-      d.fillDate = isoDate.slice(0, 10);
-      d.id = `fill_${isoDate.replace(/[^\w\s]|_/g, '')}`;
       d.normalEnd = d.normalTime + d.duration;
-      d.fillColor = colorsByHour[hourOfDay];
-      d.startsAtMidnight = hourOfDay === 0;
-
-      if (_.includes(fields, 'msPer24')) d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+      d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+      d.hourOfDay = d.msPer24 / MS_IN_HOUR;
+      d.fillDate = moment.utc(localTime).toISOString().slice(0, 10);
+      d.id = `fill_${normalTimeISO.replace(/[^\w\s]|_/g, '')}`;
     }
   };
 
@@ -779,7 +766,7 @@ export class DataUtil {
 
       // Generate the requested fillData
       if (fillData) {
-        data[rangeKey].fillData = this.getFillData(this.activeEndpoints.range, fillData);
+        data[rangeKey].data.fill = this.getFillData(this.activeEndpoints.range, fillData);
       }
     });
     this.endTimer('query total');
@@ -852,32 +839,46 @@ export class DataUtil {
   getFillData = (endpoints, opts) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
-    const duration = 3 * MS_IN_HOUR;
-    let start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
+    const fillHours = 3;
+    const duration = fillHours * MS_IN_HOUR;
+
+    const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
     const end = start + this.activeEndpoints.days * MS_IN_DAY;
-    const bins = [];
+    const hourlyStarts = utcHour.range(start, end);
 
-    while (end > start) {
-      bins.push({
-        type: 'fill',
-        time: start,
+    const fillData = [];
+    let prevFill = null;
+
+    _.each(hourlyStarts, startTime => {
+      const fill = {
         duration,
-      });
+        time: startTime.valueOf(),
+        type: 'fill',
+      };
+      this.normalizeDatumOut(fill);
 
-      start += duration;
-    }
+      if (fill.hourOfDay % fillHours === 0) {
+        if (opts.adjustForDSTChanges) {
+          if (prevFill && fill.normalTime !== prevFill.normalEnd) {
+            if (fill.normalTime > prevFill.normalEnd) {
+              // Adjust for Fall Back gap
+              prevFill.normalEnd = fill.normalTime;
+            } else if (fill.normalTime < prevFill.normalEnd) {
+              // Adjust for Spring Forward overlap
+              prevFill.normalEnd = fill.normalTime;
+            }
 
-    const fields = [];
+            fillData.splice(-1, 1, prevFill);
+          }
+        }
 
-    if (opts.adjustForDSTChanges) {
-      fields.push('msPer24');
-      // TODO: Fix gaps and overlaps resulting from DST changeovers
-    }
-
-    _.each(bins, d => this.normalizeDatumOut(d, fields));
+        fillData.push(fill);
+        prevFill = fill;
+      }
+    });
 
     this.endTimer('generate fillData');
-    return bins;
+    return fillData;
   }
 
   getMetaData = metaData => {
