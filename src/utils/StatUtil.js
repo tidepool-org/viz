@@ -24,12 +24,10 @@ export class StatUtil {
     this.dataUtil = dataUtil;
     this.bgBounds = _.get(dataUtil, 'bgPrefs.bgBounds');
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
-    this.days = dataUtil.activeEndpoints.days;
-    this.activeDays = dataUtil.activeEndpoints.activeDays;
     this.bgSource = _.get(dataUtil, 'bgSources.current', BGM_DATA_KEY);
+    this.activeDays = dataUtil.activeEndpoints.activeDays;
     this.endpoints = dataUtil.activeEndpoints.range;
 
-    this.log('days', this.days);
     this.log('activeDays', this.activeDays);
     this.log('bgSource', this.bgSource);
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
@@ -157,7 +155,7 @@ export class StatUtil {
     );
 
     const insufficientData = this.bgSource === 'smbg'
-      || this.days < 14
+      || this.activeDays < 14
       || getTotalCbgDuration() < 14 * MS_IN_DAY * 0.7;
 
     if (insufficientData) {

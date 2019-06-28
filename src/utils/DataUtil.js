@@ -128,6 +128,7 @@ export class DataUtil {
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
 
+    // Generate a map of latest datums by type
     if (d.time > _.get(this.latestDatumByType, [d.type, 'time'], 0)) this.latestDatumByType[d.type] = d;
 
     // Populate mappings to be used for 2-way join of boluses and wizards

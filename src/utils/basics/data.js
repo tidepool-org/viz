@@ -551,8 +551,12 @@ export function reduceByDay(data, bgPrefs) {
     }
 
     if (type === 'basal') {
-      _.each(typeObj.dataByDate, countAutomatedBasalEvents);
-      _.each(typeObj.dataByDate, countDistinctSuspends);
+      _.each(typeObj.dataByDate, (dateData, date) => {
+        typeObj.dataByDate[date] = countAutomatedBasalEvents(dateData);
+      });
+      _.each(typeObj.dataByDate, (dateData, date) => {
+        typeObj.dataByDate[date] = countDistinctSuspends(dateData);
+      });
     }
 
     if (_.includes(['calibration', 'smbg'], type)) {

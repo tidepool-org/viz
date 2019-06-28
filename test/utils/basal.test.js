@@ -22,6 +22,37 @@ import * as basals from '../../data/basal/fixtures';
 import * as basalUtils from '../../src/utils/basal';
 import { Basal } from '../../data/types';
 import { addDuration } from '../../src/utils/datetime';
+import { reduceByDay } from '../../src/utils/basics/data';
+import {
+  MGDL_UNITS,
+  MMOLL_UNITS,
+} from '../../src/utils/constants';
+
+const bgBounds = {
+  [MGDL_UNITS]: {
+    veryHighThreshold: 300,
+    targetUpperBound: 180,
+    targetLowerBound: 70,
+    veryLowThreshold: 55,
+  },
+  [MMOLL_UNITS]: {
+    veryHighThreshold: 16.7,
+    targetUpperBound: 10.0,
+    targetLowerBound: 3.9,
+    veryLowThreshold: 3.1,
+  },
+};
+
+const bgPrefs = {
+  [MGDL_UNITS]: {
+    bgBounds: bgBounds[MGDL_UNITS],
+    bgUnits: MGDL_UNITS,
+  },
+  [MMOLL_UNITS]: {
+    bgBounds: bgBounds[MMOLL_UNITS],
+    bgUnits: MMOLL_UNITS,
+  },
+};
 
 const MS_IN_HOUR = 3600000;
 const MS_IN_DAY = 86400000;
@@ -519,6 +550,87 @@ describe('basal utilties', () => {
         automated: MS_IN_HOUR * 2,
         manual: MS_IN_HOUR * 8,
       });
+    });
+  });
+
+  describe('countAutomatedBasalEventsForDay', () => {
+    it('should count the number of `automatedStop` events and add them to the totals', () => {
+      const then = '2015-01-01T00:00:00.000Z';
+      const bd = {
+        data: {
+          basal: { data: [
+            { type: 'basal', deliveryType: 'temp', normalTime: then, displayOffset: 0 },
+            { type: 'basal', deliveryType: 'automated', normalTime: then, displayOffset: 0 },
+          ] },
+        },
+        days: [{ date: '2015-01-01', type: 'mostRecent' }],
+      };
+
+      const result = reduceByDay(bd, bgPrefs[MGDL_UNITS]);
+
+      expect(result.data.basal.dataByDate['2015-01-01'].subtotals.automatedStop).to.equal(0);
+      expect(result.data.basal.dataByDate['2015-01-01'].total).to.equal(1);
+
+      // Add a scheduled basal to kick out of automode
+      bd.data.basal.data.push({ type: 'basal', deliveryType: 'scheduled', normalTime: then, displayOffset: 0 });
+      const result2 = reduceByDay(bd, bgPrefs[MGDL_UNITS]);
+
+      expect(result2.data.basal.dataByDate['2015-01-01'].subtotals.automatedStop).to.equal(1);
+      expect(result2.data.basal.dataByDate['2015-01-01'].total).to.equal(2);
+    });
+  });
+
+  describe('countDistinctSuspendsForDay', () => {
+    it('should count contiguous `suspend` events as 1 and add them to the totals', () => {
+      const start1 = '2015-01-01T00:00:00.000Z';
+      const start2 = '2015-01-01T00:01:00.000Z';
+      const start3 = '2015-01-01T00:01:02.000Z';
+      const start4 = '2015-01-01T00:01:06.000Z';
+      const start5 = '2015-01-01T00:02:00.000Z';
+      const bd = {
+        data: {
+          basal: { data: [
+            { type: 'basal', deliveryType: 'scheduled', normalTime: start1, normalEnd: start2 },
+            { type: 'basal', deliveryType: 'suspend', normalTime: start2, normalEnd: start3 },
+            { type: 'basal', deliveryType: 'suspend', normalTime: start3, normalEnd: start4 },
+            { type: 'basal', deliveryType: 'suspend', normalTime: start4, normalEnd: start5 },
+            { type: 'basal', deliveryType: 'scheduled', normalTime: start5 },
+          ] },
+        },
+        days: [{ date: '2015-01-01', type: 'mostRecent' }],
+      };
+
+      const result = reduceByDay(bd, bgPrefs[MGDL_UNITS]);
+
+      // should only count the 3 suspends as 1, because they are contiguous
+      expect(result.data.basal.dataByDate['2015-01-01'].subtotals.suspend).to.equal(1);
+      expect(result.data.basal.dataByDate['2015-01-01'].total).to.equal(1);
+    });
+
+    it('should count non-contiguous `suspend` events as distict add them to the totals', () => {
+      const start1 = '2015-01-01T00:00:00.000Z';
+      const start2 = '2015-01-01T00:01:00.000Z';
+      const start3 = '2015-01-01T00:01:02.000Z';
+      const start4 = '2015-01-01T00:01:06.000Z';
+      const start5 = '2015-01-01T00:02:00.000Z';
+      const bd = {
+        data: {
+          basal: { data: [
+            { type: 'basal', deliveryType: 'scheduled', normalTime: start1, normalEnd: start2 },
+            { type: 'basal', deliveryType: 'suspend', normalTime: start2, normalEnd: start3 },
+            { type: 'basal', deliveryType: 'scheduled', normalTime: start3, normalEnd: start4 },
+            { type: 'basal', deliveryType: 'suspend', normalTime: start4, normalEnd: start5 },
+            { type: 'basal', deliveryType: 'scheduled', normalTime: start5 },
+          ] },
+        },
+        days: [{ date: '2015-01-01', type: 'mostRecent' }],
+      };
+
+      const result = reduceByDay(bd, bgPrefs[MGDL_UNITS]);
+
+      // should only count the 2 suspends as 2, because they are non-contiguous
+      expect(result.data.basal.dataByDate['2015-01-01'].subtotals.suspend).to.equal(2);
+      expect(result.data.basal.dataByDate['2015-01-01'].total).to.equal(2);
     });
   });
 });
