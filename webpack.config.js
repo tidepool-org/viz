@@ -126,7 +126,7 @@ const resolve = {
 };
 
 module.exports = {
-  devtool: 'sourcemap',
+  devtool: process.env.WEBPACK_DEVTOOL || 'eval-source-map',
   entry,
   mode: isDev ? 'development' : 'production',
   module: {
