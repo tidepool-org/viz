@@ -126,7 +126,8 @@ const resolve = {
 };
 
 module.exports = {
-  devtool: process.env.WEBPACK_DEVTOOL || 'eval-source-map',
+  cache: isDev,
+  devtool: isDev ? 'cheap-source-map' : undefined,
   entry,
   mode: isDev ? 'development' : 'production',
   module: {
