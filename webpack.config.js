@@ -126,7 +126,8 @@ const resolve = {
 };
 
 module.exports = {
-  devtool: 'sourcemap',
+  cache: isDev,
+  devtool: isDev ? 'cheap-source-map' : undefined,
   entry,
   mode: isDev ? 'development' : 'production',
   module: {
