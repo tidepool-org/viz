@@ -88,6 +88,7 @@ export class Basal extends Common {
       deviceTime: this.makeDeviceTime(),
       duration: MS_IN_DAY / 12,
       rate: 0.5,
+      scheduleName: 'standard',
     });
 
     this.type = 'basal';
@@ -96,6 +97,7 @@ export class Basal extends Common {
     this.deviceTime = opts.deviceTime;
     this.duration = opts.duration;
     this.rate = opts.rate;
+    this.scheduleName = opts.scheduleName;
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
