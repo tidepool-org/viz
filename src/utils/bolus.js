@@ -339,7 +339,7 @@ export function isUnderride(insulinEvent) {
  */
 export function isCorrection(insulinEvent) {
   const recommended = _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
-  return recommended && recommended.correction > 0 && recommended.carb === 0;
+  return !!(recommended && recommended.correction > 0 && recommended.carb === 0);
 }
 
 /**
