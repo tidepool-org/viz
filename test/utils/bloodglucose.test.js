@@ -22,7 +22,7 @@ import * as bgUtils from '../../src/utils/bloodglucose';
 
 import { MS_IN_MIN } from '../../src/utils/constants';
 
-describe.only('blood glucose utilities', () => {
+describe('blood glucose utilities', () => {
   const bgBounds = {
     veryHighThreshold: 300,
     targetUpperBound: 180,
