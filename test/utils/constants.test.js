@@ -17,7 +17,7 @@
 
 import * as constants from '../../src/utils/constants';
 
-describe('constants', () => {
+describe.only('constants', () => {
   describe('BG_HIGH', () => {
     it('should be `High`', () => {
       expect(constants.BG_HIGH).to.equal('High');
@@ -57,6 +57,40 @@ describe('constants', () => {
   describe('MGDL_PER_MMOLL', () => {
     it('should be `18.01559`', () => {
       expect(constants.MGDL_PER_MMOLL).to.equal(18.01559);
+    });
+  });
+
+  describe('DEFAULT_BG_BOUNDS', () => {
+    it('should define the MGDL_UNITS veryLowThreshold as 54', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].veryLowThreshold).to.equal(54);
+    });
+
+    it('should define the MGDL_UNITS targetLowerBound as 70', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].targetLowerBound).to.equal(70);
+    });
+
+    it('should define the MGDL_UNITS targetUpperBound as 180', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].targetUpperBound).to.equal(180);
+    });
+
+    it('should define the MGDL_UNITS veryHighThreshold as 250', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].veryHighThreshold).to.equal(250);
+    });
+
+    it('should define the MMOLL_UNITS veryLowThreshold as 3.0', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].veryLowThreshold).to.equal(3.0);
+    });
+
+    it('should define the MMOLL_UNITS targetLowerBound as 3.9', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].targetLowerBound).to.equal(3.9);
+    });
+
+    it('should define the MMOLL_UNITS targetUpperBound as 10.0', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].targetUpperBound).to.equal(10.0);
+    });
+
+    it('should define the MMOLL_UNITS veryHighThreshold as 13.9', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].veryHighThreshold).to.equal(13.9);
     });
   });
 
