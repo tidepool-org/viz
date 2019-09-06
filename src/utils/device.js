@@ -13,7 +13,7 @@ export function getLatestPumpUpload(uploadData = []) {
 }
 
 /**
- * Get the latest upload datum
+ * Get the latest manual basal schedule name from an array of basal data
  * @param {Array} basalData Array of Tidepool basal data
  * @returns {Object} The latest manual basal schedule name, else undefined
  */
