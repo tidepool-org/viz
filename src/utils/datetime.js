@@ -91,7 +91,6 @@ export function getOffset(utc, timezoneName) {
   return moment.tz.zone(timezoneName).utcOffset(utcHammertime);
 }
 
-
 /**
  * getBrowserTimezone
  * @returns {String} browser-determined timezone name
@@ -317,7 +316,7 @@ export function getHammertimeFromDatumWithTimePrefs(datum, timePrefs) {
 
 /**
  * getLocalizedCeiling
- * x@param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
  *
  * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
