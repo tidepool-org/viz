@@ -22,7 +22,7 @@ import * as bgUtils from '../../src/utils/bloodglucose';
 
 import { MS_IN_MIN } from '../../src/utils/constants';
 
-describe('blood glucose utilities', () => {
+describe.only('blood glucose utilities', () => {
   const bgBounds = {
     veryHighThreshold: 300,
     targetUpperBound: 180,
@@ -255,6 +255,20 @@ describe('blood glucose utilities', () => {
 
     it('should return 22.202991964182132 when given 400', () => {
       expect(bgUtils.convertToMmolL(400)).to.equal(22.202991964182132);
+    });
+  });
+
+  describe('convertToMGDL', () => {
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.convertToMGDL);
+    });
+
+    it('should return 2.2202991964182135 when given 40', () => {
+      expect(bgUtils.convertToMGDL(4)).to.equal(72.06236);
+    });
+
+    it('should return 22.202991964182132 when given 400', () => {
+      expect(bgUtils.convertToMGDL(10)).to.equal(180.1559);
     });
   });
 
