@@ -62,6 +62,7 @@ const validTypes = [
   'basal',
   'bolus',
   'cbg',
+  'cgmSettings',
   'deviceEvent',
   'food',
   'insulin',
@@ -101,11 +102,7 @@ const normalBolus = {
   normal: minZero,
   expectedNormal: {
     type: 'withDependantFields',
-    schema: {
-      type: 'number',
-      min: 0,
-      ...optional,
-    },
+    schema: { ...minZero, ...optional },
     fields: ['normal'],
     ...optional,
   },
@@ -129,11 +126,7 @@ const extendedBolus = {
   normal: { ...minZero, ...optional },
   expectedNormal: {
     type: 'withDependantFields',
-    schema: {
-      type: 'number',
-      min: 0,
-      ...optional,
-    },
+    schema: { ...minZero, ...optional },
     fields: ['normal'],
     ...optional,
   },
@@ -301,20 +294,20 @@ const wizard = {
 
 export default {
   basal: v.compile(basal),
-  bolus: [
-    v.compile(normalBolus),
-    v.compile(extendedBolus),
-  ],
+  bolus: {
+    normal: v.compile(normalBolus),
+    extended: v.compile(extendedBolus),
+  },
   cbg: v.compile(bg),
   common: v.compile(common),
   deviceEvent: v.compile(deviceEvent),
   message: v.compile(message),
-  pumpSettings: [
-    v.compile(pumpSettingsAnimus),
-    v.compile(pumpSettingsMedtronic),
-    v.compile(pumpSettingsOmnipod),
-    v.compile(pumpSettingsTandem),
-  ],
+  pumpSettings: {
+    animus: v.compile(pumpSettingsAnimus),
+    medtronic: v.compile(pumpSettingsMedtronic),
+    omnipod: v.compile(pumpSettingsOmnipod),
+    tandem: v.compile(pumpSettingsTandem),
+  },
   smbg: v.compile(bg),
   wizard: v.compile(wizard),
 };

@@ -192,11 +192,11 @@ export class DataUtil {
   validateDatumIn = d => {
     let validator = Validator[d.type] || Validator.common;
 
-    if (_.isFunction(validator)) validator = [validator];
+    if (_.isFunction(validator)) validator = { validator };
 
     // Run all validators and store the results in an array
     const validateResult = [];
-    _.each(validator, (validationMethod, i) => {
+    _.each(_.values(validator), (validationMethod, i) => {
       // only run validationMethod if it's the first or previous validations have all failed
       if (i === 0 || validateResult.indexOf(true) === -1) {
         validateResult.push(validationMethod(d));
