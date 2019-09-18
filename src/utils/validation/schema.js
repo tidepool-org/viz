@@ -166,6 +166,26 @@ const settingsScheduleStart = {
   start: { ...minZero, max: MS_IN_DAY },
 };
 
+const basalSchedules = {
+  type: 'array',
+  items: {
+    type: 'object',
+    props: {
+      name: { type: 'string' },
+      value: {
+        type: 'array',
+        items: {
+          type: 'object',
+          props: {
+            rate: minZero,
+            ...settingsScheduleStart,
+          },
+        },
+      },
+    },
+  },
+};
+
 const carbRatio = {
   type: 'array',
   items: {
@@ -188,7 +208,7 @@ const insulinSensitivity = {
   },
 };
 
-const pumpSettingsAnimus = {
+const pumpSettingsAnimas = {
   ...common,
   bgTarget: {
     type: 'array',
@@ -205,6 +225,7 @@ const pumpSettingsAnimus = {
   },
   carbRatio,
   insulinSensitivity,
+  basalSchedules,
 };
 
 const pumpSettingsMedtronic = {
@@ -224,6 +245,7 @@ const pumpSettingsMedtronic = {
   },
   carbRatio,
   insulinSensitivity,
+  basalSchedules,
 };
 
 const pumpSettingsOmnipod = {
@@ -243,6 +265,7 @@ const pumpSettingsOmnipod = {
   },
   carbRatio,
   insulinSensitivity,
+  basalSchedules,
 };
 
 const pumpSettingsTandem = {
@@ -271,6 +294,7 @@ const pumpSettingsTandem = {
     type: 'objectWithUnknownKeys',
     schema: insulinSensitivity,
   },
+  basalSchedules,
 };
 
 const wizard = {
@@ -303,7 +327,7 @@ export default {
   deviceEvent: v.compile(deviceEvent),
   message: v.compile(message),
   pumpSettings: {
-    animus: v.compile(pumpSettingsAnimus),
+    animas: v.compile(pumpSettingsAnimas),
     medtronic: v.compile(pumpSettingsMedtronic),
     omnipod: v.compile(pumpSettingsOmnipod),
     tandem: v.compile(pumpSettingsTandem),
