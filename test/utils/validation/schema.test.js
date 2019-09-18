@@ -1,6 +1,12 @@
 import _ from 'lodash';
 import Validator from '../../../src/utils/validation/schema';
 import Types from '../../../data/types';
+import { MS_IN_DAY } from '../../../src/utils/constants';
+
+import animasMultirate from '../../../data/pumpSettings/animas/multirate.json';
+import medtronicMultirate from '../../../data/pumpSettings/medtronic/multirate.json';
+import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.json';
+import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.json';
 
 /* eslint-disable max-len */
 
@@ -65,7 +71,7 @@ describe.only('schema validation', () => {
   };
 
   context('basal', () => {
-    const basal = new Types.Basal();
+    const basal = new Types.Basal({ raw: true });
     const missingRate = { ...basal, rate: undefined };
     const negativeRate = { ...basal, rate: -1 };
     const negativeDuration = { ...basal, duration: -1 };
@@ -124,7 +130,7 @@ describe.only('schema validation', () => {
 
   describe('bolus', () => {
     context('normal', () => {
-      const bolus = new Types.Bolus();
+      const bolus = new Types.Bolus({ raw: true });
 
       const missingNormal = { ...bolus, normal: undefined };
       const zeroNormal = { ...bolus, normal: 0 };
@@ -194,7 +200,7 @@ describe.only('schema validation', () => {
     });
 
     context('extended', () => {
-      const extendedBolus = { ...new Types.Bolus(), extended: 1, duration: 1, subType: 'square' };
+      const extendedBolus = { ...new Types.Bolus({ raw: true }), extended: 1, duration: 1, subType: 'square' };
 
       const missingDuration = { ...extendedBolus, duration: undefined };
       const zeroDuration = { ...extendedBolus, duration: 0 };
@@ -315,7 +321,7 @@ describe.only('schema validation', () => {
   });
 
   describe('cbg', () => {
-    const cbg = new Types.CBG();
+    const cbg = new Types.CBG({ raw: true });
     const negativeValue = { ...cbg, value: -1 };
     const zeroValue = { ...cbg, value: 0 };
     const invalidUnits = { ...cbg, units: 'foo' };
@@ -341,7 +347,7 @@ describe.only('schema validation', () => {
   });
 
   describe('deviceEvent', () => {
-    const deviceEvent = new Types.DeviceEvent();
+    const deviceEvent = new Types.DeviceEvent({ raw: true });
 
     const withAnnotations = { ...deviceEvent, annotations: [
       { code: 'validcode 1' },
@@ -374,34 +380,8 @@ describe.only('schema validation', () => {
     });
   });
 
-  describe('smbg', () => {
-    const smbg = new Types.SMBG();
-    const negativeValue = { ...smbg, value: -1 };
-    const zeroValue = { ...smbg, value: 0 };
-    const invalidUnits = { ...smbg, units: 'foo' };
-
-    it('should validate a valid `smbg` datum', () => {
-      expect(Validator.smbg(smbg)).to.be.true;
-    });
-
-    it('should validate common fields', () => {
-      validateCommon(smbg);
-    });
-
-    it('should return an error for a non-positive `value`', () => {
-      expect(_.find(Validator.smbg(negativeValue), { field: 'value' }).message).to.equal('The \'value\' field must be a positive number!');
-      expect(_.find(Validator.smbg(zeroValue), { field: 'value' }).message).to.equal('The \'value\' field must be a positive number!');
-    });
-
-    it('should return an error for an invalid `units`', () => {
-      const result = Validator.smbg(invalidUnits);
-      expect(_.find(result, { field: 'units' }).message).to.equal('The \'units\' field does not match any of the allowed values!');
-      expect(_.find(result, { field: 'units' }).expected).to.have.members(['mg/dL', 'mmol/L']);
-    });
-  });
-
   describe('message', () => {
-    const message = new Types.Message();
+    const message = new Types.Message({ raw: true });
     const parentMessageNull = { ...message, parentMessage: null };
     const parentMessageId = { ...message, parentMessage: 'pp0gk17imoaamcoeika04sb99tthbdsj' };
     const parentMessageInvalidId = { ...message, parentMessage: '*&^#ABC123' };
@@ -437,6 +417,300 @@ describe.only('schema validation', () => {
 
     it('should return an error when provided `parentMessage` id doesn\'t match pattern', () => {
       expect(_.find(Validator.message(parentMessageInvalidId), { field: 'parentMessage' }).message).to.equal('The \'parentMessage\' field fails to match the required pattern!');
+    });
+  });
+
+  describe.only('pumpSettings', () => {
+    context('animas', () => {
+      const bgTargetZeroStart = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], start: 0 }] };
+      const bgTargetNegativeStart = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], start: -1 }] };
+      const bgTargetMsInDayStart = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], start: MS_IN_DAY }] };
+      const bgTargetAboveMsInDayStart = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], start: MS_IN_DAY + 1 }] };
+      const bgTargetZeroTarget = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], target: 0 }] };
+      const bgTargetNegativeTarget = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], target: -1 }] };
+      const bgTargetZeroRange = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], range: 0 }] };
+      const bgTargetNegativeRange = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], range: -1 }] };
+      const bgTargetForbiddenLow = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], low: 1 }] };
+      const bgTargetForbiddenHigh = { ...animasMultirate, bgTarget: [{ ...animasMultirate.bgTarget[0], high: 1 }] };
+
+      const carbRatioZeroStart = { ...animasMultirate, carbRatio: [{ ...animasMultirate.carbRatio[0], start: 0 }] };
+      const carbRatioNegativeStart = { ...animasMultirate, carbRatio: [{ ...animasMultirate.carbRatio[0], start: -1 }] };
+      const carbRatioMsInDayStart = { ...animasMultirate, carbRatio: [{ ...animasMultirate.carbRatio[0], start: MS_IN_DAY }] };
+      const carbRatioAboveMsInDayStart = { ...animasMultirate, carbRatio: [{ ...animasMultirate.carbRatio[0], start: MS_IN_DAY + 1 }] };
+      const carbRatioZeroAmount = { ...animasMultirate, carbRatio: [{ ...animasMultirate.carbRatio[0], amount: 0 }] };
+      const carbRatioNegativeAmount = { ...animasMultirate, carbRatio: [{ ...animasMultirate.carbRatio[0], amount: -1 }] };
+
+      const insulinSensitivityZeroStart = { ...animasMultirate, insulinSensitivity: [{ ...animasMultirate.insulinSensitivity[0], start: 0 }] };
+      const insulinSensitivityNegativeStart = { ...animasMultirate, insulinSensitivity: [{ ...animasMultirate.insulinSensitivity[0], start: -1 }] };
+      const insulinSensitivityMsInDayStart = { ...animasMultirate, insulinSensitivity: [{ ...animasMultirate.insulinSensitivity[0], start: MS_IN_DAY }] };
+      const insulinSensitivityAboveMsInDayStart = { ...animasMultirate, insulinSensitivity: [{ ...animasMultirate.insulinSensitivity[0], start: MS_IN_DAY + 1 }] };
+      const insulinSensitivityZeroAmount = { ...animasMultirate, insulinSensitivity: [{ ...animasMultirate.insulinSensitivity[0], amount: 0 }] };
+      const insulinSensitivityNegativeAmount = { ...animasMultirate, insulinSensitivity: [{ ...animasMultirate.insulinSensitivity[0], amount: -1 }] };
+
+      const basalSchedulesMissingName = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], name: undefined }] };
+      const basalSchedulesZeroStart = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], value: [{ ...animasMultirate.basalSchedules[0].value, start: 0 }] }] };
+      const basalSchedulesNegativeStart = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], value: [{ ...animasMultirate.basalSchedules[0].value, start: -1 }] }] };
+      const basalSchedulesMsInDayStart = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], value: [{ ...animasMultirate.basalSchedules[0].value, start: MS_IN_DAY }] }] };
+      const basalSchedulesAboveMsInDayStart = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], value: [{ ...animasMultirate.basalSchedules[0].value, start: MS_IN_DAY + 1 }] }] };
+      const basalSchedulesZeroTarget = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], value: [{ ...animasMultirate.basalSchedules[0].value, target: 0 }] }] };
+      const basalSchedulesNegativeTarget = { ...animasMultirate, basalSchedules: [{ ...animasMultirate.basalSchedules[0], value: [{ ...animasMultirate.basalSchedules[0].value, target: -1 }] }] };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings.animas(animasMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(animasMultirate, 'animas');
+      });
+    });
+
+    context('medtronic', () => {
+      const bgTargetZeroStart = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], start: 0 }] };
+      const bgTargetNegativeStart = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], start: -1 }] };
+      const bgTargetMsInDayStart = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], start: MS_IN_DAY }] };
+      const bgTargetAboveMsInDayStart = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], start: MS_IN_DAY + 1 }] };
+      const bgTargetZeroLow = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], low: 0 }] };
+      const bgTargetNegativeLow = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], low: -1 }] };
+      const bgTargetZeroHigh = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], high: 0 }] };
+      const bgTargetNegativeHigh = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], high: -1 }] };
+      const bgTargetForbiddenTarget = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], target: 1 }] };
+      const bgTargetForbiddenRange = { ...medtronicMultirate, bgTarget: [{ ...medtronicMultirate.bgTarget[0], range: 1 }] };
+
+      const carbRatioZeroStart = { ...medtronicMultirate, carbRatio: [{ ...medtronicMultirate.carbRatio[0], start: 0 }] };
+      const carbRatioNegativeStart = { ...medtronicMultirate, carbRatio: [{ ...medtronicMultirate.carbRatio[0], start: -1 }] };
+      const carbRatioMsInDayStart = { ...medtronicMultirate, carbRatio: [{ ...medtronicMultirate.carbRatio[0], start: MS_IN_DAY }] };
+      const carbRatioAboveMsInDayStart = { ...medtronicMultirate, carbRatio: [{ ...medtronicMultirate.carbRatio[0], start: MS_IN_DAY + 1 }] };
+      const carbRatioZeroAmount = { ...medtronicMultirate, carbRatio: [{ ...medtronicMultirate.carbRatio[0], amount: 0 }] };
+      const carbRatioNegativeAmount = { ...medtronicMultirate, carbRatio: [{ ...medtronicMultirate.carbRatio[0], amount: -1 }] };
+
+      const insulinSensitivityZeroStart = { ...medtronicMultirate, insulinSensitivity: [{ ...medtronicMultirate.insulinSensitivity[0], start: 0 }] };
+      const insulinSensitivityNegativeStart = { ...medtronicMultirate, insulinSensitivity: [{ ...medtronicMultirate.insulinSensitivity[0], start: -1 }] };
+      const insulinSensitivityMsInDayStart = { ...medtronicMultirate, insulinSensitivity: [{ ...medtronicMultirate.insulinSensitivity[0], start: MS_IN_DAY }] };
+      const insulinSensitivityAboveMsInDayStart = { ...medtronicMultirate, insulinSensitivity: [{ ...medtronicMultirate.insulinSensitivity[0], start: MS_IN_DAY + 1 }] };
+      const insulinSensitivityZeroAmount = { ...medtronicMultirate, insulinSensitivity: [{ ...medtronicMultirate.insulinSensitivity[0], amount: 0 }] };
+      const insulinSensitivityNegativeAmount = { ...medtronicMultirate, insulinSensitivity: [{ ...medtronicMultirate.insulinSensitivity[0], amount: -1 }] };
+
+      const basalSchedulesMissingName = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], name: undefined }] };
+      const basalSchedulesZeroStart = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], value: [{ ...medtronicMultirate.basalSchedules[0].value, start: 0 }] }] };
+      const basalSchedulesNegativeStart = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], value: [{ ...medtronicMultirate.basalSchedules[0].value, start: -1 }] }] };
+      const basalSchedulesMsInDayStart = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], value: [{ ...medtronicMultirate.basalSchedules[0].value, start: MS_IN_DAY }] }] };
+      const basalSchedulesAboveMsInDayStart = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], value: [{ ...medtronicMultirate.basalSchedules[0].value, start: MS_IN_DAY + 1 }] }] };
+      const basalSchedulesZeroTarget = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], value: [{ ...medtronicMultirate.basalSchedules[0].value, target: 0 }] }] };
+      const basalSchedulesNegativeTarget = { ...medtronicMultirate, basalSchedules: [{ ...medtronicMultirate.basalSchedules[0], value: [{ ...medtronicMultirate.basalSchedules[0].value, target: -1 }] }] };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings.medtronic(medtronicMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(medtronicMultirate, 'medtronic');
+      });
+    });
+
+    context('omnipod', () => {
+      const bgTargetZeroStart = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], start: 0 }] };
+      const bgTargetNegativeStart = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], start: -1 }] };
+      const bgTargetMsInDayStart = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], start: MS_IN_DAY }] };
+      const bgTargetAboveMsInDayStart = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], start: MS_IN_DAY + 1 }] };
+      const bgTargetZeroTarget = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], target: 0 }] };
+      const bgTargetNegativeTarget = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], target: -1 }] };
+      const bgTargetZeroHigh = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], high: 0 }] };
+      const bgTargetNegativeHigh = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], high: -1 }] };
+      const bgTargetForbiddenLow = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], low: 1 }] };
+      const bgTargetForbiddenRange = { ...omnipodMultirate, bgTarget: [{ ...omnipodMultirate.bgTarget[0], range: 1 }] };
+
+      const carbRatioZeroStart = { ...omnipodMultirate, carbRatio: [{ ...omnipodMultirate.carbRatio[0], start: 0 }] };
+      const carbRatioNegativeStart = { ...omnipodMultirate, carbRatio: [{ ...omnipodMultirate.carbRatio[0], start: -1 }] };
+      const carbRatioMsInDayStart = { ...omnipodMultirate, carbRatio: [{ ...omnipodMultirate.carbRatio[0], start: MS_IN_DAY }] };
+      const carbRatioAboveMsInDayStart = { ...omnipodMultirate, carbRatio: [{ ...omnipodMultirate.carbRatio[0], start: MS_IN_DAY + 1 }] };
+      const carbRatioZeroAmount = { ...omnipodMultirate, carbRatio: [{ ...omnipodMultirate.carbRatio[0], amount: 0 }] };
+      const carbRatioNegativeAmount = { ...omnipodMultirate, carbRatio: [{ ...omnipodMultirate.carbRatio[0], amount: -1 }] };
+
+      const insulinSensitivityZeroStart = { ...omnipodMultirate, insulinSensitivity: [{ ...omnipodMultirate.insulinSensitivity[0], start: 0 }] };
+      const insulinSensitivityNegativeStart = { ...omnipodMultirate, insulinSensitivity: [{ ...omnipodMultirate.insulinSensitivity[0], start: -1 }] };
+      const insulinSensitivityMsInDayStart = { ...omnipodMultirate, insulinSensitivity: [{ ...omnipodMultirate.insulinSensitivity[0], start: MS_IN_DAY }] };
+      const insulinSensitivityAboveMsInDayStart = { ...omnipodMultirate, insulinSensitivity: [{ ...omnipodMultirate.insulinSensitivity[0], start: MS_IN_DAY + 1 }] };
+      const insulinSensitivityZeroAmount = { ...omnipodMultirate, insulinSensitivity: [{ ...omnipodMultirate.insulinSensitivity[0], amount: 0 }] };
+      const insulinSensitivityNegativeAmount = { ...omnipodMultirate, insulinSensitivity: [{ ...omnipodMultirate.insulinSensitivity[0], amount: -1 }] };
+
+      const basalSchedulesMissingName = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], name: undefined }] };
+      const basalSchedulesZeroStart = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], value: [{ ...omnipodMultirate.basalSchedules[0].value, start: 0 }] }] };
+      const basalSchedulesNegativeStart = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], value: [{ ...omnipodMultirate.basalSchedules[0].value, start: -1 }] }] };
+      const basalSchedulesMsInDayStart = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], value: [{ ...omnipodMultirate.basalSchedules[0].value, start: MS_IN_DAY }] }] };
+      const basalSchedulesAboveMsInDayStart = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], value: [{ ...omnipodMultirate.basalSchedules[0].value, start: MS_IN_DAY + 1 }] }] };
+      const basalSchedulesZeroTarget = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], value: [{ ...omnipodMultirate.basalSchedules[0].value, target: 0 }] }] };
+      const basalSchedulesNegativeTarget = { ...omnipodMultirate, basalSchedules: [{ ...omnipodMultirate.basalSchedules[0], value: [{ ...omnipodMultirate.basalSchedules[0].value, target: -1 }] }] };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings.omnipod(omnipodMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(omnipodMultirate, 'omnipod');
+      });
+    });
+
+    context('tandem', () => {
+      const bgTargetsZeroStart = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], start: 0 } } };
+      const bgTargetsNegativeStart = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], start: -1 } } };
+      const bgTargetsMsInDayStart = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], start: MS_IN_DAY } } };
+      const bgTargetsAboveMsInDayStart = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], start: MS_IN_DAY + 1 } } };
+      const bgTargetsZeroTarget = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], target: 0 } } };
+      const bgTargetsNegativeTarget = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], target: -1 } } };
+      const bgTargetsForbiddenRange = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], range: 1 } } };
+      const bgTargetsForbiddenLow = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], low: 1 } } };
+      const bgTargetsForbiddenHigh = { ...tandemMultirate, bgTargets: { Normal: { ...tandemMultirate.bgTargets.Normal[0], high: 1 } } };
+
+      const carbRatiosZeroStart = { ...tandemMultirate, carbRatios: { Normal: { ...tandemMultirate.carbRatios.Normal[0], start: 0 } } };
+      const carbRatiosNegativeStart = { ...tandemMultirate, carbRatios: { Normal: { ...tandemMultirate.carbRatios.Normal[0], start: -1 } } };
+      const carbRatiosMsInDayStart = { ...tandemMultirate, carbRatios: { Normal: { ...tandemMultirate.carbRatios.Normal[0], start: MS_IN_DAY } } };
+      const carbRatiosAboveMsInDayStart = { ...tandemMultirate, carbRatios: { Normal: { ...tandemMultirate.carbRatios.Normal[0], start: MS_IN_DAY + 1 } } };
+      const carbRatiosZeroAmount = { ...tandemMultirate, carbRatios: { Normal: { ...tandemMultirate.carbRatios.Normal[0], amount: 0 } } };
+      const carbRatiosNegativeAmount = { ...tandemMultirate, carbRatios: { Normal: { ...tandemMultirate.carbRatios.Normal[0], amount: -1 } } };
+
+      const insulinSensitivitiesZeroStart = { ...tandemMultirate, insulinSensitivities: { Normal: { ...tandemMultirate.insulinSensitivities.Normal[0], start: 0 } } };
+      const insulinSensitivitiesNegativeStart = { ...tandemMultirate, insulinSensitivities: { Normal: { ...tandemMultirate.insulinSensitivities.Normal[0], start: -1 } } };
+      const insulinSensitivitiesMsInDayStart = { ...tandemMultirate, insulinSensitivities: { Normal: { ...tandemMultirate.insulinSensitivities.Normal[0], start: MS_IN_DAY } } };
+      const insulinSensitivitiesAboveMsInDayStart = { ...tandemMultirate, insulinSensitivities: { Normal: { ...tandemMultirate.insulinSensitivities.Normal[0], start: MS_IN_DAY + 1 } } };
+      const insulinSensitivitiesZeroAmount = { ...tandemMultirate, insulinSensitivities: { Normal: { ...tandemMultirate.insulinSensitivities.Normal[0], amount: 0 } } };
+      const insulinSensitivitiesNegativeAmount = { ...tandemMultirate, insulinSensitivities: { Normal: { ...tandemMultirate.insulinSensitivities.Normal[0], amount: -1 } } };
+
+      const basalSchedulesMissingName = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], name: undefined }] };
+      const basalSchedulesZeroStart = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], value: [{ ...tandemMultirate.basalSchedules[0].value, start: 0 }] }] };
+      const basalSchedulesNegativeStart = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], value: [{ ...tandemMultirate.basalSchedules[0].value, start: -1 }] }] };
+      const basalSchedulesMsInDayStart = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], value: [{ ...tandemMultirate.basalSchedules[0].value, start: MS_IN_DAY }] }] };
+      const basalSchedulesAboveMsInDayStart = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], value: [{ ...tandemMultirate.basalSchedules[0].value, start: MS_IN_DAY + 1 }] }] };
+      const basalSchedulesZeroTarget = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], value: [{ ...tandemMultirate.basalSchedules[0].value, target: 0 }] }] };
+      const basalSchedulesNegativeTarget = { ...tandemMultirate, basalSchedules: [{ ...tandemMultirate.basalSchedules[0], value: [{ ...tandemMultirate.basalSchedules[0].value, target: -1 }] }] };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings.tandem(tandemMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(tandemMultirate, 'tandem');
+      });
+    });
+  });
+
+  describe('smbg', () => {
+    const smbg = new Types.SMBG({ raw: true });
+    const negativeValue = { ...smbg, value: -1 };
+    const zeroValue = { ...smbg, value: 0 };
+    const invalidUnits = { ...smbg, units: 'foo' };
+
+    it('should validate a valid `smbg` datum', () => {
+      expect(Validator.smbg(smbg)).to.be.true;
+    });
+
+    it('should validate common fields', () => {
+      validateCommon(smbg);
+    });
+
+    it('should return an error for a non-positive `value`', () => {
+      expect(_.find(Validator.smbg(negativeValue), { field: 'value' }).message).to.equal('The \'value\' field must be a positive number!');
+      expect(_.find(Validator.smbg(zeroValue), { field: 'value' }).message).to.equal('The \'value\' field must be a positive number!');
+    });
+
+    it('should return an error for an invalid `units`', () => {
+      const result = Validator.smbg(invalidUnits);
+      expect(_.find(result, { field: 'units' }).message).to.equal('The \'units\' field does not match any of the allowed values!');
+      expect(_.find(result, { field: 'units' }).expected).to.have.members(['mg/dL', 'mmol/L']);
+    });
+  });
+
+  describe('wizard', () => {
+    const wizard = new Types.Wizard({ raw: true });
+
+    const zeroBgInput = { ...wizard, bgInput: 0 };
+    const negativeBgInput = { ...wizard, bgInput: -1 };
+
+    const missingBolus = { ...wizard, bolus: undefined };
+
+    const zeroCarbInput = { ...wizard, carbInput: 0 };
+    const negativeCarbInput = { ...wizard, carbInput: -1 };
+
+    const zeroInsulinCarbRatio = { ...wizard, insulinCarbRatio: 0 };
+    const negativeInsulinCarbRatio = { ...wizard, insulinCarbRatio: -1 };
+
+    const zeroInsulinOnBoard = { ...wizard, insulinOnBoard: 0 };
+    const negativeInsulinOnBoard = { ...wizard, insulinOnBoard: -1 };
+
+    const zeroInsulinSensitivity = { ...wizard, insulinSensitivity: 0 };
+    const negativeInsulinSensitivity = { ...wizard, insulinSensitivity: -1 };
+
+    const recommendedZeroCarb = { ...wizard, recommended: { carb: 0 } };
+    const recommendedNegativeCarb = { ...wizard, recommended: { carb: -1 } };
+
+    const recommendedInvalidCorrection = { ...wizard, recommended: { correction: 'foo' } };
+    const recommendedInvalidNet = { ...wizard, recommended: { net: 'foo' } };
+
+    it('should validate a valid `wizard` datum', () => {
+      expect(Validator.wizard(wizard)).to.be.true;
+    });
+
+    it('should validate common fields', () => {
+      validateCommon(wizard);
+    });
+
+    it('should pass for zero `bgInput`', () => {
+      expect(Validator.wizard(zeroBgInput)).to.be.true;
+    });
+
+    it('should return an error for a negative `bgInput`', () => {
+      expect(_.find(Validator.wizard(negativeBgInput), { field: 'bgInput' }).message).to.equal('The \'bgInput\' field must be greater than or equal to 0!');
+    });
+
+    it('should return an error for missing `bolus`', () => {
+      expect(_.find(Validator.wizard(missingBolus), { field: 'bolus' }).message).to.equal('The \'bolus\' field is required!');
+    });
+
+    it('should pass for zero `carbInput`', () => {
+      expect(Validator.wizard(zeroCarbInput)).to.be.true;
+    });
+
+    it('should return an error for a negative `carbInput`', () => {
+      expect(_.find(Validator.wizard(negativeCarbInput), { field: 'carbInput' }).message).to.equal('The \'carbInput\' field must be greater than or equal to 0!');
+    });
+
+    it('should pass for zero `insulinCarbRatio`', () => {
+      expect(Validator.wizard(zeroInsulinCarbRatio)).to.be.true;
+    });
+
+    it('should return an error for a negative `insulinCarbRatio`', () => {
+      expect(_.find(Validator.wizard(negativeInsulinCarbRatio), { field: 'insulinCarbRatio' }).message).to.equal('The \'insulinCarbRatio\' field must be greater than or equal to 0!');
+    });
+
+    it('should pass for zero `insulinOnBoard`', () => {
+      expect(Validator.wizard(zeroInsulinOnBoard)).to.be.true;
+    });
+
+    it('should return an error for a negative `insulinOnBoard`', () => {
+      expect(_.find(Validator.wizard(negativeInsulinOnBoard), { field: 'insulinOnBoard' }).message).to.equal('The \'insulinOnBoard\' field must be greater than or equal to 0!');
+    });
+
+    it('should pass for zero `insulinSensitivity`', () => {
+      expect(Validator.wizard(zeroInsulinSensitivity)).to.be.true;
+    });
+
+    it('should return an error for a negative `insulinSensitivity`', () => {
+      expect(_.find(Validator.wizard(negativeInsulinSensitivity), { field: 'insulinSensitivity' }).message).to.equal('The \'insulinSensitivity\' field must be greater than or equal to 0!');
+    });
+
+    it('should pass for zero `recommended.carb`', () => {
+      expect(Validator.wizard(recommendedZeroCarb)).to.be.true;
+    });
+
+    it('should return an error for a negative `recommended.carb`', () => {
+      expect(_.find(Validator.wizard(recommendedNegativeCarb), { field: 'recommended.carb' }).message).to.equal('The \'recommended.carb\' field must be greater than or equal to 0!');
+    });
+
+    it('should return an error for an non-numeric `recommended.correction` code', () => {
+      expect(_.find(Validator.wizard(recommendedInvalidCorrection), { field: 'recommended.correction' }).message).to.equal('The \'recommended.correction\' field must be a number!');
+    });
+
+    it('should return an error for an non-numeric `recommended.net` code', () => {
+      expect(_.find(Validator.wizard(recommendedInvalidNet), { field: 'recommended.net' }).message).to.equal('The \'recommended.net\' field must be a number!');
     });
   });
 });

@@ -177,8 +177,8 @@ const basalSchedules = {
         items: {
           type: 'object',
           props: {
-            rate: minZero,
             ...settingsScheduleStart,
+            rate: minZero,
           },
         },
       },
@@ -191,8 +191,8 @@ const carbRatio = {
   items: {
     type: 'object',
     props: {
-      amount: minZero,
       ...settingsScheduleStart,
+      amount: minZero,
     },
   },
 };
@@ -202,8 +202,8 @@ const insulinSensitivity = {
   items: {
     type: 'object',
     props: {
-      amount: minZero,
       ...settingsScheduleStart,
+      amount: minZero,
     },
   },
 };
