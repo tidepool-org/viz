@@ -10,10 +10,7 @@ import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants
 
 export class StatUtil {
   /**
-   * @param {Object} data - crossfilter group from DataUtil, already filtered by date range
-   * @param {Object} data - normalized data from DataUtil, grouped by type
-   * @param {Array} data - raw data from DataUtil
-   * @param {Object} opts - object containing bgBounds, bgUnits, days, and bgSource properties
+   * @param {Object} dataUtil - a DataUtil instance
    */
   constructor(dataUtil) {
     this.log = bows('StatUtil');
