@@ -398,13 +398,13 @@ export class DataUtil {
 
   buildByDayOfWeekDimension = () => {
     this.dimension.byDayOfWeek = this.data.dimension(
-      d => moment.utc(d[this.activeTimeField]).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day()
+      d => moment.utc(d[this.activeTimeField || 'time']).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day()
     );
   };
 
   buildByDateDimension = () => {
     this.dimension.byDate = this.data.dimension(
-      d => moment.utc(d[this.activeTimeField]).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).format('YYYY-MM-DD')
+      d => moment.utc(d[this.activeTimeField || 'time']).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).format('YYYY-MM-DD')
     );
   };
 
@@ -675,22 +675,21 @@ export class DataUtil {
       timezoneName,
     };
 
+    const prevActiveTimeField = this.activeTimeField;
     this.activeTimeField = timezoneAware ? 'time' : 'deviceTime';
+    const activeTimeFieldChanged = this.activeTimeField !== prevActiveTimeField;
 
-    if (timezoneNameChanged) {
-      this.log('Timezone Change', prevTimezoneName, 'to', timezoneName);
+    // Recreate the byTime, byDayOfWeek and byDayOfYear dimensions as needed
+    // to index on the proper time field.
+    const dimensionUpdates = {
+      byDate: timezoneNameChanged || timezoneAwareChanged || activeTimeFieldChanged,
+      byDayOfWeek: timezoneNameChanged || timezoneAwareChanged || activeTimeFieldChanged,
+      byTime: timezoneAwareChanged || activeTimeFieldChanged,
+    };
 
-      // Recreate the byDayOfWeek and byDayOfYear dimensions to account for the new timezone.
-      this.buildByDayOfWeekDimension();
-      this.buildByDateDimension();
-    }
-
-    if (timezoneAwareChanged) {
-      this.log('Time Field Change', this.activeTimeField === 'time' ? 'deviceTime' : 'time', 'to', this.activeTimeField);
-
-      // Recreate the byTime dimension to index on the proper time field.
-      this.buildByTimeDimension();
-    }
+    if (dimensionUpdates.byDate) this.buildByDateDimension();
+    if (dimensionUpdates.byDayOfWeek) this.buildByDayOfWeekDimension();
+    if (dimensionUpdates.byTime) this.buildByTimeDimension();
   };
 
   setBGPrefs = (bgPrefs = {}) => {
