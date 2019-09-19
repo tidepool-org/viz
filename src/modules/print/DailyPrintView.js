@@ -247,7 +247,7 @@ class DailyPrintView extends PrintView {
     this.data.bgRange[1] = _.max([this.data.bgRange[1], this.bgBounds.targetUpperBound]);
 
     // Calculate the maximum BG yScale value
-    this.bgScaleYLimit = _.min([this.data.bgRange[1], this.bgBounds.veryHighThreshold]);
+    this.bgScaleYLimit = _.max([this.data.bgRange[1], this.bgBounds.veryHighThreshold]);
 
     dateChart.bgScale = scaleLinear() // eslint-disable-line no-param-reassign
       .domain([0, this.bgScaleYLimit])
@@ -392,7 +392,7 @@ class DailyPrintView extends PrintView {
       yPos.update();
 
       const { targetUpperBound, targetLowerBound, veryLowThreshold } = this.bgBounds;
-
+console.log(targetUpperBound);
       const upperTarget = formatDecimalNumber(targetUpperBound, bgPrecision);
       const lowerTarget = formatDecimalNumber(targetLowerBound, bgPrecision);
 
