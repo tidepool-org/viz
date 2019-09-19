@@ -110,6 +110,7 @@ const normalBolus = {
   extended: forbidden,
   expectedExtended: forbidden,
   subType: { type: 'string', enum: ['normal'] },
+  wizard: { type: 'string', pattern: patterns.id, ...optional },
 };
 
 const extendedBolus = {
@@ -131,6 +132,7 @@ const extendedBolus = {
     ...optional,
   },
   subType: { type: 'string', enum: ['square', 'dual/square'] },
+  wizard: { type: 'string', pattern: patterns.id, ...optional },
 };
 
 const bg = {

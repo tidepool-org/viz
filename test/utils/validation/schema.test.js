@@ -146,6 +146,7 @@ describe('schema validation', () => {
       const forbiddenExpectedExtended = { ...bolus, expectedExtended: 1 };
 
       const invalidSubType = { ...bolus, subType: 'foo' };
+      const invalidWizard = { ...bolus, wizard: '*&^#ABC123' };
 
       it('should validate a valid normal `bolus` datum', () => {
         expect(Validator.bolus.normal(bolus)).to.be.true;
@@ -197,6 +198,11 @@ describe('schema validation', () => {
         expect(_.find(result, { field: 'subType' }).message).to.equal('The \'subType\' field does not match any of the allowed values!');
         expect(_.find(result, { field: 'subType' }).expected).to.have.members(['normal']);
       });
+
+      it('should return an error for an invalid `wizard`', () => {
+        const result = Validator.bolus.normal(invalidWizard);
+        expect(_.find(result, { field: 'wizard' }).message).to.equal('The \'wizard\' field fails to match the required pattern!');
+      });
     });
 
     context('extended', () => {
@@ -229,6 +235,7 @@ describe('schema validation', () => {
       const expectedNormalMissingNormal = { ...extendedBolus, normal: undefined, expectedNormal: 1 };
 
       const invalidSubType = { ...extendedBolus, subType: 'foo' };
+      const invalidWizard = { ...extendedBolus, wizard: '*&^#ABC123' };
 
       it('should validate a valid extended `bolus` datum', () => {
         expect(Validator.bolus.extended(extendedBolus)).to.be.true;
@@ -316,6 +323,11 @@ describe('schema validation', () => {
         const result = Validator.bolus.extended(invalidSubType);
         expect(_.find(result, { field: 'subType' }).message).to.equal('The \'subType\' field does not match any of the allowed values!');
         expect(_.find(result, { field: 'subType' }).expected).to.have.members(['square', 'dual/square']);
+      });
+
+      it('should return an error for an invalid `wizard`', () => {
+        const result = Validator.bolus.extended(invalidWizard);
+        expect(_.find(result, { field: 'wizard' }).message).to.equal('The \'wizard\' field fails to match the required pattern!');
       });
     });
   });
