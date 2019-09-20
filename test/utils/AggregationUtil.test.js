@@ -7,7 +7,7 @@ import { MGDL_UNITS, MGDL_PER_MMOLL } from '../../src/utils/constants';
 
 /* eslint-disable max-len, no-underscore-dangle */
 
-describe.only('AggregationUtil', () => {
+describe('AggregationUtil', () => {
   let aggregationUtil;
 
   const useRawData = {
@@ -60,10 +60,24 @@ describe.only('AggregationUtil', () => {
     veryLowSMBG,
   ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
 
+  const siteChange = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+  const cannulaPrime = { ...siteChange, subType: 'prime', primeTarget: 'cannula' };
+  const reservoirChange = { ...siteChange, subType: 'reservoirChange' };
+  const tubingPrime = { ...siteChange, deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing' };
+  const cannulaPrimeNextDay = { ...cannulaPrime, deviceTime: '2018-02-02T01:00:00' };
+
+  const siteChangeData = _.map([
+    cannulaPrime,
+    reservoirChange,
+    tubingPrime,
+    cannulaPrimeNextDay,
+  ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
+
   const data = [
     ...basalData,
     ...bolusData,
     ...fingerstickData,
+    ...siteChangeData,
   ];
 
   const bgPrefs = {
@@ -272,6 +286,29 @@ describe.only('AggregationUtil', () => {
       expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-01'].subtotals.meter).to.equal(2);
       expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-01'].subtotals.veryHigh).to.equal(1);
       expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-02'].subtotals.veryLow).to.equal(1);
+    });
+  });
+
+  describe('aggregateSiteChanges', () => {
+    let groupByDate;
+
+    beforeEach(() => {
+      groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
+    });
+
+    afterEach(() => {
+      groupByDate.dispose();
+    });
+
+    it('should summarize days since previous siteChange for all siteChange events for each date in the date range', () => {
+      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-02'].summary.daysSince).to.eql({ cannulaPrime: 1 });
+    });
+
+    it('should count total `cannulaPrime`, `reservoirChange`, and `tubingPrime` siteChange events for each date in the date range', () => {
+      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-01'].subtotals.cannulaPrime).to.equal(1);
+      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-01'].subtotals.reservoirChange).to.equal(1);
+      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-02'].subtotals.tubingPrime).to.equal(1);
+      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-02'].subtotals.cannulaPrime).to.equal(1);
     });
   });
 });
