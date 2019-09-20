@@ -392,7 +392,6 @@ class DailyPrintView extends PrintView {
       yPos.update();
 
       const { targetUpperBound, targetLowerBound, veryLowThreshold } = this.bgBounds;
-console.log(targetUpperBound);
       const upperTarget = formatDecimalNumber(targetUpperBound, bgPrecision);
       const lowerTarget = formatDecimalNumber(targetLowerBound, bgPrecision);
 
