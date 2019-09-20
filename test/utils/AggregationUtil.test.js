@@ -3,7 +3,7 @@ import _ from 'lodash';
 import DataUtil from '../../src/utils/DataUtil';
 import AggregationUtil from '../../src/utils/AggregationUtil';
 import { types as Types, generateGUID } from '../../data/types';
-import { MGDL_UNITS } from '../../src/utils/constants';
+import { MGDL_UNITS, MGDL_PER_MMOLL } from '../../src/utils/constants';
 
 /* eslint-disable max-len, no-underscore-dangle */
 
@@ -44,57 +44,26 @@ describe.only('AggregationUtil', () => {
     wizardBolus,
   ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
 
-  const calibrationData = [
-    new Types.DeviceEvent({
-      deviceTime: '2018-02-01T01:00:00',
-      subType: 'calibration',
-      ...useRawData,
-    }),
-    new Types.DeviceEvent({
-      deviceTime: '2018-02-01T02:00:00',
-      subType: 'calibration',
-      ...useRawData,
-    }),
-    new Types.DeviceEvent({
-      deviceTime: '2018-02-01T03:00:00',
-      subType: 'calibration',
-      ...useRawData,
-    }),
-  ];
+  const calibration = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'calibration', ...useRawData });
 
-  const smbgData = _.map([
-    new Types.SMBG({
-      value: 60,
-      deviceTime: '2018-02-01T00:00:00',
-      ...useRawData,
-    }),
-    new Types.SMBG({
-      value: 70,
-      deviceTime: '2018-02-01T00:15:00',
-      ...useRawData,
-    }),
-    new Types.SMBG({
-      value: 80,
-      deviceTime: '2018-02-01T00:30:00',
-      ...useRawData,
-    }),
-    new Types.SMBG({
-      value: 200,
-      deviceTime: '2018-02-01T00:45:00',
-      ...useRawData,
-    }),
-    new Types.SMBG({
-      value: 270,
-      deviceTime: '2018-02-01T00:50:00',
-      ...useRawData,
-    }),
-  ], _.toPlainObject);
+  const smbg = new Types.SMBG({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+  const manualSMBG = { ...smbg, subType: 'manual' };
+  const meterSMBG = { ...smbg, subType: undefined };
+  const veryHighSMBG = { ...smbg, value: 251 / MGDL_PER_MMOLL };
+  const veryLowSMBG = { ...smbg, deviceTime: '2018-02-02T01:00:00', value: 53 / MGDL_PER_MMOLL };
+
+  const fingerstickData = _.map([
+    calibration,
+    manualSMBG,
+    meterSMBG,
+    veryHighSMBG,
+    veryLowSMBG,
+  ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
 
   const data = [
     ...basalData,
     ...bolusData,
-    // ...calibrationData,
-    // ...smbgData,
+    ...fingerstickData,
   ];
 
   const bgPrefs = {
@@ -251,6 +220,58 @@ describe.only('AggregationUtil', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.override).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.underride).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].subtotals.wizard).to.equal(1);
+    });
+  });
+
+  describe('aggregateFingersticks', () => {
+    let groupByDate;
+
+    beforeEach(() => {
+      groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
+    });
+
+    afterEach(() => {
+      groupByDate.dispose();
+    });
+
+    it('should summarize total count for all fingerstick events in the entire date range', () => {
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).calibration.summary.total).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.total).to.equal(4);
+    });
+
+    it('should summarize average daily number of fingerstick events in the entire date range', () => {
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).calibration.summary.avgPerDay).to.equal(0.5);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.avgPerDay).to.equal(2);
+    });
+
+    it('should summarize total `calibration`, `manual`, `meter`, `veryHigh`, and `veryLow` fingerstick events for the entire date range', () => {
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).calibration.summary.subtotals.calibration.count).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.manual.count).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.meter.count).to.equal(3);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.veryHigh.count).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.veryLow.count).to.equal(1);
+    });
+
+    it('should summarize percentage of `calibration`, `manual`, `meter`, `veryHigh`, and `veryLow` fingerstick events for the entire date range', () => {
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).calibration.summary.subtotals.calibration.percentage).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.manual.percentage).to.equal(1 / 4);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.meter.percentage).to.equal(3 / 4);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.veryHigh.percentage).to.equal(1 / 4);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.summary.subtotals.veryLow.percentage).to.equal(1 / 4);
+    });
+
+    it('should summarize total count for all fingerstick events for each date in the date range', () => {
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).calibration.byDate['2018-02-01'].total).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-01'].total).to.equal(3);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-02'].total).to.equal(1);
+    });
+
+    it('should count total `calibration`, `manual`, `meter`, `veryHigh`, and `veryLow` fingerstick events for each date in the date range', () => {
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).calibration.byDate['2018-02-01'].subtotals.calibration).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-01'].subtotals.manual).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-01'].subtotals.meter).to.equal(2);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-01'].subtotals.veryHigh).to.equal(1);
+      expect(aggregationUtil.aggregateFingersticks(groupByDate).smbg.byDate['2018-02-02'].subtotals.veryLow).to.equal(1);
     });
   });
 });
