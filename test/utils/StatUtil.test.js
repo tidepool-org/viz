@@ -307,11 +307,6 @@ describe('StatUtil', () => {
       expect(statUtil.endpoints).to.eql(_.map(dayEndpoints, Date.parse));
     });
 
-    // it('should initialize the data crossfilter', () => {
-    //   expect(statUtil.data).to.be.an('object');
-    //   expect(statUtil.data.size()).to.equal(data.length);
-    // });
-
     // it('should set default `chartPrefs` when not provided in opts', () => {
     //   statUtil = new StatUtil(data, opts({ chartPrefs: undefined }));
     //   expect(statUtil._chartPrefs).to.eql({});
@@ -320,18 +315,6 @@ describe('StatUtil', () => {
     // it('should set default `endpoints` when not provided in opts', () => {
     //   statUtil = new StatUtil(data, opts({ endpoints: undefined }));
     //   expect(statUtil._endpoints).to.eql([]);
-    // });
-
-    // it('should set up crossfilter dimensions', () => {
-    //   expect(statUtil.dimension).to.be.an('object');
-    // });
-
-    // it('should set up crossfilter filters', () => {
-    //   expect(statUtil.filter).to.be.an('object');
-    // });
-
-    // it('should set up crossfilter sorts', () => {
-    //   expect(statUtil.sort).to.be.an('object');
     // });
 
     // it('should set `bgSources`', () => {
@@ -403,20 +386,6 @@ describe('StatUtil', () => {
   //   });
   // });
 
-  // describe('chartPrefs setter', () => {
-  //   it('should set the `_chartPrefs` property as provided', () => {
-  //     expect(statUtil._chartPrefs).to.equal(chartPrefs);
-  //     statUtil.chartPrefs = { foo: 'bar' };
-  //     expect(statUtil._chartPrefs).to.eql({ foo: 'bar' });
-  //   });
-
-  //   it('should set the `_chartPrefs` property to empty object when undefined arg given', () => {
-  //     expect(statUtil._chartPrefs).to.equal(chartPrefs);
-  //     statUtil.chartPrefs = undefined;
-  //     expect(statUtil._chartPrefs).to.eql({});
-  //   });
-  // });
-
   // describe('endpoints setter', () => {
   //   it('should set the `_endpoints` property as provided', () => {
   //     expect(statUtil._endpoints).to.equal(dayEndpoints);
@@ -434,37 +403,6 @@ describe('StatUtil', () => {
   //     expect(statUtil.days).to.equal(1);
   //     filterEndpoints(twoWeekEndpoints);
   //     expect(statUtil.days).to.eql(14);
-  //   });
-  // });
-
-  // describe('addData', () => {
-  //   it('should add data to the data crossfilter', () => {
-  //     expect(statUtil.data.size()).to.equal(data.length);
-  //     statUtil.dataUtil.addData([
-  //       new Types.SMBG({ value: 200 }),
-  //     ]);
-  //     expect(statUtil.data.size()).to.equal(data.length + 1);
-  //   });
-
-  //   it('should update `bgSources` and `defaultBgSource` after adding new data', () => {
-  //     statUtil = new StatUtil(smbgData, defaultOpts);
-
-  //     expect(statUtil.bgSources).to.eql({
-  //       cbg: false,
-  //       smbg: true,
-  //     });
-  //     expect(statUtil.defaultBgSource).to.eql('smbg');
-
-  //     statUtil.dataUtil.addData([
-  //       new Types.CBG({ value: 200 }),
-  //     ]);
-
-  //     expect(statUtil.bgSources).to.eql({
-  //       cbg: true,
-  //       smbg: true,
-  //     });
-
-  //     expect(statUtil.defaultBgSource).to.eql('cbg');
   //   });
   // });
 
