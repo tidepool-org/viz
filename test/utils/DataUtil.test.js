@@ -5,7 +5,7 @@ import { types as Types } from '../../data/types';
 import { MGDL_UNITS, MS_IN_HOUR } from '../../src/utils/constants';
 /* eslint-disable max-len, no-underscore-dangle */
 
-describe.only('DataUtil', () => {
+describe('DataUtil', () => {
   let dataUtil;
 
   const useRawData = {
@@ -777,21 +777,7 @@ describe.only('DataUtil', () => {
     });
   });
 
-  describe.only('validateDatumIn', () => {
-    before(() => {
-      DataUtil.__Rewire__('Validator', {
-        type1: sinon.stub().returns(true),
-        type2: {
-          subType1: sinon.stub().returns(true),
-          subType2: sinon.stub().returns(true),
-        },
-      });
-    });
-
-    after(() => {
-      DataUtil.__ResetDependency__('Validator');
-    });
-
+  describe('validateDatumIn', () => {
     it('should call all matching validators for a datum type', () => {
 
     });
