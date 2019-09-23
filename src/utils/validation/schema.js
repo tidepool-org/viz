@@ -169,20 +169,14 @@ const settingsScheduleStart = {
 };
 
 const basalSchedules = {
-  type: 'array',
-  items: {
-    type: 'object',
-    props: {
-      name: { type: 'string' },
-      value: {
-        type: 'array',
-        items: {
-          type: 'object',
-          props: {
-            ...settingsScheduleStart,
-            rate: minZero,
-          },
-        },
+  type: 'objectWithUnknownKeys',
+  schema: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        ...settingsScheduleStart,
+        rate: minZero,
       },
     },
   },
