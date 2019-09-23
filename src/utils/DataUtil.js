@@ -252,7 +252,7 @@ export class DataUtil {
 
       if (_.includes(fields, 'msPer24')) d.msPer24 = getMsPer24(d.normalTime, timezoneName);
       if (_.includes(fields, 'localDate')) {
-        d.localDate = moment.utc(d[this.activeTimeField]).tz(timezoneName).format('YYYY-MM-DD');
+        d.localDate = moment.utc(d[this.activeTimeField]).tz(timezoneName || 'UTC').format('YYYY-MM-DD');
       }
     }
 

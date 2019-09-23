@@ -5,7 +5,7 @@ import { types as Types } from '../../data/types';
 import { MGDL_UNITS, MS_IN_HOUR } from '../../src/utils/constants';
 /* eslint-disable max-len, no-underscore-dangle */
 
-describe('DataUtil', () => {
+describe.only('DataUtil', () => {
   let dataUtil;
 
   const useRawData = {
@@ -248,12 +248,12 @@ describe('DataUtil', () => {
     endpoints: dayEndpoints,
   };
 
-  const initDataUtil = (dataset) => {
-    dataUtil = new DataUtil(dataset);
+  const initDataUtil = (dataset, validator) => {
+    dataUtil = new DataUtil(dataset, validator);
   };
 
-  const initDataUtilWithQuery = (dataset, query) => {
-    dataUtil = new DataUtil(dataset);
+  const initDataUtilWithQuery = (dataset, validator, query) => {
+    dataUtil = new DataUtil(dataset, validator);
     dataUtil.query(query);
   };
 
@@ -778,16 +778,480 @@ describe('DataUtil', () => {
   });
 
   describe('validateDatumIn', () => {
-    it('should call all matching validators for a datum type', () => {
+    const validatorStub = {
+      typeWithSingleValidator: sinon.stub().returns(true),
+      typeWithMultipleValidators: {
+        schema1: sinon.stub().returns('unworthy'),
+        schema2: sinon.stub().returns(true),
+        schema3: sinon.stub().returns(true),
+      },
+      typeThatWillFail: {
+        worthiness: sinon.stub().returns('unworthy'),
+        health: sinon.stub().returns('unhealthy'),
+      },
+      common: sinon.stub().returns(true),
+    };
 
+    beforeEach(() => {
+      initDataUtil([], validatorStub);
+    });
+
+    it('should call all matching validators for a datum type until one returns true', () => {
+      sinon.assert.notCalled(dataUtil.validator.typeWithSingleValidator);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema1);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema2);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema3);
+
+      dataUtil.validateDatumIn({ type: 'typeWithSingleValidator' });
+
+      sinon.assert.calledOnce(dataUtil.validator.typeWithSingleValidator);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema1);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema2);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema3);
+
+
+      dataUtil.validateDatumIn({ type: 'typeWithMultipleValidators' });
+
+      sinon.assert.calledOnce(dataUtil.validator.typeWithMultipleValidators.schema1);
+      sinon.assert.calledOnce(dataUtil.validator.typeWithMultipleValidators.schema2);
+      sinon.assert.notCalled(dataUtil.validator.typeWithMultipleValidators.schema3);
     });
 
     it('should call the common validator if no validators exist for the datum type', () => {
-
+      sinon.assert.notCalled(dataUtil.validator.common);
+      dataUtil.validateDatumIn({ type: 'typeWithNoValidator' });
+      sinon.assert.calledOnce(dataUtil.validator.common);
     });
 
     it('should flag a datum that fails all run validators as rejected and add the reject reasons to the datum', () => {
+      const datum = { type: 'typeThatWillFail' };
+      dataUtil.validateDatumIn(datum);
 
+      expect(datum.reject).to.be.true;
+      expect(datum.rejectReason).to.eql(['unworthy', 'unhealthy']);
+    });
+  });
+
+  describe('normalizeDatumOut', () => {
+    it('should call `normalizeDatumOutTime` with the provided datum and fields array', () => {
+      sinon.stub(dataUtil, 'normalizeDatumOutTime');
+
+      const datum = { type: 'foo' };
+      const fields = ['bar'];
+
+      dataUtil.normalizeDatumOut(datum, fields);
+
+      sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum, fields);
+    });
+
+    it('should add the `deviceSerialNumber` from the `uploadMap` when `uploadId` is present and the field is requested', () => {
+      const datum = { type: 'foo' };
+      const uploadIdDatum = { ...datum, uploadId: '12345' };
+      const fields = ['deviceSerialNumber'];
+
+      dataUtil.uploadMap = {
+        12345: { deviceSerialNumber: 'abc-de' },
+      };
+
+      dataUtil.normalizeDatumOut(datum, fields);
+      expect(datum.deviceSerialNumber).to.be.undefined;
+
+      dataUtil.normalizeDatumOut(uploadIdDatum, fields);
+      expect(uploadIdDatum.deviceSerialNumber).to.equal('abc-de');
+    });
+
+    it('should add the `source` from the `uploadMap` when available, else set to `Unspecified Data Source`', () => {
+      const datum = { type: 'foo' };
+      const uploadWithSourceDatum = { ...datum, uploadId: '12345' };
+      const uploadWithoutSourceDatum = { ...datum, uploadId: '678910' };
+
+      dataUtil.uploadMap = {
+        12345: { source: 'pumpCo' },
+        678910: { source: undefined },
+      };
+
+      dataUtil.normalizeDatumOut(uploadWithSourceDatum);
+      expect(uploadWithSourceDatum.source).to.equal('pumpCo');
+
+      dataUtil.normalizeDatumOut(uploadWithoutSourceDatum);
+      expect(uploadWithoutSourceDatum.source).to.equal('Unspecified Data Source');
+    });
+
+    context('basal', () => {
+      it('should set `normalEnd` by adding the `normalTime` and `duration` fields', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
+        const datum = { type: 'basal', normalTime: 1000, duration: 500 };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(1500);
+      });
+
+      it('should copy `deliveryType` to `subType`', () => {
+        const datum = { type: 'basal', deliveryType: 'temp' };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.subType).to.equal('temp');
+      });
+
+      it('should add an annotation for basal intersecting an incomplete suspend when `annotations` field is requested', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
+        const datum = { type: 'basal', normalTime: 1000, duration: 500, annotations: [{ code: 'foo' }] };
+        const fields = ['annotations'];
+
+        dataUtil.activeTimeField = 'time';
+        dataUtil.incompleteSuspends = [
+          { time: 2000 }, // With a normalEnd of 1500, datum does not intersect this incomplete suspend
+        ];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.annotations[0]).to.eql({ code: 'foo' });
+        expect(datum.annotations[1]).to.be.undefined;
+
+        dataUtil.incompleteSuspends = [
+          { time: 2000 }, // With a normalEnd of 1500, datum does not intersect this incomplete suspend
+          { time: 1250 }, // But it does intersect this one.
+        ];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.annotations[0]).to.eql({ code: 'foo' });
+        expect(datum.annotations[1]).to.eql({ code: 'basal/intersects-incomplete-suspend' });
+      });
+    });
+
+    context('cbg', () => {
+      it('should call `normalizeDatumBgUnits` with the provided datum', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'cbg' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(dataUtil.normalizeDatumBgUnits, datum);
+      });
+
+      it('should set the `msPer24` field according to the dataUtil timezone when requested', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'cbg', time: Date.parse('2018-02-01T00:00:00') };
+        const fields = ['msPer24'];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal(0); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal(0); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal((24 - 5) * MS_IN_HOUR); // GMT-5 for US/Eastern
+
+        dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal((24 - 8) * MS_IN_HOUR); // GMT-8 for US/Pacific
+      });
+
+      it('should set the `localDate` field according to the dataUtil timezone when requested', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'cbg', time: Date.parse('2018-02-01T04:00:00') };
+        const fields = ['localDate'];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.localDate).to.equal('2018-02-01'); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.localDate).to.equal('2018-02-01'); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.localDate).to.equal('2018-01-31'); // GMT-5 for US/Eastern
+      });
+    });
+
+    context('smbg', () => {
+      it('should call `normalizeDatumBgUnits` with the provided datum', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'smbg' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(dataUtil.normalizeDatumBgUnits, datum);
+      });
+
+      it('should set the `msPer24` field according to the dataUtil timezone when requested', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'smbg', time: Date.parse('2018-02-01T00:00:00') };
+        const fields = ['msPer24'];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal(0); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal(0); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal((24 - 5) * MS_IN_HOUR); // GMT-5 for US/Eastern
+
+        dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.msPer24).to.equal((24 - 8) * MS_IN_HOUR); // GMT-8 for US/Pacific
+      });
+
+      it('should set the `localDate` field according to the dataUtil timezone when requested', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'smbg', time: Date.parse('2018-02-01T04:00:00') };
+        const fields = ['localDate'];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.localDate).to.equal('2018-02-01'); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.localDate).to.equal('2018-02-01'); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.localDate).to.equal('2018-01-31'); // GMT-5 for US/Eastern
+      });
+    });
+
+    context('pumpSettings', () => {
+      it('should call `normalizeDatumBgUnits` with keypaths and keys for bg target settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'pumpSettings' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(
+          dataUtil.normalizeDatumBgUnits,
+          datum,
+          ['bgTarget', 'bgTargets'],
+          ['target', 'low', 'high']
+        );
+      });
+
+      it('should call `normalizeDatumBgUnits` with keypaths and keys for insulin settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'pumpSettings' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(
+          dataUtil.normalizeDatumBgUnits,
+          datum,
+          ['insulinSensitivity', 'insulinSensitivities'],
+          ['amount']
+        );
+      });
+
+      it('should set basalSchedules object to an array sorted by name: `standard` first, then alphabetical', () => {
+        const datum = {
+          type: 'pumpSettings',
+          basalSchedules: {
+            Weekday: [{ start: 0, rate: 0.15 }],
+            standard: [{ start: 0, rate: 0.25 }],
+            Exercise: [{ start: 0, rate: 0.125 }],
+          },
+        };
+
+        const fields = ['basalSchedules'];
+
+        dataUtil.normalizeDatumOut(datum, fields);
+        expect(datum.basalSchedules).to.eql([
+          { name: 'standard', value: [{ start: 0, rate: 0.25 }] },
+          { name: 'Exercise', value: [{ start: 0, rate: 0.125 }] },
+          { name: 'Weekday', value: [{ start: 0, rate: 0.15 }] },
+        ]);
+      });
+    });
+
+    context('wizard', () => {
+      it('should call `normalizeDatumBgUnits` with keypaths and keys for bg input settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'wizard' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(
+          dataUtil.normalizeDatumBgUnits,
+          datum,
+          [],
+          ['bgInput']
+        );
+      });
+
+      it('should call `normalizeDatumBgUnits` with keypaths and keys for bg target settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'wizard' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(
+          dataUtil.normalizeDatumBgUnits,
+          datum,
+          ['bgTarget'],
+          ['target', 'range', 'low', 'high']
+        );
+      });
+
+      it('should call `normalizeDatumBgUnits` with keypaths and keys for insulin sensitivity settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumBgUnits');
+
+        const datum = { type: 'wizard' };
+
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithExactly(
+          dataUtil.normalizeDatumBgUnits,
+          datum,
+          [],
+          ['insulinSensitivity']
+        );
+      });
+
+      it('should call `normalizeDatumOut` on bolus field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumOut');
+
+        const datumWithBolusString = { type: 'wizard', bolus: 'some-string-id' };
+        const datumWithBolusObject = { type: 'wizard', bolus: { id: 'some-string-id' } };
+
+        dataUtil.normalizeDatumOut(datumWithBolusString);
+        sinon.assert.neverCalledWith(dataUtil.normalizeDatumOut, datumWithBolusString.bolus);
+
+        dataUtil.normalizeDatumOut(datumWithBolusObject);
+        sinon.assert.calledWithExactly(dataUtil.normalizeDatumOut, datumWithBolusObject.bolus);
+      });
+    });
+
+    context('bolus', () => {
+      it('should call `normalizeDatumOut` on wizard field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumOut');
+
+        const datumWithWizardString = { type: 'bolus', wizard: 'some-string-id' };
+        const datumWithWizardObject = { type: 'bolus', wizard: { id: 'some-string-id' } };
+
+        dataUtil.normalizeDatumOut(datumWithWizardString);
+        sinon.assert.neverCalledWith(dataUtil.normalizeDatumOut, datumWithWizardString.wizard);
+
+        dataUtil.normalizeDatumOut(datumWithWizardObject);
+        sinon.assert.calledWithExactly(dataUtil.normalizeDatumOut, datumWithWizardObject.wizard);
+      });
+    });
+
+    context('fill', () => {
+      it('should set `normalEnd` by adding the `normalTime` and `duration` fields', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
+        const datum = { type: 'fill', normalTime: 1000, displayOffset: 0, duration: 500 };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(1500);
+      });
+
+      it('should set the `msPer24` field according to the dataUtil timezone', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'fill', time: Date.parse('2018-02-01T00:00:00') };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.msPer24).to.equal(0); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.msPer24).to.equal(0); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.msPer24).to.equal((24 - 5) * MS_IN_HOUR); // GMT-5 for US/Eastern
+
+        dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.msPer24).to.equal((24 - 8) * MS_IN_HOUR); // GMT-8 for US/Pacific
+      });
+
+      it('should set the `hourOfDay` field according to the dataUtil timezone', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'fill', time: Date.parse('2018-02-01T00:00:00') };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.hourOfDay).to.equal(0); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.hourOfDay).to.equal(0); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.hourOfDay).to.equal((24 - 5)); // GMT-5 for US/Eastern
+
+        dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.hourOfDay).to.equal((24 - 8)); // GMT-8 for US/Pacific
+      });
+
+      it('should set the `fillDate` field according to the dataUtil timezone', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'fill', time: Date.parse('2018-02-01T04:00:00') };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.fillDate).to.equal('2018-02-01'); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.fillDate).to.equal('2018-02-01'); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.fillDate).to.equal('2018-01-31'); // GMT-5 for US/Eastern
+      });
+
+      it('should set the `id` field according to the dataUtil timezone', () => {
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.activeTimeField = 'time';
+
+        const datum = { type: 'fill', time: Date.parse('2018-02-01T04:00:00') };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.id).to.equal('fill_20180201T040000000Z'); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.id).to.equal('fill_20180201T040000000Z'); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.id).to.equal('fill_20180201T040000000Z'); // GMT-5 for US/Eastern
+      });
+    });
+  });
+
+  describe.only('normalizeDatumOutTime', () => {
+    context('timezone name set', () => {
+      it('should copy `time` to `normalTime`', () => {
+
+      });
+
+      it('should set the `displayOffest` field according to the dataUtil timezone', () => {
+
+      });
+    });
+
+    context('suppressed basal(s) present', () => {
+      it('should call itself recursively as needed', () => {
+
+      });
     });
   });
 });
