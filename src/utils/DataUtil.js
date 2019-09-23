@@ -40,7 +40,7 @@ import {
 import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
 import { statFetchMethods } from './stat';
-import Validator from './validation/schema';
+import SchemaValidator from './validation/schema';
 
 /* global __DEV__ */
 
@@ -48,12 +48,15 @@ export class DataUtil {
   /**
    * @param {Array} data Raw Tidepool data
    */
-  constructor(data = []) {
+  constructor(data = [], Validator = SchemaValidator) {
     this.log = bows('DataUtil');
+
     /* eslint-disable no-console */
     this.startTimer = __DEV__ ? name => console.time(name) : _.noop;
     this.endTimer = __DEV__ ? name => console.timeEnd(name) : _.noop;
     /* eslint-enable no-console */
+
+    this.validator = Validator;
     this.init(data);
   }
 
@@ -190,8 +193,7 @@ export class DataUtil {
   };
 
   validateDatumIn = d => {
-    let validator = Validator[d.type] || Validator.common;
-
+    let validator = this.validator[d.type] || this.validator.common;
     if (_.isFunction(validator)) validator = { validator };
 
     // Run all validators and store the results in an array
