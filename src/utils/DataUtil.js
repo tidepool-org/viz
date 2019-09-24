@@ -485,7 +485,9 @@ export class DataUtil {
     };
 
     if (!bgSources.current) {
-      if (bgSources.cbg) {
+      if (_.get(this, 'bgSources.current')) {
+        bgSources.current = this.bgSources.current;
+      } else if (bgSources.cbg) {
         bgSources.current = CGM_DATA_KEY;
       } else if (bgSources.smbg) {
         bgSources.current = BGM_DATA_KEY;
