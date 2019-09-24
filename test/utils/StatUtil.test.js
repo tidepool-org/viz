@@ -306,41 +306,7 @@ describe('StatUtil', () => {
       expect(statUtil.endpoints).to.be.an('array');
       expect(statUtil.endpoints).to.eql(_.map(dayEndpoints, Date.parse));
     });
-
-    // it('should set default `chartPrefs` when not provided in opts', () => {
-    //   statUtil = new StatUtil(data, opts({ chartPrefs: undefined }));
-    //   expect(statUtil._chartPrefs).to.eql({});
-    // });
-
-    // it('should set default `endpoints` when not provided in opts', () => {
-    //   statUtil = new StatUtil(data, opts({ endpoints: undefined }));
-    //   expect(statUtil._endpoints).to.eql([]);
-    // });
-
-    // it('should set `bgSources`', () => {
-    //   expect(statUtil.bgSources).to.have.keys(['cbg', 'smbg']);
-    // });
-
-    // it('should set `defaultBgSource`', () => {
-    //   expect(statUtil.defaultBgSource).to.be.oneOf(['cbg', 'smbg']);
-    // });
-
-    // it('should set `latestPump`', () => {
-    //   expect(statUtil.latestPump).to.have.keys(['deviceModel', 'manufacturer']);
-    // });
   });
-
-  // describe('bgSource getter', () => {
-  //   it('should return the `bgSource` from chartPrefs when available', () => {
-  //     statUtil = new StatUtil(data, opts({ bgSource: 'smbg' }));
-  //     expect(statUtil.bgSource).to.equal('smbg');
-  //   });
-
-  //   it('should return the `defaultBgSource` when `bgSource` from chartPrefs is unavailable', () => {
-  //     statUtil = new StatUtil(data, opts({ chartPrefs: undefined }));
-  //     expect(statUtil.bgSource).to.equal('cbg');
-  //   });
-  // });
 
   // describe('bgPrefs setter', () => {
   //   it('should set the `bgUnits` property as provided', () => {
@@ -403,21 +369,6 @@ describe('StatUtil', () => {
   //     expect(statUtil.days).to.equal(1);
   //     filterEndpoints(twoWeekEndpoints);
   //     expect(statUtil.days).to.eql(14);
-  //   });
-  // });
-
-  // describe('removeData', () => {
-  //   it('should call the `clearFilters` method', () => {
-  //     const clearFiltersSpy = sinon.spy(statUtil, 'clearFilters');
-  //     sinon.assert.callCount(clearFiltersSpy, 0);
-  //     statUtil.removeData();
-  //     sinon.assert.callCount(clearFiltersSpy, 1);
-  //   });
-
-  //   it('should remove all data from the crossfilter', () => {
-  //     expect(statUtil.data.size()).to.equal(25);
-  //     statUtil.removeData();
-  //     expect(statUtil.data.size()).to.equal(0);
   //   });
   // });
 
@@ -503,49 +454,6 @@ describe('StatUtil', () => {
   //   });
   // });
 
-  // describe('buildDimensions', () => {
-  //   it('should build the data dimensions', () => {
-  //     statUtil.dimension = {};
-  //     statUtil.buildDimensions();
-  //     expect(statUtil.dimension.byDate).to.be.an('object');
-  //     expect(statUtil.dimension.byDayOfWeek).to.be.an('object');
-  //     expect(statUtil.dimension.byType).to.be.an('object');
-  //   });
-  // });
-
-  // describe('buildFilters', () => {
-  //   it('should build the data filters', () => {
-  //     statUtil.filter = {};
-  //     statUtil.buildFilters();
-  //     expect(statUtil.filter.byActiveDays).to.be.a('function');
-  //     expect(statUtil.filter.byEndpoints).to.be.a('function');
-  //     expect(statUtil.filter.byType).to.be.a('function');
-  //   });
-  // });
-
-  // describe('buildSorts', () => {
-  //   it('should build the data sorters', () => {
-  //     statUtil.sort = {};
-  //     statUtil.buildSorts();
-  //     expect(statUtil.sort.byDate).to.be.a('function');
-  //   });
-  // });
-
-  // describe('clearFilters', () => {
-  //   it('should clear all of the dimension filters', () => {
-  //     const clearbyDateSpy = sinon.spy(statUtil.dimension.byDate, 'filterAll');
-  //     const clearbyDayOfWeekSpy = sinon.spy(statUtil.dimension.byDayOfWeek, 'filterAll');
-  //     const clearbyTypeSpy = sinon.spy(statUtil.dimension.byType, 'filterAll');
-  //     sinon.assert.callCount(clearbyDateSpy, 0);
-  //     sinon.assert.callCount(clearbyDayOfWeekSpy, 0);
-  //     sinon.assert.callCount(clearbyTypeSpy, 0);
-  //     statUtil.clearFilters();
-  //     sinon.assert.callCount(clearbyDateSpy, 1);
-  //     sinon.assert.callCount(clearbyDayOfWeekSpy, 1);
-  //     sinon.assert.callCount(clearbyTypeSpy, 1);
-  //   });
-  // });
-
   describe('getAverageGlucoseData', () => {
     it('should return the median glucose for cbg data', () => {
       statUtil.bgSource = 'cbg';
@@ -606,51 +514,6 @@ describe('StatUtil', () => {
       });
     });
   });
-
-  // describe('getBgSources', () => {
-  //   it('should call the `clearFilters` method', () => {
-  //     const clearFiltersSpy = sinon.spy(statUtil, 'clearFilters');
-  //     sinon.assert.callCount(clearFiltersSpy, 0);
-  //     statUtil.getBgSources();
-  //     sinon.assert.callCount(clearFiltersSpy, 1);
-  //   });
-
-  //   it('should return true for `smbg` and false for `cbg` when only smbg data available', () => {
-  //     statUtil = new StatUtil(smbgData, defaultOpts);
-
-  //     expect(statUtil.getBgSources()).to.eql({
-  //       cbg: false,
-  //       smbg: true,
-  //     });
-  //   });
-
-  //   it('should return false for `smbg` and true for `cbg` when only cbg data available', () => {
-  //     statUtil = new StatUtil(cbgData, defaultOpts);
-
-  //     expect(statUtil.getBgSources()).to.eql({
-  //       cbg: true,
-  //       smbg: false,
-  //     });
-  //   });
-
-  //   it('should return true for `smbg` and true for `cbg` when both types of bg data available', () => {
-  //     statUtil = new StatUtil([...cbgData, ...smbgData], defaultOpts);
-
-  //     expect(statUtil.getBgSources()).to.eql({
-  //       cbg: true,
-  //       smbg: true,
-  //     });
-  //   });
-
-  //   it('should return false for `smbg` and false for `cbg` when neither type of bg data available', () => {
-  //     statUtil = new StatUtil([], defaultOpts);
-
-  //     expect(statUtil.getBgSources()).to.eql({
-  //       cbg: false,
-  //       smbg: false,
-  //     });
-  //   });
-  // });
 
   describe('getCarbsData', () => {
     it('should return the total carbs from wizard and food data when viewing 1 day', () => {
@@ -770,28 +633,6 @@ describe('StatUtil', () => {
     });
   });
 
-  // describe('getDefaultBgSource', () => {
-  //   it('should return `cbg` when only cbg data is available', () => {
-  //     statUtil = createStatUtil(cbgData, defaultOpts);
-  //     expect(statUtil.getDefaultBgSource()).to.equal('cbg');
-  //   });
-
-  //   it('should return `cbg` when cbg and smbg data is available', () => {
-  //     statUtil = createStatUtil([...cbgData, ...smbgData], defaultOpts);
-  //     expect(statUtil.getDefaultBgSource()).to.equal('cbg');
-  //   });
-
-  //   it('should return `smbg` when cbg data is unavailable and smbg data is available', () => {
-  //     statUtil = createStatUtil(smbgData, defaultOpts);
-  //     expect(statUtil.getDefaultBgSource()).to.equal('smbg');
-  //   });
-
-  //   it('should return `undefined` when neither cbg nor smbg data is available', () => {
-  //     statUtil = createStatUtil([], defaultOpts);
-  //     expect(statUtil.getDefaultBgSource()).to.be.undefined;
-  //   });
-  // });
-
   // describe('getDayCountFromEndpoints', () => {
   //   it('should return the endpoints range in days', () => {
   //     filterEndpoints(dayEndpoints);
@@ -889,22 +730,6 @@ describe('StatUtil', () => {
       });
     });
   });
-
-  // describe('getLatestPump', () => {
-  //   it('should return the make and model of the latest pump uploaded', () => {
-  //     expect(statUtil.getLatestPump()).to.eql({
-  //       manufacturer: 'medtronic',
-  //       deviceModel: '1780',
-  //     });
-
-  //     statUtil = createStatUtil(uploadData.slice(0, 1), defaultOpts);
-
-  //     expect(statUtil.getLatestPump()).to.eql({
-  //       manufacturer: 'insulet',
-  //       deviceModel: 'dash',
-  //     });
-  //   });
-  // });
 
   describe('getReadingsInRangeData', () => {
     it('should return the readings in range data when viewing 1 day', () => {

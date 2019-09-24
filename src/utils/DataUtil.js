@@ -539,7 +539,7 @@ export class DataUtil {
     _.each(uploadData, upload => {
       let source = 'Unknown';
 
-      if (_.has(upload, 'source')) {
+      if (_.get(upload, 'source')) {
         source = upload.source;
       } else if (_.isArray(upload.deviceManufacturers) && !_.isEmpty(upload.deviceManufacturers)) {
         // Uploader does not specify `source` for CareLink uploads, so they incorrectly get set to

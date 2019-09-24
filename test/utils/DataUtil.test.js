@@ -1,8 +1,12 @@
 import _ from 'lodash';
+import moment from 'moment';
 
 import DataUtil from '../../src/utils/DataUtil';
 import { types as Types } from '../../data/types';
-import { MGDL_UNITS, MS_IN_HOUR } from '../../src/utils/constants';
+import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS } from '../../src/utils/constants';
+
+import medtronicMultirate from '../../data/pumpSettings/medtronic/multirate.raw.json';
+import omnipodMultirate from '../../data/pumpSettings/omnipod/multirate.raw.json';
 /* eslint-disable max-len, no-underscore-dangle */
 
 describe.only('DataUtil', () => {
@@ -143,6 +147,11 @@ describe.only('DataUtil', () => {
     }),
   ], _.toPlainObject);
 
+  const pumpSettingsData = [
+    { ...omnipodMultirate, deviceTime: '2018-01-02T00:00:00' },
+    { ...medtronicMultirate, deviceTime: '2018-02-02T00:00:00' },
+  ];
+
   const smbgData = _.map([
     new Types.SMBG({
       value: 60,
@@ -176,14 +185,18 @@ describe.only('DataUtil', () => {
       deviceTags: ['insulin-pump'],
       source: 'Insulet',
       deviceModel: 'dash',
+      deviceSerialNumber: 'sn-1',
       deviceTime: '2018-01-02T00:00:00',
+      uploadId: 'upload-1',
       ...useRawData,
     }),
     new Types.Upload({
       deviceTags: ['insulin-pump'],
       source: 'Medtronic',
       deviceModel: '1780',
+      deviceSerialNumber: 'sn-2',
       deviceTime: '2018-02-02T00:00:00',
+      uploadId: 'upload-2',
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -213,6 +226,7 @@ describe.only('DataUtil', () => {
     ...bolusData,
     ...cbgData,
     ...foodData,
+    ...pumpSettingsData,
     ...smbgData,
     ...uploadData,
     ...wizardData,
@@ -370,6 +384,7 @@ describe.only('DataUtil', () => {
         'bolus',
         'cbg',
         'food',
+        'pumpSettings',
         'smbg',
         'upload',
         'wizard',
@@ -1237,20 +1252,719 @@ describe.only('DataUtil', () => {
     });
   });
 
-  describe.only('normalizeDatumOutTime', () => {
+  describe('normalizeDatumOutTime', () => {
     context('timezone name set', () => {
       it('should copy `time` to `normalTime`', () => {
+        const datum = { time: Date.parse('2018-02-01T00:00:00') };
+        dataUtil.normalizeDatumOutTime(datum);
 
+        expect(datum.normalTime).to.equal(datum.time);
       });
 
       it('should set the `displayOffest` field according to the dataUtil timezone', () => {
+        const datum = { time: Date.parse('2018-02-01T00:00:00') };
 
+        dataUtil.timePrefs = { timezoneName: 'UTC' };
+        dataUtil.normalizeDatumOutTime(datum);
+        expect(datum.displayOffset).to.equal(0); // GMT-0 for UTC
+
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOutTime(datum);
+        expect(datum.displayOffset).to.equal(0); // fallback to GMT-0 for UTC when not timezone-aware
+
+        dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOutTime(datum);
+        expect(datum.displayOffset).to.equal(-5 * MS_IN_HOUR / MS_IN_MIN); // GMT-5 for US/Eastern
+
+        dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
+        dataUtil.normalizeDatumOutTime(datum);
+        expect(datum.displayOffset).to.equal(-8 * MS_IN_HOUR / MS_IN_MIN); // GMT-8 for US/Pacific
       });
     });
 
     context('suppressed basal(s) present', () => {
       it('should call itself recursively as needed', () => {
+        const datum = { time: Date.parse('2018-02-01T00:00:00'), suppressed: { type: 'basal', suppressed: { type: 'scheduled' } } };
+        const fields = ['suppressed'];
 
+        sinon.spy(dataUtil, 'normalizeDatumOutTime');
+
+        dataUtil.normalizeDatumOutTime(datum, fields);
+
+        sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum.suppressed, fields);
+        sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum.suppressed.suppressed, fields);
+      });
+    });
+  });
+
+  describe('normalizeDatumBgUnits', () => {
+    beforeEach(() => {
+      dataUtil.bgPrefs = { bgUnits: MGDL_UNITS };
+    });
+
+    it('should convert the `value` field by default if bg prefs are for mg/dL units', () => {
+      const datum = { value: 10 };
+
+      dataUtil.normalizeDatumBgUnits(datum);
+      expect(datum.value).to.equal(180.1559);
+    });
+
+    it('should not convert the `value` field if bg prefs are for mmol/L units', () => {
+      dataUtil.bgPrefs = { bgUnits: MMOLL_UNITS };
+      const datum = { value: 10 };
+
+      dataUtil.normalizeDatumBgUnits(datum);
+      expect(datum.value).to.equal(10);
+    });
+
+    it('should update the `units` field if bg prefs are for mg/dL units', () => {
+      const datumWithUnitsString = { value: 10, units: MMOLL_UNITS };
+      const datumWithUnitsObject = { value: 10, units: { bg: MMOLL_UNITS } };
+
+      dataUtil.normalizeDatumBgUnits(datumWithUnitsString);
+      expect(datumWithUnitsString.units).to.equal(MGDL_UNITS);
+
+      dataUtil.normalizeDatumBgUnits(datumWithUnitsObject);
+      expect(datumWithUnitsObject.units.bg).to.equal(MGDL_UNITS);
+    });
+
+    it('should convert any specified fields at the root of an object', () => {
+      const datum = { myField1: 10, myField2: 1 };
+
+      dataUtil.normalizeDatumBgUnits(datum, [], ['myField1', 'myField2']);
+      expect(datum.myField1).to.equal(180.1559);
+      expect(datum.myField2).to.equal(18.01559);
+    });
+
+    it('should convert any specified fields in nested object properties', () => {
+      const datum = {
+        deeply: {
+          nested: { myField1: 10, myField2: 1 },
+        },
+      };
+
+      dataUtil.normalizeDatumBgUnits(datum, ['deeply', 'nested'], ['myField1', 'myField2']);
+      expect(datum.deeply.nested.myField1).to.equal(180.1559);
+      expect(datum.deeply.nested.myField2).to.equal(18.01559);
+    });
+
+    it('should convert any specified fields in nested arrays', () => {
+      const datum = {
+        deeply: {
+          nested: [
+            { myField1: 10, myField2: 1 },
+            { myField1: 1, myField2: 10 },
+          ],
+        },
+      };
+
+      dataUtil.normalizeDatumBgUnits(datum, ['deeply', 'nested'], ['myField1', 'myField2']);
+      expect(datum.deeply.nested[0].myField1).to.equal(180.1559);
+      expect(datum.deeply.nested[0].myField2).to.equal(18.01559);
+      expect(datum.deeply.nested[1].myField1).to.equal(18.01559);
+      expect(datum.deeply.nested[1].myField2).to.equal(180.1559);
+    });
+  });
+
+  describe('normalizeSuppressedBasal', () => {
+    it('should add missing rate to a suppressed temp basal', () => {
+      const datum = {
+        suppressed: {
+          deliveryType: 'temp',
+          percent: 0.5,
+          suppressed: {
+            deliveryType: 'scheduled',
+            rate: 0.2,
+          },
+        },
+      };
+
+      dataUtil.normalizeSuppressedBasal(datum);
+      expect(datum.suppressed.rate).to.equal(0.1);
+    });
+
+    it('should set the suppressed `duration`, `time`, and `deviceTIme` to the parent values', () => {
+      const datum = {
+        duration: 1000,
+        time: '2018-02-01T00:00:00',
+        deviceTime: '2018-02-01T00:00:00',
+        suppressed: {
+          deliveryType: 'temp',
+        },
+      };
+
+      dataUtil.normalizeSuppressedBasal(datum);
+      expect(datum.suppressed.duration).to.equal(1000);
+      expect(datum.suppressed.time).to.equal(Date.parse('2018-02-01T00:00:00'));
+      expect(datum.suppressed.deviceTime).to.equal(Date.parse('2018-02-01T00:00:00'));
+    });
+
+    it('should call itself recursively as needed', () => {
+      const datum = {
+        duration: 1000,
+        time: '2018-02-01T00:00:00',
+        suppressed: {
+          deliveryType: 'suspend',
+          suppressed: {
+            deliveryType: 'temp',
+            suppressed: {
+              deliveryType: 'scheduled',
+            },
+          },
+        },
+      };
+
+      sinon.spy(dataUtil, 'normalizeSuppressedBasal');
+
+      dataUtil.normalizeSuppressedBasal(datum);
+
+      sinon.assert.calledWith(dataUtil.normalizeSuppressedBasal, sinon.match(datum.suppressed));
+      sinon.assert.calledWith(dataUtil.normalizeSuppressedBasal, sinon.match(datum.suppressed.suppressed));
+    });
+  });
+
+  describe('removeData', () => {
+    it('should call the `clearFilters` method', () => {
+      const clearFiltersSpy = sinon.spy(dataUtil, 'clearFilters');
+      sinon.assert.callCount(clearFiltersSpy, 0);
+      dataUtil.removeData();
+      sinon.assert.callCount(clearFiltersSpy, 1);
+    });
+
+    it('should remove all data from the crossfilter when no predicate arg supplied', () => {
+      initDataUtil(defaultData);
+      expect(dataUtil.data.size()).to.equal(26);
+      dataUtil.removeData();
+      expect(dataUtil.data.size()).to.equal(0);
+    });
+
+    it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
+      initDataUtil(defaultData);
+      expect(dataUtil.data.size()).to.equal(26);
+      dataUtil.removeData(d => (d.type === 'basal'));
+      expect(dataUtil.data.size()).to.equal(23);
+    });
+
+    it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
+      initDataUtil(defaultData);
+      expect(dataUtil.data.size()).to.equal(26);
+      dataUtil.removeData({ type: 'basal' });
+      expect(dataUtil.data.size()).to.equal(23);
+    });
+  });
+
+  describe('updateDatum', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should fetch the exisiting datum by matching `id`', () => {
+      sinon.spy(dataUtil.filter, 'byId');
+      dataUtil.updateDatum({ id: defaultData[0].id, updated: true });
+      sinon.assert.calledWith(dataUtil.filter.byId, defaultData[0].id);
+    });
+
+    it('should call `normalizeDatumIn` with a clone of the existing datum being updated', () => {
+      sinon.spy(dataUtil, 'normalizeDatumIn');
+      sinon.spy(_, 'cloneDeep');
+
+      const updatedDatum = { id: defaultData[0].id, updated: true };
+      dataUtil.updateDatum(updatedDatum);
+
+      sinon.assert.calledWith(_.cloneDeep, updatedDatum);
+      sinon.assert.calledWith(dataUtil.normalizeDatumIn, sinon.match(updatedDatum));
+
+      _.cloneDeep.restore();
+    });
+
+    it('should update the existing datum, but only if it passes validation', () => {
+      sinon.spy(_, 'assign');
+      const normalisedExistingDatum = {
+        ...defaultData[0],
+        time: Date.parse(defaultData[0].time),
+        deviceTime: Date.parse(defaultData[0].time),
+      };
+
+      const badUpdatedDatum = { ...defaultData[0], deliveryType: 'foo' };
+      const goodUpdatedDatum = { ...defaultData[0], deliveryType: 'scheduled' };
+
+      dataUtil.updateDatum(badUpdatedDatum);
+      sinon.assert.notCalled(_.assign);
+
+      expect(dataUtil.filter.byId(goodUpdatedDatum.id).top(1)[0].deliveryType).to.equal('automated');
+
+      dataUtil.updateDatum(goodUpdatedDatum);
+      sinon.assert.calledWith(_.assign, sinon.match({
+        ...normalisedExistingDatum,
+        deliveryType: 'scheduled',
+      }));
+
+      expect(dataUtil.filter.byId(goodUpdatedDatum.id).top(1)[0].deliveryType).to.equal('scheduled');
+
+      _.assign.restore();
+    });
+
+    it('should clear all filters and reset the byId filter after filtering by id', () => {
+      sinon.stub(dataUtil, 'clearFilters');
+      sinon.spy(dataUtil.filter, 'byId');
+      sinon.spy(dataUtil.dimension.byId, 'filterAll');
+
+      const updatedDatum = { id: defaultData[0].id, updated: true };
+      dataUtil.updateDatum(updatedDatum);
+
+      sinon.assert.calledOnce(dataUtil.clearFilters);
+      sinon.assert.calledOnce(dataUtil.filter.byId);
+      sinon.assert.calledOnce(dataUtil.dimension.byId.filterAll);
+      sinon.assert.callOrder(dataUtil.clearFilters, dataUtil.filter.byId, dataUtil.dimension.byId.filterAll);
+    });
+
+    it('should update the byTime dimension', () => {
+      sinon.spy(dataUtil, 'buildByTimeDimension');
+
+      const updatedDatum = { id: defaultData[0].id, updated: true };
+      dataUtil.updateDatum(updatedDatum);
+
+      sinon.assert.calledOnce(dataUtil.buildByTimeDimension);
+    });
+  });
+
+  describe('buildByDayOfWeekDimension', () => {
+    it('should build the `byDayOfWeek` dimension', () => {
+      delete dataUtil.dimension.byDayOfWeek;
+
+      dataUtil.buildByDayOfWeekDimension();
+      expect(dataUtil.dimension.byDayOfWeek).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildByDateDimension', () => {
+    it('should build the `byDate` dimension', () => {
+      delete dataUtil.dimension.byDate;
+
+      dataUtil.buildByDateDimension();
+      expect(dataUtil.dimension.byDate).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildByIdDimension', () => {
+    it('should build the `byId` dimension', () => {
+      delete dataUtil.dimension.byId;
+
+      dataUtil.buildByIdDimension();
+      expect(dataUtil.dimension.byId).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildBySubTypeDimension', () => {
+    it('should build the `bySubType` dimension', () => {
+      delete dataUtil.dimension.bySubType;
+
+      dataUtil.buildBySubTypeDimension();
+      expect(dataUtil.dimension.bySubType).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildByTimeDimension', () => {
+    it('should build the `byTime` dimension', () => {
+      delete dataUtil.dimension.byTime;
+
+      dataUtil.buildByTimeDimension();
+      expect(dataUtil.dimension.byTime).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildByTypeDimension', () => {
+    it('should build the `byType` dimension', () => {
+      delete dataUtil.dimension.byType;
+
+      dataUtil.buildByTypeDimension();
+      expect(dataUtil.dimension.byType).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildDimensions', () => {
+    it('should build the data dimensions', () => {
+      dataUtil.dimension = {};
+      dataUtil.buildDimensions();
+      expect(dataUtil.dimension.byDayOfWeek).to.be.an('object');
+      expect(dataUtil.dimension.byDate).to.be.an('object');
+      expect(dataUtil.dimension.byId).to.be.an('object');
+      expect(dataUtil.dimension.bySubType).to.be.an('object');
+      expect(dataUtil.dimension.byTime).to.be.an('object');
+      expect(dataUtil.dimension.byType).to.be.an('object');
+    });
+  });
+
+  describe('buildFilters', () => {
+    it('should build the data filters', () => {
+      dataUtil.filter = {};
+      dataUtil.buildFilters();
+      expect(dataUtil.filter.byActiveDays).to.be.a('function');
+      expect(dataUtil.filter.byEndpoints).to.be.a('function');
+      expect(dataUtil.filter.byType).to.be.a('function');
+      expect(dataUtil.filter.bySubType).to.be.a('function');
+      expect(dataUtil.filter.byId).to.be.a('function');
+    });
+  });
+
+  describe('buildSorts', () => {
+    it('should build the data sorters', () => {
+      dataUtil.sort = {};
+      dataUtil.buildSorts();
+      expect(dataUtil.sort.byTime).to.be.a('function');
+    });
+  });
+
+  describe('clearFilters', () => {
+    it('should clear all of the dimension filters', () => {
+      const clearbyTimeSpy = sinon.spy(dataUtil.dimension.byTime, 'filterAll');
+      const clearbyTypeSpy = sinon.spy(dataUtil.dimension.byType, 'filterAll');
+      const clearbySubTypeSpy = sinon.spy(dataUtil.dimension.bySubType, 'filterAll');
+      const clearbyIdSpy = sinon.spy(dataUtil.dimension.byId, 'filterAll');
+      const clearbyDayOfWeekSpy = sinon.spy(dataUtil.dimension.byDayOfWeek, 'filterAll');
+
+      sinon.assert.callCount(clearbyTimeSpy, 0);
+      sinon.assert.callCount(clearbyTypeSpy, 0);
+      sinon.assert.callCount(clearbySubTypeSpy, 0);
+      sinon.assert.callCount(clearbyIdSpy, 0);
+      sinon.assert.callCount(clearbyDayOfWeekSpy, 0);
+
+      dataUtil.clearFilters();
+
+      sinon.assert.callCount(clearbyTimeSpy, 1);
+      sinon.assert.callCount(clearbyTypeSpy, 1);
+      sinon.assert.callCount(clearbySubTypeSpy, 1);
+      sinon.assert.callCount(clearbyIdSpy, 1);
+      sinon.assert.callCount(clearbyDayOfWeekSpy, 1);
+    });
+  });
+
+  describe('setBgSources', () => {
+    it('should clear all filters before filtering by type', () => {
+      sinon.spy(dataUtil, 'clearFilters');
+      sinon.spy(dataUtil.filter, 'byType');
+
+      dataUtil.setBgSources();
+      sinon.assert.callOrder(dataUtil.clearFilters, dataUtil.filter.byType);
+    });
+
+    it('should set the bgSources property with flags for cbg and smbg availability', () => {
+      dataUtil.setBgSources();
+      expect(dataUtil.bgSources.cbg).to.be.false;
+      expect(dataUtil.bgSources.smbg).to.be.false;
+
+      initDataUtil([...cbgData]);
+      dataUtil.setBgSources();
+      expect(dataUtil.bgSources.cbg).to.be.true;
+      expect(dataUtil.bgSources.smbg).to.be.false;
+
+      initDataUtil([...smbgData]);
+      dataUtil.setBgSources();
+      expect(dataUtil.bgSources.cbg).to.be.false;
+      expect(dataUtil.bgSources.smbg).to.be.true;
+
+      initDataUtil([...cbgData, ...smbgData]);
+      dataUtil.setBgSources();
+      expect(dataUtil.bgSources.cbg).to.be.true;
+      expect(dataUtil.bgSources.smbg).to.be.true;
+    });
+
+    it('should set the current source if provided via arg', () => {
+      expect(dataUtil.bgSources.current).to.be.undefined;
+
+      dataUtil.setBgSources('cbg');
+      expect(dataUtil.bgSources.current).to.equal('cbg');
+
+      dataUtil.setBgSources('smbg');
+      expect(dataUtil.bgSources.current).to.equal('smbg');
+    });
+
+    context('current source is not provided by arg', () => {
+      context('`bgSources.current` property is not already set', () => {
+        it('should set the current source to cbg if cbg data is available', () => {
+          initDataUtil([...cbgData, ...smbgData]);
+          delete(dataUtil.bgSources.current);
+          expect(dataUtil.bgSources.current).to.be.undefined;
+
+          dataUtil.setBgSources();
+          expect(dataUtil.bgSources.current).to.equal('cbg');
+        });
+
+        it('should set the current source to smbg if cbg data is unavailable but smbg data is', () => {
+          initDataUtil([...smbgData]);
+          delete(dataUtil.bgSources.current);
+          expect(dataUtil.bgSources.current).to.be.undefined;
+
+          dataUtil.setBgSources();
+          expect(dataUtil.bgSources.current).to.equal('smbg');
+        });
+      });
+
+      context('`bgSources.current` property is already set', () => {
+        it('should not update the current bg source', () => {
+          initDataUtil([...cbgData, ...smbgData]);
+          dataUtil.bgSources.current = 'smbg';
+
+          dataUtil.setBgSources();
+          expect(dataUtil.bgSources.current).to.equal('smbg');
+        });
+      });
+    });
+  });
+
+  describe('setLatestPumpUpload', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should clear all filters before filtering by `upload` type', () => {
+      sinon.spy(dataUtil, 'clearFilters');
+      sinon.spy(dataUtil.filter, 'byType');
+
+      dataUtil.setLatestPumpUpload();
+      sinon.assert.callOrder(dataUtil.clearFilters, dataUtil.filter.byType);
+      sinon.assert.calledWith(dataUtil.filter.byType, 'upload');
+    });
+
+    it('should sort upload results by time after filtering by `upload` type', () => {
+      sinon.spy(dataUtil.filter, 'byType');
+      sinon.spy(dataUtil.sort, 'byTime');
+
+      dataUtil.setLatestPumpUpload();
+      sinon.assert.calledWith(dataUtil.filter.byType, 'upload');
+      sinon.assert.callOrder(dataUtil.filter.byType, dataUtil.sort.byTime);
+    });
+
+    it('should return the make, model, latest settings, and automated delivery capability of the latest pump uploaded', () => {
+      const latestPumpSettings = { type: 'pumpSettings' };
+      dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
+
+      dataUtil.setLatestPumpUpload();
+
+      expect(dataUtil.latestPumpUpload).to.eql({
+        manufacturer: 'medtronic',
+        deviceModel: '1780',
+        isAutomatedBasalDevice: true,
+        settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
+      });
+
+      dataUtil.removeData({ id: uploadData[1].id });
+
+      dataUtil.setLatestPumpUpload();
+
+      expect(dataUtil.latestPumpUpload).to.eql({
+        manufacturer: 'insulet',
+        deviceModel: 'dash',
+        isAutomatedBasalDevice: false,
+        settings: { ...latestPumpSettings },
+      });
+    });
+  });
+
+  describe('setUploadMap', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should clear all filters before filtering by `upload` and `pumpSettings` types', () => {
+      sinon.spy(dataUtil, 'clearFilters');
+      sinon.spy(dataUtil.filter, 'byType');
+
+      dataUtil.setUploadMap();
+      sinon.assert.callOrder(dataUtil.clearFilters, dataUtil.filter.byType);
+      sinon.assert.calledTwice(dataUtil.filter.byType);
+      sinon.assert.calledWith(dataUtil.filter.byType, 'upload');
+      sinon.assert.calledWith(dataUtil.filter.byType, 'pumpSettings');
+    });
+
+    it('should set the source and device serial number for each upload', () => {
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap).to.be.an('object').and.have.keys([
+        uploadData[0].uploadId,
+        uploadData[1].uploadId,
+      ]);
+
+      expect(dataUtil.uploadMap[uploadData[0].uploadId]).to.eql({
+        source: 'Insulet',
+        deviceSerialNumber: 'sn-1',
+      });
+
+      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+        source: 'Medtronic',
+        deviceSerialNumber: 'sn-2',
+      });
+    });
+
+    it('should set `deviceSerialNumber` to unknown when not available', () => {
+      dataUtil.updateDatum({ ...uploadData[1], deviceSerialNumber: undefined });
+
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+        source: 'Medtronic',
+        deviceSerialNumber: 'Unknown',
+      });
+    });
+
+    it('should set a missing `source` field to first deviceManufacturers array item', () => {
+      dataUtil.updateDatum({ ...uploadData[1], source: undefined, deviceManufacturers: ['pumpCo'] });
+
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+        source: 'pumpCo',
+        deviceSerialNumber: 'sn-2',
+      });
+    });
+
+    it('should fix `source` field for carelink uploads erroneously set to `Medtronic`', () => {
+      dataUtil.updateDatum({ ...uploadData[1], source: undefined, deviceManufacturers: ['Medtronic'] });
+      dataUtil.updateDatum({ ...pumpSettingsData[1], uploadId: uploadData[1].uploadId, source: 'carelink' });
+
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+        source: 'carelink',
+        deviceSerialNumber: 'sn-2',
+      });
+    });
+  });
+
+  describe('setIncompleteSuspends', () => {
+    it('should clear all filters before filtering by `deviceEvent` types, and sorting by time', () => {
+      sinon.spy(dataUtil, 'clearFilters');
+      sinon.spy(dataUtil.filter, 'byType');
+      sinon.spy(dataUtil.sort, 'byTime');
+
+      dataUtil.setIncompleteSuspends();
+      sinon.assert.callOrder(dataUtil.clearFilters, dataUtil.filter.byType, dataUtil.sort.byTime);
+      sinon.assert.calledWith(dataUtil.filter.byType, 'deviceEvent');
+      sinon.assert.calledOnce(dataUtil.sort.byTime);
+    });
+
+    it('should set a list of deviceEvents datums that represent incomplete suspends', () => {
+      const deviceEventData = [
+        { ...new Types.DeviceEvent({ ...useRawData }), annotations: [] },
+        { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }] },
+      ];
+
+      initDataUtil(deviceEventData);
+      delete(dataUtil.incompleteSuspends);
+
+      dataUtil.setIncompleteSuspends();
+      expect(dataUtil.incompleteSuspends).to.be.an('array');
+      expect(dataUtil.incompleteSuspends[0].id).to.equal(deviceEventData[1].id);
+    });
+  });
+
+  describe('setMetaData', () => {
+    it('should call all the metadata setters and in the correct order where required', () => {
+      sinon.spy(dataUtil, 'setBGPrefs');
+      sinon.spy(dataUtil, 'setBgSources');
+      sinon.spy(dataUtil, 'setTimePrefs');
+      sinon.spy(dataUtil, 'setEndpoints');
+      sinon.spy(dataUtil, 'setActiveDays');
+      sinon.spy(dataUtil, 'setTypes');
+      sinon.spy(dataUtil, 'setUploadMap');
+      sinon.spy(dataUtil, 'setLatestPumpUpload');
+      sinon.spy(dataUtil, 'setIncompleteSuspends');
+
+      dataUtil.setMetaData();
+
+      sinon.assert.calledOnce(dataUtil.setBGPrefs);
+      sinon.assert.calledOnce(dataUtil.setBgSources);
+      sinon.assert.calledOnce(dataUtil.setTimePrefs);
+      sinon.assert.calledOnce(dataUtil.setEndpoints);
+      sinon.assert.calledOnce(dataUtil.setActiveDays);
+      sinon.assert.calledOnce(dataUtil.setTypes);
+      sinon.assert.calledOnce(dataUtil.setUploadMap);
+      sinon.assert.calledOnce(dataUtil.setLatestPumpUpload);
+      sinon.assert.calledOnce(dataUtil.setIncompleteSuspends);
+
+      sinon.assert.callOrder(dataUtil.setEndpoints, dataUtil.setActiveDays);
+    });
+  });
+
+  describe.only('setEndpoints', () => {
+    context('endpoints arg missing', () => {
+      it('should set a default `endpoints.current.range` property', () => {
+        delete dataUtil.endpoints;
+
+        dataUtil.setEndpoints();
+        expect(dataUtil.endpoints).to.eql({
+          current: { range: [0, Infinity] },
+        });
+      });
+    });
+
+    context('endpoints arg provided', () => {
+      it('should set `endpoints.current` range, days, and activeDays property using the provided endpoints', () => {
+        delete dataUtil.endpoints;
+
+        dataUtil.setEndpoints(twoDayEndpoints);
+        expect(dataUtil.endpoints.current).to.eql({
+          range: [
+            moment.utc(twoDayEndpoints[0]).valueOf(),
+            moment.utc(twoDayEndpoints[1]).valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+      });
+
+      it('should set `endpoints.next` range, days, and activeDays property using the provided endpoints', () => {
+        delete dataUtil.endpoints;
+
+        dataUtil.setEndpoints(twoDayEndpoints);
+        expect(dataUtil.endpoints.next).to.eql({
+          range: [
+            moment.utc(twoDayEndpoints[1]).valueOf(),
+            moment.utc(twoDayEndpoints[1]).add(2, 'days').valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+      });
+
+      it('should set `endpoints.prev` range, days, and activeDays property using the provided endpoints', () => {
+        delete dataUtil.endpoints;
+
+        dataUtil.setEndpoints(twoDayEndpoints);
+        expect(dataUtil.endpoints.prev).to.eql({
+          range: [
+            moment.utc(twoDayEndpoints[0]).subtract(2, 'days').valueOf(),
+            moment.utc(twoDayEndpoints[0]).valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
       });
     });
   });

@@ -318,6 +318,7 @@ export class Upload extends Common {
     this.source = opts.source;
     this.deviceTime = opts.deviceTime;
     this.deviceModel = opts.deviceModel;
+    this.deviceSerialNumber = opts.deviceSerialNumber;
 
     this.time = this.makeTime();
     this.timezone = opts.timezone;
