@@ -314,7 +314,7 @@ export class DataUtil {
     }
 
     // Recurse as needed for suppressed basals
-    if (d.suppressed && _.includes(fields, 'suppressed')) this.normalizeDatumOutTime(d.suppressed);
+    if (d.suppressed && _.includes(fields, 'suppressed')) this.normalizeDatumOutTime(d.suppressed, fields);
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
