@@ -375,10 +375,13 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  /* eslint-disable no-param-reassign */
   removeData = predicate => {
+    if (_.isPlainObject(predicate)) predicate = _.matches(predicate);
     this.clearFilters();
     this.data.remove(predicate);
   };
+  /* eslint-enable no-param-reassign */
 
   updateDatum = updatedDatum => {
     this.log('Updating Datum', updatedDatum);
