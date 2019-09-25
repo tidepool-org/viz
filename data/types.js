@@ -357,6 +357,7 @@ export class Wizard extends Common {
       deviceTime: this.deviceTime,
     });
 
+    this.bgInput = opts.bgInput;
     this.carbInput = opts.carbInput;
     this.deviceTime = opts.deviceTime;
     this.insulinCarbRatio = opts.insulinCarbRatio;
