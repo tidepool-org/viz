@@ -330,7 +330,7 @@ export class DataUtil {
       const normalizeAtPath = path => {
         const pathValue = path ? _.get(d, path) : d;
 
-        if (_.isPlainObject(pathValue)) {
+        if (_.isPlainObject(pathValue) && _.keys(pathValue).length) {
           _.each(keys, (key) => {
             if (_.isNumber(pathValue[key])) {
               const setPath = _.reject([path, key], _.isEmpty);
@@ -451,8 +451,17 @@ export class DataUtil {
       .filterFunction(d => _.includes(activeDays, d));
 
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
-    this.filter.byType = type => this.dimension.byType.filterExact(type);
-    this.filter.bySubType = subType => this.dimension.bySubType.filterExact(subType);
+
+    this.filter.byType = type => {
+      this.activeType = type;
+      return this.dimension.byType.filterExact(type);
+    };
+
+    this.filter.bySubType = subType => {
+      this.activeSubType = subType;
+      return this.dimension.bySubType.filterExact(subType);
+    };
+
     this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
@@ -577,7 +586,7 @@ export class DataUtil {
 
   setMetaData = () => {
     this.startTimer('setMetaData');
-    this.setBGPrefs();
+    this.setBgPrefs();
     this.setBgSources();
     this.setTimePrefs();
     this.setEndpoints();
@@ -699,7 +708,7 @@ export class DataUtil {
     if (dimensionUpdates.byTime) this.buildByTimeDimension();
   };
 
-  setBGPrefs = (bgPrefs = {}) => {
+  setBgPrefs = (bgPrefs = {}) => {
     const {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
       bgUnits = MGDL_UNITS,
@@ -734,7 +743,7 @@ export class DataUtil {
 
     if (bgSource) this.setBgSources(bgSource);
     if (types) this.setTypes(types);
-    if (bgPrefs) this.setBGPrefs(bgPrefs);
+    if (bgPrefs) this.setBgPrefs(bgPrefs);
     if (timePrefs) this.setTimePrefs(timePrefs);
     if (endpoints) this.setEndpoints(endpoints);
     if (activeDays) this.setActiveDays(activeDays);
@@ -747,14 +756,10 @@ export class DataUtil {
       data[rangeKey] = {};
 
       // Filter the data set by date range
-      if (endpoints) {
-        this.filter.byEndpoints(this.activeEndpoints.range);
-      }
+      this.filter.byEndpoints(this.activeEndpoints.range);
 
       // Filter out any inactive days of the week
-      if (activeDays) {
-        this.filter.byActiveDays(this.activeDays);
-      }
+      this.filter.byActiveDays(this.activeDays);
 
       // Generate the stats for current range
       if (stats && rangeKey === 'current') {
@@ -775,6 +780,7 @@ export class DataUtil {
 
       // Generate the requested fillData
       if (fillData) {
+        data[rangeKey].data = data[rangeKey].data || {};
         data[rangeKey].data.fill = this.getFillData(this.activeEndpoints.range, fillData);
       }
     });
@@ -845,7 +851,7 @@ export class DataUtil {
     return generatedAggregationsByDate;
   };
 
-  getFillData = (endpoints, opts) => {
+  getFillData = (endpoints, opts = {}) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
     const fillHours = 3;
@@ -916,6 +922,11 @@ export class DataUtil {
   };
 
   getPreviousSiteChangeDatums = datum => {
+    const prevFilters = {
+      byType: this.activeType,
+      bySubType: this.activeSubType,
+    };
+
     // We need to ensure all the days of the week are active to ensure we get all siteChanges
     this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
@@ -943,10 +954,10 @@ export class DataUtil {
     };
 
     // Reset the endpoints, activeDays, type, and subType filters to the back to what they were
-    this.filter.byEndpoints(this.activeEndpoints.range);
     this.filter.byActiveDays(this.activeDays);
-
-    this.filter.bySubType(this.activeSubType);
+    this.filter.byEndpoints(this.activeEndpoints.range);
+    this.filter.byType(prevFilters.byType);
+    this.filter.bySubType(prevFilters.bySubType);
 
     return previousSiteChangeDatums;
   };

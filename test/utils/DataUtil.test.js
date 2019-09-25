@@ -2,8 +2,8 @@ import _ from 'lodash';
 import moment from 'moment';
 
 import DataUtil from '../../src/utils/DataUtil';
-import { types as Types } from '../../data/types';
-import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS } from '../../src/utils/constants';
+import { types as Types, generateGUID } from '../../data/types';
+import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 
 import medtronicMultirate from '../../data/pumpSettings/medtronic/multirate.raw.json';
 import omnipodMultirate from '../../data/pumpSettings/omnipod/multirate.raw.json';
@@ -148,14 +148,14 @@ describe.only('DataUtil', () => {
   ], _.toPlainObject);
 
   const pumpSettingsData = [
-    { ...omnipodMultirate, deviceTime: '2018-01-02T00:00:00' },
-    { ...medtronicMultirate, deviceTime: '2018-02-02T00:00:00' },
+    { ...omnipodMultirate, deviceTime: '2018-01-02T00:00:00', time: '2018-01-02T00:00:00.000Z' },
+    { ...medtronicMultirate, deviceTime: '2018-02-02T00:00:00', time: '2018-02-02T00:00:00.000Z' },
   ];
 
   const smbgData = _.map([
     new Types.SMBG({
       value: 60,
-      deviceTime: '2018-02-01T00:00:00',
+      deviceTime: '2018-01-31T00:00:00',
       ...useRawData,
     }),
     new Types.SMBG({
@@ -175,7 +175,7 @@ describe.only('DataUtil', () => {
     }),
     new Types.SMBG({
       value: 270,
-      deviceTime: '2018-02-01T00:50:00',
+      deviceTime: '2018-02-02T00:50:00',
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -232,7 +232,7 @@ describe.only('DataUtil', () => {
     ...wizardData,
   ];
 
-  const bgPrefs = {
+  const defaultBgPrefs = {
     bgClasses: {
       'very-low': { boundary: 54 },
       low: { boundary: 70 },
@@ -240,6 +240,11 @@ describe.only('DataUtil', () => {
       high: { boundary: 250 },
     },
     bgUnits: MGDL_UNITS,
+  };
+
+  const defaultTimePrefs = {
+    timezoneAware: true,
+    timezoneName: 'UTC',
   };
 
   const dayEndpoints = [
@@ -258,17 +263,13 @@ describe.only('DataUtil', () => {
   ];
 
   const defaultQuery = {
-    bgPrefs,
+    bgPrefs: defaultBgPrefs,
     endpoints: dayEndpoints,
+    timePrefs: defaultTimePrefs,
   };
 
   const initDataUtil = (dataset, validator) => {
     dataUtil = new DataUtil(dataset, validator);
-  };
-
-  const initDataUtilWithQuery = (dataset, validator, query) => {
-    dataUtil = new DataUtil(dataset, validator);
-    dataUtil.query(query);
   };
 
   const createQuery = overrides => _.assign({}, defaultQuery, overrides);
@@ -1886,7 +1887,7 @@ describe.only('DataUtil', () => {
 
   describe('setMetaData', () => {
     it('should call all the metadata setters and in the correct order where required', () => {
-      sinon.spy(dataUtil, 'setBGPrefs');
+      sinon.spy(dataUtil, 'setBgPrefs');
       sinon.spy(dataUtil, 'setBgSources');
       sinon.spy(dataUtil, 'setTimePrefs');
       sinon.spy(dataUtil, 'setEndpoints');
@@ -1898,7 +1899,7 @@ describe.only('DataUtil', () => {
 
       dataUtil.setMetaData();
 
-      sinon.assert.calledOnce(dataUtil.setBGPrefs);
+      sinon.assert.calledOnce(dataUtil.setBgPrefs);
       sinon.assert.calledOnce(dataUtil.setBgSources);
       sinon.assert.calledOnce(dataUtil.setTimePrefs);
       sinon.assert.calledOnce(dataUtil.setEndpoints);
@@ -1912,7 +1913,7 @@ describe.only('DataUtil', () => {
     });
   });
 
-  describe.only('setEndpoints', () => {
+  describe('setEndpoints', () => {
     context('endpoints arg missing', () => {
       it('should set a default `endpoints.current.range` property', () => {
         delete dataUtil.endpoints;
@@ -1966,6 +1967,850 @@ describe.only('DataUtil', () => {
           activeDays: 2,
         });
       });
+    });
+  });
+
+  describe('setActiveDays', () => {
+    it('should set the activeDays prop if provided, and update the active days of the week for each endpoints range', () => {
+      dataUtil.setEndpoints(twoWeekEndpoints);
+      expect(dataUtil.endpoints.current.activeDays).to.equal(14);
+      expect(dataUtil.endpoints.next.activeDays).to.equal(14);
+      expect(dataUtil.endpoints.prev.activeDays).to.equal(14);
+
+      dataUtil.setActiveDays([0, 1, 2, 4, 5, 6]); // Remove Wednesdays
+
+      expect(dataUtil.endpoints.current.activeDays).to.equal(12);
+      expect(dataUtil.endpoints.next.activeDays).to.equal(12);
+      expect(dataUtil.endpoints.prev.activeDays).to.equal(12);
+
+      dataUtil.setEndpoints(twoDayEndpoints);
+      dataUtil.setActiveDays([3]); // Show only Wednesdays
+
+      expect(dataUtil.endpoints.current.activeDays).to.equal(0);
+      expect(dataUtil.endpoints.next.activeDays).to.equal(0);
+      expect(dataUtil.endpoints.prev.activeDays).to.equal(1);
+    });
+  });
+
+  describe('setTypes', () => {
+    it('should set the types property as an array of data types query objects', () => {
+      const typesAsArray = [
+        {
+          type: 'cbg',
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+        {
+          type: 'smbg',
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+      ];
+
+      const typesAsObject = {
+        cbg: {
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+        smbg: {
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+      };
+
+      expect(dataUtil.types).to.eql([]);
+
+      dataUtil.setTypes(typesAsArray);
+      expect(dataUtil.types).to.eql(typesAsArray);
+
+      dataUtil.setTypes(); // Should set back to empty array when types not provided
+      expect(dataUtil.types).to.eql([]);
+
+      dataUtil.setTypes(typesAsObject); // Should transform object types to array format
+      expect(dataUtil.types).to.eql(typesAsArray);
+    });
+  });
+
+  describe('setTimePrefs', () => {
+    it('should default to setting timezoneAware to `false` when no `timePrefs` arg provided', () => {
+      delete(dataUtil.timePrefs);
+      dataUtil.setTimePrefs();
+      expect(dataUtil.timePrefs).to.eql({ timezoneAware: false, timezoneName: undefined });
+    });
+
+    it('should set the timezone name to UTC when timezoneAware is `true`, but timezoneName not provided', () => {
+      delete(dataUtil.timePrefs);
+      dataUtil.setTimePrefs({ timezoneAware: true });
+      expect(dataUtil.timePrefs).to.eql({ timezoneAware: true, timezoneName: 'UTC' });
+    });
+
+    it('should set the timezone name to the provided `timezoneName`', () => {
+      delete(dataUtil.timePrefs);
+      dataUtil.setTimePrefs({ timezoneAware: true, timezoneName: 'US/Pacific' });
+      expect(dataUtil.timePrefs).to.eql({ timezoneAware: true, timezoneName: 'US/Pacific' });
+    });
+
+    it('should set the activeTimeField to `time` if `timezoneAware` is true, otherwise to `deviceTime`', () => {
+      delete(dataUtil.activeTimeField);
+      dataUtil.setTimePrefs({ timezoneAware: true });
+      expect(dataUtil.activeTimeField).to.equal('time');
+
+      dataUtil.setTimePrefs({ timezoneAware: false });
+      expect(dataUtil.activeTimeField).to.equal('deviceTime');
+    });
+
+    it('should rebuild dimensions as necessary if `timezoneName` changes', () => {
+      sinon.spy(dataUtil, 'buildByDateDimension');
+      sinon.spy(dataUtil, 'buildByDayOfWeekDimension');
+      sinon.spy(dataUtil, 'buildByTimeDimension');
+
+      dataUtil.activeTimeField = 'time';
+      dataUtil.timePrefs = { timezoneAware: true, timezoneName: undefined };
+
+      sinon.assert.notCalled(dataUtil.buildByDateDimension);
+      sinon.assert.notCalled(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.notCalled(dataUtil.buildByTimeDimension);
+
+      dataUtil.setTimePrefs({ timezoneAware: true, timezoneName: 'UTC' });
+
+      sinon.assert.calledOnce(dataUtil.buildByDateDimension);
+      sinon.assert.calledOnce(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.notCalled(dataUtil.buildByTimeDimension);
+
+      dataUtil.setTimePrefs({ timezoneAware: true, timezoneName: 'US/Pacific' });
+
+      sinon.assert.calledTwice(dataUtil.buildByDateDimension);
+      sinon.assert.calledTwice(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.notCalled(dataUtil.buildByTimeDimension);
+    });
+
+    it('should rebuild dimensions as necessary if `timezoneAware` changes', () => {
+      sinon.spy(dataUtil, 'buildByDateDimension');
+      sinon.spy(dataUtil, 'buildByDayOfWeekDimension');
+      sinon.spy(dataUtil, 'buildByTimeDimension');
+
+      dataUtil.activeTimeField = 'deviceTime';
+      dataUtil.timePrefs = { timeZoneAware: undefined };
+
+      sinon.assert.notCalled(dataUtil.buildByDateDimension);
+      sinon.assert.notCalled(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.notCalled(dataUtil.buildByTimeDimension);
+
+      dataUtil.setTimePrefs({ timezoneAware: false });
+
+      sinon.assert.calledOnce(dataUtil.buildByDateDimension);
+      sinon.assert.calledOnce(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.calledOnce(dataUtil.buildByTimeDimension);
+
+      dataUtil.setTimePrefs({ timezoneAware: true });
+
+      sinon.assert.calledTwice(dataUtil.buildByDateDimension);
+      sinon.assert.calledTwice(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.calledTwice(dataUtil.buildByTimeDimension);
+    });
+
+    it('should rebuild dimensions as necessary if `activeTimeField` changes', () => {
+      sinon.spy(dataUtil, 'buildByDateDimension');
+      sinon.spy(dataUtil, 'buildByDayOfWeekDimension');
+      sinon.spy(dataUtil, 'buildByTimeDimension');
+
+      dataUtil.timePrefs = { timeZoneAware: undefined };
+      delete(dataUtil.activeTimeField);
+
+      sinon.assert.notCalled(dataUtil.buildByDateDimension);
+      sinon.assert.notCalled(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.notCalled(dataUtil.buildByTimeDimension);
+
+      dataUtil.activeTimeField = 'deviceTime';
+      dataUtil.setTimePrefs();
+
+      sinon.assert.calledOnce(dataUtil.buildByDateDimension);
+      sinon.assert.calledOnce(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.calledOnce(dataUtil.buildByTimeDimension);
+
+      dataUtil.activeTimeField = 'time';
+      dataUtil.setTimePrefs();
+
+      sinon.assert.calledTwice(dataUtil.buildByDateDimension);
+      sinon.assert.calledTwice(dataUtil.buildByDayOfWeekDimension);
+      sinon.assert.calledTwice(dataUtil.buildByTimeDimension);
+    });
+  });
+
+  describe('setBgPrefs', () => {
+    it('should default to mg/dL units and bounds when `bgPrefs` arg not provided', () => {
+      delete(dataUtil.bgPrefs);
+      dataUtil.setBgPrefs();
+      expect(dataUtil.bgPrefs).to.eql({
+        bgBounds: DEFAULT_BG_BOUNDS[MGDL_UNITS],
+        bgUnits: 'mg/dL',
+      });
+    });
+
+    it('should set units and bounds when `bgPrefs` arg is provided', () => {
+      delete(dataUtil.bgPrefs);
+      dataUtil.setBgPrefs({
+        bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgUnits: MMOLL_UNITS,
+      });
+      expect(dataUtil.bgPrefs).to.eql({
+        bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgUnits: 'mmol/L',
+      });
+    });
+  });
+
+  describe('query', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should clear all filters before calling other setters', () => {
+      sinon.spy(dataUtil, 'clearFilters');
+      sinon.spy(dataUtil, 'setBgSources');
+      sinon.spy(dataUtil, 'setTypes');
+      sinon.spy(dataUtil, 'setBgPrefs');
+      sinon.spy(dataUtil, 'setTimePrefs');
+      sinon.spy(dataUtil, 'setEndpoints');
+      sinon.spy(dataUtil, 'setActiveDays');
+
+      dataUtil.query(createQuery({
+        bgSource: 'cbg',
+        types: {
+          cbg: {
+            select: 'id,normalTime',
+            sort: 'normalTime,asc',
+          },
+        },
+        activeDays: [0, 1, 2],
+      }));
+
+      sinon.assert.calledTwice(dataUtil.clearFilters);
+      sinon.assert.calledOnce(dataUtil.setBgSources);
+      sinon.assert.calledOnce(dataUtil.setTypes);
+      sinon.assert.calledOnce(dataUtil.setBgPrefs);
+      sinon.assert.calledOnce(dataUtil.setTimePrefs);
+      sinon.assert.calledOnce(dataUtil.setEndpoints);
+      sinon.assert.calledOnce(dataUtil.setActiveDays);
+
+      sinon.assert.callOrder(
+        dataUtil.clearFilters,
+        dataUtil.setBgSources,
+        dataUtil.clearFilters,
+        dataUtil.setTypes,
+        dataUtil.setBgPrefs,
+        dataUtil.setTimePrefs,
+        dataUtil.setEndpoints,
+        dataUtil.setActiveDays,
+      );
+    });
+
+    it('should only call `setBgSources` if `bgSource` is specified in the query', () => {
+      sinon.spy(dataUtil, 'setBgSources');
+
+      dataUtil.query({});
+      sinon.assert.notCalled(dataUtil.setBgSources);
+
+      dataUtil.query({ bgSource: 'cbg' });
+      sinon.assert.calledOnce(dataUtil.setBgSources);
+    });
+
+    it('should only call `setTypes` if `types` is specified in the query', () => {
+      sinon.spy(dataUtil, 'setTypes');
+
+      dataUtil.query({});
+      sinon.assert.notCalled(dataUtil.setTypes);
+
+      dataUtil.query({
+        types: {
+          cbg: {
+            select: 'id,normalTime',
+            sort: 'normalTime,asc',
+          },
+        },
+      });
+      sinon.assert.calledOnce(dataUtil.setTypes);
+    });
+
+    it('should only call `setBgPrefs` if `bgPrefs` is specified in the query', () => {
+      sinon.spy(dataUtil, 'setBgPrefs');
+
+      dataUtil.query({});
+      sinon.assert.notCalled(dataUtil.setBgPrefs);
+
+      dataUtil.query({ bgPrefs: defaultBgPrefs });
+      sinon.assert.calledOnce(dataUtil.setBgPrefs);
+    });
+
+    it('should only call `setTimePrefs` if `timePrefs` is specified in the query', () => {
+      sinon.spy(dataUtil, 'setTimePrefs');
+
+      dataUtil.query({});
+      sinon.assert.notCalled(dataUtil.setTimePrefs);
+
+      dataUtil.query({ timePrefs: defaultTimePrefs });
+      sinon.assert.calledOnce(dataUtil.setTimePrefs);
+    });
+
+    it('should only call `setEndpoints` if `endpoints` is specified in the query', () => {
+      sinon.spy(dataUtil, 'setEndpoints');
+
+      dataUtil.query({});
+      sinon.assert.notCalled(dataUtil.setEndpoints);
+
+      dataUtil.query({ endpoints: dayEndpoints });
+      sinon.assert.calledOnce(dataUtil.setEndpoints);
+    });
+
+    it('should only call `setActiveDays` if `activeDays` is specified in the query', () => {
+      sinon.spy(dataUtil, 'setActiveDays');
+
+      dataUtil.query({});
+      sinon.assert.notCalled(dataUtil.setActiveDays);
+
+      dataUtil.query({ activeDays: [0, 1] });
+      sinon.assert.calledOnce(dataUtil.setActiveDays);
+    });
+
+    context('generating data', () => {
+      it('should filter by endpoints for each range', () => {
+        sinon.spy(dataUtil.filter, 'byEndpoints');
+
+        dataUtil.query(createQuery({
+          endpoints: dayEndpoints,
+        }));
+
+        sinon.assert.calledThrice(dataUtil.filter.byEndpoints);
+        sinon.assert.calledWith(dataUtil.filter.byEndpoints, [
+          moment.utc(dayEndpoints[0]).valueOf(),
+          moment.utc(dayEndpoints[1]).valueOf(),
+        ]);
+
+        sinon.assert.calledWith(dataUtil.filter.byEndpoints, [
+          moment.utc(dayEndpoints[1]).valueOf(),
+          moment.utc(dayEndpoints[1]).add(1, 'day').valueOf(),
+        ]);
+
+        sinon.assert.calledWith(dataUtil.filter.byEndpoints, [
+          moment.utc(dayEndpoints[0]).subtract(1, 'day').valueOf(),
+          moment.utc(dayEndpoints[0]).valueOf(),
+        ]);
+      });
+
+      it('should filter by active days after filtering by endpoints for each range', () => {
+        sinon.spy(dataUtil.filter, 'byEndpoints');
+        sinon.spy(dataUtil.filter, 'byActiveDays');
+
+        dataUtil.query(createQuery({
+          endpoints: dayEndpoints,
+        }));
+
+        sinon.assert.calledThrice(dataUtil.filter.byActiveDays);
+        sinon.assert.callOrder(
+          dataUtil.filter.byEndpoints,
+          dataUtil.filter.byActiveDays,
+          dataUtil.filter.byEndpoints,
+          dataUtil.filter.byActiveDays,
+          dataUtil.filter.byEndpoints,
+          dataUtil.filter.byActiveDays,
+        );
+      });
+
+      it('should generate stats, but only for the current range and if requested in query', () => {
+        sinon.spy(dataUtil, 'getStats');
+
+        dataUtil.query(defaultQuery);
+
+        sinon.assert.notCalled(dataUtil.getStats);
+
+        const result = dataUtil.query(createQuery({ stats: 'averageGlucose' }));
+
+        sinon.assert.calledOnce(dataUtil.getStats);
+
+        expect(result.data.current.stats.averageGlucose).to.be.an('object');
+        expect(result.data.next.stats).to.be.undefined;
+        expect(result.data.prev.stats).to.be.undefined;
+      });
+
+      it('should generate aggregations by date, but only for the current range and if requested in query', () => {
+        sinon.spy(dataUtil, 'getAggregationsByDate');
+
+        dataUtil.query(defaultQuery);
+
+        sinon.assert.notCalled(dataUtil.getAggregationsByDate);
+
+        const result = dataUtil.query(createQuery({ aggregationsByDate: 'basals' }));
+
+        sinon.assert.calledOnce(dataUtil.getAggregationsByDate);
+
+        expect(result.data.current.aggregationsByDate.basals).to.be.an('object');
+        expect(result.data.next.aggregationsByDate).to.be.undefined;
+        expect(result.data.prev.aggregationsByDate).to.be.undefined;
+      });
+
+      it('should return the endpoints used for each range in the data', () => {
+        const result = dataUtil.query(createQuery({
+          endpoints: dayEndpoints,
+        }));
+
+        expect(result.data.current.endpoints).to.eql({
+          range: [
+            moment.utc(dayEndpoints[0]).valueOf(),
+            moment.utc(dayEndpoints[1]).valueOf(),
+          ],
+          days: 1,
+          activeDays: 1,
+        });
+
+        expect(result.data.next.endpoints).to.eql({
+          range: [
+            moment.utc(dayEndpoints[1]).valueOf(),
+            moment.utc(dayEndpoints[1]).add(1, 'day').valueOf(),
+          ],
+          days: 1,
+          activeDays: 1,
+        });
+
+        expect(result.data.prev.endpoints).to.eql({
+          range: [
+            moment.utc(dayEndpoints[0]).subtract(1, 'day').valueOf(),
+            moment.utc(dayEndpoints[0]).valueOf(),
+          ],
+          days: 1,
+          activeDays: 1,
+        });
+      });
+
+      it('should return the data by requested type for each endpoint range', () => {
+        const result = dataUtil.query(createQuery({
+          types: {
+            cbg: {
+              select: 'id,normalTime',
+              sort: 'normalTime,asc',
+            },
+            smbg: {
+              select: 'id,normalTime',
+              sort: 'normalTime,asc',
+            },
+          },
+        }));
+
+        expect(result.data.current.data.cbg).to.be.an('array').and.have.lengthOf(5);
+        expect(result.data.next.data.cbg).to.be.an('array').and.have.lengthOf(0);
+        expect(result.data.prev.data.cbg).to.be.an('array').and.have.lengthOf(0);
+
+        expect(result.data.current.data.smbg).to.be.an('array').and.have.lengthOf(3);
+        expect(result.data.next.data.smbg).to.be.an('array').and.have.lengthOf(1);
+        expect(result.data.prev.data.smbg).to.be.an('array').and.have.lengthOf(1);
+      });
+
+      it('should generate fill data for each endpoint range if requested in the query', () => {
+        sinon.spy(dataUtil, 'getFillData');
+
+        const fillDataOpts = { adjustForDSTChanges: true };
+
+        const result = dataUtil.query(createQuery({
+          fillData: fillDataOpts,
+          endpoints: dayEndpoints,
+        }));
+
+        sinon.assert.calledThrice(dataUtil.getFillData);
+        sinon.assert.calledWith(
+          dataUtil.getFillData,
+          [
+            moment.utc(dayEndpoints[0]).valueOf(),
+            moment.utc(dayEndpoints[1]).valueOf(),
+          ],
+          fillDataOpts
+        );
+
+        sinon.assert.calledWith(
+          dataUtil.getFillData,
+          [
+            moment.utc(dayEndpoints[1]).valueOf(),
+            moment.utc(dayEndpoints[1]).add(1, 'day').valueOf(),
+          ],
+          fillDataOpts
+        );
+
+        sinon.assert.calledWith(
+          dataUtil.getFillData,
+          [
+            moment.utc(dayEndpoints[0]).subtract(1, 'day').valueOf(),
+            moment.utc(dayEndpoints[0]).valueOf(),
+          ],
+          fillDataOpts
+        );
+
+        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8); // 8 3hr fill bins
+        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8); // 8 3hr fill bins
+        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8); // 8 3hr fill bins
+      });
+    });
+
+    it('should return the time prefs used while generating the data', () => {
+      const result = dataUtil.query(createQuery({
+        timePrefs: {
+          timezoneAware: true,
+          timezoneName: 'US/Central',
+        },
+      }));
+
+      expect(result.timePrefs).to.eql({
+        timezoneAware: true,
+        timezoneName: 'US/Central',
+      });
+    });
+
+    it('should return the bg prefs used while generating the data', () => {
+      const result = dataUtil.query(createQuery({
+        bgPrefs: {
+          bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+          bgUnits: MMOLL_UNITS,
+        },
+      }));
+
+      expect(result.bgPrefs).to.eql({
+        bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgUnits: 'mmol/L',
+      });
+    });
+
+    it('should return metaData if requested in the query', () => {
+      sinon.spy(dataUtil, 'getMetaData');
+
+      const metaData = [
+        'latestPumpUpload',
+        'latestDatumByType',
+        'bgSources',
+      ];
+
+      const resultWithoutMetaData = dataUtil.query(defaultQuery);
+
+      sinon.assert.notCalled(dataUtil.getMetaData);
+      expect(resultWithoutMetaData.metaData).to.be.undefined;
+
+      const resultWithMetaData = dataUtil.query(createQuery({ metaData }));
+      sinon.assert.calledWith(dataUtil.getMetaData, metaData);
+
+      expect(resultWithMetaData.metaData).to.be.an('object').and.have.keys(metaData);
+    });
+  });
+
+  describe('getStats', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+      dataUtil.query(defaultQuery);
+    });
+
+    it('should generate and return requested stats passed in as string', () => {
+      const result = dataUtil.getStats('averageGlucose, totalInsulin');
+
+      expect(result.averageGlucose).to.be.an('object').and.include.keys(['averageGlucose']);
+      expect(result.totalInsulin).to.be.an('object').and.include.keys(['basal', 'bolus']);
+    });
+
+    it('should generate and return requested stats passed in as array', () => {
+      const result = dataUtil.getStats(['averageGlucose', 'totalInsulin']);
+
+      expect(result.averageGlucose).to.be.an('object').and.include.keys(['averageGlucose']);
+      expect(result.totalInsulin).to.be.an('object').and.include.keys(['basal', 'bolus']);
+    });
+  });
+
+  describe('getAggregationsByDate', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+      dataUtil.query(defaultQuery);
+    });
+
+    it('should generate and return requested aggregations passed in as string', () => {
+      const result = dataUtil.getAggregationsByDate('basals, boluses, fingersticks, siteChanges');
+
+      expect(result.basals).to.be.an('object').and.include.keys(['summary', 'byDate']);
+      expect(result.boluses).to.be.an('object').and.include.keys(['summary', 'byDate']);
+      expect(result.fingersticks).to.be.an('object').and.include.keys(['smbg', 'calibration']);
+      expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
+    });
+
+    it('should generate and return requested aggregations passed in as array', () => {
+      const result = dataUtil.getAggregationsByDate(['basals', 'boluses', 'fingersticks', 'siteChanges']);
+
+      expect(result.basals).to.be.an('object').and.include.keys(['summary', 'byDate']);
+      expect(result.boluses).to.be.an('object').and.include.keys(['summary', 'byDate']);
+      expect(result.fingersticks).to.be.an('object').and.include.keys(['smbg', 'calibration']);
+      expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
+    });
+  });
+
+  describe('getFillData', () => {
+    it('should generate fill data in 3hr bins for the start of the day of provided endpoints in data util timezone, falling back to UTC', () => {
+      initDataUtil(defaultData);
+      dataUtil.query(defaultQuery);
+
+      const endpoints = _.map(dayEndpoints, Date.parse);
+      let result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(endpoints[0]); // GMT-0 for UTC
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
+
+      delete(dataUtil.timePrefs);
+      result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(endpoints[0]); // fallback to GMT-0 for UTC when not timezone-aware
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
+
+      dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
+      result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(19, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 5 hrs
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(16, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 8 hrs
+    });
+
+    it('should optionally adjust for spring DST changes', () => {
+      const endpoints = [
+        '2019-03-10T05:00:00.000Z',
+        '2019-03-11T04:00:00.000Z',
+      ];
+
+      initDataUtil(defaultData);
+      dataUtil.query(createQuery({
+        endpoints,
+        timePrefs: { timezoneAware: true, timezoneName: 'US/Eastern' },
+      }));
+
+      const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+
+      expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
+      expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour later than start of next fill
+      expect(resultWithoutDSTAdjust[1].normalTime).to.equal(moment.utc(endpoints[0]).add(2, 'hours').valueOf());
+      expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(5, 'hours').valueOf());
+
+      const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+
+      expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
+      expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(2, 'hours').valueOf()); // End is adjusted to align to start of next fill
+      expect(resultWithDSTAdjust[1].normalTime).to.equal(moment.utc(endpoints[0]).add(2, 'hours').valueOf());
+      expect(resultWithDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(5, 'hours').valueOf());
+    });
+
+    it('should optionally adjust for fall DST changes', () => {
+      const endpoints = [
+        '2018-11-04T04:00:00.000Z',
+        '2018-11-05T05:00:00.000Z',
+      ];
+
+      initDataUtil(defaultData);
+      dataUtil.query(createQuery({
+        endpoints,
+        timePrefs: { timezoneAware: true, timezoneName: 'US/Eastern' },
+      }));
+
+      const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+
+      expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
+      expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour earlier than start of next fill
+      expect(resultWithoutDSTAdjust[1].normalTime).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf());
+      expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
+
+      const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+
+      expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
+      expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf()); // End is adjusted to align to start of next fill
+      expect(resultWithDSTAdjust[1].normalTime).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf());
+      expect(resultWithDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
+    });
+  });
+
+  describe('getMetaData', () => {
+    it('should return metaData requested via an array', () => {
+      initDataUtil(defaultData);
+
+      const metaData = [
+        'latestPumpUpload',
+        'latestDatumByType',
+        'bgSources',
+      ];
+
+      const result = dataUtil.getMetaData(metaData);
+
+      expect(result).to.be.an('object').and.have.keys(metaData);
+      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
+      expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
+      expect(result.bgSources).to.eql(dataUtil.bgSources);
+    });
+
+    it('should return metaData requested via a string', () => {
+      initDataUtil(defaultData);
+
+      const metaData = [
+        'latestPumpUpload',
+        'latestDatumByType',
+        'bgSources',
+      ];
+
+      const result = dataUtil.getMetaData(_.join(metaData, ','));
+
+      expect(result).to.be.an('object').and.have.keys(metaData);
+      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
+      expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
+      expect(result.bgSources).to.eql(dataUtil.bgSources);
+    });
+
+    it('should normalize each datum returned in `latestDatumByType`', () => {
+      initDataUtil(defaultData);
+
+      sinon.spy(dataUtil, 'normalizeDatumOut');
+      const metaData = [
+        'latestDatumByType',
+      ];
+
+      const result = dataUtil.getMetaData(metaData);
+
+      expect(result.latestDatumByType).to.be.an('object').and.have.keys([
+        'basal',
+        'bolus',
+        'cbg',
+        'food',
+        'pumpSettings',
+        'smbg',
+        'upload',
+        'wizard',
+      ]);
+
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: basalData[basalData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: bolusData[bolusData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: cbgData[cbgData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: foodData[foodData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: pumpSettingsData[pumpSettingsData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: smbgData[smbgData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: uploadData[uploadData.length - 1].id }));
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: wizardData[wizardData.length - 1].id }));
+    });
+
+    it('should normalize `latestPumpSettings.settings`', () => {
+      initDataUtil(defaultData);
+
+      sinon.spy(dataUtil, 'normalizeDatumOut');
+      const metaData = [
+        'latestPumpUpload',
+      ];
+
+      const result = dataUtil.getMetaData(metaData);
+
+      expect(result.latestPumpUpload).to.be.an('object').and.have.keys([
+        'deviceModel',
+        'isAutomatedBasalDevice',
+        'manufacturer',
+        'settings',
+      ]);
+
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: pumpSettingsData[pumpSettingsData.length - 1].id }));
+    });
+
+    it('should return the bgSources data as set in the dataUtil', () => {
+      initDataUtil(defaultData);
+
+      const metaData = [
+        'bgSources',
+      ];
+
+      const result = dataUtil.getMetaData(metaData);
+
+      expect(result.bgSources).to.have.keys([
+        'cbg',
+        'smbg',
+        'current',
+      ]);
+
+      expect(result.bgSources).to.eql(dataUtil.bgSources);
+    });
+  });
+
+  describe('getPreviousSiteChangeDatums', () => {
+    const siteChange = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+    const cannulaPrime = { ...siteChange, subType: 'prime', primeTarget: 'cannula', id: generateGUID() };
+    const reservoirChange = { ...siteChange, subType: 'reservoirChange', id: generateGUID() };
+    const tubingPrime = { ...siteChange, deviceTime: '2018-02-02T01:00:00', time: '2018-02-02T01:00:00.000Z', subType: 'prime', primeTarget: 'tubing', id: generateGUID() };
+
+    beforeEach(() => {
+      initDataUtil(_.map([
+        cannulaPrime,
+        reservoirChange,
+        tubingPrime,
+      ], _.toPlainObject));
+
+      dataUtil.query(createQuery({
+        endpoints: [
+          '2018-02-02T00:00:00.000Z',
+          '2018-02-03T00:00:00.000Z',
+        ],
+      }));
+    });
+
+    it('should filter for all deviceEvent datums prior to the provided datum, and reset those filters afterwards', () => {
+      sinon.spy(dataUtil.filter, 'byActiveDays');
+      sinon.spy(dataUtil.filter, 'byEndpoints');
+      sinon.spy(dataUtil.filter, 'byType');
+      sinon.spy(dataUtil.filter, 'bySubType');
+
+      dataUtil.activeType = 'foo';
+      dataUtil.activeSubType = 'bar';
+      dataUtil.activeEndpoints = { range: [0, Infinity] };
+      dataUtil.activeDays = [0, 1, 2];
+
+      const parsedDatumTime = Date.parse(tubingPrime.time);
+      dataUtil.getPreviousSiteChangeDatums({
+        ...tubingPrime,
+        time: parsedDatumTime,
+        deviceTime: parsedDatumTime,
+      });
+
+      sinon.assert.calledTwice(dataUtil.filter.byActiveDays);
+      sinon.assert.calledTwice(dataUtil.filter.byEndpoints);
+      sinon.assert.calledTwice(dataUtil.filter.byType);
+      sinon.assert.calledThrice(dataUtil.filter.bySubType);
+
+      expect(dataUtil.filter.byActiveDays.args[0][0]).to.eql([0, 1, 2, 3, 4, 5, 6]);
+      expect(dataUtil.filter.byActiveDays.args[1][0]).to.eql([0, 1, 2]);
+
+      expect(dataUtil.filter.byEndpoints.args[0][0]).to.eql([0, parsedDatumTime]);
+      expect(dataUtil.filter.byEndpoints.args[1][0]).to.eql([0, Infinity]);
+
+      expect(dataUtil.filter.byType.args[0][0]).to.eql('deviceEvent');
+      expect(dataUtil.filter.byType.args[1][0]).to.eql('foo');
+
+      expect(dataUtil.filter.bySubType.args[0][0]).to.eql('prime');
+      expect(dataUtil.filter.bySubType.args[1][0]).to.eql('reservoirChange');
+      expect(dataUtil.filter.bySubType.args[2][0]).to.eql('bar');
+    });
+
+    it('should return a map of previous site datums keyed by type', () => {
+      const parsedDatumTime = Date.parse(tubingPrime.time);
+
+      dataUtil.clearFilters();
+      const result = dataUtil.getPreviousSiteChangeDatums({
+        ...tubingPrime,
+        time: parsedDatumTime,
+        deviceTime: parsedDatumTime,
+      });
+
+      expect(result).to.be.an('object').and.have.keys([
+        'cannulaPrime',
+        'tubingPrime',
+        'reservoirChange',
+      ]);
+
+      expect(result.reservoirChange.id).to.equal(reservoirChange.id);
+      expect(result.cannulaPrime.id).to.equal(cannulaPrime.id);
+      expect(result.tubingPrime).to.be.undefined;
     });
   });
 });

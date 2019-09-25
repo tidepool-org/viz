@@ -352,26 +352,6 @@ describe('StatUtil', () => {
   //   });
   // });
 
-  // describe('endpoints setter', () => {
-  //   it('should set the `_endpoints` property as provided', () => {
-  //     expect(statUtil._endpoints).to.equal(dayEndpoints);
-  //     filterEndpoints(twoWeekEndpoints);
-  //     expect(statUtil._endpoints).to.eql(twoWeekEndpoints);
-  //   });
-
-  //   it('should set the `_endpoints` property to empty object when undefined arg given', () => {
-  //     expect(statUtil._endpoints).to.equal(dayEndpoints);
-  //     statUtil.endpoints = undefined;
-  //     expect(statUtil._endpoints).to.eql([]);
-  //   });
-
-  //   it('should set the `days` property with the endpoints provided', () => {
-  //     expect(statUtil.days).to.equal(1);
-  //     filterEndpoints(twoWeekEndpoints);
-  //     expect(statUtil.days).to.eql(14);
-  //   });
-  // });
-
   // describe('addBasalOverlappingStart', () => {
   //   context('basal delivery does not overlap start endpoint', () => {
   //     it('should return the basal data unchanged', () => {
