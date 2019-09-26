@@ -1021,13 +1021,16 @@ export class DataUtil {
         .byTime(this.filter.byType('basal').top(Infinity))
         .reverse()[0];
 
-      // Add to top of basal data array if it overlaps the start endpoint
-      const datumOverlapsStart = previousBasalDatum
-        && previousBasalDatum.normalTime < this.activeEndpoints.range[0]
-        && previousBasalDatum.normalEnd > this.activeEndpoints.range[0];
+      if (previousBasalDatum) {
+        this.normalizeDatumOut(previousBasalDatum);
 
-      if (datumOverlapsStart) {
-        basalData.unshift(previousBasalDatum);
+        // Add to top of basal data array if it overlaps the start endpoint
+        const datumOverlapsStart = previousBasalDatum.normalTime < this.activeEndpoints.range[0]
+          && previousBasalDatum.normalEnd > this.activeEndpoints.range[0];
+
+        if (datumOverlapsStart) {
+          basalData.unshift(previousBasalDatum);
+        }
       }
 
       // Reset the endpoints and activeDays filters to the back to what they were

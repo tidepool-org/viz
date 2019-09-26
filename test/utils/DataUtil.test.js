@@ -9,7 +9,7 @@ import medtronicMultirate from '../../data/pumpSettings/medtronic/multirate.raw.
 import omnipodMultirate from '../../data/pumpSettings/omnipod/multirate.raw.json';
 /* eslint-disable max-len, no-underscore-dangle */
 
-describe.only('DataUtil', () => {
+describe('DataUtil', () => {
   let dataUtil;
 
   const useRawData = {
@@ -19,16 +19,6 @@ describe.only('DataUtil', () => {
   const basalDatumOverlappingStart = new Types.Basal({
     duration: MS_IN_HOUR * 2,
     deviceTime: '2018-01-31T23:00:00',
-    source: 'Medtronic',
-    deviceModel: '1780',
-    deliveryType: 'automated',
-    rate: 0.5,
-    ...useRawData,
-  });
-
-  const basalDatumOverlappingEnd = new Types.Basal({
-    duration: MS_IN_HOUR * 3,
-    deviceTime: '2018-02-01T22:00:00',
     source: 'Medtronic',
     deviceModel: '1780',
     deliveryType: 'automated',
@@ -2811,6 +2801,198 @@ describe.only('DataUtil', () => {
       expect(result.reservoirChange.id).to.equal(reservoirChange.id);
       expect(result.cannulaPrime.id).to.equal(cannulaPrime.id);
       expect(result.tubingPrime).to.be.undefined;
+    });
+  });
+
+  describe('getTypeData', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should return data for types with field selection and sorts specified by strings', () => {
+      const types = [
+        {
+          type: 'smbg',
+          select: 'id,normalTime,value',
+          sort: 'normalTime,asc',
+        },
+        {
+          type: 'basal',
+          select: 'id,normalTime,rate',
+          sort: 'normalTime,asc',
+        },
+        {
+          type: 'bolus',
+          select: 'id,normalTime,normal',
+          sort: 'normalTime,asc',
+        },
+      ];
+
+      const result = dataUtil.getTypeData(types);
+
+      expect(result).to.be.an('object').and.have.keys([
+        'smbg',
+        'basal',
+        'bolus',
+      ]);
+    });
+
+    it('should return data for types with field selection and sorts specified by arrays', () => {
+      const types = [
+        {
+          type: 'smbg',
+          select: ['id', 'normalTime', 'value'],
+          sort: ['normalTime', 'asc'],
+        },
+        {
+          type: 'basal',
+          select: ['id', 'normalTime', 'rate'],
+          sort: ['normalTime', 'asc'],
+        },
+        {
+          type: 'bolus',
+          select: ['id', 'normalTime', 'normal'],
+          sort: ['normalTime', 'asc'],
+        },
+      ];
+
+      const result = dataUtil.getTypeData(types);
+
+      expect(result).to.be.an('object').and.have.keys([
+        'smbg',
+        'basal',
+        'bolus',
+      ]);
+    });
+
+    it('should normalize each datum returned', () => {
+      sinon.spy(dataUtil, 'normalizeDatumOut');
+
+      const types = [
+        {
+          type: 'smbg',
+          select: 'id,normalTime,value',
+          sort: 'normalTime,asc',
+        },
+      ];
+
+      const result = dataUtil.getTypeData(types);
+
+      assert(smbgData.length === 5);
+      expect(result.smbg).to.be.an('array').and.have.lengthOf(5);
+      sinon.assert.callCount(dataUtil.normalizeDatumOut, 5);
+    });
+
+    it('should return only the requested fields', () => {
+      const types = [
+        {
+          type: 'smbg',
+          select: 'id,normalTime,value',
+          sort: 'normalTime,asc',
+        },
+        {
+          type: 'basal',
+          select: 'id,normalTime,rate',
+          sort: 'normalTime,desc',
+        },
+      ];
+
+      const result = dataUtil.getTypeData(types);
+
+      expect(result.smbg[0]).to.have.keys([
+        'id',
+        'normalTime',
+        'value',
+      ]);
+
+      expect(result.basal[0]).to.have.keys([
+        'id',
+        'normalTime',
+        'rate',
+      ]);
+    });
+
+    it('should sort the results by requested field and sort order', () => {
+      const types = [
+        {
+          type: 'smbg',
+          select: 'id,normalTime,value',
+          sort: 'normalTime,asc',
+        },
+        {
+          type: 'basal',
+          select: 'id,normalTime,rate',
+          sort: 'normalTime,desc',
+        },
+      ];
+
+      const result = dataUtil.getTypeData(types);
+
+      expect(_.first(result.smbg).normalTime < _.last(result.smbg).normalTime).to.be.true;
+      expect(_.first(result.basal).normalTime > _.last(result.basal).normalTime).to.be.true;
+    });
+  });
+
+  describe('addBasalOverlappingStart', () => {
+    /* eslint-disable no-param-reassign */
+    const normalizeExpectedDatum = d => {
+      d.time = Date.parse(d.time);
+      d.deviceTime = Date.parse(d.deviceTime);
+      d.normalTime = d.deviceTime;
+      d.normalEnd = d.normalTime + d.duration;
+      d.displayOffset = 0;
+      d.subType = d.deliveryType;
+      d.tags = { suspend: false, temp: false };
+      return d;
+    };
+    /* eslint-enable no-param-reassign */
+
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    context('basal delivery does not overlap start endpoint', () => {
+      it('should return the normalized basal data with no datums added', () => {
+        const basalDataClone = _.cloneDeep(basalData);
+
+        const expectedNormalizedBasalData = _.map(basalDataClone, normalizeExpectedDatum);
+
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+        }));
+
+        const result = dataUtil.addBasalOverlappingStart(basalDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(3);
+        expect(result).to.eql(expectedNormalizedBasalData);
+      });
+    });
+
+    context('basal delivery overlaps start endpoint', () => {
+      it('should add the overlapping basal datum to the beginning of basalData array', () => {
+        const basalDataClone = _.cloneDeep(basalData);
+        const basalDatumOverlappingStartClone = _.cloneDeep(basalDatumOverlappingStart);
+
+        const expectedNormalizedBasalData = _.map([
+          basalDatumOverlappingStart.asObject(),
+          ...basalDataClone,
+        ], normalizeExpectedDatum);
+
+        dataUtil.addData([basalDatumOverlappingStartClone.asObject()]);
+
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+        }));
+
+        dataUtil.activeEndpoints = dataUtil.endpoints.current;
+
+        const result = dataUtil.addBasalOverlappingStart(basalDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(4);
+        expect(result).to.eql(expectedNormalizedBasalData);
+      });
     });
   });
 });
