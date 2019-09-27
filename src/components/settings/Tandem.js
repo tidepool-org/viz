@@ -17,10 +17,10 @@
 
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
-import ClipboardButton from 'react-clipboard.js';
 
 import styles from './Tandem.css';
 
+import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
@@ -73,13 +73,10 @@ const Tandem = (props) => {
   return (
     <div>
       <ClipboardButton
-        className={styles.copyButton}
-        button-title={t('For email or notes')}
-        data-clipboard-target="#copySettingsText"
+        buttonTitle={t('For email or notes')}
         onSuccess={copySettingsClicked}
-      >
-        <p>{t('Copy as text')}</p>
-      </ClipboardButton>
+        clipboardText={tandemText(user, pumpSettings, bgUnits)}
+      />
       <Header
         deviceDisplayName={deviceDisplayName}
         deviceMeta={tandemData.deviceMeta(pumpSettings, timePrefs)}

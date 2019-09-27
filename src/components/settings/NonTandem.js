@@ -17,8 +17,8 @@
 
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
-import ClipboardButton from 'react-clipboard.js';
 
+import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
@@ -191,13 +191,10 @@ const NonTandem = (props) => {
   return (
     <div>
       <ClipboardButton
-        className={styles.copyButton}
-        button-title={t('For email or notes')}
-        data-clipboard-target="#copySettingsText"
+        buttonTitle={t('For email or notes')}
         onSuccess={copySettingsClicked}
-      >
-        <p>{t('Copy as text')}</p>
-      </ClipboardButton>
+        clipboardText={nonTandemText(user, pumpSettings, bgUnits, lookupKey)}
+      />
       <Header
         deviceDisplayName={deviceName(lookupKey)}
         deviceMeta={nonTandemData.deviceMeta(pumpSettings, timePrefs)}
@@ -216,9 +213,6 @@ const NonTandem = (props) => {
           </div>
         </div>
       </div>
-      <pre className={styles.copyText} id="copySettingsText">
-        {nonTandemText(user, pumpSettings, bgUnits, lookupKey)}
-      </pre>
     </div>
   );
 };
