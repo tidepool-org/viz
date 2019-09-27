@@ -50,6 +50,7 @@ import {
   statFetchMethods,
 } from './utils/stat';
 import DataUtil from './utils/data';
+import TextUtil from './utils/text/TextUtil';
 import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
@@ -108,6 +109,9 @@ const utils = {
     getStatTitle,
     statBgSourceLabels,
     statFetchMethods,
+  },
+  text: {
+    TextUtil,
   },
 };
 
