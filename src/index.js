@@ -22,6 +22,7 @@ import CBGDateTraceLabel from './components/trends/cbg/CBGDateTraceLabel';
 import FocusedRangeLabels from './components/trends/common/FocusedRangeLabels';
 import FocusedSMBGPointLabel from './components/trends/smbg/FocusedSMBGPointLabel';
 import Loader from './components/common/loader/Loader';
+import ClipboardButton from './components/common/controls/ClipboardButton';
 import RangeSelect from './components/trends/cbg/RangeSelect';
 import TwoOptionToggle from './components/common/controls/TwoOptionToggle';
 import PumpSettingsContainer from './components/settings/common/PumpSettingsContainer';
@@ -61,6 +62,7 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
 
 const components = {
   CBGDateTraceLabel,
+  ClipboardButton,
   FocusedRangeLabels,
   FocusedSMBGPointLabel,
   Loader,
