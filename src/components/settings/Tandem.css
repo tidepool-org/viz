@@ -17,6 +17,14 @@
 
 @import '../../styles/colors.css';
 
+.header {
+  display: flex;
+  justify-content: space-between;
+
+  align-items: center;
+  align-content: center;
+}
+
 .headerCommon {
   line-height: 20px;
 }

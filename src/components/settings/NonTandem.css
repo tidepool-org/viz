@@ -15,6 +15,14 @@
  * == BSD2 LICENSE ==
  */
 
+.header {
+  display: flex;
+  justify-content: space-between;
+
+  align-items: center;
+  align-content: center;
+}
+
 .settingsContainer {
   align-items: flex-start;
   display: flex;

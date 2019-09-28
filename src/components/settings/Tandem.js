@@ -72,15 +72,17 @@ const Tandem = (props) => {
 
   return (
     <div>
-      <ClipboardButton
-        buttonTitle={t('For email or notes')}
-        onSuccess={copySettingsClicked}
-        getText={tandemText.bind(this, user, pumpSettings, bgUnits)}
-      />
-      <Header
-        deviceDisplayName={deviceDisplayName}
-        deviceMeta={tandemData.deviceMeta(pumpSettings, timePrefs)}
-      />
+      <div className={styles.header}>
+        <Header
+          deviceDisplayName={deviceDisplayName}
+          deviceMeta={tandemData.deviceMeta(pumpSettings, timePrefs)}
+        />
+        <ClipboardButton
+          buttonTitle={t('For email or notes')}
+          onSuccess={copySettingsClicked}
+          getText={tandemText.bind(this, user, pumpSettings, bgUnits)}
+        />
+      </div>
       <div>
         <span className={styles.title}>{t('Profile Settings')}</span>
         {tables}

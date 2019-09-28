@@ -190,15 +190,17 @@ const NonTandem = (props) => {
 
   return (
     <div>
-      <ClipboardButton
-        buttonTitle={t('For email or notes')}
-        onSuccess={copySettingsClicked}
-        getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
-      />
-      <Header
-        deviceDisplayName={deviceName(lookupKey)}
-        deviceMeta={nonTandemData.deviceMeta(pumpSettings, timePrefs)}
-      />
+      <div className={styles.header}>
+        <Header
+          deviceDisplayName={deviceName(lookupKey)}
+          deviceMeta={nonTandemData.deviceMeta(pumpSettings, timePrefs)}
+        />
+        <ClipboardButton
+          buttonTitle={t('For email or notes')}
+          onSuccess={copySettingsClicked}
+          getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
+        />
+      </div>
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>
           <div className={styles.categoryTitle}>{t('Basal Rates')}</div>
