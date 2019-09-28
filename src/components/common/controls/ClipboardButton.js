@@ -2,6 +2,7 @@ import React, { PropTypes, PureComponent } from 'react';
 import _ from 'lodash';
 import i18next from 'i18next';
 import Clipboard from 'react-clipboard.js';
+import cx from 'classnames';
 
 import styles from './ClipboardButton.css';
 
@@ -18,6 +19,7 @@ class ClipboardButton extends PureComponent {
 
   static defaultProps = {
     buttonText: t('Copy as text'),
+    successText: t('Copied!'),
     buttonTitle: t('Copy to clipboard'),
     clipboardText: 'Sorry, there was nothing to copy.',
   };
@@ -28,8 +30,7 @@ class ClipboardButton extends PureComponent {
   }
 
   getInitialState = () => ({
-    copied: false,
-    buttonText: this.props.buttonText,
+    successTextShowing: false,
   });
 
   getText = () => (_.isFunction(this.props.getText)
@@ -46,7 +47,7 @@ class ClipboardButton extends PureComponent {
   onSuccess = () => {
     if (_.isFunction(this.props.onSuccess)) this.props.onSuccess();
 
-    this.setState({ buttonText: t('Copied!') });
+    this.setState({ successTextShowing: true });
 
     // Update the chart date range in the patientData component.
     // We debounce this to avoid excessive updates while panning the view.
@@ -55,23 +56,32 @@ class ClipboardButton extends PureComponent {
     }
 
     const debouncedButtonTextUpdate = _.debounce(() => {
-      this.setState({ buttonText: this.getInitialState().buttonText });
+      this.setState({ successTextShowing: false });
     }, 1000);
     debouncedButtonTextUpdate();
 
     this.setState({ debouncedButtonTextUpdate });
   };
 
-  render = () => (
-    <Clipboard
-      className={styles.copyButton}
-      button-title={this.props.buttonTitle}
-      option-text={this.getText}
-      onSuccess={this.onSuccess}
-    >
-      {this.state.buttonText}
-    </Clipboard>
-  );
+  render = () => {
+    const textVisibilityClasses = cx({
+      [styles.copyButton]: true,
+      [styles.buttonTextHidden]: this.state.successTextShowing,
+      [styles.successTextHidden]: !this.state.successTextShowing,
+    });
+
+    return (
+      <Clipboard
+        className={textVisibilityClasses}
+        button-title={this.props.buttonTitle}
+        option-text={this.getText}
+        onSuccess={this.onSuccess}
+      >
+        <p className={styles.buttonText}>{this.props.buttonText}</p>
+        <p className={styles.successText}>{this.props.successText}</p>
+      </Clipboard>
+    );
+  };
 }
 
 export default ClipboardButton;

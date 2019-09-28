@@ -1,27 +1,42 @@
 .copyButton {
   composes: defaultSize from '../../../styles/typography.css';
-  float: right;
-  line-height: 0px;
-  padding: 5px;
-  border-radius: 0px;
+  padding: 5px 10px;
+  border-radius: 4px;
   cursor: pointer;
-  color: var(--text-high-contrast);
-  background-color: #f7fafa;
-  border: solid 1px #dbdee0;
+  color: var(--text-medium-contrast);
+  background-color: var(--white);
+  border: solid 1px var(--chrome);
   outline: none;
+  position: relative;
+  text-align: left;
 }
 
 .copyButton:hover {
   background-image: none;
   color: var(--white);
-  background-color: #627cff;
+  background-color: var(--brand-purple);
 }
 
 .copyButton:active {
   background-image: none;
   color: var(--white);
-  background-color: #627cff;
+  background-color: var(--brand-purple);
   opacity: 0.62;
+}
+
+.buttonText, .successText {
+  margin: 0;
+  padding: 0;
+}
+
+.copyButton.buttonTextHidden .buttonText {
+  visibility: hidden;
+  height: 0;
+}
+
+.copyButton.successTextHidden .successText {
+  visibility: hidden;
+  height: 0;
 }
 
 @media print {
