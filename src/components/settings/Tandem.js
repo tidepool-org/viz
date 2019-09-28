@@ -85,9 +85,6 @@ const Tandem = (props) => {
         <span className={styles.title}>{t('Profile Settings')}</span>
         {tables}
       </div>
-      <pre className={styles.copyText} id="copySettingsText">
-        {tandemText(user, pumpSettings, bgUnits)}
-      </pre>
     </div>
   );
 };
