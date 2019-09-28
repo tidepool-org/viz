@@ -75,7 +75,7 @@ const Tandem = (props) => {
       <ClipboardButton
         buttonTitle={t('For email or notes')}
         onSuccess={copySettingsClicked}
-        clipboardText={tandemText(user, pumpSettings, bgUnits)}
+        getText={tandemText.bind(this, user, pumpSettings, bgUnits)}
       />
       <Header
         deviceDisplayName={deviceDisplayName}

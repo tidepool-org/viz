@@ -193,7 +193,7 @@ const NonTandem = (props) => {
       <ClipboardButton
         buttonTitle={t('For email or notes')}
         onSuccess={copySettingsClicked}
-        clipboardText={nonTandemText(user, pumpSettings, bgUnits, lookupKey)}
+        getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
       />
       <Header
         deviceDisplayName={deviceName(lookupKey)}

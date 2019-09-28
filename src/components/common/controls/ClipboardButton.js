@@ -13,11 +13,13 @@ class ClipboardButton extends PureComponent {
     buttonTitle: PropTypes.string.isRequired,
     buttonText: PropTypes.string.isRequired,
     clipboardText: PropTypes.string,
+    getText: PropTypes.func.isRequired,
   };
 
   static defaultProps = {
     buttonText: t('Copy as text'),
     buttonTitle: t('Copy to clipboard'),
+    clipboardText: 'Sorry, there was nothing to copy.',
   };
 
   constructor(props) {
@@ -29,6 +31,11 @@ class ClipboardButton extends PureComponent {
     copied: false,
     buttonText: this.props.buttonText,
   });
+
+  getText = () => (_.isFunction(this.props.getText)
+    ? this.props.getText()
+    : this.props.clipboardText
+  );
 
   componentWillUnmount = () => {
     if (this.state.debouncedButtonTextUpdate) {
@@ -59,7 +66,7 @@ class ClipboardButton extends PureComponent {
     <Clipboard
       className={styles.copyButton}
       button-title={this.props.buttonTitle}
-      data-clipboard-text={this.props.clipboardText}
+      option-text={this.getText}
       onSuccess={this.onSuccess}
     >
       {this.state.buttonText}
