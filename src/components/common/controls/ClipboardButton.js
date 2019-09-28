@@ -19,7 +19,7 @@ class ClipboardButton extends PureComponent {
 
   static defaultProps = {
     buttonText: t('Copy as text'),
-    successText: t('Copied!'),
+    successText: t('Copied ✓'),
     buttonTitle: t('Copy to clipboard'),
     clipboardText: 'Sorry, there was nothing to copy.',
   };
@@ -77,8 +77,8 @@ class ClipboardButton extends PureComponent {
         option-text={this.getText}
         onSuccess={this.onSuccess}
       >
-        <p className={styles.buttonText}>{this.props.buttonText}</p>
-        <p className={styles.successText}>{this.props.successText}</p>
+        <span className={styles.buttonText}>{this.props.buttonText}</span>
+        <span className={styles.successText}>{this.props.successText}</span>
       </Clipboard>
     );
   };
