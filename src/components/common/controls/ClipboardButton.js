@@ -6,22 +6,28 @@ import cx from 'classnames';
 
 import styles from './ClipboardButton.css';
 
+if (_.get(i18next, 'options.returnEmptyString') === undefined) {
+  // Return key if no translation is present
+  i18next.init({ returnEmptyString: false, nsSeparator: '|' });
+}
+
 const t = i18next.t.bind(i18next);
 
 class ClipboardButton extends PureComponent {
   static propTypes = {
-    onSuccess: PropTypes.func,
     buttonTitle: PropTypes.string.isRequired,
     buttonText: PropTypes.string.isRequired,
     clipboardText: PropTypes.string,
-    getText: PropTypes.func.isRequired,
+    getText: PropTypes.func,
+    onSuccess: PropTypes.func,
+    successText: PropTypes.string.isRequired,
   };
 
   static defaultProps = {
     buttonText: t('Copy as text'),
-    successText: t('Copied ✓'),
     buttonTitle: t('Copy to clipboard'),
     clipboardText: 'Sorry, there was nothing to copy.',
+    successText: t('Copied ✓'),
   };
 
   constructor(props) {
