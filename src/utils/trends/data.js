@@ -198,7 +198,7 @@ export function trendsText(patient, stats, endpoints, bgPrefs) {
   });
 
   const textUtil = new TextUtil(patient, endpoints);
-  let trendsString = textUtil.buildDocumentHeader('Trends View');
+  let trendsString = textUtil.buildDocumentHeader('Trends');
 
   trendsString += textUtil.buildDocumentDates();
 

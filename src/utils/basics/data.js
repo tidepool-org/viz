@@ -821,7 +821,7 @@ export function basicsText(patient, stats, endpoints, bgPrefs) {
   });
 
   const textUtil = new TextUtil(patient, endpoints);
-  let basicsString = textUtil.buildDocumentHeader('Basics View');
+  let basicsString = textUtil.buildDocumentHeader('Basics');
 
   basicsString += textUtil.buildDocumentDates();
 

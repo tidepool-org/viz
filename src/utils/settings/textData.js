@@ -32,11 +32,11 @@ import * as nonTandemData from './nonTandemData';
  */
 export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
-  let tablesString = textUtil.buildDocumentHeader('Settings View');
+  let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
   _.map(nonTandemData.basalSchedules(settings), (schedule) => {
     const basal = nonTandemData.basal(schedule, settings, manufacturer);
-    tablesString += textUtil.buildTextTable(
+    settingsString += textUtil.buildTextTable(
       basal.scheduleName,
       basal.rows,
       basal.columns,
@@ -44,27 +44,27 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   });
 
   const sensitivity = nonTandemData.sensitivity(settings, manufacturer, units);
-  tablesString += textUtil.buildTextTable(
+  settingsString += textUtil.buildTextTable(
     `${sensitivity.title} ${units}/U`,
     sensitivity.rows,
     sensitivity.columns,
   );
 
   const target = nonTandemData.target(settings, manufacturer, units);
-  tablesString += textUtil.buildTextTable(
+  settingsString += textUtil.buildTextTable(
     `${target.title} ${units}`,
     target.rows,
     target.columns,
   );
 
   const ratio = nonTandemData.ratio(settings, manufacturer);
-  tablesString += textUtil.buildTextTable(
+  settingsString += textUtil.buildTextTable(
     `${ratio.title} g/U`,
     ratio.rows,
     ratio.columns,
   );
 
-  return tablesString;
+  return settingsString;
 }
 
 /**
@@ -77,7 +77,7 @@ export function nonTandemText(patient, settings, units, manufacturer) {
  */
 export function tandemText(patient, settings, units) {
   const textUtil = new TextUtil(patient);
-  let tablesString = textUtil.buildDocumentHeader('Settings View');
+  let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
   const styles = {
     bolusSettingsHeader: '',
@@ -86,11 +86,11 @@ export function tandemText(patient, settings, units) {
 
   _.map(tandemData.basalSchedules(settings), (schedule) => {
     const basal = tandemData.basal(schedule, settings, units, styles);
-    tablesString += textUtil.buildTextTable(
+    settingsString += textUtil.buildTextTable(
       basal.scheduleName,
       basal.rows,
       basal.columns,
     );
   });
-  return tablesString;
+  return settingsString;
 }
