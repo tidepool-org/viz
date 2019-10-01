@@ -13,11 +13,11 @@ export class TextUtil {
     this.endpoints = endpoints;
   }
 
-  buildDocumentHeader = () => {
+  buildDocumentHeader = (source) => {
     const fullname = this.buildTextLine(getPatientFullName(this.patient));
     const bday = this.buildTextLine({ label: t('Date of birth'), value: formatBirthdate(this.patient) });
     const diagnosis = this.buildTextLine({ label: t('Date of diagnosis'), value: formatDiagnosisDate(this.patient) });
-    const exported = this.buildTextLine({ label: t('Exported from Tidepool'), value: formatCurrentDate() });
+    const exported = this.buildTextLine({ label: `${t('Exported from Tidepool')}${source ? ` ${source}` : ''}`, value: formatCurrentDate() });
     return `${fullname}${bday}${diagnosis}${exported}`;
   };
 

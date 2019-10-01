@@ -32,7 +32,7 @@ import * as nonTandemData from './nonTandemData';
  */
 export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
-  let tablesString = textUtil.buildDocumentHeader();
+  let tablesString = textUtil.buildDocumentHeader('Settings View');
 
   _.map(nonTandemData.basalSchedules(settings), (schedule) => {
     const basal = nonTandemData.basal(schedule, settings, manufacturer);
@@ -77,7 +77,7 @@ export function nonTandemText(patient, settings, units, manufacturer) {
  */
 export function tandemText(patient, settings, units) {
   const textUtil = new TextUtil(patient);
-  let tablesString = textUtil.buildDocumentHeader();
+  let tablesString = textUtil.buildDocumentHeader('Settings View');
 
   const styles = {
     bolusSettingsHeader: '',
