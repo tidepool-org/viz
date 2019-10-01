@@ -6,7 +6,8 @@ import ClipboardButton from '../../../../src/components/common/controls/Clipboar
 import * as profiles from '../../../../data/patient/profiles';
 
 import { tandemText, nonTandemText } from '../../../../src/utils/settings/textData';
-import { trendsText } from '../../../../src/utils/trends/textData';
+import { trendsText } from '../../../../src/utils/trends/data';
+import { basicsText } from '../../../../src/utils/basics/data';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 const stories = storiesOf('ClipboardButton', module);
@@ -20,6 +21,8 @@ const omnipodFlatRateData = require('../../../../data/pumpSettings/omnipod/flatr
 const omnipodMultiRateData = require('../../../../data/pumpSettings/omnipod/multirate.json');
 const tandemFlatRateData = require('../../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultiRateData = require('../../../../data/pumpSettings/tandem/multirate.json');
+
+/* eslint-disable max-len */
 
 const data = {
   stats: {},
@@ -149,7 +152,7 @@ stories.add('OmniPod Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.flatrate, MGDL_UNITS, 'omnipod')}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.flatrate, MGDL_UNITS, 'insulet')}
     />
   </Wrapper>
 ));
@@ -158,7 +161,7 @@ stories.add('OmniPod Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.multirate, MGDL_UNITS, 'omnipod')}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.multirate, MGDL_UNITS, 'insulet')}
     />
   </Wrapper>
 ));
@@ -185,7 +188,7 @@ stories.add('Trends Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={trendsText.bind(this, profiles.standard, data.stats.trends.stats, data.stats.trends.endpoints)}
+      getText={trendsText.bind(this, profiles.standard, data.stats.trends.stats, data.stats.trends.endpoints, data.stats.trends.bgPrefs)}
     />
   </Wrapper>
 ), { notes });
@@ -194,7 +197,9 @@ stories.add('Basics Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={tandemText.bind(this, profiles.standard, data.stats.basics.stats, data.stats.basics.endpoints)}
+      getText={basicsText.bind(this, profiles.standard, data.stats.basics.stats, data.stats.basics.endpoints, data.stats.basics.bgPrefs)}
     />
   </Wrapper>
 ), { notes });
+
+/* eslint-enable max-len */
