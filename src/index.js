@@ -52,6 +52,7 @@ import {
 } from './utils/stat';
 import DataUtil from './utils/data';
 import TextUtil from './utils/text/TextUtil';
+import { textData as TrendsTextData } from './utils/trends/textData';
 import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
@@ -114,6 +115,7 @@ const utils = {
   },
   text: {
     TextUtil,
+    TrendsTextData,
   },
 };
 

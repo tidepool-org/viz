@@ -86,7 +86,6 @@ export function tandemText(patient, settings, units) {
 
   _.map(tandemData.basalSchedules(settings), (schedule) => {
     const basal = tandemData.basal(schedule, settings, units, styles);
-    console.log('basal', basal);
     tablesString += textUtil.buildTextTable(
       basal.scheduleName,
       basal.rows,
