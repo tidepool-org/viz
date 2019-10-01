@@ -51,8 +51,8 @@ import {
   statFetchMethods,
 } from './utils/stat';
 import DataUtil from './utils/data';
-import TextUtil from './utils/text/TextUtil';
-import { textData as TrendsTextData } from './utils/trends/textData';
+import { trendsText } from './utils/trends/data';
+import { basicsText } from './utils/basics/data';
 import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
@@ -114,8 +114,8 @@ const utils = {
     statFetchMethods,
   },
   text: {
-    TextUtil,
-    TrendsTextData,
+    trendsText,
+    basicsText,
   },
 };
 
