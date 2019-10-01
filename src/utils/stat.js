@@ -1,9 +1,14 @@
 import _ from 'lodash';
+import React from 'react';
 import i18next from 'i18next';
 
-import { generateBgRangeLabels } from './bloodglucose';
-import { AUTOMATED_DELIVERY, SCHEDULED_DELIVERY } from './constants';
+import { generateBgRangeLabels, classifyBgValue, classifyCvValue } from './bloodglucose';
+import { LBS_PER_KG, AUTOMATED_DELIVERY, SCHEDULED_DELIVERY } from './constants';
 import { getPumpVocabulary } from './device';
+import { formatDecimalNumber, formatBgValue } from './format';
+import { formatDuration } from './datetime';
+
+import colors from '../styles/colors.css';
 
 const t = i18next.t.bind(i18next);
 
@@ -81,6 +86,179 @@ export const statFetchMethods = {
 export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
 
 export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : parseFloat(value));
+
+export const formatDatum = (datum = {}, format, opts = {}) => {
+  let id = datum.id;
+  let value = datum.value;
+  let suffix = datum.suffix || '';
+  let deviation;
+  let lowerValue;
+  let lowerColorId;
+  let upperValue;
+  let upperColorId;
+
+  _.defaults(opts, {
+    emptyDataPlaceholder: '--',
+  });
+
+  const total = _.get(opts, 'data.total.value'); // TODO: need this for percentage calcs
+
+  const disableStat = () => {
+    id = 'statDisabled';
+    value = opts.emptyDataPlaceholder;
+  };
+
+  switch (format) {
+    case statFormats.bgCount:
+      if (value >= 0) {
+        const precision = value < 0.05 ? 2 : 1;
+        // Note: the + converts the rounded, fixed string back to a number
+        // This allows 2.67777777 to render as 2.7 and 3.0000001 to render as 3 (not 3.0)
+        value = +value.toFixed(precision);
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.bgRange:
+      value = generateBgRangeLabels(opts.bgPrefs, { condensed: true })[id];
+      break;
+
+    case statFormats.bgValue:
+      if (value >= 0) {
+        id = classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), value);
+        value = formatBgValue(value, opts.bgPrefs);
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.carbs:
+      if (value >= 0) {
+        value = formatDecimalNumber(value);
+        suffix = 'g';
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.cv:
+      if (value >= 0) {
+        id = classifyCvValue(value);
+        value = formatDecimalNumber(value);
+        suffix = '%';
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.duration:
+      if (value >= 0) {
+        value = formatDuration(value, { condensed: true });
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.gmi:
+      if (value >= 0) {
+        value = formatDecimalNumber(value, 1);
+        suffix = '%';
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.percentage:
+      if (total && total >= 0) {
+        value = _.max([value, 0]);
+        const percentage = (value / total) * 100;
+        let precision = 0;
+        // We want to show extra precision on very small percentages so that we avoid showing 0%
+        // when there is some data there.
+        if (percentage > 0 && percentage < 0.5) {
+          precision = percentage < 0.05 ? 2 : 1;
+        }
+        value = formatDecimalNumber(percentage, precision);
+        suffix = '%';
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.standardDevRange:
+      deviation = _.get(datum, 'deviation.value', -1);
+      if (value >= 0 && deviation >= 0) {
+        lowerValue = value - deviation;
+        lowerColorId = lowerValue >= 0
+          ? classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), lowerValue)
+          : 'low';
+
+        upperValue = value + deviation;
+        upperColorId = classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), upperValue);
+
+        lowerValue = formatBgValue(lowerValue, opts.bgPrefs);
+        upperValue = formatBgValue(upperValue, opts.bgPrefs);
+
+        value = opts.returnMarkup ? (
+          <span>
+            <span style={{
+              color: colors[lowerColorId],
+            }}>
+              {lowerValue}
+            </span>
+            &nbsp;-&nbsp;
+            <span style={{
+              color: colors[upperColorId],
+            }}>
+              {upperValue}
+            </span>
+          </span>
+        ) : `${lowerValue}-${upperValue}`;
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.standardDevValue:
+      if (value >= 0) {
+        value = formatBgValue(value, opts.bgPrefs);
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.units:
+      if (value >= 0) {
+        value = formatDecimalNumber(value, 1);
+        suffix = 'U';
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.unitsPerKg:
+      if (suffix === 'lb') {
+        value = value * LBS_PER_KG;
+      }
+      suffix = 'U/kg';
+      if (value > 0 && _.isFinite(value)) {
+        value = formatDecimalNumber(value, 2);
+      } else {
+        disableStat();
+      }
+      break;
+
+    default:
+      break;
+  }
+
+  return {
+    id,
+    value,
+    suffix,
+  };
+};
 
 export const getStatAnnotations = (data, type, opts = {}) => {
   const { bgSource, days, manufacturer } = opts;
@@ -513,7 +691,6 @@ export const getStatDefinition = (data, type, opts = {}) => {
   let stat = {
     annotations: getStatAnnotations(data, type, opts),
     collapsible: false,
-    data: getStatData(data, type, opts),
     id: type,
     title: getStatTitle(type, opts),
     type: statTypes.barHorizontal,
@@ -627,6 +804,8 @@ export const getStatDefinition = (data, type, opts = {}) => {
       stat = undefined;
       break;
   }
+
+  stat.data = getStatData(data, type, opts);
 
   return stat;
 };
