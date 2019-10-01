@@ -2,7 +2,13 @@ import _ from 'lodash';
 import React from 'react';
 import i18next from 'i18next';
 
-import { generateBgRangeLabels, classifyBgValue, classifyCvValue } from './bloodglucose';
+import {
+  generateBgRangeLabels,
+  classifyBgValue,
+  classifyCvValue,
+  reshapeBgClassesToBgBounds,
+} from './bloodglucose';
+
 import { LBS_PER_KG, AUTOMATED_DELIVERY, SCHEDULED_DELIVERY } from './constants';
 import { getPumpVocabulary } from './device';
 import { formatDecimalNumber, formatBgValue } from './format';
@@ -805,7 +811,75 @@ export const getStatDefinition = (data, type, opts = {}) => {
       break;
   }
 
-  stat.data = getStatData(data, type, opts);
-
   return stat;
 };
+
+/**
+ * statsText
+ * @param  {Object} stats - all stats data
+ * @param  {Object} textUtil - TextUtil instance
+ * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
+ *
+ * @return {String}  Stats data as a formatted string
+ */
+export function statsText(stats, textUtil, bgPrefs) {
+  _.defaults(bgPrefs, {
+    bgBounds: reshapeBgClassesToBgBounds(bgPrefs),
+  });
+
+  let statsString = '';
+
+  _.each(stats, stat => {
+    const renderTable = _.includes([
+      'timeInRange',
+      'readingsInRange',
+      'totalInsulin',
+      'timeInAuto',
+    ], stat.id);
+
+    const opts = { bgPrefs, data: stat.data };
+
+    if (renderTable) {
+      statsString += textUtil.buildTextTable(
+        `${stat.title}${stat.units ? ` (${stat.units})` : ''}`,
+        _.map(_.reverse([...stat.data.data]), datum => {
+          const formatted = formatDatum(
+            datum,
+            stat.dataFormat.summary,
+            opts
+          );
+
+          return {
+            label: datum.legendTitle || datum.title,
+            value: `${formatted.value}${formatted.suffix || ''}`,
+          };
+        }),
+        [
+          {
+            key: 'label',
+            label: 'Label',
+          },
+          {
+            key: 'value',
+            label: 'Value',
+          },
+        ],
+        { showHeader: false }
+      );
+    } else {
+      const formatted = formatDatum(
+        _.get(stat.data, stat.data.dataPaths.summary, {}),
+        stat.dataFormat.summary,
+        opts
+      );
+
+      statsString += '\n';
+      statsString += textUtil.buildTextLine({
+        label: stat.title,
+        value: `${formatted.value}${formatted.suffix || (stat.units ? ` ${stat.units}` : '')}`,
+      });
+    }
+  });
+
+  return statsString;
+}

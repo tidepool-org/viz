@@ -25,6 +25,7 @@ import generateClassifiers from '../classifiers';
 import { getLatestPumpUpload, isAutomatedBasalDevice, getPumpVocabulary } from '../device';
 import {
   generateBgRangeLabels,
+  reshapeBgClassesToBgBounds,
   weightedCGMCount,
 } from '../bloodglucose';
 
@@ -50,6 +51,9 @@ import {
   MEDTRONIC,
   pumpVocabulary,
 } from '../constants';
+
+import TextUtil from '../text/TextUtil';
+import { statsText } from '../stat';
 
 import { getBasalPathGroups } from '../basal';
 
@@ -800,4 +804,28 @@ export function disableEmptySections(data) {
   });
 
   return basicsData;
+}
+
+/**
+ * basicsText
+ * @param  {Object} patient - the patient object that contains the profile
+ * @param  {Object} stats - all stats data
+ * @param  {Array} endpoints - ISO strings [start, end]
+ * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
+ *
+ * @return {String}  Trends data as a formatted string
+ */
+export function basicsText(patient, stats, endpoints, bgPrefs) {
+  _.defaults(bgPrefs, {
+    bgBounds: reshapeBgClassesToBgBounds(bgPrefs),
+  });
+
+  const textUtil = new TextUtil(patient, endpoints);
+  let basicsString = textUtil.buildDocumentHeader('Basics View');
+
+  basicsString += textUtil.buildDocumentDates();
+
+  basicsString += statsText(stats, textUtil, bgPrefs);
+
+  return basicsString;
 }
