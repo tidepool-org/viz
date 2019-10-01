@@ -6,6 +6,7 @@ import ClipboardButton from '../../../../src/components/common/controls/Clipboar
 import * as profiles from '../../../../data/patient/profiles';
 
 import { tandemText, nonTandemText } from '../../../../src/utils/settings/textData';
+import { trendsText } from '../../../../src/utils/trends/textData';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 const stories = storiesOf('ClipboardButton', module);
@@ -45,14 +46,14 @@ const data = {
 
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data.stats.trends = require('../../local/stat-trends.json');
+  data.stats.trends = require('../../../../local/stats-trends.json');
 } catch (e) {
   data.stats.trends = {};
 }
 
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data.stats.basics = require('../../local/stat-basics.json');
+  data.stats.basics = require('../../../../local/stats-basics.json');
 } catch (e) {
   data.stats.basics = {};
 }
@@ -94,6 +95,7 @@ stories.add('Custom Text', () => (
       buttonText="Click Me!"
       buttonTitle="I'm a custom title"
       successText="Thanks!"
+      clipboardText="You copied me!"
     />
   </Wrapper>
 ));
@@ -101,7 +103,6 @@ stories.add('Custom Text', () => (
 stories.add('Animas Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.animas.flatrate, MGDL_UNITS, 'animas')}
     />
@@ -111,7 +112,6 @@ stories.add('Animas Flat Rate', () => (
 stories.add('Animas Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.animas.multirate, MGDL_UNITS, 'animas')}
     />
@@ -121,7 +121,6 @@ stories.add('Animas Multi Rate', () => (
 stories.add('Medtronic Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.medtronic.flatrate, MGDL_UNITS, 'medtronic')}
     />
@@ -131,7 +130,6 @@ stories.add('Medtronic Flat Rate', () => (
 stories.add('Medtronic Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.medtronic.multirate, MGDL_UNITS, 'medtronic')}
     />
@@ -141,7 +139,6 @@ stories.add('Medtronic Multi Rate', () => (
 stories.add('Medtronic Automated Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.medtronic.automated, MGDL_UNITS, 'medtronic')}
     />
@@ -151,7 +148,6 @@ stories.add('Medtronic Automated Rate', () => (
 stories.add('OmniPod Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.flatrate, MGDL_UNITS, 'omnipod')}
     />
@@ -161,7 +157,6 @@ stories.add('OmniPod Flat Rate', () => (
 stories.add('OmniPod Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.multirate, MGDL_UNITS, 'omnipod')}
     />
@@ -171,7 +166,6 @@ stories.add('OmniPod Multi Rate', () => (
 stories.add('Tandem Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={tandemText.bind(this, profiles.standard, data.settings.tandem.flatrate, MGDL_UNITS)}
     />
@@ -181,7 +175,6 @@ stories.add('Tandem Flat Rate', () => (
 stories.add('Tandem Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
       getText={tandemText.bind(this, profiles.standard, data.settings.tandem.multirate, MGDL_UNITS)}
     />
@@ -191,9 +184,8 @@ stories.add('Tandem Multi Rate', () => (
 stories.add('Trends Data', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
-      getText={tandemText.bind(this, profiles.standard, data.settings.tandem.multirate, MGDL_UNITS)}
+      getText={trendsText.bind(this, profiles.standard, data.stats.trends.stats, data.stats.trends.endpoints)}
     />
   </Wrapper>
 ), { notes });
@@ -201,9 +193,8 @@ stories.add('Trends Data', () => (
 stories.add('Basics Data', () => (
   <Wrapper>
     <ClipboardButton
-      buttonTitle={'For email or notes'}
       onSuccess={_.noop}
-      getText={tandemText.bind(this, profiles.standard, data.settings.tandem.multirate, MGDL_UNITS)}
+      getText={tandemText.bind(this, profiles.standard, data.stats.basics.stats, data.stats.basics.endpoints)}
     />
   </Wrapper>
 ), { notes });
