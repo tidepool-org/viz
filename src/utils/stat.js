@@ -9,12 +9,10 @@ import {
   reshapeBgClassesToBgBounds,
 } from './bloodglucose';
 
-import { LBS_PER_KG, AUTOMATED_DELIVERY, SCHEDULED_DELIVERY } from './constants';
+import { BG_COLORS, LBS_PER_KG, AUTOMATED_DELIVERY, SCHEDULED_DELIVERY } from './constants';
 import { getPumpVocabulary } from './device';
 import { formatDecimalNumber, formatBgValue } from './format';
 import { formatDuration } from './datetime';
-
-import colors from '../styles/colors.css';
 
 const t = i18next.t.bind(i18next);
 
@@ -105,6 +103,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
   _.defaults(opts, {
     emptyDataPlaceholder: '--',
+    forcePlainTextValues: false,
   });
 
   const total = _.get(opts, 'data.total.value'); // TODO: need this for percentage calcs
@@ -206,16 +205,16 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
         lowerValue = formatBgValue(lowerValue, opts.bgPrefs);
         upperValue = formatBgValue(upperValue, opts.bgPrefs);
 
-        value = opts.returnMarkup ? (
+        value = !opts.forcePlainTextValues ? (
           <span>
             <span style={{
-              color: colors[lowerColorId],
+              color: BG_COLORS[lowerColorId],
             }}>
               {lowerValue}
             </span>
             &nbsp;-&nbsp;
             <span style={{
-              color: colors[upperColorId],
+              color: BG_COLORS[upperColorId],
             }}>
               {upperValue}
             </span>
@@ -837,7 +836,7 @@ export function statsText(stats, textUtil, bgPrefs) {
       'timeInAuto',
     ], stat.id);
 
-    const opts = { bgPrefs, data: stat.data };
+    const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
 
     if (renderTable) {
       statsString += textUtil.buildTextTable(
