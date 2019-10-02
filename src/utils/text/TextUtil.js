@@ -40,7 +40,10 @@ export class TextUtil {
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
 
-  buildTextTable = (name = '', rows, columns, opts) => `\n${name}\n${this.getTable(rows, columns, opts)}\n`;
+  buildTextTable = (name, rows, columns, opts) => {
+    const tableText = this.getTable(rows, columns, opts);
+    return name ? `\n${name}\n${tableText}\n` : `\n${tableText}\n`;
+  }
 
   getTable = (rows, columns, opts = {}) => {
     _.defaults(opts, {

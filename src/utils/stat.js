@@ -855,14 +855,8 @@ export function statsText(stats, textUtil, bgPrefs) {
           };
         }),
         [
-          {
-            key: 'label',
-            label: 'Label',
-          },
-          {
-            key: 'value',
-            label: 'Value',
-          },
+          { key: 'label', label: 'Label' },
+          { key: 'value', label: 'Value' },
         ],
         { showHeader: false }
       );

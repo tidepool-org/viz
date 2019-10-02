@@ -197,7 +197,7 @@ stories.add('Basics Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={basicsText.bind(this, profiles.standard, data.stats.basics.stats, data.stats.basics.endpoints, data.stats.basics.bgPrefs, data.stats.basics.timePrefs, data.stats.basics.chartPrefs)}
+      getText={basicsText.bind(this, profiles.standard, data.stats.basics.stats, data.stats.basics.endpoints, data.stats.basics.bgPrefs, data.stats.basics.timePrefs, data.stats.basics.data)}
     />
   </Wrapper>
 ), { notes });
