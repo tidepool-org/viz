@@ -189,15 +189,16 @@ export function categorizeSmbgSubtype(data) {
  * @param  {Object} stats - all stats data
  * @param  {Array} endpoints - ISO strings [start, end]
  * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
+ * @param  {Object} timePrefs - timePrefs object
  *
  * @return {String}  Trends data as a formatted string
  */
-export function trendsText(patient, stats, endpoints, bgPrefs) {
+export function trendsText(patient, stats, endpoints, bgPrefs, timePrefs) {
   _.defaults(bgPrefs, {
     bgBounds: reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new TextUtil(patient, endpoints);
+  const textUtil = new TextUtil(patient, endpoints, timePrefs);
   let trendsString = textUtil.buildDocumentHeader('Trends');
 
   trendsString += textUtil.buildDocumentDates();

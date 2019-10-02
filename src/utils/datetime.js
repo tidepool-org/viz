@@ -77,7 +77,7 @@ export function getBrowserTimezone() {
  *
  * @return {String} timezoneName from timePrefs, browser, or fallback to 'UTC'
  */
-export function getTimezoneFromTimePrefs(timePrefs) {
+export function getTimezoneFromTimePrefs(timePrefs = {}) {
   const { timezoneAware, timezoneName } = timePrefs;
   try {
     let timezone = getBrowserTimezone() || 'UTC';

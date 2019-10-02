@@ -1,16 +1,25 @@
 import _ from 'lodash';
+import moment from 'moment';
 import table from 'text-table';
 import i18next from 'i18next';
 
-import { formatBirthdate, formatCurrentDate, formatDateRange, formatDiagnosisDate } from '../datetime';
+import {
+  formatBirthdate,
+  formatCurrentDate,
+  formatDateRange,
+  formatDiagnosisDate,
+  getTimezoneFromTimePrefs,
+} from '../datetime';
+
 import { getPatientFullName } from '../misc';
 
 const t = i18next.t.bind(i18next);
 
 export class TextUtil {
-  constructor(patient, endpoints) {
+  constructor(patient, endpoints, timePrefs) {
     this.patient = patient;
     this.endpoints = endpoints;
+    this.timePrefs = timePrefs;
   }
 
   buildDocumentHeader = (source) => {
@@ -21,7 +30,13 @@ export class TextUtil {
     return `${fullname}${bday}${diagnosis}${exported}`;
   };
 
-  buildDocumentDates = () => `\nReporting Period: ${formatDateRange(this.endpoints[0], this.endpoints[1])}\n`;
+  buildDocumentDates = () => {
+    const timezone = getTimezoneFromTimePrefs(this.timePrefs);
+
+    // endpoint is exclusive, so need to subtract a day from formatted range end date
+    const end = moment.utc(this.endpoints[1]).tz(timezone).subtract(1, 'day');
+    return `\nReporting Period: ${formatDateRange(this.endpoints[0], end)}\n`;
+  }
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
 
