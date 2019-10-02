@@ -696,6 +696,7 @@ export const getStatDefinition = (data, type, opts = {}) => {
   let stat = {
     annotations: getStatAnnotations(data, type, opts),
     collapsible: false,
+    data: getStatData(data, type, opts),
     id: type,
     title: getStatTitle(type, opts),
     type: statTypes.barHorizontal,
