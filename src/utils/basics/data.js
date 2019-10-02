@@ -845,7 +845,7 @@ export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basics
   data = processInfusionSiteHistory(data, bgPrefs);
   data = disableEmptySections(data, bgPrefs);
 
-  const getAggregateSummaryRows = (dimensions, statData, header) => {
+  const getSummaryTableData = (dimensions, statData, header) => {
     const rows = [];
     const columns = [
       { key: 'label', label: 'Label' },
@@ -884,8 +884,28 @@ export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basics
     return { rows, columns };
   };
 
+  const getSiteChangesTableData = (infusionSiteData) => {
+    const rows = [];
+    const columns = [
+      { key: 'label', label: 'Label' },
+      { key: 'value', label: 'Value' },
+    ];
+
+    _.each(_.valuesIn(infusionSiteData), datum => {
+      if (datum.daysSince) rows.push(datum.daysSince);
+    });
+
+    return {
+      columns,
+      rows: [
+        { label: 'Mean Duration', value: `${_.mean(rows)} days`},
+        { label: 'Longest Duration', value: `${_.max(rows)} days`},
+      ],
+    };
+  };
+
   if (!data.sections.fingersticks.disabled) {
-    const fingersticks = getAggregateSummaryRows(
+    const fingersticks = getSummaryTableData(
       data.sections.fingersticks.dimensions,
       data.data.fingerstick.summary,
       data.sections.fingersticks.summaryTitle
@@ -900,7 +920,7 @@ export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basics
   }
 
   if (!data.sections.boluses.disabled) {
-    const boluses = getAggregateSummaryRows(
+    const boluses = getSummaryTableData(
       data.sections.boluses.dimensions,
       data.data.bolus.summary,
       data.sections.boluses.summaryTitle
@@ -914,8 +934,21 @@ export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basics
     );
   }
 
+  if (!data.sections.siteChanges.disabled) {
+    const siteChanges = getSiteChangesTableData(
+      data.data[data.sections.siteChanges.type].infusionSiteHistory,
+    );
+
+    basicsString += textUtil.buildTextTable(
+      `${data.sections.siteChanges.title} from '${data.sections.siteChanges.subTitle}'`,
+      siteChanges.rows,
+      siteChanges.columns,
+      { showHeader: false }
+    );
+  }
+
   if (!data.sections.basals.disabled) {
-    const basals = getAggregateSummaryRows(
+    const basals = getSummaryTableData(
       data.sections.basals.dimensions,
       data.data.basal.summary,
       data.sections.basals.summaryTitle
