@@ -125,9 +125,12 @@ const resolve = {
   ],
 };
 
+let devtool = process.env.WEBPACK_DEVTOOL_VIZ || 'source-map';
+if (process.env.WEBPACK_DEVTOOL_VIZ === false) devtool = undefined;
+
 module.exports = {
   cache: isDev,
-  devtool: isDev ? 'cheap-source-map' : undefined,
+  devtool: isDev ? devtool : undefined,
   entry,
   mode: isDev ? 'development' : 'production',
   module: {
