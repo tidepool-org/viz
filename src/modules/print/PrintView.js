@@ -100,7 +100,7 @@ class PrintView {
       grey: '#6D6D6D',
       lightGrey: '#979797',
       darkGrey: '#4E4E4F',
-    }
+    };
 
     this.tableSettings = {
       colors: {

@@ -898,8 +898,8 @@ export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basics
     return {
       columns,
       rows: [
-        { label: 'Mean Duration', value: `${_.mean(rows)} days`},
-        { label: 'Longest Duration', value: `${_.max(rows)} days`},
+        { label: 'Mean Duration', value: `${_.mean(rows)} days` },
+        { label: 'Longest Duration', value: `${_.max(rows)} days` },
       ],
     };
   };
