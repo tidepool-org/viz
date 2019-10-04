@@ -23,6 +23,13 @@ import { TWENTY_FOUR_HRS } from '../datetime';
 import { statsText } from '../stat';
 import { reshapeBgClassesToBgBounds } from '../bloodglucose';
 
+// Exporting utils for easy stubbing in tests
+export const utils = {
+  reshapeBgClassesToBgBounds,
+  statsText,
+  TextUtil,
+};
+
 /**
  * determineRangeBoundaries
  * @param {Array} outOfRange - Array of out-of-range objects w/threshold and value
@@ -190,15 +197,16 @@ export function categorizeSmbgSubtype(data) {
  * @param  {Array} endpoints - ISO strings [start, end]
  * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
  * @param  {Object} timePrefs - timePrefs object
+ * @param  {Object} chartPrefs - trends chartPrefs object from blip
  *
  * @return {String}  Trends data as a formatted string
  */
 export function trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs) {
   _.defaults(bgPrefs, {
-    bgBounds: reshapeBgClassesToBgBounds(bgPrefs),
+    bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new TextUtil(patient, endpoints, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints, timePrefs);
   let trendsString = textUtil.buildDocumentHeader('Trends');
 
   trendsString += textUtil.buildDocumentDates();
@@ -206,7 +214,7 @@ export function trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartP
   const excludedDays = _.map(_.keys(_.pickBy(chartPrefs.activeDays, day => day === false)), _.capitalize).join(', ');
   if (excludedDays.length) trendsString += textUtil.buildTextLine({ label: 'Excluded Days', value: excludedDays });
 
-  trendsString += statsText(stats, textUtil, bgPrefs);
+  trendsString += utils.statsText(stats, textUtil, bgPrefs);
 
   return trendsString;
 }

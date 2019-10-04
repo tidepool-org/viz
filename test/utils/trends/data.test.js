@@ -437,4 +437,97 @@ describe('[trends] data utils', () => {
       expect(utils.categorizeSmbgSubtype(manualSubtype)).to.equal('manual');
     });
   });
+
+  describe('trendsText', () => {
+    /* eslint-disable lines-between-class-members */
+    class TextUtilStub {
+      buildDocumentHeader = sinon.stub().returns('Trends Header, ');
+      buildDocumentDates = sinon.stub().returns('Trends Dates, ');
+      buildTextLine = sinon.stub().returns('Trends Excluded Dates Text, ');
+    }
+    /* eslint-enable lines-between-class-members */
+
+    const patient = { profile: { patient: {
+      fullName: 'John Doe',
+      birthDate: '2000-01-01',
+      diagnosisDate: '2014-12-31',
+    } } };
+
+    const stats = [{ id: 'myStat' }];
+    const endpoints = ['2019-02-01T00:00:00.000Z', '2019-02-20T00:00:00.000Z'];
+    const timePrefs = { timezoneName: 'US/Eastern', timezoneAware: true };
+    const chartPrefs = { activeDays: { monday: false, wednesday: false } };
+    const bgPrefs = {};
+
+    let textUtilStub;
+
+    before(() => {
+      textUtilStub = new TextUtilStub();
+      sinon.stub(utils.utils, 'TextUtil').returns(textUtilStub);
+      sinon.stub(utils.utils, 'statsText').returns('Stats Text');
+      sinon.stub(utils.utils, 'reshapeBgClassesToBgBounds').returns('BG Bounds');
+    });
+
+    afterEach(() => {
+      utils.utils.TextUtil.resetHistory();
+      utils.utils.statsText.resetHistory();
+      utils.utils.reshapeBgClassesToBgBounds.resetHistory();
+      textUtilStub.buildDocumentHeader.resetHistory();
+      textUtilStub.buildDocumentDates.resetHistory();
+      textUtilStub.buildTextLine.resetHistory();
+    });
+
+    after(() => {
+      utils.utils.TextUtil.restore();
+      utils.utils.statsText.restore();
+      utils.utils.reshapeBgClassesToBgBounds.restore();
+    });
+
+    it('should reshape provided tideline-style bgPrefs to the viz format', () => {
+      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      sinon.assert.callCount(utils.utils.reshapeBgClassesToBgBounds, 1);
+      sinon.assert.calledWith(utils.utils.reshapeBgClassesToBgBounds, bgPrefs);
+    });
+
+    it('should return formatted text for Trends data', () => {
+      const result = utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      expect(result).to.equal('Trends Header, Trends Dates, Trends Excluded Dates Text, Stats Text');
+    });
+
+    it('should build the document header section', () => {
+      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      sinon.assert.callCount(textUtilStub.buildDocumentHeader, 1);
+      sinon.assert.calledWith(textUtilStub.buildDocumentHeader, 'Trends');
+    });
+
+    it('should build the document dates section', () => {
+      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      sinon.assert.callCount(textUtilStub.buildDocumentDates, 1);
+    });
+
+    it('should build the excluded dates when days are excluded', () => {
+      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      sinon.assert.callCount(textUtilStub.buildTextLine, 1);
+      sinon.assert.calledWith(textUtilStub.buildTextLine, { label: 'Excluded Days', value: 'Monday, Wednesday' });
+    });
+
+    it('should not build the excluded dates when no days are excluded', () => {
+      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, { activeDays: {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: true,
+        sunday: true,
+      } });
+      sinon.assert.callCount(textUtilStub.buildTextLine, 0);
+    });
+
+    it('should build the trends stats section', () => {
+      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      sinon.assert.callCount(utils.utils.statsText, 1);
+      sinon.assert.calledWith(utils.utils.statsText, stats, textUtilStub, bgPrefs);
+    });
+  });
 });
