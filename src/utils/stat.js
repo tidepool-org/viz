@@ -822,7 +822,7 @@ export const getStatDefinition = (data, type, opts = {}) => {
  *
  * @return {String}  Stats data as a formatted string
  */
-export function statsText(stats, textUtil, bgPrefs) {
+export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
   _.defaults(bgPrefs, {
     bgBounds: reshapeBgClassesToBgBounds(bgPrefs),
   });
@@ -843,7 +843,7 @@ export function statsText(stats, textUtil, bgPrefs) {
       statsString += textUtil.buildTextTable(
         `${stat.title}${stat.units ? ` (${stat.units})` : ''}`,
         _.map(_.reverse([...stat.data.data]), datum => {
-          const formatted = formatDatum(
+          const formatted = formatFn(
             datum,
             stat.dataFormat.summary,
             opts
@@ -861,7 +861,7 @@ export function statsText(stats, textUtil, bgPrefs) {
         { showHeader: false }
       );
     } else {
-      const formatted = formatDatum(
+      const formatted = formatFn(
         _.get(stat.data, stat.data.dataPaths.summary, {}),
         stat.dataFormat.summary,
         opts
