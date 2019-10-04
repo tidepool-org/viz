@@ -59,6 +59,13 @@ import { getBasalPathGroups } from '../basal';
 
 const t = i18next.t.bind(i18next);
 
+// Exporting utils for easy stubbing in tests
+export const utils = {
+  reshapeBgClassesToBgBounds,
+  statsText,
+  TextUtil,
+};
+
 /**
  * Get the BG distribution source and status
  * source will be one of [cbg | smbg | null]
@@ -819,15 +826,15 @@ export function disableEmptySections(data) {
  */
 export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basicsData) {
   _.defaults(bgPrefs, {
-    bgBounds: reshapeBgClassesToBgBounds(bgPrefs),
+    bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new TextUtil(patient, endpoints, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints, timePrefs);
   let basicsString = textUtil.buildDocumentHeader('Basics');
 
   basicsString += textUtil.buildDocumentDates();
 
-  basicsString += statsText(stats, textUtil, bgPrefs);
+  basicsString += utils.statsText(stats, textUtil, bgPrefs);
 
   let data = { ...basicsData };
 
@@ -842,8 +849,8 @@ export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basics
   );
 
   data = reduceByDay(data, bgPrefs);
-  data = processInfusionSiteHistory(data, bgPrefs);
-  data = disableEmptySections(data, bgPrefs);
+  data = processInfusionSiteHistory(data, patient);
+  data = disableEmptySections(data);
 
   const getSummaryTableData = (dimensions, statData, header) => {
     const rows = [];
