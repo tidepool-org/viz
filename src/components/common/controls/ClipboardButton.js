@@ -26,7 +26,7 @@ class ClipboardButton extends PureComponent {
   static defaultProps = {
     buttonText: t('Copy as text'),
     buttonTitle: t('Copy to clipboard'),
-    clipboardText: 'Sorry, there was nothing to copy.',
+    clipboardText: t('Sorry, there was nothing to copy.'),
     successText: t('Copied ✓'),
   };
 
