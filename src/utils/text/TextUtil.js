@@ -34,8 +34,9 @@ export class TextUtil {
     const timezone = getTimezoneFromTimePrefs(this.timePrefs);
 
     // endpoint is exclusive, so need to subtract a day from formatted range end date
+    const start = moment.utc(this.endpoints[0]).tz(timezone);
     const end = moment.utc(this.endpoints[1]).tz(timezone).subtract(1, 'day');
-    return `\nReporting Period: ${formatDateRange(this.endpoints[0], end)}\n`;
+    return `\nReporting Period: ${formatDateRange(start, end)}\n`;
   }
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);

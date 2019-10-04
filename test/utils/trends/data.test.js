@@ -447,11 +447,13 @@ describe('[trends] data utils', () => {
     }
     /* eslint-enable lines-between-class-members */
 
-    const patient = { profile: { patient: {
+    const patient = { profile: {
       fullName: 'John Doe',
-      birthDate: '2000-01-01',
-      diagnosisDate: '2014-12-31',
-    } } };
+      patient: {
+        birthday: '2000-01-01',
+        diagnosisDate: '2014-12-31',
+      },
+    } };
 
     const stats = [{ id: 'myStat' }];
     const endpoints = ['2019-02-01T00:00:00.000Z', '2019-02-20T00:00:00.000Z'];
