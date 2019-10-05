@@ -30,6 +30,8 @@ class ClipboardButton extends PureComponent {
     successText: t('Copied ✓'),
   };
 
+  static displayName = 'ClipboardButton';
+
   constructor(props) {
     super(props);
     this.state = this.getInitialState();
