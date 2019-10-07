@@ -71,7 +71,7 @@
     "react-select": "2.0.0",
     "react-sizeme": "2.5.2",
     "react-transition-group-plus": "0.5.3",
-    "reductio": "0.6.3",
+    "reductio": "https://github.com/crossfilter/reductio.git#0c45b0355950101d395d6482e2083ce1cdbcf435",
     "redux": "3.5.2",
     "redux-thunk": "2.2.0",
     "serialize-svg-path": "0.1.0",

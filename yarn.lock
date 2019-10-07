@@ -4702,7 +4702,7 @@ crossfilter2@1.4.6:
   dependencies:
     lodash.result "^4.4.0"
 
-crossfilter2@^1.4.0-alpha.6:
+crossfilter2@^1.4.0:
   version "1.4.7"
   resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.7.tgz#ab9372b46f36fb7b5da25f725b1e2838f2877987"
   integrity sha512-9swxPbMBSO4AjednWnEwlidQQxjYllWmnKkY1hs+QRxbAjsO6QsUYf3GkTDA/KLO1K0FlbWvmMsKxTXZVqp1vw==
@@ -11039,12 +11039,11 @@ reduce-without@^1.0.1:
   dependencies:
     test-value "^2.0.0"
 
-reductio@0.6.3:
+"reductio@https://github.com/crossfilter/reductio.git#0c45b0355950101d395d6482e2083ce1cdbcf435":
   version "0.6.3"
-  resolved "https://registry.yarnpkg.com/reductio/-/reductio-0.6.3.tgz#292b2f66964a08abe0d061fe04d3eae974e41d83"
-  integrity sha1-KSsvZpZKCKvg0GH+BNPq6XTkHYM=
+  resolved "https://github.com/crossfilter/reductio.git#0c45b0355950101d395d6482e2083ce1cdbcf435"
   dependencies:
-    crossfilter2 "^1.4.0-alpha.6"
+    crossfilter2 "^1.4.0"
 
 redux-mock-store@1.5.3:
   version "1.5.3"
