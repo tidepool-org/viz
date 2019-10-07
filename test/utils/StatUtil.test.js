@@ -608,7 +608,7 @@ describe('StatUtil', () => {
       });
     });
 
-    it('should return the average glucose and standard deviation for cbg data', () => {
+    it('should return the average glucose and standard deviation for smbg data', () => {
       statUtil.bgSource = 'smbg';
       expect(statUtil.getStandardDevData()).to.eql({
         averageGlucose: 136,
@@ -655,7 +655,7 @@ describe('StatUtil', () => {
         });
       });
 
-      it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
+      it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
         filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingEnd]);
         expect(statUtil.getTimeInAutoData()).to.eql({
