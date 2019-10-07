@@ -861,11 +861,9 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isUnderride(cancelledInNormalCombo)).to.be.false;
       expect(bolusUtils.isUnderride(cancelledInExtendedCombo)).to.be.false;
       expect(bolusUtils.isUnderride(comboOverride)).to.be.false;
-      expect(bolusUtils.isUnderride(comboUnderrideCancelled)).to.be.true;
       expect(bolusUtils.isUnderride(extended)).to.be.false;
       expect(bolusUtils.isUnderride(cancelledExtended)).to.be.false;
       expect(bolusUtils.isUnderride(immediatelyCancelledExtended)).to.be.false;
-      expect(bolusUtils.isUnderride(withNetRec)).to.be.true;
       expect(bolusUtils.isUnderride(correction)).to.be.false;
       expect(bolusUtils.isUnderride(correctionOverride)).to.be.false;
     });
@@ -874,6 +872,8 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isUnderride(underride)).to.be.true;
       expect(bolusUtils.isUnderride(extendedUnderride)).to.be.true;
       expect(bolusUtils.isUnderride(correctionUnderride)).to.be.true;
+      expect(bolusUtils.isUnderride(withNetRec)).to.be.true;
+      expect(bolusUtils.isUnderride(comboUnderrideCancelled)).to.be.true;
     });
 
     it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
