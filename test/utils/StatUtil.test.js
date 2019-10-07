@@ -719,7 +719,7 @@ describe('StatUtil', () => {
         });
       });
 
-      it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
+      it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
         filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingEnd]);
         expect(statUtil.getTotalInsulinData()).to.eql({
