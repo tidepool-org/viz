@@ -475,7 +475,7 @@ describe('DataUtil', () => {
         expect(datum.deviceTime).to.equal(datum.time);
       });
 
-      it('should update `latestDatumByType` if time is more recent that the datum curretnly set', () => {
+      it('should update `latestDatumByType` if time is more recent that the datum currently set', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);
 
         const datum = { type: 'any', id: 1, time: '2018-02-01T01:00:00' };
@@ -610,13 +610,13 @@ describe('DataUtil', () => {
       const tempBasal = { ...basal, deliveryType: 'temp' };
       const suspendBasal = { ...basal, deviceTime: '2018-02-02T01:00:00', deliveryType: 'suspend', rate: 0 };
 
-      it('should tag a suspend basal with `suspend`', () => {
+      it('should tag a temp basal with `temp`', () => {
         expect(tempBasal.tags).to.be.undefined;
         dataUtil.tagDatum(tempBasal);
         expect(tempBasal.tags.temp).to.be.true;
       });
 
-      it('should tag a temp basal with `temp`', () => {
+      it('should tag a suspend basal with `suspend`', () => {
         expect(suspendBasal.tags).to.be.undefined;
         dataUtil.tagDatum(suspendBasal);
         expect(suspendBasal.tags.suspend).to.be.true;

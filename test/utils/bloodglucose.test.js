@@ -263,11 +263,11 @@ describe('blood glucose utilities', () => {
       assert.isFunction(bgUtils.convertToMGDL);
     });
 
-    it('should return 2.2202991964182135 when given 40', () => {
+    it('should return 72.06236 when given 4', () => {
       expect(bgUtils.convertToMGDL(4)).to.equal(72.06236);
     });
 
-    it('should return 22.202991964182132 when given 400', () => {
+    it('should return 180.1559 when given 10', () => {
       expect(bgUtils.convertToMGDL(10)).to.equal(180.1559);
     });
   });

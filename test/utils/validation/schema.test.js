@@ -379,10 +379,6 @@ describe('schema validation', () => {
       validateCommon(deviceEvent);
     });
 
-    it('should validate common fields', () => {
-      validateCommon(deviceEvent);
-    });
-
     it('should pass for valid `annotations`', () => {
       expect(Validator.deviceEvent(withAnnotations)).to.be.true;
     });
@@ -407,7 +403,6 @@ describe('schema validation', () => {
     });
 
     it('should fail when provided id doesn\'t match pattern', () => {
-      expect(Validator.message({ ...message, id: 'pp0gk17imoaamcoeika04sb99tthbdsj' })).to.be.true;
       expect(_.find(Validator.message({ ...message, id: '*&^#ABC123' }), { field: 'id' }).message).to.equal('The \'id\' field fails to match the required pattern!');
     });
 
