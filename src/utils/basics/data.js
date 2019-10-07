@@ -552,10 +552,7 @@ export function reduceByDay(data, bgPrefs) {
 
     if (type === 'basal') {
       _.each(typeObj.dataByDate, (dateData, date) => {
-        typeObj.dataByDate[date] = countAutomatedBasalEvents(dateData);
-      });
-      _.each(typeObj.dataByDate, (dateData, date) => {
-        typeObj.dataByDate[date] = countDistinctSuspends(dateData);
+        typeObj.dataByDate[date] = countDistinctSuspends(countAutomatedBasalEvents(dateData));
       });
     }
 
