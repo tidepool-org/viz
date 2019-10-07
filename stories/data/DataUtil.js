@@ -61,8 +61,6 @@ const notes = `Run \`window.downloadInputData()\` from the console on a Tidepool
 Save the resulting file to the \`local/\` directory of viz as \`blip-input.json\`,
 and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
-// const dataUtil = new DataUtil(data);
-
 const Results = ({ results, showData, showStats }) => {
   const statData = _.get(results, 'data.current.stats');
   const days = _.get(results, 'data.current.endpoints.daysInRange', 1);
@@ -100,13 +98,7 @@ const Results = ({ results, showData, showStats }) => {
 
 const dataUtil = new DataUtil(data);
 stories.add('Query Generator', () => {
-  // const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
-  // const endMoment = moment.utc('2019-04-10').startOf('day').add(1, 'd');
-  // const endMoment = moment.utc('2018-03-29').startOf('day').add(1, 'd');
-
-  // DST Changeovers
-  // const endMoment = moment.utc('2019-03-10').startOf('day').add(1, 'd');
-  const endMoment = moment.utc('2018-11-04').startOf('day').add(1, 'd');
+  const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
 
   const getEndMoment = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
@@ -114,10 +106,7 @@ stories.add('Query Generator', () => {
   };
 
   const daysInRange = 1;
-  // const daysInRange = 18;
-  // const daysInRange = 17;
-  // const daysInRange = 14;
-  // const daysInRange = 30;
+
   const daysInRangeOptions = {
     range: true,
     min: 1,
@@ -132,21 +121,11 @@ stories.add('Query Generator', () => {
   const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_DATES);
 
   const commonFields = {
-    // _active: '_active',
-    // _groupId: '_groupId',
-    // _schemaVersion: '_schemaVersion',
-    // _version: '_version',
     annotations: 'annotations',
-    // clockDriftOffset: 'clockDriftOffset',
-    // conversionOffset: 'conversionOffset',
-    // createdTime: 'createdTime',
     deviceId: 'deviceId',
     deviceTime: 'deviceTime',
-    // guid: 'guid',
     id: 'id',
     time: 'time',
-    // type: 'type',
-    // timezoneOffset: 'timezoneOffset',
     uploadId: 'uploadId',
   };
 
@@ -275,10 +254,7 @@ stories.add('Query Generator', () => {
     const fields = options(
       type,
       fieldsByType[type],
-      // [..._.values(commonFields), ..._.values(computedFields), 'msPer24', 'suppressed'],
-      // ['units', 'value', 'bgInput', 'bgTarget', 'insulinSensitivity'],
-      ['id', 'normalTime', 'bolus', 'wizard'],
-      // ['normalTime', 'normalEnd', 'deviceTime', 'annotations', 'id'],
+      ['id', 'normalTime'],
       { display: 'check' },
       GROUP_FIELDS
     );
@@ -316,13 +292,7 @@ stories.add('Query Generator', () => {
     const selectedTypes = options(
       'Types',
       types,
-      // _.values(types),
-      // ['smbg', 'pumpSettings'],
-      // ['pumpSettings'],
-      // ['message'],
       [],
-      // ['bolus', 'wizard'],
-      // ['smbg', 'cbg', 'basal', 'bolus'],
       { display: 'check' },
       GROUP_DATA,
     );
@@ -348,8 +318,6 @@ stories.add('Query Generator', () => {
     const selectedMetaData = options(
       'Metadata',
       metadata,
-      // _.values(metadata),
-      // ['bgSources'],
       [],
       { display: 'check' },
       GROUP_DATA,
@@ -378,7 +346,6 @@ stories.add('Query Generator', () => {
       'Active Days',
       activeDays,
       _.values(activeDays),
-      // _.filter(_.values(activeDays), d => d !== '3'),
       { display: 'check' },
       GROUP_DATES,
     );
@@ -398,7 +365,6 @@ stories.add('Query Generator', () => {
     const timeZoneName = options(
       'Time Zone',
       timezones,
-      // 'UTC',
       'US/Eastern',
       { display: 'select' },
       GROUP_DATES,
@@ -432,8 +398,6 @@ stories.add('Query Generator', () => {
     const selectedStats = options(
       'Stats',
       commonStats,
-      // _.values(commonStats),
-      // [commonStats.averageGlucose],
       [],
       { display: 'check' },
       GROUP_STATS,
@@ -456,9 +420,6 @@ stories.add('Query Generator', () => {
     const selectedAggregationsByDate = options(
       'Aggregations By Date',
       aggregationsByDate,
-      // _.values(aggregationsByDate),
-      // [aggregationsByDate.basals, aggregationsByDate.boluses, aggregationsByDate.fingersticks],
-      // [aggregationsByDate.siteChanges],
       [],
       { display: 'check' },
       GROUP_STATS,
