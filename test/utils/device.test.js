@@ -21,6 +21,7 @@ import _ from 'lodash';
 
 import { ANIMAS, TANDEM, INSULET, MEDTRONIC, pumpVocabulary } from '../../src/utils/constants';
 
+import { types as Types } from '../../data/types';
 import * as device from '../../src/utils/device';
 
 describe('device utility functions', () => {
@@ -58,6 +59,25 @@ describe('device utility functions', () => {
       expect(device.getLatestPumpUpload(patientData)).to.equal(undefined);
       expect(device.getLatestPumpUpload([])).to.equal(undefined);
     });
+  });
+
+  describe('getLastManualBasalSchedule', () => {
+      it('should return the `scheduleName` prop of the latest scheduled basal when available', () => {
+        const data = [
+          new Types.Basal({ deliveryType: 'automated', scheduleName: 'Auto 1' }),
+          new Types.Basal({ deliveryType: 'scheduled', scheduleName: 'Manual 1' }),
+          new Types.Basal({ deliveryType: 'automated', scheduleName: 'Auto 1' }),
+        ];
+        expect(device.getLastManualBasalSchedule(data)).to.equal('Manual 1');
+      });
+
+      it('should return `undefined` when no scheduled basal available', () => {
+        const data = [
+          new Types.Basal({ deliveryType: 'automated', scheduleName: 'Auto 1' }),
+          new Types.Basal({ deliveryType: 'automated', scheduleName: 'Auto 1' }),
+        ];
+        expect(device.getLastManualBasalSchedule(data)).to.be.undefined;
+      });
   });
 
   describe('isAutomatedBasalDevice', () => {

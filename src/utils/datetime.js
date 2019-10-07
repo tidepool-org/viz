@@ -53,7 +53,7 @@ export const TWENTY_FOUR_HRS = 86400000;
 
 /**
  * addDuration
- * @param {String} datetime - an ISO date string
+ * @param {String} startTime - an ISO date string
  * @param {Number} duration - milliseconds to add to date
  * @returns new Date ISO string - the provided datetime + duration
  */
@@ -61,6 +61,34 @@ export function addDuration(startTime, duration) {
   const dateTime = new Date(startTime);
 
   return new Date(dateTime.valueOf() + duration).toISOString();
+}
+
+/**
+ * getMsPer24
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezoneName - valid timezoneName String
+ * @returns
+ */
+export function getMsPer24(utc, timezoneName = 'UTC') {
+  const localized = moment.utc(utc).tz(timezoneName);
+  const hrsToMs = localized.hours() * 1000 * 60 * 60;
+  const minToMs = localized.minutes() * 1000 * 60;
+  const secToMs = localized.seconds() * 1000;
+  const ms = localized.milliseconds();
+  return hrsToMs + minToMs + secToMs + ms;
+}
+
+/**
+ * getOffset
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezoneName - valid timezoneName String
+ *
+ * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
+ *                  if utc is already local midnight, returns utc
+ */
+export function getOffset(utc, timezoneName) {
+  const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
+  return moment.tz.zone(timezoneName).utcOffset(utcHammertime);
 }
 
 /**

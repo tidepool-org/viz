@@ -13,6 +13,16 @@ export function getLatestPumpUpload(uploadData = []) {
 }
 
 /**
+ * Get the latest manual basal schedule name from an array of basal data
+ * @param {Array} basalData Array of Tidepool basal data
+ * @returns {Object} The latest manual basal schedule name, else undefined
+ */
+export function getLastManualBasalSchedule(basalData = []) {
+  const lastManualBasal = _.findLast(basalData, { deliveryType: 'scheduled' });
+  return _.get(lastManualBasal, 'scheduleName');
+}
+
+/**
  * Check if the provided upload datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
  * @param {String} deviceModel Device model number

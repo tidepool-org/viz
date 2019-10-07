@@ -29,6 +29,11 @@ import {
 } from '../bloodglucose';
 
 import {
+  countAutomatedBasalEvents,
+  countDistinctSuspends,
+} from '../basal';
+
+import {
   BGM_DATA_KEY,
   CGM_DATA_KEY,
   MS_IN_DAY,
@@ -50,8 +55,6 @@ import {
   MEDTRONIC,
   pumpVocabulary,
 } from '../constants';
-
-import { getBasalPathGroups } from '../basal';
 
 const t = i18next.t.bind(i18next);
 
@@ -535,58 +538,6 @@ export function reduceByDay(data, bgPrefs) {
     p + typeObj.dataByDate[date].total
   );
 
-  /* eslint-disable no-param-reassign */
-  const countAutomatedBasalEventsForDay = (dataForDate) => {
-    // Get the path groups, and remove the first group, as we only want to
-    // track changes into and out of automated delivery
-    const basalPathGroups = getBasalPathGroups(dataForDate.data);
-    basalPathGroups.shift();
-
-    const events = {
-      automatedStop: 0,
-    };
-
-    _.reduce(basalPathGroups, (acc, group) => {
-      const subType = _.get(group[0], 'subType', group[0].deliveryType);
-      const event = subType === 'automated' ? 'automatedStart' : 'automatedStop';
-      // For now, we're only tracking `automatedStop` events
-      if (event === 'automatedStop') {
-        acc[event]++;
-      }
-      return acc;
-    }, events);
-
-    _.assign(dataForDate.subtotals, events);
-    dataForDate.total += events.automatedStop;
-  };
-  /* eslint-enable no-param-reassign */
-
-  /* eslint-disable no-param-reassign */
-  const countDistinctSuspendsForDay = (dataForDate) => {
-    const suspends = _.filter(dataForDate.data, d => d.deliveryType === 'suspend');
-
-    const result = {
-      prev: {},
-      distinct: 0,
-      skipped: 0,
-    };
-
-    _.reduce(suspends, (acc, datum) => {
-      // We only want to track non-contiguous suspends as distinct
-      if (_.get(acc.prev, 'normalEnd') === datum.normalTime) {
-        acc.skipped++;
-      } else {
-        acc.distinct++;
-      }
-      acc.prev = datum;
-      return acc;
-    }, result);
-
-    dataForDate.subtotals.suspend = result.distinct;
-    dataForDate.total -= result.skipped;
-  };
-  /* eslint-enable no-param-reassign */
-
   const mostRecentDay = _.find(basicsData.days, { type: 'mostRecent' }).date;
 
   _.each(basicsData.data, (value, type) => {
@@ -600,8 +551,9 @@ export function reduceByDay(data, bgPrefs) {
     }
 
     if (type === 'basal') {
-      _.each(typeObj.dataByDate, countAutomatedBasalEventsForDay);
-      _.each(typeObj.dataByDate, countDistinctSuspendsForDay);
+      _.each(typeObj.dataByDate, (dateData, date) => {
+        typeObj.dataByDate[date] = countDistinctSuspends(countAutomatedBasalEvents(dateData));
+      });
     }
 
     if (_.includes(['calibration', 'smbg'], type)) {
@@ -704,7 +656,7 @@ export function generateCalendarDayLabels(days) {
  * Set the availability of basics sections
  *
  * @export
- * @param {any} sections
+ * @param {Object} Provided data with empty sections disabled and empty text statements provided
  */
 export function disableEmptySections(data) {
   const basicsData = _.cloneDeep(data);
@@ -800,4 +752,44 @@ export function disableEmptySections(data) {
   });
 
   return basicsData;
+}
+
+/**
+ * Get a keyed list of dates in range, designated as future, past, or most recent
+ * @param {Array} range - The start and end points (Zulu timestamp or integer hammertime)
+ * @param {String} timezone - A valid timezone, UTC if undefined
+ * @returns {Object} Map of objects keyed by date
+ */
+export function findBasicsDays(range, timezone = 'UTC') {
+  let currentDate = new Date(range[0]);
+  const days = [];
+  const dateOfUpload = moment.utc(Date.parse(range[1])).tz(timezone).format('YYYY-MM-DD');
+  while (currentDate < moment.utc(Date.parse(range[1])).tz(timezone).endOf('isoWeek')) {
+    const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
+    const dateObj = { date };
+    if (date < dateOfUpload) {
+      dateObj.type = 'past';
+    } else if (date === dateOfUpload) {
+      dateObj.type = 'mostRecent';
+    } else {
+      dateObj.type = 'future';
+    }
+    days.push(dateObj);
+    currentDate = moment.utc(currentDate).tz(timezone).add(1, 'days').toDate();
+  }
+  return days;
+}
+
+/**
+ * Find the appropriate start endpoint for basics calendars given the timestamp of the latest datum
+ * @param {String} timestamp - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezone - A valid timezone, UTC if undefined
+ * @returns {String} ISO date string relative to provided timezone
+ */
+export function findBasicsStart(timestamp, timezone = 'UTC') {
+  return moment.utc(Date.parse(timestamp)).tz(timezone)
+    .startOf('isoWeek')
+    .subtract(14, 'days')
+    .toDate()
+    .toISOString();
 }

@@ -258,6 +258,20 @@ describe('blood glucose utilities', () => {
     });
   });
 
+  describe('convertToMGDL', () => {
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.convertToMGDL);
+    });
+
+    it('should return 72.06236 when given 4', () => {
+      expect(bgUtils.convertToMGDL(4)).to.equal(72.06236);
+    });
+
+    it('should return 180.1559 when given 10', () => {
+      expect(bgUtils.convertToMGDL(10)).to.equal(180.1559);
+    });
+  });
+
   describe('reshapeBgClassesToBgBounds', () => {
     const bgPrefs = {
       bgClasses: {

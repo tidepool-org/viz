@@ -40,6 +40,21 @@ export const MGDL_UNITS = t('mg/dL');
 export const MMOLL_UNITS = t('mmol/L');
 export const MGDL_PER_MMOLL = 18.01559;
 
+export const DEFAULT_BG_BOUNDS = {
+  [MGDL_UNITS]: {
+    veryLowThreshold: 54,
+    targetLowerBound: 70,
+    targetUpperBound: 180,
+    veryHighThreshold: 250,
+  },
+  [MMOLL_UNITS]: {
+    veryLowThreshold: 3.0,
+    targetLowerBound: 3.9,
+    targetUpperBound: 10.0,
+    veryHighThreshold: 13.9,
+  },
+};
+
 export const LBS_PER_KG = 2.2046226218;
 
 const ONE_WEEK = 7;

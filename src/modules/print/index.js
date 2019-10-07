@@ -132,8 +132,7 @@ export function createPrintView(type, data, opts, doc) {
 
 /**
  * createPrintPDFPackage
- * @param {String} mostRecent - an ISO 8601-formatted timestamp of the most recent diabetes datum
- * @param {Array} groupedData - Object of tideline-preprocessed Tidepool diabetes data & notes;
+ * @param {Array} data - Object of tideline-preprocessed Tidepool diabetes data & notes;
  *                       grouped by type
  * @param {Object} opts - an object of print options (see destructured param below)
  *

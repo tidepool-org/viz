@@ -15,28 +15,32 @@
  * == BSD2 LICENSE ==
  */
 
+/* eslint-disable no-bitwise, no-mixed-operators, max-len */
 import _ from 'lodash';
 
 import { addDuration } from '../src/utils/datetime';
-import { MGDL_UNITS, MS_IN_DAY } from '../src/utils/constants';
+import { MGDL_UNITS, MS_IN_DAY, MMOLL_UNITS, MGDL_PER_MMOLL } from '../src/utils/constants';
 
 const APPEND = '.000Z';
+
+export const generateGUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+  const r = Math.random() * 16 | 0;
+  const v = c === 'x' ? r : (r & 0x3 | 0x8);
+  return v.toString(16);
+});
 
 class Common {
   constructor(opts = {}) {
     this.deviceId = 'Test Page Data - 123';
     this.source = opts.source || 'testpage';
     this.conversionOffset = 0;
+    this.uploadId = opts.uploadId || 'uploadId123';
 
     this.assignGUID();
   }
 
   assignGUID() {
-    const guid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-      const r = Math.random() * 16 | 0;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
+    const guid = generateGUID();
 
     this.id = guid;
   }
@@ -84,6 +88,7 @@ export class Basal extends Common {
       deviceTime: this.makeDeviceTime(),
       duration: MS_IN_DAY / 12,
       rate: 0.5,
+      scheduleName: 'standard',
     });
 
     this.type = 'basal';
@@ -92,11 +97,12 @@ export class Basal extends Common {
     this.deviceTime = opts.deviceTime;
     this.duration = opts.duration;
     this.rate = opts.rate;
+    this.scheduleName = opts.scheduleName;
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    this.normalTime = this.makeNormalTime();
-    this.normalEnd = addDuration(this.normalTime, this.duration);
+    if (!opts.raw) this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.normalEnd = addDuration(this.normalTime, this.duration);
   }
 }
 
@@ -120,7 +126,7 @@ export class Bolus extends Common {
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.normalTime = this.makeNormalTime();
   }
 }
 
@@ -144,7 +150,14 @@ export class CBG extends Common {
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    this.normalTime = this.makeNormalTime();
+    if (opts.raw) {
+      if (this.units === MGDL_UNITS) {
+        this.units = MMOLL_UNITS;
+        this.value = this.value / MGDL_PER_MMOLL;
+      }
+    } else {
+      this.normalTime = this.makeNormalTime();
+    }
   }
 }
 
@@ -153,21 +166,27 @@ export class Message extends Common {
     super(opts);
 
     _.defaults(opts, {
-      messageText: 'This is a note.',
-      parentMessage: null,
+      messagetext: 'This is a note.',
+      parentmessage: null,
       time: new Date().toISOString(),
     });
 
     this.type = 'message';
 
     this.time = opts.time;
-    const dt = new Date(this.time);
-    const offsetMinutes = dt.getTimezoneOffset();
-    dt.setUTCMinutes(dt.getUTCMinutes() - offsetMinutes);
-    this.normalTime = dt.toISOString();
 
-    this.messageText = opts.messageText;
-    this.parentMessage = opts.parentMessage;
+    if (!opts.raw) {
+      const dt = new Date(this.time);
+      const offsetMinutes = dt.getTimezoneOffset();
+      dt.setUTCMinutes(dt.getUTCMinutes() - offsetMinutes);
+
+      this.normalTime = dt.toISOString();
+      this.messageText = opts.messagetext;
+      this.parentMessage = opts.parentmessage;
+    } else {
+      this.messagetext = opts.messagetext;
+      this.parentmessage = opts.parentmessage;
+    }
   }
 }
 
@@ -176,7 +195,7 @@ export class Settings extends Common {
     super(opts);
 
     _.defaults(opts, {
-      activeBasalSchedule: 'standard',
+      activeSchedule: 'standard',
       basalSchedules: [{
         name: 'standard',
         value: [{
@@ -206,7 +225,7 @@ export class Settings extends Common {
 
     this.type = 'settings';
 
-    this.activeBasalSchedule = opts.activeBasalSchedule;
+    this.activeSchedule = opts.activeSchedule;
     this.basalSchedules = opts.basalSchedules;
     this.bgTarget = opts.bgTarget;
     this.carbRatio = opts.carbRatio;
@@ -216,7 +235,15 @@ export class Settings extends Common {
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    this.normalTime = this.makeNormalTime();
+    if (opts.raw) {
+      this.units.bg = MMOLL_UNITS;
+      if (this.insulinSensitivity) this.insulinSensitivity.amount = this.insulinSensitivity.amount / MGDL_PER_MMOLL;
+      if (this.bgTarget.target) this.bgTarget.target = this.bgTarget.target / MGDL_PER_MMOLL;
+      if (this.bgTarget.low) this.bgTarget.low = this.bgTarget.low / MGDL_PER_MMOLL;
+      if (this.bgTarget.high) this.bgTarget.high = this.bgTarget.high / MGDL_PER_MMOLL;
+    } else {
+      this.normalTime = this.makeNormalTime();
+    }
   }
 }
 
@@ -240,7 +267,13 @@ export class SMBG extends Common {
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
     this.displayOffset = opts.displayOffset;
-    this.normalTime = this.makeNormalTime();
+
+    if (opts.raw) {
+      this.units = MMOLL_UNITS;
+      this.value = this.value / MGDL_PER_MMOLL;
+    } else {
+      this.normalTime = this.makeNormalTime();
+    }
   }
 }
 
@@ -267,7 +300,7 @@ export class DeviceEvent extends Common {
     this.time = this.makeTime();
     this.createdTime = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.normalTime = this.makeNormalTime();
   }
 }
 
@@ -285,10 +318,11 @@ export class Upload extends Common {
     this.source = opts.source;
     this.deviceTime = opts.deviceTime;
     this.deviceModel = opts.deviceModel;
+    this.deviceSerialNumber = opts.deviceSerialNumber;
 
     this.time = this.makeTime();
     this.timezone = opts.timezone;
-    this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.normalTime = this.makeNormalTime();
     this.createdTime = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
   }
@@ -312,6 +346,7 @@ export class Wizard extends Common {
       insulinSensitivity: 50,
       recommended: {},
       value: 5.0,
+      units: MGDL_UNITS,
     });
 
     this.type = 'wizard';
@@ -322,6 +357,7 @@ export class Wizard extends Common {
       deviceTime: this.deviceTime,
     });
 
+    this.bgInput = opts.bgInput;
     this.carbInput = opts.carbInput;
     this.deviceTime = opts.deviceTime;
     this.insulinCarbRatio = opts.insulinCarbRatio;
@@ -330,7 +366,19 @@ export class Wizard extends Common {
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    this.normalTime = this.makeNormalTime();
+    if (opts.raw) {
+      this.bolus = this.bolus.id;
+
+      this.units = MMOLL_UNITS;
+      if (this.insulinSensitivity) this.insulinSensitivity = this.insulinSensitivity / MGDL_PER_MMOLL;
+      if (this.bgInput) this.bgInput = this.bgInput / MGDL_PER_MMOLL;
+      if (this.bgTarget.target) this.bgTarget.target = this.bgTarget.target / MGDL_PER_MMOLL;
+      if (this.bgTarget.range) this.bgTarget.range = this.bgTarget.range / MGDL_PER_MMOLL;
+      if (this.bgTarget.low) this.bgTarget.low = this.bgTarget.low / MGDL_PER_MMOLL;
+      if (this.bgTarget.high) this.bgTarget.high = this.bgTarget.high / MGDL_PER_MMOLL;
+    } else {
+      this.normalTime = this.makeNormalTime();
+    }
   }
 }
 
@@ -347,7 +395,7 @@ export class Food extends Common {
     this.nutrition = opts.nutrition;
 
     this.time = this.makeTime();
-    this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.normalTime = this.makeNormalTime();
     this.createdTime = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
   }

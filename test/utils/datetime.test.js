@@ -54,6 +54,34 @@ describe('datetime', () => {
     });
   });
 
+  describe('getMsPer24', () => {
+    it('should return 1 when passed a timestamp 1ms after midnight', () => {
+      expect(datetime.getMsPer24('2014-03-06T00:00:00.001Z')).to.equal(1);
+    });
+
+    it('should return 1 when passed a timestamp 1ms after midnight Pacific time', () => {
+      expect(datetime.getMsPer24('2014-03-06T08:00:00.001Z', 'US/Pacific')).to.equal(1);
+    });
+
+    it('should return a value less than 864e5 even when past 11 p.m. on switch to DST', () => {
+      expect(datetime.getMsPer24('2014-11-03T07:25:00.000Z', 'US/Pacific')).to.equal(84300000);
+    });
+
+    it('should return same value as above when past 11 p.m. on switch to non-DST', () => {
+      expect(datetime.getMsPer24('2014-03-10T06:25:00.000Z', 'US/Pacific')).to.equal(84300000);
+    });
+  });
+
+  describe('getOffset', () => {
+    it('should return 480 given a non-DST datetime in Pacific', () => {
+      expect(datetime.getOffset(new Date('2014-03-08T08:00:00.000Z'), 'US/Pacific')).to.equal(480);
+    });
+
+    it('should return 420 given a DST datetime in Pacific', () => {
+      expect(datetime.getOffset(new Date('2014-03-10T07:00:00.000Z'), 'US/Pacific')).to.equal(420);
+    });
+  });
+
   describe('getBrowserTimezone', () => {
     it('return the default timezone detected by the browser', () => {
       const DateTimeFormatStub = sinon.stub(Intl, 'DateTimeFormat').returns({
@@ -65,10 +93,6 @@ describe('datetime', () => {
   });
 
   describe('getTimezoneFromTimePrefs', () => {
-    it('should be a function', () => {
-      assert.isFunction(datetime.getTimezoneFromTimePrefs);
-    });
-
     it('should return the `timezoneName` when timezoneAware is true', () => {
       const tz = 'Europe/Budapest';
       const timePrefs = {
@@ -186,10 +210,6 @@ describe('datetime', () => {
   });
 
   describe('formatBirthdate', () => {
-    it('should be a function', () => {
-      assert.isFunction(datetime.formatBirthdate);
-    });
-
     it('should format birthdate extracted from normal patient object', () => {
       expect(datetime.formatBirthdate(standard)).to.equal('Jan 31, 1983');
     });
@@ -202,10 +222,6 @@ describe('datetime', () => {
   describe('formatClocktimeFromMsPer24', () => {
     const twoTwentyAfternoonMs = 1000 * 60 * 60 * 14 + 1000 * 60 * 20;
     const errorMsg = 'First argument must be a value in milliseconds per twenty-four hour day!';
-
-    it('should be a function', () => {
-      assert.isFunction(datetime.formatClocktimeFromMsPer24);
-    });
 
     it('should error if no `milliseconds` provided', () => {
       const fn = () => { datetime.formatClocktimeFromMsPer24(); };
@@ -241,10 +257,6 @@ describe('datetime', () => {
   });
 
   describe('formatDiagnosisDate', () => {
-    it('should be a function', () => {
-      assert.isFunction(datetime.formatDiagnosisDate);
-    });
-
     it('should format diagnosisDate extracted from patient object', () => {
       expect(datetime.formatDiagnosisDate(standard)).to.equal('Jan 31, 1990');
     });
@@ -286,10 +298,6 @@ describe('datetime', () => {
   });
 
   describe('formatCurrentDate', () => {
-    it('should be a function', () => {
-      assert.isFunction(datetime.formatCurrentDate);
-    });
-
     it('should properly format the current date', () => {
       expect(timeParse('%b %-d, %Y')(datetime.formatCurrentDate())).to.not.be.null;
     });
@@ -297,10 +305,6 @@ describe('datetime', () => {
 
   describe('formatDuration', () => {
     const condensed = { condensed: true };
-
-    it('should be a function', () => {
-      assert.isFunction(datetime.formatDuration);
-    });
 
     it('should properly format a 30 minute duration', () => {
       expect(datetime.formatDuration(36e5 / 2)).to.equal('30 min');
@@ -427,10 +431,6 @@ describe('datetime', () => {
     const utcString = '2016-09-05T04:00:00Z';
     const hammertime = Date.parse(utcString);
 
-    it('should be a function', () => {
-      assert.isFunction(datetime.formatLocalizedFromUTC);
-    });
-
     it('should return "Sunday, September 4" for hammertime tzAware LA', () => {
       expect(datetime.formatLocalizedFromUTC(hammertime, tzAwareLA))
         .to.equal('Sunday, September 4');
@@ -540,9 +540,6 @@ describe('datetime', () => {
 
   describe('getLocalizedCeiling', () => {
     const timePrefs = { timezoneAware: true, timezoneName: 'US/Pacific' };
-    it('should be a function', () => {
-      assert.isFunction(datetime.getLocalizedCeiling);
-    });
 
     it('should error if passed a JavaScript Date for the `utc` param', () => {
       const fn = () => { datetime.getLocalizedCeiling(new Date()); };

@@ -85,6 +85,16 @@ export function convertToMmolL(val) {
 }
 
 /**
+ * convertToMGDL
+ * @param {Number} bgVal - blood glucose value in mmol/L
+ *
+ * @return {Number} convertedBgVal - blood glucose value in mg/dL, unrounded
+ */
+export function convertToMGDL(val) {
+  return (val * MGDL_PER_MMOLL);
+}
+
+/**
  * reshapeBgClassesToBgBounds
  * @param {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
  *

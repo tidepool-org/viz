@@ -652,87 +652,6 @@ describe('basics data utils', () => {
         expect(dataUtils.averageExcludingMostRecentDay(dataObj, 28, '2015-01-04')).to.equal(9);
       });
     });
-
-    describe('countAutomatedBasalEventsForDay', () => {
-      it('should count the number of `automatedStop` events and add them to the totals', () => {
-        const then = '2015-01-01T00:00:00.000Z';
-        const bd = {
-          data: {
-            basal: { data: [
-              { type: 'basal', deliveryType: 'temp', normalTime: then, displayOffset: 0 },
-              { type: 'basal', deliveryType: 'automated', normalTime: then, displayOffset: 0 },
-            ] },
-          },
-          days: [{ date: '2015-01-01', type: 'mostRecent' }],
-        };
-
-        const result = dataUtils.reduceByDay(bd, bgPrefs[MGDL_UNITS]);
-
-        expect(result.data.basal.dataByDate['2015-01-01'].subtotals.automatedStop).to.equal(0);
-        expect(result.data.basal.dataByDate['2015-01-01'].total).to.equal(1);
-
-        // Add a scheduled basal to kick out of automode
-        bd.data.basal.data.push({ type: 'basal', deliveryType: 'scheduled', normalTime: then, displayOffset: 0 });
-        const result2 = dataUtils.reduceByDay(bd, bgPrefs[MGDL_UNITS]);
-
-        expect(result2.data.basal.dataByDate['2015-01-01'].subtotals.automatedStop).to.equal(1);
-        expect(result2.data.basal.dataByDate['2015-01-01'].total).to.equal(2);
-      });
-    });
-
-    describe('countDistinctSuspendsForDay', () => {
-      it('should count contiguous `suspend` events as 1 and add them to the totals', () => {
-        const start1 = '2015-01-01T00:00:00.000Z';
-        const start2 = '2015-01-01T00:01:00.000Z';
-        const start3 = '2015-01-01T00:01:02.000Z';
-        const start4 = '2015-01-01T00:01:06.000Z';
-        const start5 = '2015-01-01T00:02:00.000Z';
-        const bd = {
-          data: {
-            basal: { data: [
-              { type: 'basal', deliveryType: 'scheduled', normalTime: start1, normalEnd: start2 },
-              { type: 'basal', deliveryType: 'suspend', normalTime: start2, normalEnd: start3 },
-              { type: 'basal', deliveryType: 'suspend', normalTime: start3, normalEnd: start4 },
-              { type: 'basal', deliveryType: 'suspend', normalTime: start4, normalEnd: start5 },
-              { type: 'basal', deliveryType: 'scheduled', normalTime: start5 },
-            ] },
-          },
-          days: [{ date: '2015-01-01', type: 'mostRecent' }],
-        };
-
-        const result = dataUtils.reduceByDay(bd, bgPrefs[MGDL_UNITS]);
-
-        // should only count the 3 suspends as 1, because they are contiguous
-        expect(result.data.basal.dataByDate['2015-01-01'].subtotals.suspend).to.equal(1);
-        expect(result.data.basal.dataByDate['2015-01-01'].total).to.equal(1);
-      });
-
-      it('should count non-contiguous `suspend` events as distict add them to the totals', () => {
-        const start1 = '2015-01-01T00:00:00.000Z';
-        const start2 = '2015-01-01T00:01:00.000Z';
-        const start3 = '2015-01-01T00:01:02.000Z';
-        const start4 = '2015-01-01T00:01:06.000Z';
-        const start5 = '2015-01-01T00:02:00.000Z';
-        const bd = {
-          data: {
-            basal: { data: [
-              { type: 'basal', deliveryType: 'scheduled', normalTime: start1, normalEnd: start2 },
-              { type: 'basal', deliveryType: 'suspend', normalTime: start2, normalEnd: start3 },
-              { type: 'basal', deliveryType: 'scheduled', normalTime: start3, normalEnd: start4 },
-              { type: 'basal', deliveryType: 'suspend', normalTime: start4, normalEnd: start5 },
-              { type: 'basal', deliveryType: 'scheduled', normalTime: start5 },
-            ] },
-          },
-          days: [{ date: '2015-01-01', type: 'mostRecent' }],
-        };
-
-        const result = dataUtils.reduceByDay(bd, bgPrefs[MGDL_UNITS]);
-
-        // should only count the 2 suspends as 2, because they are non-contiguous
-        expect(result.data.basal.dataByDate['2015-01-01'].subtotals.suspend).to.equal(2);
-        expect(result.data.basal.dataByDate['2015-01-01'].total).to.equal(2);
-      });
-    });
   });
 
   describe('defineBasicsSections', () => {
@@ -928,6 +847,108 @@ describe('basics data utils', () => {
 
       // fingersticks gets emptyText set when no data
       expect(result.sections.fingersticks.emptyText).to.be.a('string');
+    });
+  });
+
+  describe('findBasicsDays', () => {
+    it('should always return at least 7 days, Monday thru Friday', () => {
+      expect(_.map(dataUtils.findBasicsDays([
+        '2015-09-07T07:00:00.000Z',
+        '2015-09-07T12:00:00.000Z',
+      ], 'US/Pacific'), 'date')).to.deep.equal([
+        '2015-09-07',
+        '2015-09-08',
+        '2015-09-09',
+        '2015-09-10',
+        '2015-09-11',
+        '2015-09-12',
+        '2015-09-13',
+      ]);
+    });
+
+    it('should return a multiple of 7 days, Monday thru Friday', () => {
+      expect(_.map(dataUtils.findBasicsDays([
+        '2015-09-07T05:00:00.000Z',
+        '2015-09-24T12:00:00.000Z',
+      ], 'US/Central'), 'date')).to.deep.equal([
+        '2015-09-07',
+        '2015-09-08',
+        '2015-09-09',
+        '2015-09-10',
+        '2015-09-11',
+        '2015-09-12',
+        '2015-09-13',
+        '2015-09-14',
+        '2015-09-15',
+        '2015-09-16',
+        '2015-09-17',
+        '2015-09-18',
+        '2015-09-19',
+        '2015-09-20',
+        '2015-09-21',
+        '2015-09-22',
+        '2015-09-23',
+        '2015-09-24',
+        '2015-09-25',
+        '2015-09-26',
+        '2015-09-27',
+      ]);
+    });
+
+    it('should use UTC for the timezone when none provided', () => {
+      expect(_.map(dataUtils.findBasicsDays([
+        '2015-09-07T00:00:00.000Z',
+        '2015-09-07T12:00:00.000Z',
+      ]), 'date')).to.deep.equal([
+        '2015-09-07',
+        '2015-09-08',
+        '2015-09-09',
+        '2015-09-10',
+        '2015-09-11',
+        '2015-09-12',
+        '2015-09-13',
+      ]);
+    });
+
+    it('should categorize each date as past, mostRecent or future', () => {
+      expect(dataUtils.findBasicsDays([
+        '2015-09-07T00:00:00.000Z',
+        '2015-09-10T12:00:00.000Z',
+      ], 'Pacific/Auckland')).to.deep.equal([
+        { date: '2015-09-07', type: 'past' },
+        { date: '2015-09-08', type: 'past' },
+        { date: '2015-09-09', type: 'past' },
+        { date: '2015-09-10', type: 'past' },
+        { date: '2015-09-11', type: 'mostRecent' },
+        { date: '2015-09-12', type: 'future' },
+        { date: '2015-09-13', type: 'future' },
+      ]);
+    });
+  });
+
+  describe('findBasicsStart', () => {
+    it('should find the timezone-local midnight of the Monday >= 14 days prior to provided datetime', () => {
+      // exactly 28 days
+      expect(dataUtils.findBasicsStart('2015-09-07T05:00:00.000Z', 'US/Central'))
+        .to.equal('2015-08-24T05:00:00.000Z');
+      // almost but not quite 35 days
+      expect(dataUtils.findBasicsStart('2015-09-13T09:00:00.000Z', 'Pacific/Honolulu'))
+        .to.equal('2015-08-24T10:00:00.000Z');
+      // just over threshold into new local week
+      expect(dataUtils.findBasicsStart('2015-09-14T06:01:00.000Z', 'US/Mountain'))
+        .to.equal('2015-08-31T06:00:00.000Z');
+    });
+
+    it('should find UTC midnight of the Monday >= 14 days prior to provided UTC datetime (when no timezone provided)', () => {
+      // exactly 28 days
+      expect(dataUtils.findBasicsStart('2015-09-07T00:00:00.000Z'))
+        .to.equal('2015-08-24T00:00:00.000Z');
+      // almost but not quite 35 days
+      expect(dataUtils.findBasicsStart('2015-09-13T23:55:00.000Z'))
+        .to.equal('2015-08-24T00:00:00.000Z');
+      // just over threshold into new UTC week
+      expect(dataUtils.findBasicsStart('2015-09-14T00:01:00.000Z'))
+        .to.equal('2015-08-31T00:00:00.000Z');
     });
   });
 });
