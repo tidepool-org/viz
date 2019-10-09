@@ -11,16 +11,13 @@ import StatLegend from '../../../../src/components/common/stat/StatLegend';
 import InputGroup from '../../../../src/components/common//controls/InputGroup';
 import styles from '../../../../src/components/common/stat/Stat.css';
 import colors from '../../../../src/styles/colors.css';
-import { statFormats, statTypes } from '../../../../src/utils/stat';
+import * as stat from '../../../../src/utils/stat';
 import StatTooltip from '../../../../src/components/common/tooltips/StatTooltip';
 import {
   MGDL_UNITS,
   MGDL_CLAMP_TOP,
   MMOLL_UNITS,
   MMOLL_CLAMP_TOP,
-  MS_IN_DAY,
-  MS_IN_HOUR,
-  MS_IN_MIN,
 } from '../../../../src/utils/constants';
 
 /* eslint-disable max-len */
@@ -48,8 +45,8 @@ describe('Stat', () => {
   const defaultProps = {
     title: 'My Stat',
     data: defaultData,
-    dataFormat: statFormats.percentage,
-    type: statTypes.simple,
+    dataFormat: stat.statFormats.percentage,
+    type: stat.statTypes.simple,
   };
 
   const props = overrides => _.assign({}, defaultProps, overrides);
@@ -73,7 +70,7 @@ describe('Stat', () => {
       isOpened: true,
       legend: false,
       muteOthersOnHover: true,
-      type: statTypes.simple,
+      type: stat.statTypes.simple,
     });
   });
 
@@ -396,7 +393,7 @@ describe('Stat', () => {
       const renderCalculatedOutputSpy = sinon.spy(instance, 'renderCalculatedOutput');
       sinon.assert.callCount(renderCalculatedOutputSpy, 0);
 
-      instance.props.type = statTypes.input;
+      instance.props.type = stat.statTypes.input;
       instance.renderStatFooter();
       sinon.assert.callCount(renderCalculatedOutputSpy, 1);
     });
@@ -442,7 +439,7 @@ describe('Stat', () => {
           ],
         }),
         legend: true,
-        type: statTypes.barHorizontal,
+        type: stat.statTypes.barHorizontal,
       }));
 
       statLegend = () => wrapper.find(StatLegend).dive();
@@ -488,7 +485,7 @@ describe('Stat', () => {
             },
           ],
         }),
-        type: statTypes.barHorizontal,
+        type: stat.statTypes.barHorizontal,
       }));
     });
 
@@ -509,7 +506,7 @@ describe('Stat', () => {
       wrapper.setState({ isOpened: true });
 
       wrapper.setProps(props({
-        type: statTypes.input,
+        type: stat.statTypes.input,
       }));
 
       inputGroup = () => wrapper.find(InputGroup);
@@ -542,7 +539,7 @@ describe('Stat', () => {
             input: 'data.0.input',
           },
         }),
-        type: statTypes.input,
+        type: stat.statTypes.input,
       }));
 
       expect(inputGroup().props().id).to.equal('weight');
@@ -595,7 +592,7 @@ describe('Stat', () => {
             input: 'data.0.input',
           },
         }),
-        type: statTypes.input,
+        type: stat.statTypes.input,
       }));
 
       expect(inputGroup().props().value).to.equal(450);
@@ -634,9 +631,9 @@ describe('Stat', () => {
           },
         }),
         dataFormat: {
-          output: statFormats.unitsPerKg,
+          output: stat.statFormats.unitsPerKg,
         },
-        type: statTypes.input,
+        type: stat.statTypes.input,
       }));
 
       outputWrapper = () => wrapper.find(formatClassesAsSelector(styles.outputWrapper));
@@ -667,7 +664,7 @@ describe('Stat', () => {
             output: 'data.0.output',
           },
         }),
-        type: statTypes.input,
+        type: stat.statTypes.input,
       }));
       expect(outputWrapper().find(formatClassesAsSelector(styles.outputLabel))).to.have.length(0);
     });
@@ -727,7 +724,7 @@ describe('Stat', () => {
               output: 'data.0.output',
             },
           }),
-          type: statTypes.input,
+          type: stat.statTypes.input,
         }));
 
         wrapper.setState({
@@ -794,7 +791,7 @@ describe('Stat', () => {
       wrapper.setState({ isOpened: true });
 
       wrapper.setProps(props({
-        type: statTypes.barHorizontal,
+        type: stat.statTypes.barHorizontal,
       }));
 
       instance = wrapper.instance();
@@ -835,7 +832,7 @@ describe('Stat', () => {
 
       // Set to a type without a renderer
       mountedWrapper.setProps(props({
-        type: statTypes.simple,
+        type: stat.statTypes.simple,
       }));
 
       expect(mountedWrapper.find(formatClassesAsSelector(styles.statMain))).to.have.length(0);
@@ -843,7 +840,7 @@ describe('Stat', () => {
 
       // Set to a type with a renderer
       mountedWrapper.setProps(props({
-        type: statTypes.barHorizontal,
+        type: stat.statTypes.barHorizontal,
       }));
 
       expect(mountedWrapper.find(formatClassesAsSelector(styles.statMain))).to.have.length(1);
@@ -958,7 +955,7 @@ describe('Stat', () => {
               input: 'data.0.input',
             },
           }),
-          type: statTypes.input,
+          type: stat.statTypes.input,
         }));
       });
 
@@ -1056,7 +1053,7 @@ describe('Stat', () => {
     context('barHorizontal', () => {
       beforeEach(() => {
         wrapper.setProps(props({
-          type: statTypes.barHorizontal,
+          type: stat.statTypes.barHorizontal,
         }));
       });
 
@@ -1180,7 +1177,7 @@ describe('Stat', () => {
     context('barBg', () => {
       beforeEach(() => {
         wrapper.setProps(props({
-          type: statTypes.barBg,
+          type: stat.statTypes.barBg,
         }));
       });
 
@@ -1246,7 +1243,7 @@ describe('Stat', () => {
     context('simple', () => {
       beforeEach(() => {
         wrapper.setProps(props({
-          type: statTypes.simple,
+          type: stat.statTypes.simple,
         }));
       });
 
@@ -1318,7 +1315,7 @@ describe('Stat', () => {
     context('simple stat', () => {
       beforeEach(() => {
         wrapper.setProps(_.assign({}, wrapper.props(), {
-          type: statTypes.simple,
+          type: stat.statTypes.simple,
         }));
       });
 
@@ -1344,7 +1341,7 @@ describe('Stat', () => {
     context('input stat', () => {
       beforeEach(() => {
         wrapper.setProps(_.assign({}, wrapper.props(), {
-          type: statTypes.input,
+          type: stat.statTypes.input,
         }));
       });
 
@@ -1387,7 +1384,7 @@ describe('Stat', () => {
               },
             ],
           }),
-          type: statTypes.barBg,
+          type: stat.statTypes.barBg,
         }));
       });
 
@@ -1557,7 +1554,7 @@ describe('Stat', () => {
             ],
             total: { value: 50 },
           }),
-          type: statTypes.barHorizontal,
+          type: stat.statTypes.barHorizontal,
         }));
       });
 
@@ -1755,7 +1752,7 @@ describe('Stat', () => {
     it('should set the `tooltipTitleData` state from when provided a datum and a `dataFormat.tooltipTitle` prop is defined', () => {
       wrapper.setProps(props({
         dataFormat: {
-          tooltipTitle: statFormats.units,
+          tooltipTitle: stat.statFormats.units,
         },
       }));
 
@@ -1777,7 +1774,7 @@ describe('Stat', () => {
     it('should set the `tooltipTitleData` state to `undefined` when no datum arg is present', () => {
       wrapper.setProps(props({
         dataFormat: {
-          tooltipTitle: statFormats.units,
+          tooltipTitle: stat.statFormats.units,
         },
       }));
 
@@ -1811,15 +1808,17 @@ describe('Stat', () => {
 
   describe('getFormattedDataByDataPath', () => {
     it('should call and return result of `formatDatum` with the datum at the requested data path and format', () => {
-      const formatDatumSpy = sinon.spy(instance, 'formatDatum');
+      const formatDatumSpy = sinon.spy(stat, 'formatDatum');
 
-      const result = instance.getFormattedDataByDataPath('data.1', statFormats.units);
+      const result = instance.getFormattedDataByDataPath('data.1', stat.statFormats.units);
 
       sinon.assert.callCount(formatDatumSpy, 1);
-      sinon.assert.calledWith(formatDatumSpy, defaultData.data[1], statFormats.units);
+      sinon.assert.calledWith(formatDatumSpy, defaultData.data[1], stat.statFormats.units);
 
       expect(result.value).to.equal('120.0');
       expect(result.suffix).to.equal('U');
+
+      formatDatumSpy.restore();
     });
   });
 
@@ -1843,8 +1842,8 @@ describe('Stat', () => {
           },
         },
         dataFormat: {
-          summary: statFormats.percentage,
-          title: statFormats.units,
+          summary: stat.statFormats.percentage,
+          title: stat.statFormats.units,
         },
       }));
 
@@ -1853,7 +1852,7 @@ describe('Stat', () => {
       const result = instance.getFormattedDataByKey('title');
 
       sinon.assert.callCount(getFormattedDataByDataPathSpy, 1);
-      sinon.assert.calledWith(getFormattedDataByDataPathSpy, 'data.1', statFormats.units);
+      sinon.assert.calledWith(getFormattedDataByDataPathSpy, 'data.1', stat.statFormats.units);
 
       expect(result.value).to.equal('120.0');
       expect(result.suffix).to.equal('U');
@@ -1899,598 +1898,10 @@ describe('Stat', () => {
     });
   });
 
-  describe('formatDatum', () => {
-    context('bgCount format', () => {
-      it('should return correctly formatted data when `value >= 0.05`', () => {
-        expect(instance.formatDatum({
-          value: 2.67777777,
-        }, statFormats.bgCount)).to.include({
-          value: 2.7,
-        });
-
-        expect(instance.formatDatum({
-          value: 0.05,
-        }, statFormats.bgCount)).to.include({
-          value: 0.1,
-        });
-
-        // Want 0 decimal places if would end in `.0`
-        expect(instance.formatDatum({
-          value: 3.0000001,
-        }, statFormats.bgCount)).to.include({
-          value: 3,
-        });
-      });
-
-      it('should return correctly formatted data when `value < 0.05`', () => {
-        expect(instance.formatDatum({
-          value: 0.035,
-        }, statFormats.bgCount)).to.include({
-          value: 0.04,
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.bgCount)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('bgRange format', () => {
-      beforeEach(() => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MGDL_UNITS,
-            bgBounds: {
-              veryLowThreshold: 39,
-              targetLowerBound: 70,
-              targetUpperBound: 180,
-              veryHighThreshold: 250,
-            },
-          },
-        }));
-      });
-
-      it('should return correctly formatted bg range for a given `datum.id`', () => {
-        expect(instance.formatDatum({
-          id: 'veryLow',
-        }, statFormats.bgRange)).to.include({
-          value: '<39',
-        });
-
-        expect(instance.formatDatum({
-          id: 'low',
-        }, statFormats.bgRange)).to.include({
-          value: '39-70',
-        });
-
-        expect(instance.formatDatum({
-          id: 'target',
-        }, statFormats.bgRange)).to.include({
-          value: '70-180',
-        });
-
-        expect(instance.formatDatum({
-          id: 'high',
-        }, statFormats.bgRange)).to.include({
-          value: '180-250',
-        });
-
-        expect(instance.formatDatum({
-          id: 'veryHigh',
-        }, statFormats.bgRange)).to.include({
-          value: '>250',
-        });
-      });
-    });
-
-    context('bgValue format', () => {
-      it('should classify and format a datum when `value >= 0` for mg/dL units', () => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MGDL_UNITS,
-            bgBounds: {
-              veryLowThreshold: 39,
-              targetLowerBound: 70,
-              targetUpperBound: 180,
-              veryHighThreshold: 250,
-            },
-          },
-        }));
-
-        // Using 3-way classification, so both `low` and `veryLow` are classified as `low`
-        expect(instance.formatDatum({
-          value: 35.8,
-        }, statFormats.bgValue)).to.include({
-          id: 'low',
-          value: '36',
-        });
-
-        expect(instance.formatDatum({
-          value: 68.2,
-        }, statFormats.bgValue)).to.include({
-          id: 'low',
-          value: '68',
-        });
-
-        expect(instance.formatDatum({
-          value: 100,
-        }, statFormats.bgValue)).to.include({
-          id: 'target',
-          value: '100',
-        });
-
-        // Using 3-way classification, so both `high` and `veryHigh` are classified as `high`
-        expect(instance.formatDatum({
-          value: 200,
-        }, statFormats.bgValue)).to.include({
-          id: 'high',
-          value: '200',
-        });
-
-        expect(instance.formatDatum({
-          value: 252,
-        }, statFormats.bgValue)).to.include({
-          id: 'high',
-          value: '252',
-        });
-      });
-
-      it('should classify and format a datum when `value >= 0` for mmol/L units', () => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MMOLL_UNITS,
-            bgBounds: {
-              veryLowThreshold: 3.0,
-              targetLowerBound: 3.9,
-              targetUpperBound: 10.0,
-              veryHighThreshold: 13.9,
-            },
-          },
-        }));
-
-        // Using 3-way classification, so both `low` and `veryLow` are classified as `low`
-        expect(instance.formatDatum({
-          value: 2.86,
-        }, statFormats.bgValue)).to.include({
-          id: 'low',
-          value: '2.9',
-        });
-
-        expect(instance.formatDatum({
-          value: 3.62,
-        }, statFormats.bgValue)).to.include({
-          id: 'low',
-          value: '3.6',
-        });
-
-        expect(instance.formatDatum({
-          value: 7,
-        }, statFormats.bgValue)).to.include({
-          id: 'target',
-          value: '7.0',
-        });
-
-        // Using 3-way classification, so both `high` and `veryHigh` are classified as `high`
-        expect(instance.formatDatum({
-          value: 12.3,
-        }, statFormats.bgValue)).to.include({
-          id: 'high',
-          value: '12.3',
-        });
-
-        expect(instance.formatDatum({
-          value: 14.1,
-        }, statFormats.bgValue)).to.include({
-          id: 'high',
-          value: '14.1',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.bgValue)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('carbs format', () => {
-      it('should return correctly formatted data when `value >= 0`', () => {
-        expect(instance.formatDatum({
-          value: 84.645,
-        }, statFormats.carbs)).to.include({
-          suffix: 'g',
-          value: '85',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.carbs)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('cv format', () => {
-      it('should return correctly classified and formatted data when `value >= 0`', () => {
-        expect(instance.formatDatum({
-          value: 35.8,
-        }, statFormats.cv)).to.include({
-          id: 'target',
-          suffix: '%',
-          value: '36',
-        });
-
-        expect(instance.formatDatum({
-          value: 36.2,
-        }, statFormats.cv)).to.include({
-          id: 'high',
-          suffix: '%',
-          value: '36',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.cv)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('duration format', () => {
-      it('should return correctly formatted data when `value >= 0`', () => {
-        expect(instance.formatDatum({
-          value: MS_IN_DAY + MS_IN_HOUR + MS_IN_MIN,
-        }, statFormats.duration)).to.include({
-          value: '1d 1h 1m',
-        });
-
-        expect(instance.formatDatum({
-          value: MS_IN_HOUR * 3 + MS_IN_MIN,
-        }, statFormats.duration)).to.include({
-          value: '3h 1m',
-        });
-
-        expect(instance.formatDatum({
-          value: MS_IN_MIN * 48,
-        }, statFormats.duration)).to.include({
-          value: '48m',
-        });
-
-        // show seconds only when less than a minute
-        expect(instance.formatDatum({
-          value: 6000,
-        }, statFormats.duration)).to.include({
-          value: '6s',
-        });
-
-        // show 0m for 0
-        expect(instance.formatDatum({
-          value: 0,
-        }, statFormats.duration)).to.include({
-          value: '0m',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.duration)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('gmi format', () => {
-      it('should return correctly formatted data when `value >= 0`', () => {
-        expect(instance.formatDatum({
-          value: 35.85,
-        }, statFormats.gmi)).to.include({
-          suffix: '%',
-          value: '35.9',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.gmi)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('percentage format', () => {
-      it('should return correctly formatted data when `total` prop is `>= 0`', () => {
-        wrapper.setProps(props({
-          data: {
-            total: {
-              value: 10,
-            },
-          },
-        }));
-
-        // No decimal places when `% >= 0.5`
-        expect(instance.formatDatum({
-          value: 3.95,
-        }, statFormats.percentage)).to.include({
-          value: '40',
-          suffix: '%',
-        });
-
-        // 1 decimal place when `% < 0.5` and `% >= 0.05`
-        expect(instance.formatDatum({
-          value: 0.049,
-        }, statFormats.percentage)).to.include({
-          value: '0.5',
-          suffix: '%',
-        });
-
-        // 1 decimal places when `% < 0.05`
-        expect(instance.formatDatum({
-          value: 0.0049,
-        }, statFormats.percentage)).to.include({
-          value: '0.05',
-          suffix: '%',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        wrapper.setProps(props({
-          data: {
-            total: {
-              value: -1,
-            },
-          },
-        }));
-
-        expect(instance.formatDatum({
-          value: 10,
-        }, statFormats.percentage)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('standardDevRange format', () => {
-      const renderResult = result => {
-        const Component = () => result.value;
-        const render = shallow(<Component />);
-
-        return {
-          lower: {
-            color: render.childAt(0).props().style.color,
-            value: render.childAt(0).props().children,
-          },
-          upper: {
-            color: render.childAt(2).props().style.color,
-            value: render.childAt(2).props().children,
-          },
-        };
-      };
-
-      it('should return correctly formatted html when `value >= 0` && `deviation.value >= 0` for mg/dL units', () => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MGDL_UNITS,
-            bgBounds: {
-              veryLowThreshold: 39,
-              targetLowerBound: 70,
-              targetUpperBound: 180,
-              veryHighThreshold: 250,
-            },
-          },
-        }));
-
-        expect(renderResult(instance.formatDatum({
-          value: 56,
-          deviation: { value: 20 },
-        }, statFormats.standardDevRange))).to.eql({
-          lower: {
-            color: colors.low,
-            value: '36',
-          },
-          upper: {
-            color: colors.target,
-            value: '76',
-          },
-        });
-
-        expect(renderResult(instance.formatDatum({
-          value: 160,
-          deviation: { value: 30 },
-        }, statFormats.standardDevRange))).to.eql({
-          lower: {
-            color: colors.target,
-            value: '130',
-          },
-          upper: {
-            color: colors.high,
-            value: '190',
-          },
-        });
-      });
-
-      it('should return correctly formatted html when `value >= 0` && `deviation.value >= 0` for mg/dL units', () => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MMOLL_UNITS,
-            bgBounds: {
-              veryLowThreshold: 3.0,
-              targetLowerBound: 3.9,
-              targetUpperBound: 10.0,
-              veryHighThreshold: 13.9,
-            },
-          },
-        }));
-
-        expect(renderResult(instance.formatDatum({
-          value: 3.8,
-          deviation: { value: 1 },
-        }, statFormats.standardDevRange))).to.eql({
-          lower: {
-            color: colors.low,
-            value: '2.8',
-          },
-          upper: {
-            color: colors.target,
-            value: '4.8',
-          },
-        });
-
-        expect(renderResult(instance.formatDatum({
-          value: 10.2,
-          deviation: { value: 1.5 },
-        }, statFormats.standardDevRange))).to.eql({
-          lower: {
-            color: colors.target,
-            value: '8.7',
-          },
-          upper: {
-            color: colors.high,
-            value: '11.7',
-          },
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0` || `deviation.value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-          deviation: { value: 10 },
-        }, statFormats.standardDevRange)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-
-        expect(instance.formatDatum({
-          value: 10,
-          deviation: { value: -1 },
-        }, statFormats.standardDevRange)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('standardDevValue format', () => {
-      it('should return correctly formatted data when `value >= 0` for mg/dL units', () => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MGDL_UNITS,
-          },
-        }));
-
-        expect(instance.formatDatum({
-          value: 42.85,
-        }, statFormats.standardDevValue)).to.include({
-          value: '43',
-        });
-      });
-
-      it('should return correctly formatted data when `value >= 0` for mmol/L units', () => {
-        wrapper.setProps(props({
-          bgPrefs: {
-            bgUnits: MMOLL_UNITS,
-          },
-        }));
-
-        expect(instance.formatDatum({
-          value: 15.86,
-        }, statFormats.standardDevValue)).to.include({
-          value: '15.9',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.standardDevValue)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('units format', () => {
-      it('should return correctly formatted data when `value >= 0`', () => {
-        expect(instance.formatDatum({
-          value: 47.234,
-        }, statFormats.units)).to.include({
-          value: '47.2',
-          suffix: 'U',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.units)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-
-    context('unitsPerKg format', () => {
-      it('should return correctly formatted data when `value >= 0`', () => {
-        expect(instance.formatDatum({
-          value: 10.678,
-          suffix: 'kg',
-        }, statFormats.unitsPerKg)).to.include({
-          value: '10.68',
-          suffix: 'U/kg',
-        });
-
-        expect(instance.formatDatum({
-          value: 11,
-          suffix: 'kg',
-        }, statFormats.unitsPerKg)).to.include({
-          value: '11.00',
-          suffix: 'U/kg',
-        });
-      });
-
-      it('should convert `lb` values to `kg` by multiplying 2.2046226218, and format to 2 decimal places', () => {
-        expect(instance.formatDatum({
-          value: 1,
-          suffix: 'lb',
-        }, statFormats.unitsPerKg)).to.include({
-          value: '2.20',
-          suffix: 'U/kg',
-        });
-      });
-
-      it('should return the empty placeholder text and id when `value < 0`', () => {
-        expect(instance.formatDatum({
-          value: -1,
-        }, statFormats.unitsPerKg)).to.include({
-          id: 'statDisabled',
-          value: '--',
-        });
-      });
-    });
-  });
-
   describe('handleCollapse', () => {
     it('should toggle the `isOpened` state', () => {
       wrapper.setProps(props({
-        type: statTypes.barHorizontal,
+        type: stat.statTypes.barHorizontal,
       }));
 
       wrapper.setState({
@@ -2506,7 +1917,7 @@ describe('Stat', () => {
 
     it('should reset the state to the result of `getStateByType` method after toggling the isOpened state', () => {
       wrapper.setProps(props({
-        type: statTypes.barHorizontal,
+        type: stat.statTypes.barHorizontal,
       }));
 
       const setStateSpy = sinon.spy(instance, 'setState');
