@@ -25,6 +25,7 @@ import generateClassifiers from '../classifiers';
 import { getLatestPumpUpload, isAutomatedBasalDevice, getPumpVocabulary } from '../device';
 import {
   generateBgRangeLabels,
+  reshapeBgClassesToBgBounds,
   weightedCGMCount,
 } from '../bloodglucose';
 
@@ -56,7 +57,17 @@ import {
   pumpVocabulary,
 } from '../constants';
 
+import TextUtil from '../text/TextUtil';
+import { statsText } from '../stat';
+
 const t = i18next.t.bind(i18next);
+
+// Exporting utils for easy stubbing in tests
+export const utils = {
+  reshapeBgClassesToBgBounds,
+  statsText,
+  TextUtil,
+};
 
 /**
  * Get the BG distribution source and status
@@ -792,4 +803,163 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
     .subtract(14, 'days')
     .toDate()
     .toISOString();
+}
+
+/**
+ * basicsText
+ * @param  {Object} patient - the patient object that contains the profile
+ * @param  {Object} stats - all stats data
+ * @param  {Array} endpoints - ISO strings [start, end]
+ * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
+ * @param  {Object} timePrefs - timePrefs object
+ * @param  {Object} basicsData - tideline-processed basicsData object
+ *
+ * @return {String}  Trends data as a formatted string
+ */
+export function basicsText(patient, stats, endpoints, bgPrefs, timePrefs, basicsData) {
+  _.defaults(bgPrefs, {
+    bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
+  });
+
+  const textUtil = new utils.TextUtil(patient, endpoints, timePrefs);
+  let basicsString = textUtil.buildDocumentHeader('Basics');
+
+  basicsString += textUtil.buildDocumentDates();
+
+  basicsString += utils.statsText(stats, textUtil, bgPrefs);
+
+  let data = { ...basicsData };
+
+  const latestPumpUpload = getLatestPumpUpload(_.get(data, 'data.upload.data', []));
+  const source = _.get(latestPumpUpload, 'source', '').toLowerCase();
+  const manufacturer = source === 'carelink' ? 'medtronic' : source;
+
+  data.sections = defineBasicsSections(
+    bgPrefs,
+    manufacturer,
+    _.get(latestPumpUpload, 'deviceModel')
+  );
+
+  data = reduceByDay(data, bgPrefs);
+  data = processInfusionSiteHistory(data, patient);
+  data = disableEmptySections(data);
+
+  const getSummaryTableData = (dimensions, statData, header) => {
+    const rows = [];
+    const columns = [
+      { key: 'label', label: 'Label' },
+      { key: 'value', label: 'Value' },
+    ];
+
+    _.each(dimensions, dimension => {
+      const valueObj = _.get(
+        statData,
+        [dimension.path, dimension.key],
+        _.get(statData, dimension.key, {})
+      );
+
+      const isAverage = dimension.average;
+
+      const value = isAverage
+        ? Math.round(_.get(statData, [dimension.path, 'avgPerDay'], statData.avgPerDay))
+        : _.get(valueObj, 'count', valueObj);
+
+      const stat = {
+        label: dimension.label,
+        value: (value || 0).toString(),
+      };
+
+      if (dimension.primary) {
+        stat.label = header;
+        rows.unshift(stat);
+      } else {
+        if (value === 0 && dimension.hideEmpty) {
+          return;
+        }
+        rows.push(stat);
+      }
+    });
+
+    return { rows, columns };
+  };
+
+  const getSiteChangesTableData = (infusionSiteData) => {
+    const rows = [];
+    const columns = [
+      { key: 'label', label: 'Label' },
+      { key: 'value', label: 'Value' },
+    ];
+
+    _.each(_.valuesIn(infusionSiteData), datum => {
+      if (datum.daysSince) rows.push(datum.daysSince);
+    });
+
+    return {
+      columns,
+      rows: [
+        { label: 'Mean Duration', value: `${_.mean(rows)} days` },
+        { label: 'Longest Duration', value: `${_.max(rows)} days` },
+      ],
+    };
+  };
+
+  if (!data.sections.fingersticks.disabled) {
+    const fingersticks = getSummaryTableData(
+      data.sections.fingersticks.dimensions,
+      data.data.fingerstick.summary,
+      data.sections.fingersticks.summaryTitle
+    );
+
+    basicsString += textUtil.buildTextTable(
+      '',
+      fingersticks.rows,
+      fingersticks.columns,
+      { showHeader: false }
+    );
+  }
+
+  if (!data.sections.boluses.disabled) {
+    const boluses = getSummaryTableData(
+      data.sections.boluses.dimensions,
+      data.data.bolus.summary,
+      data.sections.boluses.summaryTitle
+    );
+
+    basicsString += textUtil.buildTextTable(
+      '',
+      boluses.rows,
+      boluses.columns,
+      { showHeader: false }
+    );
+  }
+
+  if (!data.sections.siteChanges.disabled) {
+    const siteChanges = getSiteChangesTableData(
+      data.data[data.sections.siteChanges.type].infusionSiteHistory,
+    );
+
+    basicsString += textUtil.buildTextTable(
+      `${data.sections.siteChanges.title} from '${data.sections.siteChanges.subTitle}'`,
+      siteChanges.rows,
+      siteChanges.columns,
+      { showHeader: false }
+    );
+  }
+
+  if (!data.sections.basals.disabled) {
+    const basals = getSummaryTableData(
+      data.sections.basals.dimensions,
+      data.data.basal.summary,
+      data.sections.basals.summaryTitle
+    );
+
+    basicsString += textUtil.buildTextTable(
+      '',
+      basals.rows,
+      basals.columns,
+      { showHeader: false }
+    );
+  }
+
+  return basicsString;
 }
