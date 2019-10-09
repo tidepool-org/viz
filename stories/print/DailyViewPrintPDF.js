@@ -68,7 +68,7 @@ function openPDF({ patient, bgUnits = MGDL_UNITS }) {
       timezoneName: 'US/Eastern',
     },
     numDays: {
-      daily: 6,
+      daily: 15,
     },
     patient,
   };

@@ -8,11 +8,9 @@ import { SizeMe } from 'react-sizeme';
 import { VictoryBar, VictoryContainer } from 'victory';
 import { Collapse } from 'react-collapse';
 
-import { formatPercentage, formatDecimalNumber, formatBgValue } from '../../../utils/format';
-import { formatDuration } from '../../../utils/datetime';
-import { generateBgRangeLabels, classifyBgValue, classifyCvValue } from '../../../utils/bloodglucose';
-import { LBS_PER_KG, MGDL_UNITS, MGDL_CLAMP_TOP, MMOLL_CLAMP_TOP } from '../../../utils/constants';
-import { statFormats, statTypes } from '../../../utils/stat';
+import { formatPercentage } from '../../../utils/format';
+import { MGDL_UNITS, MGDL_CLAMP_TOP, MMOLL_CLAMP_TOP } from '../../../utils/constants';
+import { statFormats, statTypes, formatDatum } from '../../../utils/stat';
 import styles from './Stat.css';
 import colors from '../../../styles/colors.css';
 import { bgPrefsPropType } from '../../../propTypes';
@@ -290,11 +288,11 @@ class Stat extends PureComponent {
         case 'divisor':
           calc.dividend = _.get(this.props.data, _.get(output, 'dataPaths.dividend'), {}).value;
           datum.value = calc.dividend / datum.value;
-          calc.result = this.formatDatum(datum, format);
+          calc.result = formatDatum(datum, format, this.props);
           break;
 
         default:
-          calc.result = this.formatDatum(datum, format);
+          calc.result = formatDatum(datum, format, this.props);
           break;
       }
     }
@@ -475,16 +473,18 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const datumRef = _.get(props.data, ['data', datum.eventKey]);
-                const { value } = this.formatDatum(
+                const { value } = formatDatum(
                   _.get(datumRef, 'deviation', datumRef),
-                  props.dataFormat.label
+                  props.dataFormat.label,
+                  props,
                 );
                 return `${value}`;
               }}
               tooltipText={(datum = {}) => {
-                const { value, suffix } = this.formatDatum(
+                const { value, suffix } = formatDatum(
                   _.get(props.data, ['data', datum.eventKey]),
                   props.dataFormat.tooltip,
+                  props,
                 );
                 return `${value}${suffix}`;
               }}
@@ -498,9 +498,10 @@ class Stat extends PureComponent {
               width: () => barWidth,
             },
             labels: {
-              fill: datum => this.getDatumColor(_.assign({}, datum, this.formatDatum(
+              fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
                 _.get(props.data, ['data', datum.eventKey]),
                 props.dataFormat.label,
+                props,
               ))),
               fontSize: labelFontSize,
               fontWeight: 500,
@@ -593,16 +594,18 @@ class Stat extends PureComponent {
               isDisabled={() => this.state.isDisabled}
               domain={domain}
               text={(datum = {}) => {
-                const { value, suffix } = this.formatDatum(
+                const { value, suffix } = formatDatum(
                   _.get(props.data, ['data', datum.eventKey]),
                   props.dataFormat.label,
+                  props,
                 );
                 return [value, suffix];
               }}
               tooltipText={(datum = {}) => {
-                const { value, suffix } = this.formatDatum(
+                const { value, suffix } = formatDatum(
                   _.get(props.data, ['data', datum.eventKey]),
                   props.dataFormat.tooltip,
+                  props,
                 );
                 return `${value}${suffix}`;
               }}
@@ -616,9 +619,10 @@ class Stat extends PureComponent {
               width: () => barWidth,
             },
             labels: {
-              fill: datum => this.getDatumColor(_.assign({}, datum, this.formatDatum(
+              fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
                 _.get(props.data, ['data', datum.eventKey]),
                 props.dataFormat.label,
+                props,
               ))),
               fontSize: labelFontSize,
               fontWeight: 500,
@@ -652,7 +656,7 @@ class Stat extends PureComponent {
 
   getFormattedDataByDataPath = (path, format) => {
     const datum = _.get(this.props.data, path);
-    return this.formatDatum(datum, format);
+    return formatDatum(datum, format, this.props);
   };
 
   getFormattedDataByKey = key => {
@@ -674,174 +678,6 @@ class Stat extends PureComponent {
     }
 
     return color;
-  };
-
-  formatDatum = (datum = {}, format) => {
-    let id = datum.id;
-    let value = datum.value;
-    let suffix = datum.suffix || '';
-    let deviation;
-    let lowerValue;
-    let lowerColorId;
-    let upperValue;
-    let upperColorId;
-
-    const total = _.get(this.props.data, 'total.value');
-    const { bgPrefs, emptyDataPlaceholder } = this.props;
-    const { bgBounds } = bgPrefs;
-
-    function disableStat() {
-      id = 'statDisabled';
-      value = emptyDataPlaceholder;
-    }
-
-    switch (format) {
-      case statFormats.bgCount:
-        if (value >= 0) {
-          const precision = value < 0.05 ? 2 : 1;
-          // Note: the + converts the rounded, fixed string back to a number
-          // This allows 2.67777777 to render as 2.7 and 3.0000001 to render as 3 (not 3.0)
-          value = +value.toFixed(precision);
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.bgRange:
-        value = generateBgRangeLabels(bgPrefs, { condensed: true })[id];
-        break;
-
-      case statFormats.bgValue:
-        if (value >= 0) {
-          id = classifyBgValue(bgBounds, value);
-          value = formatBgValue(value, bgPrefs);
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.carbs:
-        if (value >= 0) {
-          value = formatDecimalNumber(value);
-          suffix = 'g';
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.cv:
-        if (value >= 0) {
-          id = classifyCvValue(value);
-          value = formatDecimalNumber(value);
-          suffix = '%';
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.duration:
-        if (value >= 0) {
-          value = formatDuration(value, { condensed: true });
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.gmi:
-        if (value >= 0) {
-          value = formatDecimalNumber(value, 1);
-          suffix = '%';
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.percentage:
-        if (total && total >= 0) {
-          value = _.max([value, 0]);
-          const percentage = (value / total) * 100;
-          let precision = 0;
-          // We want to show extra precision on very small percentages so that we avoid showing 0%
-          // when there is some data there.
-          if (percentage > 0 && percentage < 0.5) {
-            precision = percentage < 0.05 ? 2 : 1;
-          }
-          value = formatDecimalNumber(percentage, precision);
-          suffix = '%';
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.standardDevRange:
-        deviation = _.get(datum, 'deviation.value', -1);
-        if (value >= 0 && deviation >= 0) {
-          lowerValue = value - deviation;
-          lowerColorId = lowerValue >= 0
-            ? classifyBgValue(bgBounds, lowerValue)
-            : 'low';
-
-          upperValue = value + deviation;
-          upperColorId = classifyBgValue(bgBounds, upperValue);
-
-          value = (
-            <span>
-              <span style={{
-                color: colors[lowerColorId],
-              }}>
-                {formatBgValue(value - deviation, bgPrefs)}
-              </span>
-              &nbsp;-&nbsp;
-              <span style={{
-                color: colors[upperColorId],
-              }}>
-                {formatBgValue(value + deviation, bgPrefs)}
-              </span>
-            </span>
-          );
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.standardDevValue:
-        if (value >= 0) {
-          value = formatBgValue(value, bgPrefs);
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.units:
-        if (value >= 0) {
-          value = formatDecimalNumber(value, 1);
-          suffix = 'U';
-        } else {
-          disableStat();
-        }
-        break;
-
-      case statFormats.unitsPerKg:
-        if (suffix === 'lb') {
-          value = value * LBS_PER_KG;
-        }
-        suffix = 'U/kg';
-        if (value > 0 && _.isFinite(value)) {
-          value = formatDecimalNumber(value, 2);
-        } else {
-          disableStat();
-        }
-        break;
-
-      default:
-        break;
-    }
-
-    return {
-      id,
-      value,
-      suffix,
-    };
   };
 
   handleCollapse = () => {

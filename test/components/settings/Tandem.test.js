@@ -25,8 +25,6 @@ import Tandem from '../../../src/components/settings/Tandem';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../src/utils/constants';
 import { formatDecimalNumber } from '../../../src/utils/format';
 
-import { formatClassesAsSelector } from '../../helpers/cssmodules';
-import styles from '../../../src/components/settings/Tandem.css';
 
 const flatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
 const multirateData = require('../../../data/pumpSettings/tandem/multirate.json');
@@ -114,7 +112,7 @@ describe('Tandem', () => {
 
   it('should have a button to copy settings', () => {
     const mounted = mount(<Tandem {...props} />);
-    const clipBoardButton = mounted.find(formatClassesAsSelector(styles.copyButton)).at(0);
+    const clipBoardButton = mounted.find('ClipboardButton').at(0);
     expect(copySettingsClicked.callCount).to.equal(0);
     clipBoardButton.prop('onSuccess')();
     expect(copySettingsClicked.callCount).to.equal(1);
