@@ -328,7 +328,7 @@ stories.add('Query Generator', () => {
     return queryFormat === 'string' ? selectedMetaData.join(',') : selectedMetaData;
   };
 
-  const getFillData = () => boolean('Generate Fill Data', true, GROUP_DATA);
+  const getFillData = () => boolean('Generate Fill Data', false, GROUP_DATA);
   const adjustForDSTChanges = () => boolean('Adjust Fill Data for DST Changes', true, GROUP_DATA);
 
   const activeDays = {

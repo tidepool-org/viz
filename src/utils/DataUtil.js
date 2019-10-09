@@ -99,6 +99,15 @@ export class DataUtil {
 
     this.setMetaData();
     this.endTimer('addData');
+
+    return {
+      size: this.data.size(),
+      metaData: this.getMetaData([
+        'latestPumpUpload',
+        'latestDatumByType',
+        'bgSources',
+      ]),
+    };
   };
 
   /* eslint-disable no-param-reassign */
