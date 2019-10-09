@@ -101,11 +101,11 @@ export class DataUtil {
     this.endTimer('addData');
 
     return {
-      size: this.data.size(),
       metaData: this.getMetaData([
-        'latestPumpUpload',
-        'latestDatumByType',
         'bgSources',
+        'latestDatumByType',
+        'latestPumpUpload',
+        'size',
       ]),
     };
   };
@@ -593,8 +593,13 @@ export class DataUtil {
     this.endTimer('setIncompleteSuspends');
   };
 
+  setSize = () => {
+    this.size = this.data.size();
+  };
+
   setMetaData = () => {
     this.startTimer('setMetaData');
+    this.setSize();
     this.setBgPrefs();
     this.setBgSources();
     this.setTimePrefs();
@@ -908,9 +913,10 @@ export class DataUtil {
   getMetaData = metaData => {
     this.startTimer('generate metaData');
     const allowedMetaData = [
-      'latestPumpUpload',
-      'latestDatumByType',
       'bgSources',
+      'latestDatumByType',
+      'latestPumpUpload',
+      'size',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
