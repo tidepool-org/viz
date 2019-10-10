@@ -307,9 +307,10 @@ stories.add('Query Generator', () => {
   };
 
   const metadata = {
-    latestPumpUpload: 'latestPumpUpload',
-    latestDatumByType: 'latestDatumByType',
     bgSources: 'bgSources',
+    latestDatumByType: 'latestDatumByType',
+    latestPumpUpload: 'latestPumpUpload',
+    size: 'size',
   };
 
   const getMetaDataQueryFormat = () => options('Metadata Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_DATA);
