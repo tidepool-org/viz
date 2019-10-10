@@ -327,8 +327,17 @@ export class DataUtil {
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
+    const units = _.get(this.bgPrefs, 'bgUnits');
+
+    if (units && d.units) {
+      d.units = _.isPlainObject(d.units) ? {
+        ...d.units,
+        bg: units,
+      } : units;
+    }
+
     // BG units are always stored in mmol/L in the backend, so we only need to convert to mg/dL
-    if (_.get(this.bgPrefs, 'bgUnits') === MGDL_UNITS) {
+    if (units === MGDL_UNITS) {
       if (d.units) {
         d.units = _.isPlainObject(d.units) ? {
           ...d.units,
