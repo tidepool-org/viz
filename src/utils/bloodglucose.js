@@ -17,7 +17,7 @@
 
 import _ from 'lodash';
 
-import { MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
+import { DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
 
 import { formatBgValue } from './format.js';
 
@@ -101,12 +101,13 @@ export function convertToMGDL(val) {
  * @return {Object} bgBounds - @tidepool/viz-style bgBounds
  */
 export function reshapeBgClassesToBgBounds(bgPrefs) {
-  const { bgClasses } = bgPrefs;
+  const { bgClasses, bgUnits } = bgPrefs;
+
   const bgBounds = {
-    veryHighThreshold: bgClasses.high.boundary,
-    targetUpperBound: bgClasses.target.boundary,
-    targetLowerBound: bgClasses.low.boundary,
-    veryLowThreshold: bgClasses['very-low'].boundary,
+    veryHighThreshold: _.get(bgClasses, 'high.boundary', DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold),
+    targetUpperBound: _.get(bgClasses, 'target.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound),
+    targetLowerBound: _.get(bgClasses, 'low.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound),
+    veryLowThreshold: _.get(bgClasses, 'very-low.boundary', DEFAULT_BG_BOUNDS[bgUnits].veryLowThreshold),
   };
 
   return bgBounds;
