@@ -40,7 +40,13 @@ import { formatBgValue } from './utils/format';
 import { reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { isAutomatedBasalDevice } from './utils/device';
-import { addDuration, getLocalizedCeiling, getTimezoneFromTimePrefs } from './utils/datetime';
+
+import {
+  addDuration,
+  getLocalizedCeiling,
+  getTimezoneFromTimePrefs,
+} from './utils/datetime';
+
 import {
   commonStats,
   getStatAnnotations,
@@ -52,7 +58,7 @@ import {
 } from './utils/stat';
 import DataUtil from './utils/DataUtil';
 import { trendsText } from './utils/trends/data';
-import { basicsText } from './utils/basics/data';
+import { basicsText, findBasicsStart } from './utils/basics/data';
 import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
@@ -98,6 +104,7 @@ const utils = {
   },
   datetime: {
     addDuration,
+    findBasicsStart,
     getLocalizedCeiling,
     getTimezoneFromTimePrefs,
   },
