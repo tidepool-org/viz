@@ -223,12 +223,13 @@ export class DataUtil {
 
   normalizeDatumOut = (d, fields = []) => {
     const { timezoneName } = this.timePrefs || {};
+    const normalizeAllFields = fields[0] === '*';
 
     // Normal time post-processing
     this.normalizeDatumOutTime(d, fields);
 
     // Add source and serial number metadata
-    if (d.uploadId && _.includes(fields, 'deviceSerialNumber')) {
+    if (d.uploadId && (normalizeAllFields || _.includes(fields, 'deviceSerialNumber'))) {
       d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
     }
     if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
@@ -239,7 +240,7 @@ export class DataUtil {
       d.subType = d.deliveryType;
 
       // Annotate any incomplete suspends
-      if (_.includes(fields, 'annotations')) {
+      if (normalizeAllFields || _.includes(fields, 'annotations')) {
         const intersectsIncompleteSuspend = _.some(
           this.incompleteSuspends,
           suspend => {
@@ -259,8 +260,11 @@ export class DataUtil {
     if (d.type === 'cbg' || d.type === 'smbg') {
       this.normalizeDatumBgUnits(d);
 
-      if (_.includes(fields, 'msPer24')) d.msPer24 = getMsPer24(d.normalTime, timezoneName);
-      if (_.includes(fields, 'localDate')) {
+      if (normalizeAllFields || _.includes(fields, 'msPer24')) {
+        d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+      }
+
+      if (normalizeAllFields || _.includes(fields, 'localDate')) {
         d.localDate = moment.utc(d[this.activeTimeField]).tz(timezoneName || 'UTC').format('YYYY-MM-DD');
       }
     }
@@ -269,7 +273,7 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
       this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
       // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
-      if (_.includes(fields, 'basalSchedules')) {
+      if (normalizeAllFields || _.includes(fields, 'basalSchedules')) {
         d.basalSchedules = _.flatten(_.partition(
           _.sortBy(_.map(d.basalSchedules, (value, name) => ({ name, value })), 'name'),
           ({ name }) => (name === 'standard')
@@ -303,6 +307,7 @@ export class DataUtil {
 
   normalizeDatumOutTime = (d, fields = []) => {
     const { timezoneName } = this.timePrefs || {};
+    const normalizeAllFields = fields[0] === '*';
 
     if (timezoneName) {
       d.normalTime = d.time;
@@ -323,7 +328,7 @@ export class DataUtil {
     }
 
     // Recurse as needed for suppressed basals
-    if (d.suppressed && _.includes(fields, 'suppressed')) this.normalizeDatumOutTime(d.suppressed, fields);
+    if (d.suppressed && (normalizeAllFields || _.includes(fields, 'suppressed'))) this.normalizeDatumOutTime(d.suppressed, fields);
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
@@ -989,8 +994,10 @@ export class DataUtil {
   getTypeData = types => {
     const generatedData = {};
 
-    _.each(types, ({ type, select, sort = {} }) => {
+    _.each(types, ({ type, select = '*', sort = {} }) => {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
+      const returnAllFields = fields[0] === '*';
+
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
 
       // Normalize data
@@ -1018,7 +1025,7 @@ export class DataUtil {
 
       // Pick selected fields
       this.startTimer(`select fields | ${type} | ${this.activeRange}`);
-      typeData = _.map(typeData, d => _.pick(d, fields));
+      if (!returnAllFields) typeData = _.map(typeData, d => _.pick(d, fields));
       this.endTimer(`select fields | ${type} | ${this.activeRange}`);
 
       generatedData[type] = typeData;
