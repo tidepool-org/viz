@@ -230,14 +230,14 @@ describe('DailyPrintView', () => {
       Renderer.data.bgRange[1] = 100;
       Renderer.makeScales(Renderer.chartsByDate[sampleDate]);
 
-      expect(Renderer.bgScaleYLimit).to.equal(180);
+      expect(Renderer.bgScaleYLimit).to.equal(300);
     });
 
     it('should set the bgScaleYLimit to a maximum of the BG very high threshold', () => {
       Renderer.data.bgRange[1] = 600;
       Renderer.makeScales(Renderer.chartsByDate[sampleDate]);
 
-      expect(Renderer.bgScaleYLimit).to.equal(300);
+      expect(Renderer.bgScaleYLimit).to.equal(600);
     });
 
     // Remaining functionality already confirmed in constructor tests
