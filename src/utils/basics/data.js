@@ -801,8 +801,7 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
   return moment.utc(Date.parse(timestamp)).tz(timezone)
     .startOf('isoWeek')
     .subtract(14, 'days')
-    .toDate()
-    .toISOString();
+    .toDate();
 }
 
 /**
