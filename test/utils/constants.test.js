@@ -196,9 +196,9 @@ describe('constants', () => {
     });
   });
 
-  describe('SECTION_TYPE_UNDECLARED', () => {
+  describe('SITE_CHANGE_TYPE_UNDECLARED', () => {
     it('should be `undeclared`', () => {
-      expect(constants.SECTION_TYPE_UNDECLARED).to.equal('undeclared');
+      expect(constants.SITE_CHANGE_TYPE_UNDECLARED).to.equal('undeclared');
     });
   });
 

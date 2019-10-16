@@ -70,12 +70,7 @@ export const MS_IN_MIN = MS_IN_HOUR / 60;
 export const CGM_READINGS_ONE_DAY = 288;
 export const CGM_DATA_KEY = 'cbg';
 export const BGM_DATA_KEY = 'smbg';
-export const NO_CGM = 'noCGM';
-export const CGM_CALCULATED = 'calculatedCGM';
-export const NOT_ENOUGH_CGM = 'notEnoughCGM';
 
-export const NO_SITE_CHANGE = 'noSiteChange';
-export const SITE_CHANGE = 'siteChange';
 export const SITE_CHANGE_RESERVOIR = 'reservoirChange';
 export const SITE_CHANGE_TUBING = 'tubingPrime';
 export const SITE_CHANGE_CANNULA = 'cannulaPrime';
@@ -83,7 +78,7 @@ export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 
-export const SECTION_TYPE_UNDECLARED = 'undeclared';
+export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
 export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';

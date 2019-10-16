@@ -17,37 +17,19 @@
 
 import _ from 'lodash';
 import moment from 'moment';
-import sundial from 'sundial';
-import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import i18next from 'i18next';
 
-import generateClassifiers from '../classifiers';
-import { getLatestPumpUpload, getPumpVocabulary } from '../device';
+import { getPumpVocabulary } from '../device';
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
-  weightedCGMCount,
 } from '../bloodglucose';
 
 import {
-  countAutomatedBasalEvents,
-  countDistinctSuspends,
-} from '../basal';
-
-import {
-  BGM_DATA_KEY,
-  CGM_DATA_KEY,
-  MS_IN_DAY,
-  CGM_READINGS_ONE_DAY,
-  NOT_ENOUGH_CGM,
-  CGM_CALCULATED,
-  NO_CGM,
-  NO_SITE_CHANGE,
-  SITE_CHANGE,
   SITE_CHANGE_RESERVOIR,
   SITE_CHANGE_TUBING,
   SITE_CHANGE_CANNULA,
-  SECTION_TYPE_UNDECLARED,
+  SITE_CHANGE_TYPE_UNDECLARED,
   AUTOMATED_DELIVERY,
   INSULET,
   TANDEM,
@@ -67,323 +49,6 @@ export const utils = {
   statsText,
   TextUtil,
 };
-
-/**
- * Get the BG distribution source and status
- * source will be one of [cbg | smbg | null]
- * status refers the the availability of cgm data [NO_CGM | NOT_ENOUGH_CGM | CGM_CALCULATED]
- *
- * @export
- * @param {Object} basicsData - the preprocessed basics data object
- * @returns {Object} bgSource - source and status of CGM data
- */
-export function determineBgDistributionSource(basicsData) {
-  const cgmAvailable = _.get(basicsData, `data.${CGM_DATA_KEY}.data.length`, 0) > 0;
-  const bgmAvailable = _.get(basicsData, `data.${BGM_DATA_KEY}.data.length`, 0) > 0;
-
-  const bgSource = {
-    source: bgmAvailable ? BGM_DATA_KEY : null,
-  };
-
-  if (cgmAvailable) {
-    const cbgCount = weightedCGMCount(basicsData.data[CGM_DATA_KEY].data);
-    const spanInDays = (Date.parse(basicsData.dateRange[1]) -
-      Date.parse(basicsData.dateRange[0])) / MS_IN_DAY;
-
-    if (cbgCount < CGM_READINGS_ONE_DAY / 2 * spanInDays) {
-      bgSource.cgmStatus = NOT_ENOUGH_CGM;
-    } else {
-      bgSource.cgmStatus = CGM_CALCULATED;
-      bgSource.source = CGM_DATA_KEY;
-    }
-  } else {
-    bgSource.cgmStatus = NO_CGM;
-  }
-
-  return bgSource;
-}
-
-/**
- * Return a CGM status message
- *
- * @export
- * @param {String} cgmStatus - cbg | smbg | noCGM
- * @returns {String} status message
- */
-export function cgmStatusMessage(cgmStatus) {
-  const statusMessages = {
-    [NO_CGM]: 'Showing BGM data (no CGM)',
-    [NOT_ENOUGH_CGM]: 'Showing BGM data (not enough CGM)',
-    [CGM_CALCULATED]: 'Showing CGM data',
-  };
-
-  return statusMessages[cgmStatus] || '';
-}
-
-/**
- * Get latest upload from blip-generated patient data
- *
- * @export
- * @param {Object} basicsData - the preprocessed basics data object
- * @returns {String|Null} - the latest upload source or null
- */
-export function getLatestPumpUploaded(basicsData) {
-  const latestPump = getLatestPumpUpload(_.get(basicsData, 'data.upload.data', []));
-
-  if (latestPump && latestPump.hasOwnProperty('source')) {
-    return latestPump.source;
-  }
-
-  return null;
-}
-
-/**
- * Get the infusion site history of a patient
- *
- * @param {Object} basicsData - the preprocessed basics data object
- * @param {String} type - infusion type, coming from the patients `siteChangeSource` setting
- * @returns {Object} infusionSiteHistory
- */
-export function getInfusionSiteHistory(basicsData, type) {
-  const infusionSitesPerDay = basicsData.data[type].dataByDate;
-  const allDays = basicsData.days;
-  const infusionSiteHistory = {};
-  let hasChangeHistory = false;
-
-  // daysSince does *not* start at zero because we have to look back to the
-  // most recent infusion site change prior to the basics-restricted time domain
-  const priorSiteChange = _.findLast(_.keys(infusionSitesPerDay), date => date < allDays[0].date);
-
-  let daysSince = (Date.parse(allDays[0].date) - Date.parse(priorSiteChange)) / MS_IN_DAY - 1;
-  _.each(allDays, day => {
-    if (day.type === 'future') {
-      infusionSiteHistory[day.date] = { type: 'future' };
-    } else {
-      daysSince += 1;
-      if (infusionSitesPerDay[day.date] && infusionSitesPerDay[day.date].count >= 1) {
-        infusionSiteHistory[day.date] = {
-          type: SITE_CHANGE,
-          count: infusionSitesPerDay[day.date].count,
-          data: infusionSitesPerDay[day.date].data,
-          daysSince,
-        };
-        daysSince = 0;
-        hasChangeHistory = true;
-      } else {
-        infusionSiteHistory[day.date] = { type: NO_SITE_CHANGE };
-      }
-    }
-  });
-
-  infusionSiteHistory.hasChangeHistory = hasChangeHistory;
-  return infusionSiteHistory;
-}
-
-/**
- * Process the infusion site history of a patient
- *
- * @export
- * @param {Object} data - the preprocessed basics data object
- * @param {Object} patient
- * @returns {Object} basicsData - the revised data object
- */
-export function processInfusionSiteHistory(data, patient) {
-  const basicsData = _.cloneDeep(data);
-  const latestPump = getLatestPumpUploaded(basicsData);
-
-  if (!latestPump) {
-    return basicsData;
-  }
-
-  const {
-    settings,
-  } = patient;
-
-  if (latestPump === ANIMAS || latestPump === MEDTRONIC || latestPump === TANDEM) {
-    basicsData.data.cannulaPrime.infusionSiteHistory = getInfusionSiteHistory(
-      basicsData,
-      SITE_CHANGE_CANNULA
-    );
-
-    basicsData.data.tubingPrime.infusionSiteHistory = getInfusionSiteHistory(
-      basicsData,
-      SITE_CHANGE_TUBING
-    );
-
-    const siteChangeSource = _.get(settings, 'siteChangeSource');
-    const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
-
-    if (siteChangeSource && _.includes(allowedSources, siteChangeSource)) {
-      basicsData.sections.siteChanges.type = settings.siteChangeSource;
-    } else {
-      basicsData.sections.siteChanges.type = SECTION_TYPE_UNDECLARED;
-    }
-  } else if (latestPump === INSULET) {
-    basicsData.data.reservoirChange.infusionSiteHistory = getInfusionSiteHistory(
-      basicsData,
-      SITE_CHANGE_RESERVOIR
-    );
-
-    basicsData.sections.siteChanges.type = SITE_CHANGE_RESERVOIR;
-    basicsData.sections.siteChanges.selector = null;
-  } else {
-    // CareLink (Medtronic) or other unsupported pump
-    basicsData.data.reservoirChange = {};
-    basicsData.sections.siteChanges.type = SITE_CHANGE_RESERVOIR;
-    basicsData.sections.siteChanges.selector = null;
-  }
-
-  const fallbackSubtitle = basicsData.sections.siteChanges.type !== SECTION_TYPE_UNDECLARED
-    ? pumpVocabulary.default[SITE_CHANGE_RESERVOIR]
-    : null;
-
-  basicsData.sections.siteChanges.subTitle = _.get(
-    pumpVocabulary,
-    [latestPump, basicsData.sections.siteChanges.type],
-    fallbackSubtitle,
-  );
-
-  return basicsData;
-}
-
-/**
- * Generate crossfilter reducers for classifying data records
- *
- * @param {Object} dataObj - the data object to reduce
- * @param {String} type - the data type
- * @param {Object} bgPrefs - bgPrefs object containing viz-style bgBounds
- */
-function buildCrossfilterUtils(dataObj, type, bgPrefs) {
-  /* eslint-disable no-param-reassign */
-  const classifiers = generateClassifiers(bgPrefs);
-
-  const getLocalDate = (datum) => (
-    sundial.applyOffset(datum.normalTime, datum.displayOffset).toISOString().slice(0, 10)
-  );
-
-  const reduceAddMaker = (classifier) => {
-    if (classifier) {
-      return function reduceAdd(p, v) {
-        const tags = classifier(v);
-        if (!_.isEmpty(tags)) {
-          ++p.total;
-          _.each(tags, tag => {
-            if (p.subtotals[tag]) {
-              p.subtotals[tag] += 1;
-            } else {
-              p.subtotals[tag] = 1;
-            }
-          });
-        }
-        p.data.push(v);
-        return p;
-      };
-    }
-    return function reduceAdd(p, v) {
-      ++p.count;
-      p.data.push(v);
-      return p;
-    };
-  };
-
-  const reduceRemoveMaker = (classifier) => {
-    if (classifier) {
-      return function reduceRemove(p, v) {
-        const tags = classifier(v);
-        if (!_.isEmpty(tags)) {
-          --p.total;
-          _.each(tags, tag => {
-            p.subtotals[tag] -= 1;
-          });
-        }
-        _.remove(p.data, d => (d.id === v.id));
-        return p;
-      };
-    }
-    return function reduceRemove(p, v) {
-      --p.count;
-      _.remove(p.data, d => (d.id === v.id));
-      return p;
-    };
-  };
-
-  const reduceInitialMaker = (classifier) => {
-    if (classifier) {
-      return function reduceInitial() {
-        return {
-          total: 0,
-          subtotals: {},
-          data: [],
-        };
-      };
-    }
-    return function reduceInitial() {
-      return {
-        count: 0,
-        data: [],
-      };
-    };
-  };
-
-  dataObj.byLocalDate = dataObj.cf.dimension(getLocalDate);
-  const classifier = classifiers[type];
-
-  // eslint-disable-next-line lodash/prefer-lodash-method
-  const dataByLocalDate = dataObj.byLocalDate.group().reduce(
-    reduceAddMaker(classifier),
-    reduceRemoveMaker(classifier),
-    reduceInitialMaker(classifier)
-  ).all();
-  const dataByDateHash = {};
-  for (let j = 0; j < dataByLocalDate.length; ++j) {
-    const day = dataByLocalDate[j];
-    dataByDateHash[day.key] = day.value;
-  }
-  dataObj.dataByDate = dataByDateHash;
-  /* eslint-enable no-param-reassign */
-}
-
-/**
- * Generate function to process summary breakdowns for section data
- *
- * @param {Object} dataObj
- * @param {Object} summary
- * @returns {Function}
- */
-export function summarizeTagFn(dataObj, summary) {
-  /* eslint-disable no-param-reassign */
-  return tag => {
-    summary[tag] = {
-      count: _.reduce(
-        _.keys(dataObj.dataByDate),
-        (p, date) => (p + (dataObj.dataByDate[date].subtotals[tag] || 0)),
-        0,
-      ),
-    };
-    summary[tag].percentage = summary[tag].count / summary.total;
-  };
-  /* eslint-enable no-param-reassign */
-}
-
-/**
- * Get the average number of data events per day excluding the most recent
- *
- * @param {Object} dataObj
- * @param {Number} total
- * @param {String} mostRecentDay
- * @returns
- */
-export function averageExcludingMostRecentDay(dataObj, total, mostRecentDay) {
-  const mostRecentTotal = dataObj.dataByDate[mostRecentDay] ?
-    dataObj.dataByDate[mostRecentDay].total : 0;
-  const numDaysExcludingMostRecent = dataObj.dataByDate[mostRecentDay] ?
-    _.keys(dataObj.dataByDate).length - 1 : _.keys(dataObj.dataByDate).length;
-
-  // TODO: if we end up using this, do we care that this averages only over # of days that
-  // *have* data? e.g., if you have a random day in the middle w/no boluses,
-  // that day (that 0) will be excluded from average
-  return (total - mostRecentTotal) / numDaysExcludingMostRecent;
-}
 
 /**
  * Define sections and dimensions used in the basics view
@@ -486,129 +151,6 @@ export function defineBasicsSections(bgPrefs, manufacturer) {
 }
 
 /**
- * Set up cross filters by date for all of the data types
- *
- * @export
- * @param {Object} data - the preprocessed basics data object
- * @param {Object} bgPrefs - bgPrefs object containing viz-style bgBounds
- * @returns {Object} basicsData - the revised data object
- */
-export function reduceByDay(data, bgPrefs) {
-  const basicsData = _.cloneDeep(data);
-
-  const sections = basicsData.sections;
-
-  const findSectionContainingType = type => section => {
-    if (section.column === 'left') {
-      return false;
-    }
-    return section.type === type;
-  };
-
-  const reduceTotalByDate = (typeObj) => (p, date) => (
-    p + typeObj.dataByDate[date].total
-  );
-
-  const mostRecentDay = _.find(basicsData.days, { type: 'mostRecent' }).date;
-
-  _.each(basicsData.data, (value, type) => {
-    const typeObj = basicsData.data[type];
-
-    if (_.includes(
-      ['basal', 'bolus', SITE_CHANGE_RESERVOIR, SITE_CHANGE_TUBING, SITE_CHANGE_CANNULA], type)
-    ) {
-      typeObj.cf = crossfilter(typeObj.data);
-      buildCrossfilterUtils(typeObj, type, bgPrefs);
-    }
-
-    if (type === 'basal') {
-      _.each(typeObj.dataByDate, (dateData, date) => {
-        typeObj.dataByDate[date] = countDistinctSuspends(countAutomatedBasalEvents(dateData));
-      });
-    }
-
-    if (_.includes(['calibration', 'smbg'], type)) {
-      if (!basicsData.data.fingerstick) {
-        basicsData.data.fingerstick = {};
-      }
-      basicsData.data.fingerstick[type] = {
-        cf: crossfilter(typeObj.data),
-      };
-      buildCrossfilterUtils(basicsData.data.fingerstick[type], type, bgPrefs);
-    }
-
-    // for basal and boluses, summarize tags and find avg events per day
-    if (_.includes(['basal', 'bolus'], type)) {
-      // NB: for basals, the totals and avgPerDay are basal *events*
-      // that is, temps, suspends, & (not now, but someday) schedule changes
-      const section = _.find(sections, findSectionContainingType(type));
-      // wrap this in an if mostly for testing convenience
-      if (section) {
-        const tags = _.map(_.filter(section.dimensions, f => !f.primary), row => row.key);
-
-        const summary = {
-          total: _.reduce(
-            _.keys(typeObj.dataByDate),
-            reduceTotalByDate(typeObj), 0
-          ),
-        };
-
-        _.each(tags, summarizeTagFn(typeObj, summary));
-        summary.avgPerDay = averageExcludingMostRecentDay(
-          typeObj,
-          summary.total,
-          mostRecentDay
-        );
-        typeObj.summary = summary;
-      }
-    }
-
-    basicsData.data[type] = typeObj;
-  });
-
-  const fsSection = _.find(sections, findSectionContainingType('fingerstick'));
-  // wrap this in an if mostly for testing convenience
-  if (fsSection) {
-    const fingerstickData = basicsData.data.fingerstick;
-    const fsSummary = { total: 0 };
-
-    // calculate the total events for each type that participates in the fingerstick section
-    // as well as an overall total
-    _.each(['calibration', 'smbg'], fsCategory => {
-      fsSummary[fsCategory] = {
-        total: _.reduce(
-          _.keys(fingerstickData[fsCategory].dataByDate),
-          (p, date) => {
-            const dateData = fingerstickData[fsCategory].dataByDate[date];
-            return p + (dateData.total || dateData.count);
-          }, 0
-        ),
-      };
-      fsSummary.total += fsSummary[fsCategory].total;
-    });
-
-    fingerstickData.summary = fsSummary;
-
-    const filterTags = filter => (filter.path === 'smbg' && !filter.primary);
-
-    const fsTags = _.map(_.filter(fsSection.dimensions, filterTags), row => row.key);
-
-    _.each(fsTags, summarizeTagFn(fingerstickData.smbg, fsSummary.smbg));
-    const smbgSummary = fingerstickData.summary.smbg;
-    smbgSummary.avgPerDay = averageExcludingMostRecentDay(
-      fingerstickData.smbg,
-      smbgSummary.total,
-      mostRecentDay,
-    );
-
-    basicsData.data.fingerstick = fingerstickData;
-    basicsData.data.fingerstick.summary.smbg = smbgSummary;
-  }
-
-  return basicsData;
-}
-
-/**
  * Generate the day labels based on the days supplied by the processed basics view data
  *
  * @export
@@ -653,7 +195,7 @@ export function disableEmptySections(sections, data) {
         break;
 
       case 'siteChanges':
-        emptyText = section.type === SECTION_TYPE_UNDECLARED
+        emptyText = section.type === SITE_CHANGE_TYPE_UNDECLARED
           ? t("Please choose a preferred site change source from the 'Basics' web view to view this data.")
           : t("This section requires data from an insulin pump, so there's nothing to display.");
         break;
@@ -748,14 +290,14 @@ export function getSiteChangeSource(patient, manufacturer) {
     settings,
   } = patient;
 
-  let siteChangeSource = SECTION_TYPE_UNDECLARED;
+  let siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
 
   if (_.includes(_.map([ANIMAS, MEDTRONIC, TANDEM], _.lowerCase), manufacturer)) {
     siteChangeSource = _.get(settings, 'siteChangeSource');
     const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
 
     if (!_.includes(allowedSources, siteChangeSource)) {
-      siteChangeSource = SECTION_TYPE_UNDECLARED;
+      siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
     }
   } else if (manufacturer === _.lowerCase(INSULET)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
@@ -770,7 +312,7 @@ export function getSiteChangeSource(patient, manufacturer) {
  * @param {String} manufacturer
  */
 export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
-  const fallbackSubtitle = siteChangeSource !== SECTION_TYPE_UNDECLARED
+  const fallbackSubtitle = siteChangeSource !== SITE_CHANGE_TYPE_UNDECLARED
     ? pumpVocabulary.default[SITE_CHANGE_RESERVOIR]
     : null;
 
@@ -786,7 +328,7 @@ export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
  * @param  {Object} patient - the patient object that contains the profile
  * @param  {Object} data - DataUtil data object
  *
- * @return {String}  Basics data as a formatted string
+ * @return {String} Basics data as a formatted string
  */
 export function basicsText(patient, data) {
   const {
@@ -904,7 +446,7 @@ export function basicsText(patient, data) {
   }
 
   const siteChangeSource = getSiteChangeSource(patient, manufacturer);
-  sections.siteChanges.disabled = siteChangeSource === SECTION_TYPE_UNDECLARED;
+  sections.siteChanges.disabled = siteChangeSource === SITE_CHANGE_TYPE_UNDECLARED;
 
   if (!sections.siteChanges.disabled) {
     sections.siteChanges.subTitle = getSiteChangeSourceLabel(siteChangeSource, manufacturer);

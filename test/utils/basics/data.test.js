@@ -36,7 +36,7 @@ import {
   INSULET,
   MEDTRONIC,
   TANDEM,
-  SECTION_TYPE_UNDECLARED,
+  SITE_CHANGE_TYPE_UNDECLARED,
 } from '../../../src/utils/constants';
 
 const bgBounds = {
@@ -496,7 +496,7 @@ describe('basics data utils', () => {
         };
 
         const result = dataUtils.processInfusionSiteHistory(basicsData, patient);
-        expect(result.sections.siteChanges.type).to.equal(SECTION_TYPE_UNDECLARED);
+        expect(result.sections.siteChanges.type).to.equal(SITE_CHANGE_TYPE_UNDECLARED);
       });
 
       it(`should set siteChanges type to undeclared, when saved preference is not allowed for ${pump}`, () => {
@@ -520,7 +520,7 @@ describe('basics data utils', () => {
         };
 
         const result = dataUtils.processInfusionSiteHistory(basicsData, patient);
-        expect(result.sections.siteChanges.type).to.equal(SECTION_TYPE_UNDECLARED);
+        expect(result.sections.siteChanges.type).to.equal(SITE_CHANGE_TYPE_UNDECLARED);
       });
     });
 
