@@ -22,7 +22,7 @@ import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolv
 import i18next from 'i18next';
 
 import generateClassifiers from '../classifiers';
-import { getLatestPumpUpload, isAutomatedBasalDevice, getPumpVocabulary } from '../device';
+import { getLatestPumpUpload, getPumpVocabulary } from '../device';
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -49,7 +49,6 @@ import {
   SITE_CHANGE_CANNULA,
   SECTION_TYPE_UNDECLARED,
   AUTOMATED_DELIVERY,
-  SCHEDULED_DELIVERY,
   INSULET,
   TANDEM,
   ANIMAS,
@@ -422,10 +421,11 @@ export function defineBasicsSections(bgPrefs, manufacturer) {
         title = 'Basals';
         summaryTitle = t('Total basal events');
         dimensions = [
-          { key: 'total', label: t('Basal Events'), primary: true },
-          { key: 'temp', label: t('Temp Basals') },
-          { key: 'suspend', label: t('Suspends') },
+          { path: 'summary', key: 'total', label: t('Basal Events'), primary: true },
+          { path: 'summary.subtotals', key: 'temp', label: t('Temp Basals') },
+          { path: 'summary.subtotals', key: 'suspend', label: t('Suspends') },
           {
+            path: 'summary.subtotals',
             key: 'automatedStop',
             label: t('{{automatedLabel}} Exited', {
               automatedLabel: deviceLabels[AUTOMATED_DELIVERY],
@@ -439,13 +439,13 @@ export function defineBasicsSections(bgPrefs, manufacturer) {
         title = t('Bolusing');
         summaryTitle = t('Avg boluses / day');
         dimensions = [
-          { key: 'total', label: t('Avg per day'), average: true, primary: true },
-          { key: 'wizard', label: t('Calculator'), percentage: true },
-          { key: 'correction', label: t('Correction'), percentage: true },
-          { key: 'extended', label: t('Extended'), percentage: true },
-          { key: 'interrupted', label: t('Interrupted'), percentage: true },
-          { key: 'override', label: t('Override'), percentage: true },
-          { key: 'underride', label: t('Underride'), percentage: true },
+          { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
+          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true },
+          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true },
+          { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true },
+          { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true },
+          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true },
+          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true },
         ];
         break;
 
@@ -453,12 +453,12 @@ export function defineBasicsSections(bgPrefs, manufacturer) {
         title = t('BG readings');
         summaryTitle = t('Avg BG readings / day');
         dimensions = [
-          { path: 'smbg', key: 'total', label: t('Avg per day'), average: true, primary: true },
-          { path: 'smbg', key: 'meter', label: t('Meter'), percentage: true },
-          { path: 'smbg', key: 'manual', label: t('Manual'), percentage: true },
-          { path: 'calibration', key: 'total', label: t('Calibrations') },
-          { path: 'smbg', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
-          { path: 'smbg', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
+          { path: 'smbg.summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
+          { path: 'smbg.summary.subtotals', key: 'meter', label: t('Meter'), percentage: true },
+          { path: 'smbg.summary.subtotals', key: 'manual', label: t('Manual'), percentage: true },
+          { path: 'calibration.summary', key: 'total', label: t('Calibrations') },
+          { path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
+          { path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
         ];
         break;
 
@@ -682,12 +682,10 @@ export function disableEmptySections(sections, data) {
       const hasCalibrations = hasDataInRange(typeData[type].calibration);
 
       if (!hasCalibrations) {
-        _.remove(sections[key].dimensions, filter => filter.path === 'calibration');
+        _.remove(sections[key].dimensions, filter => filter.path.indexOf('calibration') === 0);
       }
 
       disabled = !hasSMBG && !hasCalibrations;
-    } else if (key === 'siteChanges') {
-      disabled = (!type || type === SECTION_TYPE_UNDECLARED);
     }
 
     if (disabled) {
@@ -741,52 +739,85 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
 }
 
 /**
+ * Determine the site change source for the patient
+ * @param {Object} patient
+ * @param {String} manufacturer
+ */
+export function getSiteChangeSource(patient, manufacturer) {
+  const {
+    settings,
+  } = patient;
+
+  let siteChangeSource = SECTION_TYPE_UNDECLARED;
+
+  if (_.includes(_.map([ANIMAS, MEDTRONIC, TANDEM], _.lowerCase), manufacturer)) {
+    siteChangeSource = _.get(settings, 'siteChangeSource');
+    const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
+
+    if (!_.includes(allowedSources, siteChangeSource)) {
+      siteChangeSource = SECTION_TYPE_UNDECLARED;
+    }
+  } else if (manufacturer === _.lowerCase(INSULET)) {
+    siteChangeSource = SITE_CHANGE_RESERVOIR;
+  }
+
+  return siteChangeSource;
+}
+
+/**
+ * Get the device-specific label for the site change source
+ * @param {String} siteChangeSource
+ * @param {String} manufacturer
+ */
+export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
+  const fallbackSubtitle = siteChangeSource !== SECTION_TYPE_UNDECLARED
+    ? pumpVocabulary.default[SITE_CHANGE_RESERVOIR]
+    : null;
+
+  return _.get(
+    pumpVocabulary,
+    [_.upperFirst(manufacturer), siteChangeSource],
+    fallbackSubtitle,
+  );
+}
+
+/**
  * basicsText
  * @param  {Object} patient - the patient object that contains the profile
- * @param  {Object} stats - all stats data
- * @param  {Array} endpoints - ISO strings [start, end]
- * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
- * @param  {Object} timePrefs - timePrefs object
- * @param  {Object} basicsData - tideline-processed basicsData object
+ * @param  {Object} data - DataUtil data object
  *
- * @return {String}  Trends data as a formatted string
+ * @return {String}  Basics data as a formatted string
  */
-export function basicsText(
-  patient,
-  stats,
-  endpoints,
-  bgPrefs,
-  timePrefs,
-  aggregationsByDate,
-  latestPumpUpload
-) {
+export function basicsText(patient, data) {
+  const {
+    data: {
+      current: {
+        aggregationsByDate = {},
+        stats = [],
+        endpoints = {},
+      },
+    },
+    bgPrefs,
+    timePrefs,
+    metaData: { latestPumpUpload },
+  } = data;
+
   _.defaults(bgPrefs, {
     bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new utils.TextUtil(patient, endpoints, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
+
   let basicsString = textUtil.buildDocumentHeader('Basics');
-
   basicsString += textUtil.buildDocumentDates();
-
   basicsString += utils.statsText(stats, textUtil, bgPrefs);
 
-  const source = _.get(latestPumpUpload, 'source', '').toLowerCase();
-  const manufacturer = source === 'carelink' ? 'medtronic' : source;
+  const manufacturer = _.get(latestPumpUpload, 'manufacturer');
 
-  console.log('aggregationsByDate', aggregationsByDate);
-  console.log('latestPumpUpload', latestPumpUpload);
-
-  let sections = defineBasicsSections(
+  const sections = disableEmptySections(defineBasicsSections(
     bgPrefs,
     manufacturer,
-  );
-
-  console.log('sections', sections);
-
-  sections = disableEmptySections(sections, aggregationsByDate);
-
-  console.log('sections', sections);
+  ), aggregationsByDate);
 
   const getSummaryTableData = (dimensions, statData, header) => {
     const rows = [];
@@ -796,17 +827,11 @@ export function basicsText(
     ];
 
     _.each(dimensions, dimension => {
-      const valueObj = _.get(
-        statData,
-        [dimension.path, dimension.key],
-        _.get(statData, dimension.key, {})
-      );
+      let value = _.get(statData, [...dimension.path.split('.'), dimension.key], {});
 
-      const isAverage = dimension.average;
-
-      const value = isAverage
-        ? Math.round(_.get(statData, [dimension.path, 'avgPerDay'], statData.avgPerDay))
-        : _.get(valueObj, 'count', valueObj);
+      value = dimension.average
+        ? Math.round(_.get(statData, [...dimension.path.split('.'), 'avgPerDay']))
+        : _.get(value, 'count', value);
 
       const stat = {
         label: dimension.label,
@@ -827,7 +852,7 @@ export function basicsText(
     return { rows, columns };
   };
 
-  const getSiteChangesTableData = (infusionSiteData) => {
+  const getSiteChangesTableData = (infusionSiteData, siteChangeSource) => {
     const rows = [];
     const columns = [
       { key: 'label', label: 'Label' },
@@ -835,7 +860,8 @@ export function basicsText(
     ];
 
     _.each(_.valuesIn(infusionSiteData), datum => {
-      if (datum.daysSince) rows.push(datum.daysSince);
+      const daysSince = _.get(datum, ['summary', 'daysSince', siteChangeSource]);
+      if (daysSince) rows.push(daysSince);
     });
 
     return {
@@ -850,7 +876,7 @@ export function basicsText(
   if (!sections.fingersticks.disabled) {
     const fingersticks = getSummaryTableData(
       sections.fingersticks.dimensions,
-      aggregationsByDate.fingersticks.summary,
+      aggregationsByDate.fingersticks,
       sections.fingersticks.summaryTitle
     );
 
@@ -865,7 +891,7 @@ export function basicsText(
   if (!sections.boluses.disabled) {
     const boluses = getSummaryTableData(
       sections.boluses.dimensions,
-      aggregationsByDate.boluses.summary,
+      aggregationsByDate.boluses,
       sections.boluses.summaryTitle
     );
 
@@ -877,9 +903,15 @@ export function basicsText(
     );
   }
 
+  const siteChangeSource = getSiteChangeSource(patient, manufacturer);
+  sections.siteChanges.disabled = siteChangeSource === SECTION_TYPE_UNDECLARED;
+
   if (!sections.siteChanges.disabled) {
+    sections.siteChanges.subTitle = getSiteChangeSourceLabel(siteChangeSource, manufacturer);
+
     const siteChanges = getSiteChangesTableData(
-      aggregationsByDate[sections.siteChanges.type].infusionSiteHistory,
+      _.get(aggregationsByDate, 'siteChanges.byDate', {}),
+      siteChangeSource,
     );
 
     basicsString += textUtil.buildTextTable(
@@ -893,7 +925,7 @@ export function basicsText(
   if (!sections.basals.disabled) {
     const basals = getSummaryTableData(
       sections.basals.dimensions,
-      aggregationsByDate.basals.summary,
+      aggregationsByDate.basals,
       sections.basals.summaryTitle
     );
 
