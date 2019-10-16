@@ -213,13 +213,13 @@ export function getDeviceMeta(settingsData, timePrefs) {
  * @return {Array}               array of formatted schedule entries
  */
 export function processBasalRateData(scheduleData) {
-  const starts = getStarts(scheduleData.value);
+  const starts = getStarts(scheduleData);
   const noRateData = [{ start: '-', rate: '-' }];
 
   if (starts.length === 0) {
     return noRateData;
   } else if (starts.length === 1) {
-    if (Number(getBasalRate(scheduleData.value, starts[0])) === 0) {
+    if (Number(getBasalRate(scheduleData, starts[0])) === 0) {
       return noRateData;
     }
   }
@@ -229,14 +229,14 @@ export function processBasalRateData(scheduleData) {
       startTime
     ),
     rate: getBasalRate(
-      scheduleData.value,
+      scheduleData,
       startTime
     ),
   }));
 
   data.push({
     start: 'Total',
-    rate: getTotalBasalRates(scheduleData.value),
+    rate: getTotalBasalRates(scheduleData),
   });
   return data;
 }

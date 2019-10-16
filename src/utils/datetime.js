@@ -293,24 +293,19 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
  */
 export function getHammertimeFromDatumWithTimePrefs(datum, timePrefs) {
   let hammertime;
+
   if (timePrefs.timezoneAware) {
-    if (!_.isUndefined(datum.time)) {
-      hammertime = Date.parse(datum.time);
-    } else {
-      hammertime = null;
-    }
+    hammertime = datum.time || null;
   } else {
-    if (!_.isUndefined(datum.deviceTime)) {
-      hammertime = Date.parse(datum.deviceTime);
-    } else {
-      hammertime = null;
-    }
+    hammertime = datum.deviceTime || null;
   }
+
   if (_.isNaN(hammertime)) {
     throw new Error(
-      'Check your input datum; could not parse `time` or `deviceTime` with Date.parse.'
+      'Check your input datum; `time` nor `deviceTime` were hammertime integers'
     );
   }
+
   return hammertime;
 }
 

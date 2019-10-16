@@ -103,9 +103,9 @@ function basalColumns(styles = {}, units) {
  */
 export function basal(schedule, settings, units, styles = {}) {
   return {
-    scheduleName: schedule.name,
-    activeAtUpload: (schedule.name === settings.activeSchedule),
-    title: scheduleLabel(schedule.name, settings.activeSchedule),
+    scheduleName: schedule,
+    activeAtUpload: (schedule === settings.activeSchedule),
+    title: scheduleLabel(schedule, settings.activeSchedule),
     columns: basalColumns(styles, units),
     rows: basalRows(schedule, settings, units),
   };
