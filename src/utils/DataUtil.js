@@ -537,13 +537,12 @@ export class DataUtil {
     const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
 
     if (latestPumpUpload) {
-      const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
-
+      const latestUploadSource = _.get(this.uploadMap[latestPumpUpload.uploadId], 'source', '').toLowerCase();
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
