@@ -187,7 +187,7 @@ stories.add('Trends Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={trendsText.bind(this, profiles.standard, data.trends.data, data.trends.chartPrefs)}
+      getText={trendsText.bind(this, profiles.standard, data.trends.data, data.trends.stats, data.trends.chartPrefs)}
     />
   </Wrapper>
 ), { notes });
@@ -196,7 +196,7 @@ stories.add('Basics Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={basicsText.bind(this, profiles.standard, data.basics.data)}
+      getText={basicsText.bind(this, profiles.standard, data.basics.data, data.basics.stats)}
     />
   </Wrapper>
 ), { notes });

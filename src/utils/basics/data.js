@@ -327,15 +327,15 @@ export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
  * basicsText
  * @param  {Object} patient - the patient object that contains the profile
  * @param  {Object} data - DataUtil data object
+ * @param  {Array} stats - Processed stats array
  *
  * @return {String} Basics data as a formatted string
  */
-export function basicsText(patient, data) {
+export function basicsText(patient, data, stats) {
   const {
     data: {
       current: {
         aggregationsByDate = {},
-        stats = [],
         endpoints = {},
       },
     },
