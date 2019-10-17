@@ -89,6 +89,7 @@ function basalColumns() {
  * @return {Object}                object with basal title, columns and rows
  */
 export function basal(schedule, settings, manufacturer) {
+  const name = settings.basalSchedules[schedule].name;
   const lookupKey = (manufacturer === 'carelink') ? 'medtronic' : manufacturer;
 
   const isAutomated = _.get(pumpVocabulary, [
@@ -97,10 +98,10 @@ export function basal(schedule, settings, manufacturer) {
   ]) === schedule;
 
   return {
-    scheduleName: schedule,
-    activeAtUpload: (schedule === settings.activeSchedule),
+    scheduleName: name,
+    activeAtUpload: (name === settings.activeSchedule),
     isAutomated,
-    title: scheduleLabel(schedule, settings.activeSchedule, manufacturer, isAutomated),
+    title: scheduleLabel(name, settings.activeSchedule, manufacturer, isAutomated),
     columns: isAutomated ? [] : basalColumns(),
     rows: isAutomated ? [] : basalRows(schedule, settings),
   };
