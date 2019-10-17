@@ -589,7 +589,7 @@ export class DataUtil {
 
       this.uploadMap[upload.uploadId] = {
         source,
-        deviceSerialNumber: upload.deviceSerialNumber || 'Unknown',
+        deviceSerialNumber: upload.deviceSerialNumber || upload.serialNumber || 'Unknown',
       };
     });
     this.endTimer('setUploadMap');
@@ -939,10 +939,10 @@ export class DataUtil {
       _.intersection(allowedMetaData, requestedMetaData),
     ));
 
-    _.each(selectedMetaData.latestDatumByType, this.normalizeDatumOut);
+    _.each(selectedMetaData.latestDatumByType, d => this.normalizeDatumOut(d, ['*']));
 
     if (_.get(selectedMetaData, 'latestPumpUpload.settings')) {
-      this.normalizeDatumOut(selectedMetaData.latestPumpUpload.settings);
+      this.normalizeDatumOut(selectedMetaData.latestPumpUpload.settings, ['*']);
     }
 
     this.endTimer('generate metaData');
