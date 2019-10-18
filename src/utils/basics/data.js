@@ -120,7 +120,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer) {
           { path: 'smbg.summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'smbg.summary.subtotals', key: 'meter', label: t('Meter'), percentage: true },
           { path: 'smbg.summary.subtotals', key: 'manual', label: t('Manual'), percentage: true },
-          { path: 'calibration.summary', key: 'total', label: t('Calibrations') },
+          { path: 'calibration.summary', key: 'total', label: t('Calibrations'), hideEmpty: true },
           { path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
           { path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
         ];
@@ -266,11 +266,6 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     } else if (type === 'fingersticks') {
       const hasSMBG = hasDataInRange(aggregationData[type].smbg);
       const hasCalibrations = hasDataInRange(aggregationData[type].calibration);
-
-      if (!hasCalibrations) {
-        _.remove(aggregations[key].dimensions, filter => filter.path.indexOf('calibration') === 0);
-      }
-
       disabled = !hasSMBG && !hasCalibrations;
     } else if (type === 'siteChanges') {
       aggregations[key].source = getSiteChangeSource(patient, manufacturer);
