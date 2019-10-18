@@ -58,7 +58,12 @@ import {
 } from './utils/stat';
 import DataUtil from './utils/DataUtil';
 import { trendsText } from './utils/trends/data';
-import { basicsText, findBasicsStart } from './utils/basics/data';
+import {
+  basicsText,
+  findBasicsStart,
+  defineBasicsAggregations,
+  processBasicsAggregations,
+} from './utils/basics/data';
 import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
@@ -119,6 +124,10 @@ const utils = {
     getStatTitle,
     statBgSourceLabels,
     statFetchMethods,
+  },
+  aggregation: {
+    defineBasicsAggregations,
+    processBasicsAggregations,
   },
   text: {
     trendsText,

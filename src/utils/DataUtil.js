@@ -738,11 +738,13 @@ export class DataUtil {
   setBgPrefs = (bgPrefs = {}) => {
     const {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
+      bgClasses = {},
       bgUnits = MGDL_UNITS,
     } = bgPrefs;
 
     this.bgPrefs = {
       bgBounds,
+      bgClasses, // Required for legacy tideline charts until we deprecate them
       bgUnits,
     };
   };

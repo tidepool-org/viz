@@ -25,10 +25,10 @@ import PrintView from './PrintView';
 import {
   cgmStatusMessage,
   determineBgDistributionSource,
-  defineBasicsSections,
+  defineBasicsAggregations,
   generateCalendarDayLabels,
   processInfusionSiteHistory,
-  disableEmptySections,
+  processBasicsAggregations,
   reduceByDay,
 } from '../../utils/basics/data';
 
@@ -72,7 +72,7 @@ class BasicsPrintView extends PrintView {
     const { source: bgSource, cgmStatus } = determineBgDistributionSource(this.data);
     _.assign(this, { bgSource, cgmStatus });
 
-    this.data.sections = defineBasicsSections(
+    this.data.sections = defineBasicsAggregations(
       this.bgPrefs,
       this.manufacturer,
       _.get(latestPumpUpload, 'deviceModel')
@@ -107,7 +107,7 @@ class BasicsPrintView extends PrintView {
 
     this.data = processInfusionSiteHistory(this.data, this.patient);
 
-    this.data = disableEmptySections(this.data);
+    this.data = processBasicsAggregations(this.data);
 
     // Auto-bind callback methods
     this.renderStackedStat = this.renderStackedStat.bind(this);

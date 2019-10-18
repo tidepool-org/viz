@@ -655,7 +655,7 @@ describe('basics data utils', () => {
     });
   });
 
-  describe('defineBasicsSections', () => {
+  describe('defineBasicsAggregations', () => {
     const sectionNames = [
       'basals',
       'basalBolusRatio',
@@ -669,19 +669,19 @@ describe('basics data utils', () => {
     ];
 
     it('should return an object with all required basics section keys with the default properties set', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS]);
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS]);
       expect(result).to.have.all.keys(sectionNames);
     });
 
     it('should set titles for each section', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS]);
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS]);
       _.forEach(sectionNames, (section) => {
         expect(result[section].title).to.be.a('string');
       });
     });
 
     it('should set the veryLow and veryHigh fingerstick filter labels correctly for mg/dL data', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS]);
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS]);
       const veryHighFilter = _.find(result.fingersticks.dimensions, { key: 'veryHigh' });
       const veryLowFilter = _.find(result.fingersticks.dimensions, { key: 'veryLow' });
       expect(veryHighFilter.label).to.equal('Above 300 mg/dL');
@@ -689,7 +689,7 @@ describe('basics data utils', () => {
     });
 
     it('should set the veryLow and veryHigh fingerstick filter labels correctly for mmol/L data', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MMOLL_UNITS]);
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS]);
       const veryHighFilter = _.find(result.fingersticks.dimensions, { key: 'veryHigh' });
       const veryLowFilter = _.find(result.fingersticks.dimensions, { key: 'veryLow' });
       expect(veryHighFilter.label).to.equal('Above 16.7 mmol/L');
@@ -697,35 +697,35 @@ describe('basics data utils', () => {
     });
 
     it('should set the label for the `automatedStop` filter based on the manufacturer', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MMOLL_UNITS], 'medtronic');
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'medtronic');
       const automatedStopFilter = _.find(result.basals.dimensions, { key: 'automatedStop' });
       expect(automatedStopFilter.label).to.equal('Auto Mode Exited');
     });
 
     it('should set default label for the `automatedStop` filter when missing manufacturer', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MMOLL_UNITS]);
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS]);
       const automatedStopFilter = _.find(result.basals.dimensions, { key: 'automatedStop' });
       expect(automatedStopFilter.label).to.equal('Automated Exited');
     });
 
     it('should set the active basal ratio to `basalBolusRatio` for non-automated-basal devices', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS], MEDTRONIC, '723');
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '723');
       expect(result.basalBolusRatio.active).to.be.true;
       expect(result.timeInAutoRatio.active).to.be.false;
     });
 
     it('should activate both `basalBolusRatio` and `timeInAutoRatio` for automated-basal devices', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780');
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780');
       expect(result.basalBolusRatio.active).to.be.true;
       expect(result.timeInAutoRatio.active).to.be.true;
     });
 
     it('should set the per-manufacturer labels for `timeInAutoRatio`, with default fallbacks when unavailable', () => {
-      const result = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780');
+      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780');
       expect(result.timeInAutoRatio.title).to.equal('Time in Auto Mode ratio');
       expect(result.timeInAutoRatio.dimensions[1].label).to.equal('Auto Mode');
 
-      const fallbackResult = dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS], ANIMAS);
+      const fallbackResult = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], ANIMAS);
       expect(fallbackResult.timeInAutoRatio.title).to.equal('Time in Automated ratio');
       expect(fallbackResult.timeInAutoRatio.dimensions[1].label).to.equal('Automated');
     });
@@ -738,7 +738,7 @@ describe('basics data utils', () => {
     });
   });
 
-  describe('disableEmptySections', () => {
+  describe('processBasicsAggregations', () => {
     const basicsData = {
       data: {
         cbg: { data: [new Types.CBG()] },
@@ -754,7 +754,7 @@ describe('basics data utils', () => {
         upload: { data: [new Types.Upload({ deviceTags: ['insulin-pump'], source: MEDTRONIC })] },
       },
       days: oneWeekDates,
-      sections: dataUtils.defineBasicsSections(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780'),
+      sections: dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780'),
     };
 
     it('should disable sections for which there is no data available', () => {
@@ -770,7 +770,7 @@ describe('basics data utils', () => {
       expect(basicsData.sections.averageDailyCarbs.active).to.be.true;
       expect(_.find(basicsData.sections.fingersticks.dimensions, { path: 'calibration' })).to.not.be.undefined;
       const processedBasicsData = dataUtils.processInfusionSiteHistory(basicsData, {});
-      const result = dataUtils.disableEmptySections(processedBasicsData);
+      const result = dataUtils.processBasicsAggregations(processedBasicsData);
 
       // basals gets disabled when no data
       expect(result.sections.basals.disabled).to.be.true;
@@ -817,7 +817,7 @@ describe('basics data utils', () => {
       expect(basicsData.sections.fingersticks.emptyText).to.be.undefined;
 
       const processedBasicsData = dataUtils.processInfusionSiteHistory(basicsData, {});
-      const result = dataUtils.disableEmptySections(processedBasicsData);
+      const result = dataUtils.processBasicsAggregations(processedBasicsData);
 
       // basals gets emptyText set when no data
       expect(result.sections.basals.emptyText).to.be.a('string');

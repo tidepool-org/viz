@@ -56,7 +56,7 @@ export const utils = {
  * @param {Object} bgPrefs - bgPrefs object containing viz-style bgBounds
  * @returns {Object} sections
  */
-export function defineBasicsSections(bgPrefs, manufacturer) {
+export function defineBasicsAggregations(bgPrefs, manufacturer) {
   const bgLabels = generateBgRangeLabels(bgPrefs);
   bgLabels.veryLow = _.upperFirst(bgLabels.veryLow);
   bgLabels.veryHigh = _.upperFirst(bgLabels.veryHigh);
@@ -76,7 +76,6 @@ export function defineBasicsSections(bgPrefs, manufacturer) {
     let type = section;
     let dimensions;
     let title = '';
-    let subTitle;
     let summaryTitle;
     let emptyText;
     const active = true;
@@ -139,7 +138,6 @@ export function defineBasicsSections(bgPrefs, manufacturer) {
     sections[section] = {
       active,
       title,
-      subTitle,
       summaryTitle,
       emptyText,
       type,
@@ -163,121 +161,6 @@ export function generateCalendarDayLabels(days) {
   return _.map(_.range(firstDay, firstDay + 7), dow => (
     moment.utc().day(dow).format('ddd')
   ));
-}
-
-/**
- * Set the availability of basics sections
- *
- * @export
- * @param {Object} Provided data with empty sections disabled and empty text statements provided
- */
-export function disableEmptySections(sections, data) {
-  /* eslint-disable no-param-reassign */
-  const typeData = _.cloneDeep(data);
-
-  const hasDataInRange = processedData => (
-    processedData && (_.keys(processedData.byDate).length > 0)
-  );
-
-  const diabetesDataTypes = [
-    'basals',
-    'boluses',
-  ];
-
-  const getEmptyText = (section, sectionKey) => {
-    /* eslint-disable max-len */
-    let emptyText;
-
-    switch (sectionKey) {
-      case 'basals':
-      case 'boluses':
-        emptyText = t("This section requires data from an insulin pump, so there's nothing to display.");
-        break;
-
-      case 'siteChanges':
-        emptyText = section.type === SITE_CHANGE_TYPE_UNDECLARED
-          ? t("Please choose a preferred site change source from the 'Basics' web view to view this data.")
-          : t("This section requires data from an insulin pump, so there's nothing to display.");
-        break;
-
-      case 'fingersticks':
-        emptyText = t("This section requires data from a blood-glucose meter, so there's nothing to display.");
-        break;
-
-      default:
-        emptyText = t('Why is this grey? There is not enough data to show this statistic.');
-        break;
-    }
-
-    return emptyText;
-    /* eslint-enable max-len */
-  };
-
-  _.each(sections, (section, key) => {
-    const type = section.type;
-    let disabled = false;
-
-    if (_.includes(diabetesDataTypes, type)) {
-      disabled = !hasDataInRange(typeData[type]);
-    } else if (type === 'fingersticks') {
-      const hasSMBG = hasDataInRange(typeData[type].smbg);
-      const hasCalibrations = hasDataInRange(typeData[type].calibration);
-
-      if (!hasCalibrations) {
-        _.remove(sections[key].dimensions, filter => filter.path.indexOf('calibration') === 0);
-      }
-
-      disabled = !hasSMBG && !hasCalibrations;
-    }
-
-    if (disabled) {
-      sections[key].emptyText = getEmptyText(section, key);
-    }
-
-    sections[key].disabled = disabled;
-  });
-  /* eslint-enable no-param-reassign */
-
-  return sections;
-}
-
-/**
- * Get a keyed list of dates in range, designated as future, past, or most recent
- * @param {Array} range - The start and end points (Zulu timestamp or integer hammertime)
- * @param {String} timezone - A valid timezone, UTC if undefined
- * @returns {Object} Map of objects keyed by date
- */
-export function findBasicsDays(range, timezone = 'UTC') {
-  let currentDate = new Date(range[0]);
-  const days = [];
-  const dateOfUpload = moment.utc(Date.parse(range[1])).tz(timezone).format('YYYY-MM-DD');
-  while (currentDate < moment.utc(Date.parse(range[1])).tz(timezone).endOf('isoWeek')) {
-    const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
-    const dateObj = { date };
-    if (date < dateOfUpload) {
-      dateObj.type = 'past';
-    } else if (date === dateOfUpload) {
-      dateObj.type = 'mostRecent';
-    } else {
-      dateObj.type = 'future';
-    }
-    days.push(dateObj);
-    currentDate = moment.utc(currentDate).tz(timezone).add(1, 'days').toDate();
-  }
-  return days;
-}
-
-/**
- * Find the appropriate start endpoint for basics calendars given the timestamp of the latest datum
- * @param {String} timestamp - Zulu timestamp (Integer hammertime also OK)
- * @param {String} timezone - A valid timezone, UTC if undefined
- * @returns {String} ISO date string relative to provided timezone
- */
-export function findBasicsStart(timestamp, timezone = 'UTC') {
-  return moment.utc(Date.parse(timestamp)).tz(timezone)
-    .startOf('isoWeek')
-    .subtract(14, 'days')
-    .toDate();
 }
 
 /**
@@ -324,14 +207,142 @@ export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
 }
 
 /**
+ * Set the availability of basics sections
+ *
+ * @export
+ * @param {Object} Provided data with empty sections disabled and empty text statements provided
+ */
+export function processBasicsAggregations(aggregations, data, patient, manufacturer) {
+  /* eslint-disable no-param-reassign, max-len */
+  const aggregationData = _.cloneDeep(data);
+
+  aggregations.siteChanges.source = getSiteChangeSource(patient, manufacturer);
+  aggregations.siteChanges.disabled = aggregations.siteChanges.source === SITE_CHANGE_TYPE_UNDECLARED;
+
+  const hasDataInRange = processedData => (
+    processedData && (_.keys(processedData.byDate).length > 0)
+  );
+
+  const diabetesDataTypes = [
+    'basals',
+    'boluses',
+  ];
+
+  const getEmptyText = (aggregation, aggregationKey) => {
+    /* eslint-disable max-len */
+    let emptyText;
+
+    switch (aggregationKey) {
+      case 'basals':
+      case 'boluses':
+        emptyText = t("This section requires data from an insulin pump, so there's nothing to display.");
+        break;
+
+      case 'siteChanges':
+        emptyText = aggregation.type === SITE_CHANGE_TYPE_UNDECLARED
+          ? t("Please choose a preferred site change source from the 'Basics' web view to view this data.")
+          : t("This section requires data from an insulin pump, so there's nothing to display.");
+        break;
+
+      case 'fingersticks':
+        emptyText = t("This section requires data from a blood-glucose meter, so there's nothing to display.");
+        break;
+
+      default:
+        emptyText = t('Why is this grey? There is not enough data to show this statistic.');
+        break;
+    }
+
+    return emptyText;
+    /* eslint-enable max-len */
+  };
+
+  _.each(aggregations, (aggregation, key) => {
+    const type = aggregation.type;
+    let disabled = false;
+
+    if (_.includes(diabetesDataTypes, type)) {
+      disabled = !hasDataInRange(aggregationData[type]);
+    } else if (type === 'fingersticks') {
+      const hasSMBG = hasDataInRange(aggregationData[type].smbg);
+      const hasCalibrations = hasDataInRange(aggregationData[type].calibration);
+
+      if (!hasCalibrations) {
+        _.remove(aggregations[key].dimensions, filter => filter.path.indexOf('calibration') === 0);
+      }
+
+      disabled = !hasSMBG && !hasCalibrations;
+    } else if (type === 'siteChanges') {
+      aggregations[key].source = getSiteChangeSource(patient, manufacturer);
+      disabled = aggregations[key].source === SITE_CHANGE_TYPE_UNDECLARED;
+      if (!disabled) {
+        aggregations[key].subTitle = getSiteChangeSourceLabel(
+          aggregations[key].source,
+          manufacturer
+        );
+      }
+    }
+
+    if (disabled) {
+      aggregations[key].emptyText = getEmptyText(aggregation, key);
+    }
+
+    aggregations[key].disabled = disabled;
+  });
+  /* eslint-enable no-param-reassign */
+
+  return aggregations;
+}
+
+/**
+ * Get a keyed list of dates in range, designated as future, past, or most recent
+ * @param {Array} range - The start and end points (Zulu timestamp or integer hammertime)
+ * @param {String} timezone - A valid timezone, UTC if undefined
+ * @returns {Object} Map of objects keyed by date
+ */
+export function findBasicsDays(range, timezone = 'UTC') {
+  let currentDate = new Date(range[0]);
+  const days = [];
+  const dateOfUpload = moment.utc(Date.parse(range[1])).tz(timezone).format('YYYY-MM-DD');
+  while (currentDate < moment.utc(Date.parse(range[1])).tz(timezone).endOf('isoWeek')) {
+    const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
+    const dateObj = { date };
+    if (date < dateOfUpload) {
+      dateObj.type = 'past';
+    } else if (date === dateOfUpload) {
+      dateObj.type = 'mostRecent';
+    } else {
+      dateObj.type = 'future';
+    }
+    days.push(dateObj);
+    currentDate = moment.utc(currentDate).tz(timezone).add(1, 'days').toDate();
+  }
+  return days;
+}
+
+/**
+ * Find the appropriate start endpoint for basics calendars given the timestamp of the latest datum
+ * @param {String} timestamp - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezone - A valid timezone, UTC if undefined
+ * @returns {String} ISO date string relative to provided timezone
+ */
+export function findBasicsStart(timestamp, timezone = 'UTC') {
+  return moment.utc(Date.parse(timestamp)).tz(timezone)
+    .startOf('isoWeek')
+    .subtract(14, 'days')
+    .toDate();
+}
+
+/**
  * basicsText
  * @param  {Object} patient - the patient object that contains the profile
  * @param  {Object} data - DataUtil data object
  * @param  {Array} stats - Processed stats array
+ * @param  {Object} stats - Processed aggregations object
  *
  * @return {String} Basics data as a formatted string
  */
-export function basicsText(patient, data, stats) {
+export function basicsText(patient, data, stats, aggregations) {
   const {
     data: {
       current: {
@@ -341,7 +352,6 @@ export function basicsText(patient, data, stats) {
     },
     bgPrefs,
     timePrefs,
-    metaData: { latestPumpUpload },
   } = data;
 
   _.defaults(bgPrefs, {
@@ -353,13 +363,6 @@ export function basicsText(patient, data, stats) {
   let basicsString = textUtil.buildDocumentHeader('Basics');
   basicsString += textUtil.buildDocumentDates();
   basicsString += utils.statsText(stats, textUtil, bgPrefs);
-
-  const manufacturer = _.get(latestPumpUpload, 'manufacturer');
-
-  const sections = disableEmptySections(defineBasicsSections(
-    bgPrefs,
-    manufacturer,
-  ), aggregationsByDate);
 
   const getSummaryTableData = (dimensions, statData, header) => {
     const rows = [];
@@ -415,11 +418,11 @@ export function basicsText(patient, data, stats) {
     };
   };
 
-  if (!sections.fingersticks.disabled) {
+  if (!aggregations.fingersticks.disabled) {
     const fingersticks = getSummaryTableData(
-      sections.fingersticks.dimensions,
+      aggregations.fingersticks.dimensions,
       aggregationsByDate.fingersticks,
-      sections.fingersticks.summaryTitle
+      aggregations.fingersticks.summaryTitle
     );
 
     basicsString += textUtil.buildTextTable(
@@ -430,11 +433,11 @@ export function basicsText(patient, data, stats) {
     );
   }
 
-  if (!sections.boluses.disabled) {
+  if (!aggregations.boluses.disabled) {
     const boluses = getSummaryTableData(
-      sections.boluses.dimensions,
+      aggregations.boluses.dimensions,
       aggregationsByDate.boluses,
-      sections.boluses.summaryTitle
+      aggregations.boluses.summaryTitle
     );
 
     basicsString += textUtil.buildTextTable(
@@ -445,30 +448,25 @@ export function basicsText(patient, data, stats) {
     );
   }
 
-  const siteChangeSource = getSiteChangeSource(patient, manufacturer);
-  sections.siteChanges.disabled = siteChangeSource === SITE_CHANGE_TYPE_UNDECLARED;
-
-  if (!sections.siteChanges.disabled) {
-    sections.siteChanges.subTitle = getSiteChangeSourceLabel(siteChangeSource, manufacturer);
-
+  if (!aggregations.siteChanges.disabled) {
     const siteChanges = getSiteChangesTableData(
       _.get(aggregationsByDate, 'siteChanges.byDate', {}),
-      siteChangeSource,
+      aggregations.siteChanges.source,
     );
 
     basicsString += textUtil.buildTextTable(
-      `${sections.siteChanges.title} from '${sections.siteChanges.subTitle}'`,
+      `${aggregations.siteChanges.title} from '${aggregations.siteChanges.subTitle}'`,
       siteChanges.rows,
       siteChanges.columns,
       { showHeader: false }
     );
   }
 
-  if (!sections.basals.disabled) {
+  if (!aggregations.basals.disabled) {
     const basals = getSummaryTableData(
-      sections.basals.dimensions,
+      aggregations.basals.dimensions,
       aggregationsByDate.basals,
-      sections.basals.summaryTitle
+      aggregations.basals.summaryTitle
     );
 
     basicsString += textUtil.buildTextTable(
