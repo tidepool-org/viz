@@ -296,10 +296,10 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
  * @returns {Object} Map of objects keyed by date
  */
 export function findBasicsDays(range, timezone = 'UTC') {
-  let currentDate = new Date(range[0]);
   const days = [];
-  const dateOfUpload = moment.utc(Date.parse(range[1])).tz(timezone).format('YYYY-MM-DD');
-  while (currentDate < moment.utc(Date.parse(range[1])).tz(timezone).endOf('isoWeek')) {
+  let currentDate = moment.utc(range[0]).tz(timezone).toDate();
+  const dateOfUpload = moment.utc(range[1]).tz(timezone).format('YYYY-MM-DD');
+  while (currentDate < moment.utc(range[1]).tz(timezone).endOf('isoWeek')) {
     const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
     const dateObj = { date };
     if (date < dateOfUpload) {
