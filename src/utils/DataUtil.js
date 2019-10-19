@@ -742,9 +742,17 @@ export class DataUtil {
       bgUnits = MGDL_UNITS,
     } = bgPrefs;
 
+    // bgClasses required for legacy tideline charts until we deprecate them
+    _.defaults(bgClasses, {
+      'very-low': { boundary: DEFAULT_BG_BOUNDS[bgUnits].veryLowThreshold },
+      low: { boundary: DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound },
+      target: { boundary: DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound },
+      high: { boundary: DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold },
+    });
+
     this.bgPrefs = {
       bgBounds,
-      bgClasses, // Required for legacy tideline charts until we deprecate them
+      bgClasses,
       bgUnits,
     };
   };
