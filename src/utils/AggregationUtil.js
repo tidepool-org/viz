@@ -334,13 +334,18 @@ export class AggregationUtil {
     _.each(data, dataForDay => {
       const {
         value: {
+          dataList,
           cannulaPrime,
           reservoirChange,
           tubingPrime,
         },
       } = dataForDay;
 
+      const datums = _.sortBy(dataList, this.dataUtil.activeTimeField);
+      _.each(datums, this.dataUtil.normalizeDatumOut);
+
       processedData[dataForDay.key] = {
+        data: datums,
         summary: {
           daysSince: {},
         },
