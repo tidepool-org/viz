@@ -104,12 +104,12 @@ export function defineBasicsAggregations(bgPrefs, manufacturer) {
         summaryTitle = t('Avg boluses / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
-          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true },
-          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true },
-          { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true },
-          { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true },
-          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true },
-          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true },
+          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
+          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true, selectorIndex: 1 },
+          { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true, selectorIndex: 3 },
+          { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 4 },
+          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
+          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 5 },
         ];
         break;
 
@@ -217,6 +217,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
   const aggregationData = _.cloneDeep(data);
 
   aggregations.siteChanges.source = getSiteChangeSource(patient, manufacturer);
+  aggregations.siteChanges.manufacturer = manufacturer;
   aggregations.siteChanges.disabled = aggregations.siteChanges.source === SITE_CHANGE_TYPE_UNDECLARED;
 
   const hasDataInRange = processedData => (
