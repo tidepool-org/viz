@@ -778,12 +778,12 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    if (bgSource) this.setBgSources(bgSource);
-    if (types) this.setTypes(types);
+    this.setBgSources(bgSource);
+    this.setTypes(types);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
     if (timePrefs) this.setTimePrefs(timePrefs);
-    if (endpoints) this.setEndpoints(endpoints);
-    if (activeDays) this.setActiveDays(activeDays);
+    this.setEndpoints(endpoints);
+    this.setActiveDays(activeDays);
 
     const data = {};
 
