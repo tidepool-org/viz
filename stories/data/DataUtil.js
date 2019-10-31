@@ -114,11 +114,20 @@ stories.add('Query Generator', () => {
     step: 1,
   };
 
+  const daysInSurroundingRangeOptions = {
+    range: true,
+    min: 0,
+    max: 28,
+    step: 1,
+  };
+
   const noneOption = {
     None: 'None',
   };
 
-  const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_DATES);
+  const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_DATES);
+  const getNextDays = () => number('Days in Next Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
+  const getPrevDays = () => number('Days in Prev Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
 
   const commonFields = {
     annotations: 'annotations',
@@ -449,6 +458,8 @@ stories.add('Query Generator', () => {
     timePrefs,
     bgPrefs: getBGPrefs(),
     bgSource: getBGSource(),
+    nextDays: getNextDays(),
+    prevDays: getPrevDays(),
     stats: getStats(),
     aggregationsByDate: getAggregationsByDate(),
     metaData: getMetaData(),

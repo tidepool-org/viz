@@ -625,7 +625,7 @@ export class DataUtil {
     this.endTimer('setMetaData');
   };
 
-  setEndpoints = endpoints => {
+  setEndpoints = (endpoints, nextDays = 0, prevDays = 0) => {
     this.endpoints = {
       current: { range: [0, Infinity] },
     };
@@ -638,23 +638,27 @@ export class DataUtil {
         activeDays: days,
       };
 
-      this.endpoints.next = {
-        range: [
-          this.endpoints.current.range[1],
-          moment.utc(endpoints[1]).add(this.endpoints.current.days, 'days').valueOf(),
-        ],
-        days,
-        activeDays: days,
-      };
+      if (nextDays > 0) {
+        this.endpoints.next = {
+          range: [
+            this.endpoints.current.range[1],
+            moment.utc(endpoints[1]).add(nextDays, 'days').valueOf(),
+          ],
+          days: nextDays,
+          activeDays: nextDays,
+        };
+      }
 
-      this.endpoints.prev = {
-        range: [
-          moment.utc(endpoints[0]).subtract(this.endpoints.current.days, 'days').valueOf(),
-          this.endpoints.current.range[0],
-        ],
-        days,
-        activeDays: days,
-      };
+      if (prevDays > 0) {
+        this.endpoints.prev = {
+          range: [
+            moment.utc(endpoints[0]).subtract(prevDays, 'days').valueOf(),
+            this.endpoints.current.range[0],
+          ],
+          days: prevDays,
+          activeDays: prevDays,
+        };
+      }
     }
   };
 
@@ -767,6 +771,8 @@ export class DataUtil {
       endpoints,
       fillData,
       metaData,
+      nextDays,
+      prevDays,
       stats,
       timePrefs,
       types,
@@ -782,7 +788,7 @@ export class DataUtil {
     this.setTypes(types);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
     if (timePrefs) this.setTimePrefs(timePrefs);
-    this.setEndpoints(endpoints);
+    this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
 
     const data = {};
