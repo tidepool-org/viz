@@ -901,7 +901,12 @@ export class DataUtil {
     const duration = fillHours * MS_IN_HOUR;
 
     const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
-    const end = start + this.activeEndpoints.days * MS_IN_DAY;
+
+    const end = moment.utc(start).tz(timezone)
+      .add(this.activeEndpoints.days, 'days')
+      .endOf('day')
+      .valueOf();
+
     const hourlyStarts = utcHour.range(start, end);
 
     const fillData = [];
