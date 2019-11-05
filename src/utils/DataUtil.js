@@ -762,6 +762,8 @@ export class DataUtil {
   };
 
   query = (query = {}) => {
+    this.log('Query', query);
+
     this.startTimer('query total');
     const {
       activeDays,
@@ -837,7 +839,7 @@ export class DataUtil {
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    this.log('Query, Result', query, result, this);
+    this.log('Result', result);
 
     return result;
   };
