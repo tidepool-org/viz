@@ -77,7 +77,7 @@ const validTypes = [
 ];
 
 const common = {
-  deviceId: { type: 'string' },
+  deviceId: { type: 'string', ...optional },
   deviceTime: { type: 'string', pattern: patterns.deviceTime, ...optional },
   id: { type: 'string', pattern: patterns.id },
   time: ISODateSince2008,
