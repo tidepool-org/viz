@@ -72,7 +72,7 @@ export class DataUtil {
     this.endTimer('init total');
   };
 
-  addData = rawData => {
+  addData = (rawData, returnData = false) => {
     this.startTimer('addData');
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
@@ -100,7 +100,7 @@ export class DataUtil {
     this.setMetaData();
     this.endTimer('addData');
 
-    return {
+    const result = {
       metaData: this.getMetaData([
         'bgSources',
         'latestDatumByType',
@@ -108,6 +108,13 @@ export class DataUtil {
         'size',
       ]),
     };
+
+    if (returnData) {
+      _.each(validData, d => this.normalizeDatumOut(d, '*'));
+      result.data = validData;
+    }
+
+    return result;
   };
 
   /* eslint-disable no-param-reassign */
@@ -613,9 +620,9 @@ export class DataUtil {
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
-    this.setBgPrefs();
+    if (!this.bgPrefs) this.setBgPrefs();
     this.setBgSources();
-    this.setTimePrefs();
+    if (!this.timePrefs) this.setTimePrefs();
     this.setEndpoints();
     this.setActiveDays();
     this.setTypes();
