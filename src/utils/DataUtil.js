@@ -835,6 +835,7 @@ export class DataUtil {
       data,
       timePrefs: this.timePrefs,
       bgPrefs: this.bgPrefs,
+      query,
     };
 
     if (metaData) result.metaData = this.getMetaData(metaData);
