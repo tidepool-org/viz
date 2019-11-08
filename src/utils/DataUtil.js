@@ -429,6 +429,13 @@ export class DataUtil {
 
     // Update the byTime dimension in case the time field was changed
     this.buildByTimeDimension();
+
+    const resultingDatum = _.cloneDeep(existingDatum);
+    this.normalizeDatumOut(resultingDatum, '*');
+
+    return {
+      datum: resultingDatum,
+    };
   };
 
   buildByDayOfWeekDimension = () => {
