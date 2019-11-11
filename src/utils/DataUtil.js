@@ -60,7 +60,7 @@ export class DataUtil {
     this.init(data);
   }
 
-  init = data => {
+  init = (data = []) => {
     this.startTimer('init total');
     this.data = crossfilter([]);
 
@@ -407,9 +407,21 @@ export class DataUtil {
 
   /* eslint-disable no-param-reassign */
   removeData = predicate => {
-    if (_.isPlainObject(predicate)) predicate = _.matches(predicate);
-    this.clearFilters();
-    this.data.remove(predicate);
+    if (predicate) {
+      this.log('Removing data where', predicate);
+      if (_.isPlainObject(predicate)) predicate = _.matches(predicate);
+      this.clearFilters();
+      this.data.remove(predicate);
+    } else {
+      this.log('Reinitializing');
+      delete this.bolusToWizardIdMap;
+      delete this.bolusDatumsByIdMap;
+      delete this.wizardDatumsByIdMap;
+      delete this.latestDatumByType;
+      delete this.bgPrefs;
+      delete this.timePrefs;
+      this.init();
+    }
   };
   /* eslint-enable no-param-reassign */
 
