@@ -248,9 +248,10 @@ class DailyPrintView extends PrintView {
 
     // Calculate the maximum BG yScale value
     this.bgScaleYLimit = _.min([this.data.bgRange[1], this.bgBounds.clampThreshold]);
-// this means that the max YLimit possible is the veryHighThreshold = 250
-// needs to clamp at 400 -- use clampThreshold
-// With my data I can't prove that when bgRange[1] is less than clampThreshold that the y-axis updates correctly
+    // this means that the max YLimit possible is the veryHighThreshold = 250
+    // needs to clamp at 400 -- use clampThreshold
+    // With my data I can't prove that when bgRange[1] is less than clampThreshold
+    // that the y-axis updates correctly
 
     dateChart.bgScale = scaleLinear() // eslint-disable-line no-param-reassign
       .domain([0, this.bgScaleYLimit])
