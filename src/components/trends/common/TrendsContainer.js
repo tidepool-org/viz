@@ -144,10 +144,11 @@ export class TrendsContainer extends PureComponent {
       [MMOLL_UNITS]: PropTypes.number.isRequired,
     }).isRequired,
     // data (crossfilter dimensions)
-    cbgByDate: PropTypes.object.isRequired,
-    cbgByDayOfWeek: PropTypes.object.isRequired,
-    smbgByDate: PropTypes.object.isRequired,
-    smbgByDayOfWeek: PropTypes.object.isRequired,
+    data: PropTypes.object.isRequired,
+    // cbgByDate: PropTypes.object.isRequired,
+    // cbgByDayOfWeek: PropTypes.object.isRequired,
+    // smbgByDate: PropTypes.object.isRequired,
+    // smbgByDayOfWeek: PropTypes.object.isRequired,
     // handlers
     markTrendsViewed: PropTypes.func.isRequired,
     onDatetimeLocationChange: PropTypes.func.isRequired,
@@ -317,8 +318,9 @@ export class TrendsContainer extends PureComponent {
 
   mountData(props = this.props) {
     // find BG domain (for yScale construction)
-    const { cbgByDate, cbgByDayOfWeek, smbgByDate, smbgByDayOfWeek } = props;
-    const allBg = cbgByDate.filterAll().top(Infinity).concat(smbgByDate.filterAll().top(Infinity));
+    const currentCbgData = _.sortBy(_.cloneDeep(_.get(props, 'data.data.current.data.cbg', [])), 'normalTime');
+    const currentSmbgData = _.sortBy(_.cloneDeep(_.get(props, 'data.data.current.data.smbg', [])), 'normalTime');
+    const allBg = [...currentCbgData, ...currentSmbgData];
     const bgDomain = extent(allBg, d => d.value);
 
     const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop } = props;
@@ -340,14 +342,10 @@ export class TrendsContainer extends PureComponent {
     const start = moment(end.toISOString()).tz(timezone).subtract(extentSize, 'days');
     const dateDomain = [start.toISOString(), end.toISOString()];
 
-    // filter data according to current activeDays and dateDomain
-    this.initialFiltering(cbgByDate, cbgByDayOfWeek, dateDomain);
-    this.initialFiltering(smbgByDate, smbgByDayOfWeek, dateDomain);
-
     const state = {
       bgDomain: { lo: bgDomain[0], hi: bgDomain[1] },
-      currentCbgData: cbgByDate.top(Infinity).reverse(),
-      currentSmbgData: smbgByDate.top(Infinity).reverse(),
+      currentCbgData,
+      currentSmbgData,
       dateDomain: { start: dateDomain[0], end: dateDomain[1] },
       mostRecent: mostRecent.toISOString(),
       xScale: scaleLinear().domain([0, 864e5]),
@@ -417,33 +415,36 @@ export class TrendsContainer extends PureComponent {
     this.setExtent(newDomain);
   }
 
-  refilterByDate(dataByDate, dateDomain) {
-    // eslint-disable-next-line lodash/prefer-lodash-method
-    dataByDate.filter(dateDomain);
-  }
+  // refilterByDate(dataByDate, dateDomain) {
+  //   // eslint-disable-next-line lodash/prefer-lodash-method
+  //   // TODO: update days showing via chartPrefs
+  //   // dataByDate.filter(dateDomain);
+  // }
 
-  refilterByDayOfWeek(dataByDayOfWeek, activeDays) {
-    dataByDayOfWeek.filterFunction(this.filterActiveDaysFn(activeDays));
-  }
+  // refilterByDayOfWeek(dataByDayOfWeek, activeDays) {
+  //   // TODO: update activeDays via chartPrefs
+  //   // dataByDayOfWeek.filterFunction(this.filterActiveDaysFn(activeDays));
+  // }
 
-  initialFiltering(dataByDate, dataByDayOfWeek, dateDomain) {
-    const { activeDays } = this.props;
-    // clear old filters
-    dataByDayOfWeek.filterAll();
+  // initialFiltering(dataByDate, dataByDayOfWeek, dateDomain) {
+  //   const { activeDays } = this.props;
+  //   // clear old filters
+  //   dataByDayOfWeek.filterAll();
 
-    // filter by day of week (Monday, Tuesday, etc.)
-    dataByDayOfWeek.filterFunction(this.filterActiveDaysFn(activeDays));
+  //   // filter by day of week (Monday, Tuesday, etc.)
+  //   dataByDayOfWeek.filterFunction(this.filterActiveDaysFn(activeDays));
 
-    // filter within date domain
-    // eslint-disable-next-line lodash/prefer-lodash-method
-    dataByDate.filter(dateDomain);
-  }
+  //   // filter within date domain
+  //   // eslint-disable-next-line lodash/prefer-lodash-method
+  //   dataByDate.filter(dateDomain);
+  // }
 
-  filterActiveDaysFn(activeDays) {
-    return (d) => (activeDays[d]);
-  }
+  // filterActiveDaysFn(activeDays) {
+  //   return (d) => (activeDays[d]);
+  // }
 
   determineDataToShow() {
+    // TODO: base off of bgSources.current?
     const { currentPatientInViewId, trendsState: { touched } } = this.props;
     if (touched) {
       return;
@@ -503,6 +504,7 @@ export class TrendsContainer extends PureComponent {
   }
 }
 
+// TODO: Is now the time to move this to local state?
 export function mapStateToProps(state, ownProps) {
   const userId = _.get(ownProps, 'currentPatientInViewId');
   return {
@@ -510,7 +512,7 @@ export function mapStateToProps(state, ownProps) {
   };
 }
 
-export function mapDispatchToProps(dispatch) {
+export function mapDispatchToProps(dispatch) { // TODO: Is now the time to move this to local state?
   return bindActionCreators({
     markTrendsViewed: actions.markTrendsViewed,
     unfocusCbgSlice: actions.unfocusTrendsCbgSlice,
