@@ -44,6 +44,8 @@ import {
   SMALL_FONT_SIZE,
 } from './utils/constants';
 
+import { BG_COLORS } from '../../utils/constants';
+
 const t = i18next.t.bind(i18next);
 
 const logo = require('./images/tidepool-logo-408x46.png');
@@ -86,19 +88,15 @@ class PrintView {
     };
 
     this.colors = {
+      ...BG_COLORS,
       basal: '#19A0D7',
-      basalHeader: '#DCF1F9',
       basalAutomated: '#00D3E6',
       bolus: '#7CD0F0',
-      bolusHeader: '#EBF7FC',
       smbg: '#6480FB',
-      smbgHeader: '#E8ECFE',
       siteChange: '#FCD144',
-      veryLow: '#FB5951',
-      low: '#FF8B7C',
-      target: '#76D3A6',
-      high: '#BB9AE7',
-      veryHigh: '#8C65D6',
+      basalHeader: '#DCF1F9',
+      smbgHeader: '#E8ECFE',
+      bolusHeader: '#EBF7FC',
       grey: '#6D6D6D',
       lightGrey: '#979797',
       darkGrey: '#4E4E4F',
