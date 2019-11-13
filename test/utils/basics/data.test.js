@@ -18,6 +18,7 @@
 /* eslint-disable max-len */
 
 import _ from 'lodash';
+import moment from 'moment';
 import { utcDay } from 'd3-time';
 import * as dataUtils from '../../../src/utils/basics/data';
 import Types from '../../../data/types';
@@ -1046,6 +1047,21 @@ describe('basics data utils', () => {
         textUtilStub.buildTextTable,
         'Infusion site changes from \'Fill Cannula\'',
         [{ label: 'Mean Duration', value: '5 days' }, { label: 'Longest Duration', value: '5 days' }],
+        [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
+      );
+    });
+
+    it('should round `Mean Duration` for site changes to 1 decimal place', () => {
+      const updatedData = _.cloneDeep(data);
+      updatedData.data.cannulaPrime.data[0].normalTime = moment.utc(updatedData.data.cannulaPrime.data[0].normalTime).add(2, 'days').toISOString();
+
+      expect(_.mean([3, 5, 5])).to.equal(4.333333333333333); // Instead of [5, 5, 5] for datum.daysSince values because we moved the first datum by 2 days
+
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, updatedData);
+      sinon.assert.calledWith(
+        textUtilStub.buildTextTable,
+        'Infusion site changes from \'Fill Cannula\'',
+        [{ label: 'Mean Duration', value: '4.3 days' }, { label: 'Longest Duration', value: '5 days' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );
     });
