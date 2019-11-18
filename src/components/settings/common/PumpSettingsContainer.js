@@ -30,7 +30,6 @@ export class PumpSettingsContainer extends PureComponent {
     manufacturerKey: PropTypes.oneOf(
       ['animas', 'carelink', 'insulet', 'medtronic', 'tandem']
     ).isRequired,
-    markSettingsViewed: PropTypes.func.isRequired,
     // see more specific schema in NonTandem and Tandem components!
     pumpSettings: PropTypes.shape({
       activeSchedule: PropTypes.string.isRequired,
@@ -44,7 +43,6 @@ export class PumpSettingsContainer extends PureComponent {
   }
 
   componentWillMount() {
-    const { markSettingsViewed } = this.props;
     const {
       manufacturerKey,
       pumpSettings: { activeSchedule, lastManualBasalSchedule },
@@ -53,7 +51,6 @@ export class PumpSettingsContainer extends PureComponent {
     } = this.props;
 
     if (!touched) {
-      markSettingsViewed();
       toggleSettingsSection(manufacturerKey, lastManualBasalSchedule || activeSchedule);
     }
   }
