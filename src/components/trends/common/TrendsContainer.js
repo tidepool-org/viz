@@ -22,10 +22,7 @@ import { scaleLinear } from 'd3-scale';
 import { utcDay } from 'd3-time';
 import moment from 'moment-timezone';
 import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
-import * as actions from '../../../redux/actions/';
 import TrendsSVGContainer from './TrendsSVGContainer';
 
 import {
@@ -130,6 +127,8 @@ export class TrendsContainer extends PureComponent {
     extentSize: PropTypes.oneOf([ONE_WEEK, TWO_WEEKS, FOUR_WEEKS]).isRequired,
     initialDatetimeLocation: PropTypes.string,
     loading: PropTypes.bool.isRequired,
+    mostRecentDatetimeLocation: PropTypes.string,
+    queryDataCount: PropTypes.number.isRequired,
     showingSmbg: PropTypes.bool.isRequired,
     showingCbg: PropTypes.bool.isRequired,
     smbgRangeOverlay: PropTypes.bool.isRequired,
@@ -143,101 +142,95 @@ export class TrendsContainer extends PureComponent {
       [MGDL_UNITS]: PropTypes.number.isRequired,
       [MMOLL_UNITS]: PropTypes.number.isRequired,
     }).isRequired,
-    // data (crossfilter dimensions)
+    // data
     data: PropTypes.object.isRequired,
-    // cbgByDate: PropTypes.object.isRequired,
-    // cbgByDayOfWeek: PropTypes.object.isRequired,
-    // smbgByDate: PropTypes.object.isRequired,
-    // smbgByDayOfWeek: PropTypes.object.isRequired,
     // handlers
     markTrendsViewed: PropTypes.func.isRequired,
     onDatetimeLocationChange: PropTypes.func.isRequired,
     onSelectDate: PropTypes.func.isRequired,
     onSwitchBgDataSource: PropTypes.func.isRequired,
     // viz state
-    trendsState: PropTypes.shape({
-      cbgFlags: PropTypes.shape({
-        cbg100Enabled: PropTypes.bool.isRequired,
-        cbg80Enabled: PropTypes.bool.isRequired,
-        cbg50Enabled: PropTypes.bool.isRequired,
-        cbgMedianEnabled: PropTypes.bool.isRequired,
-      }).isRequired,
-      focusedCbgSlice: PropTypes.shape({
-        data: PropTypes.shape({
+    cbgFlags: PropTypes.shape({
+      cbg100Enabled: PropTypes.bool.isRequired,
+      cbg80Enabled: PropTypes.bool.isRequired,
+      cbg50Enabled: PropTypes.bool.isRequired,
+      cbgMedianEnabled: PropTypes.bool.isRequired,
+    }).isRequired,
+    focusedCbgSlice: PropTypes.shape({
+      data: PropTypes.shape({
+        firstQuartile: PropTypes.number.isRequired,
+        id: PropTypes.string.isRequired,
+        max: PropTypes.number.isRequired,
+        median: PropTypes.number.isRequired,
+        min: PropTypes.number.isRequired,
+        msFrom: PropTypes.number.isRequired,
+        msTo: PropTypes.number.isRequired,
+        msX: PropTypes.number.isRequired,
+        ninetiethQuantile: PropTypes.number.isRequired,
+        tenthQuantile: PropTypes.number.isRequired,
+        thirdQuartile: PropTypes.number.isRequired,
+      }),
+      position: PropTypes.shape({
+        left: PropTypes.number.isRequired,
+        tooltipLeft: PropTypes.bool.isRequired,
+        topOptions: PropTypes.shape({
           firstQuartile: PropTypes.number.isRequired,
-          id: PropTypes.string.isRequired,
           max: PropTypes.number.isRequired,
           median: PropTypes.number.isRequired,
           min: PropTypes.number.isRequired,
-          msFrom: PropTypes.number.isRequired,
-          msTo: PropTypes.number.isRequired,
-          msX: PropTypes.number.isRequired,
           ninetiethQuantile: PropTypes.number.isRequired,
           tenthQuantile: PropTypes.number.isRequired,
           thirdQuartile: PropTypes.number.isRequired,
         }),
-        position: PropTypes.shape({
-          left: PropTypes.number.isRequired,
-          tooltipLeft: PropTypes.bool.isRequired,
-          topOptions: PropTypes.shape({
-            firstQuartile: PropTypes.number.isRequired,
-            max: PropTypes.number.isRequired,
-            median: PropTypes.number.isRequired,
-            min: PropTypes.number.isRequired,
-            ninetiethQuantile: PropTypes.number.isRequired,
-            tenthQuantile: PropTypes.number.isRequired,
-            thirdQuartile: PropTypes.number.isRequired,
-          }),
-        }),
       }),
-      focusedCbgSliceKeys: PropTypes.arrayOf(PropTypes.oneOf([
-        'firstQuartile',
-        'max',
-        'median',
-        'min',
-        'ninetiethQuantile',
-        'tenthQuantile',
-        'thirdQuartile',
-      ])),
-      focusedSmbg: PropTypes.shape({
-        allPositions: PropTypes.arrayOf(PropTypes.shape({
-          top: PropTypes.number.isRequired,
-          left: PropTypes.number.isRequired,
-        })),
-        allSmbgsOnDate: PropTypes.arrayOf(PropTypes.shape({
-          value: PropTypes.number.isRequired,
-        })),
-        date: PropTypes.string.isRequired,
-        datum: PropTypes.shape({
-          value: PropTypes.number.isRequired,
-        }),
-        position: PropTypes.shape({
-          top: PropTypes.number.isRequired,
-          left: PropTypes.number.isRequired,
-        }),
+    }),
+    focusedCbgSliceKeys: PropTypes.arrayOf(PropTypes.oneOf([
+      'firstQuartile',
+      'max',
+      'median',
+      'min',
+      'ninetiethQuantile',
+      'tenthQuantile',
+      'thirdQuartile',
+    ])),
+    focusedSmbg: PropTypes.shape({
+      allPositions: PropTypes.arrayOf(PropTypes.shape({
+        top: PropTypes.number.isRequired,
+        left: PropTypes.number.isRequired,
+      })),
+      allSmbgsOnDate: PropTypes.arrayOf(PropTypes.shape({
+        value: PropTypes.number.isRequired,
+      })),
+      date: PropTypes.string.isRequired,
+      datum: PropTypes.shape({
+        value: PropTypes.number.isRequired,
       }),
-      focusedSmbgRangeAvg: PropTypes.shape({
-        data: PropTypes.shape({
-          id: PropTypes.string.isRequired,
+      position: PropTypes.shape({
+        top: PropTypes.number.isRequired,
+        left: PropTypes.number.isRequired,
+      }),
+    }),
+    focusedSmbgRangeAvg: PropTypes.shape({
+      data: PropTypes.shape({
+        id: PropTypes.string.isRequired,
+        max: PropTypes.number.isRequired,
+        mean: PropTypes.number.isRequired,
+        min: PropTypes.number.isRequired,
+        msX: PropTypes.number.isRequired,
+        msFrom: PropTypes.number.isRequired,
+        msTo: PropTypes.number.isRequired,
+      }).isRequired,
+      position: PropTypes.shape({
+        left: PropTypes.number.isRequired,
+        tooltipLeft: PropTypes.bool.isRequired,
+        yPositions: PropTypes.shape({
           max: PropTypes.number.isRequired,
           mean: PropTypes.number.isRequired,
           min: PropTypes.number.isRequired,
-          msX: PropTypes.number.isRequired,
-          msFrom: PropTypes.number.isRequired,
-          msTo: PropTypes.number.isRequired,
         }).isRequired,
-        position: PropTypes.shape({
-          left: PropTypes.number.isRequired,
-          tooltipLeft: PropTypes.bool.isRequired,
-          yPositions: PropTypes.shape({
-            max: PropTypes.number.isRequired,
-            mean: PropTypes.number.isRequired,
-            min: PropTypes.number.isRequired,
-          }).isRequired,
-        }).isRequired,
-      }),
-      touched: PropTypes.bool.isRequired,
-    }).isRequired,
+      }).isRequired,
+    }),
+    touched: PropTypes.bool.isRequired,
     unfocusCbgSlice: PropTypes.func.isRequired,
     unfocusSmbg: PropTypes.func.isRequired,
     unfocusSmbgRangeAvg: PropTypes.func.isRequired,
@@ -280,53 +273,45 @@ export class TrendsContainer extends PureComponent {
    * as a temporary compatibility interface
    */
   componentWillReceiveProps(nextProps) {
-    const newDataLoaded = this.props.loading && !nextProps.loading;
+    const loadingJustCompleted = this.props.loading && !nextProps.loading;
+    const newDataRecieved = this.props.queryDataCount !== nextProps.queryDataCount;
 
-    if (newDataLoaded) {
+    if (loadingJustCompleted || newDataRecieved) {
       this.mountData(nextProps);
-    }
-
-    if (!_.isEqual(nextProps.activeDays, this.props.activeDays)) {
-      const { cbgByDayOfWeek, smbgByDayOfWeek, smbgByDate, cbgByDate } = nextProps;
-      this.refilterByDayOfWeek(cbgByDayOfWeek, nextProps.activeDays);
-      this.refilterByDayOfWeek(smbgByDayOfWeek, nextProps.activeDays);
-      this.setState({
-        currentCbgData: cbgByDate.top(Infinity).reverse(),
-        currentSmbgData: smbgByDate.top(Infinity).reverse(),
-      });
     }
   }
 
   componentWillUnmount() {
     const {
       currentPatientInViewId,
-      trendsState,
+      focusedCbgSlice,
+      focusedSmbg,
+      focusedSmbgRangeAvg,
       unfocusCbgSlice,
       unfocusSmbg,
       unfocusSmbgRangeAvg,
     } = this.props;
-    if (_.get(trendsState, 'focusedCbgSlice') !== null) {
+    if (focusedCbgSlice !== null) {
       unfocusCbgSlice(currentPatientInViewId);
     }
-    if (_.get(trendsState, 'focusedSmbg') !== null) {
+    if (focusedSmbg !== null) {
       unfocusSmbg(currentPatientInViewId);
     }
-    if (_.get(trendsState, 'focusedSmbgRangeAvg') !== null) {
+    if (focusedSmbgRangeAvg !== null) {
       unfocusSmbgRangeAvg(currentPatientInViewId);
     }
   }
 
   mountData(props = this.props) {
-    // find BG domain (for yScale construction)
-    const currentCbgData = _.sortBy(_.cloneDeep(_.get(props, 'data.data.current.data.cbg', [])), 'normalTime');
-    const currentSmbgData = _.sortBy(_.cloneDeep(_.get(props, 'data.data.current.data.smbg', [])), 'normalTime');
-    const allBg = [...currentCbgData, ...currentSmbgData];
+    const allBg = _.sortBy(_.cloneDeep(_.get(props, 'data.data.combined', [])), 'normalTime');
     const bgDomain = extent(allBg, d => d.value);
+    const currentCbgData = _.filter(allBg, { type: 'cbg' });
+    const currentSmbgData = _.filter(allBg, { type: 'smbg' });
 
-    const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop } = props;
+    const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop, mostRecentDatetimeLocation } = props;
     const upperBound = yScaleClampTop[bgUnits];
     const yScaleDomain = [bgDomain[0], upperBound];
-    if (bgDomain[0] > bgBounds.veryLowThreshold) {
+    if (!bgDomain[0] || bgDomain[0] > bgBounds.veryLowThreshold) {
       yScaleDomain[0] = bgBounds.veryLowThreshold;
     }
     const yScale = scaleLinear().domain(yScaleDomain).clamp(true);
@@ -334,26 +319,25 @@ export class TrendsContainer extends PureComponent {
     // find initial date domain (based on initialDatetimeLocation or current time)
     const { extentSize, initialDatetimeLocation, timePrefs } = props;
     const timezone = datetime.getTimezoneFromTimePrefs(timePrefs);
-    const mostRecent = datetime.getLocalizedCeiling(new Date().valueOf(), timePrefs);
     const end = initialDatetimeLocation
-      ? datetime.getLocalizedCeiling(initialDatetimeLocation, timePrefs)
-      : mostRecent;
+      ? datetime.getLocalizedCeiling(initialDatetimeLocation, timePrefs).toISOString()
+      : mostRecentDatetimeLocation;
 
-    const start = moment(end.toISOString()).tz(timezone).subtract(extentSize, 'days');
-    const dateDomain = [start.toISOString(), end.toISOString()];
+    const start = moment(end).tz(timezone).subtract(extentSize, 'days').toISOString();
+    const dateDomain = [start, end];
 
     const state = {
       bgDomain: { lo: bgDomain[0], hi: bgDomain[1] },
       currentCbgData,
       currentSmbgData,
       dateDomain: { start: dateDomain[0], end: dateDomain[1] },
-      mostRecent: mostRecent.toISOString(),
+      mostRecent: mostRecentDatetimeLocation,
       xScale: scaleLinear().domain([0, 864e5]),
       yScale,
     };
 
     this.setState(state, this.determineDataToShow);
-    props.onDatetimeLocationChange(dateDomain, end === mostRecent);
+    props.onDatetimeLocationChange(dateDomain);
   }
 
   getCurrentDay() {
@@ -361,20 +345,8 @@ export class TrendsContainer extends PureComponent {
     return getLocalizedNoonBeforeUTC(end, this.props.timePrefs).toISOString();
   }
 
-  setExtent(newDomain, oldDomain) {
-    const { cbgByDate, smbgByDate } = this.props;
-    const { mostRecent } = this.state;
-    this.refilterByDate(cbgByDate, newDomain);
-    this.refilterByDate(smbgByDate, newDomain);
-    this.setState({
-      currentCbgData: cbgByDate.top(Infinity).reverse(),
-      currentSmbgData: smbgByDate.top(Infinity).reverse(),
-      dateDomain: { start: newDomain[0], end: newDomain[1] },
-      previousDateDomain: oldDomain ?
-        { start: oldDomain[0], end: oldDomain[1] } :
-        null,
-    });
-    this.props.onDatetimeLocationChange(newDomain, newDomain[1] >= mostRecent);
+  setExtent(newDomain) {
+    this.props.onDatetimeLocationChange(newDomain);
   }
 
   selectDate() {
@@ -389,7 +361,6 @@ export class TrendsContainer extends PureComponent {
   }
 
   goBack() {
-    const oldDomain = _.clone(this.state.dateDomain);
     const { dateDomain: { start: newEnd } } = this.state;
     const start = getLocalizedOffset(newEnd, {
       // negative because we are moving backward in time
@@ -397,15 +368,14 @@ export class TrendsContainer extends PureComponent {
       units: 'days',
     }, this.props.timePrefs).toISOString();
     const newDomain = [start, newEnd];
-    this.setExtent(newDomain, [oldDomain.start, oldDomain.end]);
+    this.setExtent(newDomain);
   }
 
   goForward() {
-    const oldDomain = _.clone(this.state.dateDomain);
     const { dateDomain: { end: newStart } } = this.state;
     const end = utcDay.offset(new Date(newStart), this.props.extentSize).toISOString();
     const newDomain = [newStart, end];
-    this.setExtent(newDomain, [oldDomain.start, oldDomain.end]);
+    this.setExtent(newDomain);
   }
 
   goToMostRecent() {
@@ -415,37 +385,8 @@ export class TrendsContainer extends PureComponent {
     this.setExtent(newDomain);
   }
 
-  // refilterByDate(dataByDate, dateDomain) {
-  //   // eslint-disable-next-line lodash/prefer-lodash-method
-  //   // TODO: update days showing via chartPrefs
-  //   // dataByDate.filter(dateDomain);
-  // }
-
-  // refilterByDayOfWeek(dataByDayOfWeek, activeDays) {
-  //   // TODO: update activeDays via chartPrefs
-  //   // dataByDayOfWeek.filterFunction(this.filterActiveDaysFn(activeDays));
-  // }
-
-  // initialFiltering(dataByDate, dataByDayOfWeek, dateDomain) {
-  //   const { activeDays } = this.props;
-  //   // clear old filters
-  //   dataByDayOfWeek.filterAll();
-
-  //   // filter by day of week (Monday, Tuesday, etc.)
-  //   dataByDayOfWeek.filterFunction(this.filterActiveDaysFn(activeDays));
-
-  //   // filter within date domain
-  //   // eslint-disable-next-line lodash/prefer-lodash-method
-  //   dataByDate.filter(dateDomain);
-  // }
-
-  // filterActiveDaysFn(activeDays) {
-  //   return (d) => (activeDays[d]);
-  // }
-
   determineDataToShow() {
-    // TODO: base off of bgSources.current?
-    const { currentPatientInViewId, trendsState: { touched } } = this.props;
+    const { currentPatientInViewId, touched } = this.props;
     if (touched) {
       return;
     }
@@ -481,17 +422,13 @@ export class TrendsContainer extends PureComponent {
         smbgData={this.state.currentSmbgData}
         cbgData={this.state.currentCbgData}
         dates={getAllDatesInRange(start, end, this.props.timePrefs)}
-        focusedSlice={this.props.trendsState.focusedCbgSlice}
-        focusedSliceKeys={this.props.trendsState.focusedCbgSliceKeys}
-        focusedSmbgRangeAvgKey={_.get(
-          this.props, ['trendsState', 'focusedSmbgRangeAvg', 'data', 'id'], null
-        )}
-        focusedSmbg={this.props.trendsState.focusedSmbg}
-        displayFlags={this.props.trendsState.cbgFlags}
+        focusedSlice={this.props.focusedCbgSlice}
+        focusedSliceKeys={this.props.focusedCbgSliceKeys}
+        focusedSmbgRangeAvgKey={this.props.focusedSmbgRangeAvg}
+        focusedSmbg={this.props.focusedSmbg}
+        displayFlags={this.props.cbgFlags}
         showingCbg={this.props.showingCbg}
-        showingCbgDateTraces={_.get(
-          this.props, ['trendsState', 'showingCbgDateTraces'], false
-        )}
+        showingCbgDateTraces={this.props.showingCbgDateTraces}
         showingSmbg={this.props.showingSmbg}
         smbgGrouped={this.props.smbgGrouped}
         smbgLines={this.props.smbgLines}
@@ -504,26 +441,4 @@ export class TrendsContainer extends PureComponent {
   }
 }
 
-// TODO: Is now the time to move this to local state?
-export function mapStateToProps(state, ownProps) {
-  const userId = _.get(ownProps, 'currentPatientInViewId');
-  return {
-    trendsState: _.get(state, ['viz', 'trends', userId], {}),
-  };
-}
-
-export function mapDispatchToProps(dispatch) { // TODO: Is now the time to move this to local state?
-  return bindActionCreators({
-    markTrendsViewed: actions.markTrendsViewed,
-    unfocusCbgSlice: actions.unfocusTrendsCbgSlice,
-    unfocusSmbg: actions.unfocusTrendsSmbg,
-    unfocusSmbgRangeAvg: actions.unfocusTrendsSmbgRangeAvg,
-  }, dispatch);
-}
-
-export default connect(
-  mapStateToProps,
-  mapDispatchToProps,
-  (stateProps, dispatchProps, ownProps) => (_.assign({}, ownProps, stateProps, dispatchProps)),
-  { withRef: true },
-)(TrendsContainer);
+export default TrendsContainer;

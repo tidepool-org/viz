@@ -32,7 +32,7 @@ const NoData = (props) => {
   const {
     dataType,
     displayTypes,
-    position,
+    position = {},
     unselectedAllData,
     unselectedAllDataString,
   } = props;
@@ -43,7 +43,7 @@ const NoData = (props) => {
       : t('There is no {{displayType}} data for this time period :(', { displayType })
   );
 
-  if (!position) {
+  if (!position.x || !position.y) {
     return null;
   }
 
@@ -65,7 +65,6 @@ NoData.defaultProps = {
 };
 
 NoData.propTypes = {
-  messageString: PropTypes.string.isRequired,
   dataType: React.PropTypes.oneOf(['cbg', 'smbg']).isRequired,
   displayTypes: PropTypes.object.isRequired,
   position: PropTypes.shape({
