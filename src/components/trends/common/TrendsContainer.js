@@ -281,27 +281,6 @@ export class TrendsContainer extends PureComponent {
     }
   }
 
-  componentWillUnmount() {
-    const {
-      currentPatientInViewId,
-      focusedCbgSlice,
-      focusedSmbg,
-      focusedSmbgRangeAvg,
-      unfocusCbgSlice,
-      unfocusSmbg,
-      unfocusSmbgRangeAvg,
-    } = this.props;
-    if (focusedCbgSlice !== null) {
-      unfocusCbgSlice(currentPatientInViewId);
-    }
-    if (focusedSmbg !== null) {
-      unfocusSmbg(currentPatientInViewId);
-    }
-    if (focusedSmbgRangeAvg !== null) {
-      unfocusSmbgRangeAvg(currentPatientInViewId);
-    }
-  }
-
   mountData(props = this.props) {
     const allBg = _.sortBy(_.cloneDeep(_.get(props, 'data.data.combined', [])), 'normalTime');
     const bgDomain = extent(allBg, d => d.value);
@@ -386,7 +365,7 @@ export class TrendsContainer extends PureComponent {
   }
 
   determineDataToShow() {
-    const { currentPatientInViewId, touched } = this.props;
+    const { touched } = this.props;
     if (touched) {
       return;
     }
@@ -399,7 +378,7 @@ export class TrendsContainer extends PureComponent {
     if (showingCbg && weightedCGMCount(currentCbgData) < minimumCbgs && currentSmbgData.length) {
       this.props.onSwitchBgDataSource(null, showingCbg ? BGM_DATA_KEY : CGM_DATA_KEY);
     }
-    this.props.markTrendsViewed(currentPatientInViewId);
+    this.props.markTrendsViewed();
   }
 
   render() {
