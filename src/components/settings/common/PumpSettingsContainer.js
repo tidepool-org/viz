@@ -18,9 +18,7 @@
 import _ from 'lodash';
 import React, { PropTypes, PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
-import * as actions from '../../../redux/actions/';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
 import NonTandem from '../NonTandem';
 import Tandem from '../Tandem';
@@ -117,23 +115,10 @@ export function mapStateToProps(state, ownProps) {
     {},
   );
   return {
-    settingsState: _.get(state, ['viz', 'settings', userId], {}),
     user,
   };
 }
 
-export function mapDispatchToProps(dispatch, ownProps) {
-  return bindActionCreators({
-    markSettingsViewed: _.partial(
-      actions.markSettingsViewed, ownProps.currentPatientInViewId
-    ),
-    toggleSettingsSection: _.partial(
-      actions.toggleSettingsSection, ownProps.currentPatientInViewId
-    ),
-  }, dispatch);
-}
-
 export default connect(
   mapStateToProps,
-  mapDispatchToProps,
 )(PumpSettingsContainer);
