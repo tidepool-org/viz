@@ -28,8 +28,6 @@
 //   this style also applies when a single smbg is focused
 
 import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 import { TransitionMotion, spring } from 'react-motion';
 import { line } from 'd3-shape';
 import _ from 'lodash';
@@ -38,8 +36,6 @@ import cx from 'classnames';
 import { springConfig } from '../../../utils/constants';
 import { THREE_HRS } from '../../../utils/datetime';
 import { findBinForTimeOfDay } from '../../../utils/trends/data';
-
-import { focusTrendsSmbg, unfocusTrendsSmbg } from '../../../redux/actions/trends';
 
 import styles from './SMBGDateLineAnimated.css';
 
@@ -58,13 +54,12 @@ export class SMBGDateLineAnimated extends PureComponent {
     })).isRequired,
     date: PropTypes.string.isRequired,
     focusedDay: PropTypes.string.isRequired,
-    focusLine: PropTypes.func.isRequired,
+    focusSmbg: PropTypes.func.isRequired,
     grouped: PropTypes.bool.isRequired,
     onSelectDate: PropTypes.func.isRequired,
     nonInteractive: PropTypes.bool,
     tooltipLeftThreshold: PropTypes.number.isRequired,
-    unfocusLine: PropTypes.func.isRequired,
-    userId: PropTypes.string.isRequired,
+    unfocusSmbg: PropTypes.func.isRequired,
     xScale: PropTypes.func.isRequired,
     yScale: PropTypes.func.isRequired,
   };
@@ -141,14 +136,14 @@ export class SMBGDateLineAnimated extends PureComponent {
   }
 
   handleMouseOut() {
-    const { unfocusLine, userId } = this.props;
-    unfocusLine(userId);
+    const { unfocusSmbg } = this.props;
+    unfocusSmbg();
   }
 
   handleMouseOver() {
-    const { data, date, focusLine, userId } = this.props;
+    const { data, date, focusSmbg } = this.props;
     const positions = this.getPositions();
-    focusLine(userId, data[0], positions[0], data, positions, date);
+    focusSmbg(data[0], positions[0], data, positions, date);
   }
 
   willEnter(entered) {
@@ -215,18 +210,4 @@ export class SMBGDateLineAnimated extends PureComponent {
   }
 }
 
-export function mapStateToProps(state) {
-  const { blip: { currentPatientInViewId } } = state;
-  return {
-    userId: currentPatientInViewId,
-  };
-}
-
-export function mapDispatchToProps(dispatch) {
-  return bindActionCreators({
-    focusLine: focusTrendsSmbg,
-    unfocusLine: unfocusTrendsSmbg,
-  }, dispatch);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(SMBGDateLineAnimated);
+export default SMBGDateLineAnimated;

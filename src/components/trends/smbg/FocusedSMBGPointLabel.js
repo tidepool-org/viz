@@ -135,10 +135,10 @@ FocusedSMBGPointLabel.propTypes = {
     })),
     date: PropTypes.string.isRequired,
     datum: PropTypes.shape({
-      deviceTime: PropTypes.string,
+      deviceTime: PropTypes.number,
       msPer24: PropTypes.number.isRequired,
       subType: PropTypes.string,
-      time: PropTypes.string,
+      time: PropTypes.number,
       value: PropTypes.number.isRequired,
     }),
     position: PropTypes.shape({

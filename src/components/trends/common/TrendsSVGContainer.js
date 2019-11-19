@@ -166,6 +166,8 @@ export class TrendsSVGContainer extends PureComponent {
       <SMBGRangeAvgContainer
         bgBounds={this.props.bgPrefs.bgBounds}
         data={data}
+        focusSmbgRange={this.props.focusSmbgRange}
+        unfocusSmbgRange={this.props.unfocusSmbgRange}
         key={componentKey}
         smbgComponent={smbgComponent}
         someSmbgDataIsFocused={this.props.focusedSmbg !== null}
@@ -233,10 +235,12 @@ export class TrendsSVGContainer extends PureComponent {
     if (this.props.showingSmbg) {
       const allSmbgsByDate = (
         <SMBGsByDateContainer
-          anSmbgRangeAvgIsFocused={this.props.focusedSmbgRangeAvgKey !== null}
+          anSmbgRangeAvgIsFocused={this.props.focusedSmbgRangeAvg !== null}
           bgBounds={this.props.bgPrefs.bgBounds}
           data={this.props.smbgData}
           dates={this.props.dates}
+          focusSmbg={this.props.focusSmbg}
+          unfocusSmbg={this.props.unfocusSmbg}
           grouped={this.props.smbgGrouped}
           key="smbgDaysContainer"
           lines={this.props.smbgLines}
@@ -257,6 +261,8 @@ export class TrendsSVGContainer extends PureComponent {
           bgBounds={this.props.bgPrefs.bgBounds}
           data={this.props.focusedSmbg.allSmbgsOnDate}
           dates={[this.props.focusedSmbg.date]}
+          focusSmbg={this.props.focusSmbg}
+          unfocusSmbg={this.props.unfocusSmbg}
           focusedSmbg={this.props.focusedSmbg}
           grouped={this.props.smbgGrouped}
           key="focusedSmbgDayContainer"
@@ -377,6 +383,10 @@ TrendsSVGContainer.propTypes = {
     cbg50Enabled: PropTypes.bool.isRequired,
     cbgMedianEnabled: PropTypes.bool.isRequired,
   }).isRequired,
+  focusSmbg: PropTypes.func.isRequired,
+  unfocusSmbg: PropTypes.func.isRequired,
+  focusSmbgRange: PropTypes.func.isRequired,
+  unfocusSmbgRange: PropTypes.func.isRequired,
   focusedSlice: PropTypes.shape({
     data: PropTypes.shape({
       firstQuartile: PropTypes.number.isRequired,
@@ -427,7 +437,26 @@ TrendsSVGContainer.propTypes = {
       left: PropTypes.number.isRequired,
     }),
   }),
-  focusedSmbgRangeAvgKey: PropTypes.string,
+  focusedSmbgRangeAvg: PropTypes.shape({
+    data: PropTypes.shape({
+      id: PropTypes.string.isRequired,
+      max: PropTypes.number.isRequired,
+      mean: PropTypes.number.isRequired,
+      min: PropTypes.number.isRequired,
+      msX: PropTypes.number.isRequired,
+      msFrom: PropTypes.number.isRequired,
+      msTo: PropTypes.number.isRequired,
+    }).isRequired,
+    position: PropTypes.shape({
+      left: PropTypes.number.isRequired,
+      tooltipLeft: PropTypes.bool.isRequired,
+      yPositions: PropTypes.shape({
+        max: PropTypes.number.isRequired,
+        mean: PropTypes.number.isRequired,
+        min: PropTypes.number.isRequired,
+      }).isRequired,
+    }).isRequired,
+  }),
   margins: PropTypes.shape({
     top: PropTypes.number.isRequired,
     right: PropTypes.number.isRequired,

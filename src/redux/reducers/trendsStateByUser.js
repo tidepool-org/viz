@@ -58,16 +58,16 @@ const initialState = {
 
 const trendsStateByUser = (state = {}, action) => {
   switch (action.type) {
-    case actionTypes.FETCH_PATIENT_DATA_SUCCESS: {
-      const { patientId: userId } = action.payload;
-      if (state[userId]) {
-        return state;
-      }
-      return update(
-        state,
-        { [userId]: { $set: _.assign({}, initialState) } }
-      );
-    }
+    // case actionTypes.FETCH_PATIENT_DATA_SUCCESS: {
+    //   const { patientId: userId } = action.payload;
+    //   if (state[userId]) {
+    //     return state;
+    //   }
+    //   return update(
+    //     state,
+    //     { [userId]: { $set: _.assign({}, initialState) } }
+    //   );
+    // }
     case actionTypes.FOCUS_TRENDS_CBG_DATE_TRACE: {
       const { userId, cbgDatum: data, cbgPosition: position } = action.payload;
       return update(
@@ -87,40 +87,40 @@ const trendsStateByUser = (state = {}, action) => {
         } }
       );
     }
-    case actionTypes.FOCUS_TRENDS_SMBG: {
-      const {
-        smbgDatum: datum,
-        smbgPosition: position,
-        userId,
-        allSmbgsOnDate,
-        allPositions,
-        date,
-      } = action.payload;
-      return update(
-        state,
-        { [userId]: {
-          [FOCUSED_SMBG]: { $set: { datum, position, allSmbgsOnDate, allPositions, date } },
-        } }
-      );
-    }
-    case actionTypes.FOCUS_TRENDS_SMBG_RANGE_AVG: {
-      const { rangeAvgData: data, rangeAvgPosition: position, userId } = action.payload;
-      return update(
-        state,
-        { [userId]: {
-          [FOCUSED_SMBG_RANGE_AVG]: { $set: { data, position } },
-        } }
-      );
-    }
-    case actionTypes.LOGOUT_REQUEST:
-      return {};
-    case actionTypes.MARK_TRENDS_VIEWED: {
-      const { userId } = action.payload;
-      return update(
-        state,
-        { [userId]: { [TOUCHED]: { $set: true } } }
-      );
-    }
+    // case actionTypes.FOCUS_TRENDS_SMBG: {
+    //   const {
+    //     smbgDatum: datum,
+    //     smbgPosition: position,
+    //     userId,
+    //     allSmbgsOnDate,
+    //     allPositions,
+    //     date,
+    //   } = action.payload;
+    //   return update(
+    //     state,
+    //     { [userId]: {
+    //       [FOCUSED_SMBG]: { $set: { datum, position, allSmbgsOnDate, allPositions, date } },
+    //     } }
+    //   );
+    // }
+    // case actionTypes.FOCUS_TRENDS_SMBG_RANGE_AVG: {
+    //   const { rangeAvgData: data, rangeAvgPosition: position, userId } = action.payload;
+    //   return update(
+    //     state,
+    //     { [userId]: {
+    //       [FOCUSED_SMBG_RANGE_AVG]: { $set: { data, position } },
+    //     } }
+    //   );
+    // }
+    // case actionTypes.LOGOUT_REQUEST:
+    //   return {};
+    // case actionTypes.MARK_TRENDS_VIEWED: {
+    //   const { userId } = action.payload;
+    //   return update(
+    //     state,
+    //     { [userId]: { [TOUCHED]: { $set: true } } }
+    //   );
+    // }
     case actionTypes.SHOW_CBG_DATE_TRACES: {
       const { userId } = action.payload;
       return update(
@@ -175,24 +175,24 @@ const trendsStateByUser = (state = {}, action) => {
         } }
       );
     }
-    case actionTypes.UNFOCUS_TRENDS_SMBG: {
-      const { userId } = action.payload;
-      return update(
-        state,
-        { [userId]: {
-          [FOCUSED_SMBG]: { $set: null },
-        } }
-      );
-    }
-    case actionTypes.UNFOCUS_TRENDS_SMBG_RANGE_AVG: {
-      const { userId } = action.payload;
-      return update(
-        state,
-        { [userId]: {
-          [FOCUSED_SMBG_RANGE_AVG]: { $set: null },
-        } }
-      );
-    }
+    // case actionTypes.UNFOCUS_TRENDS_SMBG: {
+    //   const { userId } = action.payload;
+    //   return update(
+    //     state,
+    //     { [userId]: {
+    //       [FOCUSED_SMBG]: { $set: null },
+    //     } }
+    //   );
+    // }
+    // case actionTypes.UNFOCUS_TRENDS_SMBG_RANGE_AVG: {
+    //   const { userId } = action.payload;
+    //   return update(
+    //     state,
+    //     { [userId]: {
+    //       [FOCUSED_SMBG_RANGE_AVG]: { $set: null },
+    //     } }
+    //   );
+    // }
     default:
       return state;
   }

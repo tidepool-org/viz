@@ -145,7 +145,10 @@ export class TrendsContainer extends PureComponent {
     // data
     data: PropTypes.object.isRequired,
     // handlers
-    markTrendsViewed: PropTypes.func.isRequired,
+    focusSmbg: PropTypes.func.isRequired,
+    unfocusSmbg: PropTypes.func.isRequired,
+    focusSmbgRange: PropTypes.func.isRequired,
+    unfocusSmbgRange: PropTypes.func.isRequired,
     onDatetimeLocationChange: PropTypes.func.isRequired,
     onSelectDate: PropTypes.func.isRequired,
     onSwitchBgDataSource: PropTypes.func.isRequired,
@@ -232,8 +235,6 @@ export class TrendsContainer extends PureComponent {
     }),
     touched: PropTypes.bool.isRequired,
     unfocusCbgSlice: PropTypes.func.isRequired,
-    unfocusSmbg: PropTypes.func.isRequired,
-    unfocusSmbgRangeAvg: PropTypes.func.isRequired,
   };
 
   static defaultProps = {
@@ -401,6 +402,10 @@ export class TrendsContainer extends PureComponent {
         smbgData={this.state.currentSmbgData}
         cbgData={this.state.currentCbgData}
         dates={getAllDatesInRange(start, end, this.props.timePrefs)}
+        focusSmbg={this.props.focusSmbg}
+        unfocusSmbg={this.props.unfocusSmbg}
+        focusSmbgRange={this.props.focusSmbgRange}
+        unfocusSmbgRange={this.props.unfocusSmbgRange}
         focusedSlice={this.props.focusedCbgSlice}
         focusedSliceKeys={this.props.focusedCbgSliceKeys}
         focusedSmbgRangeAvgKey={this.props.focusedSmbgRangeAvg}
