@@ -49,6 +49,8 @@ export default class CBGSlicesContainer extends PureComponent {
       cbg50Enabled: PropTypes.bool.isRequired,
       cbgMedianEnabled: PropTypes.bool.isRequired,
     }).isRequired,
+    focusCbgSlice: PropTypes.func.isRequired,
+    unfocusCbgSlice: PropTypes.func.isRequired,
     showingCbgDateTraces: PropTypes.bool.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
     topMargin: PropTypes.number.isRequired,
@@ -108,11 +110,11 @@ export default class CBGSlicesContainer extends PureComponent {
               bgBounds={this.props.bgBounds}
               datum={bin}
               displayFlags={this.props.displayFlags}
-              focusSlice={this.props.focusSlice}
+              focusCbgSlice={this.props.focusCbgSlice}
+              unfocusCbgSlice={this.props.unfocusCbgSlice}
               showingCbgDateTraces={this.props.showingCbgDateTraces}
               tooltipLeftThreshold={this.props.tooltipLeftThreshold}
               topMargin={this.props.topMargin}
-              unfocusSlice={this.props.unfocusSlice}
               xScale={xScale}
               yScale={yScale}
               sliceWidth={sliceWidth}

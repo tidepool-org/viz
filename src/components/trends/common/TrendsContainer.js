@@ -145,6 +145,10 @@ export class TrendsContainer extends PureComponent {
     // data
     data: PropTypes.object.isRequired,
     // handlers
+    focusCbgDateTrace: PropTypes.func.isRequired,
+    unfocusCbgDateTrace: PropTypes.func.isRequired,
+    focusCbgSlice: PropTypes.func.isRequired,
+    unfocusCbgSlice: PropTypes.func.isRequired,
     focusSmbg: PropTypes.func.isRequired,
     unfocusSmbg: PropTypes.func.isRequired,
     focusSmbgRange: PropTypes.func.isRequired,
@@ -234,7 +238,6 @@ export class TrendsContainer extends PureComponent {
       }).isRequired,
     }),
     touched: PropTypes.bool.isRequired,
-    unfocusCbgSlice: PropTypes.func.isRequired,
   };
 
   static defaultProps = {
@@ -402,6 +405,10 @@ export class TrendsContainer extends PureComponent {
         smbgData={this.state.currentSmbgData}
         cbgData={this.state.currentCbgData}
         dates={getAllDatesInRange(start, end, this.props.timePrefs)}
+        focusCbgDateTrace={this.props.focusCbgDateTrace}
+        unfocusCbgDateTrace={this.props.unfocusCbgDateTrace}
+        focusCbgSlice={this.props.focusCbgSlice}
+        unfocusCbgSlice={this.props.unfocusCbgSlice}
         focusSmbg={this.props.focusSmbg}
         unfocusSmbg={this.props.unfocusSmbg}
         focusSmbgRange={this.props.focusSmbgRange}

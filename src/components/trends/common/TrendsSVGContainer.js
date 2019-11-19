@@ -187,6 +187,8 @@ export class TrendsSVGContainer extends PureComponent {
           sliceWidth={this.state.chartWidth / 56}
           data={this.props.cbgData}
           displayFlags={this.props.displayFlags}
+          focusCbgSlice={this.props.focusCbgSlice}
+          unfocusCbgSlice={this.props.unfocusCbgSlice}
           showingCbgDateTraces={this.props.showingCbgDateTraces}
           tooltipLeftThreshold={this.props.tooltipLeftThreshold}
           topMargin={this.props.margins.top}
@@ -201,6 +203,8 @@ export class TrendsSVGContainer extends PureComponent {
           bgBounds={this.props.bgPrefs.bgBounds}
           data={focusedSegmentDataGroupedByDate}
           dates={_.keys(focusedSegmentDataGroupedByDate) || []}
+          focusCbgDateTrace={this.props.focusCbgDateTrace}
+          unfocusCbgDateTrace={this.props.unfocusCbgDateTrace}
           onSelectDate={this.props.onSelectDate}
           topMargin={this.props.margins.top}
           xScale={this.props.xScale}
@@ -383,6 +387,10 @@ TrendsSVGContainer.propTypes = {
     cbg50Enabled: PropTypes.bool.isRequired,
     cbgMedianEnabled: PropTypes.bool.isRequired,
   }).isRequired,
+  focusCbgDateTrace: PropTypes.func.isRequired,
+  unfocusCbgDateTrace: PropTypes.func.isRequired,
+  focusCbgSlice: PropTypes.func.isRequired,
+  unfocusCbgSlice: PropTypes.func.isRequired,
   focusSmbg: PropTypes.func.isRequired,
   unfocusSmbg: PropTypes.func.isRequired,
   focusSmbgRange: PropTypes.func.isRequired,
