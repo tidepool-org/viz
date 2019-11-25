@@ -370,9 +370,11 @@ export class TrendsContainer extends PureComponent {
 
   determineDataToShow() {
     const { touched } = this.props;
+
     if (touched) {
       return;
     }
+
     const { currentCbgData, currentSmbgData } = this.state;
     const { extentSize, showingCbg } = this.props;
     const minimumCbgs = (extentSize * CGM_READINGS_ONE_DAY) / 2;
@@ -381,8 +383,12 @@ export class TrendsContainer extends PureComponent {
     // switch to SBMG view
     if (showingCbg && weightedCGMCount(currentCbgData) < minimumCbgs && currentSmbgData.length) {
       this.props.onSwitchBgDataSource(null, showingCbg ? BGM_DATA_KEY : CGM_DATA_KEY);
+    } else {
+      // We don't mark as viewed on the same render cycle as switching the initial bg data source,
+      // since both methods update the same `chartPrefs.trends` state tree, and the data source
+      // switch would be skipped
+      this.props.markTrendsViewed();
     }
-    this.props.markTrendsViewed();
   }
 
   render() {
