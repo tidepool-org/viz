@@ -96,7 +96,10 @@ const Results = ({ results, showData, showStats }) => {
   );
 };
 
-const dataUtil = new DataUtil(data);
+const patientId = 'abc123';
+const dataUtil = new DataUtil();
+dataUtil.addData(data, patientId);
+
 stories.add('Query Generator', () => {
   const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
 
@@ -493,7 +496,9 @@ const message = {
     fullName: 'Jill Jellyfish',
   },
 };
-const messageDataUtil = new DataUtil([_.cloneDeep(message)]);
+
+const messageDataUtil = new DataUtil();
+messageDataUtil.addData([_.cloneDeep(message)], patientId);
 
 stories.add('Update Message', () => {
   const defaultQuery = {

@@ -48,7 +48,7 @@ export class DataUtil {
   /**
    * @param {Array} data Raw Tidepool data
    */
-  constructor(data = [], Validator = SchemaValidator) {
+  constructor(Validator = SchemaValidator) {
     this.log = bows('DataUtil');
 
     /* eslint-disable no-console */
@@ -57,23 +57,31 @@ export class DataUtil {
     /* eslint-enable no-console */
 
     this.validator = Validator;
-    this.init(data);
+    this.init();
   }
 
-  init = (data = []) => {
+  init = () => {
     this.startTimer('init total');
     this.data = crossfilter([]);
 
     this.buildDimensions();
     this.buildFilters();
     this.buildSorts();
-
-    this.addData(data);
     this.endTimer('init total');
   };
 
-  addData = (rawData, returnData = false) => {
+  addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
+
+    if (_.isEmpty(rawData) || !patientId) return {};
+
+    // First, we check to see if we already have data for a different patient stored. If so, we
+    // clear all data so that we never mix patient data. Note that if the patientId is not
+    if (this.patientId && this.patientId !== patientId) {
+      this.removeData();
+    }
+    this.patientId = patientId;
+
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
@@ -105,6 +113,7 @@ export class DataUtil {
         'bgSources',
         'latestDatumByType',
         'latestPumpUpload',
+        'patientId',
         'size',
       ]),
     };
@@ -406,7 +415,7 @@ export class DataUtil {
   /* eslint-enable no-param-reassign */
 
   /* eslint-disable no-param-reassign */
-  removeData = predicate => {
+  removeData = (predicate = null) => {
     if (predicate) {
       this.log('Removing data where', predicate);
       if (_.isPlainObject(predicate)) predicate = _.matches(predicate);
@@ -418,6 +427,7 @@ export class DataUtil {
       delete this.bolusDatumsByIdMap;
       delete this.wizardDatumsByIdMap;
       delete this.latestDatumByType;
+      delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
       this.init();
@@ -979,6 +989,7 @@ export class DataUtil {
       'bgSources',
       'latestDatumByType',
       'latestPumpUpload',
+      'patientId',
       'size',
     ];
 

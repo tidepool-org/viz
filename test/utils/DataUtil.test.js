@@ -258,8 +258,11 @@ describe('DataUtil', () => {
     timePrefs: defaultTimePrefs,
   };
 
+  const defaultPatientId = 'abc123';
+
   const initDataUtil = (dataset, validator) => {
-    dataUtil = new DataUtil(dataset, validator);
+    dataUtil = new DataUtil(validator);
+    if (dataset) dataUtil.addData(dataset, defaultPatientId);
   };
 
   const createQuery = overrides => _.assign({}, defaultQuery, overrides);
@@ -296,7 +299,7 @@ describe('DataUtil', () => {
       delete dataUtil.bolusToWizardIdMap;
       expect(dataUtil.bolusToWizardIdMap).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.bolusToWizardIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
         bolusData[1].id,
@@ -305,7 +308,7 @@ describe('DataUtil', () => {
 
       const newBolus = new Types.Bolus({ ...useRawData });
       const newWizard = new Types.Wizard({ bolus: newBolus, ...useRawData });
-      dataUtil.addData([newBolus, newWizard]);
+      dataUtil.addData([newBolus, newWizard], defaultPatientId);
 
       expect(dataUtil.bolusToWizardIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
@@ -321,7 +324,7 @@ describe('DataUtil', () => {
       delete dataUtil.bolusDatumsByIdMap;
       expect(dataUtil.bolusDatumsByIdMap).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.bolusDatumsByIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
         bolusData[1].id,
@@ -329,7 +332,7 @@ describe('DataUtil', () => {
       ]);
 
       const newBolus = new Types.Bolus({ ...useRawData });
-      dataUtil.addData([newBolus]);
+      dataUtil.addData([newBolus], defaultPatientId);
 
       expect(dataUtil.bolusDatumsByIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
@@ -345,7 +348,7 @@ describe('DataUtil', () => {
       delete dataUtil.wizardDatumsByIdMap;
       expect(dataUtil.wizardDatumsByIdMap).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.wizardDatumsByIdMap).to.be.an('object').and.have.keys([
         wizardData[0].id,
         wizardData[1].id,
@@ -353,7 +356,7 @@ describe('DataUtil', () => {
       ]);
 
       const newWizard = new Types.Wizard({ ...useRawData });
-      dataUtil.addData([newWizard]);
+      dataUtil.addData([newWizard], defaultPatientId);
 
       expect(dataUtil.wizardDatumsByIdMap).to.be.an('object').and.have.keys([
         wizardData[0].id,
@@ -369,7 +372,7 @@ describe('DataUtil', () => {
       delete dataUtil.latestDatumByType;
       expect(dataUtil.latestDatumByType).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.latestDatumByType).to.be.an('object').and.have.keys([
         'basal',
         'bolus',
@@ -384,7 +387,7 @@ describe('DataUtil', () => {
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(wizardData[2].id);
 
       const newWizard = new Types.Wizard({ deviceTime: '2018-02-01T04:00:00', ...useRawData });
-      dataUtil.addData([newWizard]);
+      dataUtil.addData([newWizard], defaultPatientId);
 
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(newWizard.id);
     });
@@ -392,7 +395,7 @@ describe('DataUtil', () => {
     it('should call `normalizeDatumIn` on each incoming datum', () => {
       sinon.spy(dataUtil, 'normalizeDatumIn');
       sinon.assert.notCalled(dataUtil.normalizeDatumIn);
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.called(dataUtil.normalizeDatumIn);
       sinon.assert.callCount(dataUtil.normalizeDatumIn, defaultData.length);
@@ -401,7 +404,7 @@ describe('DataUtil', () => {
     it('should call `joinWizardAndBolus` on each incoming datum', () => {
       sinon.spy(dataUtil, 'joinWizardAndBolus');
       sinon.assert.notCalled(dataUtil.joinWizardAndBolus);
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.called(dataUtil.joinWizardAndBolus);
       sinon.assert.callCount(dataUtil.joinWizardAndBolus, defaultData.length);
@@ -410,7 +413,7 @@ describe('DataUtil', () => {
     it('should call `tagDatum` on each incoming datum', () => {
       sinon.spy(dataUtil, 'tagDatum');
       sinon.assert.notCalled(dataUtil.tagDatum);
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.called(dataUtil.tagDatum);
       sinon.assert.callCount(dataUtil.tagDatum, defaultData.length);
@@ -420,7 +423,7 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setMetaData');
       sinon.assert.notCalled(dataUtil.setMetaData);
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.callCount(dataUtil.setMetaData, 1);
     });
@@ -2979,7 +2982,7 @@ describe('DataUtil', () => {
           ...basalDataClone,
         ], normalizeExpectedDatum);
 
-        dataUtil.addData([basalDatumOverlappingStartClone.asObject()]);
+        dataUtil.addData([basalDatumOverlappingStartClone.asObject()], defaultPatientId);
 
         dataUtil.query(createQuery({
           timePrefs: { timeZoneAware: false },
