@@ -54,6 +54,7 @@ describe('DailyPrintView', () => {
         targetUpperBound: 180,
         targetLowerBound: 70,
         veryLowThreshold: 54,
+        clampThreshold: 400,
       },
       bgUnits: 'mg/dL',
     },
@@ -92,6 +93,7 @@ describe('DailyPrintView', () => {
         targetUpperBound: 10,
         targetLowerBound: 3.9,
         veryLowThreshold: 3.1,
+        clampThreshold: 22.2,
       },
       bgUnits: 'mmol/L',
     },
@@ -233,11 +235,11 @@ describe('DailyPrintView', () => {
       expect(Renderer.bgScaleYLimit).to.equal(180);
     });
 
-    it('should set the bgScaleYLimit to a maximum of the BG very high threshold', () => {
+    it('should set the bgScaleYLimit to a maximum of the BG clamp threshold', () => {
       Renderer.data.bgRange[1] = 600;
       Renderer.makeScales(Renderer.chartsByDate[sampleDate]);
 
-      expect(Renderer.bgScaleYLimit).to.equal(300);
+      expect(Renderer.bgScaleYLimit).to.equal(400);
     });
 
     // Remaining functionality already confirmed in constructor tests
