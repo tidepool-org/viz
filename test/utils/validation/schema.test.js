@@ -15,7 +15,6 @@ describe('schema validation', () => {
     const validator = key ? Validator[datum.type][key] : Validator[datum.type];
 
     // Validate required fields
-    expect(_.find(validator({ ...datum, deviceId: undefined }), { field: 'deviceId' }).message).to.equal('The \'deviceId\' field is required!');
     expect(_.find(validator({ ...datum, id: undefined }), { field: 'id' }).message).to.equal('The \'id\' field is required!');
     expect(_.find(validator({ ...datum, type: undefined }), { field: 'type' }).message).to.equal('The \'type\' field is required!');
     expect(_.find(validator({ ...datum, time: undefined }), { field: 'time' }).message).to.equal('The \'time\' field is required!');
@@ -42,6 +41,12 @@ describe('schema validation', () => {
       'wizard',
     ]);
 
+    // deviceId is optional, so it should pass if undefined
+    expect(validator({ ...datum, deviceId: undefined })).to.be.true;
+
+    // Should pass when provided deviceId is wrong type
+    expect(_.find(validator({ ...datum, deviceId: 3 }), { field: 'deviceId' }).message).to.equal('The \'deviceId\' field must be a string!');
+
     // deviceTime is optional, so it should pass if undefined
     expect(validator({ ...datum, deviceTime: undefined })).to.be.true;
 
@@ -60,7 +65,7 @@ describe('schema validation', () => {
     // Should pass when provided uploadId matches pattern
     expect(validator({ ...datum, uploadId: 'pp0gk17imoaamcoeika04sb99tthbdsj' })).to.be.true;
 
-    // Should fail when provided id doesn't match pattern
+    // Should fail when provided uploadId doesn't match pattern
     expect(_.find(validator({ ...datum, uploadId: '*&^#ABC123' }), { field: 'uploadId' }).message).to.equal('The \'uploadId\' field fails to match the required pattern!');
 
     // Should pass when provided time is a date after 2008
