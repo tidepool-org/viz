@@ -19,7 +19,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import {
-  SMBGRange, mapDispatchToProps, mapStateToProps,
+  SMBGRange,
 } from '../../../../src/components/trends/smbg/SMBGRange';
 
 describe('SMBGRange', () => {
@@ -91,26 +91,6 @@ describe('SMBGRange', () => {
         expect(props.unfocusRange.callCount).to.equal(1);
         expect(props.unfocusRange.args[0][0]).to.equal(props.userId);
       });
-    });
-  });
-
-  describe('mapStateToProps', () => {
-    const state = {
-      blip: { currentPatientInViewId: 'a1b2c3' },
-    };
-
-    it('should map blip.currentPatientInViewId to `userId`', () => {
-      expect(mapStateToProps(state).userId).to.equal(state.blip.currentPatientInViewId);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    it('should return an object with a `focusRange` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('focusRange');
-    });
-
-    it('should return an object with a `unfocusRange` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('unfocusRange');
     });
   });
 });

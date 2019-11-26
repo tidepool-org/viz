@@ -30,7 +30,7 @@ import bgBounds from '../../../helpers/bgBounds';
 import SVGContainer from '../../../helpers/SVGContainer';
 
 import {
-  CBGDateTraceAnimated, mapDispatchToProps, mapStateToProps,
+  CBGDateTraceAnimated,
 } from '../../../../src/components/trends/cbg/CBGDateTraceAnimated';
 
 describe('CBGDateTraceAnimated', () => {
@@ -128,26 +128,6 @@ describe('CBGDateTraceAnimated', () => {
           expect(props.unfocusDateTrace.callCount).to.equal(1);
         });
       });
-    });
-  });
-
-  describe('mapStateToProps', () => {
-    const state = {
-      blip: { currentPatientInViewId: 'a1b2c3' },
-    };
-
-    it('should map blip.currentPatientInViewId to `userId`', () => {
-      expect(mapStateToProps(state).userId).to.equal(state.blip.currentPatientInViewId);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    it('should return an object with a `focusDateTrace` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('focusDateTrace');
-    });
-
-    it('should return an object with a `unfocusDateTrace` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('unfocusDateTrace');
     });
   });
 });

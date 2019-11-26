@@ -19,42 +19,38 @@ import React from 'react';
 
 import { mount } from 'enzyme';
 import LabeledCheckbox from '../../../../src/components/common/controls/LabeledCheckbox';
-import { RangeSelect }
-  from '../../../../src/components/trends/cbg/RangeSelect';
+import RangeSelect from '../../../../src/components/trends/cbg/RangeSelect';
 
 describe('RangeSelect', () => {
-  describe('RangeSelect (w/o redux connect()ion)', () => {
-    const props = {
-      currentPatientInViewId: 'a1b2c3',
-      displayFlags: {
-        cbg100Enabled: false,
-        cbg80Enabled: true,
-        cbg50Enabled: true,
-        cbgMedianEnabled: true,
-      },
-      turnOnCbgRange: sinon.spy(),
-      turnOffCbgRange: sinon.spy(),
-    };
+  const props = {
+    currentPatientInViewId: 'a1b2c3',
+    displayFlags: {
+      cbg100Enabled: false,
+      cbg80Enabled: true,
+      cbg50Enabled: true,
+      cbgMedianEnabled: true,
+    },
+    updateCbgRange: sinon.spy(),
+  };
 
-    const wrapper = mount(
-      <RangeSelect {...props} />
-    );
+  const wrapper = mount(
+    <RangeSelect {...props} />
+  );
 
-    describe('it should render four LabeledCheckboxes', () => {
-      expect(wrapper.find(LabeledCheckbox).length).to.equal(4);
-      expect(wrapper.find('input[type="checkbox"]').length).to.equal(4);
-    });
+  it('should render four LabeledCheckboxes', () => {
+    expect(wrapper.find(LabeledCheckbox).length).to.equal(4);
+    expect(wrapper.find('input[type="checkbox"]').length).to.equal(4);
+  });
 
-    describe('clicking on the first checkbox should turn on 100%', () => {
-      wrapper.find('input[type="checkbox"]').at(0).simulate('change');
-      expect(props.turnOnCbgRange.callCount).to.equal(1);
-      expect(props.turnOnCbgRange.calledWith('100')).to.be.true;
-    });
+  it('clicking on the first checkbox should turn on 100%', () => {
+    wrapper.find('input[type="checkbox"]').at(0).simulate('change');
+    expect(props.updateCbgRange.callCount).to.equal(1);
+    expect(props.updateCbgRange.calledWith('cbg100Enabled', true)).to.be.true;
+  });
 
-    describe('clicking on the second checkbox should turn off 80%', () => {
-      wrapper.find('input[type="checkbox"]').at(1).simulate('change');
-      expect(props.turnOffCbgRange.callCount).to.equal(1);
-      expect(props.turnOffCbgRange.calledWith('80')).to.be.true;
-    });
+  it('clicking on the second checkbox should turn off 80%', () => {
+    wrapper.find('input[type="checkbox"]').at(1).simulate('change');
+    expect(props.updateCbgRange.callCount).to.equal(2);
+    expect(props.updateCbgRange.calledWith('cbg80Enabled', false)).to.be.true;
   });
 });
