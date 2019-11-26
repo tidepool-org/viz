@@ -120,7 +120,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer) {
           { path: 'smbg.summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'smbg.summary.subtotals', key: 'meter', label: t('Meter'), percentage: true },
           { path: 'smbg.summary.subtotals', key: 'manual', label: t('Manual'), percentage: true },
-          { path: 'calibration.summary', key: 'total', label: t('Calibrations'), hideEmpty: true },
+          { path: 'calibration.summary.subtotals', key: 'calibration', label: t('Calibrations'), hideEmpty: true },
           { path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
           { path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
         ];
