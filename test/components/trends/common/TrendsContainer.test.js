@@ -33,8 +33,6 @@ import {
   getAllDatesInRange,
   getLocalizedNoonBeforeUTC,
   getLocalizedOffset,
-  mapStateToProps,
-  mapDispatchToProps,
 } from '../../../../src/components/trends/common/TrendsContainer';
 import TrendsSVGContainer from '../../../../src/components/trends/common/TrendsSVGContainer';
 
@@ -872,31 +870,6 @@ describe('TrendsContainer', () => {
         );
         expect(wrapper.find(TrendsSVGContainer)).to.have.length(1);
       });
-    });
-  });
-
-  describe('mapStateToProps', () => {
-    const userId = 'a1b2c3';
-    const state = {
-      viz: {
-        trends: {
-          [userId]: {
-            oneOption: true,
-            otherOption: false,
-          },
-        },
-      },
-    };
-
-    it('should map state.viz.trends[currentPatientInViewId] to `trendsState`', () => {
-      expect(mapStateToProps(state, { currentPatientInViewId: userId }).trendsState)
-        .to.deep.equal(state.viz.trends[userId]);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    it('should return an object with a `markTrendsViewed` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('markTrendsViewed');
     });
   });
 });

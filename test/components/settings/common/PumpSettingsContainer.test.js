@@ -22,7 +22,7 @@ import React from 'react';
 import { mount } from 'enzyme';
 import _ from 'lodash';
 
-import { PumpSettingsContainer, mapStateToProps, mapDispatchToProps }
+import { PumpSettingsContainer, mapStateToProps }
   from '../../../../src/components/settings/common/PumpSettingsContainer';
 import NonTandem from '../../../../src/components/settings/NonTandem';
 import Tandem from '../../../../src/components/settings/Tandem';
@@ -294,18 +294,6 @@ describe('PumpSettingsContainer', () => {
     it('should map state.blip.allUsersMap[currentPatientInViewId] to `user`', () => {
       expect(mapStateToProps(state, { currentPatientInViewId: userId }).user)
         .to.deep.equal(state.blip.allUsersMap[userId]);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    const ownProps = { currentPatientInViewId: 'a1b2c3' };
-
-    it('should return an objet with a `markSettingsViewed` key', () => {
-      expect(mapDispatchToProps(sinon.stub(), ownProps)).to.have.property('markSettingsViewed');
-    });
-
-    it('should return an objet with a `toggleSettingsSection` key', () => {
-      expect(mapDispatchToProps(sinon.stub(), ownProps)).to.have.property('toggleSettingsSection');
     });
   });
 });

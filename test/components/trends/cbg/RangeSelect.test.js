@@ -19,7 +19,7 @@ import React from 'react';
 
 import { mount } from 'enzyme';
 import LabeledCheckbox from '../../../../src/components/common/controls/LabeledCheckbox';
-import { RangeSelect, mapDispatchToProps }
+import { RangeSelect }
   from '../../../../src/components/trends/cbg/RangeSelect';
 
 describe('RangeSelect', () => {
@@ -55,18 +55,6 @@ describe('RangeSelect', () => {
       wrapper.find('input[type="checkbox"]').at(1).simulate('change');
       expect(props.turnOffCbgRange.callCount).to.equal(1);
       expect(props.turnOffCbgRange.calledWith('80')).to.be.true;
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    const ownProps = { currentPatientInViewId: 'a1b2c3' };
-
-    it('should return an object with a `turnOnCbgRange` key', () => {
-      expect(mapDispatchToProps(sinon.stub(), ownProps)).to.have.property('turnOnCbgRange');
-    });
-
-    it('should return an object with a `turnOffCbgRange` key', () => {
-      expect(mapDispatchToProps(sinon.stub(), ownProps)).to.have.property('turnOffCbgRange');
     });
   });
 });
