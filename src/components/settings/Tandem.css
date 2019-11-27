@@ -17,12 +17,12 @@
 
 @import '../../styles/colors.css';
 
-.copyButton {
-  composes: copyButton from './settings.css';
-}
+.header {
+  display: flex;
+  justify-content: space-between;
 
-.copyText {
-  composes: copyText from './settings.css';
+  align-items: center;
+  align-content: center;
 }
 
 .headerCommon {
@@ -70,10 +70,6 @@
 }
 
 @media print {
-
-  .copyButton {
-    composes: copyButton from './settings.css';
-  }
 
   .title {
     font-weight: normal;

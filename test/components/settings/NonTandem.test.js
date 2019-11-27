@@ -172,7 +172,7 @@ describe('NonTandem', () => {
           toggleBasalScheduleExpansion={() => {}}
         />
       );
-      const clipBoardButton = mounted.find(formatClassesAsSelector(styles.copyButton)).at(0);
+      const clipBoardButton = mounted.find('ClipboardButton').at(0);
       expect(copySettingsClicked.callCount).to.equal(0);
       clipBoardButton.prop('onSuccess')();
       expect(copySettingsClicked.callCount).to.equal(1);
@@ -431,7 +431,7 @@ describe('NonTandem', () => {
             toggleBasalScheduleExpansion={() => {}}
           />
         );
-        const clipBoardButton = mounted.find(formatClassesAsSelector(styles.copyButton)).at(0);
+        const clipBoardButton = mounted.find('ClipboardButton').at(0);
         expect(copySettingsClicked.callCount).to.equal(0);
         clipBoardButton.prop('onSuccess')();
         expect(copySettingsClicked.callCount).to.equal(1);
@@ -575,7 +575,7 @@ describe('NonTandem', () => {
           toggleBasalScheduleExpansion={() => {}}
         />
       );
-      const clipBoardButton = mounted.find(formatClassesAsSelector(styles.copyButton)).at(0);
+      const clipBoardButton = mounted.find('ClipboardButton').at(0);
       expect(copySettingsClicked.callCount).to.equal(0);
       clipBoardButton.prop('onSuccess')();
       expect(copySettingsClicked.callCount).to.equal(1);

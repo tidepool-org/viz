@@ -269,4 +269,16 @@ describe('constants', () => {
       });
     });
   });
+
+  describe('BG_COLORS', () => {
+    it('should define bg range colors', () => {
+      expect(constants.BG_COLORS).to.eql({
+        veryLow: '#FB5951',
+        low: '#FF8B7C',
+        target: '#76D3A6',
+        high: '#BB9AE7',
+        veryHigh: '#8C65D6',
+      });
+    });
+  });
 });

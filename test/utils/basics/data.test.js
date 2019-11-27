@@ -18,9 +18,11 @@
 /* eslint-disable max-len */
 
 import _ from 'lodash';
+import moment from 'moment';
 import { utcDay } from 'd3-time';
 import * as dataUtils from '../../../src/utils/basics/data';
 import Types from '../../../data/types';
+import { basicsData as basicsDataFixtures } from '../../../data/print/fixtures';
 
 import {
   NO_CGM,
@@ -949,6 +951,149 @@ describe('basics data utils', () => {
       // just over threshold into new UTC week
       expect(dataUtils.findBasicsStart('2015-09-14T00:01:00.000Z'))
         .to.equal('2015-08-31T00:00:00.000Z');
+    });
+  });
+  describe('basicsText', () => {
+    /* eslint-disable lines-between-class-members */
+    class TextUtilStub {
+      buildDocumentHeader = sinon.stub().returns('Basics Header, ');
+      buildDocumentDates = sinon.stub().returns('Basics Dates, ');
+      buildTextLine = sinon.stub().returns('Basics Line, ');
+      buildTextTable = sinon.stub().returns('Basics Table, ');
+    }
+    /* eslint-enable lines-between-class-members */
+
+    const patient = {
+      profile: { patient: {
+        fullName: 'John Doe',
+        birthDate: '2000-01-01',
+        diagnosisDate: '2014-12-31',
+      } },
+      settings: {
+        siteChangeSource: SITE_CHANGE_CANNULA,
+      },
+    };
+
+    const stats = [{ id: 'myStat' }];
+    const endpoints = ['2019-02-01T00:00:00.000Z', '2019-02-20T00:00:00.000Z'];
+    const timePrefs = { timezoneName: 'US/Eastern', timezoneAware: true };
+
+    const data = { ...basicsDataFixtures };
+
+    const defaultBgPrefs = {
+      bgClasses: {
+        'very-high': { boundary: 600 },
+        high: { boundary: 300 },
+        target: { boundary: 180 },
+        low: { boundary: 70 },
+        'very-low': { boundary: 54 },
+      },
+      bgUnits: MGDL_UNITS,
+    };
+
+    let textUtilStub;
+
+    before(() => {
+      textUtilStub = new TextUtilStub();
+      sinon.stub(dataUtils.utils, 'TextUtil').returns(textUtilStub);
+      sinon.stub(dataUtils.utils, 'statsText').returns('Stats Text, ');
+    });
+
+    afterEach(() => {
+      dataUtils.utils.TextUtil.resetHistory();
+      dataUtils.utils.statsText.resetHistory();
+      textUtilStub.buildDocumentHeader.resetHistory();
+      textUtilStub.buildDocumentDates.resetHistory();
+      textUtilStub.buildTextLine.resetHistory();
+    });
+
+    after(() => {
+      dataUtils.utils.TextUtil.restore();
+      dataUtils.utils.statsText.restore();
+    });
+
+    it('should reshape provided tideline-style bgPrefs to the viz format', () => {
+      const tidelineBgPrefs = { ...defaultBgPrefs };
+
+      dataUtils.basicsText(patient, stats, endpoints, tidelineBgPrefs, timePrefs, data);
+      expect(tidelineBgPrefs.bgBounds).to.be.an('object');
+    });
+
+    it('should return formatted text for Basics data', () => {
+      const result = dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      expect(result).to.equal('Basics Header, Basics Dates, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, ');
+    });
+
+    it('should build the document header section', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.callCount(textUtilStub.buildDocumentHeader, 1);
+      sinon.assert.calledWith(textUtilStub.buildDocumentHeader, 'Basics');
+    });
+
+    it('should build the document dates section', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.callCount(textUtilStub.buildDocumentDates, 1);
+    });
+
+    it('should build the basics stats section', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.callCount(dataUtils.utils.statsText, 1);
+      sinon.assert.calledWith(dataUtils.utils.statsText, stats, textUtilStub, defaultBgPrefs);
+    });
+
+    it('should build a summary table for fingerstick data', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.calledWith(
+        textUtilStub.buildTextTable,
+        '',
+        [{ label: 'Avg BG readings / day', value: '5' }, { label: 'Meter', value: '100' }, { label: 'Manual', value: '0' }, { label: 'Calibrations', value: '40' }, { label: 'Below 54 mg/dL', value: '0' }, { label: 'Above 300 mg/dL', value: '0' }],
+        [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
+      );
+    });
+
+    it('should build a summary table for bolus data', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.calledWith(
+        textUtilStub.buildTextTable,
+        '',
+        [{ label: 'Avg boluses / day', value: '3' }, { label: 'Calculator', value: '0' }, { label: 'Correction', value: '0' }, { label: 'Extended', value: '0' }, { label: 'Interrupted', value: '0' }, { label: 'Override', value: '0' }, { label: 'Underride', value: '0' }],
+        [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
+      );
+    });
+
+    it('should build a summary table for siteChange data', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.calledWith(
+        textUtilStub.buildTextTable,
+        'Infusion site changes from \'Fill Cannula\'',
+        [{ label: 'Mean Duration', value: '5 days' }, { label: 'Longest Duration', value: '5 days' }],
+        [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
+      );
+    });
+
+    it('should round `Mean Duration` for site changes to 1 decimal place', () => {
+      const updatedData = _.cloneDeep(data);
+      updatedData.data.cannulaPrime.data[0].normalTime = moment.utc(updatedData.data.cannulaPrime.data[0].normalTime).add(2, 'days').toISOString();
+
+      expect(_.mean([3, 5, 5])).to.equal(4.333333333333333); // Instead of [5, 5, 5] for datum.daysSince values because we moved the first datum by 2 days
+
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, updatedData);
+      sinon.assert.calledWith(
+        textUtilStub.buildTextTable,
+        'Infusion site changes from \'Fill Cannula\'',
+        [{ label: 'Mean Duration', value: '4.3 days' }, { label: 'Longest Duration', value: '5 days' }],
+        [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
+      );
+    });
+
+    it('should build a summary table for basal data', () => {
+      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, data);
+      sinon.assert.calledWith(
+        textUtilStub.buildTextTable,
+        '',
+        [{ label: 'Total basal events', value: '1' }, { label: 'Temp Basals', value: '1' }, { label: 'Suspends', value: '0' }],
+        [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
+      );
     });
   });
 });

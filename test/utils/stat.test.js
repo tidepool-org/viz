@@ -1,6 +1,15 @@
+import React from 'react';
 import _ from 'lodash';
+import { shallow } from 'enzyme';
 import * as stat from '../../src/utils/stat';
-import { MGDL_UNITS } from '../../src/utils/constants';
+import {
+  BG_COLORS,
+  MS_IN_DAY,
+  MS_IN_HOUR,
+  MS_IN_MIN,
+  MGDL_UNITS,
+  MMOLL_UNITS,
+} from '../../src/utils/constants';
 
 /* eslint-disable max-len */
 
@@ -130,6 +139,613 @@ describe('stat', () => {
       expect(stat.ensureNumeric(NaN)).to.equal(-1);
       expect(stat.ensureNumeric(null)).to.equal(-1);
       expect(stat.ensureNumeric(undefined)).to.equal(-1);
+    });
+  });
+
+  describe('formatDatum', () => {
+    const defaultData = {
+      data: [
+        {
+          value: 60,
+          id: 'low',
+        },
+        {
+          value: 120,
+        },
+      ],
+      total: {
+        value: 2,
+      },
+    };
+
+    const defaultOpts = {
+      data: defaultData,
+    };
+
+    const opts = overrides => _.assign({}, defaultOpts, overrides);
+
+    context('bgCount format', () => {
+      it('should return correctly formatted data when `value >= 0.05`', () => {
+        expect(stat.formatDatum({
+          value: 2.67777777,
+        }, statFormats.bgCount)).to.include({
+          value: 2.7,
+        });
+
+        expect(stat.formatDatum({
+          value: 0.05,
+        }, statFormats.bgCount)).to.include({
+          value: 0.1,
+        });
+
+        // Want 0 decimal places if would end in `.0`
+        expect(stat.formatDatum({
+          value: 3.0000001,
+        }, statFormats.bgCount)).to.include({
+          value: 3,
+        });
+      });
+
+      it('should return correctly formatted data when `value < 0.05`', () => {
+        expect(stat.formatDatum({
+          value: 0.035,
+        }, statFormats.bgCount)).to.include({
+          value: 0.04,
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.bgCount)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('bgRange format', () => {
+      const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MGDL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 39,
+              targetLowerBound: 70,
+              targetUpperBound: 180,
+              veryHighThreshold: 250,
+            },
+          },
+        });
+
+      it('should return correctly formatted bg range for a given `datum.id`', () => {
+        expect(stat.formatDatum({
+          id: 'veryLow',
+        }, statFormats.bgRange, customOpts)).to.include({
+          value: '<39',
+        });
+
+        expect(stat.formatDatum({
+          id: 'low',
+        }, statFormats.bgRange, customOpts)).to.include({
+          value: '39-70',
+        });
+
+        expect(stat.formatDatum({
+          id: 'target',
+        }, statFormats.bgRange, customOpts)).to.include({
+          value: '70-180',
+        });
+
+        expect(stat.formatDatum({
+          id: 'high',
+        }, statFormats.bgRange, customOpts)).to.include({
+          value: '180-250',
+        });
+
+        expect(stat.formatDatum({
+          id: 'veryHigh',
+        }, statFormats.bgRange, customOpts)).to.include({
+          value: '>250',
+        });
+      });
+    });
+
+    context('bgValue format', () => {
+      it('should classify and format a datum when `value >= 0` for mg/dL units', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MGDL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 39,
+              targetLowerBound: 70,
+              targetUpperBound: 180,
+              veryHighThreshold: 250,
+            },
+          },
+        });
+
+        // Using 3-way classification, so both `low` and `veryLow` are classified as `low`
+        expect(stat.formatDatum({
+          value: 35.8,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'low',
+          value: '36',
+        });
+
+        expect(stat.formatDatum({
+          value: 68.2,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'low',
+          value: '68',
+        });
+
+        expect(stat.formatDatum({
+          value: 100,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'target',
+          value: '100',
+        });
+
+        // Using 3-way classification, so both `high` and `veryHigh` are classified as `high`
+        expect(stat.formatDatum({
+          value: 200,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'high',
+          value: '200',
+        });
+
+        expect(stat.formatDatum({
+          value: 252,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'high',
+          value: '252',
+        });
+      });
+
+      it('should classify and format a datum when `value >= 0` for mmol/L units', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MMOLL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 3.0,
+              targetLowerBound: 3.9,
+              targetUpperBound: 10.0,
+              veryHighThreshold: 13.9,
+            },
+          },
+        });
+
+        // Using 3-way classification, so both `low` and `veryLow` are classified as `low`
+        expect(stat.formatDatum({
+          value: 2.86,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'low',
+          value: '2.9',
+        });
+
+        expect(stat.formatDatum({
+          value: 3.62,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'low',
+          value: '3.6',
+        });
+
+        expect(stat.formatDatum({
+          value: 7,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'target',
+          value: '7.0',
+        });
+
+        // Using 3-way classification, so both `high` and `veryHigh` are classified as `high`
+        expect(stat.formatDatum({
+          value: 12.3,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'high',
+          value: '12.3',
+        });
+
+        expect(stat.formatDatum({
+          value: 14.1,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'high',
+          value: '14.1',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.bgValue)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('carbs format', () => {
+      it('should return correctly formatted data when `value >= 0`', () => {
+        expect(stat.formatDatum({
+          value: 84.645,
+        }, statFormats.carbs)).to.include({
+          suffix: 'g',
+          value: '85',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.carbs)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('cv format', () => {
+      it('should return correctly classified and formatted data when `value >= 0`', () => {
+        expect(stat.formatDatum({
+          value: 35.8,
+        }, statFormats.cv)).to.include({
+          id: 'target',
+          suffix: '%',
+          value: '36',
+        });
+
+        expect(stat.formatDatum({
+          value: 36.2,
+        }, statFormats.cv)).to.include({
+          id: 'high',
+          suffix: '%',
+          value: '36',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.cv)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('duration format', () => {
+      it('should return correctly formatted data when `value >= 0`', () => {
+        expect(stat.formatDatum({
+          value: MS_IN_DAY + MS_IN_HOUR + MS_IN_MIN,
+        }, statFormats.duration)).to.include({
+          value: '1d 1h 1m',
+        });
+
+        expect(stat.formatDatum({
+          value: MS_IN_HOUR * 3 + MS_IN_MIN,
+        }, statFormats.duration)).to.include({
+          value: '3h 1m',
+        });
+
+        expect(stat.formatDatum({
+          value: MS_IN_MIN * 48,
+        }, statFormats.duration)).to.include({
+          value: '48m',
+        });
+
+        // show seconds only when less than a minute
+        expect(stat.formatDatum({
+          value: 6000,
+        }, statFormats.duration)).to.include({
+          value: '6s',
+        });
+
+        // show 0m for 0
+        expect(stat.formatDatum({
+          value: 0,
+        }, statFormats.duration)).to.include({
+          value: '0m',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.duration)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('gmi format', () => {
+      it('should return correctly formatted data when `value >= 0`', () => {
+        expect(stat.formatDatum({
+          value: 35.85,
+        }, statFormats.gmi)).to.include({
+          suffix: '%',
+          value: '35.9',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.gmi)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('percentage format', () => {
+      it('should return correctly formatted data when `total` prop is `>= 0`', () => {
+        const customOpts = opts({
+          data: {
+            total: {
+              value: 10,
+            },
+          },
+        });
+
+        // No decimal places when `% >= 0.5`
+        expect(stat.formatDatum({
+          value: 3.95,
+        }, statFormats.percentage, customOpts)).to.include({
+          value: '40',
+          suffix: '%',
+        });
+
+        // 1 decimal place when `% < 0.5` and `% >= 0.05`
+        expect(stat.formatDatum({
+          value: 0.049,
+        }, statFormats.percentage, customOpts)).to.include({
+          value: '0.5',
+          suffix: '%',
+        });
+
+        // 1 decimal places when `% < 0.05`
+        expect(stat.formatDatum({
+          value: 0.0049,
+        }, statFormats.percentage, customOpts)).to.include({
+          value: '0.05',
+          suffix: '%',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        const customOpts = opts({
+          data: {
+            total: {
+              value: -1,
+            },
+          },
+        });
+
+        expect(stat.formatDatum({
+          value: 10,
+        }, statFormats.percentage, customOpts)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('standardDevRange format', () => {
+      const renderResult = result => {
+        const Component = () => result.value;
+        const render = shallow(<Component />);
+
+        return {
+          lower: {
+            color: render.childAt(0).props().style.color,
+            value: render.childAt(0).props().children,
+          },
+          upper: {
+            color: render.childAt(2).props().style.color,
+            value: render.childAt(2).props().children,
+          },
+        };
+      };
+
+      it('should return correctly formatted html when `value >= 0` && `deviation.value >= 0` for mg/dL units', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MGDL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 39,
+              targetLowerBound: 70,
+              targetUpperBound: 180,
+              veryHighThreshold: 250,
+            },
+          },
+        });
+
+        expect(renderResult(stat.formatDatum({
+          value: 56,
+          deviation: { value: 20 },
+        }, statFormats.standardDevRange, customOpts))).to.eql({
+          lower: {
+            color: BG_COLORS.low,
+            value: '36',
+          },
+          upper: {
+            color: BG_COLORS.target,
+            value: '76',
+          },
+        });
+
+        expect(renderResult(stat.formatDatum({
+          value: 160,
+          deviation: { value: 30 },
+        }, statFormats.standardDevRange, customOpts))).to.eql({
+          lower: {
+            color: BG_COLORS.target,
+            value: '130',
+          },
+          upper: {
+            color: BG_COLORS.high,
+            value: '190',
+          },
+        });
+      });
+
+      it('should return correctly formatted html when `value >= 0` && `deviation.value >= 0` for mg/dL units', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MMOLL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 3.0,
+              targetLowerBound: 3.9,
+              targetUpperBound: 10.0,
+              veryHighThreshold: 13.9,
+            },
+          },
+        });
+
+        expect(renderResult(stat.formatDatum({
+          value: 3.8,
+          deviation: { value: 1 },
+        }, statFormats.standardDevRange, customOpts))).to.eql({
+          lower: {
+            color: BG_COLORS.low,
+            value: '2.8',
+          },
+          upper: {
+            color: BG_COLORS.target,
+            value: '4.8',
+          },
+        });
+
+        expect(renderResult(stat.formatDatum({
+          value: 10.2,
+          deviation: { value: 1.5 },
+        }, statFormats.standardDevRange, customOpts))).to.eql({
+          lower: {
+            color: BG_COLORS.target,
+            value: '8.7',
+          },
+          upper: {
+            color: BG_COLORS.high,
+            value: '11.7',
+          },
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0` || `deviation.value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+          deviation: { value: 10 },
+        }, statFormats.standardDevRange)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+
+        expect(stat.formatDatum({
+          value: 10,
+          deviation: { value: -1 },
+        }, statFormats.standardDevRange)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('standardDevValue format', () => {
+      it('should return correctly formatted data when `value >= 0` for mg/dL units', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MGDL_UNITS,
+          },
+        });
+
+        expect(stat.formatDatum({
+          value: 42.85,
+        }, statFormats.standardDevValue, customOpts)).to.include({
+          value: '43',
+        });
+      });
+
+      it('should return correctly formatted data when `value >= 0` for mmol/L units', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MMOLL_UNITS,
+          },
+        });
+
+        expect(stat.formatDatum({
+          value: 15.86,
+        }, statFormats.standardDevValue, customOpts)).to.include({
+          value: '15.9',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.standardDevValue)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('units format', () => {
+      it('should return correctly formatted data when `value >= 0`', () => {
+        expect(stat.formatDatum({
+          value: 47.234,
+        }, statFormats.units)).to.include({
+          value: '47.2',
+          suffix: 'U',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.units)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
+    });
+
+    context('unitsPerKg format', () => {
+      it('should return correctly formatted data when `value >= 0`', () => {
+        expect(stat.formatDatum({
+          value: 10.678,
+          suffix: 'kg',
+        }, statFormats.unitsPerKg)).to.include({
+          value: '10.68',
+          suffix: 'U/kg',
+        });
+
+        expect(stat.formatDatum({
+          value: 11,
+          suffix: 'kg',
+        }, statFormats.unitsPerKg)).to.include({
+          value: '11.00',
+          suffix: 'U/kg',
+        });
+      });
+
+      it('should convert `lb` values to `kg` by multiplying 2.2046226218, and format to 2 decimal places', () => {
+        expect(stat.formatDatum({
+          value: 1,
+          suffix: 'lb',
+        }, statFormats.unitsPerKg)).to.include({
+          value: '2.20',
+          suffix: 'U/kg',
+        });
+      });
+
+      it('should return the empty placeholder text and id when `value < 0`', () => {
+        expect(stat.formatDatum({
+          value: -1,
+        }, statFormats.unitsPerKg)).to.include({
+          id: 'statDisabled',
+          value: '--',
+        });
+      });
     });
   });
 
@@ -1033,6 +1649,128 @@ describe('stat', () => {
         tooltip: statFormats.units,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+    });
+  });
+
+  describe('statsText', () => {
+    const textUtil = {
+      buildTextTable: sinon.stub().returns('text table'),
+      buildTextLine: sinon.stub().returns('text line'),
+    };
+
+    const defaultBgPrefs = {
+      bgClasses: {
+        'very-high': { boundary: 600 },
+        high: { boundary: 300 },
+        target: { boundary: 180 },
+        low: { boundary: 70 },
+        'very-low': { boundary: 54 },
+      },
+      bgUnits: MGDL_UNITS,
+    };
+
+    const defaultStat = {
+      title: 'My Stat',
+      data: {
+        data: [{ value: 5, id: 'myStat' }],
+        dataPaths: { summary: 'data.0' },
+      },
+      dataFormat: { summary: 'myFormat' },
+    };
+
+    // Stats formatted as tables
+    const timeInRange = { ...defaultStat, id: 'timeInRange', title: 'timeInRange' };
+    const readingsInRange = { ...defaultStat, id: 'readingsInRange', title: 'readingsInRange' };
+    const totalInsulin = { ...defaultStat, id: 'totalInsulin', title: 'totalInsulin' };
+    const timeInAuto = { ...defaultStat, id: 'timeInAuto', title: 'timeInAuto' };
+
+    // Stats formatted as lines
+    const averageGlucose = { ...defaultStat, id: 'averageGlucose', title: 'averageGlucose' };
+    const averageDailyDose = { ...defaultStat, id: 'averageDailyDose', title: 'averageDailyDose' };
+    const carbs = { ...defaultStat, id: 'carbs', title: 'carbs' };
+    const coefficientOfVariation = { ...defaultStat, id: 'coefficientOfVariation', title: 'coefficientOfVariation' };
+    const glucoseManagementIndicator = { ...defaultStat, id: 'glucoseManagementIndicator', title: 'glucoseManagementIndicator' };
+    const sensorUsage = { ...defaultStat, id: 'sensorUsage', title: 'sensorUsage' };
+    const standardDev = { ...defaultStat, id: 'standardDev', title: 'standardDev' };
+
+    const stats = [
+      timeInRange,
+      readingsInRange,
+      totalInsulin,
+      timeInAuto,
+      averageGlucose,
+      averageDailyDose,
+      carbs,
+      coefficientOfVariation,
+      glucoseManagementIndicator,
+      sensorUsage,
+      standardDev,
+    ];
+
+    const defaultOpts = { bgPrefs: defaultBgPrefs, data: defaultStat.data, forcePlainTextValues: true };
+
+    afterEach(() => {
+      textUtil.buildTextTable.resetHistory();
+      textUtil.buildTextLine.resetHistory();
+    });
+
+    it('should reshape provided tideline-style bgPrefs to the viz format', () => {
+      const bgPrefs = { ...defaultBgPrefs };
+      stat.statsText(stats, textUtil, bgPrefs);
+      expect(bgPrefs.bgBounds).to.be.an('object');
+    });
+
+    it('should render all horizontal bar stats as tables', () => {
+      const result = stat.statsText([
+        timeInRange,
+        readingsInRange,
+        totalInsulin,
+        timeInAuto,
+      ], textUtil, defaultBgPrefs);
+
+      sinon.assert.callCount(textUtil.buildTextTable, 4);
+      sinon.assert.callCount(textUtil.buildTextLine, 0);
+      sinon.assert.calledWith(textUtil.buildTextTable, 'timeInRange');
+      sinon.assert.calledWith(textUtil.buildTextTable, 'readingsInRange');
+      sinon.assert.calledWith(textUtil.buildTextTable, 'totalInsulin');
+      sinon.assert.calledWith(textUtil.buildTextTable, 'timeInAuto');
+
+      expect(result).to.be.a('string').and.include('text table');
+    });
+
+    it('should render all other stats as simple lines', () => {
+      const result = stat.statsText([
+        averageGlucose,
+        averageDailyDose,
+        carbs,
+        coefficientOfVariation,
+        glucoseManagementIndicator,
+        sensorUsage,
+        standardDev,
+      ], textUtil, defaultBgPrefs);
+
+      sinon.assert.callCount(textUtil.buildTextTable, 0);
+      sinon.assert.callCount(textUtil.buildTextLine, 7);
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'averageGlucose' }));
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'averageDailyDose' }));
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'carbs' }));
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'coefficientOfVariation' }));
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'glucoseManagementIndicator' }));
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'sensorUsage' }));
+      sinon.assert.calledWith(textUtil.buildTextLine, sinon.match({ label: 'standardDev' }));
+
+      expect(result).to.be.a('string').and.include('text line');
+    });
+
+    it('should call formatDatum on each stat with appropriate args', () => {
+      const formatDatumSpy = sinon.spy(stat, 'formatDatum');
+
+      stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
+
+      sinon.assert.callCount(formatDatumSpy, 11);
+      sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
+
+      formatDatumSpy.restore();
     });
   });
 });

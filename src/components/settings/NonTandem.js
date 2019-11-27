@@ -17,8 +17,8 @@
 
 import React, { PropTypes } from 'react';
 import _ from 'lodash';
-import ClipboardButton from 'react-clipboard.js';
 
+import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
@@ -190,18 +190,17 @@ const NonTandem = (props) => {
 
   return (
     <div>
-      <ClipboardButton
-        className={styles.copyButton}
-        button-title={t('For email or notes')}
-        data-clipboard-target="#copySettingsText"
-        onSuccess={copySettingsClicked}
-      >
-        <p>{t('Copy as text')}</p>
-      </ClipboardButton>
-      <Header
-        deviceDisplayName={deviceName(lookupKey)}
-        deviceMeta={nonTandemData.deviceMeta(pumpSettings, timePrefs)}
-      />
+      <div className={styles.header}>
+        <Header
+          deviceDisplayName={deviceName(lookupKey)}
+          deviceMeta={nonTandemData.deviceMeta(pumpSettings, timePrefs)}
+        />
+        <ClipboardButton
+          buttonTitle={t('For email or notes')}
+          onSuccess={copySettingsClicked}
+          getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
+        />
+      </div>
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>
           <div className={styles.categoryTitle}>{t('Basal Rates')}</div>
@@ -216,9 +215,6 @@ const NonTandem = (props) => {
           </div>
         </div>
       </div>
-      <pre className={styles.copyText} id="copySettingsText">
-        {nonTandemText(user, pumpSettings, bgUnits, lookupKey)}
-      </pre>
     </div>
   );
 };

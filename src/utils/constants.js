@@ -125,3 +125,11 @@ export const pumpVocabulary = {
 export const AUTOMATED_BASAL_DEVICE_MODELS = {
   [MEDTRONIC]: ['1580', '1581', '1582', '1780', '1781', '1782'],
 };
+
+export const BG_COLORS = {
+  veryLow: '#FB5951',
+  low: '#FF8B7C',
+  target: '#76D3A6',
+  high: '#BB9AE7',
+  veryHigh: '#8C65D6',
+};
