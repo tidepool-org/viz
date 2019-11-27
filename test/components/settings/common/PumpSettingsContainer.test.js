@@ -53,7 +53,6 @@ describe('PumpSettingsContainer', () => {
       bgUnits: MGDL_UNITS,
       copySettingsClicked: sinon.spy(),
       currentPatientInViewId: 'a1b2c3',
-      markSettingsViewed,
       timePrefs: {
         timezoneAware: false,
         timezoneName: null,
@@ -81,8 +80,7 @@ describe('PumpSettingsContainer', () => {
     });
 
     describe('componentWillMount', () => {
-      it('should mark device settings view as `touched` & set opened section state', () => {
-        expect(markSettingsViewed.callCount).to.equal(0);
+      it('should call `toggleSettingsSection` & set opened section state if not `touched`', () => {
         expect(toggleSettingsSection.callCount).to.equal(0);
         const manufacturerKey = 'animas';
         mount(
@@ -93,14 +91,12 @@ describe('PumpSettingsContainer', () => {
             settingsState={untouched(animasSettings, manufacturerKey)}
           />
         );
-        expect(markSettingsViewed.callCount).to.equal(1);
         expect(toggleSettingsSection.callCount).to.equal(1);
         expect(toggleSettingsSection.args[0][0]).to.equal(manufacturerKey);
         expect(toggleSettingsSection.args[0][1]).to.equal(animasSettings.activeSchedule);
       });
 
-      it('should not mark device settings as `touched`, etc. if already `touched`', () => {
-        expect(markSettingsViewed.callCount).to.equal(0);
+      it('should not call `toggleSettingsSection`, etc. if already `touched`', () => {
         expect(toggleSettingsSection.callCount).to.equal(0);
         const manufacturerKey = 'animas';
         mount(
@@ -111,7 +107,6 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(animasSettings, manufacturerKey)}
           />
         );
-        expect(markSettingsViewed.callCount).to.equal(0);
         expect(toggleSettingsSection.callCount).to.equal(0);
       });
 
@@ -287,10 +282,6 @@ describe('PumpSettingsContainer', () => {
       },
     };
 
-    it('should map state.viz.settings[currentPatientInViewId] to `settingsState`', () => {
-      expect(mapStateToProps(state, { currentPatientInViewId: userId }).settingsState)
-        .to.deep.equal(state.viz.settings[userId]);
-    });
     it('should map state.blip.allUsersMap[currentPatientInViewId] to `user`', () => {
       expect(mapStateToProps(state, { currentPatientInViewId: userId }).user)
         .to.deep.equal(state.blip.allUsersMap[userId]);

@@ -36,7 +36,7 @@ import {
 
 import Doc from '../../helpers/pdfDoc';
 
-describe('BasicsPrintView', () => {
+describe.skip('BasicsPrintView', () => {
   let Renderer;
 
   const DPI = 72;

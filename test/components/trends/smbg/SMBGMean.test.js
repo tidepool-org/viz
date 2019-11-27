@@ -77,9 +77,8 @@ describe('SMBGMean', () => {
         expect(props.focusRange.callCount).to.equal(0);
         rect.simulate('mouseover');
         expect(props.focusRange.callCount).to.equal(1);
-        expect(props.focusRange.args[0][0]).to.equal(props.userId);
-        expect(props.focusRange.args[0][1]).to.deep.equal(props.datum);
-        expect(props.focusRange.args[0][2]).to.deep.equal(props.positionData);
+        expect(props.focusRange.args[0][0]).to.deep.equal(props.datum);
+        expect(props.focusRange.args[0][1]).to.deep.equal(props.positionData);
       });
     });
 
@@ -89,7 +88,6 @@ describe('SMBGMean', () => {
         expect(props.unfocusRange.callCount).to.equal(0);
         rect.simulate('mouseout');
         expect(props.unfocusRange.callCount).to.equal(1);
-        expect(props.unfocusRange.args[0][0]).to.equal(props.userId);
       });
     });
   });

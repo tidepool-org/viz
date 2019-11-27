@@ -35,8 +35,8 @@ import { SMBGDateLineAnimated } from '../../../../src/components/trends/smbg/SMB
 
 describe('SMBGDateLineAnimated', () => {
   let wrapper;
-  const focusLine = sinon.spy();
-  const unfocusLine = sinon.spy();
+  const focusSmbg = sinon.spy();
+  const unfocusSmbg = sinon.spy();
   const onSelectDate = sinon.spy();
   const grouped = true;
   const focusedDay = [];
@@ -52,10 +52,10 @@ describe('SMBGDateLineAnimated', () => {
     date,
     data,
     focusedDay,
-    focusLine,
+    focusSmbg,
     grouped,
     onSelectDate,
-    unfocusLine,
+    unfocusSmbg,
     xScale,
     yScale,
   };
@@ -95,24 +95,24 @@ describe('SMBGDateLineAnimated', () => {
 
   describe('interactions', () => {
     afterEach(() => {
-      props.focusLine.resetHistory();
-      props.unfocusLine.resetHistory();
+      props.focusSmbg.resetHistory();
+      props.unfocusSmbg.resetHistory();
     });
 
-    it('should call focusLine on mouseover of smbg line', () => {
+    it('should call focusSmbg on mouseover of smbg line', () => {
       const smbgDateLine = wrapper
         .find(`#smbgDateLine-${date} path`);
-      expect(focusLine.callCount).to.equal(0);
+      expect(focusSmbg.callCount).to.equal(0);
       smbgDateLine.simulate('mouseover');
-      expect(focusLine.callCount).to.equal(1);
+      expect(focusSmbg.callCount).to.equal(1);
     });
 
-    it('should call unfocusLine on mouseout of smbg line', () => {
+    it('should call unfocusSmbg on mouseout of smbg line', () => {
       const smbgDateLine = wrapper
         .find(`#smbgDateLine-${date} path`);
-      expect(unfocusLine.callCount).to.equal(0);
+      expect(unfocusSmbg.callCount).to.equal(0);
       smbgDateLine.simulate('mouseout');
-      expect(unfocusLine.callCount).to.equal(1);
+      expect(unfocusSmbg.callCount).to.equal(1);
     });
 
     it('should call onSelectDate on click of smbg line', () => {

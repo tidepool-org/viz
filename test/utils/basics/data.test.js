@@ -87,18 +87,13 @@ const oneWeekDates = [
   },
 ];
 
-describe('basics data utils', () => {
+describe.only('basics data utils', () => {
   describe('defineBasicsAggregations', () => {
     const sectionNames = [
       'basals',
-      'basalBolusRatio',
-      'bgDistribution',
       'boluses',
       'fingersticks',
       'siteChanges',
-      'totalDailyDose',
-      'timeInAutoRatio',
-      'averageDailyCarbs',
     ];
 
     it('should return an object with all required basics section keys with the default properties set', () => {
@@ -140,28 +135,6 @@ describe('basics data utils', () => {
       const automatedStopFilter = _.find(result.basals.dimensions, { key: 'automatedStop' });
       expect(automatedStopFilter.label).to.equal('Automated Exited');
     });
-
-    it('should set the active basal ratio to `basalBolusRatio` for non-automated-basal devices', () => {
-      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '723');
-      expect(result.basalBolusRatio.active).to.be.true;
-      expect(result.timeInAutoRatio.active).to.be.false;
-    });
-
-    it('should activate both `basalBolusRatio` and `timeInAutoRatio` for automated-basal devices', () => {
-      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780');
-      expect(result.basalBolusRatio.active).to.be.true;
-      expect(result.timeInAutoRatio.active).to.be.true;
-    });
-
-    it('should set the per-manufacturer labels for `timeInAutoRatio`, with default fallbacks when unavailable', () => {
-      const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], MEDTRONIC, '1780');
-      expect(result.timeInAutoRatio.title).to.equal('Time in Auto Mode ratio');
-      expect(result.timeInAutoRatio.dimensions[1].label).to.equal('Auto Mode');
-
-      const fallbackResult = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], ANIMAS);
-      expect(fallbackResult.timeInAutoRatio.title).to.equal('Time in Automated ratio');
-      expect(fallbackResult.timeInAutoRatio.dimensions[1].label).to.equal('Automated');
-    });
   });
 
   describe('generateCalendarDayLabels', () => {
@@ -169,6 +142,14 @@ describe('basics data utils', () => {
       const result = dataUtils.generateCalendarDayLabels(oneWeekDates);
       expect(result).to.eql(['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']);
     });
+  });
+
+  describe('getSiteChangeSource', () => {
+
+  });
+
+  describe('getSiteChangeSourceLabel', () => {
+
   });
 
   describe('processBasicsAggregations', () => {
@@ -191,19 +172,12 @@ describe('basics data utils', () => {
     };
 
     it('should disable sections for which there is no data available', () => {
-      // all sections (including timeInAutoRatio since it's an automated-basal device) active by default
       expect(basicsData.sections.basals.active).to.be.true;
       expect(basicsData.sections.boluses.active).to.be.true;
       expect(basicsData.sections.siteChanges.active).to.be.true;
       expect(basicsData.sections.fingersticks.active).to.be.true;
-      expect(basicsData.sections.bgDistribution.active).to.be.true;
-      expect(basicsData.sections.totalDailyDose.active).to.be.true;
-      expect(basicsData.sections.basalBolusRatio.active).to.be.true;
-      expect(basicsData.sections.timeInAutoRatio.active).to.be.true;
-      expect(basicsData.sections.averageDailyCarbs.active).to.be.true;
-      expect(_.find(basicsData.sections.fingersticks.dimensions, { path: 'calibration' })).to.not.be.undefined;
-      const processedBasicsData = dataUtils.processInfusionSiteHistory(basicsData, {});
-      const result = dataUtils.processBasicsAggregations(processedBasicsData);
+      expect(_.find(basicsData.sections.fingersticks.dimensions, { key: 'calibration' })).to.not.be.undefined;
+      const result = dataUtils.processBasicsAggregations(basicsData);
 
       // basals gets disabled when no data
       expect(result.sections.basals.disabled).to.be.true;

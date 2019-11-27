@@ -82,10 +82,9 @@ describe('CBGSliceSegment', () => {
         expect(props.focusSlice.callCount).to.equal(0);
         rect.simulate('mouseover');
         expect(props.focusSlice.callCount).to.equal(1);
-        expect(props.focusSlice.args[0][0]).to.equal(props.userId);
-        expect(props.focusSlice.args[0][1]).to.deep.equal(props.datum);
-        expect(props.focusSlice.args[0][2]).to.deep.equal(props.positionData);
-        expect(props.focusSlice.args[0][3]).to.deep.equal(props.segment.heightKeys);
+        expect(props.focusSlice.args[0][0]).to.deep.equal(props.datum);
+        expect(props.focusSlice.args[0][1]).to.deep.equal(props.positionData);
+        expect(props.focusSlice.args[0][2]).to.deep.equal(props.segment.heightKeys);
       });
     });
 
@@ -96,7 +95,6 @@ describe('CBGSliceSegment', () => {
           expect(props.unfocusSlice.callCount).to.equal(0);
           rect.simulate('mouseout', {});
           expect(props.unfocusSlice.callCount).to.equal(1);
-          expect(props.unfocusSlice.args[0][0]).to.equal(props.userId);
         });
       });
 

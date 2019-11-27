@@ -10,6 +10,8 @@ import { MGDL_UNITS, MGDL_PER_MMOLL } from '../../src/utils/constants';
 describe('AggregationUtil', () => {
   let aggregationUtil;
 
+  const patientId = 'abc123';
+
   const useRawData = {
     raw: true,
   };
@@ -109,7 +111,8 @@ describe('AggregationUtil', () => {
   };
 
   const createAggregationUtil = (dataset, query) => {
-    const dataUtil = new DataUtil(dataset);
+    const dataUtil = new DataUtil();
+    dataUtil.addData(dataset, patientId);
     dataUtil.query(query);
     dataUtil.activeEndpoints = dataUtil.endpoints.current;
 

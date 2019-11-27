@@ -73,6 +73,11 @@ export class DataUtil {
   addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
 
+    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
+    this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
+    this.latestDatumByType = this.latestDatumByType || {};
+
     if (_.isEmpty(rawData) || !patientId) return {};
 
     // First, we check to see if we already have data for a different patient stored. If so, we
@@ -81,11 +86,6 @@ export class DataUtil {
       this.removeData();
     }
     this.patientId = patientId;
-
-    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
-    this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
-    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
-    this.latestDatumByType = this.latestDatumByType || {};
 
     // We first clone the raw data so we don't mutate it at the source
     const data = _.cloneDeep(rawData);
@@ -423,10 +423,10 @@ export class DataUtil {
       this.data.remove(predicate);
     } else {
       this.log('Reinitializing');
-      delete this.bolusToWizardIdMap;
-      delete this.bolusDatumsByIdMap;
-      delete this.wizardDatumsByIdMap;
-      delete this.latestDatumByType;
+      this.bolusToWizardIdMap = {};
+      this.bolusDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.latestDatumByType = {};
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;

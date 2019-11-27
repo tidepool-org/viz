@@ -114,9 +114,8 @@ describe('CBGDateTraceAnimated', () => {
           expect(props.focusDateTrace.callCount).to.equal(0);
           circle.simulate('mouseover');
           expect(props.focusDateTrace.callCount).to.equal(1);
-          expect(props.focusDateTrace.args[0][0]).to.equal(props.userId);
-          expect(props.focusDateTrace.args[0][1]).to.exist;
-          expect(props.focusDateTrace.args[0][2]).to.exist;
+          expect(props.focusDateTrace.args[0][0]).to.eql(props.data[0]);
+          expect(props.focusDateTrace.args[0][1]).to.be.an('object').and.have.keys(['left', 'yPositions']);
         });
       });
 
