@@ -23,13 +23,9 @@ import moment from 'moment';
 import PrintView from './PrintView';
 
 import {
-  cgmStatusMessage,
-  determineBgDistributionSource,
   defineBasicsAggregations,
   generateCalendarDayLabels,
-  processInfusionSiteHistory,
   processBasicsAggregations,
-  reduceByDay,
 } from '../../utils/basics/data';
 
 import { generateBgRangeLabels } from '../../utils/bloodglucose';
@@ -43,8 +39,6 @@ import serialize from 'serialize-svg-path';
 
 import {
   CGM_DATA_KEY,
-  NO_SITE_CHANGE,
-  SITE_CHANGE,
   SITE_CHANGE_CANNULA,
   SITE_CHANGE_RESERVOIR,
   SITE_CHANGE_TUBING,
@@ -69,8 +63,8 @@ class BasicsPrintView extends PrintView {
     this.manufacturer = this.source === 'carelink' ? 'medtronic' : this.source;
 
     // Process basics data
-    const { source: bgSource, cgmStatus } = determineBgDistributionSource(this.data);
-    _.assign(this, { bgSource, cgmStatus });
+    // const { source: bgSource, cgmStatus } = determineBgDistributionSource(this.data);
+    // _.assign(this, { bgSource, cgmStatus });
 
     this.data.sections = defineBasicsAggregations(
       this.bgPrefs,
@@ -78,7 +72,7 @@ class BasicsPrintView extends PrintView {
       _.get(latestPumpUpload, 'deviceModel')
     );
 
-    this.data = reduceByDay(this.data, this.bgPrefs);
+    // this.data = reduceByDay(this.data, this.bgPrefs);
 
     const averageDailyCarbs = _.get(this.data, 'stats.carbs.data.raw.carbs');
     const totalDailyDose = _.get(this.data, 'stats.averageDailyDose.data.raw.totalInsulin');
@@ -105,7 +99,7 @@ class BasicsPrintView extends PrintView {
       totalDailyDose,
     });
 
-    this.data = processInfusionSiteHistory(this.data, this.patient);
+    // this.data = processInfusionSiteHistory(this.data, this.patient);
 
     this.data = processBasicsAggregations(this.data);
 
@@ -263,7 +257,7 @@ class BasicsPrintView extends PrintView {
       const rangeDurations = _.get(this.data, `stats.${stat}.data.raw`, {});
       const totalDuration = _.get(this.data, `stats.${stat}.data.total.value`, {});
 
-      this.doc.text(cgmStatusMessage(this.cgmStatus), { width: columnWidth });
+      // this.doc.text(cgmStatusMessage(this.cgmStatus), { width: columnWidth });
 
       const tableColumns = [
         {
@@ -758,8 +752,9 @@ class BasicsPrintView extends PrintView {
       const gridHeight = height - (this.doc.y - yPos);
       const gridWidth = width > gridHeight ? gridHeight : width;
 
-      const siteChangeTypes = [NO_SITE_CHANGE, SITE_CHANGE];
-      const isSiteChange = _.includes(siteChangeTypes, type) ? type === SITE_CHANGE : null;
+      // const siteChangeTypes = [NO_SITE_CHANGE, SITE_CHANGE];
+      // const isSiteChange = _.includes(siteChangeTypes, type) ? type === SITE_CHANGE : null;
+      const isSiteChange = null;
 
       if (isSiteChange !== null) {
         this.setStroke(this.colors.grey);
