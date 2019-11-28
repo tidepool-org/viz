@@ -136,36 +136,6 @@ describe('constants', () => {
     });
   });
 
-  describe('NO_CGM', () => {
-    it('should be `noCGM`', () => {
-      expect(constants.NO_CGM).to.equal('noCGM');
-    });
-  });
-
-  describe('CGM_CALCULATED', () => {
-    it('should be `calculatedCGM`', () => {
-      expect(constants.CGM_CALCULATED).to.equal('calculatedCGM');
-    });
-  });
-
-  describe('NOT_ENOUGH_CGM', () => {
-    it('should be `notEnoughCGM`', () => {
-      expect(constants.NOT_ENOUGH_CGM).to.equal('notEnoughCGM');
-    });
-  });
-
-  describe('NO_SITE_CHANGE', () => {
-    it('should be `noSiteChange`', () => {
-      expect(constants.NO_SITE_CHANGE).to.equal('noSiteChange');
-    });
-  });
-
-  describe('SITE_CHANGE', () => {
-    it('should be `siteChange`', () => {
-      expect(constants.SITE_CHANGE).to.equal('siteChange');
-    });
-  });
-
   describe('SITE_CHANGE_RESERVOIR', () => {
     it('should be `reservoirChange`', () => {
       expect(constants.SITE_CHANGE_RESERVOIR).to.equal('reservoirChange');
