@@ -18,7 +18,6 @@
 /* eslint-disable max-len */
 
 import _ from 'lodash';
-import moment from 'moment';
 import * as dataUtils from '../../../src/utils/basics/data';
 
 import {
@@ -590,11 +589,17 @@ describe('basics data utils', () => {
 
     it('should round `Mean Duration` for site changes to 1 decimal place', () => {
       const updatedData = _.cloneDeep(data);
-      updatedData.data.cannulaPrime.data[0].normalTime = moment.utc(updatedData.data.cannulaPrime.data[0].normalTime).add(2, 'days').toISOString();
+      updatedData.data.aggregationsByDate.siteChanges = {
+        byDate: {
+          '2018-03-08': { summary: { daysSince: { cannulaPrime: 3 } } },
+          '2018-03-10': { summary: { daysSince: { cannulaPrime: 5 } } },
+          '2018-03-13': { summary: { daysSince: { cannulaPrime: 5 } } },
+        },
+      };
 
-      expect(_.mean([3, 5, 5])).to.equal(4.333333333333333); // Instead of [5, 5, 5] for datum.daysSince values because we moved the first datum by 2 days
+      expect(_.mean([3, 5, 5])).to.equal(4.333333333333333);
 
-      dataUtils.basicsText(patient, stats, endpoints, defaultBgPrefs, timePrefs, updatedData);
+      dataUtils.basicsText(patient, updatedData, stats, aggregations);
       sinon.assert.calledWith(
         textUtilStub.buildTextTable,
         'Infusion site changes from \'Fill Cannula\'',
