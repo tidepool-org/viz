@@ -168,7 +168,7 @@ export function generateCalendarDayLabels(days) {
  * @param {Object} patient
  * @param {String} manufacturer
  */
-export function getSiteChangeSource(patient, manufacturer) {
+export function getSiteChangeSource(patient = {}, manufacturer) {
   const {
     settings,
   } = patient;
@@ -216,10 +216,6 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
   /* eslint-disable no-param-reassign, max-len */
   const aggregationData = _.cloneDeep(data);
 
-  aggregations.siteChanges.source = getSiteChangeSource(patient, manufacturer);
-  aggregations.siteChanges.manufacturer = manufacturer;
-  aggregations.siteChanges.disabled = aggregations.siteChanges.source === SITE_CHANGE_TYPE_UNDECLARED;
-
   const hasDataInRange = processedData => (
     processedData && (_.keys(processedData.byDate).length > 0)
   );
@@ -240,7 +236,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
         break;
 
       case 'siteChanges':
-        emptyText = aggregation.type === SITE_CHANGE_TYPE_UNDECLARED
+        emptyText = hasDataInRange(aggregationData[aggregationKey])
           ? t("Please choose a preferred site change source from the 'Basics' web view to view this data.")
           : t("This section requires data from an insulin pump, so there's nothing to display.");
         break;
@@ -270,6 +266,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
       disabled = !hasSMBG && !hasCalibrations;
     } else if (type === 'siteChanges') {
       aggregations[key].source = getSiteChangeSource(patient, manufacturer);
+      aggregations[key].manufacturer = manufacturer;
       disabled = aggregations[key].source === SITE_CHANGE_TYPE_UNDECLARED;
       if (!disabled) {
         aggregations[key].subTitle = getSiteChangeSourceLabel(
@@ -341,18 +338,14 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
 export function basicsText(patient, data, stats, aggregations) {
   const {
     data: {
+      aggregationsByDate = {},
       current: {
-        aggregationsByDate = {},
         endpoints = {},
       },
     },
     bgPrefs,
     timePrefs,
   } = data;
-
-  _.defaults(bgPrefs, {
-    bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
-  });
 
   const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
 
