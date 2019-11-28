@@ -236,7 +236,7 @@ export function processBasalRateData(scheduleData) {
 
   data.push({
     start: 'Total',
-    rate: getTotalBasalRates(scheduleData),
+    rate: getTotalBasalRates(scheduleData.value),
   });
   return data;
 }

@@ -95,7 +95,7 @@ export function basal(schedule, settings, manufacturer) {
   const isAutomated = _.get(pumpVocabulary, [
     data.deviceName(lookupKey),
     AUTOMATED_DELIVERY,
-  ]) === schedule;
+  ]) === name;
 
   return {
     scheduleName: name,

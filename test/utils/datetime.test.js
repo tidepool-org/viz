@@ -21,7 +21,7 @@ import { timeParse } from 'd3-time-format';
 import * as patients from '../../data/patient/profiles';
 import * as datetime from '../../src/utils/datetime';
 
-describe.only('datetime', () => {
+describe('datetime', () => {
   const {
     standard,
     fakeChildAcct,

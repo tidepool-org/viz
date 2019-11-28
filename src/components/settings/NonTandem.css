@@ -83,6 +83,13 @@
   justify-content: space-between;
 }
 
+.automatedSingleLineBasalScheduleHeader {
+  composes: automatedBasalHeaderBackground settingsHeader from './settings.css';
+  justify-content: space-between;
+  font-size: 16px;
+  padding: 0;
+}
+
 .twoLineBasalScheduleHeader {
   composes: basalHeaderBackground settingsHeaderDecoration settingsHeaderLayout settingsHeaderText from './settings.css';
 }
@@ -99,6 +106,8 @@
   composes: automatedBasalHeaderBackground from './settings.css';
   text-align: left;
   padding-left: 28px;
+  padding-top: 8px;
+  padding-bottom: 8px
 }
 
 .automatedBasalHeaderBackground > span {
