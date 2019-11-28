@@ -195,7 +195,7 @@ export function getTimedSchedules(settingsData) {
  * @return {Object}              filtered meta data
  */
 export function getDeviceMeta(settingsData, timePrefs) {
-  const utc = datetime.getHammertimeFromDatumWithTimePrefs(settingsData, timePrefs);
+  const utc = settingsData.normalTime;
   const uploadedTime = utc ?
     datetime.formatLocalizedFromUTC(utc, timePrefs, 'MMM D, YYYY') :
     false;

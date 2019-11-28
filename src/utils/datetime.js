@@ -285,31 +285,6 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
 }
 
 /**
- * getHammertimeFromDatumWithTimePrefs
- * @param {Object} datum - a Tidepool datum with a time (required) and deviceTime (optional)
- * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
- *
- * @return {Number} Integer hammertime (i.e., UTC time in milliseconds)
- */
-export function getHammertimeFromDatumWithTimePrefs(datum, timePrefs) {
-  let hammertime;
-
-  if (timePrefs.timezoneAware) {
-    hammertime = datum.time || null;
-  } else {
-    hammertime = datum.deviceTime || null;
-  }
-
-  if (_.isNaN(hammertime)) {
-    throw new Error(
-      'Check your input datum; `time` nor `deviceTime` were hammertime integers'
-    );
-  }
-
-  return hammertime;
-}
-
-/**
  * getLocalizedCeiling
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String

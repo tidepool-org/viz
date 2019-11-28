@@ -26,7 +26,6 @@ import { getOutOfRangeThreshold } from '../../../utils/bloodglucose';
 import {
   formatClocktimeFromMsPer24,
   formatLocalizedFromUTC,
-  getHammertimeFromDatumWithTimePrefs,
 } from '../../../utils/datetime';
 
 import styles from './FocusedSMBGPointLabel.css';
@@ -50,9 +49,8 @@ const FocusedSMBGPointLabel = (props) => {
     lines,
   } = props;
 
-  const hammertime = getHammertimeFromDatumWithTimePrefs(datum, timePrefs);
-  const lineDate = formatLocalizedFromUTC(hammertime, timePrefs);
-  const shortDate = formatLocalizedFromUTC(hammertime, timePrefs, 'MMM D');
+  const lineDate = formatLocalizedFromUTC(datum.normalTime, timePrefs);
+  const shortDate = formatLocalizedFromUTC(datum.normalTime, timePrefs, 'MMM D');
   const side = position.tooltipLeft ? 'left' : 'right';
   const smbgsOnDate = allSmbgsOnDate.slice();
   const positions = allPositions.slice();
