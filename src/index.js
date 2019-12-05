@@ -107,7 +107,6 @@ const utils = {
   data: {
     selectDailyViewData,
     selectBgLogViewData,
-    DataUtil,
   },
   datetime: {
     addDuration,
