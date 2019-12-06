@@ -1,15 +1,6 @@
 import Validator from 'fastest-validator';
+import _ from 'lodash';
 import { MGDL_UNITS, MMOLL_UNITS, MS_IN_DAY } from '../constants.js';
-
-/* eslint-disable lodash/prefer-lodash-method */
-
-const pick = (object, keys) => keys.reduce((obj, key) => {
-  if (object && object.hasOwnProperty(key)) {
-    obj[key] = object[key]; // eslint-disable-line no-param-reassign
-  }
-  return obj;
-}, {});
-
 
 const v = new Validator({
   messages: {
@@ -20,14 +11,14 @@ const v = new Validator({
 v.add('withDependantFields', (value, schema, fieldName, object) => {
   let missingFields = false;
 
-  schema.fields.forEach(field => {
+  _.each(schema.fields, field => {
     if (!missingFields) {
-      missingFields = object[field] == null;
+      missingFields = _.isNil(object[field]);
     }
   });
 
   if (missingFields) {
-    return v.makeError('missingFieldDependancy', schema.fields, JSON.stringify(pick(object, schema.fields)));
+    return v.makeError('missingFieldDependancy', schema.fields, JSON.stringify(_.pick(object, schema.fields)));
   }
 
   const compiledSchemaRule = v.compileSchemaRule(schema.schema);
@@ -36,10 +27,10 @@ v.add('withDependantFields', (value, schema, fieldName, object) => {
 
 v.add('objectWithUnknownKeys', (value, schema, fieldName, object) => {
   const compiledSchemaRule = v.compileSchemaRule(schema.schema);
-  const fieldValues = Object.values(object[fieldName]);
+  const fieldValues = _.valuesIn(object[fieldName]);
   const errors = [];
 
-  fieldValues.forEach(fieldValue => {
+  _.each(fieldValues, fieldValue => {
     const result = v.checkSchemaRule(fieldValue, compiledSchemaRule, fieldName);
     if (result !== true) errors.push(result);
   });
