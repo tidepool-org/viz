@@ -516,6 +516,11 @@ export class DataUtil {
       return this.dimension.byType.filterExact(type);
     };
 
+    this.filter.byTypes = (types = []) => {
+      delete this.activeType;
+      return this.dimension.byType.filterFunction(type => _.includes(types, type));
+    };
+
     this.filter.bySubType = subType => {
       this.activeSubType = subType;
       return this.dimension.bySubType.filterExact(subType);
@@ -725,6 +730,10 @@ export class DataUtil {
     });
   };
 
+  setStats = (stats = []) => {
+    this.stats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
+  };
+
   setTypes = types => {
     this.types = _.isArray(types) ? types : [];
 
@@ -824,6 +833,7 @@ export class DataUtil {
 
     this.setBgSources(bgSource);
     this.setTypes(types);
+    this.setStats(stats);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
     if (timePrefs) this.setTimePrefs(timePrefs);
     this.setEndpoints(endpoints, nextDays, prevDays);
@@ -843,8 +853,8 @@ export class DataUtil {
       this.filter.byActiveDays(this.activeDays);
 
       // Generate the stats for current range
-      if (stats && rangeKey === 'current') {
-        data[rangeKey].stats = this.getStats(stats);
+      if (this.stats.length && rangeKey === 'current') {
+        data[rangeKey].stats = this.getStats(this.stats);
       }
 
       // Generate the aggregations for current range
@@ -883,11 +893,10 @@ export class DataUtil {
 
   getStats = stats => {
     this.startTimer('generate stats');
-    const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
     const generatedStats = {};
 
     this.statUtil = new StatUtil(this);
-    _.each(selectedStats, stat => {
+    _.each(stats, stat => {
       const method = statFetchMethods[stat];
 
       if (_.isFunction(this.statUtil[method])) {
@@ -912,6 +921,8 @@ export class DataUtil {
       boluses: 'aggregateBoluses',
       fingersticks: 'aggregateFingersticks',
       siteChanges: 'aggregateSiteChanges',
+      dataByDate: 'aggregateDataByDate',
+      statsByDate: 'aggregateStatsByDate',
     };
 
     this.aggregationUtil = new AggregationUtil(this);

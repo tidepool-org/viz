@@ -425,6 +425,8 @@ stories.add('Query Generator', () => {
     boluses: 'boluses',
     fingersticks: 'fingersticks',
     siteChanges: 'siteChanges',
+    dataByDate: 'dataByDate',
+    statsByDate: 'statsByDate',
   };
 
   const getAggregationsByDateQueryFormat = () => options('Aggregations By Date Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);

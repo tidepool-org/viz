@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import bows from 'bows';
+import moment from 'moment';
 import reductio from 'reductio';
 
 import {
@@ -29,6 +30,8 @@ export class AggregationUtil {
     reductio.registerPostProcessor('postProcessCalibrationAggregations', this.postProcessCalibrationAggregations);
     reductio.registerPostProcessor('postProcessSiteChangeAggregations', this.postProcessSiteChangeAggregations);
     reductio.registerPostProcessor('postProcessSMBGAggregations', this.postProcessSMBGAggregations);
+    reductio.registerPostProcessor('postProcessDataByDateAggregations', this.postProcessDataByDateAggregations);
+    reductio.registerPostProcessor('postProcessStatsByDateAggregations', this.postProcessStatsByDateAggregations);
   };
 
   aggregateBasals = group => {
@@ -133,6 +136,27 @@ export class AggregationUtil {
     reducer(group);
 
     return group.post().postProcessSiteChangeAggregations()();
+  };
+
+  aggregateDataByDate = group => {
+    const types = _.map(this.dataUtil.types, d => d.type);
+    this.dataUtil.filter.byTypes(types);
+
+    const reducer = reductio();
+    reducer.dataList(true);
+
+    reducer(group);
+
+    return group.post().postProcessDataByDateAggregations()();
+  };
+
+  aggregateStatsByDate = group => {
+    const reducer = reductio();
+    reducer.dataList(true);
+
+    reducer(group);
+
+    return group.post().postProcessStatsByDateAggregations()();
   };
 
   /**
@@ -420,6 +444,81 @@ export class AggregationUtil {
     });
 
     return this.summarizeProcessedData(processedData);
+  };
+
+  /**
+   * postProcessDataByDateAggregations
+   *
+   * Post processor for crossfilter reductio data by date aggregations
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} formatted data by date aggregations for all types
+   */
+  postProcessDataByDateAggregations = priorResults => () => {
+    const data = _.filter(
+      _.cloneDeep(priorResults()),
+      ({ value: { dataList } }) => !_.isEmpty(dataList)
+    );
+
+    const processedData = {};
+
+    _.each(data, dataForDay => {
+      const {
+        value: {
+          dataList,
+        },
+      } = dataForDay;
+
+      _.each(dataList, d => this.dataUtil.normalizeDatumOut(d, ['*']));
+
+      const sortedData = _.sortBy(dataList, this.dataUtil.activeTimeField);
+
+      processedData[dataForDay.key] = _.groupBy(sortedData, 'type');
+    });
+
+    return processedData;
+  };
+
+  /**
+   * postProcessStatsByDateAggregations
+   *
+   * Post processor for crossfilter reductio stats by date aggregations
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} formatted stats by date aggregations
+   */
+  postProcessStatsByDateAggregations = priorResults => () => {
+    const data = _.filter(
+      _.cloneDeep(priorResults()),
+      ({ value: { dataList } }) => !_.isEmpty(dataList)
+    );
+
+    const processedData = {};
+    const initialActiveEndpoints = this.dataUtil.activeEndpoints;
+
+    _.each(_.reverse(data), (dataForDay, index) => {
+      // Set the endpoints to filter current data for day
+      const timezoneName = this.dataUtil.timePrefs.timezoneName || 'utc';
+
+      this.dataUtil.activeEndpoints.range = [
+        moment.utc(initialActiveEndpoints.range[1]).tz(timezoneName).subtract(index + 1, 'days').valueOf(),
+        moment.utc(initialActiveEndpoints.range[1]).tz(timezoneName).subtract(index, 'days').valueOf(),
+      ];
+
+      this.dataUtil.activeEndpoints.days = 1;
+      this.dataUtil.activeEndpoints.activeDays = 1;
+
+      this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+
+      // Fetch the stats with endpoints and activeDays set for the day
+      processedData[dataForDay.key] = this.dataUtil.getStats(this.dataUtil.stats);
+    });
+
+    // Reset the activeEndpoints to it's initial value
+    this.dataUtil.activeEndpoints = initialActiveEndpoints;
+    this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+
+    return processedData;
   };
 
   /* eslint-disable lodash/prefer-lodash-method */
