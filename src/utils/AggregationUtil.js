@@ -24,6 +24,9 @@ export class AggregationUtil {
   init = (dataUtil) => {
     this.dataUtil = dataUtil;
     this.bgBounds = _.get(dataUtil, 'bgPrefs.bgBounds');
+    this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
+    this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
+    this.earliestDateInActiveRange = moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD');
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
     reductio.registerPostProcessor('postProcessBolusAggregations', this.postProcessBolusAggregations);
@@ -168,11 +171,7 @@ export class AggregationUtil {
    * @returns {Object} formatted total and subtotal data for basal aggregations
    */
   postProcessBasalAggregations = priorResults => () => {
-    const data = _.filter(
-      _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
-    );
-
+    const data = this.filterByActiveRange(priorResults());
     const processedData = {};
 
     _.each(data, dataForDay => {
@@ -228,11 +227,7 @@ export class AggregationUtil {
    * @returns {Object} formatted total and subtotal data for bolus aggregations
    */
   postProcessBolusAggregations = priorResults => () => {
-    const data = _.filter(
-      _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
-    );
-
+    const data = this.filterByActiveRange(priorResults());
     const processedData = {};
 
     _.each(data, dataForDay => {
@@ -279,11 +274,7 @@ export class AggregationUtil {
    * @returns {Object} formatted total and subtotal data for calibration aggregations
    */
   postProcessCalibrationAggregations = priorResults => () => {
-    const data = _.filter(
-      _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
-    );
-
+    const data = this.filterByActiveRange(priorResults());
     const processedData = {};
 
     _.each(data, dataForDay => {
@@ -410,11 +401,7 @@ export class AggregationUtil {
    * @returns {Object} formatted total and subtotal data for smbg aggregations
    */
   postProcessSMBGAggregations = priorResults => () => {
-    const data = _.filter(
-      _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
-    );
-
+    const data = this.filterByActiveRange(priorResults());
     const processedData = {};
 
     _.each(data, dataForDay => {
@@ -455,11 +442,7 @@ export class AggregationUtil {
    * @returns {Object} formatted data by date aggregations for all types
    */
   postProcessDataByDateAggregations = priorResults => () => {
-    const data = _.filter(
-      _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
-    );
-
+    const data = this.filterByActiveRange(priorResults());
     const processedData = {};
 
     _.each(data, dataForDay => {
@@ -488,21 +471,14 @@ export class AggregationUtil {
    * @returns {Object} formatted stats by date aggregations
    */
   postProcessStatsByDateAggregations = priorResults => () => {
-    const data = _.filter(
-      _.cloneDeep(priorResults()),
-      ({ value: { dataList } }) => !_.isEmpty(dataList)
-    );
-
+    const data = this.filterByActiveRange(priorResults());
     const processedData = {};
-    const initialActiveEndpoints = this.dataUtil.activeEndpoints;
 
-    _.each(_.reverse(data), (dataForDay, index) => {
+    _.each(_.sortBy(data, 'key').reverse(), (dataForDay, index) => {
       // Set the endpoints to filter current data for day
-      const timezoneName = this.dataUtil.timePrefs.timezoneName || 'utc';
-
       this.dataUtil.activeEndpoints.range = [
-        moment.utc(initialActiveEndpoints.range[1]).tz(timezoneName).subtract(index + 1, 'days').valueOf(),
-        moment.utc(initialActiveEndpoints.range[1]).tz(timezoneName).subtract(index, 'days').valueOf(),
+        moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+        moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
       ];
 
       this.dataUtil.activeEndpoints.days = 1;
@@ -515,11 +491,16 @@ export class AggregationUtil {
     });
 
     // Reset the activeEndpoints to it's initial value
-    this.dataUtil.activeEndpoints = initialActiveEndpoints;
+    this.dataUtil.activeEndpoints = this.initialActiveEndpoints;
     this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
     return processedData;
   };
+
+  filterByActiveRange = results => _.filter(
+    _.cloneDeep(results),
+    result => result.key >= this.earliestDateInActiveRange
+  );
 
   /* eslint-disable lodash/prefer-lodash-method */
   reduceByTag = (tag, type, reducer) => {
