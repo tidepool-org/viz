@@ -21,7 +21,7 @@ addDecorator(withKnobs);
 let data;
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data = _.flatten(_.map(require('../local/data.json'), v => v.data));
+  data = _.flatten(_.map(require('../local/rawData.json'), v => v.data));
 } catch (e) {
   data = { data: [] };
 }
