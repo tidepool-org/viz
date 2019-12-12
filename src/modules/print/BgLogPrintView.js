@@ -25,6 +25,7 @@ import moment from 'moment';
 
 import PrintView from './PrintView';
 import { formatBgValue } from '../../utils/format';
+import { getStatDefinition } from '../../utils/stat';
 import { classifyBgValue, getOutOfRangeThreshold } from '../../utils/bloodglucose';
 import { formatClocktimeFromMsPer24, THREE_HRS } from '../../utils/datetime';
 import { MS_IN_HOUR } from '../../utils/constants';
@@ -36,11 +37,11 @@ class BgLogPrintView extends PrintView {
     super(doc, data, opts);
 
     this.smbgRadius = 3;
-    this.numDays = opts.numDays;
 
+    this.numDays = _.get(this.data, 'data.current.endpoints.activeDays');
     this.doc.addPage();
 
-    const dates = _.keys(data.dataByDate).sort();
+    const dates = _.keys(_.get(this.data, 'data.current.aggregationsByDate.dataByDate')).sort();
     const numDays = _.min([this.numDays, dates.length]);
     this.chartDates = _.slice(dates, -Math.abs(numDays)).reverse();
 
@@ -80,13 +81,13 @@ class BgLogPrintView extends PrintView {
   }
 
   getBgChartRow(date) {
-    const data = this.data.dataByDate[date];
+    const data = _.get(this.data, `data.current.aggregationsByDate.dataByDate.${date}`);
     const dateMoment = moment(date);
     const isWeekend = _.includes(['0', '6'], dateMoment.format('d'));
     const timeSlots = _.filter(_.map(_.sortBy(this.bgChart.columns, 'id'), 'id'), _.isNumber);
 
     const smbgByTimeSlot = _.groupBy(
-      data.data.smbg,
+      data.smbg,
       datum => _.findLast(timeSlots, slot => datum.msPer24 >= slot)
     );
 
@@ -180,7 +181,22 @@ class BgLogPrintView extends PrintView {
   renderSummaryTable() {
     this.resetText();
 
-    const { stats = {} } = this.data;
+    const endpoints = _.get(this.data, 'data.current.endpoints', {});
+
+    const stats = {};
+    const statsData = _.get(this.data, 'data.current.stats', {});
+
+    _.forOwn(statsData, (data, statType) => {
+      const stat = getStatDefinition(data, statType, {
+        bgSource: _.get(this.data, 'metaData.bgSources.current'),
+        days: endpoints.activeDays || endpoints.days,
+        bgPrefs: this.bgPrefs,
+        manufacturer: _.get(this.data, 'metaData.latestPumpUpload.manufacturer'),
+      });
+
+      stats[statType] = stat;
+    });
+
     const { total, days, averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
 
     const totalDays = Math.ceil(days || this.numDays || 0);

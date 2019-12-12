@@ -73,11 +73,11 @@ class PrintView {
     this.smallFontSize = opts.smallFontSize || SMALL_FONT_SIZE;
     this.extraSmallFontSize = opts.extraSmallFontSize || EXTRA_SMALL_FONT_SIZE;
 
-    this.bgPrefs = opts.bgPrefs;
-    this.bgUnits = opts.bgPrefs.bgUnits;
-    this.bgBounds = opts.bgPrefs.bgBounds;
-    this.timePrefs = opts.timePrefs;
-    this.timezone = getTimezoneFromTimePrefs(opts.timePrefs);
+    this.bgPrefs = data.bgPrefs;
+    this.bgUnits = data.bgPrefs.bgUnits;
+    this.bgBounds = data.bgPrefs.bgBounds;
+    this.timePrefs = data.timePrefs;
+    this.timezone = getTimezoneFromTimePrefs(data.timePrefs);
 
     this.width = opts.width || WIDTH;
     this.height = opts.height || HEIGHT;
