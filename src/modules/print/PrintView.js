@@ -55,7 +55,7 @@ class PrintView {
     this.doc = doc;
 
     this.title = opts.title;
-    this.data = data;
+    this.data = _.cloneDeep(data);
 
     this.debug = opts.debug || false;
 
