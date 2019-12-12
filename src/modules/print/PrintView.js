@@ -23,6 +23,7 @@ import PdfTableFitColumn from 'voilab-pdf-table/plugins/fitcolumn';
 import i18next from 'i18next';
 
 import {
+  getOffset,
   getTimezoneFromTimePrefs,
   formatBirthdate,
   formatCurrentDate,
@@ -44,7 +45,7 @@ import {
   SMALL_FONT_SIZE,
 } from './utils/constants';
 
-import { BG_COLORS } from '../../utils/constants';
+import { BG_COLORS, MS_IN_MIN } from '../../utils/constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -300,8 +301,10 @@ class PrintView {
   }
 
   getDateRange(startDate, endDate, format) {
+    const start = startDate - getOffset(startDate, this.timezone) * MS_IN_MIN;
+    const end = endDate - getOffset(endDate, this.timezone) * MS_IN_MIN;
     return t('Date range: {{dateRange}}', {
-      dateRange: formatDateRange(startDate, endDate, format),
+      dateRange: formatDateRange(start, end, format),
     });
   }
 

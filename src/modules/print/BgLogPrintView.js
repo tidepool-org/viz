@@ -52,7 +52,8 @@ class BgLogPrintView extends PrintView {
   }
 
   newPage() {
-    super.newPage(this.getDateRange(this.data.dateRange[0], this.data.dateRange[1]));
+    const currentRange = _.get(this.data, 'data.current.endpoints.range', []);
+    super.newPage(this.getDateRange(currentRange[0], currentRange[1] - 1));
   }
 
   getBGLabelYOffset() {
