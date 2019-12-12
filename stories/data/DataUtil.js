@@ -31,7 +31,6 @@ import {
 
 import moment from 'moment';
 
-import DataUtil from '../../src/utils/DataUtil';
 import Stat from '../../src/components/common/stat/Stat';
 import { commonStats, getStatDefinition } from '../../src/utils/stat';
 import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
@@ -48,14 +47,6 @@ const GROUP_SORTS = 'SORTS';
 const GROUP_UNITS = 'UNITS';
 const GROUP_STATS = 'STATS';
 const GROUP_RESULTS = 'RESULTS';
-
-let data;
-try {
-  // eslint-disable-next-line global-require, import/no-unresolved
-  data = require('../../local/blip-input.json');
-} catch (e) {
-  data = [];
-}
 
 const notes = `Run \`window.downloadInputData()\` from the console on a Tidepool Web data view.
 Save the resulting file to the \`local/\` directory of viz as \`blip-input.json\`,
@@ -96,12 +87,19 @@ const Results = ({ results, showData, showStats }) => {
   );
 };
 
-const patientId = 'abc123';
-const dataUtil = new DataUtil();
-dataUtil.addData(data, patientId);
+stories.add('Query Generator', (props) => {
+  const { dataUtil } = props;
 
-stories.add('Query Generator', () => {
-  const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
+  const datumTypes = ['cbg', 'smbg', 'basal', 'bolus', 'wizard', 'food', 'pumpSettings', 'upload'];
+
+  const latestDatumsByType = dataUtil.getMetaData('latestDatumByType').latestDatumByType;
+
+  const latestDatumTime = _.max(_.map(
+    _.pickBy(latestDatumsByType, d => _.includes(datumTypes, d.type)),
+    d => (d.normalTime)
+  ));
+
+  const endMoment = moment.utc(latestDatumTime).startOf('day').add(1, 'd');
 
   const getEndMoment = () => {
     const endDate = date('End Date', endMoment.toDate(), GROUP_DATES);
@@ -485,24 +483,25 @@ stories.add('Query Generator', () => {
   />;
 }, { notes });
 
-const message = {
-  id: '5cee9af2cb5d8e0011101c33',
-  guid: '8966e5c6-5b60-4f47-a937-c461eff4f624',
-  parentmessage: null,
-  userid: '991e1a7ef0',
-  groupid: 'a481e64684',
-  timestamp: '2018-03-27T19:34:38-04:00',
-  createdtime: '2019-05-26T14:45:06+00:00',
-  messagetext: 'Parent Note for testing',
-  user: {
-    fullName: 'Jill Jellyfish',
-  },
-};
+stories.add('Update Message', (props) => {
+  const { dataUtil, patientId } = props;
 
-const messageDataUtil = new DataUtil();
-messageDataUtil.addData([_.cloneDeep(message)], patientId);
+  const message = {
+    id: '5cee9af2cb5d8e0011101c33',
+    guid: '8966e5c6-5b60-4f47-a937-c461eff4f624',
+    parentmessage: null,
+    userid: '991e1a7ef0',
+    groupid: 'a481e64684',
+    timestamp: '2018-03-27T19:34:38-04:00',
+    createdtime: '2019-05-26T14:45:06+00:00',
+    messagetext: 'Parent Note for testing',
+    user: {
+      fullName: 'Jill Jellyfish',
+    },
+  };
 
-stories.add('Update Message', () => {
+  dataUtil.addData([message], patientId);
+
   const defaultQuery = {
     endpoints: [
       '2018-03-27T05:00:00.000Z',
@@ -517,10 +516,10 @@ stories.add('Update Message', () => {
 
   const query = () => object('Query', defaultQuery, GROUP_RESULTS);
   const datum = () => object('Message', _.cloneDeep(message), GROUP_RESULTS);
-  const updateButton = () => button('Update Message', () => messageDataUtil.updateDatum(datum()), GROUP_RESULTS);
+  const updateButton = () => button('Update Message', () => dataUtil.updateDatum(datum()), GROUP_RESULTS);
   return <Results
     showData
-    results={messageDataUtil.query(query())}
+    results={dataUtil.query(query())}
     datum={datum()}
     button={updateButton()}
   />;
