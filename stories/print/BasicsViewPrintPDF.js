@@ -25,7 +25,6 @@ import PrintView from '../../src/modules/print/PrintView';
 
 import * as profiles from '../../data/patient/profiles';
 import * as settings from '../../data/patient/settings';
-import { data as dataStub } from '../../data/patient/data';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
@@ -33,12 +32,12 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
 const stories = storiesOf('Basics View PDF', module);
 
-let data;
+let queries;
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data = require('../../local/print-view.json');
+  queries = require('../../local/PDFDataQueries.json');
 } catch (e) {
-  data = dataStub;
+  queries = {};
 }
 
 const bgBounds = {
@@ -56,7 +55,7 @@ const bgBounds = {
   },
 };
 
-function openPDF({ patient, bgUnits = MGDL_UNITS }) {
+function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
@@ -71,7 +70,9 @@ function openPDF({ patient, bgUnits = MGDL_UNITS }) {
     patient,
   };
 
-  createPrintView('basics', data[bgUnits].basics, opts, doc).render();
+  const data = queries ? dataUtil.query(queries.basics) : {};
+
+  createPrintView('basics', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
   doc.end();
@@ -88,9 +89,9 @@ and then use this story to iterate on the Basics Print PDF outside of Tidepool W
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
 
-stories.add(`cannula prime (${MGDL_UNITS})`, () => (
+stories.add(`cannula prime (${MGDL_UNITS})`, ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({ patient: {
+    onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.standard,
       ...settings.cannulaPrimeSelected,
     } })}
@@ -99,9 +100,9 @@ stories.add(`cannula prime (${MGDL_UNITS})`, () => (
   </button>
 ), { notes });
 
-stories.add(`tubing prime (${MMOLL_UNITS})`, () => (
+stories.add(`tubing prime (${MMOLL_UNITS})`, ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({
+    onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.tubingPrimeSelected,
@@ -113,9 +114,9 @@ stories.add(`tubing prime (${MMOLL_UNITS})`, () => (
   </button>
 ), { notes });
 
-stories.add(`reservoir change (${MGDL_UNITS})`, () => (
+stories.add(`reservoir change (${MGDL_UNITS})`, ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({
+    onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.reservoirChangeSelected,
@@ -127,9 +128,9 @@ stories.add(`reservoir change (${MGDL_UNITS})`, () => (
   </button>
 ), { notes });
 
-stories.add(`site change source undefined (${MMOLL_UNITS})`, () => (
+stories.add(`site change source undefined (${MMOLL_UNITS})`, ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({
+    onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.siteChangeSourceUndefined,
