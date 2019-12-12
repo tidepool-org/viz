@@ -21,9 +21,9 @@ addDecorator(withKnobs);
 let data;
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data = require('../local/blip-input.json');
+  data = _.flatten(_.map(require('../local/data.json'), v => v.data));
 } catch (e) {
-  data = [];
+  data = { data: [] };
 }
 
 const patientId = 'abc123';
