@@ -98,8 +98,9 @@ export class DataUtil {
     this.endTimer('processNormalizedData');
 
     // Filter out any data that failed validation, and and duplicates by `id`
+    this.clearFilters();
     const validData = _.uniqBy(data, 'id');
-    const rejectedData = _.remove(validData, 'reject');
+    const rejectedData = _.remove(validData, d => d.reject || this.filter.byId(d.id).top(1).length);
     this.data.add(validData);
 
     this.log('validData', validData.length, 'of', data.length);
