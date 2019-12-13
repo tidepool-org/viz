@@ -42,11 +42,9 @@ class SettingsPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
 
-    this.source = _.get(data, 'source', '').toLowerCase();
-    this.manufacturer = this.source === 'carelink' ? 'medtronic' : this.source;
-
     this.isTandem = this.manufacturer === 'tandem';
-    this.deviceMeta = getDeviceMeta(data, opts.timePrefs);
+    this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
+    this.deviceMeta = getDeviceMeta(this.latestPumpUpload.settings, this.timePrefs);
 
     this.doc.addPage();
   }
@@ -83,18 +81,18 @@ class SettingsPrintView extends PrintView {
   renderTandemProfiles() {
     this.renderSectionHeading('Profile Settings');
 
-    const basalSchedules = profileSchedules(this.data);
+    const basalSchedules = profileSchedules(this.latestPumpUpload.settings);
 
     const sortedSchedules = _.orderBy(basalSchedules,
       [
-        schedule => (schedule.name === this.data.activeSchedule ? 1 : 0),
+        schedule => (schedule.name === this.latestPumpUpload.settings.activeSchedule ? 1 : 0),
         'position',
       ],
       ['desc', 'asc']
     );
 
     _.each(sortedSchedules, schedule => {
-      const profile = tandemBasal(schedule, this.data, this.bgUnits);
+      const profile = tandemBasal(schedule, this.latestPumpUpload.settings, this.bgUnits);
 
       const heading = {
         text: profile.title.main,
@@ -205,7 +203,7 @@ class SettingsPrintView extends PrintView {
       activeSchedule,
       basalSchedules,
       lastManualBasalSchedule,
-    } = this.data;
+    } = this.latestPumpUpload.settings;
 
     const columnWidth = this.getActiveColumnWidth();
 
@@ -225,7 +223,7 @@ class SettingsPrintView extends PrintView {
     const schedules = _.reject(
       _.map(
         basalSchedules,
-        (schedule, index) => basal(index, this.data, this.manufacturer)
+        (schedule, index) => basal(index, this.latestPumpUpload.settings, this.manufacturer)
       ),
       schedule => (schedule.isAutomated && schedule.scheduleName !== activeSchedule)
     );
@@ -256,7 +254,7 @@ class SettingsPrintView extends PrintView {
 
       const heading = {
         text: scheduleLabel.main,
-        subText: schedule.isAutomated ? scheduleLabel.secondary.toLowerCase() : scheduleLabel.units,
+        subText: schedule.isAutomated ? ` ${scheduleLabel.secondary.toLowerCase()}` : ` ${scheduleLabel.units}`,
         note: schedule.isAutomated ? null : scheduleLabel.secondary,
       };
 
@@ -341,7 +339,7 @@ class SettingsPrintView extends PrintView {
 
     const heading = {
       text: settings.title,
-      subText: units,
+      subText: ` ${units}`,
     };
 
     this.renderTableHeading(heading, {
@@ -368,17 +366,26 @@ class SettingsPrintView extends PrintView {
 
   renderSensitivity() {
     const units = `${this.bgUnits}/U`;
-    this.renderWizardSetting(sensitivity(this.data, this.manufacturer, this.bgUnits), units);
+    this.renderWizardSetting(
+      sensitivity(this.latestPumpUpload.settings, this.manufacturer, this.bgUnits),
+      units
+    );
   }
 
   renderTarget() {
     const units = this.bgUnits;
-    this.renderWizardSetting(target(this.data, this.manufacturer), units);
+    this.renderWizardSetting(
+      target(this.latestPumpUpload.settings, this.manufacturer),
+      units
+    );
   }
 
   renderRatio() {
     const units = 'g/U';
-    this.renderWizardSetting(ratio(this.data, this.manufacturer), units);
+    this.renderWizardSetting(
+      ratio(this.latestPumpUpload.settings, this.manufacturer),
+      units
+    );
   }
 }
 

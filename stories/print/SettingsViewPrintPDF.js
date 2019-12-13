@@ -79,7 +79,7 @@ function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }, dataFixture) {
     patient,
   };
 
-  const data = dataFixture || queries ? dataUtil.query(queries.settings) : {};
+  const data = dataFixture || (queries ? dataUtil.query(queries.settings) : {});
 
   createPrintView('settings', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
