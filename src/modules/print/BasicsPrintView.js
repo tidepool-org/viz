@@ -27,6 +27,7 @@ import {
   defineBasicsAggregations,
   generateCalendarDayLabels,
   processBasicsAggregations,
+  findBasicsDays,
 } from '../../utils/basics/data';
 
 import { formatDatum, statBgSourceLabels } from '../../utils/stat';
@@ -37,6 +38,8 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE_RESERVOIR,
   SITE_CHANGE_TUBING,
+  NO_SITE_CHANGE,
+  SITE_CHANGE,
 } from '../../utils/constants';
 
 const siteChangeCannulaImage = require('./images/sitechange-cannula.png');
@@ -109,7 +112,8 @@ class BasicsPrintView extends PrintView {
     const columnWidth = this.getActiveColumnWidth();
     const calendar = {};
 
-    calendar.labels = generateCalendarDayLabels(this.data.days);
+    calendar.days = findBasicsDays(this.endpoints.range, this.timePrefs.timezoneName);
+    calendar.labels = generateCalendarDayLabels(calendar.days);
 
     calendar.headerHeight = 15;
 
@@ -125,8 +129,6 @@ class BasicsPrintView extends PrintView {
       padding: [3, 2, 3, 2],
     }));
 
-    calendar.days = this.data.days;
-
     calendar.pos = {};
 
     this.calendar = calendar;
@@ -137,23 +139,30 @@ class BasicsPrintView extends PrintView {
       width: this.chartArea.width,
       gutter: 15,
       type: 'percentage',
-      widths: [49, 25.5, 25.5],
+      widths: [25.5, 49, 25.5],
     });
   }
 
   render() {
-    // this.renderLeftColumn();
-    // this.renderCenterColumn();
-    this.renderRightColumn();
+    this.renderStats();
+    this.renderCalendars();
+    this.RenderCalendarSummaries();
   }
 
-  renderLeftColumn() {
+  renderStats() {
     this.goToLayoutColumnPosition(0);
+    this.renderAggregatedStats();
+  }
+
+  renderCalendars() {
+    this.goToLayoutColumnPosition(1);
     this.initCalendar();
+
+    const data = _.get(this.data, 'data.current.aggregationsByDate');
 
     this.renderCalendarSection({
       title: this.sections.fingersticks.title,
-      data: this.data.data.fingerstick.smbg.dataByDate,
+      data: data.fingersticks.smbg.byDate,
       type: 'smbg',
       disabled: this.sections.fingersticks.disabled,
       emptyText: this.sections.fingersticks.emptyText,
@@ -161,7 +170,7 @@ class BasicsPrintView extends PrintView {
 
     this.renderCalendarSection({
       title: this.sections.boluses.title,
-      data: this.data.data.bolus.dataByDate,
+      data: data.boluses.byDate,
       type: 'bolus',
       disabled: this.sections.boluses.disabled,
       emptyText: this.sections.boluses.emptyText,
@@ -174,11 +183,7 @@ class BasicsPrintView extends PrintView {
         text: this.sections.siteChanges.title,
         subText: siteChangesSubTitle ? `from '${this.sections.siteChanges.subTitle}'` : false,
       },
-      data: _.get(
-        this.data.data,
-        [_.get(this.sections.siteChanges, 'type'), 'infusionSiteHistory'],
-        {}
-      ),
+      data: data.siteChanges.byDate,
       type: 'siteChange',
       disabled: this.sections.siteChanges.disabled,
       emptyText: this.sections.siteChanges.emptyText,
@@ -186,7 +191,7 @@ class BasicsPrintView extends PrintView {
 
     this.renderCalendarSection({
       title: this.sections.basals.title,
-      data: this.data.data.basal.dataByDate,
+      data: data.basals.byDate,
       type: 'basal',
       disabled: this.sections.basals.disabled,
       emptyText: this.sections.basals.emptyText,
@@ -194,13 +199,15 @@ class BasicsPrintView extends PrintView {
     });
   }
 
-  renderCenterColumn() {
-    this.goToLayoutColumnPosition(1);
+  RenderCalendarSummaries() {
+    this.goToLayoutColumnPosition(2);
+
+    const data = _.get(this.data, 'data.current.aggregationsByDate');
 
     this.renderCalendarSummary({
       dimensions: this.sections.fingersticks.dimensions,
       header: this.sections.fingersticks.summaryTitle,
-      data: this.data.data.fingerstick.summary,
+      data: data.fingersticks,
       type: 'smbg',
       disabled: this.sections.fingersticks.disabled,
     });
@@ -208,7 +215,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSummary({
       dimensions: this.sections.boluses.dimensions,
       header: this.sections.boluses.summaryTitle,
-      data: this.data.data.bolus.summary,
+      data: data.boluses,
       type: 'bolus',
       disabled: this.sections.boluses.disabled,
     });
@@ -216,15 +223,10 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSummary({
       dimensions: this.sections.basals.dimensions,
       header: this.sections.basals.summaryTitle,
-      data: this.data.data.basal.summary,
+      data: data.basals,
       type: 'basal',
       disabled: this.sections.basals.disabled,
     });
-  }
-
-  renderRightColumn() {
-    this.goToLayoutColumnPosition(2);
-    this.renderAggregatedStats();
   }
 
   renderHorizontalBarStat(stat, opts = {}) {
@@ -494,30 +496,39 @@ class BasicsPrintView extends PrintView {
     if (disabled) {
       this.renderEmptyText(emptyText);
     } else {
+      const isSiteChange = type === 'siteChange';
       let priorToFirstSiteChange = false;
-      if (type === 'siteChange') {
-        priorToFirstSiteChange = _.some(data, { daysSince: NaN });
+      const siteChangeSource = this.sections.siteChanges.source;
+
+      if (isSiteChange) {
+        priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince));
       }
 
       const chunkedDayMap = _.chunk(_.map(this.calendar.days, (day, index) => {
         const date = moment.utc(day.date);
         const dateLabelMask = (index === 0 || date.date() === 1) ? 'MMM D' : 'D';
 
-        let dayType = _.get(data, `${day.date}.type`, day.type);
+        let dayType = day.type;
 
-        if (dayType === 'noSiteChange' && priorToFirstSiteChange) {
-          dayType = 'past';
-        }
+        if (isSiteChange) {
+          if (dayType !== 'future') {
+            dayType = data[day.date] ? SITE_CHANGE : NO_SITE_CHANGE;
+          }
 
-        if (dayType === 'siteChange' && priorToFirstSiteChange) {
-          priorToFirstSiteChange = false;
+          if (dayType === NO_SITE_CHANGE && priorToFirstSiteChange) {
+            dayType = 'past';
+          }
+
+          if (dayType === SITE_CHANGE && priorToFirstSiteChange) {
+            priorToFirstSiteChange = false;
+          }
         }
 
         return {
           color: this.colors[type],
           count: _.get(data, `${day.date}.total`, _.get(data, `${day.date}.count`, 0)),
           dayOfWeek: date.format('ddd'),
-          daysSince: _.get(data, `${day.date}.daysSince`),
+          daysSince: _.get(data, `${day.date}.summary.daysSince[${siteChangeSource}]`),
           label: date.format(dateLabelMask),
           type: dayType,
         };
@@ -576,9 +587,8 @@ class BasicsPrintView extends PrintView {
       const gridHeight = height - (this.doc.y - yPos);
       const gridWidth = width > gridHeight ? gridHeight : width;
 
-      // const siteChangeTypes = [NO_SITE_CHANGE, SITE_CHANGE];
-      // const isSiteChange = _.includes(siteChangeTypes, type) ? type === SITE_CHANGE : null;
-      const isSiteChange = null;
+      const siteChangeTypes = [NO_SITE_CHANGE, SITE_CHANGE];
+      const isSiteChange = _.includes(siteChangeTypes, type) ? type === SITE_CHANGE : null;
 
       if (isSiteChange !== null) {
         this.setStroke(this.colors.grey);
@@ -604,7 +614,7 @@ class BasicsPrintView extends PrintView {
         if (isSiteChange) {
           const daysSinceLabel = daysSince === 1 ? 'day' : 'days';
 
-          const siteChangeType = this.sections.siteChanges.type;
+          const siteChangeSource = this.sections.siteChanges.source;
           const imageWidth = width / 2.5;
           const imagePadding = (width - imageWidth) / 2;
 
@@ -626,7 +636,7 @@ class BasicsPrintView extends PrintView {
 
           this.setFill();
 
-          this.doc.image(siteChangeImages[siteChangeType], xPos + imagePadding, this.doc.y, {
+          this.doc.image(siteChangeImages[siteChangeSource], xPos + imagePadding, this.doc.y, {
             width: imageWidth,
           });
 
@@ -728,16 +738,14 @@ class BasicsPrintView extends PrintView {
       const rows = [];
 
       _.each(dimensions, dimension => {
-        const valueObj = _.get(
-          data,
-          [dimension.path, dimension.key],
-          _.get(data, dimension.key, {})
-        );
+        const { path, key } = dimension;
+
+        const valueObj = _.get(data, _.compact([...path.split('.').concat(key)]), 0);
 
         const isAverage = dimension.average;
 
         const value = isAverage
-          ? Math.round(_.get(data, [dimension.path, 'avgPerDay'], data.avgPerDay))
+          ? Math.round(_.get(data, [...path.split('.').concat('avgPerDay')]))
           : _.get(valueObj, 'count', valueObj);
 
         const stat = {
@@ -760,7 +768,7 @@ class BasicsPrintView extends PrintView {
         statWidth: columnWidth * 0.75,
         valueWidth: columnWidth * 0.25,
         height: 20,
-        labelHeader: primaryDimension.stat,
+        labelHeader: primaryDimension.label,
         valueHeader: (primaryDimension.value || 0).toString(),
       });
 
