@@ -30,6 +30,7 @@ import {
   formatDateRange,
 } from '../../utils/datetime';
 
+import { getStatDefinition } from '../../utils/stat';
 import { getPatientFullName } from '../../utils/misc';
 
 import {
@@ -57,6 +58,26 @@ class PrintView {
 
     this.title = opts.title;
     this.data = _.cloneDeep(data);
+    this.bgPrefs = this.data.bgPrefs;
+    this.bgUnits = this.data.bgPrefs.bgUnits;
+    this.bgBounds = this.data.bgPrefs.bgBounds;
+    this.timePrefs = this.data.timePrefs;
+    this.timezone = getTimezoneFromTimePrefs(this.data.timePrefs);
+    this.endpoints = _.get(this.data, 'data.current.endpoints', {});
+    this.bgSource = _.get(this.data, 'metaData.bgSources.current');
+    this.manufacturer = _.get(this.data, 'metaData.latestPumpUpload.manufacturer');
+
+    this.stats = {};
+    const statsData = _.get(this.data, 'data.current.stats', {});
+    _.forOwn(statsData, (statData, statType) => {
+      const stat = getStatDefinition(statData, statType, {
+        bgSource: this.bgSource,
+        days: this.endpoints.activeDays || this.endpoints.days,
+        bgPrefs: this.bgPrefs,
+        manufacturer: this.manufacturer,
+      });
+      this.stats[statType] = stat;
+    });
 
     this.debug = opts.debug || false;
 
@@ -72,12 +93,6 @@ class PrintView {
     this.largeFontSize = opts.largeFontSize || LARGE_FONT_SIZE;
     this.smallFontSize = opts.smallFontSize || SMALL_FONT_SIZE;
     this.extraSmallFontSize = opts.extraSmallFontSize || EXTRA_SMALL_FONT_SIZE;
-
-    this.bgPrefs = data.bgPrefs;
-    this.bgUnits = data.bgPrefs.bgUnits;
-    this.bgBounds = data.bgPrefs.bgBounds;
-    this.timePrefs = data.timePrefs;
-    this.timezone = getTimezoneFromTimePrefs(data.timePrefs);
 
     this.width = opts.width || WIDTH;
     this.height = opts.height || HEIGHT;
@@ -467,7 +482,12 @@ class PrintView {
         yPos += (height - textHeight) / 2 + 1;
       }
 
-      this.doc.text(text, xPos, yPos, {
+      let textRightPadding = 0;
+      if (subText && align === 'right') {
+        textRightPadding = this.doc.widthOfString(subText);
+      }
+
+      this.doc.text(text, xPos - textRightPadding, yPos, {
         continued: !!subText,
         align,
         width,
@@ -476,7 +496,7 @@ class PrintView {
       this.doc.font(this.font);
 
       if (subText) {
-        this.doc.text(` ${subText}`, xPos, yPos, {
+        this.doc.text(`${subText}`, xPos, yPos, {
           align,
           width,
         });

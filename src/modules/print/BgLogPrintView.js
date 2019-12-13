@@ -25,7 +25,6 @@ import moment from 'moment';
 
 import PrintView from './PrintView';
 import { formatBgValue } from '../../utils/format';
-import { getStatDefinition } from '../../utils/stat';
 import { classifyBgValue, getOutOfRangeThreshold } from '../../utils/bloodglucose';
 import { formatClocktimeFromMsPer24, THREE_HRS } from '../../utils/datetime';
 import { MS_IN_HOUR } from '../../utils/constants';
@@ -38,7 +37,7 @@ class BgLogPrintView extends PrintView {
 
     this.smbgRadius = 3;
 
-    this.numDays = _.get(this.data, 'data.current.endpoints.activeDays');
+    this.numDays = this.endpoints.activeDays;
     this.doc.addPage();
 
     const dates = _.keys(_.get(this.data, 'data.current.aggregationsByDate.dataByDate')).sort();
@@ -53,8 +52,7 @@ class BgLogPrintView extends PrintView {
   }
 
   newPage() {
-    const currentRange = _.get(this.data, 'data.current.endpoints.range', []);
-    super.newPage(this.getDateRange(currentRange[0], currentRange[1] - 1));
+    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1));
   }
 
   getBGLabelYOffset() {
@@ -181,23 +179,7 @@ class BgLogPrintView extends PrintView {
   renderSummaryTable() {
     this.resetText();
 
-    const endpoints = _.get(this.data, 'data.current.endpoints', {});
-
-    const stats = {};
-    const statsData = _.get(this.data, 'data.current.stats', {});
-
-    _.forOwn(statsData, (data, statType) => {
-      const stat = getStatDefinition(data, statType, {
-        bgSource: _.get(this.data, 'metaData.bgSources.current'),
-        days: endpoints.activeDays || endpoints.days,
-        bgPrefs: this.bgPrefs,
-        manufacturer: _.get(this.data, 'metaData.latestPumpUpload.manufacturer'),
-      });
-
-      stats[statType] = stat;
-    });
-
-    const { total, days, averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
+    const { total, days, averageGlucose } = _.get(this.stats, 'averageGlucose.data.raw', {});
 
     const totalDays = Math.ceil(days || this.numDays || 0);
     const totalReadings = total || 0;
