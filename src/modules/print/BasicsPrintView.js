@@ -58,14 +58,12 @@ class BasicsPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
 
-    const aggregationsByDate = _.get(this.data, 'data.current.aggregationsByDate');
-
-    this.sections = _.isEmpty(aggregationsByDate) ? {} : processBasicsAggregations(
+    this.sections = _.isEmpty(this.aggregationsByDate) ? {} : processBasicsAggregations(
       defineBasicsAggregations(
         this.bgPrefs,
         this.manufacturer,
       ),
-      aggregationsByDate,
+      this.aggregationsByDate,
       this.patient,
       this.manufacturer
     );
@@ -158,11 +156,9 @@ class BasicsPrintView extends PrintView {
     this.goToLayoutColumnPosition(1);
     this.initCalendar();
 
-    const data = _.get(this.data, 'data.current.aggregationsByDate');
-
     this.renderCalendarSection({
       title: this.sections.fingersticks.title,
-      data: data.fingersticks.smbg.byDate,
+      data: this.aggregationsByDate.fingersticks.smbg.byDate,
       type: 'smbg',
       disabled: this.sections.fingersticks.disabled,
       emptyText: this.sections.fingersticks.emptyText,
@@ -170,7 +166,7 @@ class BasicsPrintView extends PrintView {
 
     this.renderCalendarSection({
       title: this.sections.boluses.title,
-      data: data.boluses.byDate,
+      data: this.aggregationsByDate.boluses.byDate,
       type: 'bolus',
       disabled: this.sections.boluses.disabled,
       emptyText: this.sections.boluses.emptyText,
@@ -183,7 +179,7 @@ class BasicsPrintView extends PrintView {
         text: this.sections.siteChanges.title,
         subText: siteChangesSubTitle ? `from '${this.sections.siteChanges.subTitle}'` : false,
       },
-      data: data.siteChanges.byDate,
+      data: this.aggregationsByDate.siteChanges.byDate,
       type: 'siteChange',
       disabled: this.sections.siteChanges.disabled,
       emptyText: this.sections.siteChanges.emptyText,
@@ -191,7 +187,7 @@ class BasicsPrintView extends PrintView {
 
     this.renderCalendarSection({
       title: this.sections.basals.title,
-      data: data.basals.byDate,
+      data: this.aggregationsByDate.basals.byDate,
       type: 'basal',
       disabled: this.sections.basals.disabled,
       emptyText: this.sections.basals.emptyText,
@@ -202,12 +198,10 @@ class BasicsPrintView extends PrintView {
   RenderCalendarSummaries() {
     this.goToLayoutColumnPosition(2);
 
-    const data = _.get(this.data, 'data.current.aggregationsByDate');
-
     this.renderCalendarSummary({
       dimensions: this.sections.fingersticks.dimensions,
       header: this.sections.fingersticks.summaryTitle,
-      data: data.fingersticks,
+      data: this.aggregationsByDate.fingersticks,
       type: 'smbg',
       disabled: this.sections.fingersticks.disabled,
     });
@@ -215,7 +209,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSummary({
       dimensions: this.sections.boluses.dimensions,
       header: this.sections.boluses.summaryTitle,
-      data: data.boluses,
+      data: this.aggregationsByDate.boluses,
       type: 'bolus',
       disabled: this.sections.boluses.disabled,
     });
@@ -223,7 +217,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSummary({
       dimensions: this.sections.basals.dimensions,
       header: this.sections.basals.summaryTitle,
-      data: data.basals,
+      data: this.aggregationsByDate.basals,
       type: 'basal',
       disabled: this.sections.basals.disabled,
     });

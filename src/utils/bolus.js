@@ -47,6 +47,20 @@ export function getBolusFromInsulinEvent(insulinEvent) {
 }
 
 /**
+ * getBolusFromInsulinEvent
+ * @param {Object} insulinEvent - a Tidepool wizard or bolus object
+ *
+ * @return {Object} a Tidepool bolus object
+ */
+export function getWizardFromInsulinEvent(insulinEvent) {
+  let wizard = insulinEvent;
+  if (insulinEvent.wizard) {
+    wizard = insulinEvent.wizard;
+  }
+  return wizard;
+}
+
+/**
  * getCarbs
  * @param {Object} insulinEvent - a Tidepool wizard or bolus object
  *
@@ -54,10 +68,10 @@ export function getBolusFromInsulinEvent(insulinEvent) {
  *                  NaN if bolus calculator not used; null if no carbInput
  */
 export function getCarbs(insulinEvent) {
-  if (insulinEvent.type !== 'wizard') {
+  if (insulinEvent.type !== 'wizard' && !insulinEvent.wizard) {
     return NaN;
   }
-  return _.get(insulinEvent, 'carbInput', null);
+  return _.get(getWizardFromInsulinEvent(insulinEvent), 'carbInput', null);
 }
 
 /**

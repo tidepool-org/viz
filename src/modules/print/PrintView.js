@@ -65,7 +65,8 @@ class PrintView {
     this.timezone = getTimezoneFromTimePrefs(this.data.timePrefs);
     this.endpoints = _.get(this.data, 'data.current.endpoints', {});
     this.bgSource = _.get(this.data, 'metaData.bgSources.current');
-    this.manufacturer = _.get(this.data, 'metaData.latestPumpUpload.manufacturer');
+    this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
+    this.manufacturer = _.get(this.latestPumpUpload, 'manufacturer');
 
     this.stats = {};
     const statsData = _.get(this.data, 'data.current.stats', {});
@@ -78,6 +79,8 @@ class PrintView {
       });
       this.stats[statType] = stat;
     });
+
+    this.aggregationsByDate = _.get(this.data, 'data.current.aggregationsByDate', {});
 
     this.debug = opts.debug || false;
 
@@ -316,8 +319,14 @@ class PrintView {
   }
 
   getDateRange(startDate, endDate, format) {
-    const start = startDate - getOffset(startDate, this.timezone) * MS_IN_MIN;
-    const end = endDate - getOffset(endDate, this.timezone) * MS_IN_MIN;
+    let start = startDate;
+    let end = endDate;
+
+    if (_.isNumber(startDate) && _.isNumber(endDate)) {
+      start = startDate - getOffset(startDate, this.timezone) * MS_IN_MIN;
+      end = endDate - getOffset(endDate, this.timezone) * MS_IN_MIN;
+    }
+
     return t('Date range: {{dateRange}}', {
       dateRange: formatDateRange(start, end, format),
     });

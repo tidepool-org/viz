@@ -43,7 +43,6 @@ class SettingsPrintView extends PrintView {
     super(doc, data, opts);
 
     this.isTandem = this.manufacturer === 'tandem';
-    this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
     this.deviceMeta = getDeviceMeta(this.latestPumpUpload.settings, this.timePrefs);
 
     this.doc.addPage();

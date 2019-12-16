@@ -40,7 +40,7 @@ class BgLogPrintView extends PrintView {
     this.numDays = this.endpoints.activeDays;
     this.doc.addPage();
 
-    const dates = _.keys(_.get(this.data, 'data.current.aggregationsByDate.dataByDate')).sort();
+    const dates = _.keys(this.aggregationsByDate.dataByDate).sort();
     const numDays = _.min([this.numDays, dates.length]);
     this.chartDates = _.slice(dates, -Math.abs(numDays)).reverse();
 
@@ -79,7 +79,7 @@ class BgLogPrintView extends PrintView {
   }
 
   getBgChartRow(date) {
-    const data = _.get(this.data, `data.current.aggregationsByDate.dataByDate.${date}`);
+    const data = _.get(this.aggregationsByDate, `dataByDate.${date}`);
     const dateMoment = moment(date);
     const isWeekend = _.includes(['0', '6'], dateMoment.format('d'));
     const timeSlots = _.filter(_.map(_.sortBy(this.bgChart.columns, 'id'), 'id'), _.isNumber);

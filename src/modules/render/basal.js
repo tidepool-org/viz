@@ -38,16 +38,15 @@ export function calculateBasalPath(basalSequence, xScale, yScale, {
   const flushWithBottomOfScale = zeroBasal + flushBottomOffset;
 
   function handleDiscontinuousEnd(basal) {
-    path += `L ${xScale(basal.utc + basal.duration)},${flushWithBottomOfScale} `;
+    path += `L ${xScale(basal.normalTime + basal.duration)},${flushWithBottomOfScale} `;
   }
 
   function handleDiscontinuousStart(basal) {
-    path += `M ${xScale(basal.utc)},${flushWithBottomOfScale} `;
+    path += `M ${xScale(basal.normalTime)},${flushWithBottomOfScale} `;
   }
 
-
   const first = basalSequence[0];
-  const startX = xScale(first.utc);
+  const startX = xScale(first.normalTime);
   const startY = _.every(basalSequence, (d) => (d.rate === 0)) ?
     flushWithBottomOfScale :
     yScale(first.rate);
@@ -57,7 +56,7 @@ export function calculateBasalPath(basalSequence, xScale, yScale, {
     path += 'M ';
   }
   path += `${startX},${startY}
-    L ${xScale(first.utc + first.duration)},${startY} `;
+    L ${xScale(first.normalTime + first.duration)},${startY} `;
 
   if (!isFilled && first.discontinuousEnd) {
     handleDiscontinuousEnd(first);
@@ -69,8 +68,8 @@ export function calculateBasalPath(basalSequence, xScale, yScale, {
       handleDiscontinuousStart(basal);
     }
 
-    path += `L ${xScale(basal.utc)},${thisBasalY}
-      L ${xScale(basal.utc + basal.duration)},${thisBasalY} `;
+    path += `L ${xScale(basal.normalTime)},${thisBasalY}
+      L ${xScale(basal.normalTime + basal.duration)},${thisBasalY} `;
 
     if (!isFilled && basal.discontinuousEnd) {
       handleDiscontinuousEnd(basal);
@@ -78,7 +77,7 @@ export function calculateBasalPath(basalSequence, xScale, yScale, {
   });
 
   const last = basalSequence[basalSequence.length - 1];
-  const endX = xScale(last.utc + last.duration);
+  const endX = xScale(last.normalTime + last.duration);
   path += `L ${endX},${yScale(last.rate)}`;
 
   if (endAtZero || isFilled) {

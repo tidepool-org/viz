@@ -26,7 +26,10 @@ export class AggregationUtil {
     this.bgBounds = _.get(dataUtil, 'bgPrefs.bgBounds');
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
-    this.earliestDateInActiveRange = moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD');
+    this.rangeDates = [
+      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).format('YYYY-MM-DD'),
+    ];
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
     reductio.registerPostProcessor('postProcessBolusAggregations', this.postProcessBolusAggregations);
@@ -445,19 +448,40 @@ export class AggregationUtil {
     const data = this.filterByActiveRange(priorResults());
     const processedData = {};
 
-    _.each(data, dataForDay => {
+    _.each(_.sortBy(data, 'key').reverse(), (dataForDay, index) => {
       const {
         value: {
           dataList,
         },
       } = dataForDay;
 
-      _.each(dataList, d => this.dataUtil.normalizeDatumOut(d, ['*']));
+      // Set the endpoints to filter current data for day
+      this.dataUtil.activeEndpoints = {
+        range: [
+          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
+        ],
+        days: 1,
+        activeDays: 1,
+      };
+
+      this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
       const sortedData = _.sortBy(dataList, this.dataUtil.activeTimeField);
+      const groupedData = _.groupBy(sortedData, 'type');
+      const groupedBasals = _.cloneDeep(groupedData.basal || []);
 
-      processedData[dataForDay.key] = _.groupBy(sortedData, 'type');
+      this.dataUtil.addBasalOverlappingStart(groupedBasals);
+
+      _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
+
+      if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+      processedData[dataForDay.key] = groupedData;
     });
+
+    // Reset the activeEndpoints to it's initial value
+    this.dataUtil.activeEndpoints = _.cloneDeep(this.initialActiveEndpoints);
+    this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
     return processedData;
   };
@@ -476,13 +500,14 @@ export class AggregationUtil {
 
     _.each(_.sortBy(data, 'key').reverse(), (dataForDay, index) => {
       // Set the endpoints to filter current data for day
-      this.dataUtil.activeEndpoints.range = [
-        moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
-        moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
-      ];
-
-      this.dataUtil.activeEndpoints.days = 1;
-      this.dataUtil.activeEndpoints.activeDays = 1;
+      this.dataUtil.activeEndpoints = {
+        range: [
+          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
+        ],
+        days: 1,
+        activeDays: 1,
+      };
 
       this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
@@ -491,7 +516,7 @@ export class AggregationUtil {
     });
 
     // Reset the activeEndpoints to it's initial value
-    this.dataUtil.activeEndpoints = this.initialActiveEndpoints;
+    this.dataUtil.activeEndpoints = _.cloneDeep(this.initialActiveEndpoints);
     this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
     return processedData;
@@ -499,7 +524,7 @@ export class AggregationUtil {
 
   filterByActiveRange = results => _.filter(
     _.cloneDeep(results),
-    result => result.key >= this.earliestDateInActiveRange
+    result => result.key >= this.rangeDates[0] && result.key < this.rangeDates[1]
   );
 
   /* eslint-disable lodash/prefer-lodash-method */
