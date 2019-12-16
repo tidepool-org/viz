@@ -28,6 +28,7 @@ import * as profiles from '../../data/patient/profiles';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
 /* global PDFDocument, blobStream, window */
+/* eslint-disable max-len */
 
 const stories = storiesOf('Settings View PDF', module);
 
