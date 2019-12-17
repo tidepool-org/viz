@@ -65,8 +65,6 @@ import {
   processBasicsAggregations,
 } from './utils/basics/data';
 
-import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
-
 const i18next = require('i18next');
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
@@ -105,10 +103,6 @@ const utils = {
   },
   constants: {
     DEFAULT_BG_BOUNDS,
-  },
-  data: {
-    selectDailyViewData,
-    selectBgLogViewData,
   },
   datetime: {
     addDuration,
