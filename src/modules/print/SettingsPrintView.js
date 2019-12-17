@@ -95,7 +95,7 @@ class SettingsPrintView extends PrintView {
 
       const heading = {
         text: profile.title.main,
-        subText: profile.title.secondary,
+        subText: ` ${profile.title.secondary}`,
       };
 
       this.renderTableHeading(heading, {
@@ -140,7 +140,7 @@ class SettingsPrintView extends PrintView {
         const label = _.isPlainObject(column.label)
           ? {
             text: column.label.main,
-            subText: column.label.secondary,
+            subText: ` ${column.label.secondary}`,
           } : {
             text: column.label,
           };
