@@ -134,6 +134,10 @@ export function createPrintView(type, data, opts, doc) {
 export function createPrintPDFPackage(data, opts) {
   const {
     patient,
+    basics = {},
+    daily = {},
+    bgLog = {},
+    settings = {},
   } = opts;
 
   if (_.get(patient, 'preferences.displayLanguageCode')) {
@@ -153,10 +157,10 @@ export function createPrintPDFPackage(data, opts) {
     const doc = new DocLib({ autoFirstPage: false, bufferPages: true, margin: constants.MARGIN });
     const stream = doc.pipe(streamLib());
 
-    if (data.basics) createPrintView('basics', data.basics, pdfOpts, doc).render();
-    if (data.daily) createPrintView('daily', data.daily, pdfOpts, doc).render();
-    if (data.bgLog) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
-    if (data.settings) createPrintView('settings', data.settings, pdfOpts, doc).render();
+    if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
+    if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
+    if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
+    if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
 
     PrintView.renderPageNumbers(doc);
 
