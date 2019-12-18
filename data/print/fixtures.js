@@ -448,24 +448,8 @@ export const basicsData = {
             '2019-07-25': {
               data: [
                 {
-                  clockDriftOffset: 0,
-                  conversionOffset: 0,
-                  deviceId: 'InsOmn-130534887',
-                  deviceTime: '1564065176000',
-                  guid: '17050035-7a05-4e7b-9f9e-a6ffb429546b',
-                  id: 'g3qlrddd2hi3v5kn96h7rofiudtgq6nl',
-                  payload: {
-                    event: 'pod_deactivation',
-                    logIndices: [
-                      1041,
-                    ],
-                  },
-                  status: 'miorplqpoov1nu9n3v9bj9q0gsovi0je',
                   subType: 'reservoirChange',
-                  time: 1564065176000,
-                  timezoneOffset: -240,
                   type: 'deviceEvent',
-                  uploadId: 'upid_e20155bc6fd3',
                   tags: {
                     calibration: false,
                     reservoirChange: true,
@@ -473,28 +457,11 @@ export const basicsData = {
                     tubingPrime: false,
                   },
                   normalTime: 1564065176000,
-                  displayOffset: -240,
                   source: 'Insulet',
                 },
                 {
-                  clockDriftOffset: 0,
-                  conversionOffset: 0,
-                  deviceId: 'InsOmn-130534887',
-                  deviceTime: 1564092397000,
-                  guid: 'b9841e42-079c-44fa-9587-0dbd8443f541',
-                  id: 'ko2566q95s8c6f38h2a5n4pmd94vucp8',
-                  payload: {
-                    event: 'pod_deactivation',
-                    logIndices: [
-                      1055,
-                    ],
-                  },
-                  status: '6lev4d7oqs1j7th0s6uie67aqp0br1qh',
                   subType: 'reservoirChange',
-                  time: 1564092397000,
-                  timezoneOffset: -240,
                   type: 'deviceEvent',
-                  uploadId: 'upid_e20155bc6fd3',
                   tags: {
                     calibration: false,
                     reservoirChange: true,
@@ -502,7 +469,6 @@ export const basicsData = {
                     tubingPrime: false,
                   },
                   normalTime: 1564092397000,
-                  displayOffset: -240,
                   source: 'Insulet',
                 },
               ],
@@ -700,47 +666,70 @@ export const dailyData = {
 };
 
 export const bgLogData = {
-  dateRange: ['2017-12-31', '2018-01-29'],
-  timezone: 'America/Toronto',
-  dataByDate: {
-    '2017-12-31': { data: { smbg: [
-      { value: 50, msPer24: THREE_HRS * 0.5 },
-      { value: 70, msPer24: THREE_HRS * 1.5 },
-      { value: 90, msPer24: THREE_HRS * 2.5 },
-      { value: 150, msPer24: THREE_HRS * 3.5 },
-      { value: 170, msPer24: THREE_HRS * 4.5 },
-      { value: 190, msPer24: THREE_HRS * 5.5 },
-      { value: 210, msPer24: THREE_HRS * 6.5 },
-      { value: 260, msPer24: THREE_HRS * 7.5 },
-    ] } },
-    '2018-01-01': { data: { smbg: [{ value: 60 }] } },
-    '2018-01-02': { data: { smbg: [{ value: 100 }] } },
-    '2018-01-03': { data: { smbg: [{ value: 200 }] } },
-    '2018-01-04': { data: { smbg: [{ value: 300 }] } },
-    '2018-01-05': { data: { smbg: [{ value: 50 }] } },
-    '2018-01-06': { data: { smbg: [{ value: 60 }] } },
-    '2018-01-07': { data: { smbg: [{ value: 100 }] } },
-    '2018-01-08': { data: { smbg: [{ value: 200 }] } },
-    '2018-01-09': { data: { smbg: [{ value: 300 }] } },
-    '2018-01-10': { data: { smbg: [{ value: 50 }] } },
-    '2018-01-11': { data: { smbg: [{ value: 60 }] } },
-    '2018-01-12': { data: { smbg: [{ value: 100 }] } },
-    '2018-01-13': { data: { smbg: [{ value: 200 }] } },
-    '2018-01-14': { data: { smbg: [{ value: 300 }] } },
-    '2018-01-15': { data: { smbg: [{ value: 50 }] } },
-    '2018-01-16': { data: { smbg: [{ value: 60 }] } },
-    '2018-01-17': { data: { smbg: [{ value: 100 }] } },
-    '2018-01-18': { data: { smbg: [{ value: 200 }] } },
-    '2018-01-19': { data: { smbg: [{ value: 300 }] } },
-    '2018-01-20': { data: { smbg: [{ value: 50 }] } },
-    '2018-01-21': { data: { smbg: [{ value: 60 }] } },
-    '2018-01-22': { data: { smbg: [{ value: 100 }] } },
-    '2018-01-23': { data: { smbg: [{ value: 200 }] } },
-    '2018-01-24': { data: { smbg: [{ value: 300 }] } },
-    '2018-01-25': { data: { smbg: [{ value: 50 }] } },
-    '2018-01-26': { data: { smbg: [{ value: 60 }] } },
-    '2018-01-27': { data: { smbg: [{ value: 100 }] } },
-    '2018-01-28': { data: { smbg: [{ value: 200 }] } },
-    '2018-01-29': { data: { smbg: [{ value: 300 }] } },
+  timePrefs,
+  bgPrefs,
+  metaData,
+  data: {
+    current: {
+      endpoints: {
+        range: [
+          1561608000000,
+          1564200000000,
+        ],
+        days: 30,
+        activeDays: 30,
+      },
+      stats: {
+        readingsInRange: {
+          veryLow: 0,
+          low: 0.21052631578947367,
+          target: 1.105263157894737,
+          high: 1.1578947368421053,
+          veryHigh: 1.2105263157894737,
+          total: 70,
+        },
+        averageGlucose: {
+          averageGlucose: 12.737278189136658,
+          total: 70,
+        },
+        totalInsulin: {
+          basal: 0.6568947368421053,
+          bolus: 1.3078947368421052,
+        },
+        carbs: {
+          carbs: 33.63157894736842,
+          total: 40,
+        },
+        averageDailyDose: {
+          totalInsulin: 1.9647894736842106,
+        },
+      },
+      aggregationsByDate: {
+        dataByDate: {
+          '2019-07-27': {
+            smbg: [
+              { value: 50 },
+            ],
+          },
+          '2019-07-26': {
+            smbg: [
+              { value: 50, msPer24: THREE_HRS * 0.5 },
+              { value: 70, msPer24: THREE_HRS * 1.5 },
+              { value: 90, msPer24: THREE_HRS * 2.5 },
+              { value: 150, msPer24: THREE_HRS * 3.5 },
+              { value: 170, msPer24: THREE_HRS * 4.5 },
+              { value: 190, msPer24: THREE_HRS * 5.5 },
+              { value: 210, msPer24: THREE_HRS * 6.5 },
+              { value: 260, msPer24: THREE_HRS * 7.5 },
+            ],
+          },
+          '2019-07-25': {
+            smbg: [
+              { value: 60 },
+            ],
+          },
+        },
+      },
+    },
   },
 };
