@@ -67,7 +67,7 @@ describe('ClipboardButton', () => {
   });
 
   describe('onSuccess', () => {
-    it('should call `props.getText` if provided', () => {
+    it('should call `props.onSuccess` if provided', () => {
       sinon.assert.notCalled(defaultProps.onSuccess);
       instance.onSuccess();
       sinon.assert.calledOnce(defaultProps.onSuccess);
@@ -99,7 +99,6 @@ describe('ClipboardButton', () => {
     let button;
 
     beforeEach(() => {
-      // button = () => wrapper.find('ClipboardButton').at(0);
       button = () => wrapper.find(formatClassesAsSelector(styles.copyButton)).hostNodes();
     });
 

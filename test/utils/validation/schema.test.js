@@ -44,7 +44,7 @@ describe('schema validation', () => {
     // deviceId is optional, so it should pass if undefined
     expect(validator({ ...datum, deviceId: undefined })).to.be.true;
 
-    // Should pass when provided deviceId is wrong type
+    // Should fail when provided deviceId is wrong type
     expect(_.find(validator({ ...datum, deviceId: 3 }), { field: 'deviceId' }).message).to.equal('The \'deviceId\' field must be a string!');
 
     // deviceTime is optional, so it should pass if undefined
