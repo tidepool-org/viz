@@ -68,34 +68,7 @@ class BasicsPrintView extends PrintView {
       this.manufacturer
     );
 
-    const averageDailyCarbs = _.get(this.stats, 'carbs.data.raw.carbs');
-    const totalDailyDose = _.get(this.stats, 'averageDailyDose.data.raw.totalInsulin');
-    const { basal, bolus } = _.get(this.stats, 'totalInsulin.data.raw', {});
-    const averageDailyDose = { basal, bolus };
-
-    const basalBolusRatio = {
-      basal: basal / totalDailyDose,
-      bolus: bolus / totalDailyDose,
-    };
-
-    const { automated, manual } = _.get(this.stats, 'timeInAuto.data.raw', {});
-    const totalBasalDuration = _.get(this.stats, 'timeInAuto.data.total.value');
-    const timeInAutoRatio = {
-      automated: automated / totalBasalDuration,
-      manual: manual / totalBasalDuration,
-    };
-
-    _.assign(this.data.data, {
-      averageDailyCarbs,
-      averageDailyDose,
-      basalBolusRatio,
-      timeInAutoRatio,
-      totalDailyDose,
-    });
-
     // Auto-bind callback methods
-    // this.renderStackedStat = this.renderStackedStat.bind(this);
-    // this.renderPieChart = this.renderPieChart.bind(this);
     this.renderCalendarCell = this.renderCalendarCell.bind(this);
 
     this.doc.addPage();
@@ -223,6 +196,149 @@ class BasicsPrintView extends PrintView {
     });
   }
 
+  renderAggregatedStats() {
+    const {
+      carbs,
+      totalInsulin,
+      timeInAuto,
+      timeInRange,
+      readingsInRange,
+      averageDailyDose,
+      sensorUsage,
+    } = this.stats;
+
+    if (timeInRange) {
+      this.renderHorizontalBarStat(
+        timeInRange,
+        {
+          heading: {
+            text: 'BG Distribution',
+            note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
+          },
+        }
+      );
+    }
+
+    if (readingsInRange) {
+      this.renderHorizontalBarStat(
+        readingsInRange,
+        {
+          heading: {
+            text: 'BG Distribution',
+            note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
+          },
+        }
+      );
+    }
+
+    if (sensorUsage) this.renderSimpleStat(sensorUsage);
+
+    this.renderHorizontalBarStat(
+      totalInsulin,
+      {
+        heading: 'Insulin Ratio',
+        secondaryFormatKey: 'tooltip',
+        fillOpacity: 0.5,
+      }
+    );
+
+    if (timeInAuto) {
+      const automatedLabel = getPumpVocabulary(this.manufacturer)[AUTOMATED_DELIVERY];
+      this.renderHorizontalBarStat(
+        timeInAuto,
+        {
+          heading: `Time In ${automatedLabel} Ratio`,
+          fillOpacity: 0.5,
+        }
+      );
+    }
+
+    this.renderSimpleStat(carbs);
+    this.renderSimpleStat(averageDailyDose);
+  }
+
+  defineStatColumns(opts = {}) {
+    const columnWidth = this.getActiveColumnWidth();
+
+    const {
+      height = 30,
+      labelWidth = columnWidth * 0.65,
+      valueWidth = columnWidth * 0.35,
+      statFont = this.font,
+      statFontSize = this.defaultFontSize,
+      valueFont = this.boldFont,
+      valueFontSize = this.defaultFontSize,
+      labelHeader = false,
+      valueHeader = false,
+    } = opts;
+
+    const columns = [
+      {
+        id: 'label',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: Math.round(labelWidth) - this.tableSettings.borderWidth,
+        height,
+        fontSize: statFontSize,
+        font: statFont,
+        align: 'left',
+        headerAlign: 'left',
+        border: 'TBL',
+        headerBorder: 'TBL',
+        valign: 'center',
+        header: labelHeader,
+      },
+      {
+        id: 'value',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: Math.round(valueWidth) - this.tableSettings.borderWidth,
+        height,
+        fontSize: valueFontSize,
+        font: valueFont,
+        align: 'right',
+        headerAlign: 'right',
+        border: 'TBR',
+        headerBorder: 'TBR',
+        valign: 'center',
+        header: valueHeader,
+      },
+    ];
+
+    return columns;
+  }
+
+  renderSimpleStat(stat) {
+    const label = stat.title;
+
+    const value = formatDatum(
+      _.get(stat.data, _.get(stat.data, 'dataPaths.summary')),
+      _.get(stat, 'dataFormat.summary'),
+      { bgPrefs: this.bgPrefs, data: stat.data }
+    );
+
+    const tableColumns = this.defineStatColumns();
+
+    this.setFill(value.id === 'statDisabled' ? this.colors.lightGrey : 'black', 1);
+
+    const rows = [
+      {
+        label,
+        value: {
+          text: `${value.value}`,
+          subText: `${value.suffix}`,
+        },
+      },
+    ];
+
+    this.renderTable(tableColumns, rows, {
+      showHeaders: false,
+      bottomMargin: 15,
+    });
+
+    this.setFill();
+  }
+
   renderHorizontalBarStat(stat, opts = {}) {
     _.defaults(opts, {
       heading: {
@@ -324,149 +440,6 @@ class BasicsPrintView extends PrintView {
         bottomMargin: 15,
       });
     }
-  }
-
-  renderAggregatedStats() {
-    const {
-      carbs,
-      totalInsulin,
-      timeInAuto,
-      timeInRange,
-      readingsInRange,
-      averageDailyDose,
-      sensorUsage,
-    } = this.stats;
-
-    if (timeInRange) {
-      this.renderHorizontalBarStat(
-        timeInRange,
-        {
-          heading: {
-            text: 'BG Distribution',
-            note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
-          },
-        }
-      );
-    }
-
-    if (readingsInRange) {
-      this.renderHorizontalBarStat(
-        readingsInRange,
-        {
-          heading: {
-            text: 'BG Distribution',
-            note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
-          },
-        }
-      );
-    }
-
-    if (sensorUsage) this.renderSimpleStat(sensorUsage);
-
-    this.renderHorizontalBarStat(
-      totalInsulin,
-      {
-        heading: 'Insulin Ratio',
-        secondaryFormatKey: 'tooltip',
-        fillOpacity: 0.5,
-      }
-    );
-
-    if (timeInAuto) {
-      const automatedLabel = getPumpVocabulary(this.manufacturer)[AUTOMATED_DELIVERY];
-      this.renderHorizontalBarStat(
-        timeInAuto,
-        {
-          heading: `Time In ${automatedLabel} Ratio`,
-          fillOpacity: 0.5,
-        }
-      );
-    }
-
-    this.renderSimpleStat(carbs);
-    this.renderSimpleStat(averageDailyDose);
-  }
-
-  defineStatColumns(opts = {}) {
-    const columnWidth = this.getActiveColumnWidth();
-
-    const {
-      height = 30,
-      statWidth = columnWidth * 0.65,
-      valueWidth = columnWidth * 0.35,
-      statFont = this.font,
-      statFontSize = this.defaultFontSize,
-      valueFont = this.boldFont,
-      valueFontSize = this.defaultFontSize,
-      labelHeader = false,
-      valueHeader = false,
-    } = opts;
-
-    const columns = [
-      {
-        id: 'label',
-        cache: false,
-        renderer: this.renderCustomTextCell,
-        width: Math.round(statWidth) - this.tableSettings.borderWidth,
-        height,
-        fontSize: statFontSize,
-        font: statFont,
-        align: 'left',
-        headerAlign: 'left',
-        border: 'TBL',
-        headerBorder: 'TBL',
-        valign: 'center',
-        header: labelHeader,
-      },
-      {
-        id: 'value',
-        cache: false,
-        renderer: this.renderCustomTextCell,
-        width: Math.round(valueWidth) - this.tableSettings.borderWidth,
-        height,
-        fontSize: valueFontSize,
-        font: valueFont,
-        align: 'right',
-        headerAlign: 'right',
-        border: 'TBR',
-        headerBorder: 'TBR',
-        valign: 'center',
-        header: valueHeader,
-      },
-    ];
-
-    return columns;
-  }
-
-  renderSimpleStat(stat) {
-    const label = stat.title;
-
-    const value = formatDatum(
-      _.get(stat.data, _.get(stat.data, 'dataPaths.summary')),
-      _.get(stat, 'dataFormat.summary'),
-      { bgPrefs: this.bgPrefs, data: stat.data }
-    );
-
-    const tableColumns = this.defineStatColumns();
-
-    this.setFill(value.id === 'statDisabled' ? this.colors.lightGrey : 'black', 1);
-
-    const rows = [
-      {
-        label,
-        value: {
-          text: `${value.value}`,
-          subText: `${value.suffix}`,
-        },
-      },
-    ];
-
-    this.renderTable(tableColumns, rows, {
-      showHeaders: false,
-      bottomMargin: 15,
-    });
-
-    this.setFill();
   }
 
   renderCalendarSection(opts) {
@@ -759,7 +732,7 @@ class BasicsPrintView extends PrintView {
       });
 
       const tableColumns = this.defineStatColumns({
-        statWidth: columnWidth * 0.75,
+        labelWidth: columnWidth * 0.75,
         valueWidth: columnWidth * 0.25,
         height: 20,
         labelHeader: primaryDimension.label,
