@@ -1668,6 +1668,11 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.2.tgz#54c5a964462be3d4d78af631363c18d6fa91ac26"
 
+"@ranfdev/deepobj@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@ranfdev/deepobj/-/deepobj-1.0.2.tgz#9dba923578fa24aed3d3961975037b6423a03771"
+  integrity sha512-FM3y6kfJaj5MCoAjdv24EDCTDbuFz+4+pgAunbjYfugwIE4O/xx8mPNji1n/ouG8pHCntSnBr1xwTOensF23Gg==
+
 "@reach/router@^1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@reach/router/-/router-1.2.1.tgz#34ae3541a5ac44fa7796e5506a5d7274a162be4e"
@@ -4701,7 +4706,14 @@ cross-spawn@^5.0.1:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
-crossfilter2@^1.4.0, crossfilter2@crossfilter/crossfilter#cb4588dc16:
+crossfilter2@1.5.0:
+  version "1.5.0"
+  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.5.0.tgz#6dcbd2add9ae3dd6c2be11fcf0b85d458cbade4a"
+  integrity sha512-ia2jwcYSqlAg75kCU89QlHKk9dYyxk5ODX5s4Rd09sUkopE99wz0Bzmty8tmKmEX+5RU4guRio/uPKXfDqkj2w==
+  dependencies:
+    "@ranfdev/deepobj" "1.0.2"
+
+crossfilter2@^1.4.0:
   version "1.4.7"
   resolved "https://codeload.github.com/crossfilter/crossfilter/tar.gz/cb4588dc16e11fd705ddb7a330f94627179c9eb1"
   dependencies:
