@@ -255,11 +255,16 @@ describe('DataUtil', () => {
   const defaultQuery = {
     bgPrefs: defaultBgPrefs,
     endpoints: dayEndpoints,
+    nextDays: 1,
+    prevDays: 1,
     timePrefs: defaultTimePrefs,
   };
 
+  const defaultPatientId = 'abc123';
+
   const initDataUtil = (dataset, validator) => {
-    dataUtil = new DataUtil(dataset, validator);
+    dataUtil = new DataUtil(validator);
+    if (dataset) dataUtil.addData(dataset, defaultPatientId);
   };
 
   const createQuery = overrides => _.assign({}, defaultQuery, overrides);
@@ -296,7 +301,7 @@ describe('DataUtil', () => {
       delete dataUtil.bolusToWizardIdMap;
       expect(dataUtil.bolusToWizardIdMap).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.bolusToWizardIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
         bolusData[1].id,
@@ -305,7 +310,7 @@ describe('DataUtil', () => {
 
       const newBolus = new Types.Bolus({ ...useRawData });
       const newWizard = new Types.Wizard({ bolus: newBolus, ...useRawData });
-      dataUtil.addData([newBolus, newWizard]);
+      dataUtil.addData([newBolus, newWizard], defaultPatientId);
 
       expect(dataUtil.bolusToWizardIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
@@ -321,7 +326,7 @@ describe('DataUtil', () => {
       delete dataUtil.bolusDatumsByIdMap;
       expect(dataUtil.bolusDatumsByIdMap).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.bolusDatumsByIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
         bolusData[1].id,
@@ -329,7 +334,7 @@ describe('DataUtil', () => {
       ]);
 
       const newBolus = new Types.Bolus({ ...useRawData });
-      dataUtil.addData([newBolus]);
+      dataUtil.addData([newBolus], defaultPatientId);
 
       expect(dataUtil.bolusDatumsByIdMap).to.be.an('object').and.have.keys([
         bolusData[0].id,
@@ -345,7 +350,7 @@ describe('DataUtil', () => {
       delete dataUtil.wizardDatumsByIdMap;
       expect(dataUtil.wizardDatumsByIdMap).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.wizardDatumsByIdMap).to.be.an('object').and.have.keys([
         wizardData[0].id,
         wizardData[1].id,
@@ -353,7 +358,7 @@ describe('DataUtil', () => {
       ]);
 
       const newWizard = new Types.Wizard({ ...useRawData });
-      dataUtil.addData([newWizard]);
+      dataUtil.addData([newWizard], defaultPatientId);
 
       expect(dataUtil.wizardDatumsByIdMap).to.be.an('object').and.have.keys([
         wizardData[0].id,
@@ -369,7 +374,7 @@ describe('DataUtil', () => {
       delete dataUtil.latestDatumByType;
       expect(dataUtil.latestDatumByType).to.be.undefined;
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
       expect(dataUtil.latestDatumByType).to.be.an('object').and.have.keys([
         'basal',
         'bolus',
@@ -384,7 +389,7 @@ describe('DataUtil', () => {
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(wizardData[2].id);
 
       const newWizard = new Types.Wizard({ deviceTime: '2018-02-01T04:00:00', ...useRawData });
-      dataUtil.addData([newWizard]);
+      dataUtil.addData([newWizard], defaultPatientId);
 
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(newWizard.id);
     });
@@ -392,7 +397,7 @@ describe('DataUtil', () => {
     it('should call `normalizeDatumIn` on each incoming datum', () => {
       sinon.spy(dataUtil, 'normalizeDatumIn');
       sinon.assert.notCalled(dataUtil.normalizeDatumIn);
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.called(dataUtil.normalizeDatumIn);
       sinon.assert.callCount(dataUtil.normalizeDatumIn, defaultData.length);
@@ -401,7 +406,7 @@ describe('DataUtil', () => {
     it('should call `joinWizardAndBolus` on each incoming datum', () => {
       sinon.spy(dataUtil, 'joinWizardAndBolus');
       sinon.assert.notCalled(dataUtil.joinWizardAndBolus);
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.called(dataUtil.joinWizardAndBolus);
       sinon.assert.callCount(dataUtil.joinWizardAndBolus, defaultData.length);
@@ -410,7 +415,7 @@ describe('DataUtil', () => {
     it('should call `tagDatum` on each incoming datum', () => {
       sinon.spy(dataUtil, 'tagDatum');
       sinon.assert.notCalled(dataUtil.tagDatum);
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.called(dataUtil.tagDatum);
       sinon.assert.callCount(dataUtil.tagDatum, defaultData.length);
@@ -420,9 +425,64 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setMetaData');
       sinon.assert.notCalled(dataUtil.setMetaData);
 
-      dataUtil.addData(defaultData);
+      dataUtil.addData(defaultData, defaultPatientId);
 
       sinon.assert.callCount(dataUtil.setMetaData, 1);
+    });
+
+    it('should return the resulting metaData', () => {
+      expect(dataUtil.addData(defaultData, defaultPatientId).metaData).to.be.an('object').and.have.keys([
+        'bgSources',
+        'latestDatumByType',
+        'latestPumpUpload',
+        'patientId',
+        'size',
+      ]);
+    });
+
+    it('should return the added data when requested', () => {
+      expect(dataUtil.addData(defaultData, defaultPatientId, true).data).to.be.an('array').and.have.lengthOf(defaultData.length);
+    });
+
+    it('should remove data prior to adding if the patientId has changed', () => {
+      const removeSpy = sinon.spy(dataUtil, 'removeData');
+      const addSpy = sinon.spy(dataUtil.data, 'add');
+
+      dataUtil.addData(defaultData, defaultPatientId);
+      sinon.assert.notCalled(removeSpy);
+      sinon.assert.calledOnce(addSpy);
+
+      const result = dataUtil.addData([new Types.CBG({ ...useRawData })], 'newPatientId', true);
+      sinon.assert.calledOnce(removeSpy);
+      expect(result.data).to.have.lengthOf(1);
+    });
+
+    it('should abort early and return an empty object when patientId is not provided', () => {
+      sinon.spy(dataUtil, 'normalizeDatumIn');
+      sinon.spy(dataUtil, 'joinWizardAndBolus');
+      sinon.spy(dataUtil, 'tagDatum');
+      sinon.spy(dataUtil, 'setMetaData');
+      sinon.spy(dataUtil, 'getMetaData');
+      expect(dataUtil.addData(defaultData)).to.eql({});
+      sinon.assert.notCalled(dataUtil.normalizeDatumIn);
+      sinon.assert.notCalled(dataUtil.joinWizardAndBolus);
+      sinon.assert.notCalled(dataUtil.tagDatum);
+      sinon.assert.notCalled(dataUtil.setMetaData);
+      sinon.assert.notCalled(dataUtil.getMetaData);
+    });
+
+    it('should abort early and return an empty object when provided data is empty', () => {
+      sinon.spy(dataUtil, 'normalizeDatumIn');
+      sinon.spy(dataUtil, 'joinWizardAndBolus');
+      sinon.spy(dataUtil, 'tagDatum');
+      sinon.spy(dataUtil, 'setMetaData');
+      sinon.spy(dataUtil, 'getMetaData');
+      expect(dataUtil.addData([])).to.eql({});
+      sinon.assert.notCalled(dataUtil.normalizeDatumIn);
+      sinon.assert.notCalled(dataUtil.joinWizardAndBolus);
+      sinon.assert.notCalled(dataUtil.tagDatum);
+      sinon.assert.notCalled(dataUtil.setMetaData);
+      sinon.assert.notCalled(dataUtil.getMetaData);
     });
   });
 
@@ -853,7 +913,9 @@ describe('DataUtil', () => {
     it('should add the `deviceSerialNumber` from the `uploadMap` when `uploadId` is present and the field is requested', () => {
       const datum = { type: 'foo' };
       const uploadIdDatum = { ...datum, uploadId: '12345' };
+      const uploadIdDatum2 = { ...uploadIdDatum };
       const fields = ['deviceSerialNumber'];
+      const allFields = ['*'];
 
       dataUtil.uploadMap = {
         12345: { deviceSerialNumber: 'abc-de' },
@@ -864,6 +926,9 @@ describe('DataUtil', () => {
 
       dataUtil.normalizeDatumOut(uploadIdDatum, fields);
       expect(uploadIdDatum.deviceSerialNumber).to.equal('abc-de');
+
+      dataUtil.normalizeDatumOut(uploadIdDatum2, allFields);
+      expect(uploadIdDatum2.deviceSerialNumber).to.equal('abc-de');
     });
 
     it('should add the `source` from the `uploadMap` when available, else set to `Unspecified Data Source`', () => {
@@ -902,7 +967,9 @@ describe('DataUtil', () => {
       it('should add an annotation for basal intersecting an incomplete suspend when `annotations` field is requested', () => {
         sinon.stub(dataUtil, 'normalizeDatumOutTime');
         const datum = { type: 'basal', normalTime: 1000, duration: 500, annotations: [{ code: 'foo' }] };
+        const datum2 = { ...datum };
         const fields = ['annotations'];
+        const allFields = ['*'];
 
         dataUtil.activeTimeField = 'time';
         dataUtil.incompleteSuspends = [
@@ -921,6 +988,10 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumOut(datum, fields);
         expect(datum.annotations[0]).to.eql({ code: 'foo' });
         expect(datum.annotations[1]).to.eql({ code: 'basal/intersects-incomplete-suspend' });
+
+        dataUtil.normalizeDatumOut(datum2, allFields);
+        expect(datum2.annotations[0]).to.eql({ code: 'foo' });
+        expect(datum2.annotations[1]).to.eql({ code: 'basal/intersects-incomplete-suspend' });
       });
     });
 
@@ -939,7 +1010,12 @@ describe('DataUtil', () => {
         dataUtil.activeTimeField = 'time';
 
         const datum = { type: 'cbg', time: Date.parse('2018-02-01T00:00:00') };
+        const datum2 = { ...datum };
         const fields = ['msPer24'];
+        const allFields = ['*'];
+
+        dataUtil.normalizeDatumOut(datum2, allFields);
+        expect(datum2.msPer24).to.equal(0); // GMT-0 for UTC
 
         dataUtil.normalizeDatumOut(datum, fields);
         expect(datum.msPer24).to.equal(0); // GMT-0 for UTC
@@ -962,7 +1038,12 @@ describe('DataUtil', () => {
         dataUtil.activeTimeField = 'time';
 
         const datum = { type: 'cbg', time: Date.parse('2018-02-01T04:00:00') };
+        const datum2 = { ...datum };
         const fields = ['localDate'];
+        const allFields = ['*'];
+
+        dataUtil.normalizeDatumOut(datum2, allFields);
+        expect(datum2.localDate).to.equal('2018-02-01'); // GMT-0 for UTC
 
         dataUtil.normalizeDatumOut(datum, fields);
         expect(datum.localDate).to.equal('2018-02-01'); // GMT-0 for UTC
@@ -992,7 +1073,12 @@ describe('DataUtil', () => {
         dataUtil.activeTimeField = 'time';
 
         const datum = { type: 'smbg', time: Date.parse('2018-02-01T00:00:00') };
+        const datum2 = { ...datum };
         const fields = ['msPer24'];
+        const allFields = ['*'];
+
+        dataUtil.normalizeDatumOut(datum2, allFields);
+        expect(datum2.msPer24).to.equal(0); // GMT-0 for UTC
 
         dataUtil.normalizeDatumOut(datum, fields);
         expect(datum.msPer24).to.equal(0); // GMT-0 for UTC
@@ -1015,7 +1101,12 @@ describe('DataUtil', () => {
         dataUtil.activeTimeField = 'time';
 
         const datum = { type: 'smbg', time: Date.parse('2018-02-01T04:00:00') };
+        const datum2 = { ...datum };
         const fields = ['localDate'];
+        const allFields = ['*'];
+
+        dataUtil.normalizeDatumOut(datum2, allFields);
+        expect(datum2.localDate).to.equal('2018-02-01'); // GMT-0 for UTC
 
         dataUtil.normalizeDatumOut(datum, fields);
         expect(datum.localDate).to.equal('2018-02-01'); // GMT-0 for UTC
@@ -1415,32 +1506,66 @@ describe('DataUtil', () => {
   });
 
   describe('removeData', () => {
-    it('should call the `clearFilters` method', () => {
-      const clearFiltersSpy = sinon.spy(dataUtil, 'clearFilters');
-      sinon.assert.callCount(clearFiltersSpy, 0);
-      dataUtil.removeData();
-      sinon.assert.callCount(clearFiltersSpy, 1);
+    context('predicate is provided', () => {
+      it('should call the `clearFilters` method', () => {
+        const clearFiltersSpy = sinon.spy(dataUtil, 'clearFilters');
+        sinon.assert.callCount(clearFiltersSpy, 0);
+        dataUtil.removeData({ foo: 'bar' });
+        sinon.assert.callCount(clearFiltersSpy, 1);
+      });
+
+      it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
+        initDataUtil(defaultData);
+        expect(dataUtil.data.size()).to.equal(26);
+        dataUtil.removeData(d => (d.type === 'basal'));
+        expect(dataUtil.data.size()).to.equal(23);
+      });
+
+      it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
+        initDataUtil(defaultData);
+        expect(dataUtil.data.size()).to.equal(26);
+        dataUtil.removeData({ type: 'basal' });
+        expect(dataUtil.data.size()).to.equal(23);
+      });
     });
 
-    it('should remove all data from the crossfilter when no predicate arg supplied', () => {
-      initDataUtil(defaultData);
-      expect(dataUtil.data.size()).to.equal(26);
-      dataUtil.removeData();
-      expect(dataUtil.data.size()).to.equal(0);
-    });
+    context('predicate not provided', () => {
+      it('should remove all data from the crossfilter', () => {
+        initDataUtil(defaultData);
+        expect(dataUtil.data.size()).to.equal(26);
+        dataUtil.removeData();
+        expect(dataUtil.data.size()).to.equal(0);
+      });
 
-    it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
-      initDataUtil(defaultData);
-      expect(dataUtil.data.size()).to.equal(26);
-      dataUtil.removeData(d => (d.type === 'basal'));
-      expect(dataUtil.data.size()).to.equal(23);
-    });
+      it('should reset the id maps and latestDatumByType', () => {
+        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
+        dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.latestDatumByType = { foo: 'bar' };
+        dataUtil.removeData();
+        expect(dataUtil.bolusToWizardIdMap).to.eql({});
+        expect(dataUtil.bolusDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.latestDatumByType).to.eql({});
+      });
 
-    it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
-      initDataUtil(defaultData);
-      expect(dataUtil.data.size()).to.equal(26);
-      dataUtil.removeData({ type: 'basal' });
-      expect(dataUtil.data.size()).to.equal(23);
+      it('should delete the `bgSources` metadata', () => {
+        dataUtil.bgSources = { foo: 'bar' };
+        dataUtil.removeData();
+        expect(dataUtil.bgSources).to.be.undefined;
+      });
+
+      it('should delete the `bgPrefs` metadata', () => {
+        dataUtil.bgPrefs = { foo: 'bar' };
+        dataUtil.removeData();
+        expect(dataUtil.bgPrefs).to.be.undefined;
+      });
+
+      it('should delete the `timePrefs` metadata', () => {
+        dataUtil.timePrefs = { foo: 'bar' };
+        dataUtil.removeData();
+        expect(dataUtil.timePrefs).to.be.undefined;
+      });
     });
   });
 
@@ -1497,6 +1622,7 @@ describe('DataUtil', () => {
 
     it('should clear all filters and reset the byId filter after filtering by id', () => {
       sinon.stub(dataUtil, 'clearFilters');
+      sinon.stub(dataUtil, 'normalizeDatumOut');
       sinon.spy(dataUtil.filter, 'byId');
       sinon.spy(dataUtil.dimension.byId, 'filterAll');
 
@@ -1516,6 +1642,18 @@ describe('DataUtil', () => {
       dataUtil.updateDatum(updatedDatum);
 
       sinon.assert.calledOnce(dataUtil.buildByTimeDimension);
+    });
+
+    it('should return the normalized datum', () => {
+      sinon.stub(dataUtil, 'normalizeDatumIn');
+
+      sinon.stub(dataUtil, 'normalizeDatumOut').callsFake(d => {
+        d.normalized = true; // eslint-disable-line no-param-reassign
+        return d;
+      });
+
+      const updatedDatum = { id: defaultData[0].id, updated: true };
+      expect(dataUtil.updateDatum(updatedDatum).datum.normalized).to.be.true;
     });
   });
 
@@ -1691,7 +1829,8 @@ describe('DataUtil', () => {
     });
 
     it('should set the current source if provided via arg', () => {
-      expect(dataUtil.bgSources.current).to.be.undefined;
+      initDataUtil([...cbgData, ...smbgData]);
+      delete(dataUtil.bgSources.current);
 
       dataUtil.setBgSources('cbg');
       expect(dataUtil.bgSources.current).to.equal('cbg');
@@ -1705,7 +1844,6 @@ describe('DataUtil', () => {
         it('should set the current source to cbg if cbg data is available', () => {
           initDataUtil([...cbgData, ...smbgData]);
           delete(dataUtil.bgSources.current);
-          expect(dataUtil.bgSources.current).to.be.undefined;
 
           dataUtil.setBgSources();
           expect(dataUtil.bgSources.current).to.equal('cbg');
@@ -1714,7 +1852,6 @@ describe('DataUtil', () => {
         it('should set the current source to smbg if cbg data is unavailable but smbg data is', () => {
           initDataUtil([...smbgData]);
           delete(dataUtil.bgSources.current);
-          expect(dataUtil.bgSources.current).to.be.undefined;
 
           dataUtil.setBgSources();
           expect(dataUtil.bgSources.current).to.equal('smbg');
@@ -1875,8 +2012,24 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('setSize', () => {
+    it('should set the size property to the current data count', () => {
+      const deviceEventData = [
+        { ...new Types.DeviceEvent({ ...useRawData }), annotations: [] },
+        { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }] },
+      ];
+
+      initDataUtil(deviceEventData);
+      delete(dataUtil.size);
+
+      dataUtil.setSize();
+      expect(dataUtil.size).to.equal(2);
+    });
+  });
+
   describe('setMetaData', () => {
     it('should call all the metadata setters and in the correct order where required', () => {
+      sinon.spy(dataUtil, 'setSize');
       sinon.spy(dataUtil, 'setBgPrefs');
       sinon.spy(dataUtil, 'setBgSources');
       sinon.spy(dataUtil, 'setTimePrefs');
@@ -1889,6 +2042,7 @@ describe('DataUtil', () => {
 
       dataUtil.setMetaData();
 
+      sinon.assert.calledOnce(dataUtil.setSize);
       sinon.assert.calledOnce(dataUtil.setBgPrefs);
       sinon.assert.calledOnce(dataUtil.setBgSources);
       sinon.assert.calledOnce(dataUtil.setTimePrefs);
@@ -1929,11 +2083,13 @@ describe('DataUtil', () => {
           activeDays: 2,
         });
       });
+    });
 
+    context('nextDays arg provided', () => {
       it('should set `endpoints.next` range, days, and activeDays property using the provided endpoints', () => {
         delete dataUtil.endpoints;
 
-        dataUtil.setEndpoints(twoDayEndpoints);
+        dataUtil.setEndpoints(twoDayEndpoints, 2);
         expect(dataUtil.endpoints.next).to.eql({
           range: [
             moment.utc(twoDayEndpoints[1]).valueOf(),
@@ -1943,11 +2099,13 @@ describe('DataUtil', () => {
           activeDays: 2,
         });
       });
+    });
 
+    context('prevDays arg provided', () => {
       it('should set `endpoints.prev` range, days, and activeDays property using the provided endpoints', () => {
         delete dataUtil.endpoints;
 
-        dataUtil.setEndpoints(twoDayEndpoints);
+        dataUtil.setEndpoints(twoDayEndpoints, undefined, 2);
         expect(dataUtil.endpoints.prev).to.eql({
           range: [
             moment.utc(twoDayEndpoints[0]).subtract(2, 'days').valueOf(),
@@ -1962,7 +2120,7 @@ describe('DataUtil', () => {
 
   describe('setActiveDays', () => {
     it('should set the activeDays prop if provided, and update the active days of the week for each endpoints range', () => {
-      dataUtil.setEndpoints(twoWeekEndpoints);
+      dataUtil.setEndpoints(twoWeekEndpoints, 14, 14);
       expect(dataUtil.endpoints.current.activeDays).to.equal(14);
       expect(dataUtil.endpoints.next.activeDays).to.equal(14);
       expect(dataUtil.endpoints.prev.activeDays).to.equal(14);
@@ -1973,7 +2131,7 @@ describe('DataUtil', () => {
       expect(dataUtil.endpoints.next.activeDays).to.equal(12);
       expect(dataUtil.endpoints.prev.activeDays).to.equal(12);
 
-      dataUtil.setEndpoints(twoDayEndpoints);
+      dataUtil.setEndpoints(twoDayEndpoints, 2, 2);
       dataUtil.setActiveDays([3]); // Show only Wednesdays
 
       expect(dataUtil.endpoints.current.activeDays).to.equal(0);
@@ -2007,6 +2165,8 @@ describe('DataUtil', () => {
           sort: 'normalTime,asc',
         },
       };
+
+      initDataUtil([new Types.CBG({ ...useRawData })]);
 
       expect(dataUtil.types).to.eql([]);
 
@@ -2133,6 +2293,12 @@ describe('DataUtil', () => {
       dataUtil.setBgPrefs();
       expect(dataUtil.bgPrefs).to.eql({
         bgBounds: DEFAULT_BG_BOUNDS[MGDL_UNITS],
+        bgClasses: {
+          'very-low': { boundary: DEFAULT_BG_BOUNDS[MGDL_UNITS].veryLowThreshold },
+          low: { boundary: DEFAULT_BG_BOUNDS[MGDL_UNITS].targetLowerBound },
+          target: { boundary: DEFAULT_BG_BOUNDS[MGDL_UNITS].targetUpperBound },
+          high: { boundary: DEFAULT_BG_BOUNDS[MGDL_UNITS].veryHighThreshold },
+        },
         bgUnits: 'mg/dL',
       });
     });
@@ -2141,10 +2307,20 @@ describe('DataUtil', () => {
       delete(dataUtil.bgPrefs);
       dataUtil.setBgPrefs({
         bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          low: { boundary: 3.1 },
+          target: { boundary: 10.2 },
+        },
         bgUnits: MMOLL_UNITS,
       });
       expect(dataUtil.bgPrefs).to.eql({
         bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          'very-low': { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryLowThreshold },
+          low: { boundary: 3.1 },
+          target: { boundary: 10.2 },
+          high: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryHighThreshold },
+        },
         bgUnits: 'mmol/L',
       });
     });
@@ -2195,21 +2371,22 @@ describe('DataUtil', () => {
       );
     });
 
-    it('should only call `setBgSources` if `bgSource` is specified in the query', () => {
+    it('should call `setBgSources` with `bgSource` as specified in the query', () => {
       sinon.spy(dataUtil, 'setBgSources');
 
       dataUtil.query({});
-      sinon.assert.notCalled(dataUtil.setBgSources);
+      sinon.assert.calledWith(dataUtil.setBgSources, undefined);
 
       dataUtil.query({ bgSource: 'cbg' });
-      sinon.assert.calledOnce(dataUtil.setBgSources);
+      sinon.assert.calledTwice(dataUtil.setBgSources);
+      sinon.assert.calledWith(dataUtil.setBgSources, 'cbg');
     });
 
-    it('should only call `setTypes` if `types` is specified in the query', () => {
+    it('should call `setTypes` with `types` as specified in the query', () => {
       sinon.spy(dataUtil, 'setTypes');
 
       dataUtil.query({});
-      sinon.assert.notCalled(dataUtil.setTypes);
+      sinon.assert.calledWith(dataUtil.setTypes, undefined);
 
       dataUtil.query({
         types: {
@@ -2219,7 +2396,13 @@ describe('DataUtil', () => {
           },
         },
       });
-      sinon.assert.calledOnce(dataUtil.setTypes);
+      sinon.assert.calledTwice(dataUtil.setTypes);
+      sinon.assert.calledWith(dataUtil.setTypes, {
+        cbg: {
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+      });
     });
 
     it('should only call `setBgPrefs` if `bgPrefs` is specified in the query', () => {
@@ -2236,30 +2419,31 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setTimePrefs');
 
       dataUtil.query({});
-      sinon.assert.notCalled(dataUtil.setTimePrefs);
 
       dataUtil.query({ timePrefs: defaultTimePrefs });
       sinon.assert.calledOnce(dataUtil.setTimePrefs);
     });
 
-    it('should only call `setEndpoints` if `endpoints` is specified in the query', () => {
+    it('should call `setEndpoints` with `endpoints` as specified in the query', () => {
       sinon.spy(dataUtil, 'setEndpoints');
 
       dataUtil.query({});
-      sinon.assert.notCalled(dataUtil.setEndpoints);
+      sinon.assert.calledWith(dataUtil.setEndpoints, undefined);
 
       dataUtil.query({ endpoints: dayEndpoints });
-      sinon.assert.calledOnce(dataUtil.setEndpoints);
+      sinon.assert.calledTwice(dataUtil.setEndpoints);
+      sinon.assert.calledWith(dataUtil.setEndpoints, dayEndpoints);
     });
 
-    it('should only call `setActiveDays` if `activeDays` is specified in the query', () => {
+    it('should call `setActiveDays` with `activeDays` as specified in the query', () => {
       sinon.spy(dataUtil, 'setActiveDays');
 
       dataUtil.query({});
-      sinon.assert.notCalled(dataUtil.setActiveDays);
+      sinon.assert.calledWith(dataUtil.setActiveDays, undefined);
 
       dataUtil.query({ activeDays: [0, 1] });
-      sinon.assert.calledOnce(dataUtil.setActiveDays);
+      sinon.assert.calledTwice(dataUtil.setActiveDays);
+      sinon.assert.calledWith(dataUtil.setActiveDays, [0, 1]);
     });
 
     context('generating data', () => {
@@ -2268,6 +2452,8 @@ describe('DataUtil', () => {
 
         dataUtil.query(createQuery({
           endpoints: dayEndpoints,
+          nextDays: 1,
+          prevDays: 1,
         }));
 
         sinon.assert.calledThrice(dataUtil.filter.byEndpoints);
@@ -2293,6 +2479,8 @@ describe('DataUtil', () => {
 
         dataUtil.query(createQuery({
           endpoints: dayEndpoints,
+          nextDays: 1,
+          prevDays: 1,
         }));
 
         sinon.assert.calledThrice(dataUtil.filter.byActiveDays);
@@ -2402,6 +2590,8 @@ describe('DataUtil', () => {
         const result = dataUtil.query(createQuery({
           fillData: fillDataOpts,
           endpoints: dayEndpoints,
+          nextDays: 1,
+          prevDays: 1,
         }));
 
         sinon.assert.calledThrice(dataUtil.getFillData);
@@ -2432,9 +2622,11 @@ describe('DataUtil', () => {
           fillDataOpts
         );
 
-        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8); // 8 3hr fill bins
-        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8); // 8 3hr fill bins
-        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8); // 8 3hr fill bins
+        // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
+        // which end up being 2 days in this case
+        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(16);
+        expect(result.data.next.data.fill).to.be.an('array').and.have.lengthOf(16);
+        expect(result.data.prev.data.fill).to.be.an('array').and.have.lengthOf(16);
       });
     });
 
@@ -2462,6 +2654,12 @@ describe('DataUtil', () => {
 
       expect(result.bgPrefs).to.eql({
         bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          'very-low': { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryLowThreshold },
+          low: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].targetLowerBound },
+          target: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].targetUpperBound },
+          high: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryHighThreshold },
+        },
         bgUnits: 'mmol/L',
       });
     });
@@ -2540,21 +2738,24 @@ describe('DataUtil', () => {
 
       const endpoints = _.map(dayEndpoints, Date.parse);
       let result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
+      // which end up being 2 days in this case
+      expect(result).to.be.an('array').and.have.lengthOf(16);
 
       expect(result[0].normalTime).to.equal(endpoints[0]); // GMT-0 for UTC
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
 
       delete(dataUtil.timePrefs);
       result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(8);
+      expect(result).to.be.an('array').and.have.lengthOf(16);
 
       expect(result[0].normalTime).to.equal(endpoints[0]); // fallback to GMT-0 for UTC when not timezone-aware
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
 
       dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
       result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(8);
+      expect(result).to.be.an('array').and.have.lengthOf(16);
 
       expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(19, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 5 hrs
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(16, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 8 hrs
@@ -2573,7 +2774,10 @@ describe('DataUtil', () => {
       }));
 
       const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
-      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+
+      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
+      // which end up being 2 days in this case
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(16);
 
       expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour later than start of next fill
@@ -2581,7 +2785,7 @@ describe('DataUtil', () => {
       expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(5, 'hours').valueOf());
 
       const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
-      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(16);
 
       expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(2, 'hours').valueOf()); // End is adjusted to align to start of next fill
@@ -2602,7 +2806,10 @@ describe('DataUtil', () => {
       }));
 
       const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
-      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+
+      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
+      // which end up being 2 days in this case
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(16);
 
       expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour earlier than start of next fill
@@ -2610,7 +2817,7 @@ describe('DataUtil', () => {
       expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
 
       const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
-      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(16);
 
       expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf()); // End is adjusted to align to start of next fill
@@ -2624,34 +2831,42 @@ describe('DataUtil', () => {
       initDataUtil(defaultData);
 
       const metaData = [
-        'latestPumpUpload',
-        'latestDatumByType',
         'bgSources',
+        'latestDatumByType',
+        'latestPumpUpload',
+        'patientId',
+        'size',
       ];
 
       const result = dataUtil.getMetaData(metaData);
 
       expect(result).to.be.an('object').and.have.keys(metaData);
-      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
-      expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.bgSources).to.eql(dataUtil.bgSources);
+      expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
+      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
+      expect(result.patientId).to.equal(defaultPatientId);
+      expect(result.size).to.equal(26);
     });
 
     it('should return metaData requested via a string', () => {
       initDataUtil(defaultData);
 
       const metaData = [
-        'latestPumpUpload',
-        'latestDatumByType',
         'bgSources',
+        'latestDatumByType',
+        'latestPumpUpload',
+        'patientId',
+        'size',
       ];
 
       const result = dataUtil.getMetaData(_.join(metaData, ','));
 
       expect(result).to.be.an('object').and.have.keys(metaData);
-      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
-      expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.bgSources).to.eql(dataUtil.bgSources);
+      expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
+      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
+      expect(result.patientId).to.equal(defaultPatientId);
+      expect(result.size).to.equal(26);
     });
 
     it('should normalize each datum returned in `latestDatumByType`', () => {
@@ -2979,7 +3194,7 @@ describe('DataUtil', () => {
           ...basalDataClone,
         ], normalizeExpectedDatum);
 
-        dataUtil.addData([basalDatumOverlappingStartClone.asObject()]);
+        dataUtil.addData([basalDatumOverlappingStartClone.asObject()], defaultPatientId);
 
         dataUtil.query(createQuery({
           timePrefs: { timeZoneAware: false },

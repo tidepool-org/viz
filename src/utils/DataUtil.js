@@ -48,7 +48,7 @@ export class DataUtil {
   /**
    * @param {Array} data Raw Tidepool data
    */
-  constructor(data = [], Validator = SchemaValidator) {
+  constructor(Validator = SchemaValidator) {
     this.log = bows('DataUtil');
 
     /* eslint-disable no-console */
@@ -57,27 +57,35 @@ export class DataUtil {
     /* eslint-enable no-console */
 
     this.validator = Validator;
-    this.init(data);
+    this.init();
   }
 
-  init = data => {
+  init = () => {
     this.startTimer('init total');
     this.data = crossfilter([]);
 
     this.buildDimensions();
     this.buildFilters();
     this.buildSorts();
-
-    this.addData(data);
     this.endTimer('init total');
   };
 
-  addData = rawData => {
+  addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
+
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
+
+    if (_.isEmpty(rawData) || !patientId) return {};
+
+    // First, we check to see if we already have data for a different patient stored. If so, we
+    // clear all data so that we never mix patient data.
+    if (this.patientId && this.patientId !== patientId) {
+      this.removeData();
+    }
+    this.patientId = patientId;
 
     // We first clone the raw data so we don't mutate it at the source
     const data = _.cloneDeep(rawData);
@@ -99,6 +107,23 @@ export class DataUtil {
 
     this.setMetaData();
     this.endTimer('addData');
+
+    const result = {
+      metaData: this.getMetaData([
+        'bgSources',
+        'latestDatumByType',
+        'latestPumpUpload',
+        'patientId',
+        'size',
+      ]),
+    };
+
+    if (returnData) {
+      _.each(validData, d => this.normalizeDatumOut(d, '*'));
+      result.data = validData;
+    }
+
+    return result;
   };
 
   /* eslint-disable no-param-reassign */
@@ -214,12 +239,13 @@ export class DataUtil {
 
   normalizeDatumOut = (d, fields = []) => {
     const { timezoneName } = this.timePrefs || {};
+    const normalizeAllFields = fields[0] === '*';
 
     // Normal time post-processing
     this.normalizeDatumOutTime(d, fields);
 
     // Add source and serial number metadata
-    if (d.uploadId && _.includes(fields, 'deviceSerialNumber')) {
+    if (d.uploadId && (normalizeAllFields || _.includes(fields, 'deviceSerialNumber'))) {
       d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
     }
     if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
@@ -230,7 +256,7 @@ export class DataUtil {
       d.subType = d.deliveryType;
 
       // Annotate any incomplete suspends
-      if (_.includes(fields, 'annotations')) {
+      if (normalizeAllFields || _.includes(fields, 'annotations')) {
         const intersectsIncompleteSuspend = _.some(
           this.incompleteSuspends,
           suspend => {
@@ -250,8 +276,11 @@ export class DataUtil {
     if (d.type === 'cbg' || d.type === 'smbg') {
       this.normalizeDatumBgUnits(d);
 
-      if (_.includes(fields, 'msPer24')) d.msPer24 = getMsPer24(d.normalTime, timezoneName);
-      if (_.includes(fields, 'localDate')) {
+      if (normalizeAllFields || _.includes(fields, 'msPer24')) {
+        d.msPer24 = getMsPer24(d.normalTime, timezoneName);
+      }
+
+      if (normalizeAllFields || _.includes(fields, 'localDate')) {
         d.localDate = moment.utc(d[this.activeTimeField]).tz(timezoneName || 'UTC').format('YYYY-MM-DD');
       }
     }
@@ -260,7 +289,7 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
       this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
       // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
-      if (_.includes(fields, 'basalSchedules')) {
+      if (normalizeAllFields || _.includes(fields, 'basalSchedules')) {
         d.basalSchedules = _.flatten(_.partition(
           _.sortBy(_.map(d.basalSchedules, (value, name) => ({ name, value })), 'name'),
           ({ name }) => (name === 'standard')
@@ -294,6 +323,7 @@ export class DataUtil {
 
   normalizeDatumOutTime = (d, fields = []) => {
     const { timezoneName } = this.timePrefs || {};
+    const normalizeAllFields = fields[0] === '*';
 
     if (timezoneName) {
       d.normalTime = d.time;
@@ -314,12 +344,21 @@ export class DataUtil {
     }
 
     // Recurse as needed for suppressed basals
-    if (d.suppressed && _.includes(fields, 'suppressed')) this.normalizeDatumOutTime(d.suppressed, fields);
+    if (d.suppressed && (normalizeAllFields || _.includes(fields, 'suppressed'))) this.normalizeDatumOutTime(d.suppressed, fields);
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
+    const units = _.get(this.bgPrefs, 'bgUnits');
+
+    if (units && d.units) {
+      d.units = _.isPlainObject(d.units) ? {
+        ...d.units,
+        bg: units,
+      } : units;
+    }
+
     // BG units are always stored in mmol/L in the backend, so we only need to convert to mg/dL
-    if (_.get(this.bgPrefs, 'bgUnits') === MGDL_UNITS) {
+    if (units === MGDL_UNITS) {
       if (d.units) {
         d.units = _.isPlainObject(d.units) ? {
           ...d.units,
@@ -376,10 +415,23 @@ export class DataUtil {
   /* eslint-enable no-param-reassign */
 
   /* eslint-disable no-param-reassign */
-  removeData = predicate => {
-    if (_.isPlainObject(predicate)) predicate = _.matches(predicate);
-    this.clearFilters();
-    this.data.remove(predicate);
+  removeData = (predicate = null) => {
+    if (predicate) {
+      this.log('Removing data where', predicate);
+      if (_.isPlainObject(predicate)) predicate = _.matches(predicate);
+      this.clearFilters();
+      this.data.remove(predicate);
+    } else {
+      this.log('Reinitializing');
+      this.bolusToWizardIdMap = {};
+      this.bolusDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.latestDatumByType = {};
+      delete this.bgSources;
+      delete this.bgPrefs;
+      delete this.timePrefs;
+      this.init();
+    }
   };
   /* eslint-enable no-param-reassign */
 
@@ -399,6 +451,13 @@ export class DataUtil {
 
     // Update the byTime dimension in case the time field was changed
     this.buildByTimeDimension();
+
+    const resultingDatum = _.cloneDeep(existingDatum);
+    this.normalizeDatumOut(resultingDatum, '*');
+
+    return {
+      datum: resultingDatum,
+    };
   };
 
   buildByDayOfWeekDimension = () => {
@@ -514,13 +573,12 @@ export class DataUtil {
     const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
 
     if (latestPumpUpload) {
-      const latestUploadSource = _.get(latestPumpUpload, 'source', '').toLowerCase();
-
+      const latestUploadSource = _.get(this.uploadMap[latestPumpUpload.uploadId], 'source', '').toLowerCase();
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
@@ -567,7 +625,7 @@ export class DataUtil {
 
       this.uploadMap[upload.uploadId] = {
         source,
-        deviceSerialNumber: upload.deviceSerialNumber || 'Unknown',
+        deviceSerialNumber: upload.deviceSerialNumber || upload.serialNumber || 'Unknown',
       };
     });
     this.endTimer('setUploadMap');
@@ -584,11 +642,16 @@ export class DataUtil {
     this.endTimer('setIncompleteSuspends');
   };
 
+  setSize = () => {
+    this.size = this.data.size();
+  };
+
   setMetaData = () => {
     this.startTimer('setMetaData');
-    this.setBgPrefs();
+    this.setSize();
+    if (!this.bgPrefs) this.setBgPrefs();
     this.setBgSources();
-    this.setTimePrefs();
+    if (!this.timePrefs) this.setTimePrefs();
     this.setEndpoints();
     this.setActiveDays();
     this.setTypes();
@@ -598,7 +661,7 @@ export class DataUtil {
     this.endTimer('setMetaData');
   };
 
-  setEndpoints = endpoints => {
+  setEndpoints = (endpoints, nextDays = 0, prevDays = 0) => {
     this.endpoints = {
       current: { range: [0, Infinity] },
     };
@@ -611,23 +674,27 @@ export class DataUtil {
         activeDays: days,
       };
 
-      this.endpoints.next = {
-        range: [
-          this.endpoints.current.range[1],
-          moment.utc(endpoints[1]).add(this.endpoints.current.days, 'days').valueOf(),
-        ],
-        days,
-        activeDays: days,
-      };
+      if (nextDays > 0) {
+        this.endpoints.next = {
+          range: [
+            this.endpoints.current.range[1],
+            moment.utc(endpoints[1]).add(nextDays, 'days').valueOf(),
+          ],
+          days: nextDays,
+          activeDays: nextDays,
+        };
+      }
 
-      this.endpoints.prev = {
-        range: [
-          moment.utc(endpoints[0]).subtract(this.endpoints.current.days, 'days').valueOf(),
-          this.endpoints.current.range[0],
-        ],
-        days,
-        activeDays: days,
-      };
+      if (prevDays > 0) {
+        this.endpoints.prev = {
+          range: [
+            moment.utc(endpoints[0]).subtract(prevDays, 'days').valueOf(),
+            this.endpoints.current.range[0],
+          ],
+          days: prevDays,
+          activeDays: prevDays,
+        };
+      }
     }
   };
 
@@ -711,16 +778,28 @@ export class DataUtil {
   setBgPrefs = (bgPrefs = {}) => {
     const {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
+      bgClasses = {},
       bgUnits = MGDL_UNITS,
     } = bgPrefs;
 
+    // bgClasses required for legacy tideline charts until we deprecate them
+    _.defaults(bgClasses, {
+      'very-low': { boundary: DEFAULT_BG_BOUNDS[bgUnits].veryLowThreshold },
+      low: { boundary: DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound },
+      target: { boundary: DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound },
+      high: { boundary: DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold },
+    });
+
     this.bgPrefs = {
       bgBounds,
+      bgClasses,
       bgUnits,
     };
   };
 
   query = (query = {}) => {
+    this.log('Query', query);
+
     this.startTimer('query total');
     const {
       activeDays,
@@ -730,6 +809,8 @@ export class DataUtil {
       endpoints,
       fillData,
       metaData,
+      nextDays,
+      prevDays,
       stats,
       timePrefs,
       types,
@@ -741,12 +822,12 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    if (bgSource) this.setBgSources(bgSource);
-    if (types) this.setTypes(types);
+    this.setBgSources(bgSource);
+    this.setTypes(types);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
     if (timePrefs) this.setTimePrefs(timePrefs);
-    if (endpoints) this.setEndpoints(endpoints);
-    if (activeDays) this.setActiveDays(activeDays);
+    this.setEndpoints(endpoints, nextDays, prevDays);
+    this.setActiveDays(activeDays);
 
     const data = {};
 
@@ -790,11 +871,12 @@ export class DataUtil {
       data,
       timePrefs: this.timePrefs,
       bgPrefs: this.bgPrefs,
+      query,
     };
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    this.log('Query, Result', query, result, this);
+    this.log('Result', result);
 
     return result;
   };
@@ -858,7 +940,12 @@ export class DataUtil {
     const duration = fillHours * MS_IN_HOUR;
 
     const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
-    const end = start + this.activeEndpoints.days * MS_IN_DAY;
+
+    const end = moment.utc(start).tz(timezone)
+      .add(this.activeEndpoints.days, 'days')
+      .endOf('day')
+      .valueOf();
+
     const hourlyStarts = utcHour.range(start, end);
 
     const fillData = [];
@@ -899,9 +986,11 @@ export class DataUtil {
   getMetaData = metaData => {
     this.startTimer('generate metaData');
     const allowedMetaData = [
-      'latestPumpUpload',
-      'latestDatumByType',
       'bgSources',
+      'latestDatumByType',
+      'latestPumpUpload',
+      'patientId',
+      'size',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
@@ -911,10 +1000,10 @@ export class DataUtil {
       _.intersection(allowedMetaData, requestedMetaData),
     ));
 
-    _.each(selectedMetaData.latestDatumByType, this.normalizeDatumOut);
+    _.each(selectedMetaData.latestDatumByType, d => this.normalizeDatumOut(d, ['*']));
 
     if (_.get(selectedMetaData, 'latestPumpUpload.settings')) {
-      this.normalizeDatumOut(selectedMetaData.latestPumpUpload.settings);
+      this.normalizeDatumOut(selectedMetaData.latestPumpUpload.settings, ['*']);
     }
 
     this.endTimer('generate metaData');
@@ -965,8 +1054,10 @@ export class DataUtil {
   getTypeData = types => {
     const generatedData = {};
 
-    _.each(types, ({ type, select, sort = {} }) => {
+    _.each(types, ({ type, select = '*', sort = {} }) => {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
+      const returnAllFields = fields[0] === '*';
+
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
 
       // Normalize data
@@ -994,7 +1085,7 @@ export class DataUtil {
 
       // Pick selected fields
       this.startTimer(`select fields | ${type} | ${this.activeRange}`);
-      typeData = _.map(typeData, d => _.pick(d, fields));
+      if (!returnAllFields) typeData = _.map(typeData, d => _.pick(d, fields));
       this.endTimer(`select fields | ${type} | ${this.activeRange}`);
 
       generatedData[type] = typeData;

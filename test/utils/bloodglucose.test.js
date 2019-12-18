@@ -278,7 +278,7 @@ describe('blood glucose utilities', () => {
         'very-high': { boundary: 600 },
         high: { boundary: 300 },
         target: { boundary: 180 },
-        low: { boundary: 70 },
+        low: { boundary: 75 },
         'very-low': { boundary: 54 },
       },
       bgUnits: 'mg/dL',
@@ -290,6 +290,16 @@ describe('blood glucose utilities', () => {
 
     it('should extract and reshape `bgClasses` to `bgBounds`', () => {
       expect(bgUtils.reshapeBgClassesToBgBounds(bgPrefs)).to.deep.equal({
+        veryHighThreshold: 300,
+        targetUpperBound: 180,
+        targetLowerBound: 75,
+        veryLowThreshold: 54,
+      });
+    });
+
+    it('should fall back to a default bg bound if a bg class is missing', () => {
+      const missingLowClass = { ...bgPrefs, bgClasses: { ...bgPrefs.bgClasses, low: undefined } };
+      expect(bgUtils.reshapeBgClassesToBgBounds(missingLowClass)).to.deep.equal({
         veryHighThreshold: 300,
         targetUpperBound: 180,
         targetLowerBound: 70,

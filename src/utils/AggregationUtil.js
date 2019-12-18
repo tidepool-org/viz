@@ -164,26 +164,29 @@ export class AggregationUtil {
 
       const total = _.reduce([suspend, temp], (acc, { count = 0 }) => acc + count, 0);
 
-      if (total) {
-        processedData[dataForDay.key] = {
-          data: _.sortBy(dataList, this.dataUtil.activeTimeField),
-          total,
-          subtotals: {
-            suspend: suspend.count,
-            temp: temp.count,
-          },
-        };
+      processedData[dataForDay.key] = {
+        data: _.sortBy(dataList, this.dataUtil.activeTimeField),
+        total,
+        subtotals: {
+          suspend: suspend.count,
+          temp: temp.count,
+        },
+      };
 
-        _.assign(
-          processedData[dataForDay.key],
-          countAutomatedBasalEvents(processedData[dataForDay.key]),
-        );
+      _.assign(
+        processedData[dataForDay.key],
+        countAutomatedBasalEvents(processedData[dataForDay.key]),
+      );
 
-        _.assign(
-          processedData[dataForDay.key],
-          countDistinctSuspends(processedData[dataForDay.key]),
-        );
+      _.assign(
+        processedData[dataForDay.key],
+        countDistinctSuspends(processedData[dataForDay.key]),
+      );
 
+      if (processedData[dataForDay.key].total === 0) {
+        // If there's no events for the day, we don't need to return it
+        delete processedData[dataForDay.key].data;
+      } else {
         // No need to return the data - we only want the aggregations
         delete processedData[dataForDay.key].data;
       }
@@ -334,13 +337,18 @@ export class AggregationUtil {
     _.each(data, dataForDay => {
       const {
         value: {
+          dataList,
           cannulaPrime,
           reservoirChange,
           tubingPrime,
         },
       } = dataForDay;
 
+      const datums = _.sortBy(dataList, this.dataUtil.activeTimeField);
+      _.each(datums, this.dataUtil.normalizeDatumOut);
+
       processedData[dataForDay.key] = {
+        data: datums,
         summary: {
           daysSince: {},
         },

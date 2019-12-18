@@ -4701,16 +4701,16 @@ cross-spawn@^5.0.1:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
-crossfilter2@1.4.6:
-  version "1.4.6"
-  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.6.tgz#c173f0d75a04344ad226b1f8ae747f0386f98750"
+crossfilter2@1.4.8:
+  version "1.4.8"
+  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.8.tgz#a723bc47d91560bc93e43ad4444c7aa37ea36980"
+  integrity sha512-H3D2AyRGpRYK0pKs6kgwALuNb3J6/PuW/sIckPDxPi2wz+TX1Cp/1+BC7sKkMUF12RGPjV/PNANF/W4TQ+4BLg==
   dependencies:
     lodash.result "^4.4.0"
 
 crossfilter2@^1.4.0:
   version "1.4.7"
-  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.7.tgz#ab9372b46f36fb7b5da25f725b1e2838f2877987"
-  integrity sha512-9swxPbMBSO4AjednWnEwlidQQxjYllWmnKkY1hs+QRxbAjsO6QsUYf3GkTDA/KLO1K0FlbWvmMsKxTXZVqp1vw==
+  resolved "https://codeload.github.com/crossfilter/crossfilter/tar.gz/cb4588dc16e11fd705ddb7a330f94627179c9eb1"
   dependencies:
     lodash.result "^4.4.0"
 
@@ -11046,21 +11046,11 @@ reduce-without@^1.0.1:
   dependencies:
     test-value "^2.0.0"
 
-"reductio@https://github.com/crossfilter/reductio.git#0c45b0355950101d395d6482e2083ce1cdbcf435":
+reductio@crossfilter/reductio#0c45b03559:
   version "0.6.3"
-  resolved "https://github.com/crossfilter/reductio.git#0c45b0355950101d395d6482e2083ce1cdbcf435"
+  resolved "https://codeload.github.com/crossfilter/reductio/tar.gz/0c45b0355950101d395d6482e2083ce1cdbcf435"
   dependencies:
     crossfilter2 "^1.4.0"
-
-redux-mock-store@1.5.3:
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/redux-mock-store/-/redux-mock-store-1.5.3.tgz#1f10528949b7ce8056c2532624f7cafa98576c6d"
-  dependencies:
-    lodash.isplainobject "^4.0.6"
-
-redux-thunk@2.2.0:
-  version "2.2.0"
-  resolved "https://registry.yarnpkg.com/redux-thunk/-/redux-thunk-2.2.0.tgz#e615a16e16b47a19a515766133d1e3e99b7852e5"
 
 redux@3.5.2:
   version "3.5.2"

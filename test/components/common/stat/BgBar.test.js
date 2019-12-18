@@ -14,7 +14,7 @@ describe('BgBar', () => {
   };
 
   const avgGlucoseDatumDisabled = {
-    y: -1,
+    y: 0,
   };
 
   const stdDevDatum = {
@@ -27,7 +27,7 @@ describe('BgBar', () => {
   const stdDevDatumDisabled = {
     ...avgGlucoseDatum,
     deviation: {
-      value: -1,
+      value: 0,
     },
   };
 

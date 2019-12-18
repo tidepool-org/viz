@@ -498,46 +498,6 @@ describe('datetime', () => {
     });
   });
 
-  describe('getHammertimeFromDatumWithTimePrefs', () => {
-    const tzAware = {
-      timezoneAware: true,
-      timezoneName: 'US/Central',
-    };
-    const tzNaive = {
-      timezoneAware: false,
-      timezoneName: null,
-    };
-    const datum = {
-      time: '2016-09-23T23:00:00.000Z',
-      deviceTime: '2016-09-23T19:00:00',
-    };
-
-    it('should return 1474671600000 for timezone aware', () => {
-      expect(datetime.getHammertimeFromDatumWithTimePrefs(datum, tzAware)).to.equal(1474671600000);
-    });
-
-    it('should return 1474657200000 for timezone unaware', () => {
-      expect(datetime.getHammertimeFromDatumWithTimePrefs(datum, tzNaive)).to.equal(1474657200000);
-    });
-
-    it('should return `null` if `time` is not present on datum when timezone-aware', () => {
-      expect(datetime.getHammertimeFromDatumWithTimePrefs({}, tzAware)).to.be.null;
-    });
-
-    it('should return `null` if `deviceTime` is not present on datum when timezone-naive', () => {
-      expect(datetime.getHammertimeFromDatumWithTimePrefs({}, tzNaive)).to.be.null;
-    });
-
-    it('should error if time/deviceTime is not string timestamp', () => {
-      const fn = () => {
-        datetime.getHammertimeFromDatumWithTimePrefs({ time: 'tuesday' }, tzAware);
-      };
-      expect(fn).to.throw(
-        'Check your input datum; could not parse `time` or `deviceTime` with Date.parse.'
-      );
-    });
-  });
-
   describe('getLocalizedCeiling', () => {
     const timePrefs = { timezoneAware: true, timezoneName: 'US/Pacific' };
 

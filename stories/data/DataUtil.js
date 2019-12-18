@@ -96,7 +96,10 @@ const Results = ({ results, showData, showStats }) => {
   );
 };
 
-const dataUtil = new DataUtil(data);
+const patientId = 'abc123';
+const dataUtil = new DataUtil();
+dataUtil.addData(data, patientId);
+
 stories.add('Query Generator', () => {
   const endMoment = moment.utc(data[1].time).startOf('day').add(1, 'd');
 
@@ -114,11 +117,20 @@ stories.add('Query Generator', () => {
     step: 1,
   };
 
+  const daysInSurroundingRangeOptions = {
+    range: true,
+    min: 0,
+    max: 28,
+    step: 1,
+  };
+
   const noneOption = {
     None: 'None',
   };
 
-  const getDaysInRange = () => number('Days in Range', daysInRange, daysInRangeOptions, GROUP_DATES);
+  const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_DATES);
+  const getNextDays = () => number('Days in Next Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
+  const getPrevDays = () => number('Days in Prev Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
 
   const commonFields = {
     annotations: 'annotations',
@@ -307,9 +319,10 @@ stories.add('Query Generator', () => {
   };
 
   const metadata = {
-    latestPumpUpload: 'latestPumpUpload',
-    latestDatumByType: 'latestDatumByType',
     bgSources: 'bgSources',
+    latestDatumByType: 'latestDatumByType',
+    latestPumpUpload: 'latestPumpUpload',
+    size: 'size',
   };
 
   const getMetaDataQueryFormat = () => options('Metadata Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_DATA);
@@ -328,7 +341,7 @@ stories.add('Query Generator', () => {
     return queryFormat === 'string' ? selectedMetaData.join(',') : selectedMetaData;
   };
 
-  const getFillData = () => boolean('Generate Fill Data', true, GROUP_DATA);
+  const getFillData = () => boolean('Generate Fill Data', false, GROUP_DATA);
   const adjustForDSTChanges = () => boolean('Adjust Fill Data for DST Changes', true, GROUP_DATA);
 
   const activeDays = {
@@ -448,6 +461,8 @@ stories.add('Query Generator', () => {
     timePrefs,
     bgPrefs: getBGPrefs(),
     bgSource: getBGSource(),
+    nextDays: getNextDays(),
+    prevDays: getPrevDays(),
     stats: getStats(),
     aggregationsByDate: getAggregationsByDate(),
     metaData: getMetaData(),
@@ -481,7 +496,9 @@ const message = {
     fullName: 'Jill Jellyfish',
   },
 };
-const messageDataUtil = new DataUtil([_.cloneDeep(message)]);
+
+const messageDataUtil = new DataUtil();
+messageDataUtil.addData([_.cloneDeep(message)], patientId);
 
 stories.add('Update Message', () => {
   const defaultQuery = {

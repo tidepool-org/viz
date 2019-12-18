@@ -77,6 +77,5 @@
   "timezoneOffset": -420,
   "uploadId": "SampleUploadId",
   "source": "Tandem",
-  "deviceSerialNumber": "123-45-678",
   "deviceSerialNumber": "0987654321"
 }

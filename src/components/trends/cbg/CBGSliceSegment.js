@@ -16,11 +16,6 @@
  */
 
 import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-
-import { delayShowCbgTracesOnFocus } from '../../../redux/actions/thunks';
-import { unfocusTrendsCbgSlice } from '../../../redux/actions/trends';
 
 export class CBGSliceSegment extends PureComponent {
   static propTypes = {
@@ -53,7 +48,6 @@ export class CBGSliceSegment extends PureComponent {
       y: PropTypes.string.isRequired,
     }),
     unfocusSlice: PropTypes.func.isRequired,
-    userId: PropTypes.string.isRequired,
     width: PropTypes.number.isRequired,
     x: PropTypes.number.isRequired,
   }
@@ -70,20 +64,14 @@ export class CBGSliceSegment extends PureComponent {
     if (e.relatedTarget && e.relatedTarget.id.search('cbgCircle') !== -1) {
       return;
     }
-    this.props.unfocusSlice(this.props.userId);
+    this.props.unfocusSlice();
   }
 
   handleMouseOver() {
     const {
-      datum, focusSlice, positionData, segment: { heightKeys: focusedKeys }, userId,
+      datum, focusSlice, positionData, segment: { heightKeys: focusedKeys },
     } = this.props;
-
-    focusSlice(
-      userId,
-      datum,
-      positionData,
-      focusedKeys,
-    );
+    focusSlice(datum, positionData, focusedKeys);
   }
 
   render() {
@@ -105,18 +93,4 @@ export class CBGSliceSegment extends PureComponent {
   }
 }
 
-export function mapStateToProps(state) {
-  const { blip: { currentPatientInViewId } } = state;
-  return {
-    userId: currentPatientInViewId,
-  };
-}
-
-export function mapDispatchToProps(dispatch) {
-  return bindActionCreators({
-    focusSlice: delayShowCbgTracesOnFocus,
-    unfocusSlice: unfocusTrendsCbgSlice,
-  }, dispatch);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(CBGSliceSegment);
+export default CBGSliceSegment;

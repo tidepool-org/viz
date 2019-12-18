@@ -44,7 +44,6 @@ packageConfig.externals = {
   'react-sizeme': 'react-sizeme',
   'react-transition-group-plus': 'react-transition-group-plus',
   redux: 'redux',
-  'redux-thunk': 'redux-thunk',
   'serialize-svg-path': 'serialize-svg-path',
   sundial: 'sundial',
   'text-table': 'text-table',

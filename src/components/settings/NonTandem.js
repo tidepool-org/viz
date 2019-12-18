@@ -74,6 +74,8 @@ const NonTandem = (props) => {
       let labelClass = styles.singleLineBasalScheduleHeader;
 
       if (basal.isAutomated) {
+        labelClass = styles.automatedSingleLineBasalScheduleHeader;
+
         // We only show automated basal schedules if active at upload
         if (!basal.activeAtUpload) {
           return null;

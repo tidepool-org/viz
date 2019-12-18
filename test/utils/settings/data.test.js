@@ -130,7 +130,7 @@ describe('[settings] data utils', () => {
     it('should cope with empty shedules', () => {
       expect(
         data.processBasalRateData(
-          multirateSettingsData.basalSchedules[1],
+          multirateSettingsData.basalSchedules[1].value,
         )
       )
       .to.have.length(1)
@@ -300,7 +300,7 @@ describe('[settings] data utils', () => {
         data.getDeviceMeta(settingsData, timePrefs)
       ).to.have.property('schedule').equal('sick');
       expect(
-        data.getDeviceMeta(settingsData, timePrefs)
+        data.getDeviceMeta({ ...settingsData, normalTime: settingsData.deviceTime }, timePrefs)
       ).to.have.property('uploaded').equal('Jul 12, 2016');
     });
 
@@ -316,7 +316,7 @@ describe('[settings] data utils', () => {
         data.getDeviceMeta(settingsData, timezoneAwarePrefs)
       ).to.have.property('schedule').equal('sick');
       expect(
-        data.getDeviceMeta(settingsData, timezoneAwarePrefs)
+        data.getDeviceMeta({ ...settingsData, normalTime: settingsData.time }, timezoneAwarePrefs)
       ).to.have.property('uploaded').equal('Jul 13, 2016');
     });
 
