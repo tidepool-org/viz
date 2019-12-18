@@ -81,7 +81,7 @@ export class DataUtil {
     if (_.isEmpty(rawData) || !patientId) return {};
 
     // First, we check to see if we already have data for a different patient stored. If so, we
-    // clear all data so that we never mix patient data. Note that if the patientId is not
+    // clear all data so that we never mix patient data.
     if (this.patientId && this.patientId !== patientId) {
       this.removeData();
     }

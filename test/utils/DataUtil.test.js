@@ -1831,7 +1831,6 @@ describe('DataUtil', () => {
     it('should set the current source if provided via arg', () => {
       initDataUtil([...cbgData, ...smbgData]);
       delete(dataUtil.bgSources.current);
-      expect(dataUtil.bgSources.current).to.be.undefined;
 
       dataUtil.setBgSources('cbg');
       expect(dataUtil.bgSources.current).to.equal('cbg');
@@ -1845,7 +1844,6 @@ describe('DataUtil', () => {
         it('should set the current source to cbg if cbg data is available', () => {
           initDataUtil([...cbgData, ...smbgData]);
           delete(dataUtil.bgSources.current);
-          expect(dataUtil.bgSources.current).to.be.undefined;
 
           dataUtil.setBgSources();
           expect(dataUtil.bgSources.current).to.equal('cbg');
@@ -1854,7 +1852,6 @@ describe('DataUtil', () => {
         it('should set the current source to smbg if cbg data is unavailable but smbg data is', () => {
           initDataUtil([...smbgData]);
           delete(dataUtil.bgSources.current);
-          expect(dataUtil.bgSources.current).to.be.undefined;
 
           dataUtil.setBgSources();
           expect(dataUtil.bgSources.current).to.equal('smbg');
@@ -2024,7 +2021,6 @@ describe('DataUtil', () => {
 
       initDataUtil(deviceEventData);
       delete(dataUtil.size);
-      expect(dataUtil.size).to.be.undefined;
 
       dataUtil.setSize();
       expect(dataUtil.size).to.equal(2);
