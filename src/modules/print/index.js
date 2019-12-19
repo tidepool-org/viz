@@ -25,7 +25,6 @@ import BasicsPrintView from './BasicsPrintView';
 import DailyPrintView from './DailyPrintView';
 import BgLogPrintView from './BgLogPrintView';
 import SettingsPrintView from './SettingsPrintView';
-import { reshapeBgClassesToBgBounds } from '../../utils/bloodglucose';
 
 import * as constants from './utils/constants';
 
@@ -38,7 +37,6 @@ const t = i18next.t.bind(i18next);
 
 // Exporting utils for easy stubbing in tests
 export const utils = {
-  reshapeBgClassesToBgBounds,
   PDFDocument: class PDFDocumentStub {},
   blobStream: function blobStreamStub() {},
   PrintView,
