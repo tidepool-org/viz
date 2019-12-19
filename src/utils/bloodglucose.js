@@ -108,6 +108,7 @@ export function reshapeBgClassesToBgBounds(bgPrefs) {
     targetUpperBound: _.get(bgClasses, 'target.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound),
     targetLowerBound: _.get(bgClasses, 'low.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound),
     veryLowThreshold: _.get(bgClasses, 'very-low.boundary', DEFAULT_BG_BOUNDS[bgUnits].veryLowThreshold),
+    clampThreshold: DEFAULT_BG_BOUNDS[bgUnits].clampThreshold,
   };
 
   return bgBounds;
