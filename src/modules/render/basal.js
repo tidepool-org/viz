@@ -149,7 +149,7 @@ export function getBasalSequencePaths(basalSequence, xScale, yScale) {
         // For automated suppressed delivery, we always render at the baseline
         suppressed.rate = 0;
       }
-      suppresseds.push(_.assign({}, suppressed, _.pick(basal, ['duration', 'utc'])));
+      suppresseds.push(_.assign({}, suppressed, _.pick(basal, ['duration', 'normalTime'])));
     }
   });
 
