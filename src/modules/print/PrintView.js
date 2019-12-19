@@ -58,11 +58,11 @@ class PrintView {
 
     this.title = opts.title;
     this.data = _.cloneDeep(data);
-    this.bgPrefs = this.data.bgPrefs;
-    this.bgUnits = this.data.bgPrefs.bgUnits;
-    this.bgBounds = this.data.bgPrefs.bgBounds;
-    this.timePrefs = this.data.timePrefs;
-    this.timezone = getTimezoneFromTimePrefs(this.data.timePrefs);
+    this.bgPrefs = _.get(this.data, 'bgPrefs');
+    this.bgUnits = _.get(this.data, 'bgPrefs.bgUnits');
+    this.bgBounds = _.get(this.data, 'bgPrefs.bgBounds');
+    this.timePrefs = _.get(this.data, 'timePrefs');
+    this.timezone = getTimezoneFromTimePrefs(this.timePrefs);
     this.endpoints = _.get(this.data, 'data.current.endpoints', {});
     this.bgSource = _.get(this.data, 'metaData.bgSources.current');
     this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
