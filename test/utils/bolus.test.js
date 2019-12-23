@@ -283,8 +283,9 @@ describe('bolus utilities', () => {
       assert.isFunction(bolusUtils.getCarbs);
     });
 
-    it('should return NaN on a bolus (rather than wizard) event', () => {
+    it('should return NaN on a bolus (rather than wizard) event if no wizard prop is present', () => {
       expect(Number.isNaN(bolusUtils.getCarbs(normal))).to.be.true;
+      expect(Number.isNaN(bolusUtils.getCarbs({ ...normal, wizard: 'foo' }))).to.be.false;
     });
 
     it('should return `null` on a wizard that lacks `carbInput`', () => {
