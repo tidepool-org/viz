@@ -41,7 +41,6 @@ import { isAutomatedBasalDevice } from './utils/device';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
 import {
-  addDuration,
   getLocalizedCeiling,
   getTimezoneFromTimePrefs,
 } from './utils/datetime';
@@ -105,7 +104,6 @@ const utils = {
     DEFAULT_BG_BOUNDS,
   },
   datetime: {
-    addDuration,
     findBasicsStart,
     getLocalizedCeiling,
     getTimezoneFromTimePrefs,
