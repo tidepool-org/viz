@@ -47,10 +47,10 @@ export function getBolusFromInsulinEvent(insulinEvent) {
 }
 
 /**
- * getBolusFromInsulinEvent
+ * getWizardFromInsulinEvent
  * @param {Object} insulinEvent - a Tidepool wizard or bolus object
  *
- * @return {Object} a Tidepool bolus object
+ * @return {Object} a Tidepool wizard object
  */
 export function getWizardFromInsulinEvent(insulinEvent) {
   let wizard = insulinEvent;

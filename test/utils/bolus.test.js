@@ -251,6 +251,33 @@ describe('bolus utilities', () => {
     });
   });
 
+  describe('getWizardFromInsulinEvent', () => {
+    it('should be a function', () => {
+      assert.isFunction(bolusUtils.getWizardFromInsulinEvent);
+    });
+
+    it('should return any object that doesn\'t have an embedded bolus', () => {
+      const obj = {};
+      expect(bolusUtils.getWizardFromInsulinEvent(obj)).to.equal(obj);
+    });
+
+    it('errors on `null` or `undefined` ¯\\_(ツ)_/¯', () => {
+      const fn1 = () => { bolusUtils.getWizardFromInsulinEvent(null); };
+      const fn2 = () => { bolusUtils.getWizardFromInsulinEvent(undefined); };
+      const fn3 = () => { bolusUtils.getWizardFromInsulinEvent(); };
+      expect(fn1).to.throw();
+      expect(fn2).to.throw();
+      expect(fn3).to.throw();
+    });
+
+    it('should return the embedded `wizard` if it exists', () => {
+      const obj = { wizard: 2 };
+      expect(bolusUtils.getWizardFromInsulinEvent(obj)).to.equal(obj.wizard);
+      const obj2 = { wizard: { type: 'wizard', normal: 5 } };
+      expect(bolusUtils.getWizardFromInsulinEvent(obj2)).to.equal(obj2.wizard);
+    });
+  });
+
   describe('getCarbs', () => {
     it('should be a function', () => {
       assert.isFunction(bolusUtils.getCarbs);
