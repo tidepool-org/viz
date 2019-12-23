@@ -23,12 +23,12 @@ import { getBasalSequences } from '../../utils/basal';
 
 /**
  * processBgRange
- * @param {*} selectedDataByDate - Array of Tidepool datums
+ * @param {Object} dataByDate - Arrays of Tidepool datums keyed by type and grouped by date
  * @returns {Array} the extent of bg range values
  */
-export function processBgRange(selectedDataByDate) {
+export function processBgRange(dataByDate) {
   const bgs = _.reduce(
-    selectedDataByDate,
+    dataByDate,
     (all, date) => (
       all.concat(_.get(date, 'cbg', [])).concat(_.get(date, 'smbg', []))
     ),
@@ -39,12 +39,13 @@ export function processBgRange(selectedDataByDate) {
 
 /**
  * processBolusRange
- * @param {*} selectedDataByDate - Array of Tidepool datums
+ * @param {Object} dataByDate - Arrays of Tidepool datums keyed by type and grouped by date
+ * @param {String} timezoneName - a timezone name
  * @returns {Array} the extent of bolus range values
  */
-export function processBolusRange(selectedDataByDate, timezoneName) {
+export function processBolusRange(dataByDate, timezoneName) {
   const boluses = _.reduce(
-    selectedDataByDate, (all, date) => (all.concat(_.get(date, 'bolus', []))), []
+    dataByDate, (all, date) => (all.concat(_.get(date, 'bolus', []))), []
   );
   _.each(boluses, (bolus) => {
     // eslint-disable-next-line no-param-reassign
@@ -55,12 +56,12 @@ export function processBolusRange(selectedDataByDate, timezoneName) {
 
 /**
  * processBasalRange
- * @param {*} selectedDataByDate - Array of Tidepool datums
+ * @param {Object} dataByDate - Arrays of Tidepool datums keyed by type and grouped by date
  * @returns {Array} the extent of basal range values
  */
-export function processBasalRange(selectedDataByDate) {
+export function processBasalRange(dataByDate) {
   const basals = _.reduce(
-    selectedDataByDate, (all, date) => (all.concat(_.get(date, 'basal', []))), []
+    dataByDate, (all, date) => (all.concat(_.get(date, 'basal', []))), []
   );
   const rawBasalRange = extent(
     basals,
@@ -73,7 +74,8 @@ export function processBasalRange(selectedDataByDate) {
 
 /**
  * processBasalSequencesByDate
- * @param {*} selectedDataByDate - Array of Tidepool datums
+ * @param {Object} dateData - Object containing arrays of Tidepool datums keyed by type
+ * @param {Array} bounds - start and end bounds of date, as integer timestamps
  */
 export function processBasalSequencesForDate(dateData, bounds) {
   const { basal: basals = [] } = dateData;
