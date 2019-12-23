@@ -1724,6 +1724,7 @@ describe('stat', () => {
         targetLowerBound: bgPrefs.bgClasses.low.boundary,
         targetUpperBound: bgPrefs.bgClasses.target.boundary,
         veryHighThreshold: bgPrefs.bgClasses.high.boundary,
+        clampThreshold: 600,
       });
     });
 
