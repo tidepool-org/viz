@@ -1761,6 +1761,7 @@ describe('DataUtil', () => {
       expect(dataUtil.filter.byActiveDays).to.be.a('function');
       expect(dataUtil.filter.byEndpoints).to.be.a('function');
       expect(dataUtil.filter.byType).to.be.a('function');
+      expect(dataUtil.filter.byTypes).to.be.a('function');
       expect(dataUtil.filter.bySubType).to.be.a('function');
       expect(dataUtil.filter.byId).to.be.a('function');
     });
@@ -2137,6 +2138,18 @@ describe('DataUtil', () => {
       expect(dataUtil.endpoints.current.activeDays).to.equal(0);
       expect(dataUtil.endpoints.next.activeDays).to.equal(0);
       expect(dataUtil.endpoints.prev.activeDays).to.equal(1);
+    });
+  });
+
+  describe('setStats', () => {
+    it('should set stats prop when provided as an string', () => {
+      dataUtil.setStats('averageGlucose, timeInRange');
+      expect(dataUtil.stats).to.eql(['averageGlucose', 'timeInRange']);
+    });
+
+    it('should set stats prop when provided as an array', () => {
+      dataUtil.setStats(['averageGlucose', 'timeInRange']);
+      expect(dataUtil.stats).to.eql(['averageGlucose', 'timeInRange']);
     });
   });
 
@@ -2691,14 +2704,7 @@ describe('DataUtil', () => {
       dataUtil.query(defaultQuery);
     });
 
-    it('should generate and return requested stats passed in as string', () => {
-      const result = dataUtil.getStats('averageGlucose, totalInsulin');
-
-      expect(result.averageGlucose).to.be.an('object').and.include.keys(['averageGlucose']);
-      expect(result.totalInsulin).to.be.an('object').and.include.keys(['basal', 'bolus']);
-    });
-
-    it('should generate and return requested stats passed in as array', () => {
+    it('should generate and return requested stats', () => {
       const result = dataUtil.getStats(['averageGlucose', 'totalInsulin']);
 
       expect(result.averageGlucose).to.be.an('object').and.include.keys(['averageGlucose']);
@@ -2709,25 +2715,29 @@ describe('DataUtil', () => {
   describe('getAggregationsByDate', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
-      dataUtil.query(defaultQuery);
+      dataUtil.query({ ...defaultQuery, types: { smbg: {} }, stats: 'averageGlucose, timeInRange' });
     });
 
     it('should generate and return requested aggregations passed in as string', () => {
-      const result = dataUtil.getAggregationsByDate('basals, boluses, fingersticks, siteChanges');
+      const result = dataUtil.getAggregationsByDate('basals, boluses, fingersticks, siteChanges, dataByDate, statsByDate');
 
       expect(result.basals).to.be.an('object').and.include.keys(['summary', 'byDate']);
       expect(result.boluses).to.be.an('object').and.include.keys(['summary', 'byDate']);
       expect(result.fingersticks).to.be.an('object').and.include.keys(['smbg', 'calibration']);
       expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
+      expect(result.dataByDate['2018-01-31']).to.be.an('object').and.include.keys(['smbg']);
+      expect(result.statsByDate['2018-01-31']).to.be.an('object').and.include.keys(['averageGlucose', 'timeInRange']);
     });
 
     it('should generate and return requested aggregations passed in as array', () => {
-      const result = dataUtil.getAggregationsByDate(['basals', 'boluses', 'fingersticks', 'siteChanges']);
+      const result = dataUtil.getAggregationsByDate(['basals', 'boluses', 'fingersticks', 'siteChanges', 'dataByDate', 'statsByDate']);
 
       expect(result.basals).to.be.an('object').and.include.keys(['summary', 'byDate']);
       expect(result.boluses).to.be.an('object').and.include.keys(['summary', 'byDate']);
       expect(result.fingersticks).to.be.an('object').and.include.keys(['smbg', 'calibration']);
       expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
+      expect(result.dataByDate['2018-01-31']).to.be.an('object').and.include.keys(['smbg']);
+      expect(result.statsByDate['2018-01-31']).to.be.an('object').and.include.keys(['averageGlucose', 'timeInRange']);
     });
   });
 
