@@ -10,7 +10,7 @@ import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.raw.jso
 
 /* eslint-disable max-len */
 
-describe('schema validation', () => {
+describe.skip('schema validation', () => {
   const validateCommon = (datum, key) => {
     const validator = key ? Validator[datum.type][key] : Validator[datum.type];
 

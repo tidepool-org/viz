@@ -1,6 +1,8 @@
 import Validator from 'fastest-validator';
 import _ from 'lodash';
-import { MGDL_UNITS, MMOLL_UNITS, MS_IN_DAY } from '../constants.js';
+import { MGDL_UNITS, MMOLL_UNITS } from '../constants.js';
+// import { MGDL_UNITS, MMOLL_UNITS, MS_IN_DAY } from '../constants.js';
+
 
 const v = new Validator({
   messages: {
@@ -8,6 +10,7 @@ const v = new Validator({
   },
 });
 
+/* eslint-disable no-underscore-dangle */
 v.add('withDependantFields', (value, schema, fieldName, object) => {
   let missingFields = false;
 
@@ -21,22 +24,29 @@ v.add('withDependantFields', (value, schema, fieldName, object) => {
     return v.makeError('missingFieldDependancy', schema.fields, JSON.stringify(_.pick(object, schema.fields)));
   }
 
-  const compiledSchemaRule = v.compileSchemaRule(schema.schema);
-  return v.checkSchemaRule(object[fieldName], compiledSchemaRule, fieldName);
+  const processedRule = v._processRule(schema.schema, fieldName, false);
+  const checkWrapper = v._checkWrapper(processedRule);
+  return checkWrapper(object[fieldName], processedRule, fieldName);
 });
 
 v.add('objectWithUnknownKeys', (value, schema, fieldName, object) => {
-  const compiledSchemaRule = v.compileSchemaRule(schema.schema);
+  const processedRule = v._processRule(schema.schema, fieldName, false);
+  const checkWrapper = v._checkWrapper(processedRule, processedRule.length > 1);
   const fieldValues = _.valuesIn(object[fieldName]);
   const errors = [];
-
+  console.log('processedRule', processedRule);
+  console.log('object', object);
+  console.log('fieldName', fieldName);
+  console.log('fieldValues', fieldValues);
+  console.log('schema', schema);
   _.each(fieldValues, fieldValue => {
-    const result = v.checkSchemaRule(fieldValue, compiledSchemaRule, fieldName);
+    const result = checkWrapper(fieldValue, processedRule);
     if (result !== true) errors.push(result);
   });
 
   return errors.length ? errors : true;
 });
+/* eslint-enable no-underscore-dangle */
 
 const patterns = {
   id: /^[A-Za-z0-9\-_]+$/,
@@ -164,134 +174,134 @@ const message = {
   ],
 };
 
-const settingsScheduleStart = {
-  start: { ...minZero, max: MS_IN_DAY },
-};
+// const settingsScheduleStart = {
+//   start: { ...minZero, max: MS_IN_DAY },
+// };
 
-const basalSchedules = {
-  type: 'objectWithUnknownKeys',
-  schema: {
-    type: 'array',
-    items: {
-      type: 'object',
-      props: {
-        ...settingsScheduleStart,
-        rate: minZero,
-      },
-    },
-  },
-};
+// const basalSchedules = {
+//   type: 'objectWithUnknownKeys',
+//   schema: {
+//     type: 'array',
+//     items: {
+//       type: 'object',
+//       props: {
+//         ...settingsScheduleStart,
+//         rate: minZero,
+//       },
+//     },
+//   },
+// };
 
-const carbRatio = {
-  type: 'array',
-  items: {
-    type: 'object',
-    props: {
-      ...settingsScheduleStart,
-      amount: minZero,
-    },
-  },
-};
+// const carbRatio = {
+//   type: 'array',
+//   items: {
+//     type: 'object',
+//     props: {
+//       ...settingsScheduleStart,
+//       amount: minZero,
+//     },
+//   },
+// };
 
-const insulinSensitivity = {
-  type: 'array',
-  items: {
-    type: 'object',
-    props: {
-      ...settingsScheduleStart,
-      amount: minZero,
-    },
-  },
-};
+// const insulinSensitivity = {
+//   type: 'array',
+//   items: {
+//     type: 'object',
+//     props: {
+//       ...settingsScheduleStart,
+//       amount: minZero,
+//     },
+//   },
+// };
 
-const pumpSettingsAnimas = {
-  ...common,
-  bgTarget: {
-    type: 'array',
-    items: {
-      type: 'object',
-      props: {
-        ...settingsScheduleStart,
-        target: minZero,
-        range: minZero,
-        low: forbidden,
-        high: forbidden,
-      },
-    },
-  },
-  carbRatio,
-  insulinSensitivity,
-  basalSchedules,
-};
+// const pumpSettingsAnimas = {
+//   ...common,
+//   bgTarget: {
+//     type: 'array',
+//     items: {
+//       type: 'object',
+//       props: {
+//         ...settingsScheduleStart,
+//         target: minZero,
+//         range: minZero,
+//         low: forbidden,
+//         high: forbidden,
+//       },
+//     },
+//   },
+//   carbRatio,
+//   insulinSensitivity,
+//   basalSchedules,
+// };
 
-const pumpSettingsMedtronic = {
-  ...common,
-  bgTarget: {
-    type: 'array',
-    items: {
-      type: 'object',
-      props: {
-        ...settingsScheduleStart,
-        target: forbidden,
-        range: forbidden,
-        low: minZero,
-        high: minZero,
-      },
-    },
-  },
-  carbRatio,
-  insulinSensitivity,
-  basalSchedules,
-};
+// const pumpSettingsMedtronic = {
+//   ...common,
+//   bgTarget: {
+//     type: 'array',
+//     items: {
+//       type: 'object',
+//       props: {
+//         ...settingsScheduleStart,
+//         target: forbidden,
+//         range: forbidden,
+//         low: minZero,
+//         high: minZero,
+//       },
+//     },
+//   },
+//   carbRatio,
+//   insulinSensitivity,
+//   basalSchedules,
+// };
 
-const pumpSettingsOmnipod = {
-  ...common,
-  bgTarget: {
-    type: 'array',
-    items: {
-      type: 'object',
-      props: {
-        ...settingsScheduleStart,
-        target: minZero,
-        range: forbidden,
-        low: forbidden,
-        high: minZero,
-      },
-    },
-  },
-  carbRatio,
-  insulinSensitivity,
-  basalSchedules,
-};
+// const pumpSettingsOmnipod = {
+//   ...common,
+//   bgTarget: {
+//     type: 'array',
+//     items: {
+//       type: 'object',
+//       props: {
+//         ...settingsScheduleStart,
+//         target: minZero,
+//         range: forbidden,
+//         low: forbidden,
+//         high: minZero,
+//       },
+//     },
+//   },
+//   carbRatio,
+//   insulinSensitivity,
+//   basalSchedules,
+// };
 
-const pumpSettingsTandem = {
-  ...common,
-  bgTargets: {
-    type: 'objectWithUnknownKeys',
-    schema: {
-      type: 'array',
-      items: {
-        type: 'object',
-        props: {
-          ...settingsScheduleStart,
-          target: minZero,
-          range: forbidden,
-          low: forbidden,
-          high: forbidden,
-        },
-      },
-    },
-  },
-  carbRatios: {
-    type: 'objectWithUnknownKeys',
-    schema: carbRatio,
-  },
-  insulinSensitivities: {
-    type: 'objectWithUnknownKeys',
-    schema: insulinSensitivity,
-  },
-  basalSchedules,
-};
+// const pumpSettingsTandem = {
+//   ...common,
+//   bgTargets: {
+//     type: 'objectWithUnknownKeys',
+//     schema: {
+//       type: 'array',
+//       items: {
+//         type: 'object',
+//         props: {
+//           ...settingsScheduleStart,
+//           target: minZero,
+//           range: forbidden,
+//           low: forbidden,
+//           high: forbidden,
+//         },
+//       },
+//     },
+//   },
+//   carbRatios: {
+//     type: 'objectWithUnknownKeys',
+//     schema: carbRatio,
+//   },
+//   insulinSensitivities: {
+//     type: 'objectWithUnknownKeys',
+//     schema: insulinSensitivity,
+//   },
+//   basalSchedules,
+// };
 
 const wizard = {
   ...common,
@@ -313,21 +323,21 @@ const wizard = {
 };
 
 export default {
-  basal: v.compile(basal),
+  basal: v.compile(basal).bind(v),
   bolus: {
-    normal: v.compile(normalBolus),
-    extended: v.compile(extendedBolus),
+    normal: v.compile(normalBolus).bind(v),
+    extended: v.compile(extendedBolus).bind(v),
   },
-  cbg: v.compile(bg),
-  common: v.compile(common),
-  deviceEvent: v.compile(deviceEvent),
-  message: v.compile(message),
-  pumpSettings: {
-    animas: v.compile(pumpSettingsAnimas),
-    medtronic: v.compile(pumpSettingsMedtronic),
-    omnipod: v.compile(pumpSettingsOmnipod),
-    tandem: v.compile(pumpSettingsTandem),
-  },
-  smbg: v.compile(bg),
-  wizard: v.compile(wizard),
+  cbg: v.compile(bg).bind(v),
+  common: v.compile(common).bind(v),
+  deviceEvent: v.compile(deviceEvent).bind(v),
+  message: v.compile(message).bind(v),
+  // pumpSettings: {
+  //   animas: v.compile(pumpSettingsAnimas).bind(v),
+  //   medtronic: v.compile(pumpSettingsMedtronic).bind(v),
+  //   omnipod: v.compile(pumpSettingsOmnipod).bind(v),
+  //   tandem: v.compile(pumpSettingsTandem).bind(v),
+  // },
+  smbg: v.compile(bg).bind(v),
+  wizard: v.compile(wizard).bind(v),
 };
