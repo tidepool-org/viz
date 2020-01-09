@@ -21,7 +21,6 @@ import _ from 'lodash';
 import * as basals from '../../data/basal/fixtures';
 import * as basalUtils from '../../src/utils/basal';
 import { Basal } from '../../data/types';
-import { addDuration } from '../../src/utils/datetime';
 
 const MS_IN_HOUR = 3600000;
 const MS_IN_DAY = 86400000;
@@ -136,15 +135,15 @@ describe('basal utilties', () => {
 
     it('should return an endpoints object given a start and end time', () => {
       const start = data[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
+      const end = start + MS_IN_DAY;
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: 3,
         },
       };
@@ -162,16 +161,16 @@ describe('basal utilties', () => {
         }),
       ];
 
-      const start = addDuration(data[0].normalTime, MS_IN_HOUR);
-      const end = addDuration(start, MS_IN_DAY);
+      const start = data[0].normalTime + MS_IN_HOUR;
+      const end = start + MS_IN_DAY;
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: 0,
         },
       };
@@ -182,20 +181,20 @@ describe('basal utilties', () => {
     // eslint-disable-next-line max-len
     it('should return an endpoints object with a start and end index when basal segments overlap the start and end times', () => {
       const start = data[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
-      data[0].normalTime = addDuration(start, -MS_IN_HOUR);
+      const end = start + MS_IN_DAY;
+      data[0].normalTime = start - MS_IN_HOUR;
       data[0].duration = data[0].duration + MS_IN_HOUR;
 
-      data[data.length - 1].normalEnd = addDuration(end, MS_IN_HOUR);
+      data[data.length - 1].normalEnd = end + MS_IN_HOUR;
       data[data.length - 1].duration = data[data.length - 1].duration + MS_IN_HOUR;
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: 3,
         },
       };
@@ -206,8 +205,8 @@ describe('basal utilties', () => {
     // eslint-disable-next-line max-len
     it('should return an endpoints object with a start and end index when basal segments overlap the only the start time and `optionalExtents` arg is `true`', () => {
       const start = data[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
-      data[0].normalTime = addDuration(start, -MS_IN_HOUR);
+      const end = start + MS_IN_DAY;
+      data[0].normalTime = start - MS_IN_HOUR;
       data[0].duration = data[0].duration + MS_IN_HOUR;
 
       // remove the last datum
@@ -215,11 +214,11 @@ describe('basal utilties', () => {
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: 2,
         },
       };
@@ -230,8 +229,8 @@ describe('basal utilties', () => {
     // eslint-disable-next-line max-len
     it('should return an endpoints object with a `-1` end index when basal segments overlap the only the start time and `optionalExtents` arg is `false`', () => {
       const start = data[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
-      data[0].normalTime = addDuration(start, -MS_IN_HOUR);
+      const end = start + MS_IN_DAY;
+      data[0].normalTime = start - MS_IN_HOUR;
       data[0].duration = data[0].duration + MS_IN_HOUR;
 
       // remove the last datum
@@ -239,11 +238,11 @@ describe('basal utilties', () => {
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: -1,
         },
       };
@@ -254,8 +253,8 @@ describe('basal utilties', () => {
     // eslint-disable-next-line max-len
     it('should return an endpoints object with a `-1` end index when basal segments overlap the only the start time and `optionalExtents` arg is omitted', () => {
       const start = data[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
-      data[0].normalTime = addDuration(start, -MS_IN_HOUR);
+      const end = start + MS_IN_DAY;
+      data[0].normalTime = start - MS_IN_HOUR;
       data[0].duration = data[0].duration + MS_IN_HOUR;
 
       // remove the last datum
@@ -263,11 +262,11 @@ describe('basal utilties', () => {
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: -1,
         },
       };
@@ -277,19 +276,19 @@ describe('basal utilties', () => {
 
     // eslint-disable-next-line max-len
     it('should return an endpoints object with a start and end index when basal segments overlap only the end time and `optionalExtents` arg is `true`', () => {
-      const start = addDuration(data[0].normalTime, -MS_IN_HOUR);
-      const end = addDuration(start, MS_IN_DAY);
+      const start = data[0].normalTime - MS_IN_HOUR;
+      const end = start + MS_IN_DAY;
 
       // remove the first datum
       data.shift();
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: 0,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: 2,
         },
       };
@@ -299,19 +298,19 @@ describe('basal utilties', () => {
 
     // eslint-disable-next-line max-len
     it('should return an endpoints object with a `-1` start index when basal segments overlap only the end time and `optionalExtents` arg is `false`', () => {
-      const start = addDuration(data[0].normalTime, -MS_IN_HOUR);
-      const end = addDuration(start, MS_IN_DAY);
+      const start = data[0].normalTime - MS_IN_HOUR;
+      const end = start + MS_IN_DAY;
 
       // remove the first datum
       data.shift();
 
       const expected = {
         start: {
-          datetime: start,
+          datetime: new Date(start).toISOString(),
           index: -1,
         },
         end: {
-          datetime: end,
+          datetime: new Date(end).toISOString(),
           index: 2,
         },
       };
@@ -335,7 +334,7 @@ describe('basal utilties', () => {
 
     it('should return an object with `automated` and `manual` keys', () => {
       const start = data[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
+      const end = start + MS_IN_DAY;
       const result = basalUtils.getGroupDurations(data, start, end);
 
       expect(_.keysIn(result)).to.eql(['automated', 'manual']);
@@ -349,7 +348,7 @@ describe('basal utilties', () => {
       ));
 
       const start = halfAutomatedData[0].normalTime;
-      const end = addDuration(start, MS_IN_DAY);
+      const end = start + MS_IN_DAY;
       const result = basalUtils.getGroupDurations(halfAutomatedData, start, end);
 
       expect(result.automated).to.equal(result.manual);
@@ -360,8 +359,8 @@ describe('basal utilties', () => {
     it('should handle partial durations for `automated` and `manual` basals that fall partially outside the start of range', () => {
       const firstDatum = data[0];
       firstDatum.deliveryType = 'automated';
-      const start = addDuration(firstDatum.normalTime, MS_IN_HOUR);
-      const end = addDuration(start, MS_IN_DAY);
+      const start = firstDatum.normalTime + MS_IN_HOUR;
+      const end = start + MS_IN_DAY;
       const result = basalUtils.getGroupDurations(data, start, end);
       expect(result.automated).to.equal(firstDatum.duration - MS_IN_HOUR);
       expect(result.automated + result.manual).to.equal(MS_IN_DAY - MS_IN_HOUR);
@@ -372,8 +371,8 @@ describe('basal utilties', () => {
       const firstDatum = data[0];
       const lastDatum = data[data.length - 1];
       lastDatum.deliveryType = 'automated';
-      const start = addDuration(firstDatum.normalTime, -MS_IN_HOUR);
-      const end = addDuration(start, MS_IN_DAY);
+      const start = firstDatum.normalTime - MS_IN_HOUR;
+      const end = start + MS_IN_DAY;
       const result = basalUtils.getGroupDurations(data, start, end);
       expect(result.automated).to.equal(lastDatum.duration - MS_IN_HOUR);
       expect(result.automated + result.manual).to.equal(MS_IN_DAY - MS_IN_HOUR);

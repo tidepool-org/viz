@@ -290,6 +290,7 @@ describe('StatUtil', () => {
         targetUpperBound: 180,
         targetLowerBound: 70,
         veryLowThreshold: 54,
+        clampThreshold: 600,
       });
     });
 
@@ -437,7 +438,7 @@ describe('StatUtil', () => {
       });
     });
 
-    it('should should not modify the `total` value', () => {
+    it('should not modify the `total` value', () => {
       const sampleData = {
         basal: 56,
         bolus: 28,

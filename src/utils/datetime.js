@@ -52,18 +52,6 @@ export const THREE_HRS = 10800000;
 export const TWENTY_FOUR_HRS = 86400000;
 
 /**
- * addDuration
- * @param {String} startTime - an ISO date string
- * @param {Number} duration - milliseconds to add to date
- * @returns new Date ISO string - the provided datetime + duration
- */
-export function addDuration(startTime, duration) {
-  const dateTime = new Date(startTime);
-
-  return new Date(dateTime.valueOf() + duration).toISOString();
-}
-
-/**
  * getMsPer24
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {String} timezoneName - valid timezoneName String

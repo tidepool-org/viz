@@ -294,6 +294,7 @@ describe('blood glucose utilities', () => {
         targetUpperBound: 180,
         targetLowerBound: 75,
         veryLowThreshold: 54,
+        clampThreshold: 600,
       });
     });
 
@@ -304,6 +305,7 @@ describe('blood glucose utilities', () => {
         targetUpperBound: 180,
         targetLowerBound: 70,
         veryLowThreshold: 54,
+        clampThreshold: 600,
       });
     });
   });

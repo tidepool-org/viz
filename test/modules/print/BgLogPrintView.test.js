@@ -49,15 +49,6 @@ describe('BgLogPrintView', () => {
   let doc;
 
   const opts = {
-    bgPrefs: {
-      bgBounds: {
-        veryHighThreshold: 250,
-        targetUpperBound: 180,
-        targetLowerBound: 70,
-        veryLowThreshold: 54,
-      },
-      bgUnits: 'mg/dL',
-    },
     debug: false,
     dpi: DPI,
     defaultFontSize: DEFAULT_FONT_SIZE,
@@ -73,14 +64,9 @@ describe('BgLogPrintView', () => {
       right: MARGIN,
       bottom: MARGIN,
     },
-    numDays: 30,
     patient: {
       ...patients.standard,
       ...settings.cannulaPrimeSelected,
-    },
-    timePrefs: {
-      timezoneAware: true,
-      timezoneName: 'US/Pacific',
     },
     width: 8.5 * DPI - (2 * MARGIN),
     title: 'Bg Readings',
@@ -157,9 +143,9 @@ describe('BgLogPrintView', () => {
     });
 
     it('should set the `chartDates` property to the dataByDate keys in reverse chronological order', () => {
-      expect(Renderer.chartDates).to.be.an('array').and.have.length(30);
-      expect(Renderer.chartDates[0]).to.equal('2018-01-29');
-      expect(Renderer.chartDates[29]).to.equal('2017-12-31');
+      expect(Renderer.chartDates).to.be.an('array').and.have.length(3);
+      expect(Renderer.chartDates[0]).to.equal('2019-07-27');
+      expect(Renderer.chartDates[2]).to.equal('2019-07-25');
     });
 
     it('should add the first pdf page', () => {
@@ -180,7 +166,7 @@ describe('BgLogPrintView', () => {
 
     it('should call the newPage method of the parent class with a date range string', () => {
       Renderer.newPage();
-      sinon.assert.calledWith(PrintView.prototype.newPage, 'Date range: Dec 31, 2017 - Jan 29, 2018');
+      sinon.assert.calledWith(PrintView.prototype.newPage, 'Date range: Jun 27 - Jul 26, 2019');
     });
   });
 
@@ -278,13 +264,13 @@ describe('BgLogPrintView', () => {
     });
 
     it('should return formatted date text for each row', () => {
-      const result = Renderer.getBgChartRow('2017-12-31');
+      const result = Renderer.getBgChartRow('2019-07-26');
 
-      expect(result.date.text).to.equal('Sun, Dec 31');
+      expect(result.date.text).to.equal('Fri, Jul 26');
     });
 
     it('should return the row smbg data for a given date, grouped by 3 hr time slot', () => {
-      const result = Renderer.getBgChartRow('2017-12-31');
+      const result = Renderer.getBgChartRow('2019-07-26');
 
       expect(result[THREE_HRS * 0].smbg[0].value).to.equal(50);
       expect(result[THREE_HRS * 1].smbg[0].value).to.equal(70);
@@ -297,12 +283,12 @@ describe('BgLogPrintView', () => {
     });
 
     it('should return a darker fill color for weekend rows', () => {
-      const weekendResult = Renderer.getBgChartRow('2017-12-31');
-      expect(weekendResult.date.text).to.equal('Sun, Dec 31');
+      const weekendResult = Renderer.getBgChartRow('2019-07-27');
+      expect(weekendResult.date.text).to.equal('Sat, Jul 27');
       expect(weekendResult._fill.color).to.equal('#FAFAFA');
 
-      const weekdayResult = Renderer.getBgChartRow('2018-01-01');
-      expect(weekdayResult.date.text).to.equal('Mon, Jan 1');
+      const weekdayResult = Renderer.getBgChartRow('2019-07-26');
+      expect(weekdayResult.date.text).to.equal('Fri, Jul 26');
       expect(weekdayResult._fill.color).to.equal('white');
     });
   });
@@ -357,14 +343,14 @@ describe('BgLogPrintView', () => {
       sinon.assert.callCount(Renderer.getBgChartRow, 0);
 
       Renderer.renderBGChart();
-      assert(Renderer.chartDates.length === 30);
-      expect(Renderer.bgChart.rows).to.be.an('array').and.have.length(30);
+      assert(Renderer.chartDates.length === 3);
+      expect(Renderer.bgChart.rows).to.be.an('array').and.have.length(3);
 
-      sinon.assert.callCount(Renderer.getBgChartRow, 30);
+      sinon.assert.callCount(Renderer.getBgChartRow, 3);
 
       Renderer.chartDates.pop();
       Renderer.renderBGChart();
-      expect(Renderer.bgChart.rows).to.be.an('array').and.have.length(29);
+      expect(Renderer.bgChart.rows).to.be.an('array').and.have.length(2);
     });
 
     it('should define the bg chart initial render position', () => {
@@ -496,14 +482,6 @@ describe('BgLogPrintView', () => {
     });
 
     it('should define the summary table rows with results when all required stat data is provided', () => {
-      Renderer = createRenderer(_.assign({}, data, {
-        stats: { averageGlucose: { data: { raw: {
-          averageGlucose: 120,
-          total: 90,
-          days: 30,
-        } } } },
-      }), opts);
-
       Renderer.renderTable = sinon.stub();
       Renderer.bgChart = {
         columnWidth: 200,
@@ -514,19 +492,17 @@ describe('BgLogPrintView', () => {
       expect(Renderer.summaryTable.rows).to.eql([
         {
           totalDays: '30',
-          totalReadings: '90',
-          avgReadingsPerDay: '3',
-          avgBg: '120',
+          totalReadings: '70',
+          avgReadingsPerDay: '2',
+          avgBg: '13',
         },
       ]);
     });
 
     it('should define the summary table rows with empty results when no stat data is provided', () => {
-      Renderer = createRenderer(_.assign({}, data, {
-        stats: undefined,
-      }), _.assign({}, opts, {
-        numDays: 30,
-      }));
+      const dataWithoutStats = _.cloneDeep(data);
+      dataWithoutStats.data.current.stats = undefined;
+      Renderer = createRenderer(dataWithoutStats, opts);
 
       Renderer.renderTable = sinon.stub();
       Renderer.bgChart = {
@@ -534,7 +510,6 @@ describe('BgLogPrintView', () => {
       };
 
       Renderer.renderSummaryTable();
-
       expect(Renderer.summaryTable.rows).to.eql([
         {
           totalDays: '30',

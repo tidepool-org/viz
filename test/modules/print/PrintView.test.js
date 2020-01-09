@@ -44,14 +44,7 @@ import { getPatientFullName } from '../../../src/utils/misc';
 describe('PrintView', () => {
   let Renderer;
 
-  const data = {};
-
-  const DPI = 72;
-  const MARGIN = DPI / 2;
-
-  let doc;
-
-  const opts = {
+  const data = {
     bgPrefs: {
       bgBounds: {
         veryHighThreshold: 300,
@@ -61,6 +54,37 @@ describe('PrintView', () => {
       },
       bgUnits: 'mg/dL',
     },
+    timePrefs: {
+      timezoneAware: true,
+      timezoneName: 'US/Pacific',
+    },
+    metaData: {
+      bgSources: { current: 'cbg' },
+      latestPumpUpload: { manufacturer: 'PumpCo' },
+    },
+    data: {
+      current: {
+        endpoints: {
+          range: [100, 200],
+        },
+        stats: {
+          averageGlucose: {
+            averageGlucose: 12.8,
+            total: 70,
+          },
+        },
+        aggregationsByDate: { myAggregation: 'foo' },
+      },
+    },
+  };
+
+  const DPI = 72;
+  const MARGIN = DPI / 2;
+
+  let doc;
+
+  const opts = {
+
     debug: false,
     dpi: DPI,
     defaultFontSize: DEFAULT_FONT_SIZE,
@@ -77,10 +101,7 @@ describe('PrintView', () => {
       bottom: MARGIN,
     },
     patient: patients.standard,
-    timePrefs: {
-      timezoneAware: true,
-      timezoneName: 'US/Pacific',
-    },
+
     width: 8.5 * DPI - (2 * MARGIN),
     title: 'Print View',
   };
@@ -110,8 +131,6 @@ describe('PrintView', () => {
         'largeFontSize',
         'smallFontSize',
         'extraSmallFontSize',
-        'bgPrefs',
-        'timePrefs',
         'width',
         'height',
         'patient',
@@ -121,9 +140,15 @@ describe('PrintView', () => {
         expect(Renderer[opt]).to.equal(opts[opt]);
       });
 
-      expect(Renderer.bgUnits).to.equal(opts.bgPrefs.bgUnits);
-      expect(Renderer.bgBounds).to.equal(opts.bgPrefs.bgBounds);
-      expect(Renderer.timezone).to.equal(getTimezoneFromTimePrefs(opts.timePrefs));
+      expect(Renderer.bgUnits).to.equal(data.bgPrefs.bgUnits);
+      expect(Renderer.bgBounds).to.eql(data.bgPrefs.bgBounds);
+      expect(Renderer.timezone).to.equal(getTimezoneFromTimePrefs(data.timePrefs));
+      expect(Renderer.endpoints).to.eql(data.data.current.endpoints);
+      expect(Renderer.bgSource).to.equal(data.metaData.bgSources.current);
+      expect(Renderer.latestPumpUpload).to.eql(data.metaData.latestPumpUpload);
+      expect(Renderer.manufacturer).to.equal(data.metaData.latestPumpUpload.manufacturer);
+      expect(Renderer.stats.averageGlucose.data.raw.averageGlucose).to.eql(data.data.current.stats.averageGlucose.averageGlucose);
+      expect(Renderer.aggregationsByDate).to.eql(data.data.current.aggregationsByDate);
     });
 
     it('should set fallback default properties when not provided by constructor args', () => {
@@ -466,9 +491,14 @@ describe('PrintView', () => {
   });
 
   describe('getDateRange', () => {
-    it('should return the formatted date range', () => {
+    it('should return the formatted date range when provided date strings and format', () => {
       const result = Renderer.getDateRange('2017-12-01', '2017-12-10', 'YYYY-MM-DD');
+      expect(result).to.equal('Date range: Dec 1 - Dec 10, 2017');
+    });
 
+    it('should return the formatted date range when provided date timestamps', () => {
+      Renderer.timezone = 'UTC';
+      const result = Renderer.getDateRange(Date.parse('2017-12-01T00:00:00.000Z'), Date.parse('2017-12-10T00:00:00.000Z'));
       expect(result).to.equal('Date range: Dec 1 - Dec 10, 2017');
     });
   });
@@ -820,15 +850,15 @@ describe('PrintView', () => {
       Renderer.renderCustomTextCell(table, cellData, draw, column, pos, padding);
 
       sinon.assert.calledWith(Renderer.doc.text, 'foo');
-      sinon.assert.calledWith(Renderer.doc.text, ' bar');
+      sinon.assert.calledWith(Renderer.doc.text, 'bar');
       sinon.assert.calledWith(Renderer.doc.text, 'baz');
     });
 
-    it('should render a standard cell with a text, subtext, and note object provided', () => {
+    it('should render a header cell with a text, subtext, and note object provided', () => {
       Renderer.renderCustomTextCell(table, cellData, draw, headerColumn, pos, padding, true);
 
       sinon.assert.calledWith(Renderer.doc.text, 'dog');
-      sinon.assert.calledWith(Renderer.doc.text, ' cat');
+      sinon.assert.calledWith(Renderer.doc.text, 'cat');
       sinon.assert.calledWith(Renderer.doc.text, 'mouse');
     });
 
@@ -882,7 +912,7 @@ describe('PrintView', () => {
 
     it('should allow custom font styles and alignment in a standard cell', () => {
       const customColumn = _.assign({}, column, {
-        align: 'right',
+        align: 'left',
         font: 'comic sans',
         fontSize: 13,
         noteFontSize: 9,
@@ -901,18 +931,18 @@ describe('PrintView', () => {
         pos.y,
         {
           continued: true,
-          align: 'right',
+          align: 'left',
           width: 100,
         }
       );
 
       sinon.assert.calledWith(
         Renderer.doc.text,
-        ' bar',
+        'bar',
         pos.x,
         pos.y,
         {
-          align: 'right',
+          align: 'left',
           width: 100,
         }
       );
@@ -921,6 +951,35 @@ describe('PrintView', () => {
         Renderer.doc.text,
         'baz',
         {
+          align: 'left',
+          width: 100,
+        }
+      );
+    });
+
+    it('should offset the text position when right aligned', () => {
+      const customColumn = _.assign({}, column, {
+        align: 'right',
+        font: 'comic sans',
+        fontSize: 13,
+        noteFontSize: 9,
+      });
+
+      Renderer.doc.widthOfString = sinon.stub().returns(40);
+
+      Renderer.renderCustomTextCell(table, cellData, draw, customColumn, pos, padding);
+
+      sinon.assert.calledWith(Renderer.doc.font, 'comic sans');
+      sinon.assert.calledWith(Renderer.doc.fontSize, 13);
+      sinon.assert.calledWith(Renderer.doc.fontSize, 9);
+
+      sinon.assert.calledWith(
+        Renderer.doc.text,
+        'foo',
+        pos.x - 40, // should subtract the width of subText string from the x position
+        pos.y,
+        {
+          continued: true,
           align: 'right',
           width: 100,
         }
@@ -955,7 +1014,7 @@ describe('PrintView', () => {
 
       sinon.assert.calledWith(
         Renderer.doc.text,
-        ' cat',
+        'cat',
         pos.x,
         pos.y,
         {

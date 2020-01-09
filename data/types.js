@@ -18,7 +18,6 @@
 /* eslint-disable no-bitwise, no-mixed-operators, max-len */
 import _ from 'lodash';
 
-import { addDuration } from '../src/utils/datetime';
 import { MGDL_UNITS, MS_IN_DAY, MMOLL_UNITS, MGDL_PER_MMOLL } from '../src/utils/constants';
 
 const APPEND = '.000Z';
@@ -62,7 +61,7 @@ class Common {
   }
 
   makeNormalTime() {
-    return this.deviceTime + APPEND;
+    return Date.parse(this.deviceTime + APPEND);
   }
 
   makeTime() {
@@ -99,10 +98,12 @@ export class Basal extends Common {
     this.rate = opts.rate;
     this.scheduleName = opts.scheduleName;
 
+    if (opts.id) this.id = opts.id;
+
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
     if (!opts.raw) this.normalTime = this.makeNormalTime();
-    if (!opts.raw) this.normalEnd = addDuration(this.normalTime, this.duration);
+    if (!opts.raw) this.normalEnd = this.normalTime + this.duration;
   }
 }
 

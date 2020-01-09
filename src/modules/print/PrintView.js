@@ -23,12 +23,14 @@ import PdfTableFitColumn from 'voilab-pdf-table/plugins/fitcolumn';
 import i18next from 'i18next';
 
 import {
+  getOffset,
   getTimezoneFromTimePrefs,
   formatBirthdate,
   formatCurrentDate,
   formatDateRange,
 } from '../../utils/datetime';
 
+import { getStatDefinition } from '../../utils/stat';
 import { getPatientFullName } from '../../utils/misc';
 
 import {
@@ -44,7 +46,7 @@ import {
   SMALL_FONT_SIZE,
 } from './utils/constants';
 
-import { BG_COLORS } from '../../utils/constants';
+import { BG_COLORS, MS_IN_MIN } from '../../utils/constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -55,7 +57,30 @@ class PrintView {
     this.doc = doc;
 
     this.title = opts.title;
-    this.data = data;
+    this.data = _.cloneDeep(data);
+    this.bgPrefs = _.get(this.data, 'bgPrefs');
+    this.bgUnits = _.get(this.data, 'bgPrefs.bgUnits');
+    this.bgBounds = _.get(this.data, 'bgPrefs.bgBounds');
+    this.timePrefs = _.get(this.data, 'timePrefs');
+    this.timezone = getTimezoneFromTimePrefs(this.timePrefs);
+    this.endpoints = _.get(this.data, 'data.current.endpoints', {});
+    this.bgSource = _.get(this.data, 'metaData.bgSources.current');
+    this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
+    this.manufacturer = _.get(this.latestPumpUpload, 'manufacturer');
+
+    this.stats = {};
+    const statsData = _.get(this.data, 'data.current.stats', {});
+    _.forOwn(statsData, (statData, statType) => {
+      const stat = getStatDefinition(statData, statType, {
+        bgSource: this.bgSource,
+        days: this.endpoints.activeDays || this.endpoints.days,
+        bgPrefs: this.bgPrefs,
+        manufacturer: this.manufacturer,
+      });
+      this.stats[statType] = stat;
+    });
+
+    this.aggregationsByDate = _.get(this.data, 'data.current.aggregationsByDate', {});
 
     this.debug = opts.debug || false;
 
@@ -71,12 +96,6 @@ class PrintView {
     this.largeFontSize = opts.largeFontSize || LARGE_FONT_SIZE;
     this.smallFontSize = opts.smallFontSize || SMALL_FONT_SIZE;
     this.extraSmallFontSize = opts.extraSmallFontSize || EXTRA_SMALL_FONT_SIZE;
-
-    this.bgPrefs = opts.bgPrefs;
-    this.bgUnits = opts.bgPrefs.bgUnits;
-    this.bgBounds = opts.bgPrefs.bgBounds;
-    this.timePrefs = opts.timePrefs;
-    this.timezone = getTimezoneFromTimePrefs(opts.timePrefs);
 
     this.width = opts.width || WIDTH;
     this.height = opts.height || HEIGHT;
@@ -300,8 +319,16 @@ class PrintView {
   }
 
   getDateRange(startDate, endDate, format) {
+    let start = startDate;
+    let end = endDate;
+
+    if (_.isNumber(startDate) && _.isNumber(endDate)) {
+      start = startDate - getOffset(startDate, this.timezone) * MS_IN_MIN;
+      end = endDate - getOffset(endDate, this.timezone) * MS_IN_MIN;
+    }
+
     return t('Date range: {{dateRange}}', {
-      dateRange: formatDateRange(startDate, endDate, format),
+      dateRange: formatDateRange(start, end, format),
     });
   }
 
@@ -464,7 +491,12 @@ class PrintView {
         yPos += (height - textHeight) / 2 + 1;
       }
 
-      this.doc.text(text, xPos, yPos, {
+      let textRightPadding = 0;
+      if (subText && align === 'right') {
+        textRightPadding = this.doc.widthOfString(subText);
+      }
+
+      this.doc.text(text, xPos - textRightPadding, yPos, {
         continued: !!subText,
         align,
         width,
@@ -473,7 +505,7 @@ class PrintView {
       this.doc.font(this.font);
 
       if (subText) {
-        this.doc.text(` ${subText}`, xPos, yPos, {
+        this.doc.text(`${subText}`, xPos, yPos, {
           align,
           width,
         });

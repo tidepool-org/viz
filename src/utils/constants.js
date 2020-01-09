@@ -46,12 +46,14 @@ export const DEFAULT_BG_BOUNDS = {
     targetLowerBound: 70,
     targetUpperBound: 180,
     veryHighThreshold: 250,
+    clampThreshold: 600,
   },
   [MMOLL_UNITS]: {
     veryLowThreshold: 3.0,
     targetLowerBound: 3.9,
     targetUpperBound: 10.0,
     veryHighThreshold: 13.9,
+    clampThreshold: 33.3,
   },
 };
 
@@ -71,6 +73,8 @@ export const CGM_READINGS_ONE_DAY = 288;
 export const CGM_DATA_KEY = 'cbg';
 export const BGM_DATA_KEY = 'smbg';
 
+export const NO_SITE_CHANGE = 'noSiteChange';
+export const SITE_CHANGE = 'siteChange';
 export const SITE_CHANGE_RESERVOIR = 'reservoirChange';
 export const SITE_CHANGE_TUBING = 'tubingPrime';
 export const SITE_CHANGE_CANNULA = 'cannulaPrime';

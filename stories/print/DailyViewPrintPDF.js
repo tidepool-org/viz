@@ -24,7 +24,6 @@ import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
 
 import * as profiles from '../../data/patient/profiles';
-import { data as dataStub } from '../../data/patient/data';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
@@ -32,12 +31,12 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
 const stories = storiesOf('Daily View PDF', module);
 
-let data;
+let queries;
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data = require('../../local/print-view.json');
+  queries = require('../../local/PDFDataQueries.json');
 } catch (e) {
-  data = dataStub;
+  queries = {};
 }
 
 const bgBounds = {
@@ -55,7 +54,7 @@ const bgBounds = {
   },
 };
 
-function openPDF({ patient, bgUnits = MGDL_UNITS }) {
+function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
@@ -73,7 +72,9 @@ function openPDF({ patient, bgUnits = MGDL_UNITS }) {
     patient,
   };
 
-  createPrintView('daily', data[bgUnits].daily, opts, doc).render();
+  const data = queries ? dataUtil.query(queries.daily) : {};
+
+  createPrintView('daily', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
   doc.end();
@@ -90,14 +91,14 @@ and then use this story to iterate on the Daily Print PDF outside of Tidepool We
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
 
-stories.add(`standard account (${MGDL_UNITS})`, () => (
-  <button onClick={() => openPDF({ patient: profiles.standard })}>
+stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add(`standard account (${MMOLL_UNITS})`, () => (
-  <button onClick={() => openPDF({ patient: profiles.standard, bgUnits: MMOLL_UNITS })}>
+stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.standard, bgUnits: MMOLL_UNITS })}>
     Open PDF in new tab
   </button>
 ), { notes });

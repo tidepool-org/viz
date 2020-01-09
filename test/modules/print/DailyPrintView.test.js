@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -48,16 +48,6 @@ describe('DailyPrintView', () => {
   let doc;
 
   const opts = {
-    bgPrefs: {
-      bgBounds: {
-        veryHighThreshold: 300,
-        targetUpperBound: 180,
-        targetLowerBound: 70,
-        veryLowThreshold: 54,
-        clampThreshold: 400,
-      },
-      bgUnits: 'mg/dL',
-    },
     chartsPerPage: 3,
     debug: false,
     dpi: DPI,
@@ -74,30 +64,23 @@ describe('DailyPrintView', () => {
       right: MARGIN,
       bottom: MARGIN,
     },
-    numDays: 6,
     patient: patients.standard,
     summaryHeaderFontSize: 10,
     summaryWidthAsPercentage: 0.18,
-    timePrefs: {
-      timezoneAware: true,
-      timezoneName: 'US/Pacific',
-    },
     width: 8.5 * DPI - (2 * MARGIN),
     title: 'Daily View',
   };
 
-  const mmollOpts = _.assign({}, opts, {
-    bgPrefs: {
-      bgBounds: {
-        veryHighThreshold: 16.7,
-        targetUpperBound: 10,
-        targetLowerBound: 3.9,
-        veryLowThreshold: 3.1,
-        clampThreshold: 22.2,
-      },
-      bgUnits: 'mmol/L',
+  const mmollBgPrefs = {
+    bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+    bgClasses: {
+      'very-low': { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryLowThreshold },
+      low: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].targetLowerBound },
+      target: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].targetUpperBound },
+      high: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryHighThreshold },
     },
-  });
+    bgUnits: MMOLL_UNITS,
+  };
 
   beforeEach(() => {
     doc = new Doc({ margin: MARGIN });
@@ -121,8 +104,11 @@ describe('DailyPrintView', () => {
         { prop: 'carbsFontSize', type: 'number' },
         { prop: 'summaryHeaderFontSize', type: 'number' },
         { prop: 'chartsPerPage', type: 'number', value: opts.chartsPerPage },
-        { prop: 'numDays', type: 'number', value: opts.numDays },
+        { prop: 'numDays', type: 'number', value: data.data.current.endpoints.activeDays },
         { prop: 'bolusWidth', type: 'number' },
+        { prop: 'bolusRange', type: 'array' },
+        { prop: 'bgRange', type: 'array' },
+        { prop: 'basalRange', type: 'array' },
         { prop: 'carbRadius', type: 'number' },
         { prop: 'cbgRadius', type: 'number' },
         { prop: 'markerRadius', type: 'number' },
@@ -229,17 +215,17 @@ describe('DailyPrintView', () => {
     });
 
     it('should set the bgScaleYLimit to a minimum of the BG target upper bound', () => {
-      Renderer.data.bgRange[1] = 100;
+      Renderer.bgRange[1] = 100;
       Renderer.makeScales(Renderer.chartsByDate[sampleDate]);
 
       expect(Renderer.bgScaleYLimit).to.equal(180);
     });
 
     it('should set the bgScaleYLimit to a maximum of the BG clamp threshold', () => {
-      Renderer.data.bgRange[1] = 600;
+      Renderer.bgRange[1] = 800;
       Renderer.makeScales(Renderer.chartsByDate[sampleDate]);
 
-      expect(Renderer.bgScaleYLimit).to.equal(400);
+      expect(Renderer.bgScaleYLimit).to.equal(600);
     });
 
     // Remaining functionality already confirmed in constructor tests
@@ -350,28 +336,26 @@ describe('DailyPrintView', () => {
 
     beforeEach(() => {
       args = setArgs(Renderer);
-      Renderer.data.dataByDate[sampleDate].stats = {
-        averageGlucose: { data: { raw: {
+      Renderer.aggregationsByDate.statsByDate[sampleDate] = {
+        averageGlucose: {
           averageGlucose: 120,
-        } } },
-        carbs: { data: { raw: {
+        },
+        carbs: {
           carbs: 10.2,
-        } } },
-        timeInRange: { data: {
-          raw: {
-            target: MS_IN_HOUR * 3,
-            veryLow: MS_IN_HOUR,
-          },
-          total: { value: MS_IN_HOUR * 4 },
-        } },
-        totalInsulin: { data: { raw: {
+        },
+        timeInRange: {
+          target: MS_IN_HOUR * 3,
+          veryLow: MS_IN_HOUR,
+          total: MS_IN_HOUR * 4,
+        },
+        totalInsulin: {
           basal: 10,
           bolus: 20,
-        } } },
-        timeInAuto: { data: { raw: {
+        },
+        timeInAuto: {
           manual: MS_IN_HOUR * 3,
           automated: MS_IN_HOUR * 7,
-        } } },
+        },
       };
       Renderer.renderSummary(args);
     });
@@ -434,12 +418,17 @@ describe('DailyPrintView', () => {
 
     context('mmol/L support', () => {
       beforeEach(() => {
-        Renderer = new DailyPrintView(doc, data, mmollOpts);
+        Renderer = new DailyPrintView(doc, _.assign({}, data, { bgPrefs: mmollBgPrefs }), opts);
         args = setArgs(Renderer);
-        Renderer.data.dataByDate[sampleDate].stats.averageGlucose = {
-          data: { raw: {
+        Renderer.aggregationsByDate.statsByDate[sampleDate] = {
+          averageGlucose: {
             averageGlucose: 12.25,
-          } },
+          },
+          timeInRange: {
+            target: MS_IN_HOUR * 3,
+            veryLow: MS_IN_HOUR,
+            total: MS_IN_HOUR * 4,
+          },
         };
         Renderer.renderSummary(args);
       });
@@ -498,7 +487,7 @@ describe('DailyPrintView', () => {
     const setArgs = (renderer) => ({
       bgScale: sinon.stub().returns(100),
       bottomOfBasalChart: 150,
-      bounds: renderer.chartsByDate[sampleDate].bounds,
+      utcBounds: renderer.chartsByDate[sampleDate].utcBounds,
       date: sampleDate,
       topEdge: 350,
       xScale: sinon.stub().returns(100),
@@ -544,7 +533,7 @@ describe('DailyPrintView', () => {
       });
 
       it('should render bg bounds in mmol/L with proper formatting', () => {
-        sinon.assert.calledWith(Renderer.doc.text, '300');
+        sinon.assert.calledWith(Renderer.doc.text, '250');
         sinon.assert.calledWith(Renderer.doc.text, '180');
         sinon.assert.calledWith(Renderer.doc.text, '70');
         sinon.assert.calledWith(Renderer.doc.text, '54');
@@ -553,16 +542,16 @@ describe('DailyPrintView', () => {
 
     context('mmol/L support', () => {
       beforeEach(() => {
-        Renderer = new DailyPrintView(doc, data, mmollOpts);
+        Renderer = new DailyPrintView(doc, _.assign({}, data, { bgPrefs: mmollBgPrefs }), opts);
 
         Renderer.renderYAxes(setArgs(Renderer));
       });
 
       it('should render bg bounds in mmol/L with proper formatting', () => {
-        sinon.assert.calledWith(Renderer.doc.text, '16.7');
+        sinon.assert.calledWith(Renderer.doc.text, '13.9');
         sinon.assert.calledWith(Renderer.doc.text, '10.0');
         sinon.assert.calledWith(Renderer.doc.text, '3.9');
-        sinon.assert.calledWith(Renderer.doc.text, '3.1');
+        sinon.assert.calledWith(Renderer.doc.text, '3.0');
       });
     });
   });
@@ -591,7 +580,7 @@ describe('DailyPrintView', () => {
 
     context('mmol/L support', () => {
       beforeEach(() => {
-        Renderer = new DailyPrintView(doc, data, mmollOpts);
+        Renderer = new DailyPrintView(doc, _.assign({}, data, { bgPrefs: mmollBgPrefs }), opts);
         Renderer.renderSmbgs(Renderer.chartsByDate[sampleDate]);
       });
 
@@ -657,7 +646,7 @@ describe('DailyPrintView', () => {
       expect(groups.length).to.equal(2);
 
       const expectedOutlinesPaths = groups.length; // one outline for each group
-      const expectedBasalSequencePaths = 1; // one sequence path total
+      const expectedBasalSequencePaths = 2; // one scheduled sequence, one automated
 
       sinon.assert.callCount(Renderer.doc.path, expectedOutlinesPaths + expectedBasalSequencePaths);
 

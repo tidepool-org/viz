@@ -15,6 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
+/* eslint-disable max-len */
+
 import _ from 'lodash';
 
 import SettingsPrintView from '../../../src/modules/print/SettingsPrintView';
@@ -41,6 +43,12 @@ import {
   EXTRA_SMALL_FONT_SIZE,
 } from '../../../src/modules/print/utils/constants';
 
+
+import {
+  MGDL_UNITS,
+  MMOLL_UNITS,
+} from '../../../src/utils/constants';
+
 import Doc from '../../helpers/pdfDoc';
 
 const data = {
@@ -60,15 +68,6 @@ describe('SettingsPrintView', () => {
   let doc;
 
   const opts = {
-    bgPrefs: {
-      bgBounds: {
-        veryHighThreshold: 300,
-        targetUpperBound: 180,
-        targetLowerBound: 70,
-        veryLowThreshold: 54,
-      },
-      bgUnits: 'mg/dL',
-    },
     debug: false,
     dpi: DPI,
     defaultFontSize: DEFAULT_FONT_SIZE,
@@ -85,31 +84,42 @@ describe('SettingsPrintView', () => {
       bottom: MARGIN,
     },
     patient: patients.standard,
-    timePrefs: {
-      timezoneAware: true,
-      timezoneName: 'US/Pacific',
-    },
     width: 8.5 * DPI - (2 * MARGIN),
     title: 'Device Settings',
   };
 
-  const mmollOpts = _.assign({}, opts, {
-    bgPrefs: {
+  const timePrefs = {
+    timezoneAware: true,
+    timezoneName: 'US/Pacific',
+  };
+
+  const bgPrefs = {
+    [MGDL_UNITS]: {
+      bgBounds: {
+        veryHighThreshold: 300,
+        targetUpperBound: 180,
+        targetLowerBound: 70,
+        veryLowThreshold: 54,
+      },
+      bgUnits: MGDL_UNITS,
+    },
+    [MMOLL_UNITS]: {
       bgBounds: {
         veryHighThreshold: 16.7,
         targetUpperBound: 10,
         targetLowerBound: 3.9,
         veryLowThreshold: 3.1,
       },
-      bgUnits: 'mmol/L',
+      bgUnits: MMOLL_UNITS,
     },
-  });
+  };
 
   const devices = [
     {
       name: 'animas',
       data: animasFlatrate,
-      opts: mmollOpts,
+      opts,
+      bgUnits: MMOLL_UNITS,
     },
     {
       name: 'medtronic',
@@ -123,9 +133,19 @@ describe('SettingsPrintView', () => {
     },
   ];
 
-  const createRenderer = (renderData = data.animasFlatrate, renderOpts = opts) => (
-    new SettingsPrintView(doc, renderData, renderOpts)
-  );
+  const createRenderer = (settings = data.animasFlatrate, renderOpts = opts, bgUnits = MGDL_UNITS) => {
+    const renderData = {
+      bgPrefs: bgPrefs[bgUnits],
+      timePrefs,
+      metaData: {
+        latestPumpUpload: {
+          manufacturer: _.lowerCase(settings.source),
+          settings,
+        },
+      },
+    };
+    return new SettingsPrintView(doc, renderData, renderOpts);
+  };
 
   beforeEach(() => {
     doc = new Doc({ margin: MARGIN });
@@ -143,7 +163,6 @@ describe('SettingsPrintView', () => {
 
     it('should set it\'s own required initial instance properties for non-tandem devices', () => {
       const requiredProps = [
-        { prop: 'manufacturer', type: 'string', value: 'animas' },
         { prop: 'isTandem', type: 'boolean', value: false },
         { prop: 'deviceMeta', type: 'object' },
       ];
@@ -164,7 +183,6 @@ describe('SettingsPrintView', () => {
       }));
 
       const requiredProps = [
-        { prop: 'manufacturer', type: 'string', value: 'medtronic' },
         { prop: 'isTandem', type: 'boolean', value: false },
         { prop: 'deviceMeta', type: 'object' },
       ];
@@ -183,7 +201,6 @@ describe('SettingsPrintView', () => {
       Renderer = createRenderer(data.tandemMultirate);
 
       const requiredProps = [
-        { prop: 'manufacturer', type: 'string', value: 'tandem' },
         { prop: 'isTandem', type: 'boolean', value: true },
         { prop: 'deviceMeta', type: 'object' },
       ];
@@ -309,7 +326,7 @@ describe('SettingsPrintView', () => {
       sinon.stub(Renderer, 'renderTableHeading');
       sinon.stub(Renderer, 'renderTable');
 
-      const schedules = Renderer.data.basalSchedules;
+      const schedules = Renderer.latestPumpUpload.settings.basalSchedules;
       expect(schedules.length).to.equal(3);
 
       Renderer.renderTandemProfiles();
@@ -324,7 +341,7 @@ describe('SettingsPrintView', () => {
           text: schedule.name,
         });
 
-        if (schedule.name === Renderer.data.activeSchedule) {
+        if (schedule.name === Renderer.latestPumpUpload.settings.activeSchedule) {
           activeIndex = index;
         }
       });
@@ -333,8 +350,8 @@ describe('SettingsPrintView', () => {
       expect(activeIndex).to.be.a('number');
 
       const activeCall = Renderer.renderTableHeading.getCall(activeIndex);
-      expect(activeCall.args[0].text).to.equal(Renderer.data.activeSchedule);
-      expect(activeCall.args[0].subText).to.equal('Active at upload');
+      expect(activeCall.args[0].text).to.equal(Renderer.latestPumpUpload.settings.activeSchedule);
+      expect(activeCall.args[0].subText).to.equal(' Active at upload');
 
       // ensure it's rendering a table for each schedule
       sinon.assert.callCount(Renderer.renderTable, schedules.length);
@@ -369,7 +386,7 @@ describe('SettingsPrintView', () => {
     });
 
     it('should set update the layout column position before and after rendering each table', () => {
-      const singleScheduleData = _.cloneDeep(Renderer.data);
+      const singleScheduleData = _.cloneDeep(Renderer.latestPumpUpload.settings);
       singleScheduleData.basalSchedules = _.slice(singleScheduleData.basalSchedules, 0, 1);
       Renderer = createRenderer(singleScheduleData);
 
@@ -386,7 +403,7 @@ describe('SettingsPrintView', () => {
       sinon.stub(Renderer, 'renderTableHeading');
       sinon.stub(Renderer, 'renderTable');
 
-      const schedules = Renderer.data.basalSchedules;
+      const schedules = Renderer.latestPumpUpload.settings.basalSchedules;
       expect(schedules.length).to.equal(3);
 
       Renderer.renderBasalSchedules();
@@ -401,7 +418,7 @@ describe('SettingsPrintView', () => {
           text: schedule.name,
         });
 
-        if (schedule.name === Renderer.data.activeSchedule) {
+        if (schedule.name === Renderer.latestPumpUpload.settings.activeSchedule) {
           activeIndex = index;
         }
       });
@@ -410,7 +427,7 @@ describe('SettingsPrintView', () => {
       expect(activeIndex).to.be.a('number');
 
       const activeCall = Renderer.renderTableHeading.getCall(activeIndex);
-      expect(activeCall.args[0].text).to.equal(Renderer.data.activeSchedule);
+      expect(activeCall.args[0].text).to.equal(Renderer.latestPumpUpload.settings.activeSchedule);
       expect(activeCall.args[0].note).to.equal('Active at upload');
 
       // ensure it's rendering a table for each schedule
@@ -433,7 +450,7 @@ describe('SettingsPrintView', () => {
         sinon.stub(Renderer, 'renderTableHeading');
         sinon.stub(Renderer, 'renderTable');
 
-        const schedules = Renderer.data.basalSchedules;
+        const schedules = Renderer.latestPumpUpload.settings.basalSchedules;
         expect(schedules.length).to.equal(4);
 
         Renderer.renderBasalSchedules();
@@ -448,7 +465,7 @@ describe('SettingsPrintView', () => {
             text: schedule.name,
           });
 
-          if (schedule.name === Renderer.data.activeSchedule) {
+          if (schedule.name === Renderer.latestPumpUpload.settings.activeSchedule) {
             activeIndex = index;
           }
         });
@@ -458,7 +475,7 @@ describe('SettingsPrintView', () => {
 
         const activeCall = Renderer.renderTableHeading.getCall(activeIndex);
         expect(activeCall.args[0].text).to.equal('Auto Mode');
-        expect(activeCall.args[0].subText).to.equal('active at upload');
+        expect(activeCall.args[0].subText).to.equal(' active at upload');
 
         // ensure it's only rendering a table for each non-automated schedule
         sinon.assert.callCount(Renderer.renderTable, schedules.length - 1);
@@ -472,7 +489,7 @@ describe('SettingsPrintView', () => {
         sinon.stub(Renderer, 'renderTableHeading');
         sinon.stub(Renderer, 'renderTable');
 
-        const schedules = Renderer.data.basalSchedules;
+        const schedules = Renderer.latestPumpUpload.settings.basalSchedules;
         expect(schedules.length).to.equal(4);
 
         Renderer.renderBasalSchedules();
@@ -607,7 +624,7 @@ describe('SettingsPrintView', () => {
 
     _.forEach(devices, device => {
       beforeEach(() => {
-        Renderer = createRenderer(device.data, device.opts);
+        Renderer = createRenderer(device.data, device.opts, device.bgUnits);
         settings = sensitivity(Renderer.data, Renderer.manufacturer, Renderer.bgUnits);
       });
 
@@ -632,7 +649,7 @@ describe('SettingsPrintView', () => {
 
     _.forEach(devices, device => {
       beforeEach(() => {
-        Renderer = createRenderer(device.data, device.opts);
+        Renderer = createRenderer(device.data, device.opts, device.bgUnits);
         settings = target(Renderer.data, Renderer.manufacturer);
       });
 
@@ -674,7 +691,7 @@ describe('SettingsPrintView', () => {
 
     _.forEach(devices, device => {
       beforeEach(() => {
-        Renderer = createRenderer(device.data, device.opts);
+        Renderer = createRenderer(device.data, device.opts, device.bgUnits);
         settings = ratio(Renderer.data, Renderer.manufacturer);
       });
 

@@ -88,8 +88,10 @@ export class DataUtil {
     this.patientId = patientId;
 
     // We first clone the raw data so we don't mutate it at the source
+    this.startTimer('normalizeDataIn');
     const data = _.cloneDeep(rawData);
     _.each(data, this.normalizeDatumIn);
+    this.endTimer('normalizeDataIn');
 
     // Join wizard and bolus datums
     this.startTimer('processNormalizedData');
@@ -98,9 +100,15 @@ export class DataUtil {
     this.endTimer('processNormalizedData');
 
     // Filter out any data that failed validation, and and duplicates by `id`
+    this.startTimer('filterValidData');
+    this.clearFilters();
     const validData = _.uniqBy(data, 'id');
-    const rejectedData = _.remove(validData, 'reject');
+    const rejectedData = _.remove(validData, d => d.reject || this.filter.byId(d.id).top(1).length);
+    this.endTimer('filterValidData');
+
+    this.startTimer('addValidData');
     this.data.add(validData);
+    this.endTimer('addValidData');
 
     this.log('validData', validData.length, 'of', data.length);
     if (rejectedData.length) this.log('rejectedData', rejectedData);
@@ -516,6 +524,11 @@ export class DataUtil {
       return this.dimension.byType.filterExact(type);
     };
 
+    this.filter.byTypes = (types = []) => {
+      delete this.activeType;
+      return this.dimension.byType.filterFunction(type => _.includes(types, type));
+    };
+
     this.filter.bySubType = subType => {
       this.activeSubType = subType;
       return this.dimension.bySubType.filterExact(subType);
@@ -536,14 +549,17 @@ export class DataUtil {
   };
 
   clearFilters = () => {
+    this.startTimer('clearFilters');
     this.dimension.byTime.filterAll();
     this.dimension.byType.filterAll();
     this.dimension.bySubType.filterAll();
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
+    this.endTimer('clearFilters');
   };
 
   setBgSources = current => {
+    this.startTimer('setBgSources');
     this.clearFilters();
 
     const bgSources = {
@@ -563,6 +579,7 @@ export class DataUtil {
     }
 
     this.bgSources = bgSources;
+    this.endTimer('setBgSources');
   };
 
   setLatestPumpUpload = () => {
@@ -643,7 +660,9 @@ export class DataUtil {
   };
 
   setSize = () => {
+    this.startTimer('setSize');
     this.size = this.data.size();
+    this.endTimer('setSize');
   };
 
   setMetaData = () => {
@@ -662,6 +681,7 @@ export class DataUtil {
   };
 
   setEndpoints = (endpoints, nextDays = 0, prevDays = 0) => {
+    this.startTimer('setEndpoints');
     this.endpoints = {
       current: { range: [0, Infinity] },
     };
@@ -696,9 +716,11 @@ export class DataUtil {
         };
       }
     }
+    this.endTimer('setEndpoints');
   };
 
   setActiveDays = activeDays => {
+    this.startTimer('setActiveDays');
     this.activeDays = activeDays || [0, 1, 2, 3, 4, 5, 6];
 
     _.each(_.keys(this.endpoints), range => {
@@ -723,9 +745,15 @@ export class DataUtil {
         ).length;
       }
     });
+    this.endTimer('setActiveDays');
+  };
+
+  setStats = (stats = []) => {
+    this.stats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
   };
 
   setTypes = types => {
+    this.startTimer('setTypes');
     this.types = _.isArray(types) ? types : [];
 
     if (_.isPlainObject(types)) {
@@ -734,9 +762,11 @@ export class DataUtil {
         ...value,
       }));
     }
+    this.endTimer('setTypes');
   };
 
   setTimePrefs = (timePrefs = {}) => {
+    this.startTimer('setTimePrefs');
     const {
       timezoneAware = false,
     } = timePrefs;
@@ -773,9 +803,11 @@ export class DataUtil {
     if (dimensionUpdates.byDate) this.buildByDateDimension();
     if (dimensionUpdates.byDayOfWeek) this.buildByDayOfWeekDimension();
     if (dimensionUpdates.byTime) this.buildByTimeDimension();
+    this.endTimer('setTimePrefs');
   };
 
   setBgPrefs = (bgPrefs = {}) => {
+    this.startTimer('setBgPrefs');
     const {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
       bgClasses = {},
@@ -795,6 +827,7 @@ export class DataUtil {
       bgClasses,
       bgUnits,
     };
+    this.endTimer('setBgPrefs');
   };
 
   query = (query = {}) => {
@@ -824,6 +857,7 @@ export class DataUtil {
 
     this.setBgSources(bgSource);
     this.setTypes(types);
+    this.setStats(stats);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
     if (timePrefs) this.setTimePrefs(timePrefs);
     this.setEndpoints(endpoints, nextDays, prevDays);
@@ -843,8 +877,8 @@ export class DataUtil {
       this.filter.byActiveDays(this.activeDays);
 
       // Generate the stats for current range
-      if (stats && rangeKey === 'current') {
-        data[rangeKey].stats = this.getStats(stats);
+      if (this.stats.length && rangeKey === 'current') {
+        data[rangeKey].stats = this.getStats(this.stats);
       }
 
       // Generate the aggregations for current range
@@ -883,11 +917,10 @@ export class DataUtil {
 
   getStats = stats => {
     this.startTimer('generate stats');
-    const selectedStats = _.isString(stats) ? _.map(stats.split(','), _.trim) : stats;
     const generatedStats = {};
 
     this.statUtil = new StatUtil(this);
-    _.each(selectedStats, stat => {
+    _.each(stats, stat => {
       const method = statFetchMethods[stat];
 
       if (_.isFunction(this.statUtil[method])) {
@@ -912,6 +945,8 @@ export class DataUtil {
       boluses: 'aggregateBoluses',
       fingersticks: 'aggregateFingersticks',
       siteChanges: 'aggregateSiteChanges',
+      dataByDate: 'aggregateDataByDate',
+      statsByDate: 'aggregateStatsByDate',
     };
 
     this.aggregationUtil = new AggregationUtil(this);

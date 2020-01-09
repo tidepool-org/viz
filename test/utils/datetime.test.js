@@ -47,13 +47,6 @@ describe('datetime', () => {
     });
   });
 
-  describe('addDuration', () => {
-    it('add a duration to a date string', () => {
-      const start = '2017-11-10T00:00:00.000Z';
-      expect(datetime.addDuration(start, 60000)).to.equal('2017-11-10T00:01:00.000Z');
-    });
-  });
-
   describe('getMsPer24', () => {
     it('should return 1 when passed a timestamp 1ms after midnight', () => {
       expect(datetime.getMsPer24('2014-03-06T00:00:00.001Z')).to.equal(1);

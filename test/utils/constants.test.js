@@ -77,6 +77,10 @@ describe('constants', () => {
       expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].veryHighThreshold).to.equal(250);
     });
 
+    it('should define the MGDL_UNITS clampThreshold as 600', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].clampThreshold).to.equal(600);
+    });
+
     it('should define the MMOLL_UNITS veryLowThreshold as 3.0', () => {
       expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].veryLowThreshold).to.equal(3.0);
     });
@@ -91,6 +95,10 @@ describe('constants', () => {
 
     it('should define the MMOLL_UNITS veryHighThreshold as 13.9', () => {
       expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].veryHighThreshold).to.equal(13.9);
+    });
+
+    it('should define the MMOLL_UNITS clampThreshold as 33.3', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].clampThreshold).to.equal(33.3);
     });
   });
 
@@ -139,6 +147,18 @@ describe('constants', () => {
   describe('SITE_CHANGE_RESERVOIR', () => {
     it('should be `reservoirChange`', () => {
       expect(constants.SITE_CHANGE_RESERVOIR).to.equal('reservoirChange');
+    });
+  });
+
+  describe('NO_SITE_CHANGE', () => {
+    it('should be `noSiteChange`', () => {
+      expect(constants.NO_SITE_CHANGE).to.equal('noSiteChange');
+    });
+  });
+
+  describe('SITE_CHANGE', () => {
+    it('should be `siteChange`', () => {
+      expect(constants.SITE_CHANGE).to.equal('siteChange');
     });
   });
 

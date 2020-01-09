@@ -25,7 +25,6 @@ import BasicsPrintView from './BasicsPrintView';
 import DailyPrintView from './DailyPrintView';
 import BgLogPrintView from './BgLogPrintView';
 import SettingsPrintView from './SettingsPrintView';
-import { reshapeBgClassesToBgBounds } from '../../utils/bloodglucose';
 
 import * as constants from './utils/constants';
 
@@ -38,7 +37,6 @@ const t = i18next.t.bind(i18next);
 
 // Exporting utils for easy stubbing in tests
 export const utils = {
-  reshapeBgClassesToBgBounds,
   PDFDocument: class PDFDocumentStub {},
   blobStream: function blobStreamStub() {},
   PrintView,
@@ -61,15 +59,11 @@ export const utils = {
  */
 export function createPrintView(type, data, opts, doc) {
   const {
-    bgPrefs,
     patient,
-    timePrefs,
-    numDays,
   } = opts;
 
   let Renderer;
   let renderOpts = {
-    bgPrefs,
     // TODO: set this up as a Webpack Define plugin to pull from env variable
     // maybe that'll be tricky through React Storybook?
     debug: false,
@@ -81,7 +75,6 @@ export function createPrintView(type, data, opts, doc) {
     margins: constants.MARGINS,
     patient,
     smallFontSize: constants.SMALL_FONT_SIZE,
-    timePrefs,
     width: constants.WIDTH,
   };
 
@@ -91,7 +84,6 @@ export function createPrintView(type, data, opts, doc) {
 
       renderOpts = _.assign(renderOpts, {
         chartsPerPage: 3,
-        numDays: numDays.daily,
         summaryHeaderFontSize: 10,
         summaryWidthAsPercentage: 0.18,
         title: t('Daily Charts'),
@@ -110,7 +102,6 @@ export function createPrintView(type, data, opts, doc) {
       Renderer = utils.BgLogPrintView;
 
       renderOpts = _.assign(renderOpts, {
-        numDays: numDays.bgLog,
         title: t('BG Log'),
       });
       break;
@@ -140,8 +131,11 @@ export function createPrintView(type, data, opts, doc) {
  */
 export function createPrintPDFPackage(data, opts) {
   const {
-    bgPrefs,
     patient,
+    basics = {},
+    daily = {},
+    bgLog = {},
+    settings = {},
   } = opts;
 
   if (_.get(patient, 'preferences.displayLanguageCode')) {
@@ -151,7 +145,6 @@ export function createPrintPDFPackage(data, opts) {
   const pdfOpts = _.cloneDeep(opts);
 
   return new Promise((resolve, reject) => {
-    pdfOpts.bgPrefs.bgBounds = utils.reshapeBgClassesToBgBounds(bgPrefs);
     const DocLib = typeof PDFDocument !== 'undefined' ? PDFDocument : utils.PDFDocument;
     const streamLib = typeof blobStream !== 'undefined' ? blobStream : utils.blobStream;
 
@@ -162,10 +155,10 @@ export function createPrintPDFPackage(data, opts) {
     const doc = new DocLib({ autoFirstPage: false, bufferPages: true, margin: constants.MARGIN });
     const stream = doc.pipe(streamLib());
 
-    if (data.basics) createPrintView('basics', data.basics, pdfOpts, doc).render();
-    if (data.daily) createPrintView('daily', data.daily, pdfOpts, doc).render();
-    if (data.bgLog) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
-    if (data.settings) createPrintView('settings', data.settings, pdfOpts, doc).render();
+    if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
+    if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
+    if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
+    if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
 
     PrintView.renderPageNumbers(doc);
 

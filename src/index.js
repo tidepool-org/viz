@@ -41,7 +41,6 @@ import { isAutomatedBasalDevice } from './utils/device';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
 import {
-  addDuration,
   getLocalizedCeiling,
   getTimezoneFromTimePrefs,
 } from './utils/datetime';
@@ -64,8 +63,6 @@ import {
   defineBasicsAggregations,
   processBasicsAggregations,
 } from './utils/basics/data';
-
-import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
 
 const i18next = require('i18next');
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
@@ -106,12 +103,7 @@ const utils = {
   constants: {
     DEFAULT_BG_BOUNDS,
   },
-  data: {
-    selectDailyViewData,
-    selectBgLogViewData,
-  },
   datetime: {
-    addDuration,
     findBasicsStart,
     getLocalizedCeiling,
     getTimezoneFromTimePrefs,
