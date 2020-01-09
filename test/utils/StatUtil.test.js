@@ -438,7 +438,7 @@ describe('StatUtil', () => {
       });
     });
 
-    it('should should not modify the `total` value', () => {
+    it('should not modify the `total` value', () => {
       const sampleData = {
         basal: 56,
         bolus: 28,
