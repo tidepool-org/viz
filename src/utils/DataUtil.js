@@ -88,8 +88,11 @@ export class DataUtil {
     this.patientId = patientId;
 
     // We first clone the raw data so we don't mutate it at the source
-    this.startTimer('normalizeDataIn');
+    this.startTimer('cloneRawData');
     const data = _.cloneDeep(rawData);
+    this.endTimer('cloneRawData');
+
+    this.startTimer('normalizeDataIn');
     _.each(data, this.normalizeDatumIn);
     this.endTimer('normalizeDataIn');
 
