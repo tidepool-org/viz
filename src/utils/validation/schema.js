@@ -2,12 +2,14 @@ import Validator from 'fastest-validator';
 import _ from 'lodash';
 import { MGDL_UNITS, MMOLL_UNITS, MS_IN_DAY } from '../constants.js';
 
+
 const v = new Validator({
   messages: {
     missingFieldDependancy: "Field(s) '{expected}' are expected when field '{field}' exists. Value(s) were {actual}",
   },
 });
 
+/* eslint-disable no-underscore-dangle */
 v.add('withDependantFields', (value, schema, fieldName, object) => {
   let missingFields = false;
 
@@ -21,22 +23,34 @@ v.add('withDependantFields', (value, schema, fieldName, object) => {
     return v.makeError('missingFieldDependancy', schema.fields, JSON.stringify(_.pick(object, schema.fields)));
   }
 
-  const compiledSchemaRule = v.compileSchemaRule(schema.schema);
-  return v.checkSchemaRule(object[fieldName], compiledSchemaRule, fieldName);
+  const processedRule = v._processRule(schema.schema, null, false);
+  const checkWrapper = v._checkWrapper(processedRule);
+
+  return checkWrapper(object[fieldName], processedRule, fieldName);
 });
 
 v.add('objectWithUnknownKeys', (value, schema, fieldName, object) => {
-  const compiledSchemaRule = v.compileSchemaRule(schema.schema);
-  const fieldValues = _.valuesIn(object[fieldName]);
   const errors = [];
+  const processedRule = v._processRule(schema.schema, null, false);
 
-  _.each(fieldValues, fieldValue => {
-    const result = v.checkSchemaRule(fieldValue, compiledSchemaRule, fieldName);
-    if (result !== true) errors.push(result);
+  _.each(object[fieldName], fieldValue => {
+    const checkWrapper = v._checkWrapper(processedRule);
+    const result = checkWrapper(fieldValue, processedRule);
+    if (result !== true) {
+      _.each(result, (item, i) => {
+        // Add the field name to the field path for proper error descriptions
+        const fieldPath = `${fieldName}${item.field}`;
+        result[i].message = item.message.replace(item.field, fieldPath);
+        result[i].field = fieldPath;
+      });
+
+      errors.push(result);
+    }
   });
 
   return errors.length ? errors : true;
 });
+/* eslint-enable no-underscore-dangle */
 
 const patterns = {
   id: /^[A-Za-z0-9\-_]+$/,
@@ -53,9 +67,6 @@ const postiveNumber = { type: 'number', positive: true };
 const ISODateSince2008 = {
   type: 'string',
   pattern: patterns.ISODateSince2008,
-  messages: {
-    stringPattern: 'Must be an ISO datetime after 2008',
-  },
 };
 
 const validTypes = [

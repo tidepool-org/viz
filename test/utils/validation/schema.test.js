@@ -72,7 +72,7 @@ describe('schema validation', () => {
     expect(validator({ ...datum, time: '2008-01-01T00:00:00.000Z' })).to.be.true;
 
     // Should fail when provided time isn't a date after 2008
-    expect(_.find(validator({ ...datum, time: '2007-12-31T23:59:59.000Z' }), { field: 'time' }).message).to.equal('Must be an ISO datetime after 2008');
+    expect(_.find(validator({ ...datum, time: '2007-12-31T23:59:59.000Z' }), { field: 'time' }).message).to.equal('The \'time\' field fails to match the required pattern!');
   };
 
   context('basal', () => {
@@ -108,7 +108,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `rate`', () => {
-      expect(_.find(Validator.basal(negativeRate), { field: 'rate' }).message).to.equal('The \'rate\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.basal(negativeRate), { field: 'rate' }).message).to.equal('The \'rate\' field must be larger than or equal to 0!');
     });
 
     it('should return an error for an invalid `deliveryType`', () => {
@@ -125,7 +125,7 @@ describe('schema validation', () => {
 
       expect(_.find(Validator.basal(suppressedMissingRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field is required!');
 
-      expect(_.find(Validator.basal(suppressedNegativeRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.basal(suppressedNegativeRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field must be larger than or equal to 0!');
 
       const invalidDeliveryTypeResult = Validator.basal(suppressedInvalidDeliveryType);
       expect(_.find(invalidDeliveryTypeResult, { field: 'suppressed.deliveryType' }).message).to.equal('The \'suppressed.deliveryType\' field does not match any of the allowed values!');
@@ -170,7 +170,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `normal`', () => {
-        expect(_.find(Validator.bolus.normal(negativeNormal), { field: 'normal' }).message).to.equal('The \'normal\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.normal(negativeNormal), { field: 'normal' }).message).to.equal('The \'normal\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero or positive `expectedNormal`', () => {
@@ -179,7 +179,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `expectedNormal`', () => {
-        expect(_.find(Validator.bolus.normal(negativeExpectedNormal), { field: 'expectedNormal' }).message).to.equal('The \'expectedNormal\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.normal(negativeExpectedNormal), { field: 'expectedNormal' }).message).to.equal('The \'expectedNormal\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for an `expectedNormal` that\'s missing the `normal` field', () => {
@@ -259,7 +259,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `duration`', () => {
-        expect(_.find(Validator.bolus.extended(negativeDuration), { field: 'duration' }).message).to.equal('The \'duration\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.extended(negativeDuration), { field: 'duration' }).message).to.equal('The \'duration\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `expectedDuration`', () => {
@@ -267,7 +267,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `expectedDuration`', () => {
-        expect(_.find(Validator.bolus.extended(negativeExpectedDuration), { field: 'expectedDuration' }).message).to.equal('The \'expectedDuration\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.extended(negativeExpectedDuration), { field: 'expectedDuration' }).message).to.equal('The \'expectedDuration\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `extended`', () => {
@@ -279,7 +279,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `extended`', () => {
-        expect(_.find(Validator.bolus.extended(negativeExtended), { field: 'extended' }).message).to.equal('The \'extended\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.extended(negativeExtended), { field: 'extended' }).message).to.equal('The \'extended\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero or positive `expectedExtended`', () => {
@@ -288,7 +288,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `expectedExtended`', () => {
-        expect(_.find(Validator.bolus.extended(negativeExpectedExtended), { field: 'expectedExtended' }).message).to.equal('The \'expectedExtended\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.extended(negativeExpectedExtended), { field: 'expectedExtended' }).message).to.equal('The \'expectedExtended\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for an `expectedExtended` that\'s missing the `extended` field', () => {
@@ -308,7 +308,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `normal`', () => {
-        expect(_.find(Validator.bolus.extended(negativeNormal), { field: 'normal' }).message).to.equal('The \'normal\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.extended(negativeNormal), { field: 'normal' }).message).to.equal('The \'normal\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero or positive `expectedNormal`', () => {
@@ -317,7 +317,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `expectedNormal`', () => {
-        expect(_.find(Validator.bolus.extended(negativeExpectedNormal), { field: 'expectedNormal' }).message).to.equal('The \'expectedNormal\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.bolus.extended(negativeExpectedNormal), { field: 'expectedNormal' }).message).to.equal('The \'expectedNormal\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for an `expectedNormal` that\'s missing the `normal` field', () => {
@@ -416,7 +416,7 @@ describe('schema validation', () => {
     });
 
     it('should fail when provided time isn\'t a date after 2008', () => {
-      expect(_.find(Validator.message({ ...message, time: '2007-12-31T23:59:59.000Z' }), { field: 'time' }).message).to.equal('Must be an ISO datetime after 2008');
+      expect(_.find(Validator.message({ ...message, time: '2007-12-31T23:59:59.000Z' }), { field: 'time' }).message).to.equal('The \'time\' field fails to match the required pattern!');
     });
 
     it('should pass when provided `parentMessage` is `null`', () => {
@@ -479,7 +479,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.animas(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `bgTarget[0].start` greater than MS_IN_DAY', () => {
@@ -492,7 +492,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].target`', () => {
-        expect(_.find(Validator.pumpSettings.animas(bgTargetNegativeTarget), { field: 'bgTarget[0].target' }).message).to.equal('The \'bgTarget[0].target\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(bgTargetNegativeTarget), { field: 'bgTarget[0].target' }).message).to.equal('The \'bgTarget[0].target\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `bgTarget[0].range`', () => {
@@ -500,7 +500,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].range`', () => {
-        expect(_.find(Validator.pumpSettings.animas(bgTargetNegativeRange), { field: 'bgTarget[0].range' }).message).to.equal('The \'bgTarget[0].range\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(bgTargetNegativeRange), { field: 'bgTarget[0].range' }).message).to.equal('The \'bgTarget[0].range\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a forbidden `bgTarget[0].low`', () => {
@@ -516,7 +516,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatio[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.animas(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `carbRatio[0].start` greater than MS_IN_DAY', () => {
@@ -529,7 +529,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatio[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.animas(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `insulinSensitivity[0].start`', () => {
@@ -537,7 +537,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivity[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.animas(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `insulinSensitivity[0].start` greater than MS_IN_DAY', () => {
@@ -550,7 +550,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivity[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.animas(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
@@ -558,7 +558,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.animas(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
@@ -571,7 +571,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
-        expect(_.find(Validator.pumpSettings.animas(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.animas(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
 
@@ -621,7 +621,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `bgTarget[0].start` greater than MS_IN_DAY', () => {
@@ -634,7 +634,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].low`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(bgTargetNegativeLow), { field: 'bgTarget[0].low' }).message).to.equal('The \'bgTarget[0].low\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(bgTargetNegativeLow), { field: 'bgTarget[0].low' }).message).to.equal('The \'bgTarget[0].low\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `bgTarget[0].high`', () => {
@@ -642,7 +642,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].high`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(bgTargetNegativeHigh), { field: 'bgTarget[0].high' }).message).to.equal('The \'bgTarget[0].high\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(bgTargetNegativeHigh), { field: 'bgTarget[0].high' }).message).to.equal('The \'bgTarget[0].high\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a forbidden `bgTarget[0].target`', () => {
@@ -658,7 +658,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatio[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `carbRatio[0].start` greater than MS_IN_DAY', () => {
@@ -671,7 +671,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatio[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `insulinSensitivity[0].start`', () => {
@@ -679,7 +679,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivity[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `insulinSensitivity[0].start` greater than MS_IN_DAY', () => {
@@ -692,7 +692,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivity[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
@@ -700,7 +700,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
@@ -713,7 +713,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
-        expect(_.find(Validator.pumpSettings.medtronic(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.medtronic(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
 
@@ -763,7 +763,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `bgTarget[0].start` greater than MS_IN_DAY', () => {
@@ -776,7 +776,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].target`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(bgTargetNegativeTarget), { field: 'bgTarget[0].target' }).message).to.equal('The \'bgTarget[0].target\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(bgTargetNegativeTarget), { field: 'bgTarget[0].target' }).message).to.equal('The \'bgTarget[0].target\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `bgTarget[0].high`', () => {
@@ -784,7 +784,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTarget[0].high`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(bgTargetNegativeHigh), { field: 'bgTarget[0].high' }).message).to.equal('The \'bgTarget[0].high\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(bgTargetNegativeHigh), { field: 'bgTarget[0].high' }).message).to.equal('The \'bgTarget[0].high\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a forbidden `bgTarget[0].low`', () => {
@@ -800,7 +800,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatio[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `carbRatio[0].start` greater than MS_IN_DAY', () => {
@@ -813,7 +813,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatio[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `insulinSensitivity[0].start`', () => {
@@ -821,7 +821,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivity[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `insulinSensitivity[0].start` greater than MS_IN_DAY', () => {
@@ -834,7 +834,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivity[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
@@ -842,7 +842,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
@@ -855,7 +855,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
-        expect(_.find(Validator.pumpSettings.omnipod(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.omnipod(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
 
@@ -904,7 +904,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTargets[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(bgTargetsNegativeStart)[0], { field: 'bgTargets[0].start' }).message).to.equal('The \'bgTargets[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(bgTargetsNegativeStart)[0], { field: 'bgTargets[0].start' }).message).to.equal('The \'bgTargets[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `bgTargets[0].start` greater than MS_IN_DAY', () => {
@@ -917,7 +917,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `bgTargets[0].target`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(bgTargetsNegativeTarget)[0], { field: 'bgTargets[0].target' }).message).to.equal('The \'bgTargets[0].target\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(bgTargetsNegativeTarget)[0], { field: 'bgTargets[0].target' }).message).to.equal('The \'bgTargets[0].target\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a forbidden `bgTargets[0].low`', () => {
@@ -937,7 +937,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatios[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(carbRatiosNegativeStart)[0], { field: 'carbRatios[0].start' }).message).to.equal('The \'carbRatios[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(carbRatiosNegativeStart)[0], { field: 'carbRatios[0].start' }).message).to.equal('The \'carbRatios[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `carbRatios[0].start` greater than MS_IN_DAY', () => {
@@ -950,7 +950,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `carbRatios[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(carbRatiosNegativeAmount)[0], { field: 'carbRatios[0].amount' }).message).to.equal('The \'carbRatios[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(carbRatiosNegativeAmount)[0], { field: 'carbRatios[0].amount' }).message).to.equal('The \'carbRatios[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `insulinSensitivities[0].start`', () => {
@@ -958,7 +958,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivities[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(insulinSensitivitiesNegativeStart)[0], { field: 'insulinSensitivities[0].start' }).message).to.equal('The \'insulinSensitivities[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(insulinSensitivitiesNegativeStart)[0], { field: 'insulinSensitivities[0].start' }).message).to.equal('The \'insulinSensitivities[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `insulinSensitivities[0].start` greater than MS_IN_DAY', () => {
@@ -971,7 +971,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `insulinSensitivities[0].amount`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(insulinSensitivitiesNegativeAmount)[0], { field: 'insulinSensitivities[0].amount' }).message).to.equal('The \'insulinSensitivities[0].amount\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(insulinSensitivitiesNegativeAmount)[0], { field: 'insulinSensitivities[0].amount' }).message).to.equal('The \'insulinSensitivities[0].amount\' field must be larger than or equal to 0!');
       });
 
       it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
@@ -979,7 +979,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
       });
 
       it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
@@ -992,7 +992,7 @@ describe('schema validation', () => {
       });
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
-        expect(_.find(Validator.pumpSettings.tandem(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be greater than or equal to 0!');
+        expect(_.find(Validator.pumpSettings.tandem(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
   });
@@ -1062,7 +1062,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `bgInput`', () => {
-      expect(_.find(Validator.wizard(negativeBgInput), { field: 'bgInput' }).message).to.equal('The \'bgInput\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.wizard(negativeBgInput), { field: 'bgInput' }).message).to.equal('The \'bgInput\' field must be larger than or equal to 0!');
     });
 
     it('should return an error for missing `bolus`', () => {
@@ -1074,7 +1074,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `carbInput`', () => {
-      expect(_.find(Validator.wizard(negativeCarbInput), { field: 'carbInput' }).message).to.equal('The \'carbInput\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.wizard(negativeCarbInput), { field: 'carbInput' }).message).to.equal('The \'carbInput\' field must be larger than or equal to 0!');
     });
 
     it('should pass for zero `insulinCarbRatio`', () => {
@@ -1082,7 +1082,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `insulinCarbRatio`', () => {
-      expect(_.find(Validator.wizard(negativeInsulinCarbRatio), { field: 'insulinCarbRatio' }).message).to.equal('The \'insulinCarbRatio\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.wizard(negativeInsulinCarbRatio), { field: 'insulinCarbRatio' }).message).to.equal('The \'insulinCarbRatio\' field must be larger than or equal to 0!');
     });
 
     it('should pass for zero `insulinOnBoard`', () => {
@@ -1090,7 +1090,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `insulinOnBoard`', () => {
-      expect(_.find(Validator.wizard(negativeInsulinOnBoard), { field: 'insulinOnBoard' }).message).to.equal('The \'insulinOnBoard\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.wizard(negativeInsulinOnBoard), { field: 'insulinOnBoard' }).message).to.equal('The \'insulinOnBoard\' field must be larger than or equal to 0!');
     });
 
     it('should pass for zero `insulinSensitivity`', () => {
@@ -1098,7 +1098,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `insulinSensitivity`', () => {
-      expect(_.find(Validator.wizard(negativeInsulinSensitivity), { field: 'insulinSensitivity' }).message).to.equal('The \'insulinSensitivity\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.wizard(negativeInsulinSensitivity), { field: 'insulinSensitivity' }).message).to.equal('The \'insulinSensitivity\' field must be larger than or equal to 0!');
     });
 
     it('should pass for zero `recommended.carb`', () => {
@@ -1106,7 +1106,7 @@ describe('schema validation', () => {
     });
 
     it('should return an error for a negative `recommended.carb`', () => {
-      expect(_.find(Validator.wizard(recommendedNegativeCarb), { field: 'recommended.carb' }).message).to.equal('The \'recommended.carb\' field must be greater than or equal to 0!');
+      expect(_.find(Validator.wizard(recommendedNegativeCarb), { field: 'recommended.carb' }).message).to.equal('The \'recommended.carb\' field must be larger than or equal to 0!');
     });
 
     it('should return an error for an non-numeric `recommended.correction` code', () => {
