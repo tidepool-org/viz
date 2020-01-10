@@ -114,8 +114,7 @@ describe('SMBGDatePointsAnimated', () => {
         .find(`#smbg-${data[0].id}`);
       expect(focusSmbg.callCount).to.equal(0);
       smbgCircle.simulate('mouseover');
-      expect(focusSmbg.args[0][0]).to.equal(props.userId);
-      expect(focusSmbg.args[0][1]).to.deep.equal(data[0]);
+      expect(focusSmbg.args[0][0]).to.deep.equal(data[0]);
       expect(focusSmbg.callCount).to.equal(1);
     });
 

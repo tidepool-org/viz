@@ -31,6 +31,8 @@ const SMBGsByDateContainer = (props) => {
     anSmbgRangeAvgIsFocused,
     bgBounds,
     dates,
+    focusSmbg,
+    unfocusSmbg,
     focusedSmbg,
     grouped,
     lines,
@@ -61,6 +63,8 @@ const SMBGsByDateContainer = (props) => {
           bgBounds={bgBounds}
           data={dateData}
           date={date}
+          focusSmbg={focusSmbg}
+          unfocusSmbg={unfocusSmbg}
           focusedDay={focusedDay}
           grouped={grouped}
           key={date}
@@ -78,6 +82,8 @@ const SMBGsByDateContainer = (props) => {
           bgBounds={bgBounds}
           data={focusedSmbg.allSmbgsOnDate}
           date={focusedDay}
+          focusSmbg={focusSmbg}
+          unfocusSmbg={unfocusSmbg}
           key={`${focusedDay}-focused`}
           focusedDay={focusedDay}
           grouped={grouped}
@@ -99,6 +105,8 @@ const SMBGsByDateContainer = (props) => {
         bgBounds={bgBounds}
         data={smbgs}
         date={date}
+        focusSmbg={focusSmbg}
+        unfocusSmbg={unfocusSmbg}
         grouped={grouped}
         isFocused={focusedDay === date}
         key={date}
@@ -137,6 +145,8 @@ SMBGsByDateContainer.propTypes = {
     value: PropTypes.number.isRequired,
   })).isRequired,
   dates: PropTypes.arrayOf(PropTypes.string).isRequired,
+  focusSmbg: PropTypes.func.isRequired,
+  unfocusSmbg: PropTypes.func.isRequired,
   focusedSmbg: PropTypes.shape({
     allPositions: PropTypes.arrayOf(PropTypes.shape({
       top: PropTypes.number.isRequired,

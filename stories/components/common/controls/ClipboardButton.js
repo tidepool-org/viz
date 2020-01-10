@@ -25,7 +25,6 @@ const tandemMultiRateData = require('../../../../data/pumpSettings/tandem/multir
 /* eslint-disable max-len */
 
 const data = {
-  stats: {},
   settings: {
     animas: {
       flatrate: animasFlatRateData,
@@ -49,21 +48,21 @@ const data = {
 
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data.stats.trends = require('../../../../local/stats-trends.json');
+  data.trends = require('../../../../local/data-trends.json');
 } catch (e) {
-  data.stats.trends = {};
+  data.trends = {};
 }
 
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data.stats.basics = require('../../../../local/stats-basics.json');
+  data.basics = require('../../../../local/data-basics.json');
 } catch (e) {
-  data.stats.basics = {};
+  data.basics = {};
 }
 
-const notes = `Run \`window.downloadStatsData()\` from the console on a Tidepool Web basics and/or
+const notes = `Run \`window.downloadChartData()\` from the console on a Tidepool Web basics and/or
 trends data view. Save the resulting file to the \`local/\` directory of viz as
-\`stats-[basics|trends].json\`, and then use this story to iterate on the copied text`;
+\`data-[basics|trends].json\`, and then use this story to iterate on the copied text`;
 
 const Wrapper = ({ children }) => (
   <div
@@ -188,7 +187,7 @@ stories.add('Trends Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={trendsText.bind(this, profiles.standard, data.stats.trends.stats, data.stats.trends.endpoints, data.stats.trends.bgPrefs, data.stats.trends.timePrefs, data.stats.trends.chartPrefs)}
+      getText={trendsText.bind(this, profiles.standard, data.trends.data, data.trends.stats, data.trends.chartPrefs)}
     />
   </Wrapper>
 ), { notes });
@@ -197,7 +196,7 @@ stories.add('Basics Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={basicsText.bind(this, profiles.standard, data.stats.basics.stats, data.stats.basics.endpoints, data.stats.basics.bgPrefs, data.stats.basics.timePrefs, data.stats.basics.data)}
+      getText={basicsText.bind(this, profiles.standard, data.basics.data, data.basics.stats, data.basics.aggregations)}
     />
   </Wrapper>
 ), { notes });

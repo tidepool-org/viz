@@ -40,6 +40,23 @@ export const MGDL_UNITS = t('mg/dL');
 export const MMOLL_UNITS = t('mmol/L');
 export const MGDL_PER_MMOLL = 18.01559;
 
+export const DEFAULT_BG_BOUNDS = {
+  [MGDL_UNITS]: {
+    veryLowThreshold: 54,
+    targetLowerBound: 70,
+    targetUpperBound: 180,
+    veryHighThreshold: 250,
+    clampThreshold: 600,
+  },
+  [MMOLL_UNITS]: {
+    veryLowThreshold: 3.0,
+    targetLowerBound: 3.9,
+    targetUpperBound: 10.0,
+    veryHighThreshold: 13.9,
+    clampThreshold: 33.3,
+  },
+};
+
 export const LBS_PER_KG = 2.2046226218;
 
 const ONE_WEEK = 7;
@@ -55,9 +72,6 @@ export const MS_IN_MIN = MS_IN_HOUR / 60;
 export const CGM_READINGS_ONE_DAY = 288;
 export const CGM_DATA_KEY = 'cbg';
 export const BGM_DATA_KEY = 'smbg';
-export const NO_CGM = 'noCGM';
-export const CGM_CALCULATED = 'calculatedCGM';
-export const NOT_ENOUGH_CGM = 'notEnoughCGM';
 
 export const NO_SITE_CHANGE = 'noSiteChange';
 export const SITE_CHANGE = 'siteChange';
@@ -68,7 +82,7 @@ export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 
-export const SECTION_TYPE_UNDECLARED = 'undeclared';
+export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
 export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';

@@ -47,6 +47,20 @@ export function getBolusFromInsulinEvent(insulinEvent) {
 }
 
 /**
+ * getWizardFromInsulinEvent
+ * @param {Object} insulinEvent - a Tidepool wizard or bolus object
+ *
+ * @return {Object} a Tidepool wizard object
+ */
+export function getWizardFromInsulinEvent(insulinEvent) {
+  let wizard = insulinEvent;
+  if (insulinEvent.wizard) {
+    wizard = insulinEvent.wizard;
+  }
+  return wizard;
+}
+
+/**
  * getCarbs
  * @param {Object} insulinEvent - a Tidepool wizard or bolus object
  *
@@ -54,10 +68,10 @@ export function getBolusFromInsulinEvent(insulinEvent) {
  *                  NaN if bolus calculator not used; null if no carbInput
  */
 export function getCarbs(insulinEvent) {
-  if (insulinEvent.type !== 'wizard') {
+  if (insulinEvent.type !== 'wizard' && !insulinEvent.wizard) {
     return NaN;
   }
-  return _.get(insulinEvent, 'carbInput', null);
+  return _.get(getWizardFromInsulinEvent(insulinEvent), 'carbInput', null);
 }
 
 /**
@@ -318,7 +332,7 @@ export function isInterruptedBolus(insulinEvent) {
  * @return {Boolean} whether the bolus programmed was larger than the calculated recommendation
  */
 export function isOverride(insulinEvent) {
-  return getRecommended(insulinEvent) < getProgrammed(insulinEvent);
+  return getRecommended(insulinEvent.wizard || insulinEvent) < getProgrammed(insulinEvent);
 }
 
 /**
@@ -328,7 +342,18 @@ export function isOverride(insulinEvent) {
  * @return {Boolean} whether the bolus programmed was smaller than the calculated recommendation
  */
 export function isUnderride(insulinEvent) {
-  return getRecommended(insulinEvent) > getProgrammed(insulinEvent);
+  return getRecommended(insulinEvent.wizard || insulinEvent) > getProgrammed(insulinEvent);
+}
+
+/**
+ * isCorrection
+ * @param {Object} insulinEvent - a Tidepool bolus or wizard object
+ *
+ * @return {Boolean} whether the bolus programmed a recommended bg correction without carb entry
+ */
+export function isCorrection(insulinEvent) {
+  const recommended = _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
+  return !!(recommended && recommended.correction > 0 && recommended.carb === 0);
 }
 
 /**

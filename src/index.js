@@ -34,13 +34,17 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
-import reducers from './redux/reducers/';
-
 import { formatBgValue } from './utils/format';
 import { reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { isAutomatedBasalDevice } from './utils/device';
-import { addDuration, getLocalizedCeiling, getTimezoneFromTimePrefs } from './utils/datetime';
+import { DEFAULT_BG_BOUNDS } from './utils/constants';
+
+import {
+  getLocalizedCeiling,
+  getTimezoneFromTimePrefs,
+} from './utils/datetime';
+
 import {
   commonStats,
   getStatAnnotations,
@@ -50,10 +54,15 @@ import {
   statBgSourceLabels,
   statFetchMethods,
 } from './utils/stat';
-import DataUtil from './utils/data';
+
 import { trendsText } from './utils/trends/data';
-import { basicsText } from './utils/basics/data';
-import { selectDailyViewData, selectBgLogViewData } from './utils/print/data';
+
+import {
+  basicsText,
+  findBasicsStart,
+  defineBasicsAggregations,
+  processBasicsAggregations,
+} from './utils/basics/data';
 
 const i18next = require('i18next');
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
@@ -91,13 +100,11 @@ const utils = {
     formatBgValue,
     reshapeBgClassesToBgBounds,
   },
-  data: {
-    selectDailyViewData,
-    selectBgLogViewData,
-    DataUtil,
+  constants: {
+    DEFAULT_BG_BOUNDS,
   },
   datetime: {
-    addDuration,
+    findBasicsStart,
     getLocalizedCeiling,
     getTimezoneFromTimePrefs,
   },
@@ -113,6 +120,10 @@ const utils = {
     statBgSourceLabels,
     statFetchMethods,
   },
+  aggregation: {
+    defineBasicsAggregations,
+    processBasicsAggregations,
+  },
   text: {
     trendsText,
     basicsText,
@@ -123,5 +134,4 @@ export {
   components,
   containers,
   utils,
-  reducers,
 };

@@ -15,12 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
-import _ from 'lodash';
 import React, { PropTypes } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
-import * as actions from '../../../redux/actions/';
 import LabeledCheckbox from '../../common/controls/LabeledCheckbox';
 
 import styles from './RangeSelect.css';
@@ -34,29 +30,29 @@ export const RangeSelect = (props) => (
       checked={props.displayFlags.cbg100Enabled}
       name="hundred"
       label={t('100% of Readings')}
-      onFn={_.partial(props.turnOnCbgRange, '100')}
-      offFn={_.partial(props.turnOffCbgRange, '100')}
+      onFn={props.updateCbgRange.bind(this, 'cbg100Enabled', true)}
+      offFn={props.updateCbgRange.bind(this, 'cbg100Enabled', false)}
     />
     <LabeledCheckbox
       checked={props.displayFlags.cbg80Enabled}
       name="eighty"
       label={t('80% of Readings')}
-      onFn={_.partial(props.turnOnCbgRange, '80')}
-      offFn={_.partial(props.turnOffCbgRange, '80')}
+      onFn={props.updateCbgRange.bind(this, 'cbg80Enabled', true)}
+      offFn={props.updateCbgRange.bind(this, 'cbg80Enabled', false)}
     />
     <LabeledCheckbox
       checked={props.displayFlags.cbg50Enabled}
       name="fifty"
       label={t('50% of Readings')}
-      onFn={_.partial(props.turnOnCbgRange, '50')}
-      offFn={_.partial(props.turnOffCbgRange, '50')}
+      onFn={props.updateCbgRange.bind(this, 'cbg50Enabled', true)}
+      offFn={props.updateCbgRange.bind(this, 'cbg50Enabled', false)}
     />
     <LabeledCheckbox
       checked={props.displayFlags.cbgMedianEnabled}
       name="median"
       label={t('Median')}
-      onFn={_.partial(props.turnOnCbgRange, 'median')}
-      offFn={_.partial(props.turnOffCbgRange, 'median')}
+      onFn={props.updateCbgRange.bind(this, 'cbgMedianEnabled', true)}
+      offFn={props.updateCbgRange.bind(this, 'cbgMedianEnabled', false)}
     />
   </div>
 );
@@ -68,23 +64,7 @@ RangeSelect.propTypes = {
     cbg50Enabled: PropTypes.bool.isRequired,
     cbgMedianEnabled: PropTypes.bool.isRequired,
   }).isRequired,
-  turnOnCbgRange: PropTypes.func.isRequired,
-  turnOffCbgRange: PropTypes.func.isRequired,
-  currentPatientInViewId: PropTypes.string.isRequired,
+  updateCbgRange: PropTypes.func.isRequired,
 };
 
-export function mapDispatchToProps(dispatch, ownProps) {
-  return bindActionCreators({
-    turnOnCbgRange: _.partial(
-      actions.turnOnCbgRange, ownProps.currentPatientInViewId
-    ),
-    turnOffCbgRange: _.partial(
-      actions.turnOffCbgRange, ownProps.currentPatientInViewId
-    ),
-  }, dispatch);
-}
-
-export default connect(
-  null,
-  mapDispatchToProps,
-)(RangeSelect);
+export default RangeSelect;

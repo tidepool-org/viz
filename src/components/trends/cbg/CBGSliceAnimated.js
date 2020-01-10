@@ -59,6 +59,8 @@ export class CBGSliceAnimated extends PureComponent {
       cbg50Enabled: PropTypes.bool.isRequired,
       cbgMedianEnabled: PropTypes.bool.isRequired,
     }).isRequired,
+    focusCbgSlice: PropTypes.func.isRequired,
+    unfocusCbgSlice: PropTypes.func.isRequired,
     showingCbgDateTraces: PropTypes.bool.isRequired,
     sliceWidth: PropTypes.number.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
@@ -214,6 +216,8 @@ export class CBGSliceAnimated extends PureComponent {
                   <CBGSliceSegment
                     classes={classes}
                     datum={datum}
+                    focusSlice={this.props.focusCbgSlice}
+                    unfocusSlice={this.props.unfocusCbgSlice}
                     interpolated={interpolated}
                     key={interpolated.key}
                     positionData={{

@@ -25,7 +25,6 @@ import PrintView from '../../src/modules/print/PrintView';
 
 import * as profiles from '../../data/patient/profiles';
 import * as settings from '../../data/patient/settings';
-import { data as dataStub } from '../../data/patient/data';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
@@ -33,12 +32,12 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
 const stories = storiesOf('Combined Views PDF', module);
 
-let data;
+let queries;
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data = require('../../local/print-view.json');
+  queries = require('../../local/PDFDataQueries.json');
 } catch (e) {
-  data = dataStub;
+  queries = {};
 }
 
 const bgBounds = {
@@ -56,7 +55,7 @@ const bgBounds = {
   },
 };
 
-function openPDF({ patient, bgUnits = MGDL_UNITS }) {
+function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
@@ -75,10 +74,18 @@ function openPDF({ patient, bgUnits = MGDL_UNITS }) {
     patient,
   };
 
-  createPrintView('basics', data[bgUnits].basics, opts, doc).render();
-  createPrintView('daily', data[bgUnits].daily, opts, doc).render();
-  createPrintView('bgLog', data[bgUnits].bgLog, opts, doc).render();
-  createPrintView('settings', data[bgUnits].settings, opts, doc).render();
+  const data = {};
+
+  if (queries) {
+    _.each(queries, (query, key) => {
+      data[key] = dataUtil.query(query);
+    });
+  }
+
+  createPrintView('basics', data.basics, opts, doc).render();
+  createPrintView('daily', data.daily, opts, doc).render();
+  createPrintView('bgLog', data.bgLog, opts, doc).render();
+  createPrintView('settings', data.settings, opts, doc).render();
 
   PrintView.renderPageNumbers(doc);
 
@@ -96,9 +103,9 @@ and then use this story to iterate on the Combined Print PDF outside of Tidepool
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
 
-stories.add(`standard account (${MGDL_UNITS})`, () => (
+stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({ patient: {
+    onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.standard,
       ...settings.cannulaPrimeSelected,
     } })}
@@ -107,9 +114,9 @@ stories.add(`standard account (${MGDL_UNITS})`, () => (
   </button>
 ), { notes });
 
-stories.add(`standard account (${MMOLL_UNITS})`, () => (
+stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({
+    onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.cannulaPrimeSelected,
@@ -121,9 +128,9 @@ stories.add(`standard account (${MMOLL_UNITS})`, () => (
   </button>
 ), { notes });
 
-stories.add('fake child account', () => (
+stories.add('fake child account', ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({ patient: {
+    onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.fakeChildAcct,
       ...settings.tubingPrimeSelected,
     } })}
@@ -132,9 +139,9 @@ stories.add('fake child account', () => (
   </button>
 ), { notes });
 
-stories.add('long patient name', () => (
+stories.add('long patient name', ({ dataUtil }) => (
   <button
-    onClick={() => openPDF({ patient: {
+    onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.longName,
       ...settings.tubingPrimeSelected,
     } })}
