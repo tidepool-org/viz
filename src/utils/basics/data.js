@@ -296,8 +296,8 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
 export function findBasicsDays(range, timezone = 'UTC') {
   const days = [];
   let currentDate = moment.utc(range[0]).tz(timezone).toDate();
-  const dateOfUpload = moment.utc(range[1]).tz(timezone).format('YYYY-MM-DD');
-  while (currentDate < moment.utc(range[1]).tz(timezone).endOf('isoWeek')) {
+  const dateOfUpload = moment.utc(range[1]).subtract(1, 'ms').tz(timezone).format('YYYY-MM-DD');
+  while (currentDate < moment.utc(range[1]).subtract(1, 'ms').tz(timezone).endOf('isoWeek')) {
     const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
     const dateObj = { date };
     if (date < dateOfUpload) {
