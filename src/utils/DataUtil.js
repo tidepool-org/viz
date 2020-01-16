@@ -1001,6 +1001,7 @@ export class DataUtil {
 
     const end = moment.utc(start).tz(timezone)
       .add(this.activeEndpoints.days, 'days')
+      .subtract(1, 'ms')
       .endOf('day')
       .valueOf();
 
@@ -1120,7 +1121,33 @@ export class DataUtil {
 
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
-      _.each(typeData, d => this.normalizeDatumOut(d, fields));
+      if (type === 'basal' && _.includes(['prev', 'next'], this.activeRange)) {
+        typeData = this.sort.byTime(typeData);
+        if (this.activeRange === 'prev') {
+          // Normalize the basal data an add any basals overlapping the start
+          typeData = this.addBasalOverlappingStart(typeData);
+
+          // Trim the first basal if it overlaps the start
+          if (typeData.length) {
+            typeData[0].normalTime = _.max([
+              typeData[0].normalTime,
+              this.activeEndpoints.range[0],
+            ]);
+          }
+        } else {
+          _.each(typeData, d => this.normalizeDatumOut(d, fields));
+
+          // Trim last basal if it overlaps the range end
+          if (typeData.length) {
+            typeData[typeData.length - 1].normalEnd = _.min([
+              typeData[typeData.length - 1].normalEnd,
+              this.activeEndpoints.range[1],
+            ]);
+          }
+        }
+      } else {
+        _.each(typeData, d => this.normalizeDatumOut(d, fields));
+      }
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
 
       // Sort data
