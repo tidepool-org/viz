@@ -690,7 +690,9 @@ export class DataUtil {
     };
 
     if (endpoints) {
+      const { timezoneName } = this.timePrefs;
       const days = moment.utc(endpoints[1]).diff(moment.utc(endpoints[0])) / MS_IN_DAY;
+
       this.endpoints.current = {
         range: _.map(endpoints, e => moment.utc(e).valueOf()),
         days,
@@ -706,6 +708,15 @@ export class DataUtil {
           days: nextDays,
           activeDays: nextDays,
         };
+
+        const nextStartIsDST = moment.utc(this.endpoints.next.range[0]).tz(timezoneName).isDST();
+        const nextEndIsDST = moment.utc(this.endpoints.next.range[1]).tz(timezoneName).isDST();
+        const nextOverlapsDSTChangeover = nextStartIsDST !== nextEndIsDST;
+
+        if (nextOverlapsDSTChangeover) {
+          const offset = nextEndIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
+          this.endpoints.next.range[1] = this.endpoints.next.range[1] + offset;
+        }
       }
 
       if (prevDays > 0) {
@@ -717,6 +728,15 @@ export class DataUtil {
           days: prevDays,
           activeDays: prevDays,
         };
+
+        const prevStartIsDST = moment.utc(this.endpoints.prev.range[0]).tz(timezoneName).isDST();
+        const prevEndIsDST = moment.utc(this.endpoints.prev.range[1]).tz(timezoneName).isDST();
+        const prevOverlapsDSTChangeover = prevStartIsDST !== prevEndIsDST;
+
+        if (prevOverlapsDSTChangeover) {
+          const offset = prevStartIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
+          this.endpoints.prev.range[0] = this.endpoints.prev.range[0] + offset;
+        }
       }
     }
     this.endTimer('setEndpoints');
