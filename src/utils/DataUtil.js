@@ -568,7 +568,7 @@ export class DataUtil {
     const bgSources = {
       cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
       smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
-      current,
+      current: _.includes([CGM_DATA_KEY, BGM_DATA_KEY], current) ? current : undefined,
     };
 
     if (!bgSources.current) {
