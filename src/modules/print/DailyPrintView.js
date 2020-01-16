@@ -75,7 +75,7 @@ class DailyPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
 
-    this.isAutomatedBasalDevice = this.latestPumpUpload.isAutomatedBasalDevice;
+    this.isAutomatedBasalDevice = _.get(this, 'latestPumpUpload.isAutomatedBasalDevice', false);
 
     const deviceLabels = getPumpVocabulary(this.manufacturer);
 
