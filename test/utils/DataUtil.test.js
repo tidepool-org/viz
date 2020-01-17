@@ -2104,6 +2104,47 @@ describe('DataUtil', () => {
           activeDays: 2,
         });
       });
+
+      it('should adjust next days end endpoint if the next range overlaps a DST changeover if timezoneAware', () => {
+        dataUtil.setTimePrefs({
+          timeZoneAware: true,
+          timezoneName: 'US/Eastern',
+        });
+
+        delete dataUtil.endpoints;
+
+        const nextStartIsDSTEndpoints = [
+          '2019-11-02T04:00:00.000Z',
+          '2019-11-03T04:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(nextStartIsDSTEndpoints, 2);
+        expect(dataUtil.endpoints.next).to.eql({
+          range: [
+            moment.utc(nextStartIsDSTEndpoints[1]).valueOf(),
+            moment.utc(nextStartIsDSTEndpoints[1]).add(2, 'days').valueOf() + MS_IN_HOUR,
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+
+        delete dataUtil.endpoints;
+
+        const nextEndIsDSTEndpoints = [
+          '2019-03-09T04:00:00.000Z',
+          '2019-03-10T04:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(nextEndIsDSTEndpoints, 2);
+        expect(dataUtil.endpoints.next).to.eql({
+          range: [
+            moment.utc(nextEndIsDSTEndpoints[1]).valueOf(),
+            moment.utc(nextEndIsDSTEndpoints[1]).add(2, 'days').valueOf() - MS_IN_HOUR,
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+      });
     });
 
     context('prevDays arg provided', () => {
@@ -2115,6 +2156,48 @@ describe('DataUtil', () => {
           range: [
             moment.utc(twoDayEndpoints[0]).subtract(2, 'days').valueOf(),
             moment.utc(twoDayEndpoints[0]).valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+      });
+
+      it('should adjust prev days end endpoint if the prev range overlaps a DST changeover if timezoneAware', () => {
+        dataUtil.setTimePrefs({
+          timeZoneAware: true,
+          timezoneName: 'US/Eastern',
+        });
+
+        delete dataUtil.endpoints;
+
+        const prevStartIsDSTEndpoints = [
+          '2019-11-04T05:00:00.000Z',
+          '2019-11-05T05:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(prevStartIsDSTEndpoints, undefined, 2);
+        expect(dataUtil.endpoints.prev).to.eql({
+          range: [
+            moment.utc(prevStartIsDSTEndpoints[0]).subtract(2, 'days').valueOf() - MS_IN_HOUR,
+            moment.utc(prevStartIsDSTEndpoints[0]).valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+
+
+        delete dataUtil.endpoints;
+
+        const prevEndIsDSTEndpoints = [
+          '2019-03-12T05:00:00.000Z',
+          '2019-03-13T05:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(prevEndIsDSTEndpoints, undefined, 2);
+        expect(dataUtil.endpoints.prev).to.eql({
+          range: [
+            moment.utc(prevEndIsDSTEndpoints[0]).subtract(2, 'days').valueOf() + MS_IN_HOUR,
+            moment.utc(prevEndIsDSTEndpoints[0]).valueOf(),
           ],
           days: 2,
           activeDays: 2,
