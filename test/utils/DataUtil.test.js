@@ -2059,6 +2059,10 @@ describe('DataUtil', () => {
   });
 
   describe('setEndpoints', () => {
+    beforeEach(() => {
+      dataUtil.setTimePrefs(defaultTimePrefs);
+    });
+
     context('endpoints arg missing', () => {
       it('should set a default `endpoints.current.range` property', () => {
         delete dataUtil.endpoints;
@@ -2121,6 +2125,8 @@ describe('DataUtil', () => {
 
   describe('setActiveDays', () => {
     it('should set the activeDays prop if provided, and update the active days of the week for each endpoints range', () => {
+      dataUtil.setTimePrefs(defaultTimePrefs);
+
       dataUtil.setEndpoints(twoWeekEndpoints, 14, 14);
       expect(dataUtil.endpoints.current.activeDays).to.equal(14);
       expect(dataUtil.endpoints.next.activeDays).to.equal(14);
@@ -2603,8 +2609,8 @@ describe('DataUtil', () => {
         const result = dataUtil.query(createQuery({
           fillData: fillDataOpts,
           endpoints: dayEndpoints,
-          nextDays: 1,
-          prevDays: 1,
+          nextDays: 2,
+          prevDays: 2,
         }));
 
         sinon.assert.calledThrice(dataUtil.getFillData);
@@ -2621,7 +2627,7 @@ describe('DataUtil', () => {
           dataUtil.getFillData,
           [
             moment.utc(dayEndpoints[1]).valueOf(),
-            moment.utc(dayEndpoints[1]).add(1, 'day').valueOf(),
+            moment.utc(dayEndpoints[1]).add(2, 'days').valueOf(),
           ],
           fillDataOpts
         );
@@ -2629,15 +2635,14 @@ describe('DataUtil', () => {
         sinon.assert.calledWith(
           dataUtil.getFillData,
           [
-            moment.utc(dayEndpoints[0]).subtract(1, 'day').valueOf(),
+            moment.utc(dayEndpoints[0]).subtract(2, 'days').valueOf(),
             moment.utc(dayEndpoints[0]).valueOf(),
           ],
           fillDataOpts
         );
 
-        // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-        // which end up being 2 days in this case
-        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(16);
+        // Expecting 8 3hr fill bins for each day
+        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8);
         expect(result.data.next.data.fill).to.be.an('array').and.have.lengthOf(16);
         expect(result.data.prev.data.fill).to.be.an('array').and.have.lengthOf(16);
       });
@@ -2749,23 +2754,22 @@ describe('DataUtil', () => {
       const endpoints = _.map(dayEndpoints, Date.parse);
       let result = dataUtil.getFillData(endpoints);
 
-      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-      // which end up being 2 days in this case
-      expect(result).to.be.an('array').and.have.lengthOf(16);
+      // Expecting 8 3hr fill bins for each day
+      expect(result).to.be.an('array').and.have.lengthOf(8);
 
       expect(result[0].normalTime).to.equal(endpoints[0]); // GMT-0 for UTC
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
 
       delete(dataUtil.timePrefs);
       result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(16);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
 
       expect(result[0].normalTime).to.equal(endpoints[0]); // fallback to GMT-0 for UTC when not timezone-aware
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
 
       dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
       result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(16);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
 
       expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(19, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 5 hrs
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(16, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 8 hrs
@@ -2785,9 +2789,8 @@ describe('DataUtil', () => {
 
       const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
 
-      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-      // which end up being 2 days in this case
-      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      // Expecting 8 3hr fill bins for each day
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour later than start of next fill
@@ -2795,7 +2798,7 @@ describe('DataUtil', () => {
       expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(5, 'hours').valueOf());
 
       const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
-      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(2, 'hours').valueOf()); // End is adjusted to align to start of next fill
@@ -2817,9 +2820,8 @@ describe('DataUtil', () => {
 
       const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
 
-      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-      // which end up being 2 days in this case
-      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      // Expecting 8 3hr fill bins for each day
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour earlier than start of next fill
@@ -2827,7 +2829,7 @@ describe('DataUtil', () => {
       expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
 
       const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
-      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf()); // End is adjusted to align to start of next fill
@@ -3174,6 +3176,7 @@ describe('DataUtil', () => {
 
     beforeEach(() => {
       initDataUtil(defaultData);
+      dataUtil.setTimePrefs(defaultTimePrefs);
     });
 
     context('basal delivery does not overlap start endpoint', () => {

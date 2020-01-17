@@ -709,13 +709,15 @@ export class DataUtil {
           activeDays: nextDays,
         };
 
-        const nextStartIsDST = moment.utc(this.endpoints.next.range[0]).tz(timezoneName).isDST();
-        const nextEndIsDST = moment.utc(this.endpoints.next.range[1]).tz(timezoneName).isDST();
-        const nextOverlapsDSTChangeover = nextStartIsDST !== nextEndIsDST;
+        if (timezoneName) {
+          const nextStartIsDST = moment.utc(this.endpoints.next.range[0]).tz(timezoneName).isDST();
+          const nextEndIsDST = moment.utc(this.endpoints.next.range[1]).tz(timezoneName).isDST();
+          const nextOverlapsDSTChangeover = nextStartIsDST !== nextEndIsDST;
 
-        if (nextOverlapsDSTChangeover) {
-          const offset = nextEndIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
-          this.endpoints.next.range[1] = this.endpoints.next.range[1] + offset;
+          if (nextOverlapsDSTChangeover) {
+            const offset = nextEndIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
+            this.endpoints.next.range[1] = this.endpoints.next.range[1] + offset;
+          }
         }
       }
 
@@ -729,13 +731,15 @@ export class DataUtil {
           activeDays: prevDays,
         };
 
-        const prevStartIsDST = moment.utc(this.endpoints.prev.range[0]).tz(timezoneName).isDST();
-        const prevEndIsDST = moment.utc(this.endpoints.prev.range[1]).tz(timezoneName).isDST();
-        const prevOverlapsDSTChangeover = prevStartIsDST !== prevEndIsDST;
+        if (timezoneName) {
+          const prevStartIsDST = moment.utc(this.endpoints.prev.range[0]).tz(timezoneName).isDST();
+          const prevEndIsDST = moment.utc(this.endpoints.prev.range[1]).tz(timezoneName).isDST();
+          const prevOverlapsDSTChangeover = prevStartIsDST !== prevEndIsDST;
 
-        if (prevOverlapsDSTChangeover) {
-          const offset = prevStartIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
-          this.endpoints.prev.range[0] = this.endpoints.prev.range[0] + offset;
+          if (prevOverlapsDSTChangeover) {
+            const offset = prevStartIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
+            this.endpoints.prev.range[0] = this.endpoints.prev.range[0] + offset;
+          }
         }
       }
     }
