@@ -11,7 +11,11 @@ describe('TextUtil', () => {
     },
   };
 
-  const endpoints = ['2019-02-01T02:00:00.000Z', '2019-02-20T02:00:00.000Z'];
+  const endpoints = [
+    Date.parse('2019-02-01T05:00:00.000Z'),
+    Date.parse('2019-02-20T05:00:00.000Z'),
+  ];
+
   const timePrefs = { timezoneName: 'US/Eastern', timezoneAware: true };
 
   let textUtil;
