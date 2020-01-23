@@ -57,7 +57,7 @@ Currently only the data visualization itself for the BGM and CGM versions of the
 **CGM Trends**
 
 ```
-└── PatientData (Redux-connected)
+└── PatientData
     └── Trends
         ├── TidelineHeader
         ├── TrendsSubNav
@@ -84,7 +84,7 @@ Currently only the data visualization itself for the BGM and CGM versions of the
 **BGM Trends**
 
 ```
-└── PatientData (Redux-connected)
+└── PatientData
     └── Trends
         ├── TidelineHeader
         ├── TrendsSubNav
@@ -100,7 +100,7 @@ Currently only the data visualization itself for the BGM and CGM versions of the
         │   │           │   ├── SMBGRangeAvgContainer (for range behind smbgs)
         │   │           │   │   └── <g className="smbgAggContainer">{up to 8 SMBGRangeAnimated (per default 3-hr binning), each wrapped in WithDefault}</g>
         │   │           │   ├── SMBGsByDateContainer
-        │   │           │   │   └── <g id="smbgsByDateContainer">{up to n each of SMBGDateLineAnimated and SMBGDatePointsAnimated where n is # of days in view; all of these components are Redux-connected}</g>
+        │   │           │   │   └── <g id="smbgsByDateContainer">{up to n each of SMBGDateLineAnimated and SMBGDatePointsAnimated where n is # of days in view}</g>
         │   │           │   │       └── <g id="">
         │   │           │   └── SMBGRangeAvgContainer (for avg in front of smbgs)
         │   │           │   │   └── <g className="smbgAggContainer">{up to 8 SMBGMeanAnimated (per default 3-hr binning), each wrapped in WithDefault}</g>
@@ -123,7 +123,6 @@ Altogether, in diagram form (though **not to scale**):
 
 ### 💣 Tech Debt
 
-- Because of where they need to be rendered in the component hierarchy, the hover tooltip component(s) are currently being rendered in blip, and so as an expedient way to share the hover state between the viz code and the blip code, we are using Redux actions to represent the hover focus on element(s). Since hover state is **not** the kind of state that it makes sense to persist when a user navigates away from the visualization part of the app before coming back, the Redux store is not the appropriate place to store this state. Rather, this state should probably be contained in the React component state of a high-level container component in Trends.
 - When you hover a date line on the smbg side of Trends, instead of properly pulling the line to the top we just render a second version of the line on top.
 
 ### 🚀 The Future

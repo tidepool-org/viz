@@ -56,6 +56,39 @@ const underride = {
   },
 };
 
+const correction = {
+  type: 'wizard',
+  bolus: {
+    normal: 1,
+  },
+  recommended: {
+    carb: 0,
+    correction: 1,
+  },
+};
+
+const correctionOverride = {
+  type: 'wizard',
+  bolus: {
+    normal: 1.5,
+  },
+  recommended: {
+    carb: 0,
+    correction: 1,
+  },
+};
+
+const correctionUnderride = {
+  type: 'wizard',
+  bolus: {
+    normal: 0.5,
+  },
+  recommended: {
+    carb: 0,
+    correction: 1,
+  },
+};
+
 const combo = {
   normal: 1,
   extended: 2,
@@ -218,13 +251,41 @@ describe('bolus utilities', () => {
     });
   });
 
+  describe('getWizardFromInsulinEvent', () => {
+    it('should be a function', () => {
+      assert.isFunction(bolusUtils.getWizardFromInsulinEvent);
+    });
+
+    it('should return any object that doesn\'t have an embedded bolus', () => {
+      const obj = {};
+      expect(bolusUtils.getWizardFromInsulinEvent(obj)).to.equal(obj);
+    });
+
+    it('errors on `null` or `undefined` ¯\\_(ツ)_/¯', () => {
+      const fn1 = () => { bolusUtils.getWizardFromInsulinEvent(null); };
+      const fn2 = () => { bolusUtils.getWizardFromInsulinEvent(undefined); };
+      const fn3 = () => { bolusUtils.getWizardFromInsulinEvent(); };
+      expect(fn1).to.throw();
+      expect(fn2).to.throw();
+      expect(fn3).to.throw();
+    });
+
+    it('should return the embedded `wizard` if it exists', () => {
+      const obj = { wizard: 2 };
+      expect(bolusUtils.getWizardFromInsulinEvent(obj)).to.equal(obj.wizard);
+      const obj2 = { wizard: { type: 'wizard', normal: 5 } };
+      expect(bolusUtils.getWizardFromInsulinEvent(obj2)).to.equal(obj2.wizard);
+    });
+  });
+
   describe('getCarbs', () => {
     it('should be a function', () => {
       assert.isFunction(bolusUtils.getCarbs);
     });
 
-    it('should return NaN on a bolus (rather than wizard) event', () => {
+    it('should return NaN on a bolus (rather than wizard) event if no wizard prop is present', () => {
       expect(Number.isNaN(bolusUtils.getCarbs(normal))).to.be.true;
+      expect(Number.isNaN(bolusUtils.getCarbs({ ...normal, wizard: 'foo' }))).to.be.false;
     });
 
     it('should return `null` on a wizard that lacks `carbInput`', () => {
@@ -340,8 +401,8 @@ describe('bolus utilities', () => {
     });
 
     it('should return total when both `carb` and `correction` recs exist', () => {
-      const { recommended: { carb, correction } } = underride;
-      expect(bolusUtils.getRecommended(underride)).to.equal(carb + correction);
+      const { recommended: { carb, correction: correctionValue } } = underride;
+      expect(bolusUtils.getRecommended(underride)).to.equal(carb + correctionValue);
     });
 
     it('should return `carb` rec when only `carb` rec exists', () => {
@@ -350,8 +411,8 @@ describe('bolus utilities', () => {
     });
 
     it('should return `correction` rec when only `correction` rec exists', () => {
-      const { recommended: { correction } } = extendedUnderride;
-      expect(bolusUtils.getRecommended(extendedUnderride)).to.equal(correction);
+      const { recommended: { correction: correctionValue } } = extendedUnderride;
+      expect(bolusUtils.getRecommended(extendedUnderride)).to.equal(correctionValue);
     });
 
     it('should return `net` rec when `net` rec exists', () => {
@@ -796,11 +857,22 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isOverride(immediatelyCancelledExtended)).to.be.false;
       expect(bolusUtils.isOverride(extendedUnderride)).to.be.false;
       expect(bolusUtils.isOverride(withNetRec)).to.be.false;
+      expect(bolusUtils.isOverride(correction)).to.be.false;
+      expect(bolusUtils.isOverride(correctionUnderride)).to.be.false;
     });
 
     it('should return `true` on all overridden boluses', () => {
+      expect(bolusUtils.isOverride(correctionOverride)).to.be.true;
       expect(bolusUtils.isOverride(override)).to.be.true;
       expect(bolusUtils.isOverride(comboOverride)).to.be.true;
+    });
+
+    it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
+      expect(bolusUtils.isOverride({ ...override.bolus, wizard: override })).to.be.true;
+      expect(bolusUtils.isOverride({
+        ...comboOverride.bolus,
+        wizard: comboOverride,
+      })).to.be.true;
     });
   });
 
@@ -810,23 +882,73 @@ describe('bolus utilities', () => {
     });
 
     it('should return `false` on all non-underride boluses', () => {
-      expect(bolusUtils.isOverride(normal)).to.be.false;
-      expect(bolusUtils.isOverride(cancelled)).to.be.false;
-      expect(bolusUtils.isOverride(override)).to.be.true;
-      expect(bolusUtils.isOverride(combo)).to.be.false;
-      expect(bolusUtils.isOverride(cancelledInNormalCombo)).to.be.false;
-      expect(bolusUtils.isOverride(cancelledInExtendedCombo)).to.be.false;
-      expect(bolusUtils.isOverride(comboOverride)).to.be.true;
-      expect(bolusUtils.isOverride(comboUnderrideCancelled)).to.be.false;
-      expect(bolusUtils.isOverride(extended)).to.be.false;
-      expect(bolusUtils.isOverride(cancelledExtended)).to.be.false;
-      expect(bolusUtils.isOverride(immediatelyCancelledExtended)).to.be.false;
-      expect(bolusUtils.isOverride(withNetRec)).to.be.false;
+      expect(bolusUtils.isUnderride(normal)).to.be.false;
+      expect(bolusUtils.isUnderride(cancelled)).to.be.false;
+      expect(bolusUtils.isUnderride(override)).to.be.false;
+      expect(bolusUtils.isUnderride(combo)).to.be.false;
+      expect(bolusUtils.isUnderride(cancelledInNormalCombo)).to.be.false;
+      expect(bolusUtils.isUnderride(cancelledInExtendedCombo)).to.be.false;
+      expect(bolusUtils.isUnderride(comboOverride)).to.be.false;
+      expect(bolusUtils.isUnderride(extended)).to.be.false;
+      expect(bolusUtils.isUnderride(cancelledExtended)).to.be.false;
+      expect(bolusUtils.isUnderride(immediatelyCancelledExtended)).to.be.false;
+      expect(bolusUtils.isUnderride(correction)).to.be.false;
+      expect(bolusUtils.isUnderride(correctionOverride)).to.be.false;
     });
 
     it('should return `true` on all underridden boluses', () => {
-      expect(bolusUtils.isOverride(underride)).to.be.false;
-      expect(bolusUtils.isOverride(extendedUnderride)).to.be.false;
+      expect(bolusUtils.isUnderride(underride)).to.be.true;
+      expect(bolusUtils.isUnderride(extendedUnderride)).to.be.true;
+      expect(bolusUtils.isUnderride(correctionUnderride)).to.be.true;
+      expect(bolusUtils.isUnderride(withNetRec)).to.be.true;
+      expect(bolusUtils.isUnderride(comboUnderrideCancelled)).to.be.true;
+    });
+
+    it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
+      expect(bolusUtils.isUnderride({ ...underride.bolus, wizard: underride })).to.be.true;
+      expect(bolusUtils.isUnderride({
+        ...extendedUnderride.bolus,
+        wizard: extendedUnderride,
+      })).to.be.true;
+    });
+  });
+
+  describe('isCorrection', () => {
+    it('should return `false` for all non-correction boluses', () => {
+      expect(bolusUtils.isCorrection(normal)).to.be.false;
+      expect(bolusUtils.isCorrection(cancelled)).to.be.false;
+      expect(bolusUtils.isCorrection(underride)).to.be.false;
+      expect(bolusUtils.isCorrection(override)).to.be.false;
+      expect(bolusUtils.isCorrection(combo)).to.be.false;
+      expect(bolusUtils.isCorrection(cancelledInNormalCombo)).to.be.false;
+      expect(bolusUtils.isCorrection(cancelledInExtendedCombo)).to.be.false;
+      expect(bolusUtils.isCorrection(comboOverride)).to.be.false;
+      expect(bolusUtils.isCorrection(comboUnderrideCancelled)).to.be.false;
+      expect(bolusUtils.isCorrection(extended)).to.be.false;
+      expect(bolusUtils.isCorrection(cancelledExtended)).to.be.false;
+      expect(bolusUtils.isCorrection(extendedUnderride)).to.be.false;
+      expect(bolusUtils.isCorrection(immediatelyCancelledExtended)).to.be.false;
+      expect(bolusUtils.isCorrection(withNetRec)).to.be.false;
+    });
+
+    it('should return `true` for all correction boluses', () => {
+      expect(bolusUtils.isCorrection(correction)).to.be.true;
+      expect(bolusUtils.isCorrection(correctionOverride)).to.be.true;
+      expect(bolusUtils.isCorrection(correctionUnderride)).to.be.true;
+    });
+
+    it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
+      expect(bolusUtils.isCorrection({ ...correction.bolus, wizard: correction })).to.be.true;
+
+      expect(bolusUtils.isCorrection({
+        ...correctionOverride.bolus,
+        wizard: correctionOverride,
+      })).to.be.true;
+
+      expect(bolusUtils.isCorrection({
+        ...correctionUnderride.bolus,
+        wizard: correctionUnderride,
+      })).to.be.true;
     });
   });
 });

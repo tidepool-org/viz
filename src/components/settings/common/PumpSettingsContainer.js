@@ -18,9 +18,7 @@
 import _ from 'lodash';
 import React, { PropTypes, PureComponent } from 'react';
 import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
-import * as actions from '../../../redux/actions/';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
 import NonTandem from '../NonTandem';
 import Tandem from '../Tandem';
@@ -32,7 +30,6 @@ export class PumpSettingsContainer extends PureComponent {
     manufacturerKey: PropTypes.oneOf(
       ['animas', 'carelink', 'insulet', 'medtronic', 'tandem']
     ).isRequired,
-    markSettingsViewed: PropTypes.func.isRequired,
     // see more specific schema in NonTandem and Tandem components!
     pumpSettings: PropTypes.shape({
       activeSchedule: PropTypes.string.isRequired,
@@ -46,7 +43,6 @@ export class PumpSettingsContainer extends PureComponent {
   }
 
   componentWillMount() {
-    const { markSettingsViewed } = this.props;
     const {
       manufacturerKey,
       pumpSettings: { activeSchedule, lastManualBasalSchedule },
@@ -55,7 +51,6 @@ export class PumpSettingsContainer extends PureComponent {
     } = this.props;
 
     if (!touched) {
-      markSettingsViewed();
       toggleSettingsSection(manufacturerKey, lastManualBasalSchedule || activeSchedule);
     }
   }
@@ -117,23 +112,10 @@ export function mapStateToProps(state, ownProps) {
     {},
   );
   return {
-    settingsState: _.get(state, ['viz', 'settings', userId], {}),
     user,
   };
 }
 
-export function mapDispatchToProps(dispatch, ownProps) {
-  return bindActionCreators({
-    markSettingsViewed: _.partial(
-      actions.markSettingsViewed, ownProps.currentPatientInViewId
-    ),
-    toggleSettingsSection: _.partial(
-      actions.toggleSettingsSection, ownProps.currentPatientInViewId
-    ),
-  }, dispatch);
-}
-
 export default connect(
   mapStateToProps,
-  mapDispatchToProps,
 )(PumpSettingsContainer);

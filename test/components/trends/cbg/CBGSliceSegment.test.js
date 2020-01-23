@@ -19,7 +19,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import {
-  CBGSliceSegment, mapDispatchToProps, mapStateToProps,
+  CBGSliceSegment,
 } from '../../../../src/components/trends/cbg/CBGSliceSegment';
 
 describe('CBGSliceSegment', () => {
@@ -82,10 +82,9 @@ describe('CBGSliceSegment', () => {
         expect(props.focusSlice.callCount).to.equal(0);
         rect.simulate('mouseover');
         expect(props.focusSlice.callCount).to.equal(1);
-        expect(props.focusSlice.args[0][0]).to.equal(props.userId);
-        expect(props.focusSlice.args[0][1]).to.deep.equal(props.datum);
-        expect(props.focusSlice.args[0][2]).to.deep.equal(props.positionData);
-        expect(props.focusSlice.args[0][3]).to.deep.equal(props.segment.heightKeys);
+        expect(props.focusSlice.args[0][0]).to.deep.equal(props.datum);
+        expect(props.focusSlice.args[0][1]).to.deep.equal(props.positionData);
+        expect(props.focusSlice.args[0][2]).to.deep.equal(props.segment.heightKeys);
       });
     });
 
@@ -96,7 +95,6 @@ describe('CBGSliceSegment', () => {
           expect(props.unfocusSlice.callCount).to.equal(0);
           rect.simulate('mouseout', {});
           expect(props.unfocusSlice.callCount).to.equal(1);
-          expect(props.unfocusSlice.args[0][0]).to.equal(props.userId);
         });
       });
 
@@ -110,26 +108,6 @@ describe('CBGSliceSegment', () => {
           expect(props.unfocusSlice.callCount).to.equal(0);
         });
       });
-    });
-  });
-
-  describe('mapStateToProps', () => {
-    const state = {
-      blip: { currentPatientInViewId: 'a1b2c3' },
-    };
-
-    it('should map blip.currentPatientInViewId to `userId`', () => {
-      expect(mapStateToProps(state).userId).to.equal(state.blip.currentPatientInViewId);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    it('should return an object with a `focusSlice` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('focusSlice');
-    });
-
-    it('should return an object with a `unfocusSlice` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('unfocusSlice');
     });
   });
 });

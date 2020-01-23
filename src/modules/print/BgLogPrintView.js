@@ -36,11 +36,11 @@ class BgLogPrintView extends PrintView {
     super(doc, data, opts);
 
     this.smbgRadius = 3;
-    this.numDays = opts.numDays;
 
+    this.numDays = this.endpoints.activeDays;
     this.doc.addPage();
 
-    const dates = _.keys(data.dataByDate).sort();
+    const dates = _.keys(this.aggregationsByDate.dataByDate).sort();
     const numDays = _.min([this.numDays, dates.length]);
     this.chartDates = _.slice(dates, -Math.abs(numDays)).reverse();
 
@@ -52,7 +52,7 @@ class BgLogPrintView extends PrintView {
   }
 
   newPage() {
-    super.newPage(this.getDateRange(this.data.dateRange[0], this.data.dateRange[1]));
+    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1));
   }
 
   getBGLabelYOffset() {
@@ -79,13 +79,13 @@ class BgLogPrintView extends PrintView {
   }
 
   getBgChartRow(date) {
-    const data = this.data.dataByDate[date];
+    const data = _.get(this.aggregationsByDate, `dataByDate.${date}`);
     const dateMoment = moment(date);
     const isWeekend = _.includes(['0', '6'], dateMoment.format('d'));
     const timeSlots = _.filter(_.map(_.sortBy(this.bgChart.columns, 'id'), 'id'), _.isNumber);
 
     const smbgByTimeSlot = _.groupBy(
-      data.data.smbg,
+      data.smbg,
       datum => _.findLast(timeSlots, slot => datum.msPer24 >= slot)
     );
 
@@ -179,8 +179,7 @@ class BgLogPrintView extends PrintView {
   renderSummaryTable() {
     this.resetText();
 
-    const { stats = {} } = this.data;
-    const { total, days, averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
+    const { total, days, averageGlucose } = _.get(this.stats, 'averageGlucose.data.raw', {});
 
     const totalDays = Math.ceil(days || this.numDays || 0);
     const totalReadings = total || 0;

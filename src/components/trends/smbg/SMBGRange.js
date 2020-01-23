@@ -16,10 +16,6 @@
  */
 
 import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
-
-import { focusTrendsSmbgRangeAvg, unfocusTrendsSmbgRangeAvg } from '../../../redux/actions/trends';
 
 export class SMBGRange extends PureComponent {
   static defaultProps = {
@@ -57,7 +53,6 @@ export class SMBGRange extends PureComponent {
     }),
     rectWidth: PropTypes.number.isRequired,
     unfocusRange: PropTypes.func.isRequired,
-    userId: PropTypes.string.isRequired,
   };
 
   constructor(props) {
@@ -68,13 +63,13 @@ export class SMBGRange extends PureComponent {
   }
 
   handleMouseOut() {
-    const { unfocusRange, userId } = this.props;
-    unfocusRange(userId);
+    const { unfocusRange } = this.props;
+    unfocusRange();
   }
 
   handleMouseOver() {
-    const { datum, focusRange, positionData, userId } = this.props;
-    focusRange(userId, datum, positionData);
+    const { datum, focusRange, positionData } = this.props;
+    focusRange(datum, positionData);
   }
 
   render() {
@@ -95,18 +90,4 @@ export class SMBGRange extends PureComponent {
   }
 }
 
-export function mapStateToProps(state) {
-  const { blip: { currentPatientInViewId } } = state;
-  return {
-    userId: currentPatientInViewId,
-  };
-}
-
-export function mapDispatchToProps(dispatch) {
-  return bindActionCreators({
-    focusRange: focusTrendsSmbgRangeAvg,
-    unfocusRange: unfocusTrendsSmbgRangeAvg,
-  }, dispatch);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(SMBGRange);
+export default SMBGRange;

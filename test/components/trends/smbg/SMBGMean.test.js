@@ -19,7 +19,7 @@ import React from 'react';
 import { shallow } from 'enzyme';
 
 import {
-  SMBGMean, mapDispatchToProps, mapStateToProps,
+  SMBGMean,
 } from '../../../../src/components/trends/smbg/SMBGMean';
 
 describe('SMBGMean', () => {
@@ -77,9 +77,8 @@ describe('SMBGMean', () => {
         expect(props.focusRange.callCount).to.equal(0);
         rect.simulate('mouseover');
         expect(props.focusRange.callCount).to.equal(1);
-        expect(props.focusRange.args[0][0]).to.equal(props.userId);
-        expect(props.focusRange.args[0][1]).to.deep.equal(props.datum);
-        expect(props.focusRange.args[0][2]).to.deep.equal(props.positionData);
+        expect(props.focusRange.args[0][0]).to.deep.equal(props.datum);
+        expect(props.focusRange.args[0][1]).to.deep.equal(props.positionData);
       });
     });
 
@@ -89,28 +88,7 @@ describe('SMBGMean', () => {
         expect(props.unfocusRange.callCount).to.equal(0);
         rect.simulate('mouseout');
         expect(props.unfocusRange.callCount).to.equal(1);
-        expect(props.unfocusRange.args[0][0]).to.equal(props.userId);
       });
-    });
-  });
-
-  describe('mapStateToProps', () => {
-    const state = {
-      blip: { currentPatientInViewId: 'a1b2c3' },
-    };
-
-    it('should map blip.currentPatientInViewId to `userId`', () => {
-      expect(mapStateToProps(state).userId).to.equal(state.blip.currentPatientInViewId);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    it('should return an object with a `focusRange` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('focusRange');
-    });
-
-    it('should return an object with a `unfocusRange` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('unfocusRange');
     });
   });
 });

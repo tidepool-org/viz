@@ -193,15 +193,23 @@ export function categorizeSmbgSubtype(data) {
 /**
  * trendsText
  * @param  {Object} patient - the patient object that contains the profile
- * @param  {Object} stats - all stats data
- * @param  {Array} endpoints - ISO strings [start, end]
- * @param  {Object} bgPrefs - bgPrefs object from blip containing tideline-style bgClasses
- * @param  {Object} timePrefs - timePrefs object
+ * @param  {Object} data - DataUtil data object
+ * @param  {Array} stats - Processed stats array
  * @param  {Object} chartPrefs - trends chartPrefs object from blip
  *
  * @return {String}  Trends data as a formatted string
  */
-export function trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs) {
+export function trendsText(patient, data, stats, chartPrefs) {
+  const {
+    data: {
+      current: {
+        endpoints = {},
+      },
+    },
+    bgPrefs,
+    timePrefs,
+  } = data;
+
   _.defaults(bgPrefs, {
     bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });

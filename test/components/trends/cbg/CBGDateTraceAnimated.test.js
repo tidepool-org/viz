@@ -30,7 +30,7 @@ import bgBounds from '../../../helpers/bgBounds';
 import SVGContainer from '../../../helpers/SVGContainer';
 
 import {
-  CBGDateTraceAnimated, mapDispatchToProps, mapStateToProps,
+  CBGDateTraceAnimated,
 } from '../../../../src/components/trends/cbg/CBGDateTraceAnimated';
 
 describe('CBGDateTraceAnimated', () => {
@@ -114,9 +114,8 @@ describe('CBGDateTraceAnimated', () => {
           expect(props.focusDateTrace.callCount).to.equal(0);
           circle.simulate('mouseover');
           expect(props.focusDateTrace.callCount).to.equal(1);
-          expect(props.focusDateTrace.args[0][0]).to.equal(props.userId);
-          expect(props.focusDateTrace.args[0][1]).to.exist;
-          expect(props.focusDateTrace.args[0][2]).to.exist;
+          expect(props.focusDateTrace.args[0][0]).to.eql(props.data[0]);
+          expect(props.focusDateTrace.args[0][1]).to.be.an('object').and.have.keys(['left', 'yPositions']);
         });
       });
 
@@ -128,26 +127,6 @@ describe('CBGDateTraceAnimated', () => {
           expect(props.unfocusDateTrace.callCount).to.equal(1);
         });
       });
-    });
-  });
-
-  describe('mapStateToProps', () => {
-    const state = {
-      blip: { currentPatientInViewId: 'a1b2c3' },
-    };
-
-    it('should map blip.currentPatientInViewId to `userId`', () => {
-      expect(mapStateToProps(state).userId).to.equal(state.blip.currentPatientInViewId);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    it('should return an object with a `focusDateTrace` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('focusDateTrace');
-    });
-
-    it('should return an object with a `unfocusDateTrace` key', () => {
-      expect(mapDispatchToProps(sinon.stub())).to.have.property('unfocusDateTrace');
     });
   });
 });

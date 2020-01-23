@@ -258,13 +258,27 @@ describe('blood glucose utilities', () => {
     });
   });
 
+  describe('convertToMGDL', () => {
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.convertToMGDL);
+    });
+
+    it('should return 72.06236 when given 4', () => {
+      expect(bgUtils.convertToMGDL(4)).to.equal(72.06236);
+    });
+
+    it('should return 180.1559 when given 10', () => {
+      expect(bgUtils.convertToMGDL(10)).to.equal(180.1559);
+    });
+  });
+
   describe('reshapeBgClassesToBgBounds', () => {
     const bgPrefs = {
       bgClasses: {
         'very-high': { boundary: 600 },
         high: { boundary: 300 },
         target: { boundary: 180 },
-        low: { boundary: 70 },
+        low: { boundary: 75 },
         'very-low': { boundary: 54 },
       },
       bgUnits: 'mg/dL',
@@ -278,8 +292,20 @@ describe('blood glucose utilities', () => {
       expect(bgUtils.reshapeBgClassesToBgBounds(bgPrefs)).to.deep.equal({
         veryHighThreshold: 300,
         targetUpperBound: 180,
+        targetLowerBound: 75,
+        veryLowThreshold: 54,
+        clampThreshold: 600,
+      });
+    });
+
+    it('should fall back to a default bg bound if a bg class is missing', () => {
+      const missingLowClass = { ...bgPrefs, bgClasses: { ...bgPrefs.bgClasses, low: undefined } };
+      expect(bgUtils.reshapeBgClassesToBgBounds(missingLowClass)).to.deep.equal({
+        veryHighThreshold: 300,
+        targetUpperBound: 180,
         targetLowerBound: 70,
         veryLowThreshold: 54,
+        clampThreshold: 600,
       });
     });
   });
