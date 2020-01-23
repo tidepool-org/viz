@@ -242,19 +242,18 @@ class DailyPrintView extends PrintView {
       belowBasal,
     } = this.chartMinimums;
 
-    // We need to ensure that the top of the bgScale is at least at the the targetUpperBound
-    // for proper rendering of datasets with no BG values above this mark.
     this.data.bgRange[1] = _.max([this.data.bgRange[1], this.bgBounds.targetUpperBound]);
 
     // Calculate the maximum BG yScale value
-    this.bgScaleYLimit = _.min([this.data.bgRange[1], this.bgBounds.veryHighThreshold]);
+    this.bgScaleYLimit = _.min([this.data.bgRange[1], this.bgBounds.clampThreshold]);
 
     dateChart.bgScale = scaleLinear() // eslint-disable-line no-param-reassign
       .domain([0, this.bgScaleYLimit])
       .range([
         dateChart.topEdge + notesEtc + bgEtcChart + this.cbgRadius,
         dateChart.topEdge + notesEtc - this.cbgRadius,
-      ]);
+      ])
+      .clamp(true);
     dateChart.bolusScale = scaleLinear() // eslint-disable-line no-param-reassign
       .domain([0, this.data.bolusRange[1]])
       .range([
