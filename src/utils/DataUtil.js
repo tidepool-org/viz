@@ -163,7 +163,13 @@ export class DataUtil {
     if (d.reject) return;
 
     // Convert the time and deviceTime properties to hammertime,
-    // which improves dimension filtering performance significantly over using ISO strings
+    // which improves dimension filtering performance significantly over using ISO strings.
+    // We store the original time strings, with labels prefaced with underscores, however,
+    // for easier reference when debugging.
+    /* eslint-disable no-underscore-dangle */
+    d._time = d.time;
+    d._deviceTime = d.deviceTime;
+    /* eslint-enable no-underscore-dangle */
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
 
@@ -249,6 +255,8 @@ export class DataUtil {
   };
 
   normalizeDatumOut = (d, fields = []) => {
+    if (this.returnRawData) return;
+
     const { timezoneName } = this.timePrefs || {};
     const normalizeAllFields = fields[0] === '*';
 
@@ -788,6 +796,16 @@ export class DataUtil {
         type,
         ...value,
       }));
+    } else if (types === '*') {
+      const groupByType = this.dimension.byType.group();
+
+      this.types = _.map(groupByType.all(), group => ({
+        type: group.key,
+        select: '*',
+        sort: `${this.activeTimeField},asc`,
+      }));
+
+      groupByType.dispose();
     }
     this.endTimer('setTypes');
   };
@@ -874,6 +892,7 @@ export class DataUtil {
       stats,
       timePrefs,
       types,
+      raw = false,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -881,6 +900,8 @@ export class DataUtil {
 
     // Clear all previous filters
     this.clearFilters();
+
+    this.returnRawData = raw;
 
     this.setBgSources(bgSource);
     this.setTypes(types);
@@ -936,6 +957,9 @@ export class DataUtil {
     };
 
     if (metaData) result.metaData = this.getMetaData(metaData);
+
+    // Always reset `returnRawData` to false after each query
+    this.returnRawData = false;
 
     this.log('Result', result);
 
