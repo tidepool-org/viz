@@ -255,7 +255,30 @@ export class DataUtil {
   };
 
   normalizeDatumOut = (d, fields = []) => {
-    if (this.returnRawData) return;
+    if (this.returnRawData) {
+      /* eslint-disable no-underscore-dangle */
+      d.time = d._time;
+      d.deviceTime = d._deviceTime;
+      delete d._time;
+      delete d._deviceTime;
+      delete d.tags;
+
+      if (_.includes(['bolus', 'wizard'], d.type)) {
+        const isWizard = d.type === 'wizard';
+        const fieldToRestore = isWizard ? 'bolus' : 'wizard';
+        if (_.get(d, [fieldToRestore, 'id'])) d[fieldToRestore] = d[fieldToRestore].id;
+      }
+
+      if (d.type === 'message') {
+        delete d.type;
+        delete d.messageText;
+        delete d.parentMessage;
+        delete d.time;
+      }
+
+      return;
+      /* eslint-enable no-underscore-dangle */
+    }
 
     const { timezoneName } = this.timePrefs || {};
     const normalizeAllFields = fields[0] === '*';

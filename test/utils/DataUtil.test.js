@@ -3246,6 +3246,8 @@ describe('DataUtil', () => {
   describe('addBasalOverlappingStart', () => {
     /* eslint-disable no-param-reassign */
     const normalizeExpectedDatum = d => {
+      d._time = d.time;
+      d._deviceTime = d.deviceTime;
       d.time = Date.parse(d.time);
       d.deviceTime = Date.parse(d.deviceTime);
       d.normalTime = d.deviceTime;
