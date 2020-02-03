@@ -163,7 +163,13 @@ export class DataUtil {
     if (d.reject) return;
 
     // Convert the time and deviceTime properties to hammertime,
-    // which improves dimension filtering performance significantly over using ISO strings
+    // which improves dimension filtering performance significantly over using ISO strings.
+    // We store the original time strings, with labels prefaced with underscores, however,
+    // for easier reference when debugging.
+    /* eslint-disable no-underscore-dangle */
+    d._time = d.time;
+    d._deviceTime = d.deviceTime;
+    /* eslint-enable no-underscore-dangle */
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
 
@@ -249,6 +255,37 @@ export class DataUtil {
   };
 
   normalizeDatumOut = (d, fields = []) => {
+    if (this.returnRawData) {
+      /* eslint-disable no-underscore-dangle */
+      if (d._time) {
+        d.time = d._time;
+        delete d._time;
+      }
+
+      if (d._deviceTime) {
+        d.deviceTime = d._deviceTime;
+        delete d._deviceTime;
+      }
+
+      delete d.tags;
+
+      if (_.includes(['bolus', 'wizard'], d.type)) {
+        const isWizard = d.type === 'wizard';
+        const fieldToRestore = isWizard ? 'bolus' : 'wizard';
+        if (_.get(d, [fieldToRestore, 'id'])) d[fieldToRestore] = d[fieldToRestore].id;
+      }
+
+      if (d.type === 'message') {
+        delete d.type;
+        delete d.messageText;
+        delete d.parentMessage;
+        delete d.time;
+      }
+
+      return;
+      /* eslint-enable no-underscore-dangle */
+    }
+
     const { timezoneName } = this.timePrefs || {};
     const normalizeAllFields = fields[0] === '*';
 
@@ -788,6 +825,16 @@ export class DataUtil {
         type,
         ...value,
       }));
+    } else if (types === '*') {
+      const groupByType = this.dimension.byType.group();
+
+      this.types = _.map(groupByType.all(), group => ({
+        type: group.key,
+        select: '*',
+        sort: `${this.activeTimeField},asc`,
+      }));
+
+      groupByType.dispose();
     }
     this.endTimer('setTypes');
   };
@@ -857,6 +904,10 @@ export class DataUtil {
     this.endTimer('setBgPrefs');
   };
 
+  setReturnRawData = (returnRaw = false) => {
+    this.returnRawData = returnRaw;
+  };
+
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -874,6 +925,7 @@ export class DataUtil {
       stats,
       timePrefs,
       types,
+      raw,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -882,6 +934,7 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
+    this.setReturnRawData(raw);
     this.setBgSources(bgSource);
     this.setTypes(types);
     this.setStats(stats);
@@ -936,6 +989,9 @@ export class DataUtil {
     };
 
     if (metaData) result.metaData = this.getMetaData(metaData);
+
+    // Always reset `returnRawData` to `false` after each query
+    this.setReturnRawData(false);
 
     this.log('Result', result);
 
