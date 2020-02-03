@@ -15,7 +15,7 @@ module.exports = function babelConfig(api) {
   if (env === 'test') {
     plugins.unshift(
       ['babel-plugin-istanbul', {
-        useInlineSourceMaps: false,
+        useInlineSourceMaps: true,
       }],
     );
   }

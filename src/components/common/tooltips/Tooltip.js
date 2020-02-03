@@ -17,7 +17,9 @@
 
 /* global requestAnimationFrame */
 
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+
+import React, { PureComponent } from 'react';
 import _ from 'lodash';
 
 import styles from './Tooltip.css';
@@ -48,7 +50,7 @@ class Tooltip extends PureComponent {
     });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.calculateOffset(nextProps);
   }
 

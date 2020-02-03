@@ -1,3 +1,10 @@
+import _ from 'lodash';
+import bows from 'bows';
+import { extent } from 'd3-array';
+import { scaleLinear } from 'd3-scale';
+import { utcDay } from 'd3-time';
+import moment from 'moment-timezone';
+
 /*
  * == BSD2 LICENSE ==
  * Copyright (c) 2016, Tidepool Project
@@ -15,13 +22,9 @@
  * == BSD2 LICENSE ==
  */
 
-import _ from 'lodash';
-import bows from 'bows';
-import { extent } from 'd3-array';
-import { scaleLinear } from 'd3-scale';
-import { utcDay } from 'd3-time';
-import moment from 'moment-timezone';
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+
+import React, { PureComponent } from 'react';
 
 import TrendsSVGContainer from './TrendsSVGContainer';
 
@@ -136,7 +139,7 @@ export class TrendsContainer extends PureComponent {
     smbgLines: PropTypes.bool.isRequired,
     timePrefs: PropTypes.shape({
       timezoneAware: PropTypes.bool.isRequired,
-      timezoneName: React.PropTypes.string,
+      timezoneName: PropTypes.string,
     }).isRequired,
     yScaleClampTop: PropTypes.shape({
       [MGDL_UNITS]: PropTypes.number.isRequired,
@@ -263,7 +266,7 @@ export class TrendsContainer extends PureComponent {
     this.selectDate = this.selectDate.bind(this);
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     this.mountData();
   }
 
@@ -276,7 +279,7 @@ export class TrendsContainer extends PureComponent {
    * smbg version of trends view and thus only remains
    * as a temporary compatibility interface
    */
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const loadingJustCompleted = this.props.loading && !nextProps.loading;
     const newDataRecieved = this.props.queryDataCount !== nextProps.queryDataCount;
 

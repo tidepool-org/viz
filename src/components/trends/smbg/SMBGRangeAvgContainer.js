@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 /*
  * == BSD2 LICENSE ==
  * Copyright (c) 2017, Tidepool Project
@@ -15,8 +17,9 @@
  * == BSD2 LICENSE ==
  */
 
-import _ from 'lodash';
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+
+import React, { PureComponent } from 'react';
 import { range } from 'd3-array';
 
 import { THREE_HRS, TWENTY_FOUR_HRS } from '../../../utils/datetime';
@@ -54,12 +57,12 @@ export default class SMBGRangeAvgContainer extends PureComponent {
     width: 108,
   };
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     const { binSize, data } = this.props;
     this.setState({ mungedData: this.mungeData(binSize, data) });
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     const { binSize, data } = nextProps;
     if (binSize !== this.props.binSize || data !== this.props.data) {
       this.setState({ mungedData: this.mungeData(binSize, data) });
