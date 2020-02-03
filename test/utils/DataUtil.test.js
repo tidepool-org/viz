@@ -512,19 +512,21 @@ describe('DataUtil', () => {
         expect(datum2.time).to.equal('2018-02-01T01:00:00');
       });
 
-      it('should convert `time` string to UTC hammertime timestamp', () => {
+      it('should convert `time` string to UTC hammertime timestamp, and save ref to original as `_time`', () => {
         const datum = { type: 'any', time: '2018-02-01T01:00:00' };
         dataUtil.validateDatumIn = sinon.stub().returns(true);
         dataUtil.normalizeDatumIn(datum);
         expect(datum.time).to.equal(1517446800000);
+        expect(datum._time).to.equal('2018-02-01T01:00:00');
       });
 
-      it('should convert `deviceTime` string to UTC hammertime timestamp', () => {
+      it('should convert `deviceTime` string to UTC hammertime timestamp, and save ref to original as `_deviceTime`', () => {
         const datum = { type: 'any', time: '2018-02-01T01:00:00', deviceTime: '2018-02-01T02:00:00' };
         dataUtil.validateDatumIn = sinon.stub().returns(true);
         dataUtil.normalizeDatumIn(datum);
         expect(datum.time).to.equal(1517446800000);
         expect(datum.deviceTime).to.equal(datum.time + MS_IN_HOUR);
+        expect(datum._deviceTime).to.equal('2018-02-01T02:00:00');
       });
 
       it('should set missing `deviceTime` to processed `time`', () => {
@@ -946,6 +948,82 @@ describe('DataUtil', () => {
 
       dataUtil.normalizeDatumOut(uploadWithoutSourceDatum);
       expect(uploadWithoutSourceDatum.source).to.equal('Unspecified Data Source');
+    });
+
+    context('returnRawData is `true`', () => {
+      beforeEach(() => {
+        dataUtil.returnRawData = true;
+      });
+
+      it('should restore `time` and `deviceTime` to their original ISO date string values', () => {
+        const datum = {
+          time: 12345,
+          _time: 'original time string',
+          deviceTime: 678910,
+          _deviceTime: 'original deviceTime string',
+        };
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum.time).to.equal('original time string');
+        expect(datum.deviceTime).to.equal('original deviceTime string');
+      });
+
+      it('should restore populated `bolus` object on a `wizard` datum to it\'s original string `id` ref', () => {
+        const datum = {
+          type: 'wizard',
+          bolus: { id: 'myBolusID' },
+        };
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum.bolus).to.equal('myBolusID');
+      });
+
+      it('should restore populated `wizard` object on a `bolus` datum to it\'s original string `id` ref', () => {
+        const datum = {
+          type: 'bolus',
+          wizard: { id: 'myWizardID' },
+        };
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum.wizard).to.equal('myWizardID');
+      });
+
+      it('should delete added `_time`, `_deviceTime`, and `tags` fields', () => {
+        const datum = {
+          time: 12345,
+          _time: 'original time string',
+          deviceTime: 678910,
+          _deviceTime: 'original deviceTime string',
+          tags: ['foo', 'bar'],
+        };
+
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum).to.have.all.keys('time', 'deviceTime');
+        expect(datum).to.not.have.keys('_time', '_deviceTime', 'tags');
+      });
+
+      it('should restore a processed message datum back to it\'s original shape', () => {
+        const datum = {
+          type: 'message',
+          messagetext: 'myMessageText',
+          messageText: 'myMessageText',
+          parentmessage: 'myParentMessage',
+          parentMessage: 'myParentMessage',
+          time: 12345,
+          timestamp: 12345,
+        };
+
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum).to.have.all.keys('messagetext', 'parentmessage', 'timestamp');
+        expect(datum).to.not.have.keys('type', 'messageText', 'parentMessage', 'time');
+      });
     });
 
     context('basal', () => {
@@ -2428,6 +2506,22 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('setReturnRawData', () => {
+    it('should set `returnRawData` to provided arg', () => {
+      expect(dataUtil.returnRawData).to.be.undefined;
+      dataUtil.setReturnRawData(true);
+      expect(dataUtil.returnRawData).to.equal(true);
+      dataUtil.setReturnRawData(false);
+      expect(dataUtil.returnRawData).to.equal(false);
+    });
+
+    it('should set `returnRawData` to `false` if no arg provided', () => {
+      expect(dataUtil.returnRawData).to.be.undefined;
+      dataUtil.setReturnRawData();
+      expect(dataUtil.returnRawData).to.equal(false);
+    });
+  });
+
   describe('query', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
@@ -2471,6 +2565,25 @@ describe('DataUtil', () => {
         dataUtil.setEndpoints,
         dataUtil.setActiveDays,
       );
+    });
+
+    it('should call `setReturnRawData` with `raw` as specified in the query', () => {
+      sinon.spy(dataUtil, 'setReturnRawData');
+
+      dataUtil.query({});
+      sinon.assert.calledWith(dataUtil.setReturnRawData, undefined);
+
+      dataUtil.query({ raw: true });
+      sinon.assert.calledWith(dataUtil.setReturnRawData, true);
+    });
+
+    it('should always call `setReturnRawData` with `false` after calling with provided arg after query', () => {
+      sinon.spy(dataUtil, 'setReturnRawData');
+
+      dataUtil.query({ raw: true });
+      sinon.assert.calledTwice(dataUtil.setReturnRawData);
+      expect(dataUtil.setReturnRawData.getCall(0).args).to.eql([true]);
+      expect(dataUtil.setReturnRawData.getCall(1).args).to.eql([false]);
     });
 
     it('should call `setBgSources` with `bgSource` as specified in the query', () => {

@@ -257,10 +257,16 @@ export class DataUtil {
   normalizeDatumOut = (d, fields = []) => {
     if (this.returnRawData) {
       /* eslint-disable no-underscore-dangle */
-      d.time = d._time;
-      d.deviceTime = d._deviceTime;
-      delete d._time;
-      delete d._deviceTime;
+      if (d._time) {
+        d.time = d._time;
+        delete d._time;
+      }
+
+      if (d._deviceTime) {
+        d.deviceTime = d._deviceTime;
+        delete d._deviceTime;
+      }
+
       delete d.tags;
 
       if (_.includes(['bolus', 'wizard'], d.type)) {
@@ -898,6 +904,10 @@ export class DataUtil {
     this.endTimer('setBgPrefs');
   };
 
+  setReturnRawData = (returnRaw = false) => {
+    this.returnRawData = returnRaw;
+  };
+
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -915,7 +925,7 @@ export class DataUtil {
       stats,
       timePrefs,
       types,
-      raw = false,
+      raw,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -924,8 +934,7 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    this.returnRawData = raw;
-
+    this.setReturnRawData(raw);
     this.setBgSources(bgSource);
     this.setTypes(types);
     this.setStats(stats);
@@ -981,8 +990,8 @@ export class DataUtil {
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    // Always reset `returnRawData` to false after each query
-    this.returnRawData = false;
+    // Always reset `returnRawData` to `false` after each query
+    this.setReturnRawData(false);
 
     this.log('Result', result);
 
