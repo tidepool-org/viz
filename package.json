@@ -8,7 +8,7 @@
   "main": "dist/index.js",
   "scripts": {
     "apidocs": "./node_modules/.bin/jsdoc2md",
-    "browser-tests": "NODE_ENV=test ./node_modules/.bin/karma start --no-single-run --browsers Chrome",
+    "browser-tests": "NODE_ENV=test ./node_modules/.bin/karma start --browsers Chrome",
     "build": "NODE_ENV=production npm run clean && NODE_ENV=production ./node_modules/.bin/webpack --config package.config.js",
     "build-dev": "npm run clean && NODE_ENV=development  ./node_modules/.bin/webpack --config package.config.js --progress",
     "build-docs": "./update-gh-pages.sh",
