@@ -16,7 +16,6 @@
  */
 
 import PropTypes from 'prop-types';
-
 import React, { PureComponent } from 'react';
 import Markdown from 'react-markdown';
 import _ from 'lodash';

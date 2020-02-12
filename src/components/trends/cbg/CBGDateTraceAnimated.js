@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { TweenMax } from 'gsap';
 import PropTypes from 'prop-types';
-
 import React, { PureComponent } from 'react';
 
 import { classifyBgValue } from '../../../utils/bloodglucose';

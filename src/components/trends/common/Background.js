@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { range } from 'd3-array';
 import PropTypes from 'prop-types';
-
 import React from 'react';
 
 import * as datetime from '../../../utils/datetime';

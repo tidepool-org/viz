@@ -5,7 +5,6 @@ import { scaleLinear } from 'd3-scale';
 import { utcDay } from 'd3-time';
 import moment from 'moment-timezone';
 import PropTypes from 'prop-types';
-
 import React, { PureComponent } from 'react';
 
 import TrendsSVGContainer from './TrendsSVGContainer';

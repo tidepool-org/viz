@@ -1,46 +1,4 @@
-const BUMPERS = {
-  top: 50,
-  bottom: 30,
-};
-
-const MARGINS = {
-  top: 30,
-  right: 10,
-  bottom: 10,
-  left: 40,
-};
-
-const SMBG_OPTS = {
-  maxR: 7.5,
-  r: 6,
-};
-
-/*
- * == BSD2 LICENSE ==
- * Copyright (c) 2016, Tidepool Project
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the associated License, which is identical to the BSD 2-Clause
- * License as published by the Open Source Initiative at opensource.org.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the License for more details.
- *
- * You should have received a copy of the License along with this program; if
- * not, you can obtain one from Tidepool Project at tidepool.org.
- * == BSD2 LICENSE ==
- */
-
-/*
- * TODO: DISCUSS
- * Is this how we want to approach defaults/constants in the Reactified viz components?
- * Here, the approach is to use global constants. Then, the options that are required
- * in child components as well are assigned to default props, but those that are only used
- * in this parent/container component are just used directly as constants.
- */
 import PropTypes from 'prop-types';
-
 import React, { PureComponent } from 'react';
 import sizeMe from 'react-sizeme';
 import _ from 'lodash';
@@ -63,6 +21,22 @@ import XAxisLabels from './XAxisLabels';
 import XAxisTicks from './XAxisTicks';
 import YAxisLabelsAndTicks from './YAxisLabelsAndTicks';
 
+const BUMPERS = {
+  top: 50,
+  bottom: 30,
+};
+
+const MARGINS = {
+  top: 30,
+  right: 10,
+  bottom: 10,
+  left: 40,
+};
+
+const SMBG_OPTS = {
+  maxR: 7.5,
+  r: 6,
+};
 export class TrendsSVGContainer extends PureComponent {
   constructor(props) {
     super(props);

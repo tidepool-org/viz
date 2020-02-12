@@ -16,7 +16,6 @@
  */
 
 import PropTypes from 'prop-types';
-
 import React from 'react';
 import _ from 'lodash';
 import Tooltip from '../../common/tooltips/Tooltip';

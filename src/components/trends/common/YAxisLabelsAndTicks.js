@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import PropTypes from 'prop-types';
-
 import React from 'react';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';

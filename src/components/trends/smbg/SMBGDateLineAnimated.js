@@ -28,7 +28,6 @@
 //   this style also applies when a single smbg is focused
 
 import PropTypes from 'prop-types';
-
 import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 import { line } from 'd3-shape';

@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import cx from 'classnames';
 import PropTypes from 'prop-types';
-
 import React from 'react';
 
 import norgie from './norgie.css';

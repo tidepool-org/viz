@@ -1,7 +1,6 @@
 import _ from 'lodash';
 import { range } from 'd3-array';
 import PropTypes from 'prop-types';
-
 import React from 'react';
 
 import { formatClocktimeFromMsPer24, THREE_HRS } from '../../../utils/datetime';
