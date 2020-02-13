@@ -1,3 +1,5 @@
+import _ from 'lodash';
+
 /*
  * == BSD2 LICENSE ==
  * Copyright (c) 2016, Tidepool Project
@@ -15,8 +17,8 @@
  * == BSD2 LICENSE ==
  */
 
-import _ from 'lodash';
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
@@ -42,7 +44,7 @@ export class PumpSettingsContainer extends PureComponent {
     toggleSettingsSection: PropTypes.func.isRequired,
   }
 
-  componentWillMount() {
+  UNSAFE_componentWillMount() {
     const {
       manufacturerKey,
       pumpSettings: { activeSchedule, lastManualBasalSchedule },

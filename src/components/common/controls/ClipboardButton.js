@@ -1,4 +1,5 @@
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import _ from 'lodash';
 import i18next from 'i18next';
 import Clipboard from 'react-clipboard.js';

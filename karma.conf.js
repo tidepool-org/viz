@@ -10,6 +10,7 @@ webpackConf.externals = {
 };
 
 webpackConf.devtool = 'inline-source-map';
+webpackConf.mode = 'development';
 
 webpackConf.output = {
   filename: '[name]',

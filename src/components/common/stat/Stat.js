@@ -1,6 +1,7 @@
 /* global document */
 
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import _ from 'lodash';
 import bows from 'bows';
 import cx from 'classnames';
@@ -109,7 +110,7 @@ class Stat extends PureComponent {
     };
   }
 
-  componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     this.setState(() => this.getStateByType(nextProps));
     this.chartProps = this.getChartPropsByType(nextProps);
   }

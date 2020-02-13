@@ -32,7 +32,6 @@ packageConfig.externals = {
   'parse-svg-path': 'parse-svg-path',
   'prop-types': 'prop-types',
   react: 'react',
-  'react-addons-update': 'react-addons-update',
   'react-clipboard.js': 'react-clipboard.js',
   'react-collapse': 'react-collapse',
   'react-dimensions': 'react-dimensions',
