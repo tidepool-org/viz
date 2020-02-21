@@ -134,8 +134,10 @@ stories.add('Query Generator', (props) => {
     annotations: 'annotations',
     deviceId: 'deviceId',
     deviceTime: 'deviceTime',
+    _deviceTime: '_deviceTime',
     id: 'id',
     time: 'time',
+    _time: '_time',
     uploadId: 'uploadId',
   };
 
