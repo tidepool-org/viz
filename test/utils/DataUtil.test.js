@@ -1071,6 +1071,20 @@ describe('DataUtil', () => {
         expect(datum2.annotations[0]).to.eql({ code: 'foo' });
         expect(datum2.annotations[1]).to.eql({ code: 'basal/intersects-incomplete-suspend' });
       });
+
+      context('suppressed basal(s) present', () => {
+        it('should call itself recursively as needed', () => {
+          const datum = { time: Date.parse('2018-02-01T00:00:00'), type: 'basal', suppressed: { type: 'basal', suppressed: { type: 'scheduled' } } };
+          const fields = ['suppressed'];
+
+          sinon.spy(dataUtil, 'normalizeDatumOut');
+
+          dataUtil.normalizeDatumOut(datum, fields);
+
+          sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed, fields);
+          sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed.suppressed, fields);
+        });
+      });
     });
 
     context('cbg', () => {
@@ -1297,12 +1311,13 @@ describe('DataUtil', () => {
 
         const datumWithBolusString = { type: 'wizard', bolus: 'some-string-id' };
         const datumWithBolusObject = { type: 'wizard', bolus: { id: 'some-string-id' } };
+        const fields = '*';
 
-        dataUtil.normalizeDatumOut(datumWithBolusString);
-        sinon.assert.neverCalledWith(dataUtil.normalizeDatumOut, datumWithBolusString.bolus);
+        dataUtil.normalizeDatumOut(datumWithBolusString, fields);
+        sinon.assert.neverCalledWithMatch(dataUtil.normalizeDatumOut, datumWithBolusString.bolus, fields);
 
-        dataUtil.normalizeDatumOut(datumWithBolusObject);
-        sinon.assert.calledWithExactly(dataUtil.normalizeDatumOut, datumWithBolusObject.bolus);
+        dataUtil.normalizeDatumOut(datumWithBolusObject, fields);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithBolusObject.bolus, fields);
       });
     });
 
@@ -1312,12 +1327,13 @@ describe('DataUtil', () => {
 
         const datumWithWizardString = { type: 'bolus', wizard: 'some-string-id' };
         const datumWithWizardObject = { type: 'bolus', wizard: { id: 'some-string-id' } };
+        const fields = '*';
 
-        dataUtil.normalizeDatumOut(datumWithWizardString);
-        sinon.assert.neverCalledWith(dataUtil.normalizeDatumOut, datumWithWizardString.wizard);
+        dataUtil.normalizeDatumOut(datumWithWizardString, fields);
+        sinon.assert.neverCalledWithMatch(dataUtil.normalizeDatumOut, datumWithWizardString.wizard, fields);
 
-        dataUtil.normalizeDatumOut(datumWithWizardObject);
-        sinon.assert.calledWithExactly(dataUtil.normalizeDatumOut, datumWithWizardObject.wizard);
+        dataUtil.normalizeDatumOut(datumWithWizardObject, fields);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithWizardObject.wizard, fields);
       });
     });
 
@@ -1439,20 +1455,6 @@ describe('DataUtil', () => {
         dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
         dataUtil.normalizeDatumOutTime(datum);
         expect(datum.displayOffset).to.equal(-8 * MS_IN_HOUR / MS_IN_MIN); // GMT-8 for US/Pacific
-      });
-    });
-
-    context('suppressed basal(s) present', () => {
-      it('should call itself recursively as needed', () => {
-        const datum = { time: Date.parse('2018-02-01T00:00:00'), suppressed: { type: 'basal', suppressed: { type: 'scheduled' } } };
-        const fields = ['suppressed'];
-
-        sinon.spy(dataUtil, 'normalizeDatumOutTime');
-
-        dataUtil.normalizeDatumOutTime(datum, fields);
-
-        sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum.suppressed, fields);
-        sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum.suppressed.suppressed, fields);
       });
     });
   });
