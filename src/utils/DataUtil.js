@@ -319,6 +319,9 @@ export class DataUtil {
           this.log('intersectsIncompleteSuspend', d.id);
         }
       }
+
+      // Recurse as needed for suppressed basals
+      if (d.suppressed && (normalizeAllFields || _.includes(fields, 'suppressed'))) this.normalizeDatumOut(d.suppressed, fields);
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
@@ -350,11 +353,11 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, ['bgTarget'], ['target', 'range', 'low', 'high']);
       this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
 
-      if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus);
+      if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
     }
 
     if (d.type === 'bolus') {
-      if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard);
+      if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard, fields);
     }
 
     if (d.type === 'fill') {
@@ -369,9 +372,8 @@ export class DataUtil {
     }
   };
 
-  normalizeDatumOutTime = (d, fields = []) => {
+  normalizeDatumOutTime = d => {
     const { timezoneName } = this.timePrefs || {};
-    const normalizeAllFields = fields[0] === '*';
 
     if (timezoneName) {
       d.normalTime = d.time;
@@ -390,9 +392,6 @@ export class DataUtil {
         d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
       }
     }
-
-    // Recurse as needed for suppressed basals
-    if (d.suppressed && (normalizeAllFields || _.includes(fields, 'suppressed'))) this.normalizeDatumOutTime(d.suppressed, fields);
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
@@ -1184,8 +1183,8 @@ export class DataUtil {
       if (type === 'basal' && _.includes(['prev', 'next'], this.activeRange)) {
         typeData = this.sort.byTime(typeData);
         if (this.activeRange === 'prev') {
-          // Normalize the basal data an add any basals overlapping the start
-          typeData = this.addBasalOverlappingStart(typeData);
+          // Normalize the basal data and add any basals overlapping the start
+          typeData = this.addBasalOverlappingStart(typeData, fields);
 
           // Trim the first basal if it overlaps the start
           if (typeData.length) {
@@ -1239,8 +1238,8 @@ export class DataUtil {
     return generatedData;
   };
 
-  addBasalOverlappingStart = basalData => {
-    _.each(basalData, this.normalizeDatumOut);
+  addBasalOverlappingStart = (basalData, normalizeFields) => {
+    _.each(basalData, d => this.normalizeDatumOut(d, normalizeFields));
 
     if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {
       // We need to ensure all the days of the week are active to ensure we get all basals
@@ -1258,7 +1257,7 @@ export class DataUtil {
         .reverse()[0];
 
       if (previousBasalDatum) {
-        this.normalizeDatumOut(previousBasalDatum);
+        this.normalizeDatumOut(previousBasalDatum, normalizeFields);
 
         // Add to top of basal data array if it overlaps the start endpoint
         const datumOverlapsStart = previousBasalDatum.normalTime < this.activeEndpoints.range[0]
