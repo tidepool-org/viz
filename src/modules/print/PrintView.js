@@ -533,7 +533,7 @@ class PrintView {
       {
         id: 'heading',
         align: _.get(opts, 'align', 'left'),
-        height: _.get(opts, 'height', heading.note ? 37 : 24),
+        height: _.get(opts, 'height', _.get(heading, 'note') ? 37 : 24),
         cache: false,
         renderer: this.renderCustomTextCell,
         font: _.get(opts, 'font', this.boldFont),
@@ -544,7 +544,7 @@ class PrintView {
     const rows = [
       {
         heading,
-        note: heading.note,
+        note: _.get(heading, 'note'),
       },
     ];
 

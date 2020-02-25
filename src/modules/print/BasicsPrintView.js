@@ -355,7 +355,9 @@ class BasicsPrintView extends PrintView {
     const columnWidth = this.getActiveColumnWidth();
 
     const statHasData = _.get(stat, 'data.total.value') > 0;
-    if (!statHasData) opts.heading.note = opts.emptyText; // eslint-disable-line no-param-reassign
+    if (!statHasData && _.isPlainObject(opts.heading)) {
+      opts.heading.note = opts.emptyText; // eslint-disable-line no-param-reassign
+    }
 
     this.renderTableHeading(opts.heading, {
       columnDefaults: {
