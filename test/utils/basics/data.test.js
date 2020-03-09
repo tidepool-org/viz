@@ -528,6 +528,7 @@ describe('basics data utils', () => {
       textUtilStub.buildDocumentHeader.resetHistory();
       textUtilStub.buildDocumentDates.resetHistory();
       textUtilStub.buildTextLine.resetHistory();
+      textUtilStub.buildTextTable.resetHistory();
     });
 
     after(() => {
