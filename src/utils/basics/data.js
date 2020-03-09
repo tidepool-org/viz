@@ -361,15 +361,15 @@ export function basicsText(patient, data, stats, aggregations) {
     ];
 
     _.each(dimensions, dimension => {
-      let value = _.get(statData, [...dimension.path.split('.'), dimension.key], {});
+      const pathValue = _.get(statData, [...dimension.path.split('.'), dimension.key]);
 
-      value = dimension.average
+      const value = dimension.average
         ? Math.round(_.get(statData, [...dimension.path.split('.'), 'avgPerDay']))
-        : _.get(value, 'count', value);
+        : _.get(pathValue, 'count', pathValue || 0);
 
       const stat = {
         label: dimension.label,
-        value: (value || 0).toString(),
+        value: value.toString(),
       };
 
       if (dimension.primary) {
