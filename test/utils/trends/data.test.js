@@ -461,6 +461,16 @@ describe('[trends] data utils', () => {
     const chartPrefs = { activeDays: { monday: false, wednesday: false } };
     const bgPrefs = {};
 
+    const data = {
+      data: {
+        current: {
+          endpoints,
+        },
+      },
+      bgPrefs,
+      timePrefs,
+    };
+
     let textUtilStub;
 
     before(() => {
@@ -486,35 +496,35 @@ describe('[trends] data utils', () => {
     });
 
     it('should reshape provided tideline-style bgPrefs to the viz format', () => {
-      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.callCount(utils.utils.reshapeBgClassesToBgBounds, 1);
       sinon.assert.calledWith(utils.utils.reshapeBgClassesToBgBounds, bgPrefs);
     });
 
     it('should return formatted text for Trends data', () => {
-      const result = utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      const result = utils.trendsText(patient, data, stats, chartPrefs);
       expect(result).to.equal('Trends Header, Trends Dates, Trends Excluded Dates Text, Stats Text');
     });
 
     it('should build the document header section', () => {
-      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.callCount(textUtilStub.buildDocumentHeader, 1);
       sinon.assert.calledWith(textUtilStub.buildDocumentHeader, 'Trends');
     });
 
     it('should build the document dates section', () => {
-      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.callCount(textUtilStub.buildDocumentDates, 1);
     });
 
     it('should build the excluded dates when days are excluded', () => {
-      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.callCount(textUtilStub.buildTextLine, 1);
       sinon.assert.calledWith(textUtilStub.buildTextLine, { label: 'Excluded Days', value: 'Monday, Wednesday' });
     });
 
     it('should not build the excluded dates when no days are excluded', () => {
-      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, { activeDays: {
+      utils.trendsText(patient, data, stats, { activeDays: {
         monday: true,
         tuesday: true,
         wednesday: true,
@@ -527,7 +537,7 @@ describe('[trends] data utils', () => {
     });
 
     it('should build the trends stats section', () => {
-      utils.trendsText(patient, stats, endpoints, bgPrefs, timePrefs, chartPrefs);
+      utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.callCount(utils.utils.statsText, 1);
       sinon.assert.calledWith(utils.utils.statsText, stats, textUtilStub, bgPrefs);
     });

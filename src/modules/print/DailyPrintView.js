@@ -28,7 +28,8 @@ import PrintView from './PrintView';
 import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
-import { isAutomatedBasalDevice, getPumpVocabulary } from '../../utils/device';
+import { getPumpVocabulary } from '../../utils/device';
+import { getStatDefinition } from '../../utils/stat';
 import {
   classifyBgValue,
   getOutOfRangeThreshold,
@@ -45,6 +46,7 @@ import {
 import {
   formatLocalizedFromUTC,
   formatDuration,
+  getOffset,
 } from '../../utils/datetime';
 import {
   formatBgValue,
@@ -60,19 +62,20 @@ import {
   SCHEDULED_DELIVERY,
 } from '../../utils/constants';
 
+import {
+  processBasalRange,
+  processBgRange,
+  processBolusRange,
+  processBasalSequencesForDate,
+} from '../../utils/print/data';
+
 const t = i18next.t.bind(i18next);
 
 class DailyPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
 
-    this.source = _.get(data, 'latestPumpUpload.source', '').toLowerCase();
-    this.manufacturer = this.source === 'carelink' ? 'medtronic' : this.source;
-
-    this.isAutomatedBasalDevice = isAutomatedBasalDevice(
-      this.manufacturer,
-      _.get(data, 'latestPumpUpload.deviceModel')
-    );
+    this.isAutomatedBasalDevice = _.get(this, 'latestPumpUpload.isAutomatedBasalDevice', false);
 
     const deviceLabels = getPumpVocabulary(this.manufacturer);
 
@@ -87,7 +90,7 @@ class DailyPrintView extends PrintView {
     this.summaryHeaderFontSize = opts.summaryHeaderFontSize;
 
     this.chartsPerPage = opts.chartsPerPage;
-    this.numDays = opts.numDays;
+    this.numDays = this.endpoints.activeDays;
 
     // render options
     this.bolusWidth = 3;
@@ -138,17 +141,38 @@ class DailyPrintView extends PrintView {
       rightEdge: opts.margins.left + opts.summaryWidthAsPercentage * this.width,
     };
 
+    this.bgRange = processBgRange(this.aggregationsByDate.dataByDate);
+    this.bolusRange = processBolusRange(this.aggregationsByDate.dataByDate, this.timezone);
+    this.basalRange = processBasalRange(this.aggregationsByDate.dataByDate);
+
     this.summaryArea.width = this.summaryArea.rightEdge - this.margins.left;
 
-    const dates = _.keys(data.dataByDate);
+    const dates = _.keys(this.aggregationsByDate.dataByDate);
+    dates.sort();
+
     const numDays = _.min([this.numDays, dates.length]);
     const selectedDates = _.slice(dates, -Math.abs(numDays));
+
     this.chartsByDate = {};
     this.initialChartsByDate = {};
+
     _.each(selectedDates, (date) => {
-      const dateData = data.dataByDate[date];
-      this.chartsByDate[date] = { ...dateData };
-      this.initialChartsByDate[date] = { ...dateData };
+      const dateData = this.aggregationsByDate.dataByDate[date];
+
+      const bounds = [
+        moment.utc(date).tz(this.timezone).valueOf(),
+        moment.utc(date).tz(this.timezone).add(1, 'day').valueOf(),
+      ];
+
+      const utcBounds = [
+        bounds[0] + getOffset(bounds[0], this.timezone) * MS_IN_MIN,
+        bounds[1] + getOffset(bounds[1], this.timezone) * MS_IN_MIN,
+      ];
+
+      processBasalSequencesForDate(dateData, utcBounds);
+
+      this.chartsByDate[date] = { data: dateData, utcBounds, date };
+      this.initialChartsByDate[date] = _.cloneDeep(this.chartsByDate[date]);
     });
 
     this.chartsPlaced = this.initialChartsPlaced = 0;
@@ -158,14 +182,14 @@ class DailyPrintView extends PrintView {
     this.setHeaderSize().setFooterSize().calculateChartMinimums(this.chartArea);
 
     // calculate heights and place charts in preparation for rendering
-    for (let i = 0; i < numDays; ++i) {
-      const dateData = data.dataByDate[selectedDates[i]];
-      this.calculateDateChartHeight(dateData);
-    }
+    _.each(selectedDates, (date) => {
+      this.calculateDateChartHeight(this.chartsByDate[date]);
+    });
 
-    while (this.chartsPlaced < numDays) {
+    while (this.chartsPlaced < selectedDates.length) {
       this.placeChartsOnPage();
     }
+
     _.each(this.chartsByDate, (dateChart) => {
       this.makeScales(dateChart);
     });
@@ -242,10 +266,10 @@ class DailyPrintView extends PrintView {
       belowBasal,
     } = this.chartMinimums;
 
-    this.data.bgRange[1] = _.max([this.data.bgRange[1], this.bgBounds.targetUpperBound]);
+    this.bgRange[1] = _.max([this.bgRange[1], this.bgBounds.targetUpperBound]);
 
     // Calculate the maximum BG yScale value
-    this.bgScaleYLimit = _.min([this.data.bgRange[1], this.bgBounds.clampThreshold]);
+    this.bgScaleYLimit = _.min([this.bgRange[1], this.bgBounds.clampThreshold]);
 
     dateChart.bgScale = scaleLinear() // eslint-disable-line no-param-reassign
       .domain([0, this.bgScaleYLimit])
@@ -255,19 +279,19 @@ class DailyPrintView extends PrintView {
       ])
       .clamp(true);
     dateChart.bolusScale = scaleLinear() // eslint-disable-line no-param-reassign
-      .domain([0, this.data.bolusRange[1]])
+      .domain([0, this.bolusRange[1]])
       .range([
         dateChart.topEdge + notesEtc + bgEtcChart,
         dateChart.topEdge + notesEtc + (bgEtcChart / 3),
       ]);
     dateChart.basalScale = scaleLinear() // eslint-disable-line no-param-reassign
-      .domain([0, this.data.basalRange[1]])
+      .domain([0, this.basalRange[1]])
       .range([
         dateChart.bottomEdge - belowBasal,
         dateChart.bottomEdge - belowBasal - basalChart,
       ]);
     dateChart.xScale = scaleLinear() // eslint-disable-line no-param-reassign
-      .domain([dateChart.bounds[0], dateChart.bounds[1]])
+      .domain([dateChart.utcBounds[0], dateChart.utcBounds[1]])
       // TODO: change to this.bolusWidth / 2 assuming boluses will be wider than cbgs
       .range([this.chartArea.leftEdge + this.cbgRadius, this.rightEdge - this.cbgRadius]);
 
@@ -348,7 +372,18 @@ class DailyPrintView extends PrintView {
 
     const bgPrecision = this.bgUnits === MMOLL_UNITS ? 1 : 0;
 
-    const { stats = {} } = _.get(this.data, ['dataByDate', date], {});
+    const statsData = _.get(this.aggregationsByDate, ['statsByDate', date], {});
+    const stats = {};
+    _.forOwn(statsData, (statData, statType) => {
+      const stat = getStatDefinition(statData, statType, {
+        bgSource: this.bgSource,
+        days: this.endpoints.activeDays || this.endpoints.days,
+        bgPrefs: this.bgPrefs,
+        manufacturer: this.manufacturer,
+      });
+      stats[statType] = stat;
+    });
+
     const { target, veryLow } = _.get(stats, 'timeInRange.data.raw', {});
     const totalCbgDuration = _.get(stats, 'timeInRange.data.total.value', {});
     const { averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
@@ -604,9 +639,9 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderYAxes({ bgScale, bottomOfBasalChart, bounds, date, topEdge, xScale }) {
-    const end = bounds[1];
-    let current = bounds[0];
+  renderYAxes({ bgScale, bottomOfBasalChart, utcBounds, date, topEdge, xScale }) {
+    const end = utcBounds[1];
+    let current = utcBounds[0];
     const threeHrLocs = [current];
     while (current < end) {
       current = moment.utc(current)
@@ -689,7 +724,7 @@ class DailyPrintView extends PrintView {
 
   renderCbgs({ bgScale, data: { cbg: cbgs }, xScale }) {
     _.each(cbgs, (cbg) => {
-      this.doc.circle(xScale(cbg.utc), bgScale(cbg.value), 1)
+      this.doc.circle(xScale(cbg.normalTime), bgScale(cbg.value), 1)
         .fill(this.colors[classifyBgValue(this.bgBounds, cbg.value)]);
     });
 
@@ -698,7 +733,7 @@ class DailyPrintView extends PrintView {
 
   renderSmbgs({ bgScale, data: { smbg: smbgs }, xScale }) {
     _.each(smbgs, (smbg) => {
-      const xPos = xScale(smbg.utc);
+      const xPos = xScale(smbg.normalTime);
       const yPos = bgScale(smbg.value);
       const smbgLabel = formatBgValue(smbg.value, this.bgPrefs, getOutOfRangeThreshold(smbg));
       const labelWidth = this.doc.widthOfString(smbgLabel);
@@ -747,7 +782,7 @@ class DailyPrintView extends PrintView {
       const circleOffset = 1;
       const textOffset = 1.75;
       if (carbs) {
-        const carbsX = xScale(getBolusFromInsulinEvent(insulinEvent).utc);
+        const carbsX = xScale(getBolusFromInsulinEvent(insulinEvent).normalTime);
         const carbsY = bolusScale(getMaxValue(insulinEvent)) - this.carbRadius - circleOffset;
         this.doc.circle(carbsX, carbsY, this.carbRadius)
           .fill(this.colors.carbs);
@@ -774,7 +809,7 @@ class DailyPrintView extends PrintView {
       const carbs = _.get(foodEvent, 'nutrition.carbohydrate.net');
 
       if (carbs) {
-        const carbsX = xScale(foodEvent.utc);
+        const carbsX = xScale(foodEvent.normalTime);
         const carbsY = bolusScale(0) - this.carbRadius - circleOffset;
         this.doc.circle(carbsX, carbsY, this.carbRadius)
           .fill(this.colors.carbs);
@@ -823,8 +858,8 @@ class DailyPrintView extends PrintView {
           },
         };
       }(this.doc));
-      _.each(_.sortBy(binOfBoluses, 'utc'), (bolus) => {
-        const displayTime = formatLocalizedFromUTC(bolus.utc, this.timePrefs, 'h:mma')
+      _.each(_.sortBy(binOfBoluses, 'normalTime'), (bolus) => {
+        const displayTime = formatLocalizedFromUTC(bolus.normalTime, this.timePrefs, 'h:mma')
           .slice(0, -1);
         this.doc.text(
           displayTime,
@@ -872,7 +907,7 @@ class DailyPrintView extends PrintView {
 
         if (newRate) {
           labeledSchedules.push({
-            utc: datum.utc,
+            normalTime: datum.normalTime,
             rate: datum.rate,
             duration: currentSchedule.duration + datum.duration,
           });
@@ -891,7 +926,7 @@ class DailyPrintView extends PrintView {
     this.setFill();
 
     _.each(labeledSchedules, schedule => {
-      const start = xScale(schedule.utc);
+      const start = xScale(schedule.normalTime);
 
       this.doc.fontSize(this.extraSmallFontSize);
       const label = `${parseFloat(formatDecimalNumber(schedule.rate, 3))}`;
@@ -963,7 +998,7 @@ class DailyPrintView extends PrintView {
 
         // Render group markers
         if (index > 0) {
-          const xPos = xScale(firstDatum.utc);
+          const xPos = xScale(firstDatum.normalTime);
           const yPos = basalScale.range()[1] + this.markerRadius + 1;
           const zeroBasal = basalScale.range()[0];
           const flushWithBottomOfScale = zeroBasal;
@@ -1106,7 +1141,7 @@ class DailyPrintView extends PrintView {
       .domain([0, 10])
       .range([cursor, cursor + 10]);
     const normalPaths = getBolusPaths(
-      { normal: 10, utc: 0 },
+      { normal: 10, normalTime: 0 },
       normalBolusXScale,
       legendBolusYScale,
       bolusOpts
@@ -1132,7 +1167,7 @@ class DailyPrintView extends PrintView {
         },
         bolus: {
           normal: 10,
-          utc: 0,
+          normalTime: 0,
         },
       },
       rideBolusXScale,
@@ -1152,7 +1187,7 @@ class DailyPrintView extends PrintView {
         },
         bolus: {
           normal: 5,
-          utc: 5,
+          normalTime: 5,
         },
       },
       rideBolusXScale,
@@ -1174,7 +1209,7 @@ class DailyPrintView extends PrintView {
       {
         normal: 6,
         expectedNormal: 10,
-        utc: 0,
+        normalTime: 0,
       },
       interruptedBolusXScale,
       legendBolusYScale,
@@ -1196,7 +1231,7 @@ class DailyPrintView extends PrintView {
         normal: 5,
         extended: 5,
         duration: 10,
-        utc: 0,
+        normalTime: 0,
       },
       extendedBolusXScale,
       legendBolusYScale,
@@ -1244,13 +1279,13 @@ class DailyPrintView extends PrintView {
       subType: dynamicBasalType,
       rate: 1.5,
       duration: 2,
-      utc: 0,
+      normalTime: 0,
     };
     const negTemp = {
       subType: 'temp',
       rate: 0.5,
       duration: 2.5,
-      utc: 2,
+      normalTime: 2,
       suppressed: {
         rate: 1.5,
       },
@@ -1259,13 +1294,13 @@ class DailyPrintView extends PrintView {
       subType: 'scheduled',
       rate: 1.75,
       duration: 1.5,
-      utc: 4.5,
+      normalTime: 4.5,
     };
     const posTemp = {
       subType: 'temp',
       rate: 2,
       duration: 2,
-      utc: 6,
+      normalTime: 6,
       suppressed: {
         rate: 1.75,
       },
@@ -1274,7 +1309,7 @@ class DailyPrintView extends PrintView {
       subType: 'suspend',
       rate: 0,
       duration: 2,
-      utc: 8,
+      normalTime: 8,
       suppressed: {
         subType: dynamicBasalType,
         rate: dynamicBasalType === 'automated' ? 0 : 1.75,

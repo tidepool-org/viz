@@ -50,6 +50,8 @@ export class SMBGMeanAnimated extends PureComponent {
       msTo: PropTypes.number.isRequired,
     }),
     defaultY: PropTypes.number.isRequired,
+    focusSmbgRange: PropTypes.func.isRequired,
+    unfocusSmbgRange: PropTypes.func.isRequired,
     meanHeight: PropTypes.number.isRequired,
     someSmbgDataIsFocused: PropTypes.bool.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
@@ -138,6 +140,8 @@ export class SMBGMeanAnimated extends PureComponent {
             <SMBGMean
               classes={meanClasses}
               datum={datum}
+              focusRange={this.props.focusSmbgRange}
+              unfocusRange={this.props.unfocusSmbgRange}
               interpolated={interpolated[0]}
               positionData={{
                 left: xPos,

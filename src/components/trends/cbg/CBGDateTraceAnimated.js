@@ -18,11 +18,7 @@
 import _ from 'lodash';
 import { TweenMax } from 'gsap';
 import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 
-import connectWithTransitionGroup from '../../common/connectWithTransitionGroup';
-import { focusTrendsCbgDateTrace, unfocusTrendsCbgDateTrace } from '../../../redux/actions/trends';
 import { classifyBgValue } from '../../../utils/bloodglucose';
 
 import styles from './CBGDateTraceAnimated.css';
@@ -86,12 +82,12 @@ export class CBGDateTraceAnimated extends PureComponent {
   }
 
   handleMouseOut() {
-    const { unfocusDateTrace, userId } = this.props;
-    unfocusDateTrace(userId);
+    const { unfocusDateTrace } = this.props;
+    unfocusDateTrace();
   }
 
   render() {
-    const { bgBounds, cbgRadius, data, date, topMargin, userId, xScale, yScale } = this.props;
+    const { bgBounds, cbgRadius, data, date, topMargin, xScale, yScale } = this.props;
     return (
       <g id={`cbgDateTrace-${date}`}>
         {_.map(data, (d) => (
@@ -103,7 +99,7 @@ export class CBGDateTraceAnimated extends PureComponent {
             key={d.id}
             onClick={this.handleClick}
             onMouseOver={() => {
-              this.props.focusDateTrace(userId, d, {
+              this.props.focusDateTrace(d, {
                 left: xScale(d.msPer24),
                 yPositions: {
                   top: yScale(d.value),
@@ -122,20 +118,4 @@ export class CBGDateTraceAnimated extends PureComponent {
   }
 }
 
-export function mapStateToProps(state) {
-  const { blip: { currentPatientInViewId } } = state;
-  return {
-    userId: currentPatientInViewId,
-  };
-}
-
-export function mapDispatchToProps(dispatch) {
-  return bindActionCreators({
-    focusDateTrace: focusTrendsCbgDateTrace,
-    unfocusDateTrace: unfocusTrendsCbgDateTrace,
-  }, dispatch);
-}
-
-export default connectWithTransitionGroup(
-  connect(mapStateToProps, mapDispatchToProps, null, { withRef: true })(CBGDateTraceAnimated)
-);
+export default CBGDateTraceAnimated;

@@ -3,7 +3,6 @@
 #### Table of contents
 
 - [The core](#the-core)
-- [Redux directories](#redux-directories)
 - [React component directories](#react-component-directories)
     - [components](#components)
     - [containers](#containers)
@@ -43,10 +42,6 @@ As of May, 2017, the directory structure is as follows (although this may change
 │   │       ├── cbg
 │   │       ├── common
 │   │       └── smbg
-│   ├── redux
-│   │   ├── actions
-│   │   ├── constants
-│   │   └── reducers
 │   ├── styles
 │   └── utils
 │       ├── apidocs
@@ -74,9 +69,6 @@ As of May, 2017, the directory structure is as follows (although this may change
     │       ├── common
     │       └── smbg
     ├── helpers
-    ├── redux
-    │   ├── actions
-    │   └── reducers
     └── utils
         ├── settings
         └── trends
@@ -89,25 +81,9 @@ All active, non-tooling code in the repository is contained in `src/`, and `src/
 ```
 └── src
     ├── components
-    ├── redux
     ├── styles
     └── utils
 ```
-
-### Redux directories
-
-```
-└── redux
-    ├── actions
-    ├── constants
-    └── reducers
-```
-
-Within `src/redux/`, the `actions/` and `reducers/` contain the actions and reducers specific to the components in this component library. An `index.js` file in each of these directories exports the set of actions and a root reducer for a consuming application to import and consume via `connect()`ed components (in the case of actions) and by adding the reducer as a branch of the consuming application's state tree.
-
-In both `actions/` and `reducers/`, files should be grouped into sub-directories by ["view"](#views) or located in a directory called `common/` if the action(s) or reducer(s) is relevant to more than one view.
-
-The `src/redux/constants/` directory at present contains just the `actionTypes.js` file, which exports (as individual named exports) the action type constants for every action defined in `actions/` as well as those of blip's actions that are relevant to the viz reducers.
 
 ### React component directories
 

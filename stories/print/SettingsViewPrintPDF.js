@@ -24,20 +24,20 @@ import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
 
 import * as profiles from '../../data/patient/profiles';
-import { data as dataStub } from '../../data/patient/data';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
 /* global PDFDocument, blobStream, window */
+/* eslint-disable max-len */
 
 const stories = storiesOf('Settings View PDF', module);
 
-let data;
+let queries;
 try {
   // eslint-disable-next-line global-require, import/no-unresolved
-  data = require('../../local/print-view.json');
+  queries = require('../../local/PDFDataQueries.json');
 } catch (e) {
-  data = dataStub;
+  queries = {};
 }
 
 import animasDataMultiRate from '../../data/pumpSettings/animas/multirate.json';
@@ -65,7 +65,7 @@ const bgBounds = {
   },
 };
 
-function openPDF({ patient, bgUnits = MGDL_UNITS }, dataFixture) {
+function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }, dataFixture) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
@@ -80,9 +80,9 @@ function openPDF({ patient, bgUnits = MGDL_UNITS }, dataFixture) {
     patient,
   };
 
-  const viewData = dataFixture || data[bgUnits].settings;
+  const data = dataFixture || (queries ? dataUtil.query(queries.settings) : {});
 
-  createPrintView('settings', viewData, opts, doc).render();
+  createPrintView('settings', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
   doc.end();
@@ -99,80 +99,80 @@ and then use this story to iterate on the Settings Print PDF outside of Tidepool
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
 
-stories.add(`standard account (${MGDL_UNITS})`, () => (
-  <button onClick={() => openPDF({ patient: profiles.standard })}>
+stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add(`standard account (${MMOLL_UNITS})`, () => (
-  <button onClick={() => openPDF({ patient: profiles.standard, bgUnits: MMOLL_UNITS })}>
+stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.standard, bgUnits: MMOLL_UNITS })}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('animas flat rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, animasDataFlatRate)}>
+stories.add('animas flat rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, animasDataFlatRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('animas multi rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, animasDataMultiRate)}>
+stories.add('animas multi rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, animasDataMultiRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic flat rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, medtronicDataFlatRate)}>
+stories.add('medtronic flat rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, medtronicDataFlatRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic multi rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, medtronicDataMultiRate)}>
+stories.add('medtronic multi rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, medtronicDataMultiRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic automated rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, medtronicDataAutomated)}>
+stories.add('medtronic automated rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, medtronicDataAutomated)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic automated inactive rate', () => {
+stories.add('medtronic automated inactive rate', ({ dataUtil }) => {
   const inactiveAutomatedBasaldata = _.assign({}, medtronicDataAutomated, {
     activeSchedule: 'Standard',
   });
 
   return (
-    <button onClick={() => openPDF({ patient: profiles.longName }, inactiveAutomatedBasaldata)}>
+    <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, inactiveAutomatedBasaldata)}>
       Open PDF in new tab
     </button>
   );
 }, { notes });
 
-stories.add('omnipod flat rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, omnipodDataFlatRate)}>
+stories.add('omnipod flat rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, omnipodDataFlatRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('omnipod multi rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, omnipodDataMultiRate)}>
+stories.add('omnipod multi rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, omnipodDataMultiRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('tandem flat rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, tandemDataFlatRate)}>
+stories.add('tandem flat rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, tandemDataFlatRate)}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('tandem multi rate', () => (
-  <button onClick={() => openPDF({ patient: profiles.longName }, tandemDataMultiRate)}>
+stories.add('tandem multi rate', ({ dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, tandemDataMultiRate)}>
     Open PDF in new tab
   </button>
 ), { notes });

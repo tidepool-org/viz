@@ -22,7 +22,7 @@ import React from 'react';
 import { mount } from 'enzyme';
 import _ from 'lodash';
 
-import { PumpSettingsContainer, mapStateToProps, mapDispatchToProps }
+import { PumpSettingsContainer, mapStateToProps }
   from '../../../../src/components/settings/common/PumpSettingsContainer';
 import NonTandem from '../../../../src/components/settings/NonTandem';
 import Tandem from '../../../../src/components/settings/Tandem';
@@ -53,7 +53,6 @@ describe('PumpSettingsContainer', () => {
       bgUnits: MGDL_UNITS,
       copySettingsClicked: sinon.spy(),
       currentPatientInViewId: 'a1b2c3',
-      markSettingsViewed,
       timePrefs: {
         timezoneAware: false,
         timezoneName: null,
@@ -81,8 +80,7 @@ describe('PumpSettingsContainer', () => {
     });
 
     describe('componentWillMount', () => {
-      it('should mark device settings view as `touched` & set opened section state', () => {
-        expect(markSettingsViewed.callCount).to.equal(0);
+      it('should call `toggleSettingsSection` & set opened section state if not `touched`', () => {
         expect(toggleSettingsSection.callCount).to.equal(0);
         const manufacturerKey = 'animas';
         mount(
@@ -93,14 +91,12 @@ describe('PumpSettingsContainer', () => {
             settingsState={untouched(animasSettings, manufacturerKey)}
           />
         );
-        expect(markSettingsViewed.callCount).to.equal(1);
         expect(toggleSettingsSection.callCount).to.equal(1);
         expect(toggleSettingsSection.args[0][0]).to.equal(manufacturerKey);
         expect(toggleSettingsSection.args[0][1]).to.equal(animasSettings.activeSchedule);
       });
 
-      it('should not mark device settings as `touched`, etc. if already `touched`', () => {
-        expect(markSettingsViewed.callCount).to.equal(0);
+      it('should not call `toggleSettingsSection`, etc. if already `touched`', () => {
         expect(toggleSettingsSection.callCount).to.equal(0);
         const manufacturerKey = 'animas';
         mount(
@@ -111,7 +107,6 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(animasSettings, manufacturerKey)}
           />
         );
-        expect(markSettingsViewed.callCount).to.equal(0);
         expect(toggleSettingsSection.callCount).to.equal(0);
       });
 
@@ -287,25 +282,9 @@ describe('PumpSettingsContainer', () => {
       },
     };
 
-    it('should map state.viz.settings[currentPatientInViewId] to `settingsState`', () => {
-      expect(mapStateToProps(state, { currentPatientInViewId: userId }).settingsState)
-        .to.deep.equal(state.viz.settings[userId]);
-    });
     it('should map state.blip.allUsersMap[currentPatientInViewId] to `user`', () => {
       expect(mapStateToProps(state, { currentPatientInViewId: userId }).user)
         .to.deep.equal(state.blip.allUsersMap[userId]);
-    });
-  });
-
-  describe('mapDispatchToProps', () => {
-    const ownProps = { currentPatientInViewId: 'a1b2c3' };
-
-    it('should return an objet with a `markSettingsViewed` key', () => {
-      expect(mapDispatchToProps(sinon.stub(), ownProps)).to.have.property('markSettingsViewed');
-    });
-
-    it('should return an objet with a `toggleSettingsSection` key', () => {
-      expect(mapDispatchToProps(sinon.stub(), ownProps)).to.have.property('toggleSettingsSection');
     });
   });
 });

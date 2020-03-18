@@ -77,7 +77,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
   const paths = [];
 
   const bolusBottom = yScale.range()[0];
-  const bolusCenter = xScale(bolus.utc);
+  const bolusCenter = xScale(bolus.normalTime);
 
   const isNonTrivialUnderride = bolusUtils.isUnderride(insulinEvent) &&
     bolusUtils.getDelivered(insulinEvent);
@@ -158,7 +158,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
     // it scales with various settings for line thickness, which may vary based on render target
     const triangleSize = 4.5 * extendedLineThickness;
     const halfTriangle = triangleSize / 2;
-    const startOfTriangle = xScale(bolus.utc + bolusUtils.getMaxDuration(insulinEvent))
+    const startOfTriangle = xScale(bolus.normalTime + bolusUtils.getMaxDuration(insulinEvent))
       - triangleSize;
     const extendedY = yScale(extendedVal) + (extendedLineThickness / 2);
 
@@ -178,7 +178,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
     const interruptedExtended = bolusUtils.isInterruptedBolus(insulinEvent) && extendedVal > 0;
 
     if (interruptedExtended) {
-      const startOfInterrupted = xScale(bolus.utc + bolusUtils.getDuration(insulinEvent));
+      const startOfInterrupted = xScale(bolus.normalTime + bolusUtils.getDuration(insulinEvent));
 
       paths.push({
         d: `

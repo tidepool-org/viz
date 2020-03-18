@@ -195,6 +195,7 @@ export function getTotalBasalFromEndpoints(data, endpoints) {
       // handle last segment, which may go past the end endpoint
       duration = _.min([end - new Date(datum.normalTime), datum.duration]);
     }
+
     dose += getSegmentDose(duration, datum.rate);
   });
 
@@ -230,3 +231,59 @@ export function getBasalGroupDurationsFromEndpoints(data, endpoints) {
 
   return durations;
 }
+
+export const countAutomatedBasalEvents = (data) => {
+  const returnData = _.cloneDeep(data);
+
+  // Get the path groups, and remove the first group, as we only want to
+  // track changes into and out of automated delivery
+  const basalPathGroups = getBasalPathGroups(returnData.data);
+  basalPathGroups.shift();
+
+  const events = {
+    automatedStop: 0,
+  };
+
+  _.reduce(basalPathGroups, (acc, group) => {
+    const subType = _.get(group[0], 'subType', group[0].deliveryType);
+    const event = subType === 'automated' ? 'automatedStart' : 'automatedStop';
+    // For now, we're only tracking `automatedStop` events
+    if (event === 'automatedStop') {
+      acc[event]++;
+    }
+    return acc;
+  }, events);
+
+  _.assign(returnData.subtotals, events);
+  returnData.total += events.automatedStop;
+
+  return returnData;
+};
+
+export const countDistinctSuspends = (data) => {
+  const returnData = _.cloneDeep(data);
+
+  const suspends = _.filter(returnData.data, d => d.deliveryType === 'suspend');
+
+  const result = {
+    prev: {},
+    distinct: 0,
+    skipped: 0,
+  };
+
+  _.reduce(suspends, (acc, datum) => {
+    // We only want to track non-contiguous suspends as distinct
+    if (_.get(acc.prev, 'normalEnd') === datum.normalTime) {
+      acc.skipped++;
+    } else {
+      acc.distinct++;
+    }
+    acc.prev = datum;
+    return acc;
+  }, result);
+
+  returnData.subtotals.suspend = result.distinct;
+  returnData.total -= result.skipped;
+
+  return returnData;
+};

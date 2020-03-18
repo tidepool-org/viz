@@ -36,14 +36,7 @@ describe('print module', () => {
   };
 
   const opts = {
-    bgPrefs: {},
-    numDays: {
-      daily: 6,
-      bgLog: 30,
-    },
     patient: {},
-    timePrefs: {},
-    mostRecent: '',
   };
 
   class DailyPrintView {
@@ -65,9 +58,7 @@ describe('print module', () => {
   const sandbox = sinon.sandbox.create();
 
   let doc;
-  let stream;
 
-  sinon.stub(Module.utils, 'reshapeBgClassesToBgBounds');
   sinon.stub(Module.utils.PrintView, 'renderPageNumbers');
   sinon.stub(Module.utils, 'BasicsPrintView').returns(new BasicsPrintView());
   sinon.stub(Module.utils, 'DailyPrintView').returns(new DailyPrintView());
@@ -76,14 +67,12 @@ describe('print module', () => {
   sinon.stub(Module.utils, 'blobStream').returns(new MemoryStream());
 
   beforeEach(() => {
-    stream = new MemoryStream();
     doc = new Doc({ pdf, margin });
     sandbox.stub(Module.utils, 'PDFDocument').returns(doc);
   });
 
   afterEach(() => {
     sandbox.restore();
-    Module.utils.reshapeBgClassesToBgBounds.resetHistory();
     Module.utils.PrintView.renderPageNumbers.resetHistory();
     Module.utils.BasicsPrintView.resetHistory();
     Module.utils.DailyPrintView.resetHistory();
@@ -100,16 +89,6 @@ describe('print module', () => {
     expect(Module.createPrintView).to.be.a('function');
   });
 
-  it('should properly set bg bounds', () => {
-    const result = Module.createPrintPDFPackage(data, opts, stream);
-    doc.stream.end();
-
-    return result.then(() => {
-      sinon.assert.calledOnce(Module.utils.reshapeBgClassesToBgBounds);
-      sinon.assert.calledWithExactly(Module.utils.reshapeBgClassesToBgBounds, opts.bgPrefs);
-    });
-  });
-
   it('should render and return the complete pdf data package when all data is available', () => {
     const result = Module.createPrintPDFPackage(data, opts);
     doc.stream.end();
@@ -122,8 +101,6 @@ describe('print module', () => {
         data.basics,
         {
           patient: opts.patient,
-          timePrefs: opts.timePrefs,
-          bgPrefs: opts.bgPrefs,
           title: 'The Basics',
         },
       );
@@ -134,10 +111,7 @@ describe('print module', () => {
         doc,
         data.daily,
         {
-          numDays: opts.numDays.daily,
           patient: opts.patient,
-          timePrefs: opts.timePrefs,
-          bgPrefs: opts.bgPrefs,
           title: 'Daily Charts',
         },
       );
@@ -148,10 +122,7 @@ describe('print module', () => {
         doc,
         data.bgLog,
         {
-          numDays: opts.numDays.bgLog,
           patient: opts.patient,
-          timePrefs: opts.timePrefs,
-          bgPrefs: opts.bgPrefs,
           title: 'BG Log',
         },
       );
@@ -163,8 +134,6 @@ describe('print module', () => {
         data.settings,
         {
           patient: opts.patient,
-          timePrefs: opts.timePrefs,
-          bgPrefs: opts.bgPrefs,
           title: 'Pump Settings',
         },
       );
@@ -173,54 +142,83 @@ describe('print module', () => {
     });
   });
 
-  it('should only render the basics view when only basics data is available', () => {
-    const basicsDataOnly = {
-      basics: data.basics,
+  it('should only render the basics view when other views are disabled', () => {
+    const basicsOnlyEnabledOpts = {
+      basics: { disabled: false },
+      daily: { disabled: true },
+      bgLog: { disabled: true },
+      settings: { disabled: true },
     };
 
-    const result = Module.createPrintPDFPackage(basicsDataOnly, opts);
+    const result = Module.createPrintPDFPackage(data, basicsOnlyEnabledOpts);
     doc.stream.end();
 
     return result.then(() => {
       sinon.assert.calledOnce(Module.utils.BasicsPrintView);
 
       sinon.assert.notCalled(Module.utils.DailyPrintView);
-
+      sinon.assert.notCalled(Module.utils.BgLogPrintView);
       sinon.assert.notCalled(Module.utils.SettingsPrintView);
     });
   });
 
-  it('should only render the daily view when only daily data is available', () => {
-    const dailyDataOnly = {
-      daily: data.daily,
+  it('should only render the daily view when other views are disabled', () => {
+    const dailyOnlyEnabledOpts = {
+      basics: { disabled: true },
+      daily: { disabled: false },
+      bgLog: { disabled: true },
+      settings: { disabled: true },
     };
 
-    const result = Module.createPrintPDFPackage(dailyDataOnly, opts);
+    const result = Module.createPrintPDFPackage(data, dailyOnlyEnabledOpts);
     doc.stream.end();
 
     return result.then(() => {
-      sinon.assert.notCalled(Module.utils.BasicsPrintView);
-
       sinon.assert.calledOnce(Module.utils.DailyPrintView);
 
+      sinon.assert.notCalled(Module.utils.BasicsPrintView);
+      sinon.assert.notCalled(Module.utils.BgLogPrintView);
       sinon.assert.notCalled(Module.utils.SettingsPrintView);
     });
   });
 
-  it('should only render the settings view when only settings data is available', () => {
-    const settingsDataOnly = {
-      settings: data.settings,
+  it('should only render the bgLog view when other views are disabled', () => {
+    const bgLogOnlyEnabledOpts = {
+      basics: { disabled: true },
+      daily: { disabled: true },
+      bgLog: { disabled: false },
+      settings: { disabled: true },
     };
 
-    const result = Module.createPrintPDFPackage(settingsDataOnly, opts);
+    const result = Module.createPrintPDFPackage(data, bgLogOnlyEnabledOpts);
     doc.stream.end();
 
     return result.then(() => {
+      sinon.assert.calledOnce(Module.utils.BgLogPrintView);
+
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
-
       sinon.assert.notCalled(Module.utils.DailyPrintView);
+      sinon.assert.notCalled(Module.utils.SettingsPrintView);
+    });
+  });
 
+  it('should only render the settings view when other views are disabled', () => {
+    const settingsOnlyEnabledOpts = {
+      basics: { disabled: true },
+      daily: { disabled: true },
+      bgLog: { disabled: true },
+      settings: { disabled: false },
+    };
+
+    const result = Module.createPrintPDFPackage(data, settingsOnlyEnabledOpts);
+    doc.stream.end();
+
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.SettingsPrintView);
+
+      sinon.assert.notCalled(Module.utils.BasicsPrintView);
+      sinon.assert.notCalled(Module.utils.DailyPrintView);
+      sinon.assert.notCalled(Module.utils.BgLogPrintView);
     });
   });
 

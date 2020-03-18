@@ -1716,8 +1716,16 @@ describe('stat', () => {
 
     it('should reshape provided tideline-style bgPrefs to the viz format', () => {
       const bgPrefs = { ...defaultBgPrefs };
+      expect(bgPrefs.bgBounds).to.be.undefined;
+
       stat.statsText(stats, textUtil, bgPrefs);
-      expect(bgPrefs.bgBounds).to.be.an('object');
+      expect(bgPrefs.bgBounds).to.eql({
+        veryLowThreshold: bgPrefs.bgClasses['very-low'].boundary,
+        targetLowerBound: bgPrefs.bgClasses.low.boundary,
+        targetUpperBound: bgPrefs.bgClasses.target.boundary,
+        veryHighThreshold: bgPrefs.bgClasses.high.boundary,
+        clampThreshold: 600,
+      });
     });
 
     it('should render all horizontal bar stats as tables', () => {

@@ -16,8 +16,6 @@
  */
 
 import React, { PropTypes, PureComponent } from 'react';
-import { connect } from 'react-redux';
-import { bindActionCreators } from 'redux';
 import { TransitionMotion, spring } from 'react-motion';
 import _ from 'lodash';
 
@@ -25,8 +23,6 @@ import { classifyBgValue } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import { THREE_HRS } from '../../../utils/datetime';
 import { findBinForTimeOfDay } from '../../../utils/trends/data';
-
-import { focusTrendsSmbg, unfocusTrendsSmbg } from '../../../redux/actions/trends';
 
 import styles from './SMBGDatePointsAnimated.css';
 
@@ -57,7 +53,6 @@ export class SMBGDatePointsAnimated extends PureComponent {
     someSmbgDataIsFocused: PropTypes.bool.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
     unfocusSmbg: PropTypes.func.isRequired,
-    userId: PropTypes.string.isRequired,
     xScale: PropTypes.func.isRequired,
     yScale: PropTypes.func.isRequired,
   };
@@ -98,8 +93,8 @@ export class SMBGDatePointsAnimated extends PureComponent {
   }
 
   handleMouseOut() {
-    const { unfocusSmbg, userId } = this.props;
-    unfocusSmbg(userId);
+    const { unfocusSmbg } = this.props;
+    unfocusSmbg();
   }
 
   willEnter(entered) {
@@ -134,7 +129,6 @@ export class SMBGDatePointsAnimated extends PureComponent {
       nonInteractive,
       smbgOpts,
       someSmbgDataIsFocused,
-      userId,
     } = this.props;
     const radius = isFocused ? smbgOpts.maxR : smbgOpts.r;
     const positions = this.getPositions();
@@ -186,7 +180,7 @@ export class SMBGDatePointsAnimated extends PureComponent {
                     id={`smbg-${key}`}
                     key={key}
                     onMouseOver={() => focusSmbg(
-                      userId, smbg.data.smbg, smbg.data.position, data, positions, date
+                      smbg.data.smbg, smbg.data.position, data, positions, date
                     )}
                     onMouseOut={this.handleMouseOut}
                     onClick={this.handleClick}
@@ -206,18 +200,4 @@ export class SMBGDatePointsAnimated extends PureComponent {
   }
 }
 
-export function mapStateToProps(state) {
-  const { blip: { currentPatientInViewId } } = state;
-  return {
-    userId: currentPatientInViewId,
-  };
-}
-
-export function mapDispatchToProps(dispatch) {
-  return bindActionCreators({
-    focusSmbg: focusTrendsSmbg,
-    unfocusSmbg: unfocusTrendsSmbg,
-  }, dispatch);
-}
-
-export default connect(mapStateToProps, mapDispatchToProps)(SMBGDatePointsAnimated);
+export default SMBGDatePointsAnimated;

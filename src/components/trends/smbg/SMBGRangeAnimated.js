@@ -48,6 +48,8 @@ export class SMBGRangeAnimated extends PureComponent {
       msTo: PropTypes.number.isRequired,
     }),
     defaultY: PropTypes.number.isRequired,
+    focusSmbgRange: PropTypes.func.isRequired,
+    unfocusSmbgRange: PropTypes.func.isRequired,
     someSmbgDataIsFocused: PropTypes.bool.isRequired,
     tooltipLeftThreshold: PropTypes.number.isRequired,
     width: PropTypes.number.isRequired,
@@ -125,6 +127,8 @@ export class SMBGRangeAnimated extends PureComponent {
             <SMBGRange
               classes={rangeClasses}
               datum={datum}
+              focusRange={this.props.focusSmbgRange}
+              unfocusRange={this.props.unfocusSmbgRange}
               interpolated={interpolated[0]}
               positionData={{
                 left: xPos,
