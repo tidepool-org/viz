@@ -214,7 +214,7 @@ export function trendsText(patient, data, stats, chartPrefs) {
     bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new utils.TextUtil(patient, endpoints, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
   let trendsString = textUtil.buildDocumentHeader('Trends');
 
   trendsString += textUtil.buildDocumentDates();

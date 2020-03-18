@@ -25,7 +25,7 @@ describe('BgBar', () => {
   };
 
   const stdDevDatumDisabled = {
-    ...avgGlucoseDatum,
+    y: 0,
     deviation: {
       value: 0,
     },
@@ -263,21 +263,36 @@ describe('BgBar', () => {
       expect(bgDeviation().childAt(1).props().style.fill).to.equal(colors.high);
     });
 
-    it('should set the color to `low` when the deviation is > the mean, resulting in a negative low bar value', () => {
+    it('should not render when the deviation is >0 the mean, resulting in a negative low bar value', () => {
       // -1 low value
       wrapper.setProps(props({ datum: {
         y: 50,
         deviation: { value: 51 },
       } }));
+      expect(bgDeviation().children()).to.have.lengthOf(0);
 
-      expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.low);
+      // 0 low value
+      wrapper.setProps(props({ datum: {
+        y: 50,
+        deviation: { value: 50 },
+      } }));
+
+      expect(bgDeviation().children()).to.have.lengthOf(0);
+
+      // 1 low value
+      wrapper.setProps(props({ datum: {
+        y: 50,
+        deviation: { value: 49 },
+      } }));
+
+      expect(bgDeviation().children()).to.have.lengthOf(2);
     });
 
     it('should constrain the bars to render within the scale when the deviation would cause them to render outside of it', () => {
-      // -50 to 450 -- scale only shows 0 to 400
+      // 1 to 499 -- scale only shows 0 to 400
       wrapper.setProps(props({ datum: {
-        y: 200,
-        deviation: { value: 250 },
+        y: 250,
+        deviation: { value: 249 },
       } }));
 
       const scaleWidth = defaultProps.width - defaultProps.chartLabelWidth;
