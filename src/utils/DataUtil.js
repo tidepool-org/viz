@@ -477,6 +477,7 @@ export class DataUtil {
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
+      delete this.latestPumpUpload;
       this.init();
     }
   };
