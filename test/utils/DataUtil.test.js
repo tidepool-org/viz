@@ -1646,6 +1646,12 @@ describe('DataUtil', () => {
         dataUtil.removeData();
         expect(dataUtil.timePrefs).to.be.undefined;
       });
+
+      it('should delete the `latestPumpUpload` metadata', () => {
+        dataUtil.latestPumpUpload = { foo: 'bar' };
+        dataUtil.removeData();
+        expect(dataUtil.latestPumpUpload).to.be.undefined;
+      });
     });
   });
 
