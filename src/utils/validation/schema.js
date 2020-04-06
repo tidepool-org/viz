@@ -142,8 +142,19 @@ const extendedBolus = {
     fields: ['normal'],
     ...optional,
   },
-  subType: { type: 'string', enum: ['square', 'dual/square'] },
+  subType: { type: 'string', enum: ['square'] },
   wizard: { type: 'string', pattern: patterns.id, ...optional },
+};
+
+const combinationBolus = {
+  ...extendedBolus,
+  subType: { type: 'string', enum: ['dual/square'] },
+  expectedNormal: {
+    type: 'withDependantFields',
+    schema: { ...minZero, ...optional },
+    fields: ['normal', 'duration', 'expectedDuration', 'extended', 'expectedExtended'],
+    ...optional,
+  },
 };
 
 const bg = {
@@ -328,6 +339,7 @@ export default {
   bolus: {
     normal: v.compile(normalBolus),
     extended: v.compile(extendedBolus),
+    combination: v.compile(combinationBolus),
   },
   cbg: v.compile(bg),
   common: v.compile(common),

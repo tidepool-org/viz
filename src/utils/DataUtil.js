@@ -99,7 +99,6 @@ export class DataUtil {
     // Join wizard and bolus datums
     this.startTimer('processNormalizedData');
     _.each(data, this.joinWizardAndBolus);
-    _.each(data, this.tagDatum);
     this.endTimer('processNormalizedData');
 
     // Filter out any data that failed validation, and and duplicates by `id`
@@ -110,6 +109,7 @@ export class DataUtil {
     this.endTimer('filterValidData');
 
     this.startTimer('addValidData');
+    _.each(validData, this.tagDatum);
     this.data.add(validData);
     this.endTimer('addValidData');
 

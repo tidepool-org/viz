@@ -327,12 +327,71 @@ describe('schema validation', () => {
       it('should return an error for an invalid `subType`', () => {
         const result = Validator.bolus.extended(invalidSubType);
         expect(_.find(result, { field: 'subType' }).message).to.equal('The \'subType\' field does not match any of the allowed values!');
-        expect(_.find(result, { field: 'subType' }).expected).to.have.members(['square', 'dual/square']);
+        expect(_.find(result, { field: 'subType' }).expected).to.have.members(['square']);
       });
 
       it('should return an error for an invalid `wizard`', () => {
         const result = Validator.bolus.extended(invalidWizard);
         expect(_.find(result, { field: 'wizard' }).message).to.equal('The \'wizard\' field fails to match the required pattern!');
+      });
+    });
+
+    context('combination', () => {
+      const combinationBolus = { ...new Types.Bolus({ raw: true }), extended: 1, duration: 1, subType: 'dual/square' };
+
+      const expectedNormal = { ...combinationBolus, normal: 1, expectedNormal: 1, duration: 1, expectedDuration: 1, extended: 1, expectedExtended: 1 };
+      const zeroExpectedNormal = { ...expectedNormal, expectedNormal: 0 };
+      const negativeExpectedNormal = { ...expectedNormal, expectedNormal: -1 };
+
+      const expectedNormalMissingNormal = { ...expectedNormal, normal: undefined };
+      const expectedNormalMissingDuration = { ...expectedNormal, duration: undefined };
+      const expectedNormalMissingExpectedDuration = { ...expectedNormal, expectedDuration: undefined };
+      const expectedNormalMissingExtended = { ...expectedNormal, extended: undefined };
+      const expectedNormalMissingExpectedExtended = { ...expectedNormal, expectedExtended: undefined };
+
+      const invalidSubType = { ...combinationBolus, subType: 'foo' };
+
+      it('should validate a valid combination `bolus` datum', () => {
+        expect(Validator.bolus.combination(combinationBolus)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(combinationBolus, 'combination');
+      });
+
+      it('should pass for zero or positive `expectedNormal`', () => {
+        expect(Validator.bolus.combination(expectedNormal)).to.be.true;
+        expect(Validator.bolus.combination(zeroExpectedNormal)).to.be.true;
+      });
+
+      it('should return an error for a negative `expectedNormal`', () => {
+        expect(_.find(Validator.bolus.combination(negativeExpectedNormal), { field: 'expectedNormal' }).message).to.equal('The \'expectedNormal\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for an `expectedNormal` that\'s missing the `normal` field', () => {
+        expect(_.find(Validator.bolus.combination(expectedNormalMissingNormal), { field: 'expectedNormal' }).message).to.contain('Field(s) \'normal,duration,expectedDuration,extended,expectedExtended\' are expected when field \'expectedNormal\' exists.');
+      });
+
+      it('should return an error for an `expectedNormal` that\'s missing the `duration` field', () => {
+        expect(_.find(Validator.bolus.combination(expectedNormalMissingDuration), { field: 'expectedNormal' }).message).to.contain('Field(s) \'normal,duration,expectedDuration,extended,expectedExtended\' are expected when field \'expectedNormal\' exists.');
+      });
+
+      it('should return an error for an `expectedNormal` that\'s missing the `expectedDuration` field', () => {
+        expect(_.find(Validator.bolus.combination(expectedNormalMissingExpectedDuration), { field: 'expectedNormal' }).message).to.contain('Field(s) \'normal,duration,expectedDuration,extended,expectedExtended\' are expected when field \'expectedNormal\' exists.');
+      });
+
+      it('should return an error for an `expectedNormal` that\'s missing the `extended` field', () => {
+        expect(_.find(Validator.bolus.combination(expectedNormalMissingExtended), { field: 'expectedNormal' }).message).to.contain('Field(s) \'normal,duration,expectedDuration,extended,expectedExtended\' are expected when field \'expectedNormal\' exists.');
+      });
+
+      it('should return an error for an `expectedNormal` that\'s missing the `expectedExtended` field', () => {
+        expect(_.find(Validator.bolus.combination(expectedNormalMissingExpectedExtended), { field: 'expectedNormal' }).message).to.contain('Field(s) \'normal,duration,expectedDuration,extended,expectedExtended\' are expected when field \'expectedNormal\' exists.');
+      });
+
+      it('should return an error for an invalid `subType`', () => {
+        const result = Validator.bolus.combination(invalidSubType);
+        expect(_.find(result, { field: 'subType' }).message).to.equal('The \'subType\' field does not match any of the allowed values!');
+        expect(_.find(result, { field: 'subType' }).expected).to.have.members(['dual/square']);
       });
     });
   });
