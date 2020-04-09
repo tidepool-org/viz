@@ -205,6 +205,7 @@ class BasicsPrintView extends PrintView {
       readingsInRange,
       averageDailyDose,
       sensorUsage,
+      glucoseManagementIndicator,
     } = this.stats;
 
     if (timeInRange) {
@@ -255,6 +256,8 @@ class BasicsPrintView extends PrintView {
 
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
+
+    if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
   }
 
   defineStatColumns(opts = {}) {
