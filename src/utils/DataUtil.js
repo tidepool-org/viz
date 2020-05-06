@@ -364,6 +364,15 @@ export class DataUtil {
       const localTime = d.normalTime + d.displayOffset * MS_IN_MIN;
       const normalTimeISO = moment.utc(d.normalTime).toISOString();
 
+      // Fill times need to be shifted to account for time zones offsets that do not fall exactly on
+      // the hour. This is because the times for the fills are generated with d3-time's
+      // utcHour.range, which won't work as-is for timezones with offsets that fall between hours,
+      // such as 'Asia/Kolkata' with an offset of UTC +5:30 or Canada/Newfoundland at UTC -2:30
+      // Most timezones do fall on the hour, and will not actually end up being shifted, since the
+      // modulus in those cases will be 0
+      const timezoneModulusShift = (d.displayOffset % 60) * MS_IN_MIN;
+      d.normalTime = d.normalTime - timezoneModulusShift;
+
       d.normalEnd = d.normalTime + d.duration;
       d.msPer24 = getMsPer24(d.normalTime, timezoneName);
       d.hourOfDay = d.msPer24 / MS_IN_HOUR;
