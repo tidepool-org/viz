@@ -1,7 +1,6 @@
 import bows from 'bows';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
-import { utcHour } from 'd3-time';
 import _ from 'lodash';
 
 import {
@@ -363,15 +362,6 @@ export class DataUtil {
     if (d.type === 'fill') {
       const localTime = d.normalTime + d.displayOffset * MS_IN_MIN;
       const normalTimeISO = moment.utc(d.normalTime).toISOString();
-
-      // Fill times need to be shifted to account for time zones offsets that do not fall exactly on
-      // the hour. This is because the times for the fills are generated with d3-time's
-      // utcHour.range, which won't work as-is for timezones with offsets that fall between hours,
-      // such as 'Asia/Kolkata' with an offset of UTC +5:30 or Canada/Newfoundland at UTC -2:30
-      // Most timezones do fall on the hour, and will not actually end up being shifted, since the
-      // modulus in those cases will be 0
-      const timezoneModulusShift = (d.displayOffset % 60) * MS_IN_MIN;
-      d.normalTime = d.normalTime - timezoneModulusShift;
 
       d.normalEnd = d.normalTime + d.duration;
       d.msPer24 = getMsPer24(d.normalTime, timezoneName);
@@ -1063,18 +1053,17 @@ export class DataUtil {
   getFillData = (endpoints, opts = {}) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
+    const days = this.activeEndpoints.days;
     const fillHours = 3;
+    const fillBinCount = (24 / fillHours) * days;
     const duration = fillHours * MS_IN_HOUR;
 
     const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
 
-    const end = moment.utc(start).tz(timezone)
-      .add(this.activeEndpoints.days, 'days')
-      .subtract(1, 'ms')
-      .endOf('day')
-      .valueOf();
-
-    const hourlyStarts = utcHour.range(start, end);
+    const hourlyStarts = [start];
+    for (let index = 1; index < 24 * days; index++) {
+      hourlyStarts.push(hourlyStarts[index - 1] + MS_IN_HOUR);
+    }
 
     const fillData = [];
     let prevFill = null;
@@ -1082,7 +1071,7 @@ export class DataUtil {
     _.each(hourlyStarts, startTime => {
       const fill = {
         duration,
-        time: startTime.valueOf(),
+        time: startTime,
         type: 'fill',
       };
       this.normalizeDatumOut(fill);
@@ -1102,7 +1091,7 @@ export class DataUtil {
           }
         }
 
-        fillData.push(fill);
+        if (fillData.length < fillBinCount) fillData.push(fill);
         prevFill = fill;
       }
     });
