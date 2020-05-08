@@ -1,7 +1,6 @@
 import bows from 'bows';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
-import { utcHour } from 'd3-time';
 import _ from 'lodash';
 
 import {
@@ -1054,18 +1053,17 @@ export class DataUtil {
   getFillData = (endpoints, opts = {}) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
+    const days = this.activeEndpoints.days;
     const fillHours = 3;
+    const fillBinCount = (24 / fillHours) * days;
     const duration = fillHours * MS_IN_HOUR;
 
     const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
 
-    const end = moment.utc(start).tz(timezone)
-      .add(this.activeEndpoints.days, 'days')
-      .subtract(1, 'ms')
-      .endOf('day')
-      .valueOf();
-
-    const hourlyStarts = utcHour.range(start, end);
+    const hourlyStarts = [start];
+    for (let index = 1; index < 24 * days; index++) {
+      hourlyStarts.push(hourlyStarts[index - 1] + MS_IN_HOUR);
+    }
 
     const fillData = [];
     let prevFill = null;
@@ -1073,7 +1071,7 @@ export class DataUtil {
     _.each(hourlyStarts, startTime => {
       const fill = {
         duration,
-        time: startTime.valueOf(),
+        time: startTime,
         type: 'fill',
       };
       this.normalizeDatumOut(fill);
@@ -1093,7 +1091,7 @@ export class DataUtil {
           }
         }
 
-        fillData.push(fill);
+        if (fillData.length < fillBinCount) fillData.push(fill);
         prevFill = fill;
       }
     });
