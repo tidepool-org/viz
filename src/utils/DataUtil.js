@@ -1,7 +1,6 @@
 import bows from 'bows';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
-import { utcHour } from 'd3-time';
 import _ from 'lodash';
 
 import {
@@ -99,7 +98,6 @@ export class DataUtil {
     // Join wizard and bolus datums
     this.startTimer('processNormalizedData');
     _.each(data, this.joinWizardAndBolus);
-    _.each(data, this.tagDatum);
     this.endTimer('processNormalizedData');
 
     // Filter out any data that failed validation, and and duplicates by `id`
@@ -110,6 +108,7 @@ export class DataUtil {
     this.endTimer('filterValidData');
 
     this.startTimer('addValidData');
+    _.each(validData, this.tagDatum);
     this.data.add(validData);
     this.endTimer('addValidData');
 
@@ -163,7 +162,13 @@ export class DataUtil {
     if (d.reject) return;
 
     // Convert the time and deviceTime properties to hammertime,
-    // which improves dimension filtering performance significantly over using ISO strings
+    // which improves dimension filtering performance significantly over using ISO strings.
+    // We store the original time strings, with labels prefaced with underscores, however,
+    // for easier reference when debugging.
+    /* eslint-disable no-underscore-dangle */
+    d._time = d.time;
+    d._deviceTime = d.deviceTime;
+    /* eslint-enable no-underscore-dangle */
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
 
@@ -249,6 +254,37 @@ export class DataUtil {
   };
 
   normalizeDatumOut = (d, fields = []) => {
+    if (this.returnRawData) {
+      /* eslint-disable no-underscore-dangle */
+      if (d._time) {
+        d.time = d._time;
+        delete d._time;
+      }
+
+      if (d._deviceTime) {
+        d.deviceTime = d._deviceTime;
+        delete d._deviceTime;
+      }
+
+      delete d.tags;
+
+      if (_.includes(['bolus', 'wizard'], d.type)) {
+        const isWizard = d.type === 'wizard';
+        const fieldToRestore = isWizard ? 'bolus' : 'wizard';
+        if (_.get(d, [fieldToRestore, 'id'])) d[fieldToRestore] = d[fieldToRestore].id;
+      }
+
+      if (d.type === 'message') {
+        delete d.type;
+        delete d.messageText;
+        delete d.parentMessage;
+        delete d.time;
+      }
+
+      return;
+      /* eslint-enable no-underscore-dangle */
+    }
+
     const { timezoneName } = this.timePrefs || {};
     const normalizeAllFields = fields[0] === '*';
 
@@ -282,6 +318,9 @@ export class DataUtil {
           this.log('intersectsIncompleteSuspend', d.id);
         }
       }
+
+      // Recurse as needed for suppressed basals
+      if (d.suppressed && (normalizeAllFields || _.includes(fields, 'suppressed'))) this.normalizeDatumOut(d.suppressed, fields);
     }
 
     if (d.type === 'cbg' || d.type === 'smbg') {
@@ -313,11 +352,11 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, ['bgTarget'], ['target', 'range', 'low', 'high']);
       this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
 
-      if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus);
+      if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
     }
 
     if (d.type === 'bolus') {
-      if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard);
+      if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard, fields);
     }
 
     if (d.type === 'fill') {
@@ -332,9 +371,8 @@ export class DataUtil {
     }
   };
 
-  normalizeDatumOutTime = (d, fields = []) => {
+  normalizeDatumOutTime = d => {
     const { timezoneName } = this.timePrefs || {};
-    const normalizeAllFields = fields[0] === '*';
 
     if (timezoneName) {
       d.normalTime = d.time;
@@ -353,9 +391,6 @@ export class DataUtil {
         d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
       }
     }
-
-    // Recurse as needed for suppressed basals
-    if (d.suppressed && (normalizeAllFields || _.includes(fields, 'suppressed'))) this.normalizeDatumOutTime(d.suppressed, fields);
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {
@@ -441,6 +476,7 @@ export class DataUtil {
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
+      delete this.latestPumpUpload;
       this.init();
     }
   };
@@ -568,7 +604,7 @@ export class DataUtil {
     const bgSources = {
       cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
       smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
-      current,
+      current: _.includes([CGM_DATA_KEY, BGM_DATA_KEY], current) ? current : undefined,
     };
 
     if (!bgSources.current) {
@@ -690,7 +726,9 @@ export class DataUtil {
     };
 
     if (endpoints) {
+      const { timezoneName } = this.timePrefs;
       const days = moment.utc(endpoints[1]).diff(moment.utc(endpoints[0])) / MS_IN_DAY;
+
       this.endpoints.current = {
         range: _.map(endpoints, e => moment.utc(e).valueOf()),
         days,
@@ -706,6 +744,17 @@ export class DataUtil {
           days: nextDays,
           activeDays: nextDays,
         };
+
+        if (timezoneName) {
+          const nextStartIsDST = moment.utc(this.endpoints.next.range[0]).tz(timezoneName).isDST();
+          const nextEndIsDST = moment.utc(this.endpoints.next.range[1]).tz(timezoneName).isDST();
+          const nextOverlapsDSTChangeover = nextStartIsDST !== nextEndIsDST;
+
+          if (nextOverlapsDSTChangeover) {
+            const offset = nextEndIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
+            this.endpoints.next.range[1] = this.endpoints.next.range[1] + offset;
+          }
+        }
       }
 
       if (prevDays > 0) {
@@ -717,6 +766,17 @@ export class DataUtil {
           days: prevDays,
           activeDays: prevDays,
         };
+
+        if (timezoneName) {
+          const prevStartIsDST = moment.utc(this.endpoints.prev.range[0]).tz(timezoneName).isDST();
+          const prevEndIsDST = moment.utc(this.endpoints.prev.range[1]).tz(timezoneName).isDST();
+          const prevOverlapsDSTChangeover = prevStartIsDST !== prevEndIsDST;
+
+          if (prevOverlapsDSTChangeover) {
+            const offset = prevStartIsDST ? -MS_IN_HOUR : MS_IN_HOUR;
+            this.endpoints.prev.range[0] = this.endpoints.prev.range[0] + offset;
+          }
+        }
       }
     }
     this.endTimer('setEndpoints');
@@ -764,6 +824,16 @@ export class DataUtil {
         type,
         ...value,
       }));
+    } else if (types === '*') {
+      const groupByType = this.dimension.byType.group();
+
+      this.types = _.map(groupByType.all(), group => ({
+        type: group.key,
+        select: '*',
+        sort: `${this.activeTimeField},asc`,
+      }));
+
+      groupByType.dispose();
     }
     this.endTimer('setTypes');
   };
@@ -833,6 +903,10 @@ export class DataUtil {
     this.endTimer('setBgPrefs');
   };
 
+  setReturnRawData = (returnRaw = false) => {
+    this.returnRawData = returnRaw;
+  };
+
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -850,6 +924,7 @@ export class DataUtil {
       stats,
       timePrefs,
       types,
+      raw,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -858,6 +933,7 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
+    this.setReturnRawData(raw);
     this.setBgSources(bgSource);
     this.setTypes(types);
     this.setStats(stats);
@@ -912,6 +988,9 @@ export class DataUtil {
     };
 
     if (metaData) result.metaData = this.getMetaData(metaData);
+
+    // Always reset `returnRawData` to `false` after each query
+    this.setReturnRawData(false);
 
     this.log('Result', result);
 
@@ -974,17 +1053,17 @@ export class DataUtil {
   getFillData = (endpoints, opts = {}) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
+    const days = this.activeEndpoints.days;
     const fillHours = 3;
+    const fillBinCount = (24 / fillHours) * days;
     const duration = fillHours * MS_IN_HOUR;
 
     const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
 
-    const end = moment.utc(start).tz(timezone)
-      .add(this.activeEndpoints.days, 'days')
-      .endOf('day')
-      .valueOf();
-
-    const hourlyStarts = utcHour.range(start, end);
+    const hourlyStarts = [start];
+    for (let index = 1; index < 24 * days; index++) {
+      hourlyStarts.push(hourlyStarts[index - 1] + MS_IN_HOUR);
+    }
 
     const fillData = [];
     let prevFill = null;
@@ -992,7 +1071,7 @@ export class DataUtil {
     _.each(hourlyStarts, startTime => {
       const fill = {
         duration,
-        time: startTime.valueOf(),
+        time: startTime,
         type: 'fill',
       };
       this.normalizeDatumOut(fill);
@@ -1012,7 +1091,7 @@ export class DataUtil {
           }
         }
 
-        fillData.push(fill);
+        if (fillData.length < fillBinCount) fillData.push(fill);
         prevFill = fill;
       }
     });
@@ -1100,7 +1179,33 @@ export class DataUtil {
 
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
-      _.each(typeData, d => this.normalizeDatumOut(d, fields));
+      if (type === 'basal' && _.includes(['prev', 'next'], this.activeRange)) {
+        typeData = this.sort.byTime(typeData);
+        if (this.activeRange === 'prev') {
+          // Normalize the basal data and add any basals overlapping the start
+          typeData = this.addBasalOverlappingStart(typeData, fields);
+
+          // Trim the first basal if it overlaps the start
+          if (typeData.length) {
+            typeData[0].normalTime = _.max([
+              typeData[0].normalTime,
+              this.activeEndpoints.range[0],
+            ]);
+          }
+        } else {
+          _.each(typeData, d => this.normalizeDatumOut(d, fields));
+
+          // Trim last basal if it overlaps the range end
+          if (typeData.length) {
+            typeData[typeData.length - 1].normalEnd = _.min([
+              typeData[typeData.length - 1].normalEnd,
+              this.activeEndpoints.range[1],
+            ]);
+          }
+        }
+      } else {
+        _.each(typeData, d => this.normalizeDatumOut(d, fields));
+      }
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
 
       // Sort data
@@ -1132,8 +1237,8 @@ export class DataUtil {
     return generatedData;
   };
 
-  addBasalOverlappingStart = basalData => {
-    _.each(basalData, this.normalizeDatumOut);
+  addBasalOverlappingStart = (basalData, normalizeFields) => {
+    _.each(basalData, d => this.normalizeDatumOut(d, normalizeFields));
 
     if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {
       // We need to ensure all the days of the week are active to ensure we get all basals
@@ -1151,7 +1256,7 @@ export class DataUtil {
         .reverse()[0];
 
       if (previousBasalDatum) {
-        this.normalizeDatumOut(previousBasalDatum);
+        this.normalizeDatumOut(previousBasalDatum, normalizeFields);
 
         // Add to top of basal data array if it overlaps the start endpoint
         const datumOverlapsStart = previousBasalDatum.normalTime < this.activeEndpoints.range[0]

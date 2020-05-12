@@ -205,6 +205,7 @@ class BasicsPrintView extends PrintView {
       readingsInRange,
       averageDailyDose,
       sensorUsage,
+      glucoseManagementIndicator,
     } = this.stats;
 
     if (timeInRange) {
@@ -255,6 +256,8 @@ class BasicsPrintView extends PrintView {
 
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
+
+    if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
   }
 
   defineStatColumns(opts = {}) {
@@ -355,7 +358,9 @@ class BasicsPrintView extends PrintView {
     const columnWidth = this.getActiveColumnWidth();
 
     const statHasData = _.get(stat, 'data.total.value') > 0;
-    if (!statHasData) opts.heading.note = opts.emptyText; // eslint-disable-line no-param-reassign
+    if (!statHasData && _.isPlainObject(opts.heading)) {
+      opts.heading.note = opts.emptyText; // eslint-disable-line no-param-reassign
+    }
 
     this.renderTableHeading(opts.heading, {
       columnDefaults: {

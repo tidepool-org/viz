@@ -1,5 +1,4 @@
 import _ from 'lodash';
-import moment from 'moment';
 import table from 'text-table';
 import i18next from 'i18next';
 
@@ -8,8 +7,11 @@ import {
   formatCurrentDate,
   formatDateRange,
   formatDiagnosisDate,
+  getOffset,
   getTimezoneFromTimePrefs,
 } from '../datetime';
+
+import { MS_IN_MIN } from '../constants';
 
 import { getPatientFullName } from '../misc';
 
@@ -33,9 +35,13 @@ export class TextUtil {
   buildDocumentDates = () => {
     const timezone = getTimezoneFromTimePrefs(this.timePrefs);
 
-    // endpoint is exclusive, so need to subtract a day from formatted range end date
-    const start = moment.utc(this.endpoints[0]).tz(timezone);
-    const end = moment.utc(this.endpoints[1]).tz(timezone).subtract(1, 'day');
+    // endpoint is exclusive, so need to subtract a millisecond from formatted range end date
+    let start = this.endpoints[0];
+    let end = this.endpoints[1] - 1;
+
+    start = start - getOffset(start, timezone) * MS_IN_MIN;
+    end = end - getOffset(end, timezone) * MS_IN_MIN;
+
     return `\nReporting Period: ${formatDateRange(start, end)}\n`;
   }
 

@@ -512,19 +512,21 @@ describe('DataUtil', () => {
         expect(datum2.time).to.equal('2018-02-01T01:00:00');
       });
 
-      it('should convert `time` string to UTC hammertime timestamp', () => {
+      it('should convert `time` string to UTC hammertime timestamp, and save ref to original as `_time`', () => {
         const datum = { type: 'any', time: '2018-02-01T01:00:00' };
         dataUtil.validateDatumIn = sinon.stub().returns(true);
         dataUtil.normalizeDatumIn(datum);
         expect(datum.time).to.equal(1517446800000);
+        expect(datum._time).to.equal('2018-02-01T01:00:00');
       });
 
-      it('should convert `deviceTime` string to UTC hammertime timestamp', () => {
+      it('should convert `deviceTime` string to UTC hammertime timestamp, and save ref to original as `_deviceTime`', () => {
         const datum = { type: 'any', time: '2018-02-01T01:00:00', deviceTime: '2018-02-01T02:00:00' };
         dataUtil.validateDatumIn = sinon.stub().returns(true);
         dataUtil.normalizeDatumIn(datum);
         expect(datum.time).to.equal(1517446800000);
         expect(datum.deviceTime).to.equal(datum.time + MS_IN_HOUR);
+        expect(datum._deviceTime).to.equal('2018-02-01T02:00:00');
       });
 
       it('should set missing `deviceTime` to processed `time`', () => {
@@ -948,6 +950,82 @@ describe('DataUtil', () => {
       expect(uploadWithoutSourceDatum.source).to.equal('Unspecified Data Source');
     });
 
+    context('returnRawData is `true`', () => {
+      beforeEach(() => {
+        dataUtil.returnRawData = true;
+      });
+
+      it('should restore `time` and `deviceTime` to their original ISO date string values', () => {
+        const datum = {
+          time: 12345,
+          _time: 'original time string',
+          deviceTime: 678910,
+          _deviceTime: 'original deviceTime string',
+        };
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum.time).to.equal('original time string');
+        expect(datum.deviceTime).to.equal('original deviceTime string');
+      });
+
+      it('should restore populated `bolus` object on a `wizard` datum to it\'s original string `id` ref', () => {
+        const datum = {
+          type: 'wizard',
+          bolus: { id: 'myBolusID' },
+        };
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum.bolus).to.equal('myBolusID');
+      });
+
+      it('should restore populated `wizard` object on a `bolus` datum to it\'s original string `id` ref', () => {
+        const datum = {
+          type: 'bolus',
+          wizard: { id: 'myWizardID' },
+        };
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum.wizard).to.equal('myWizardID');
+      });
+
+      it('should delete added `_time`, `_deviceTime`, and `tags` fields', () => {
+        const datum = {
+          time: 12345,
+          _time: 'original time string',
+          deviceTime: 678910,
+          _deviceTime: 'original deviceTime string',
+          tags: ['foo', 'bar'],
+        };
+
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum).to.have.all.keys('time', 'deviceTime');
+        expect(datum).to.not.have.keys('_time', '_deviceTime', 'tags');
+      });
+
+      it('should restore a processed message datum back to it\'s original shape', () => {
+        const datum = {
+          type: 'message',
+          messagetext: 'myMessageText',
+          messageText: 'myMessageText',
+          parentmessage: 'myParentMessage',
+          parentMessage: 'myParentMessage',
+          time: 12345,
+          timestamp: 12345,
+        };
+
+
+        dataUtil.normalizeDatumOut(datum);
+
+        expect(datum).to.have.all.keys('messagetext', 'parentmessage', 'timestamp');
+        expect(datum).to.not.have.keys('type', 'messageText', 'parentMessage', 'time');
+      });
+    });
+
     context('basal', () => {
       it('should set `normalEnd` by adding the `normalTime` and `duration` fields', () => {
         sinon.stub(dataUtil, 'normalizeDatumOutTime');
@@ -992,6 +1070,20 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumOut(datum2, allFields);
         expect(datum2.annotations[0]).to.eql({ code: 'foo' });
         expect(datum2.annotations[1]).to.eql({ code: 'basal/intersects-incomplete-suspend' });
+      });
+
+      context('suppressed basal(s) present', () => {
+        it('should call itself recursively as needed', () => {
+          const datum = { time: Date.parse('2018-02-01T00:00:00'), type: 'basal', suppressed: { type: 'basal', suppressed: { type: 'scheduled' } } };
+          const fields = ['suppressed'];
+
+          sinon.spy(dataUtil, 'normalizeDatumOut');
+
+          dataUtil.normalizeDatumOut(datum, fields);
+
+          sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed, fields);
+          sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed.suppressed, fields);
+        });
       });
     });
 
@@ -1219,12 +1311,13 @@ describe('DataUtil', () => {
 
         const datumWithBolusString = { type: 'wizard', bolus: 'some-string-id' };
         const datumWithBolusObject = { type: 'wizard', bolus: { id: 'some-string-id' } };
+        const fields = '*';
 
-        dataUtil.normalizeDatumOut(datumWithBolusString);
-        sinon.assert.neverCalledWith(dataUtil.normalizeDatumOut, datumWithBolusString.bolus);
+        dataUtil.normalizeDatumOut(datumWithBolusString, fields);
+        sinon.assert.neverCalledWithMatch(dataUtil.normalizeDatumOut, datumWithBolusString.bolus, fields);
 
-        dataUtil.normalizeDatumOut(datumWithBolusObject);
-        sinon.assert.calledWithExactly(dataUtil.normalizeDatumOut, datumWithBolusObject.bolus);
+        dataUtil.normalizeDatumOut(datumWithBolusObject, fields);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithBolusObject.bolus, fields);
       });
     });
 
@@ -1234,12 +1327,13 @@ describe('DataUtil', () => {
 
         const datumWithWizardString = { type: 'bolus', wizard: 'some-string-id' };
         const datumWithWizardObject = { type: 'bolus', wizard: { id: 'some-string-id' } };
+        const fields = '*';
 
-        dataUtil.normalizeDatumOut(datumWithWizardString);
-        sinon.assert.neverCalledWith(dataUtil.normalizeDatumOut, datumWithWizardString.wizard);
+        dataUtil.normalizeDatumOut(datumWithWizardString, fields);
+        sinon.assert.neverCalledWithMatch(dataUtil.normalizeDatumOut, datumWithWizardString.wizard, fields);
 
-        dataUtil.normalizeDatumOut(datumWithWizardObject);
-        sinon.assert.calledWithExactly(dataUtil.normalizeDatumOut, datumWithWizardObject.wizard);
+        dataUtil.normalizeDatumOut(datumWithWizardObject, fields);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithWizardObject.wizard, fields);
       });
     });
 
@@ -1361,20 +1455,6 @@ describe('DataUtil', () => {
         dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
         dataUtil.normalizeDatumOutTime(datum);
         expect(datum.displayOffset).to.equal(-8 * MS_IN_HOUR / MS_IN_MIN); // GMT-8 for US/Pacific
-      });
-    });
-
-    context('suppressed basal(s) present', () => {
-      it('should call itself recursively as needed', () => {
-        const datum = { time: Date.parse('2018-02-01T00:00:00'), suppressed: { type: 'basal', suppressed: { type: 'scheduled' } } };
-        const fields = ['suppressed'];
-
-        sinon.spy(dataUtil, 'normalizeDatumOutTime');
-
-        dataUtil.normalizeDatumOutTime(datum, fields);
-
-        sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum.suppressed, fields);
-        sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum.suppressed.suppressed, fields);
       });
     });
   });
@@ -1565,6 +1645,12 @@ describe('DataUtil', () => {
         dataUtil.timePrefs = { foo: 'bar' };
         dataUtil.removeData();
         expect(dataUtil.timePrefs).to.be.undefined;
+      });
+
+      it('should delete the `latestPumpUpload` metadata', () => {
+        dataUtil.latestPumpUpload = { foo: 'bar' };
+        dataUtil.removeData();
+        expect(dataUtil.latestPumpUpload).to.be.undefined;
       });
     });
   });
@@ -2059,6 +2145,10 @@ describe('DataUtil', () => {
   });
 
   describe('setEndpoints', () => {
+    beforeEach(() => {
+      dataUtil.setTimePrefs(defaultTimePrefs);
+    });
+
     context('endpoints arg missing', () => {
       it('should set a default `endpoints.current.range` property', () => {
         delete dataUtil.endpoints;
@@ -2100,6 +2190,47 @@ describe('DataUtil', () => {
           activeDays: 2,
         });
       });
+
+      it('should adjust next days end endpoint if the next range overlaps a DST changeover if timezoneAware', () => {
+        dataUtil.setTimePrefs({
+          timeZoneAware: true,
+          timezoneName: 'US/Eastern',
+        });
+
+        delete dataUtil.endpoints;
+
+        const nextStartIsDSTEndpoints = [
+          '2019-11-02T04:00:00.000Z',
+          '2019-11-03T04:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(nextStartIsDSTEndpoints, 2);
+        expect(dataUtil.endpoints.next).to.eql({
+          range: [
+            moment.utc(nextStartIsDSTEndpoints[1]).valueOf(),
+            moment.utc(nextStartIsDSTEndpoints[1]).add(2, 'days').valueOf() + MS_IN_HOUR,
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+
+        delete dataUtil.endpoints;
+
+        const nextEndIsDSTEndpoints = [
+          '2019-03-09T04:00:00.000Z',
+          '2019-03-10T04:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(nextEndIsDSTEndpoints, 2);
+        expect(dataUtil.endpoints.next).to.eql({
+          range: [
+            moment.utc(nextEndIsDSTEndpoints[1]).valueOf(),
+            moment.utc(nextEndIsDSTEndpoints[1]).add(2, 'days').valueOf() - MS_IN_HOUR,
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+      });
     });
 
     context('prevDays arg provided', () => {
@@ -2116,11 +2247,55 @@ describe('DataUtil', () => {
           activeDays: 2,
         });
       });
+
+      it('should adjust prev days end endpoint if the prev range overlaps a DST changeover if timezoneAware', () => {
+        dataUtil.setTimePrefs({
+          timeZoneAware: true,
+          timezoneName: 'US/Eastern',
+        });
+
+        delete dataUtil.endpoints;
+
+        const prevStartIsDSTEndpoints = [
+          '2019-11-04T05:00:00.000Z',
+          '2019-11-05T05:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(prevStartIsDSTEndpoints, undefined, 2);
+        expect(dataUtil.endpoints.prev).to.eql({
+          range: [
+            moment.utc(prevStartIsDSTEndpoints[0]).subtract(2, 'days').valueOf() - MS_IN_HOUR,
+            moment.utc(prevStartIsDSTEndpoints[0]).valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+
+
+        delete dataUtil.endpoints;
+
+        const prevEndIsDSTEndpoints = [
+          '2019-03-12T05:00:00.000Z',
+          '2019-03-13T05:00:00.000Z',
+        ];
+
+        dataUtil.setEndpoints(prevEndIsDSTEndpoints, undefined, 2);
+        expect(dataUtil.endpoints.prev).to.eql({
+          range: [
+            moment.utc(prevEndIsDSTEndpoints[0]).subtract(2, 'days').valueOf() + MS_IN_HOUR,
+            moment.utc(prevEndIsDSTEndpoints[0]).valueOf(),
+          ],
+          days: 2,
+          activeDays: 2,
+        });
+      });
     });
   });
 
   describe('setActiveDays', () => {
     it('should set the activeDays prop if provided, and update the active days of the week for each endpoints range', () => {
+      dataUtil.setTimePrefs(defaultTimePrefs);
+
       dataUtil.setEndpoints(twoWeekEndpoints, 14, 14);
       expect(dataUtil.endpoints.current.activeDays).to.equal(14);
       expect(dataUtil.endpoints.next.activeDays).to.equal(14);
@@ -2339,6 +2514,22 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('setReturnRawData', () => {
+    it('should set `returnRawData` to provided arg', () => {
+      expect(dataUtil.returnRawData).to.be.undefined;
+      dataUtil.setReturnRawData(true);
+      expect(dataUtil.returnRawData).to.equal(true);
+      dataUtil.setReturnRawData(false);
+      expect(dataUtil.returnRawData).to.equal(false);
+    });
+
+    it('should set `returnRawData` to `false` if no arg provided', () => {
+      expect(dataUtil.returnRawData).to.be.undefined;
+      dataUtil.setReturnRawData();
+      expect(dataUtil.returnRawData).to.equal(false);
+    });
+  });
+
   describe('query', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
@@ -2382,6 +2573,25 @@ describe('DataUtil', () => {
         dataUtil.setEndpoints,
         dataUtil.setActiveDays,
       );
+    });
+
+    it('should call `setReturnRawData` with `raw` as specified in the query', () => {
+      sinon.spy(dataUtil, 'setReturnRawData');
+
+      dataUtil.query({});
+      sinon.assert.calledWith(dataUtil.setReturnRawData, undefined);
+
+      dataUtil.query({ raw: true });
+      sinon.assert.calledWith(dataUtil.setReturnRawData, true);
+    });
+
+    it('should always call `setReturnRawData` with `false` after calling with provided arg after query', () => {
+      sinon.spy(dataUtil, 'setReturnRawData');
+
+      dataUtil.query({ raw: true });
+      sinon.assert.calledTwice(dataUtil.setReturnRawData);
+      expect(dataUtil.setReturnRawData.getCall(0).args).to.eql([true]);
+      expect(dataUtil.setReturnRawData.getCall(1).args).to.eql([false]);
     });
 
     it('should call `setBgSources` with `bgSource` as specified in the query', () => {
@@ -2603,8 +2813,8 @@ describe('DataUtil', () => {
         const result = dataUtil.query(createQuery({
           fillData: fillDataOpts,
           endpoints: dayEndpoints,
-          nextDays: 1,
-          prevDays: 1,
+          nextDays: 2,
+          prevDays: 2,
         }));
 
         sinon.assert.calledThrice(dataUtil.getFillData);
@@ -2621,7 +2831,7 @@ describe('DataUtil', () => {
           dataUtil.getFillData,
           [
             moment.utc(dayEndpoints[1]).valueOf(),
-            moment.utc(dayEndpoints[1]).add(1, 'day').valueOf(),
+            moment.utc(dayEndpoints[1]).add(2, 'days').valueOf(),
           ],
           fillDataOpts
         );
@@ -2629,15 +2839,14 @@ describe('DataUtil', () => {
         sinon.assert.calledWith(
           dataUtil.getFillData,
           [
-            moment.utc(dayEndpoints[0]).subtract(1, 'day').valueOf(),
+            moment.utc(dayEndpoints[0]).subtract(2, 'days').valueOf(),
             moment.utc(dayEndpoints[0]).valueOf(),
           ],
           fillDataOpts
         );
 
-        // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-        // which end up being 2 days in this case
-        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(16);
+        // Expecting 8 3hr fill bins for each day
+        expect(result.data.current.data.fill).to.be.an('array').and.have.lengthOf(8);
         expect(result.data.next.data.fill).to.be.an('array').and.have.lengthOf(16);
         expect(result.data.prev.data.fill).to.be.an('array').and.have.lengthOf(16);
       });
@@ -2749,26 +2958,39 @@ describe('DataUtil', () => {
       const endpoints = _.map(dayEndpoints, Date.parse);
       let result = dataUtil.getFillData(endpoints);
 
-      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-      // which end up being 2 days in this case
-      expect(result).to.be.an('array').and.have.lengthOf(16);
+      // Expecting 8 3hr fill bins for each day
+      expect(result).to.be.an('array').and.have.lengthOf(8);
 
       expect(result[0].normalTime).to.equal(endpoints[0]); // GMT-0 for UTC
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
 
       delete(dataUtil.timePrefs);
       result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(16);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
 
       expect(result[0].normalTime).to.equal(endpoints[0]); // fallback to GMT-0 for UTC when not timezone-aware
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // GMT-0 for UTC
 
       dataUtil.timePrefs = { timezoneName: 'US/Eastern' };
       result = dataUtil.getFillData(endpoints);
-      expect(result).to.be.an('array').and.have.lengthOf(16);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
 
       expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(19, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 5 hrs
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(16, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 8 hrs
+
+      dataUtil.timePrefs = { timezoneName: 'Canada/Newfoundland' };
+      result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(20.5, 'hours').valueOf()); // Start of previous day for Canada/Newfoundland, plus 3.5 hrs
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(17.5, 'hours').valueOf()); // Start of previous day for Canada/Newfoundland, plus 6.5 hrs
+
+      dataUtil.timePrefs = { timezoneName: 'Asia/Kolkata' };
+      result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(5.5, 'hours').valueOf()); // Start of current day for Asia/Kolkata, plus 5 hrs 30 mins
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(2.5, 'hours').valueOf()); // Start of current day for Asia/Kolkata, plus 8 hrs 30 mins
     });
 
     it('should optionally adjust for spring DST changes', () => {
@@ -2785,9 +3007,8 @@ describe('DataUtil', () => {
 
       const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
 
-      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-      // which end up being 2 days in this case
-      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      // Expecting 8 3hr fill bins for each day
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour later than start of next fill
@@ -2795,7 +3016,7 @@ describe('DataUtil', () => {
       expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(5, 'hours').valueOf());
 
       const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
-      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(2, 'hours').valueOf()); // End is adjusted to align to start of next fill
@@ -2817,9 +3038,8 @@ describe('DataUtil', () => {
 
       const resultWithoutDSTAdjust = dataUtil.getFillData(dataUtil.endpoints.current.range);
 
-      // Expecting 16 3hr fill bins since we get the day floor/ceiling of the start/end range,
-      // which end up being 2 days in this case
-      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      // Expecting 8 3hr fill bins for each day
+      expect(resultWithoutDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithoutDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithoutDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(3, 'hours').valueOf()); // End is 1 hour earlier than start of next fill
@@ -2827,7 +3047,7 @@ describe('DataUtil', () => {
       expect(resultWithoutDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
 
       const resultWithDSTAdjust = dataUtil.getFillData(endpoints, { adjustForDSTChanges: true });
-      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(16);
+      expect(resultWithDSTAdjust).to.be.an('array').and.have.lengthOf(8);
 
       expect(resultWithDSTAdjust[0].normalTime).to.equal(moment.utc(endpoints[0]).valueOf());
       expect(resultWithDSTAdjust[0].normalEnd).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf()); // End is adjusted to align to start of next fill
@@ -3161,6 +3381,8 @@ describe('DataUtil', () => {
   describe('addBasalOverlappingStart', () => {
     /* eslint-disable no-param-reassign */
     const normalizeExpectedDatum = d => {
+      d._time = d.time;
+      d._deviceTime = d.deviceTime;
       d.time = Date.parse(d.time);
       d.deviceTime = Date.parse(d.deviceTime);
       d.normalTime = d.deviceTime;
@@ -3174,6 +3396,7 @@ describe('DataUtil', () => {
 
     beforeEach(() => {
       initDataUtil(defaultData);
+      dataUtil.setTimePrefs(defaultTimePrefs);
     });
 
     context('basal delivery does not overlap start endpoint', () => {
