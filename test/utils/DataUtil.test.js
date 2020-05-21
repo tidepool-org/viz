@@ -2977,6 +2977,20 @@ describe('DataUtil', () => {
 
       expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(19, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 5 hrs
       expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(16, 'hours').valueOf()); // Start of previous day for US/Eastern, plus 8 hrs
+
+      dataUtil.timePrefs = { timezoneName: 'Canada/Newfoundland' };
+      result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(20.5, 'hours').valueOf()); // Start of previous day for Canada/Newfoundland, plus 3.5 hrs
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(17.5, 'hours').valueOf()); // Start of previous day for Canada/Newfoundland, plus 6.5 hrs
+
+      dataUtil.timePrefs = { timezoneName: 'Asia/Kolkata' };
+      result = dataUtil.getFillData(endpoints);
+      expect(result).to.be.an('array').and.have.lengthOf(8);
+
+      expect(result[0].normalTime).to.equal(moment.utc(endpoints[0]).subtract(5.5, 'hours').valueOf()); // Start of current day for Asia/Kolkata, plus 5 hrs 30 mins
+      expect(result[0].normalEnd).to.equal(moment.utc(endpoints[0]).subtract(2.5, 'hours').valueOf()); // Start of current day for Asia/Kolkata, plus 8 hrs 30 mins
     });
 
     it('should optionally adjust for spring DST changes', () => {
