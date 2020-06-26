@@ -9,7 +9,7 @@ webpackConf.externals = {
   'react/lib/ReactContext': true,
 };
 
-webpackConf.devtool = 'inline-source-map';
+webpackConf.devtool = process.env.npm_lifecycle_script.indexOf('--no-single-run') === -1 ? 'inline-source-map' : false;
 webpackConf.mode = 'development';
 
 webpackConf.output = {
