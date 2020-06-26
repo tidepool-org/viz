@@ -1762,7 +1762,6 @@ describe('Stat', () => {
         index: 1,
       });
 
-      // sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         tooltipTitleData: sinon.match({
           suffix: 'U',
@@ -1782,7 +1781,6 @@ describe('Stat', () => {
 
       instance.setChartTitle();
 
-      // sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         tooltipTitleData: undefined,
       }));
@@ -1799,7 +1797,6 @@ describe('Stat', () => {
 
       instance.setChartTitle();
 
-      // sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         tooltipTitleData: undefined,
       }));
