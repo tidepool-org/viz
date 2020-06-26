@@ -25,6 +25,7 @@ import {
 describe('Stat', () => {
   let wrapper;
   let instance;
+  let setStateCb;
 
   const defaultData = {
     data: [
@@ -54,6 +55,7 @@ describe('Stat', () => {
   beforeEach(() => {
     wrapper = shallow(<Stat {...defaultProps} />);
     instance = wrapper.instance();
+    setStateCb = () => wrapper.setState({});
   });
 
   it('should set appropriate default props', () => {
@@ -303,12 +305,11 @@ describe('Stat', () => {
           data: _.assign({}, defaultProps.data, {
             dataPaths: { summary: 'data.0' },
           }),
-        }));
+        }), setStateCb);
         summaryData = () => wrapper.find(formatClassesAsSelector(styles.summaryData));
       });
 
       it('should render the summary data when `isOpened` state is `false`', () => {
-        wrapper.setState({ isOpened: true });
         wrapper.setState({ isOpened: true });
         expect(summaryData()).to.have.length(0);
 
@@ -317,10 +318,8 @@ describe('Stat', () => {
       });
 
       it('should render the summary data when `alwaysShowSummary` prop is `true` and `isOpened` state is true', () => {
-        wrapper.setProps(props({ alwaysShowSummary: false }));
+        wrapper.setProps(props({ alwaysShowSummary: false }), setStateCb);
         wrapper.setState({ isOpened: true });
-        wrapper.setState({ isOpened: true });
-        expect(summaryData()).to.have.length(0);
 
         wrapper.setProps(props({ alwaysShowSummary: true }));
         expect(summaryData()).to.have.length(1);
@@ -395,7 +394,6 @@ describe('Stat', () => {
       const renderCalculatedOutputSpy = sinon.spy(instance, 'renderCalculatedOutput');
       sinon.assert.callCount(renderCalculatedOutputSpy, 0);
 
-      // instance.props.type = stat.statTypes.input;
       wrapper.setProps({ type: stat.statTypes.input });
       instance.renderStatFooter();
       sinon.assert.callCount(renderCalculatedOutputSpy, 1);
@@ -510,7 +508,7 @@ describe('Stat', () => {
 
       wrapper.setProps(props({
         type: stat.statTypes.input,
-      }));
+      }), setStateCb);
 
       inputGroup = () => wrapper.find(InputGroup);
     });
@@ -555,17 +553,11 @@ describe('Stat', () => {
       wrapper.setState({
         inputSuffix: 'suffix',
       });
-      wrapper.setState({
-        inputSuffix: 'suffix',
-      });
 
       expect(inputGroup().props().suffix).to.equal('suffix');
     });
 
     it('should assign the `inputValue` state to the InputGroup component `defaultValue` prop', () => {
-      wrapper.setState({
-        inputValue: 'value',
-      });
       wrapper.setState({
         inputValue: 'value',
       });
@@ -643,7 +635,7 @@ describe('Stat', () => {
           output: stat.statFormats.unitsPerKg,
         },
         type: stat.statTypes.input,
-      }));
+      }), setStateCb);
 
       outputWrapper = () => wrapper.find(formatClassesAsSelector(styles.outputWrapper));
     });
@@ -685,9 +677,6 @@ describe('Stat', () => {
     it('should render the output value wrapper with a disabled class', () => {
       expect(outputWrapper().find(formatClassesAsSelector(styles.outputValueDisabled))).to.have.length(0);
 
-      wrapper.setState({
-        inputValue: undefined,
-      });
       wrapper.setState({
         inputValue: undefined,
       });
@@ -804,7 +793,7 @@ describe('Stat', () => {
 
       wrapper.setProps(props({
         type: stat.statTypes.barHorizontal,
-      }));
+      }), setStateCb);
 
       instance = wrapper.instance();
     });
@@ -818,7 +807,6 @@ describe('Stat', () => {
       const statInner = () => wrapper.find(formatClassesAsSelector(styles.Stat));
       expect(statInner()).to.have.length(1);
 
-      wrapper.setState({ isOpened: false });
       wrapper.setState({ isOpened: false });
       expect(statInner().is(formatClassesAsSelector(styles.isOpen))).to.be.false;
 
@@ -969,7 +957,7 @@ describe('Stat', () => {
             },
           }),
           type: stat.statTypes.input,
-        }));
+        }), setStateCb);
       });
 
       it('should set the `inputSuffix` state to the `input.suffix` data when not already set in state', () => {
@@ -980,9 +968,6 @@ describe('Stat', () => {
       });
 
       it('should not change the `inputSuffix` state if already set', () => {
-        wrapper.setState({
-          inputSuffix: 'foo',
-        });
         wrapper.setState({
           inputSuffix: 'foo',
         });
@@ -997,9 +982,6 @@ describe('Stat', () => {
       });
 
       it('should not change the `inputValue` state if already set', () => {
-        wrapper.setState({
-          inputValue: 'foo',
-        });
         wrapper.setState({
           inputValue: 'foo',
         });
@@ -1026,15 +1008,12 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.false;
         expect(instance.getStateByType(instance.props).showFooter).to.be.false;
 
         // state unset, prop is true
-        wrapper.setState({
-          isOpened: undefined,
-        });
         wrapper.setState({
           isOpened: undefined,
         });
@@ -1053,15 +1032,12 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.true;
         expect(instance.getStateByType(instance.props).showFooter).to.be.true;
 
         // state is false, prop is true
-        wrapper.setState({
-          isOpened: false,
-        });
         wrapper.setState({
           isOpened: false,
         });
@@ -1079,7 +1055,7 @@ describe('Stat', () => {
       beforeEach(() => {
         wrapper.setProps(props({
           type: stat.statTypes.barHorizontal,
-        }));
+        }), setStateCb);
       });
 
       it('should set the `isCollapsible` state to the `collapsible` prop', () => {
@@ -1102,14 +1078,11 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.false;
 
         // state unset, prop is true
-        wrapper.setState({
-          isOpened: undefined,
-        });
         wrapper.setState({
           isOpened: undefined,
         });
@@ -1127,14 +1100,11 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.true;
 
         // state is false, prop is true
-        wrapper.setState({
-          isOpened: false,
-        });
         wrapper.setState({
           isOpened: false,
         });
@@ -1188,14 +1158,11 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           legend: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).showFooter).to.be.false;
 
         // state is true, prop is true
-        wrapper.setState({
-          isOpened: true,
-        });
         wrapper.setState({
           isOpened: true,
         });
@@ -1235,7 +1202,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.false;
 
@@ -1243,10 +1210,6 @@ describe('Stat', () => {
         wrapper.setState({
           isOpened: undefined,
         });
-        wrapper.setState({
-          isOpened: undefined,
-        });
-
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: true,
         }));
@@ -1260,14 +1223,11 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.true;
 
         // state is false, prop is true
-        wrapper.setState({
-          isOpened: false,
-        });
         wrapper.setState({
           isOpened: false,
         });
