@@ -15,7 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
-import React, { PropTypes } from 'react';
+import PropTypes from 'prop-types';
+import React from 'react';
 
 import Tooltip from '../../common/tooltips/Tooltip';
 
@@ -198,8 +199,8 @@ FocusedRangeLabels.propTypes = {
     top: PropTypes.number.isRequired,
   }).isRequired,
   timePrefs: PropTypes.shape({
-    timezoneAware: React.PropTypes.bool.isRequired,
-    timezoneName: React.PropTypes.string,
+    timezoneAware: PropTypes.bool.isRequired,
+    timezoneName: PropTypes.string,
   }).isRequired,
 };
 

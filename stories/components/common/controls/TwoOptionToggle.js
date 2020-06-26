@@ -1,3 +1,4 @@
+import PropTypes from 'prop-types';
 import React from 'react';
 
 import { storiesOf } from '@storybook/react';
@@ -9,7 +10,7 @@ const toggleFn = () => { console.log('Clicked toggle!'); };
 
 class InteractiveContainer extends React.Component {
   static propTypes = {
-    disabled: React.PropTypes.bool,
+    disabled: PropTypes.bool,
   };
 
   constructor(props) {

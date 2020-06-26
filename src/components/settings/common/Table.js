@@ -15,7 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
-import React, { PropTypes, PureComponent } from 'react';
+import PropTypes from 'prop-types';
+import React, { PureComponent } from 'react';
 import _ from 'lodash';
 
 import styles from './Table.css';
@@ -108,9 +109,9 @@ class Table extends PureComponent {
 }
 
 Table.propTypes = {
-  title: React.PropTypes.shape({
-    className: React.PropTypes.string.isRequired,
-    label: React.PropTypes.object.isRequired,
+  title: PropTypes.shape({
+    className: PropTypes.string.isRequired,
+    label: PropTypes.object.isRequired,
   }),
   rows: PropTypes.array.isRequired,
   columns: PropTypes.array.isRequired,
