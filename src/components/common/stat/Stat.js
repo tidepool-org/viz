@@ -455,6 +455,7 @@ class Stat extends PureComponent {
             x: i + 1,
             y: d.value,
             deviation: d.deviation,
+            eventKey: i,
           })),
           dataComponent: (
             <BgBar
@@ -544,6 +545,7 @@ class Stat extends PureComponent {
             x: i + 1,
             y: total > 0 ? d.value / total : d.value,
             id: d.id,
+            eventKey: i,
           })),
           dataComponent: (
             <HoverBar
