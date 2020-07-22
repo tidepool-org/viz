@@ -25,6 +25,7 @@ import {
 describe('Stat', () => {
   let wrapper;
   let instance;
+  let setStateCb;
 
   const defaultData = {
     data: [
@@ -54,6 +55,7 @@ describe('Stat', () => {
   beforeEach(() => {
     wrapper = shallow(<Stat {...defaultProps} />);
     instance = wrapper.instance();
+    setStateCb = () => wrapper.setState({});
   });
 
   it('should set appropriate default props', () => {
@@ -303,7 +305,7 @@ describe('Stat', () => {
           data: _.assign({}, defaultProps.data, {
             dataPaths: { summary: 'data.0' },
           }),
-        }));
+        }), setStateCb);
         summaryData = () => wrapper.find(formatClassesAsSelector(styles.summaryData));
       });
 
@@ -316,9 +318,8 @@ describe('Stat', () => {
       });
 
       it('should render the summary data when `alwaysShowSummary` prop is `true` and `isOpened` state is true', () => {
-        wrapper.setProps(props({ alwaysShowSummary: false }));
+        wrapper.setProps(props({ alwaysShowSummary: false }), setStateCb);
         wrapper.setState({ isOpened: true });
-        expect(summaryData()).to.have.length(0);
 
         wrapper.setProps(props({ alwaysShowSummary: true }));
         expect(summaryData()).to.have.length(1);
@@ -393,25 +394,25 @@ describe('Stat', () => {
       const renderCalculatedOutputSpy = sinon.spy(instance, 'renderCalculatedOutput');
       sinon.assert.callCount(renderCalculatedOutputSpy, 0);
 
-      instance.props.type = stat.statTypes.input;
+      wrapper.setProps({ type: stat.statTypes.input });
       instance.renderStatFooter();
       sinon.assert.callCount(renderCalculatedOutputSpy, 1);
     });
 
     it('should call the `renderStatLegend` method when the `legend` prop is `true`', () => {
+      wrapper.setProps({ legend: true });
       const renderStatLegendSpy = sinon.spy(instance, 'renderStatLegend');
       sinon.assert.callCount(renderStatLegendSpy, 0);
 
-      instance.props.legend = true;
       instance.renderStatFooter();
       sinon.assert.callCount(renderStatLegendSpy, 1);
     });
 
     it('should call the `renderStatUnits` method when the stat type is `true`', () => {
+      wrapper.setProps({ units: 'myUnits' });
       const renderStatUnitsSpy = sinon.spy(instance, 'renderStatUnits');
       sinon.assert.callCount(renderStatUnitsSpy, 0);
 
-      instance.props.units = 'myUnits';
       instance.renderStatFooter();
       sinon.assert.callCount(renderStatUnitsSpy, 1);
     });
@@ -507,7 +508,7 @@ describe('Stat', () => {
 
       wrapper.setProps(props({
         type: stat.statTypes.input,
-      }));
+      }), setStateCb);
 
       inputGroup = () => wrapper.find(InputGroup);
     });
@@ -634,7 +635,7 @@ describe('Stat', () => {
           output: stat.statFormats.unitsPerKg,
         },
         type: stat.statTypes.input,
-      }));
+      }), setStateCb);
 
       outputWrapper = () => wrapper.find(formatClassesAsSelector(styles.outputWrapper));
     });
@@ -792,7 +793,7 @@ describe('Stat', () => {
 
       wrapper.setProps(props({
         type: stat.statTypes.barHorizontal,
-      }));
+      }), setStateCb);
 
       instance = wrapper.instance();
     });
@@ -956,7 +957,7 @@ describe('Stat', () => {
             },
           }),
           type: stat.statTypes.input,
-        }));
+        }), setStateCb);
       });
 
       it('should set the `inputSuffix` state to the `input.suffix` data when not already set in state', () => {
@@ -1007,7 +1008,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.false;
         expect(instance.getStateByType(instance.props).showFooter).to.be.false;
@@ -1031,7 +1032,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.true;
         expect(instance.getStateByType(instance.props).showFooter).to.be.true;
@@ -1054,7 +1055,7 @@ describe('Stat', () => {
       beforeEach(() => {
         wrapper.setProps(props({
           type: stat.statTypes.barHorizontal,
-        }));
+        }), setStateCb);
       });
 
       it('should set the `isCollapsible` state to the `collapsible` prop', () => {
@@ -1077,7 +1078,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.false;
 
@@ -1099,7 +1100,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.true;
 
@@ -1157,7 +1158,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           legend: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).showFooter).to.be.false;
 
@@ -1201,7 +1202,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.false;
 
@@ -1209,7 +1210,6 @@ describe('Stat', () => {
         wrapper.setState({
           isOpened: undefined,
         });
-
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: true,
         }));
@@ -1223,7 +1223,7 @@ describe('Stat', () => {
 
         wrapper.setProps(_.assign({}, wrapper.props(), {
           isOpened: false,
-        }));
+        }), setStateCb);
 
         expect(instance.getStateByType(instance.props).isOpened).to.be.true;
 
@@ -1434,6 +1434,7 @@ describe('Stat', () => {
             x: 1,
             y: 100,
             deviation: { value: 30 },
+            eventKey: 0,
           },
         ]);
       });
@@ -1451,10 +1452,10 @@ describe('Stat', () => {
         const dataComponent = shallow(result.dataComponent);
 
         expect(dataComponent.is('.bgBar')).to.be.true;
-        expect(dataComponent.instance().props.barWidth).to.be.a('number');
-        expect(dataComponent.instance().props.bgPrefs).to.eql(instance.props.bgPrefs);
-        expect(dataComponent.instance().props.chartLabelWidth).to.be.a('number');
-        expect(dataComponent.instance().props.domain).to.eql(result.domain);
+        expect(dataComponent.props().children[0].props.children[1].props.barWidth).to.be.a('number');
+        expect(dataComponent.props().children[0].props.children[1].props.bgPrefs).to.eql(instance.props.bgPrefs);
+        expect(dataComponent.props().children[0].props.children[1].props.chartLabelWidth).to.be.a('number');
+        expect(dataComponent.props().children[0].props.children[1].props.domain).to.eql(result.domain);
       });
 
       it('should set `labelComponent` to a `BgBarLabel` component with necessary props', () => {
@@ -1462,11 +1463,11 @@ describe('Stat', () => {
         const dataComponent = shallow(result.labelComponent);
 
         expect(dataComponent.is('.bgBarLabel')).to.be.true;
-        expect(dataComponent.instance().props.barWidth).to.be.a('number');
-        expect(dataComponent.instance().props.bgPrefs).to.eql(instance.props.bgPrefs);
-        expect(dataComponent.instance().props.domain).to.eql(result.domain);
-        expect(dataComponent.instance().props.text).to.be.a('function');
-        expect(dataComponent.instance().props.tooltipText).to.be.a('function');
+        expect(dataComponent.props().children.props.barWidth).to.be.a('number');
+        expect(dataComponent.props().children.props.bgPrefs).to.eql(instance.props.bgPrefs);
+        expect(dataComponent.props().children.props.domain).to.eql(result.domain);
+        expect(dataComponent.props().children.props.text).to.be.a('function');
+        expect(dataComponent.props().children.props.tooltipText).to.be.a('function');
       });
 
       it('should set `renderer` to a `VictoryBar` component', () => {
@@ -1624,10 +1625,10 @@ describe('Stat', () => {
         const dataComponent = shallow(result.dataComponent);
 
         expect(dataComponent.is('.HoverBar')).to.be.true;
-        expect(dataComponent.instance().props.barWidth).to.be.a('number');
-        expect(dataComponent.instance().props.barSpacing).to.be.a('number');
-        expect(dataComponent.instance().props.chartLabelWidth).to.be.a('number');
-        expect(dataComponent.instance().props.domain).to.eql(result.domain);
+        expect(dataComponent.props().children[0].props.children.props.barWidth).to.be.a('number');
+        expect(dataComponent.props().children[0].props.children.props.barSpacing).to.be.a('number');
+        expect(dataComponent.props().children[0].props.children.props.chartLabelWidth).to.be.a('number');
+        expect(dataComponent.props().children[0].props.children.props.domain).to.eql(result.domain);
       });
 
       it('should set `labelComponent` to a `HoverBarLabel` component with necessary props', () => {
@@ -1635,11 +1636,11 @@ describe('Stat', () => {
         const dataComponent = shallow(result.labelComponent);
 
         expect(dataComponent.is('.HoverBarLabel')).to.be.true;
-        expect(dataComponent.instance().props.barWidth).to.be.a('number');
-        expect(dataComponent.instance().props.domain).to.eql(result.domain);
-        expect(dataComponent.instance().props.isDisabled).to.be.a('function');
-        expect(dataComponent.instance().props.text).to.be.a('function');
-        expect(dataComponent.instance().props.tooltipText).to.be.a('function');
+        expect(dataComponent.props().children[0].props.barWidth).to.be.a('number');
+        expect(dataComponent.props().children[0].props.domain).to.eql(result.domain);
+        expect(dataComponent.props().children[0].props.isDisabled).to.be.a('function');
+        expect(dataComponent.props().children[2].props.text).to.be.a('function');
+        expect(dataComponent.props().children[0].props.tooltipText).to.be.a('function');
       });
 
       it('should set `renderer` to a `VictoryBar` component', () => {
@@ -1762,7 +1763,6 @@ describe('Stat', () => {
         index: 1,
       });
 
-      sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         tooltipTitleData: sinon.match({
           suffix: 'U',
@@ -1782,7 +1782,6 @@ describe('Stat', () => {
 
       instance.setChartTitle();
 
-      sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         tooltipTitleData: undefined,
       }));
@@ -1799,7 +1798,6 @@ describe('Stat', () => {
 
       instance.setChartTitle();
 
-      sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         tooltipTitleData: undefined,
       }));
@@ -1925,8 +1923,8 @@ describe('Stat', () => {
 
       instance.handleCollapse();
 
-      sinon.assert.callCount(setStateSpy, 2);
-      sinon.assert.callCount(getStateByTypeSpy, 1);
+      sinon.assert.callCount(setStateSpy, 3);
+      sinon.assert.callCount(getStateByTypeSpy, 2);
 
       sinon.assert.callOrder(setStateSpy, getStateByTypeSpy, setStateSpy);
     });
