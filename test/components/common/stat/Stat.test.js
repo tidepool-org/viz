@@ -1434,6 +1434,7 @@ describe('Stat', () => {
             x: 1,
             y: 100,
             deviation: { value: 30 },
+            eventKey: 0,
           },
         ]);
       });
