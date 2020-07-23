@@ -20,6 +20,7 @@ class ClipboardButton extends PureComponent {
     buttonText: PropTypes.string.isRequired,
     clipboardText: PropTypes.string,
     getText: PropTypes.func,
+    onClick: PropTypes.func,
     onSuccess: PropTypes.func,
     successText: PropTypes.string.isRequired,
   };
@@ -28,6 +29,7 @@ class ClipboardButton extends PureComponent {
     buttonText: t('Copy as text'),
     buttonTitle: t('Copy to clipboard'),
     clipboardText: t('Sorry, there was nothing to copy.'),
+    onClick: _.noop,
     successText: t('Copied ✓'),
   };
 
@@ -52,6 +54,8 @@ class ClipboardButton extends PureComponent {
       this.state.debouncedButtonTextUpdate.cancel();
     }
   };
+
+  onClick = () => this.props.onClick();
 
   onSuccess = () => {
     if (_.isFunction(this.props.onSuccess)) this.props.onSuccess();
@@ -84,6 +88,7 @@ class ClipboardButton extends PureComponent {
         className={textVisibilityClasses}
         button-title={this.props.buttonTitle}
         option-text={this.getText}
+        onClick={this.onClick}
         onSuccess={this.onSuccess}
       >
         <span className={styles.buttonText}>{this.props.buttonText}</span>

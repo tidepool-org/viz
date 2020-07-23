@@ -56,6 +56,7 @@ import {
 } from './utils/stat';
 
 import { trendsText } from './utils/trends/data';
+import TextUtil from './utils/text/TextUtil';
 
 import {
   basicsText,
@@ -125,6 +126,7 @@ const utils = {
     processBasicsAggregations,
   },
   text: {
+    TextUtil,
     trendsText,
     basicsText,
   },
