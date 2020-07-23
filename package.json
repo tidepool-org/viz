@@ -109,7 +109,7 @@
     "eslint-plugin-jsx-a11y": "6.1.1",
     "eslint-plugin-lodash": "2.7.0",
     "eslint-plugin-moment-utc": "1.0.0",
-    "eslint-plugin-react": "7.11.1",
+    "eslint-plugin-react": "7.20.3",
     "gitbook-cli": "2.3.2",
     "jsdoc-to-markdown": "4.0.1",
     "json-loader": "0.5.7",
