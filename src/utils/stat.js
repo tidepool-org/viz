@@ -62,6 +62,7 @@ export const statFormats = {
 export const commonStats = {
   averageGlucose: 'averageGlucose',
   averageDailyDose: 'averageDailyDose',
+  bgExtents: 'bgExtents',
   carbs: 'carbs',
   coefficientOfVariation: 'coefficientOfVariation',
   glucoseManagementIndicator: 'glucoseManagementIndicator',
@@ -76,6 +77,7 @@ export const commonStats = {
 export const statFetchMethods = {
   [commonStats.averageGlucose]: 'getAverageGlucoseData',
   [commonStats.averageDailyDose]: 'getTotalInsulinData',
+  [commonStats.bgExtents]: 'getBgExtents',
   [commonStats.carbs]: 'getCarbsData',
   [commonStats.coefficientOfVariation]: 'getCoefficientOfVariationData',
   [commonStats.glucoseManagementIndicator]: 'getGlucoseManagementIndicatorData',
@@ -390,6 +392,18 @@ export const getStatData = (data, type, opts = {}) => {
       };
       break;
 
+    case commonStats.bgExtents:
+      statData.data = [
+        {
+          value: ensureNumeric(data.bgExtents),
+        },
+      ];
+
+      statData.dataPaths = {
+        summary: 'data.0',
+      };
+      break;
+
     case commonStats.averageDailyDose:
       statData.data = [
         {
@@ -642,6 +656,10 @@ export const getStatTitle = (type, opts = {}) => {
       title = t('Avg. Glucose ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
       break;
 
+    case commonStats.bgExtents:
+      title = t('BG Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
+      break;
+
     case commonStats.averageDailyDose:
       title = (days > 1) ? t('Avg. Daily Insulin') : t('Total Insulin');
       break;
@@ -709,6 +727,15 @@ export const getStatDefinition = (data, type, opts = {}) => {
         summary: statFormats.bgValue,
       };
       stat.type = statTypes.barBg;
+      stat.units = _.get(opts, 'bgPrefs.bgUnits');
+      break;
+
+    case commonStats.bgExtents:
+      stat.dataFormat = {
+        label: statFormats.bgValue,
+        summary: statFormats.bgValue,
+      };
+      stat.type = statTypes.simple;
       stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
 

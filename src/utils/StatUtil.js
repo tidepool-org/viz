@@ -46,6 +46,22 @@ export class StatUtil {
     return data;
   };
 
+  getBgExtents = (returnBgData = false) => {
+    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
+
+    const data = {
+      averageGlucose: _.maxBy(bgData, 'value'),
+      total: bgData.length,
+    };
+
+    if (returnBgData) {
+      data.bgData = bgData;
+    }
+
+    return data;
+  };
+
   getBasalBolusData = () => {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
