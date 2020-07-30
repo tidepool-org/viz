@@ -152,6 +152,7 @@ class Stat extends PureComponent {
     super(props);
     this.log = bows('Stat');
 
+    this.state = {};
     this.chartProps = this.getChartPropsByType(props);
 
     this.setStatRef = ref => {
