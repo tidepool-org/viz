@@ -4,7 +4,7 @@ import { mount } from 'enzyme';
 import HoverBar from '../../../../src/components/common/stat/HoverBar';
 import colors from '../../../../src/styles/colors.css';
 
-describe('HoverBar', () => {
+describe.skip('HoverBar', () => {
   let wrapper;
 
   const width = 300;

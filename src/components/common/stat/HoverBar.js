@@ -27,21 +27,6 @@ export const HoverBar = props => {
 
   return (
     <g className="HoverBar">
-      <g className="HoverBarTarget">
-        <Rect
-          {...props}
-          x={0}
-          y={scale.x(index + 1) - (barWidth / 2) - (barSpacing / 2)}
-          rx={barGridRadius}
-          ry={barGridRadius}
-          width={scale.y(domain.x[1])}
-          height={barWidth + barSpacing}
-          style={{
-            stroke: 'transparent',
-            fill: 'transparent',
-          }}
-        />
-      </g>
       <g className="barBg">
         <Rect
           {...props}
@@ -62,6 +47,21 @@ export const HoverBar = props => {
         width={scale.y(domain.x[1]) - chartLabelWidth}
         y={y * widthCorrection}
       />
+      <g className="HoverBarTarget">
+        <Rect
+          {...props}
+          x={0}
+          y={scale.x(index + 1) - (barWidth / 2) - (barSpacing / 2)}
+          rx={barGridRadius}
+          ry={barGridRadius}
+          width={scale.y(domain.x[1])}
+          height={barWidth + barSpacing}
+          style={{
+            stroke: 'transparent',
+            fill: 'transparent',
+          }}
+        />
+      </g>
     </g>
   );
 };

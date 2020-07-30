@@ -564,6 +564,10 @@ class Stat extends PureComponent {
               target: 'data',
               eventHandlers: {
                 onMouseOver: (event, target) => {
+                  console.log('this.state.isDisabled', this.state.isDisabled);
+                  console.log('props.dataFormat.tooltip', props.dataFormat.tooltip);
+                  console.log('target.index', target.index);
+
                   if (this.state.isDisabled || !props.dataFormat.tooltip) {
                     return {};
                   }
