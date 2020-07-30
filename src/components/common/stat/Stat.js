@@ -94,11 +94,64 @@ class Stat extends PureComponent {
 
   static displayName = 'Stat';
 
+  static getStateByType = (props, prevState) => {
+    const {
+      data,
+      legend,
+    } = props;
+
+    let isOpened;
+    let input;
+
+    const state = {
+      chartTitle: props.title,
+      isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
+    };
+
+    switch (props.type) {
+      case 'input':
+        input = _.get(props.data, props.data.dataPaths.input, {});
+        isOpened = _.get(prevState, 'isOpened', props.isOpened);
+        state.inputSuffix = _.get(prevState, 'inputSuffix', input.suffix);
+        state.inputValue = _.get(prevState, 'inputValue', input.value);
+        state.isCollapsible = props.collapsible;
+        state.isOpened = isOpened;
+        state.showFooter = isOpened;
+        break;
+
+      case 'barHorizontal':
+        isOpened = _.get(prevState, 'isOpened', props.isOpened);
+        state.isCollapsible = props.collapsible;
+        state.isOpened = isOpened;
+        state.hoveredDatumIndex = _.get(prevState, 'hoveredDatumIndex', -1);
+        state.showFooter = legend && isOpened;
+        break;
+
+      case 'barBg':
+        isOpened = _.get(prevState, 'isOpened', props.isOpened);
+        state.isCollapsible = props.collapsible;
+        state.isOpened = isOpened;
+        break;
+
+      case 'simple':
+      default:
+        state.isCollapsible = false;
+        state.isOpened = false;
+        state.showFooter = false;
+        break;
+    }
+
+    return state;
+  };
+
+  static getDerivedStateFromProps(nextProps, prevState) {
+    return Stat.getStateByType(nextProps, prevState);
+  }
+
   constructor(props) {
     super(props);
     this.log = bows('Stat');
 
-    this.state = this.getStateByType(props);
     this.chartProps = this.getChartPropsByType(props);
 
     this.setStatRef = ref => {
@@ -110,9 +163,8 @@ class Stat extends PureComponent {
     };
   }
 
-  UNSAFE_componentWillReceiveProps(nextProps) {
-    this.setState(() => this.getStateByType(nextProps));
-    this.chartProps = this.getChartPropsByType(nextProps);
+  componentDidUpdate(prevProps) {
+    this.chartProps = this.getChartPropsByType(prevProps);
   }
 
   renderChartTitle = () => {
@@ -350,56 +402,6 @@ class Stat extends PureComponent {
         {this.state.showMessages && this.renderTooltip()}
       </div>
     );
-  };
-
-  getStateByType = props => {
-    const {
-      data,
-      legend,
-    } = props;
-
-    let isOpened;
-    let input;
-
-    const state = {
-      chartTitle: props.title,
-      isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
-    };
-
-    switch (props.type) {
-      case 'input':
-        input = _.get(props.data, props.data.dataPaths.input, {});
-        isOpened = _.get(this.state, 'isOpened', props.isOpened);
-        state.inputSuffix = _.get(this.state, 'inputSuffix', input.suffix);
-        state.inputValue = _.get(this.state, 'inputValue', input.value);
-        state.isCollapsible = props.collapsible;
-        state.isOpened = isOpened;
-        state.showFooter = isOpened;
-        break;
-
-      case 'barHorizontal':
-        isOpened = _.get(this.state, 'isOpened', props.isOpened);
-        state.isCollapsible = props.collapsible;
-        state.isOpened = isOpened;
-        state.hoveredDatumIndex = -1;
-        state.showFooter = legend && isOpened;
-        break;
-
-      case 'barBg':
-        isOpened = _.get(this.state, 'isOpened', props.isOpened);
-        state.isCollapsible = props.collapsible;
-        state.isOpened = isOpened;
-        break;
-
-      case 'simple':
-      default:
-        state.isCollapsible = false;
-        state.isOpened = false;
-        state.showFooter = false;
-        break;
-    }
-
-    return state;
   };
 
   getDefaultChartProps = props => {
@@ -686,7 +688,7 @@ class Stat extends PureComponent {
   handleCollapse = () => {
     this.setState(state => ({
       isOpened: !state.isOpened,
-    }), () => this.setState(this.getStateByType(this.props)));
+    }), () => this.setState(Stat.getStateByType(this.props, this.state)));
   };
 
   handleTooltipIconMouseOver = () => {
