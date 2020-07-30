@@ -1290,6 +1290,7 @@ describe('Stat', () => {
       expect(result.animate).to.be.an('object').and.have.keys([
         'duration',
         'onLoad',
+        'animationWhitelist',
       ]);
 
       expect(result.labels).to.be.a('function');

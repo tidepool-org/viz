@@ -406,7 +406,7 @@ class Stat extends PureComponent {
     const { chartHeight, animate } = props;
 
     return {
-      animate: animate ? { duration: 300, onLoad: { duration: 0 } } : false,
+      animate: animate ? { duration: 300, onLoad: { duration: 0 }, animationWhitelist: ['data'] } : false,
       height: chartHeight,
       labels: d => formatPercentage(d.y),
       renderer: null,
