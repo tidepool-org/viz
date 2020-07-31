@@ -22,7 +22,7 @@ import {
 
 /* eslint-disable max-len */
 
-describe('Stat', () => {
+describe.skip('Stat', () => {
   let wrapper;
   let instance;
   let setStateCb;

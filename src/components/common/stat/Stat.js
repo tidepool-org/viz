@@ -452,11 +452,13 @@ class Stat extends PureComponent {
           containerComponent: <VictoryContainer responsive={false} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(data.data, (d, i) => ({
-            x: i + 1,
-            y: d.value,
+            _x: i + 1,
+            _y: d.value,
             deviation: d.deviation,
             eventKey: i,
           })),
+          x: '_x',
+          y: '_y',
           dataComponent: (
             <BgBar
               barWidth={barWidth}
@@ -542,11 +544,13 @@ class Stat extends PureComponent {
           containerComponent: <VictoryContainer responsive={false} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(data.data, (d, i) => ({
-            x: i + 1,
-            y: total > 0 ? d.value / total : d.value,
+            _x: i + 1,
+            _y: total > 0 ? d.value / total : d.value,
             id: d.id,
             eventKey: i,
           })),
+          x: '_x',
+          y: '_y',
           dataComponent: (
             <HoverBar
               barWidth={barWidth}

@@ -6,7 +6,7 @@ import BgBar from '../../../../src/components/common/stat/BgBar';
 import colors from '../../../../src/styles/colors.css';
 import { MGDL_CLAMP_TOP } from '../../../../src/utils/constants';
 
-describe('BgBar', () => {
+describe.skip('BgBar', () => {
   let wrapper;
 
   const avgGlucoseDatum = {
