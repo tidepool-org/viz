@@ -570,7 +570,6 @@ class Stat extends PureComponent {
                   }
 
                   const datum = _.get(props.data, ['data', target.index], {});
-                  datum.index = target.index;
                   this.setChartTitle(datum);
                   this.setState({ hoveredDatumIndex: target.index });
 
@@ -651,8 +650,8 @@ class Stat extends PureComponent {
     const { title = this.props.title } = datum;
     const tooltipTitleFormat = _.get(this.props, 'dataFormat.tooltipTitle');
 
-    if (tooltipTitleFormat && datum.index >= 0) {
-      tooltipTitleData = this.getFormattedDataByDataPath(['data', datum.index], tooltipTitleFormat);
+    if (tooltipTitleFormat && datum.eventKey >= 0) {
+      tooltipTitleData = this.getFormattedDataByDataPath(['data', datum.eventKey], tooltipTitleFormat);
     }
 
     this.setState({
