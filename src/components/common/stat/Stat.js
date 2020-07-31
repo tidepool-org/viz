@@ -569,8 +569,7 @@ class Stat extends PureComponent {
                     return {};
                   }
 
-                  const datum = _.get(props.data, ['data', target.index], {});
-                  this.setChartTitle(datum);
+                  this.setChartTitle(target.datum);
                   this.setState({ hoveredDatumIndex: target.index });
 
                   return {
