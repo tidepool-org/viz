@@ -81,7 +81,7 @@ class Stat extends PureComponent {
   static defaultProps = {
     alwaysShowSummary: false,
     alwaysShowTooltips: true,
-    animate: false,
+    animate: true,
     bgPrefs: {},
     categories: {},
     chartHeight: 0,
