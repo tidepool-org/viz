@@ -1,5 +1,3 @@
-/* global document */
-
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
@@ -26,6 +24,9 @@ import CollapseIconClose from './assets/chevron-right-24-px.svg';
 import InfoIcon from './assets/info-outline-24-px.svg';
 import InputGroup from '../controls/InputGroup';
 
+/* global document */
+/* eslint-disable no-underscore-dangle */
+
 const dataPathPropType = PropTypes.oneOfType([
   PropTypes.string,
   PropTypes.array,
@@ -38,8 +39,6 @@ const datumPropType = PropTypes.shape({
 });
 
 const statFormatPropType = PropTypes.oneOf(_.values(statFormats));
-
-/* eslint-disable no-underscore-dangle */
 
 class Stat extends PureComponent {
   static propTypes = {
@@ -113,7 +112,6 @@ class Stat extends PureComponent {
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
-    console.log('nextProps', nextProps);
     this.setState(() => this.getStateByType(nextProps));
     this.chartProps = this.getChartPropsByType(nextProps);
   }
@@ -544,7 +542,6 @@ class Stat extends PureComponent {
         };
 
         _.assign(chartProps, {
-          animating: this.state.animating,
           alignment: 'middle',
           containerComponent: <VictoryContainer responsive={false} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
@@ -625,7 +622,7 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: datum => (datum._y === 0 ? 'transparent' : this.getDatumColor(_.cloneDeep(datum))),
+              fill: datum => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
               width: () => barWidth,
             },
             labels: {
@@ -665,7 +662,7 @@ class Stat extends PureComponent {
   };
 
   getFormattedDataByDataPath = (path, format) => {
-    const datum = _.cloneDeep(_.get(this.props.data, path));
+    const datum = _.get(this.props.data, path);
     return formatDatum(datum, format, this.props);
   };
 
@@ -676,9 +673,8 @@ class Stat extends PureComponent {
   };
 
   getDatumColor = datum => {
-    console.log('getDatumColor datum', datum);
     const { hoveredDatumIndex, isDisabled } = this.state;
-    console.log('hoveredDatumIndex', hoveredDatumIndex);
+
     const isMuted = this.props.muteOthersOnHover
       && hoveredDatumIndex >= 0
       && hoveredDatumIndex !== datum.index;
