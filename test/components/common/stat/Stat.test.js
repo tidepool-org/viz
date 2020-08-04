@@ -20,9 +20,9 @@ import {
   MMOLL_CLAMP_TOP,
 } from '../../../../src/utils/constants';
 
-/* eslint-disable max-len */
+/* eslint-disable max-len, no-underscore-dangle */
 
-describe.skip('Stat', () => {
+describe('Stat', () => {
   let wrapper;
   let instance;
   let setStateCb;
@@ -1417,6 +1417,8 @@ describe.skip('Stat', () => {
           'horizontal',
           'labelComponent',
           'padding',
+          'x',
+          'y',
         ]);
       });
 
@@ -1432,10 +1434,11 @@ describe.skip('Stat', () => {
 
         expect(result.data).to.eql([
           {
-            x: 1,
-            y: 100,
+            value: 100,
+            _x: 1,
+            _y: 100,
             deviation: { value: 30 },
-            eventKey: 0,
+            index: 0,
           },
         ]);
       });
@@ -1589,6 +1592,8 @@ describe.skip('Stat', () => {
           'horizontal',
           'labelComponent',
           'padding',
+          'x',
+          'y',
         ]);
       });
 
@@ -1604,12 +1609,12 @@ describe.skip('Stat', () => {
         const firstDatum = result.data[0];
         const secondDatum = result.data[1];
 
-        expect(firstDatum.x).to.equal(1);
-        expect(firstDatum.y).to.equal(0.6);
+        expect(firstDatum._x).to.equal(1);
+        expect(firstDatum._y).to.equal(0.6);
         expect(firstDatum.id).to.equal('basal');
 
-        expect(secondDatum.x).to.equal(2);
-        expect(secondDatum.y).to.equal(0.4);
+        expect(secondDatum._x).to.equal(2);
+        expect(secondDatum._y).to.equal(0.4);
         expect(secondDatum.id).to.equal('bolus');
       });
 
@@ -1881,19 +1886,19 @@ describe.skip('Stat', () => {
     it('should return the muted color when another datum is being hovered and `muteOthersOnHover` prop is `true`', () => {
       wrapper.setState({ hoveredDatumIndex: 2 });
       wrapper.setProps(props({ muteOthersOnHover: true }));
-      expect(instance.getDatumColor({ id: 'basal', eventKey: 1 })).to.equal(colors.muted);
+      expect(instance.getDatumColor({ id: 'basal', index: 1 })).to.equal(colors.muted);
     });
 
     it('should return the standard color when another datum is being hovered and `muteOthersOnHover` prop is `false`', () => {
       wrapper.setState({ hoveredDatumIndex: 2 });
       wrapper.setProps(props({ muteOthersOnHover: false }));
-      expect(instance.getDatumColor({ id: 'basal', eventKey: 1 })).to.equal(colors.basal);
+      expect(instance.getDatumColor({ id: 'basal', index: 1 })).to.equal(colors.basal);
     });
 
     it('should return the standard color when the datum passed in is being hovered', () => {
       wrapper.setState({ hoveredDatumIndex: 1 });
       wrapper.setProps(props({ muteOthersOnHover: true }));
-      expect(instance.getDatumColor({ id: 'basal', eventKey: 1 })).to.equal(colors.basal);
+      expect(instance.getDatumColor({ id: 'basal', index: 1 })).to.equal(colors.basal);
     });
   });
 
