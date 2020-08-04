@@ -27,7 +27,7 @@ export const HoverBar = props => {
 
   return (
     <g className="HoverBar">
-      <g className="HoverBarTarget">
+      <g className="HoverBarTarget" pointerEvents="all">
         <Rect
           {...props}
           x={0}
@@ -42,7 +42,7 @@ export const HoverBar = props => {
           }}
         />
       </g>
-      <g className="barBg">
+      <g className="barBg" pointerEvents="none">
         <Rect
           {...props}
           x={0}
@@ -57,11 +57,13 @@ export const HoverBar = props => {
           }}
         />
       </g>
-      <Bar
-        {...props}
-        width={scale.y(domain.x[1]) - chartLabelWidth}
-        y={y * widthCorrection}
-      />
+      <g pointerEvents="none">
+        <Bar
+          {...props}
+          width={scale.y(domain.x[1]) - chartLabelWidth}
+          y={y * widthCorrection}
+        />
+      </g>
     </g>
   );
 };

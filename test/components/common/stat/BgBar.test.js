@@ -10,11 +10,11 @@ describe('BgBar', () => {
   let wrapper;
 
   const avgGlucoseDatum = {
-    y: 100,
+    _y: 100,
   };
 
   const avgGlucoseDatumDisabled = {
-    y: 0,
+    _y: 0,
   };
 
   const stdDevDatum = {
@@ -25,7 +25,7 @@ describe('BgBar', () => {
   };
 
   const stdDevDatumDisabled = {
-    y: 0,
+    _y: 0,
     deviation: {
       value: 0,
     },
@@ -187,25 +187,25 @@ describe('BgBar', () => {
 
       // veryLow
       wrapper.setProps(props({ datum: {
-        y: 53,
+        _y: 53,
       } }));
       expect(bgMean().childAt(0).props().style.fill).to.equal(colors.low);
 
       // low
       wrapper.setProps(props({ datum: {
-        y: 69,
+        _y: 69,
       } }));
       expect(bgMean().childAt(0).props().style.fill).to.equal(colors.low);
 
       // high
       wrapper.setProps(props({ datum: {
-        y: 181,
+        _y: 181,
       } }));
       expect(bgMean().childAt(0).props().style.fill).to.equal(colors.high);
 
       // veryHigh
       wrapper.setProps(props({ datum: {
-        y: 251,
+        _y: 251,
       } }));
       expect(bgMean().childAt(0).props().style.fill).to.equal(colors.high);
     });
@@ -232,7 +232,7 @@ describe('BgBar', () => {
 
       // veryLow - low
       wrapper.setProps(props({ datum: {
-        y: 50,
+        _y: 50,
         deviation: { value: 18 },
       } }));
       expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.low);
@@ -240,7 +240,7 @@ describe('BgBar', () => {
 
       // low - target
       wrapper.setProps(props({ datum: {
-        y: 70,
+        _y: 70,
         deviation: { value: 40 },
       } }));
       expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.low);
@@ -248,7 +248,7 @@ describe('BgBar', () => {
 
       // target - high
       wrapper.setProps(props({ datum: {
-        y: 160,
+        _y: 160,
         deviation: { value: 40 },
       } }));
       expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.target);
@@ -256,7 +256,7 @@ describe('BgBar', () => {
 
       // high - veryHigh
       wrapper.setProps(props({ datum: {
-        y: 240,
+        _y: 240,
         deviation: { value: 18 },
       } }));
       expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.high);
@@ -266,14 +266,14 @@ describe('BgBar', () => {
     it('should not render when the deviation is >0 the mean, resulting in a negative low bar value', () => {
       // -1 low value
       wrapper.setProps(props({ datum: {
-        y: 50,
+        _y: 50,
         deviation: { value: 51 },
       } }));
       expect(bgDeviation().children()).to.have.lengthOf(0);
 
       // 0 low value
       wrapper.setProps(props({ datum: {
-        y: 50,
+        _y: 50,
         deviation: { value: 50 },
       } }));
 
@@ -281,7 +281,7 @@ describe('BgBar', () => {
 
       // 1 low value
       wrapper.setProps(props({ datum: {
-        y: 50,
+        _y: 50,
         deviation: { value: 49 },
       } }));
 
@@ -291,7 +291,7 @@ describe('BgBar', () => {
     it('should constrain the bars to render within the scale when the deviation would cause them to render outside of it', () => {
       // 1 to 499 -- scale only shows 0 to 400
       wrapper.setProps(props({ datum: {
-        y: 250,
+        _y: 250,
         deviation: { value: 249 },
       } }));
 

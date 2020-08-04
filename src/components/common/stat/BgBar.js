@@ -6,6 +6,8 @@ import { Arc } from 'victory-core';
 import colors from '../../../styles/colors.css';
 import { classifyBgValue } from '../../../utils/bloodglucose';
 
+/* eslint-disable no-underscore-dangle */
+
 export const BgBar = props => {
   const {
     barWidth,
@@ -37,15 +39,15 @@ export const BgBar = props => {
 
   const yPos = scale.x(index + 1) - (barWidth / 2);
   const datumY = yPos + (barWidth / 2);
-  const datumX = scale.y(datum.y) * widthCorrection;
+  const datumX = scale.y(datum._y) * widthCorrection;
 
-  const dev1Value = datum.y - deviation;
-  const dev1X = scale.y(datum.y - deviation) * widthCorrection;
+  const dev1Value = datum._y - deviation;
+  const dev1X = scale.y(datum._y - deviation) * widthCorrection;
 
-  const dev2Value = datum.y + deviation;
-  const dev2X = scale.y(datum.y + deviation) * widthCorrection;
+  const dev2Value = datum._y + deviation;
+  const dev2X = scale.y(datum._y + deviation) * widthCorrection;
 
-  const isEnabled = renderMean ? datum.y > 0 : dev1Value > 0 && dev2Value > 0;
+  const isEnabled = renderMean ? datum._y > 0 : dev1Value > 0 && dev2Value > 0;
 
   return (
     <g className="bgBar">
@@ -118,7 +120,7 @@ export const BgBar = props => {
             x={datumX}
             y={datumY}
             style={{
-              fill: colors[classifyBgValue(bgBounds, datum.y)],
+              fill: colors[classifyBgValue(bgBounds, datum._y)],
               stroke: colors.white,
               strokeWidth: 2,
             }}
