@@ -392,10 +392,6 @@ export const getStatData = (data, type, opts = {}) => {
       };
       break;
 
-    case commonStats.bgExtents:
-      statData.data = _.map(data.bgExtents, ensureNumeric);
-      break;
-
     case commonStats.averageDailyDose:
       statData.data = [
         {
@@ -427,6 +423,10 @@ export const getStatData = (data, type, opts = {}) => {
         output: 'data.0.output',
         summary: 'data.0',
       };
+      break;
+
+    case commonStats.bgExtents:
+      statData.data = _.map(data.bgExtents, ensureNumeric);
       break;
 
     case commonStats.carbs:
@@ -648,12 +648,12 @@ export const getStatTitle = (type, opts = {}) => {
       title = t('Avg. Glucose ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
       break;
 
-    case commonStats.bgExtents:
-      title = t('BG Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
-      break;
-
     case commonStats.averageDailyDose:
       title = (days > 1) ? t('Avg. Daily Insulin') : t('Total Insulin');
+      break;
+
+    case commonStats.bgExtents:
+      title = t('BG Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
       break;
 
     case commonStats.carbs:
@@ -722,15 +722,6 @@ export const getStatDefinition = (data, type, opts = {}) => {
       stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
 
-    case commonStats.bgExtents:
-      stat.dataFormat = {
-        label: statFormats.bgValue,
-        summary: statFormats.bgValue,
-      };
-      stat.type = statTypes.simple;
-      stat.units = _.get(opts, 'bgPrefs.bgUnits');
-      break;
-
     case commonStats.averageDailyDose:
       stat.alwaysShowSummary = true;
       stat.dataFormat = {
@@ -738,6 +729,15 @@ export const getStatDefinition = (data, type, opts = {}) => {
         summary: statFormats.units,
       };
       stat.type = statTypes.input;
+      break;
+
+    case commonStats.bgExtents:
+      stat.dataFormat = {
+        label: statFormats.bgValue,
+        summary: statFormats.bgValue,
+      };
+      stat.type = statTypes.simple;
+      stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
 
     case commonStats.carbs:
