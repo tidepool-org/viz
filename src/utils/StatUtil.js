@@ -46,13 +46,12 @@ export class StatUtil {
     return data;
   };
 
-  getBgExtents = (returnBgData = false) => {
+  getBgExtentsData = (returnBgData = false) => {
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const data = {
-      averageGlucose: _.maxBy(bgData, 'value'),
-      total: bgData.length,
+      bgExtents: [_.minBy(bgData, 'value').value.toFixed(0), _.maxBy(bgData, 'value').value.toFixed(0)]
     };
 
     if (returnBgData) {

@@ -77,7 +77,7 @@ export const commonStats = {
 export const statFetchMethods = {
   [commonStats.averageGlucose]: 'getAverageGlucoseData',
   [commonStats.averageDailyDose]: 'getTotalInsulinData',
-  [commonStats.bgExtents]: 'getBgExtents',
+  [commonStats.bgExtents]: 'getBgExtentsData',
   [commonStats.carbs]: 'getCarbsData',
   [commonStats.coefficientOfVariation]: 'getCoefficientOfVariationData',
   [commonStats.glucoseManagementIndicator]: 'getGlucoseManagementIndicatorData',
@@ -393,15 +393,7 @@ export const getStatData = (data, type, opts = {}) => {
       break;
 
     case commonStats.bgExtents:
-      statData.data = [
-        {
-          value: ensureNumeric(data.bgExtents),
-        },
-      ];
-
-      statData.dataPaths = {
-        summary: 'data.0',
-      };
+      statData.data = _.map(data.bgExtents, ensureNumeric);
       break;
 
     case commonStats.averageDailyDose:
