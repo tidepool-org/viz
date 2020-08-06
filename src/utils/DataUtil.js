@@ -582,7 +582,7 @@ export class DataUtil {
     this.sort = {};
     this.sort.byTime = array => {
       const timeField = _.get(this, 'timePrefs.timezoneAware') ? 'time' : 'deviceTime';
-      return crossfilter.quicksort.by(d => d[timeField])(array, 0, array.length);
+      return array.sort((a, b) => a[timeField] - b[timeField]);
     };
     this.endTimer('buildSorts');
   };

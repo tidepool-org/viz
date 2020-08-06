@@ -2536,6 +2536,11 @@
   version "1.1.2"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.stat/-/fs.stat-1.1.2.tgz#54c5a964462be3d4d78af631363c18d6fa91ac26"
 
+"@ranfdev/deepobj@1.0.2":
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/@ranfdev/deepobj/-/deepobj-1.0.2.tgz#9dba923578fa24aed3d3961975037b6423a03771"
+  integrity sha512-FM3y6kfJaj5MCoAjdv24EDCTDbuFz+4+pgAunbjYfugwIE4O/xx8mPNji1n/ouG8pHCntSnBr1xwTOensF23Gg==
+
 "@reach/router@^1.2.1":
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/@reach/router/-/router-1.2.1.tgz#34ae3541a5ac44fa7796e5506a5d7274a162be4e"
@@ -5708,18 +5713,12 @@ cross-spawn@^5.0.1:
     shebang-command "^1.2.0"
     which "^1.2.9"
 
-crossfilter2@1.4.8:
-  version "1.4.8"
-  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.4.8.tgz#a723bc47d91560bc93e43ad4444c7aa37ea36980"
-  integrity sha512-H3D2AyRGpRYK0pKs6kgwALuNb3J6/PuW/sIckPDxPi2wz+TX1Cp/1+BC7sKkMUF12RGPjV/PNANF/W4TQ+4BLg==
+crossfilter2@1.5.2, crossfilter2@^1.5.2:
+  version "1.5.2"
+  resolved "https://registry.yarnpkg.com/crossfilter2/-/crossfilter2-1.5.2.tgz#582a3c42a2ec6452768c0f5c8ed588c160d8897f"
+  integrity sha512-ImlvPlUOQ2MW+DJmoglK3anU9GwvHk2EWaqUoXczydhIKzg7ot4W+w8kPNlUAW6Onoyg2AE1QhH5fzK2gNSbYg==
   dependencies:
-    lodash.result "^4.4.0"
-
-crossfilter2@^1.4.0:
-  version "1.4.7"
-  resolved "https://codeload.github.com/crossfilter/crossfilter/tar.gz/cb4588dc16e11fd705ddb7a330f94627179c9eb1"
-  dependencies:
-    lodash.result "^4.4.0"
+    "@ranfdev/deepobj" "1.0.2"
 
 cryptiles@2.x.x:
   version "2.0.5"
@@ -9545,10 +9544,6 @@ lodash.pick@^4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/lodash.pick/-/lodash.pick-4.4.0.tgz#52f05610fff9ded422611441ed1fc123a03001b3"
 
-lodash.result@^4.4.0:
-  version "4.5.2"
-  resolved "https://registry.yarnpkg.com/lodash.result/-/lodash.result-4.5.2.tgz#cb45b27fb914eaa8d8ee6f0ce7b2870b87cb70aa"
-
 lodash.some@^4.6.0:
   version "4.6.0"
   resolved "https://registry.yarnpkg.com/lodash.some/-/lodash.some-4.6.0.tgz#1bb9f314ef6b8baded13b549169b2a945eb68e4d"
@@ -12417,11 +12412,12 @@ reduce-without@^1.0.1:
   dependencies:
     test-value "^2.0.0"
 
-reductio@crossfilter/reductio#0c45b03559:
-  version "0.6.3"
-  resolved "https://codeload.github.com/crossfilter/reductio/tar.gz/0c45b0355950101d395d6482e2083ce1cdbcf435"
+reductio@1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/reductio/-/reductio-1.0.0.tgz#18ae6236ebdc665dbfe96ccbbf469150b8ff8b12"
+  integrity sha512-rwmCXVMTykn46mWX4KDoLk7qx/V5Z2R/OVKgIe18EYvml0M5NDm4TYJP708/PeI6X5G0Wix75514ZNbTOJNNTg==
   dependencies:
-    crossfilter2 "^1.4.0"
+    crossfilter2 "^1.5.2"
 
 redux@3.5.2:
   version "3.5.2"
