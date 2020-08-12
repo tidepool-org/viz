@@ -1116,12 +1116,30 @@ describe('stat', () => {
 
     it('should format and return `bgExtents` data', () => {
       const data = {
-        bgExtents: [50, 350],
+        bgMin: 50,
+        bgMax: 350,
       };
 
       const statData = stat.getStatData(data, commonStats.bgExtents, opts);
 
-      expect(statData.data).to.eql([50, 350]);
+      // expect(statData.data).to.eql({ bgMin: 50, bgMax: 350 });
+
+      expect(statData.data).to.eql([
+        {
+          id: 'bgMax',
+          value: 350,
+          title: 'Max BG',
+        },
+        {
+          id: 'bgMin',
+          value: 50,
+          title: 'Min BG',
+        },
+      ]);
+
+      expect(statData.dataPaths).to.eql({
+        summary: 'data.0',
+      });
     });
 
     it('should format and return `carbs` data', () => {

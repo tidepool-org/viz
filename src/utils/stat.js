@@ -426,7 +426,22 @@ export const getStatData = (data, type, opts = {}) => {
       break;
 
     case commonStats.bgExtents:
-      statData.data = _.map(data.bgExtents, ensureNumeric);
+      statData.data = [
+        {
+          id: 'bgMax',
+          value: ensureNumeric(data.bgMax),
+          title: t('Max BG'),
+        },
+        {
+          id: 'bgMin',
+          value: ensureNumeric(data.bgMin),
+          title: t('Min BG'),
+        },
+      ];
+
+      statData.dataPaths = {
+        summary: 'data.0',
+      };
       break;
 
     case commonStats.carbs:
@@ -854,6 +869,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
       'readingsInRange',
       'totalInsulin',
       'timeInAuto',
+      'bgExtents',
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };

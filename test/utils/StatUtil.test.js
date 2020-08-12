@@ -377,14 +377,16 @@ describe('StatUtil', () => {
     it('should return the min and max glucose for cbg data', () => {
       statUtil.bgSource = 'cbg';
       expect(statUtil.getBgExtentsData()).to.eql({
-        bgExtents: [49.99999999999999, 260],
+        bgMin: 49.99999999999999,
+        bgMax: 260,
       });
     });
 
     it('should return the min and max glucose for smbg data', () => {
       statUtil.bgSource = 'smbg';
       expect(statUtil.getBgExtentsData()).to.eql({
-        bgExtents: [60, 270],
+        bgMin: 60,
+        bgMax: 270,
       });
     });
   });
