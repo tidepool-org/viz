@@ -1116,13 +1116,11 @@ describe('stat', () => {
 
     it('should format and return `bgExtents` data', () => {
       const data = {
-        bgMin: 50,
         bgMax: 350,
+        bgMin: 50,
       };
 
       const statData = stat.getStatData(data, commonStats.bgExtents, opts);
-
-      // expect(statData.data).to.eql({ bgMin: 50, bgMax: 350 });
 
       expect(statData.data).to.eql([
         {
