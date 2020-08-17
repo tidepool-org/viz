@@ -365,6 +365,7 @@ class Stat extends PureComponent {
     const state = {
       chartTitle: props.title,
       isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
+      animationCompleted: 1,
     };
 
     switch (props.type) {
@@ -407,7 +408,18 @@ class Stat extends PureComponent {
     const { chartHeight, animate } = props;
 
     return {
-      animate: animate ? { duration: 300, onLoad: { duration: 0 }, animationWhitelist: ['data'] } : false,
+      animate: animate ? {
+        animationWhitelist: ['data'],
+        duration: 300,
+        onEnd: () => {
+          // There is a bug in the version of victory we are running (31.3.0) that is calling onEnd
+          // before animation completes, so we need to trigger a final repaint a frame later to
+          // ensure the animated label values are accurate and displaying the desired precision.
+          // see https://github.com/FormidableLabs/victory/issues/1280#issuecomment-477387326
+          this.setState({ animationCompleted: 0 }, () => this.setState({ animationCompleted: 1 }));
+        },
+        onLoad: { duration: 0 },
+      } : false,
       height: chartHeight,
       labels: d => formatPercentage(d._y),
       renderer: null,
