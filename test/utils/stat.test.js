@@ -1134,10 +1134,6 @@ describe('stat', () => {
           title: 'Min BG',
         },
       ]);
-
-      expect(statData.dataPaths).to.eql({
-        summary: 'data.0',
-      });
     });
 
     it('should format and return `carbs` data', () => {

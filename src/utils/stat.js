@@ -439,9 +439,6 @@ export const getStatData = (data, type, opts = {}) => {
         },
       ];
 
-      statData.dataPaths = {
-        summary: 'data.0',
-      };
       break;
 
     case commonStats.carbs:

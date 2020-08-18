@@ -46,7 +46,7 @@ export class StatUtil {
     return data;
   };
 
-  getBgExtentsData = (returnBgData = false) => {
+  getBgExtentsData = () => {
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
@@ -54,10 +54,6 @@ export class StatUtil {
       bgMax: _.maxBy(bgData, 'value').value,
       bgMin: _.minBy(bgData, 'value').value,
     };
-
-    if (returnBgData) {
-      data.bgData = bgData;
-    }
 
     return data;
   };
