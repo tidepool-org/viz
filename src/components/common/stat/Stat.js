@@ -613,12 +613,8 @@ class Stat extends PureComponent {
               isDisabled={() => this.state.isDisabled}
               domain={domain}
               text={(datum = {}) => {
-                console.log('datum.index', datum.index);
-                console.log('datum.value', datum.value);
-                console.log('datum._x', datum._x);
-                console.log('datum._y', datum._y);
                 const { value, suffix } = formatDatum(
-                  _.get(props, `data.data.${datum.index}`, datum),
+                  _.get(props, `data.data.${datum.index}`),
                   props.dataFormat.label,
                   props,
                 );
@@ -626,7 +622,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props, `data.data.${datum.index}`, datum),
+                  _.get(props, `data.data.${datum.index}`),
                   props.dataFormat.tooltip,
                   props,
                 );
