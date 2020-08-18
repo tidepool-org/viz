@@ -81,6 +81,7 @@ describe('stat', () => {
       expect(stat.commonStats).to.eql({
         averageGlucose: 'averageGlucose',
         averageDailyDose: 'averageDailyDose',
+        bgExtents: 'bgExtents',
         carbs: 'carbs',
         coefficientOfVariation: 'coefficientOfVariation',
         glucoseManagementIndicator: 'glucoseManagementIndicator',
@@ -99,6 +100,7 @@ describe('stat', () => {
       expect(stat.statFetchMethods).to.eql({
         averageGlucose: 'getAverageGlucoseData',
         averageDailyDose: 'getTotalInsulinData',
+        bgExtents: 'getBgExtentsData',
         carbs: 'getCarbsData',
         coefficientOfVariation: 'getCoefficientOfVariationData',
         glucoseManagementIndicator: 'getGlucoseManagementIndicatorData',
@@ -1112,6 +1114,28 @@ describe('stat', () => {
       ]);
     });
 
+    it('should format and return `bgExtents` data', () => {
+      const data = {
+        bgMax: 350,
+        bgMin: 50,
+      };
+
+      const statData = stat.getStatData(data, commonStats.bgExtents, opts);
+
+      expect(statData.data).to.eql([
+        {
+          id: 'bgMax',
+          value: 350,
+          title: 'Max BG',
+        },
+        {
+          id: 'bgMin',
+          value: 50,
+          title: 'Min BG',
+        },
+      ]);
+    });
+
     it('should format and return `carbs` data', () => {
       const data = {
         carbs: 30,
@@ -1408,6 +1432,16 @@ describe('stat', () => {
       });
     });
 
+    describe('bgExtents', () => {
+      it('should return title for `bgExtents` stat when bgSource is `smgb`', () => {
+        expect(stat.getStatTitle(commonStats.bgExtents, smbgOpts)).to.equal('BG Extents (BGM)');
+      });
+
+      it('should return title for `bgExtents` stat when bgSource is `cbg`', () => {
+        expect(stat.getStatTitle(commonStats.bgExtents, cbgOpts)).to.equal('BG Extents (CGM)');
+      });
+    });
+
     describe('carbs', () => {
       it('should return title for `carbs` stat when viewing a single day of data', () => {
         expect(stat.getStatTitle(commonStats.carbs, singleDayOpts)).to.equal('Total Carbs');
@@ -1526,6 +1560,16 @@ describe('stat', () => {
       expect(def).to.include.all.keys(commonStatProperties);
       expect(def.id).to.equal(commonStats.averageGlucose);
       expect(def.type).to.equal(statTypes.barBg);
+      expect(def.dataFormat).to.eql({
+        label: statFormats.bgValue,
+        summary: statFormats.bgValue,
+      });
+    });
+
+    it('should define the `bgExtents` stat', () => {
+      const def = stat.getStatDefinition(data, commonStats.bgExtents, opts);
+      expect(def).to.include.all.keys(commonStatProperties);
+      expect(def.id).to.equal(commonStats.bgExtents);
       expect(def.dataFormat).to.eql({
         label: statFormats.bgValue,
         summary: statFormats.bgValue,

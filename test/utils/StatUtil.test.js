@@ -373,6 +373,24 @@ describe('StatUtil', () => {
     });
   });
 
+  describe('getBgExtentsData', () => {
+    it('should return the min and max glucose for cbg data', () => {
+      statUtil.bgSource = 'cbg';
+      expect(statUtil.getBgExtentsData()).to.eql({
+        bgMin: 49.99999999999999,
+        bgMax: 260,
+      });
+    });
+
+    it('should return the min and max glucose for smbg data', () => {
+      statUtil.bgSource = 'smbg';
+      expect(statUtil.getBgExtentsData()).to.eql({
+        bgMin: 60,
+        bgMax: 270,
+      });
+    });
+  });
+
   describe('getCarbsData', () => {
     it('should return the total carbs from wizard and food data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
