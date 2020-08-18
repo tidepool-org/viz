@@ -468,7 +468,7 @@ class Stat extends PureComponent {
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
-            _x: i + 1,
+            _x: Math.round(i + 1),
             _y: d.value,
             index: i,
           })),
@@ -559,7 +559,7 @@ class Stat extends PureComponent {
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
-            _x: i + 1,
+            _x: Math.round(i + 1),
             _y: total > 0 ? d.value / total : d.value,
             index: i,
           })),
@@ -613,6 +613,10 @@ class Stat extends PureComponent {
               isDisabled={() => this.state.isDisabled}
               domain={domain}
               text={(datum = {}) => {
+                console.log('datum.index', datum.index);
+                console.log('datum.value', datum.value);
+                console.log('datum._x', datum._x);
+                console.log('datum._y', datum._y);
                 const { value, suffix } = formatDatum(
                   _.get(props, `data.data.${datum.index}`, datum),
                   props.dataFormat.label,
