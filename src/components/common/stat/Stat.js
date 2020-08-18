@@ -491,9 +491,8 @@ class Stat extends PureComponent {
               bgPrefs={props.bgPrefs}
               domain={domain}
               text={(datum = {}) => {
-                const datumRef = _.get(chartData, datum.index);
                 const { value } = formatDatum(
-                  _.get(datumRef, 'deviation', datumRef),
+                  _.get(datum, 'deviation', datum),
                   props.dataFormat.label,
                   props,
                 );
@@ -501,7 +500,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(chartData, datum.index),
+                  datum,
                   props.dataFormat.tooltip,
                   props,
                 );
@@ -615,7 +614,7 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(chartData, datum.index),
+                  _.get(props, `data.data.${datum.index}`),
                   props.dataFormat.label,
                   props,
                 );
@@ -623,7 +622,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(chartData, datum.index),
+                  datum,
                   props.dataFormat.tooltip,
                   props,
                 );
