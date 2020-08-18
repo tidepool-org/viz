@@ -365,7 +365,7 @@ class Stat extends PureComponent {
     const state = {
       chartTitle: props.title,
       isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
-      animationCompleted: 1,
+      // animationCompleted: 1,
     };
 
     switch (props.type) {
@@ -411,13 +411,13 @@ class Stat extends PureComponent {
       animate: animate ? {
         animationWhitelist: ['data'],
         duration: 300,
-        onEnd: () => {
-          // There is a bug in the version of victory we are running (31.3.0) that is calling onEnd
-          // before animation completes, so we need to trigger a final repaint a frame later to
-          // ensure the animated label values are accurate and displaying the desired precision.
-          // see https://github.com/FormidableLabs/victory/issues/1280#issuecomment-477387326
-          this.setState({ animationCompleted: 0 }, () => this.setState({ animationCompleted: 1 }));
-        },
+        // onEnd: () => {
+        //   // There is a bug in the version of victory we are running (31.3.0) that is calling onEnd
+        //   // before animation completes, so we need to trigger a final repaint a frame later to
+        //   // ensure the animated label values are accurate and displaying the desired precision.
+        //   // see https://github.com/FormidableLabs/victory/issues/1280#issuecomment-477387326
+        //   this.setState({ animationCompleted: 0 }, () => this.setState({ animationCompleted: 1 }));
+        // },
         onLoad: { duration: 0 },
       } : false,
       height: chartHeight,
@@ -614,7 +614,7 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props, `data.data.${datum.index}`),
+                  _.get(props, `data.data.${datum.index}`, datum),
                   props.dataFormat.label,
                   props,
                 );
@@ -622,7 +622,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  datum,
+                  _.get(props, `data.data.${datum.index}`, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
