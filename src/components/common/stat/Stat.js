@@ -363,6 +363,7 @@ class Stat extends PureComponent {
     let input;
 
     const state = {
+      chartData: data.data,
       chartTitle: props.title,
       isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
       // animationCompleted: 1,
@@ -443,7 +444,8 @@ class Stat extends PureComponent {
     let padding;
     let total;
 
-    const chartData = _.cloneDeep(data.data);
+    const { chartData } = this.state;
+    // const chartData = _.cloneDeep(data.data);
 
     const chartProps = this.getDefaultChartProps(props);
 
@@ -614,7 +616,8 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props, `data.data.${datum.index}`),
+                  // _.get(props, `data.data.${datum.index}`),
+                  _.get(chartData, datum.index),
                   props.dataFormat.label,
                   props,
                 );
@@ -622,7 +625,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props, `data.data.${datum.index}`),
+                  _.get(chartData, datum.index),
                   props.dataFormat.tooltip,
                   props,
                 );
