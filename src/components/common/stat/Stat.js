@@ -363,10 +363,8 @@ class Stat extends PureComponent {
     let input;
 
     const state = {
-      chartData: data.data,
       chartTitle: props.title,
       isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
-      // animationCompleted: 1,
     };
 
     switch (props.type) {
@@ -412,13 +410,6 @@ class Stat extends PureComponent {
       animate: animate ? {
         animationWhitelist: ['data'],
         duration: 300,
-        // onEnd: () => {
-        //   // There is a bug in the version of victory we are running (31.3.0) that is calling onEnd
-        //   // before animation completes, so we need to trigger a final repaint a frame later to
-        //   // ensure the animated label values are accurate and displaying the desired precision.
-        //   // see https://github.com/FormidableLabs/victory/issues/1280#issuecomment-477387326
-        //   this.setState({ animationCompleted: 0 }, () => this.setState({ animationCompleted: 1 }));
-        // },
         onLoad: { duration: 0 },
       } : false,
       height: chartHeight,
@@ -444,8 +435,7 @@ class Stat extends PureComponent {
     let padding;
     let total;
 
-    const { chartData } = this.state;
-    // const chartData = _.cloneDeep(data.data);
+    const chartData = _.cloneDeep(data.data);
 
     const chartProps = this.getDefaultChartProps(props);
 
@@ -493,8 +483,9 @@ class Stat extends PureComponent {
               bgPrefs={props.bgPrefs}
               domain={domain}
               text={(datum = {}) => {
+                const datumRef = _.get(chartData, datum.index, datum);
                 const { value } = formatDatum(
-                  _.get(datum, 'deviation', datum),
+                  _.get(datumRef, 'deviation', datumRef),
                   props.dataFormat.label,
                   props,
                 );
@@ -502,7 +493,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  datum,
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
@@ -616,8 +607,7 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  // _.get(props, `data.data.${datum.index}`),
-                  _.get(chartData, datum.index),
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.label,
                   props,
                 );
@@ -625,7 +615,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(chartData, datum.index),
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
