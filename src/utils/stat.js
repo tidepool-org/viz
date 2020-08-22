@@ -62,6 +62,7 @@ export const statFormats = {
 export const commonStats = {
   averageGlucose: 'averageGlucose',
   averageDailyDose: 'averageDailyDose',
+  bgExtents: 'bgExtents',
   carbs: 'carbs',
   coefficientOfVariation: 'coefficientOfVariation',
   glucoseManagementIndicator: 'glucoseManagementIndicator',
@@ -76,6 +77,7 @@ export const commonStats = {
 export const statFetchMethods = {
   [commonStats.averageGlucose]: 'getAverageGlucoseData',
   [commonStats.averageDailyDose]: 'getTotalInsulinData',
+  [commonStats.bgExtents]: 'getBgExtentsData',
   [commonStats.carbs]: 'getCarbsData',
   [commonStats.coefficientOfVariation]: 'getCoefficientOfVariationData',
   [commonStats.glucoseManagementIndicator]: 'getGlucoseManagementIndicatorData',
@@ -423,6 +425,22 @@ export const getStatData = (data, type, opts = {}) => {
       };
       break;
 
+    case commonStats.bgExtents:
+      statData.data = [
+        {
+          id: 'bgMax',
+          value: ensureNumeric(data.bgMax),
+          title: t('Max BG'),
+        },
+        {
+          id: 'bgMin',
+          value: ensureNumeric(data.bgMin),
+          title: t('Min BG'),
+        },
+      ];
+
+      break;
+
     case commonStats.carbs:
       statData.data = [
         {
@@ -646,6 +664,10 @@ export const getStatTitle = (type, opts = {}) => {
       title = (days > 1) ? t('Avg. Daily Insulin') : t('Total Insulin');
       break;
 
+    case commonStats.bgExtents:
+      title = t('BG Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
+      break;
+
     case commonStats.carbs:
       title = (days > 1) ? t('Avg. Daily Carbs') : t('Total Carbs');
       break;
@@ -719,6 +741,15 @@ export const getStatDefinition = (data, type, opts = {}) => {
         summary: statFormats.units,
       };
       stat.type = statTypes.input;
+      break;
+
+    case commonStats.bgExtents:
+      stat.dataFormat = {
+        label: statFormats.bgValue,
+        summary: statFormats.bgValue,
+      };
+      stat.type = statTypes.simple;
+      stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
 
     case commonStats.carbs:
@@ -835,6 +866,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
       'readingsInRange',
       'totalInsulin',
       'timeInAuto',
+      'bgExtents',
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
