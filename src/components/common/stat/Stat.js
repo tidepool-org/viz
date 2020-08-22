@@ -1,5 +1,3 @@
-/* global document */
-
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
@@ -25,6 +23,9 @@ import CollapseIconOpen from './assets/expand-more-24-px.svg';
 import CollapseIconClose from './assets/chevron-right-24-px.svg';
 import InfoIcon from './assets/info-outline-24-px.svg';
 import InputGroup from '../controls/InputGroup';
+
+/* global document */
+/* eslint-disable no-underscore-dangle */
 
 const dataPathPropType = PropTypes.oneOfType([
   PropTypes.string,
@@ -406,9 +407,13 @@ class Stat extends PureComponent {
     const { chartHeight, animate } = props;
 
     return {
-      animate: animate ? { duration: 300, onLoad: { duration: 0 } } : false,
+      animate: animate ? {
+        animationWhitelist: ['data'],
+        duration: 300,
+        onLoad: { duration: 0 },
+      } : false,
       height: chartHeight,
-      labels: d => formatPercentage(d.y),
+      labels: d => formatPercentage(d._y),
       renderer: null,
       style: {
         data: {
@@ -429,6 +434,8 @@ class Stat extends PureComponent {
     let chartLabelWidth = labelFontSize * 2.75;
     let padding;
     let total;
+
+    const chartData = _.cloneDeep(data.data);
 
     const chartProps = this.getDefaultChartProps(props);
 
@@ -451,12 +458,14 @@ class Stat extends PureComponent {
           alignment: 'middle',
           containerComponent: <VictoryContainer responsive={false} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
-          data: _.map(data.data, (d, i) => ({
-            x: i + 1,
-            y: d.value,
-            deviation: d.deviation,
-            eventKey: i,
+          data: _.map(chartData, (d, i) => ({
+            ...d,
+            _x: Math.round(i + 1),
+            _y: d.value,
+            index: i,
           })),
+          x: '_x',
+          y: '_y',
           dataComponent: (
             <BgBar
               barWidth={barWidth}
@@ -474,7 +483,7 @@ class Stat extends PureComponent {
               bgPrefs={props.bgPrefs}
               domain={domain}
               text={(datum = {}) => {
-                const datumRef = _.get(props.data, ['data', datum.eventKey]);
+                const datumRef = _.get(chartData, datum.index, datum);
                 const { value } = formatDatum(
                   _.get(datumRef, 'deviation', datumRef),
                   props.dataFormat.label,
@@ -484,7 +493,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props.data, ['data', datum.eventKey]),
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
@@ -501,7 +510,7 @@ class Stat extends PureComponent {
             },
             labels: {
               fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
-                _.get(props.data, ['data', datum.eventKey]),
+                datum,
                 props.dataFormat.label,
                 props,
               ))),
@@ -519,17 +528,17 @@ class Stat extends PureComponent {
         total = _.get(data, 'total.value');
 
         if (height > 0) {
-          barWidth = ((height - barSpacing) / props.data.data.length) - (barSpacing / 2);
+          barWidth = ((height - barSpacing) / chartData.length) - (barSpacing / 2);
           labelFontSize = _.min([barWidth * 0.833, labelFontSize]);
           chartLabelWidth = labelFontSize * 2.75;
         } else {
           barWidth = 30;
-          height = (barWidth + barSpacing) * props.data.data.length;
+          height = (barWidth + barSpacing) * chartData.length;
         }
 
         domain = {
           x: [0, 1],
-          y: [0, props.data.data.length],
+          y: [0, chartData.length],
         };
 
         padding = {
@@ -541,12 +550,14 @@ class Stat extends PureComponent {
           alignment: 'middle',
           containerComponent: <VictoryContainer responsive={false} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
-          data: _.map(data.data, (d, i) => ({
-            x: i + 1,
-            y: total > 0 ? d.value / total : d.value,
-            id: d.id,
-            eventKey: i,
+          data: _.map(chartData, (d, i) => ({
+            ...d,
+            _x: Math.round(i + 1),
+            _y: total > 0 ? d.value / total : d.value,
+            index: i,
           })),
+          x: '_x',
+          y: '_y',
           dataComponent: (
             <HoverBar
               barWidth={barWidth}
@@ -565,9 +576,7 @@ class Stat extends PureComponent {
                     return {};
                   }
 
-                  const datum = _.get(props.data, ['data', target.index], {});
-                  datum.index = target.index;
-                  this.setChartTitle(datum);
+                  this.setChartTitle(target.datum);
                   this.setState({ hoveredDatumIndex: target.index });
 
                   return {
@@ -598,7 +607,7 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props.data, ['data', datum.eventKey]),
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.label,
                   props,
                 );
@@ -606,7 +615,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  _.get(props.data, ['data', datum.eventKey]),
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
@@ -618,12 +627,12 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: datum => (datum.y === 0 ? 'transparent' : this.getDatumColor(datum)),
+              fill: datum => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
               width: () => barWidth,
             },
             labels: {
               fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
-                _.get(props.data, ['data', datum.eventKey]),
+                datum,
                 props.dataFormat.label,
                 props,
               ))),
@@ -670,9 +679,10 @@ class Stat extends PureComponent {
 
   getDatumColor = datum => {
     const { hoveredDatumIndex, isDisabled } = this.state;
+
     const isMuted = this.props.muteOthersOnHover
       && hoveredDatumIndex >= 0
-      && hoveredDatumIndex !== datum.eventKey;
+      && hoveredDatumIndex !== datum.index;
 
     let color = colors[datum.id] || colors.statDefault;
 

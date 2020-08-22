@@ -107,8 +107,11 @@ export class DataUtil {
     const rejectedData = _.remove(validData, d => d.reject || this.filter.byId(d.id).top(1).length);
     this.endTimer('filterValidData');
 
-    this.startTimer('addValidData');
+    this.startTimer('tagData');
     _.each(validData, this.tagDatum);
+    this.endTimer('tagData');
+
+    this.startTimer('addValidData');
     this.data.add(validData);
     this.endTimer('addValidData');
 
@@ -582,7 +585,7 @@ export class DataUtil {
     this.sort = {};
     this.sort.byTime = array => {
       const timeField = _.get(this, 'timePrefs.timezoneAware') ? 'time' : 'deviceTime';
-      return crossfilter.quicksort.by(d => d[timeField])(array, 0, array.length);
+      return array.sort((a, b) => a[timeField] - b[timeField]);
     };
     this.endTimer('buildSorts');
   };

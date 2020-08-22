@@ -5,11 +5,13 @@ import { VictoryLabel, VictoryTooltip, TextSize } from 'victory';
 
 import colors from '../../../styles/colors.css';
 
+/* eslint-disable no-underscore-dangle */
+
 export const HoverBarLabel = props => {
   const {
     barWidth,
     isDisabled,
-    datum = { x: 0, y: 0 },
+    datum = { _x: 0, _y: 0 },
     domain,
     scale = {
       x: _.noop,
@@ -49,7 +51,7 @@ export const HoverBarLabel = props => {
   // Ensure that the datum y value isn't below zero, or the tooltip will be incorrectly positioned
   const tooltipDatum = {
     ...datum,
-    y: _.max([datum.y, 0]),
+    _y: _.max([datum._y, 0]),
   };
 
   return (
