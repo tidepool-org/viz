@@ -407,7 +407,11 @@ class Stat extends PureComponent {
     const { chartHeight, animate } = props;
 
     return {
-      animate: animate ? { duration: 300, onLoad: { duration: 0 }, animationWhitelist: ['data'] } : false,
+      animate: animate ? {
+        animationWhitelist: ['data'],
+        duration: 300,
+        onLoad: { duration: 0 },
+      } : false,
       height: chartHeight,
       labels: d => formatPercentage(d._y),
       renderer: null,
@@ -456,7 +460,7 @@ class Stat extends PureComponent {
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
-            _x: i + 1,
+            _x: Math.round(i + 1),
             _y: d.value,
             index: i,
           })),
@@ -479,8 +483,9 @@ class Stat extends PureComponent {
               bgPrefs={props.bgPrefs}
               domain={domain}
               text={(datum = {}) => {
+                const datumRef = _.get(chartData, datum.index, datum);
                 const { value } = formatDatum(
-                  _.get(datum, 'deviation', datum),
+                  _.get(datumRef, 'deviation', datumRef),
                   props.dataFormat.label,
                   props,
                 );
@@ -488,7 +493,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  datum,
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
@@ -547,7 +552,7 @@ class Stat extends PureComponent {
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
-            _x: i + 1,
+            _x: Math.round(i + 1),
             _y: total > 0 ? d.value / total : d.value,
             index: i,
           })),
@@ -602,7 +607,7 @@ class Stat extends PureComponent {
               domain={domain}
               text={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  datum,
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.label,
                   props,
                 );
@@ -610,7 +615,7 @@ class Stat extends PureComponent {
               }}
               tooltipText={(datum = {}) => {
                 const { value, suffix } = formatDatum(
-                  datum,
+                  _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
                   props,
                 );
