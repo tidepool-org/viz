@@ -51,8 +51,8 @@ export class StatUtil {
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const data = {
-      bgMax: _.maxBy(bgData, 'value').value,
-      bgMin: _.minBy(bgData, 'value').value,
+      bgMax: _.get(_.maxBy(bgData, 'value'), 'value', null),
+      bgMin: _.get(_.minBy(bgData, 'value'), 'value', null),
     };
 
     return data;
