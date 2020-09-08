@@ -74,6 +74,7 @@ export class DataUtil {
 
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.deviceUploadMap = this.deviceUploadMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
 
@@ -185,6 +186,11 @@ export class DataUtil {
     }
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
+    }
+
+    // Generate a map of devices by deviceId
+    if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
+      this.deviceUploadMap[d.deviceId] = d.uploadId;
     }
   };
 
@@ -581,7 +587,7 @@ export class DataUtil {
       return this.dimension.bySubType.filterExact(subType);
     };
 
-    this.filter.byDeviceIds = (deviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(deviceIds, deviceId));
+    this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
 
     this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
@@ -715,11 +721,33 @@ export class DataUtil {
     this.endTimer('setSize');
   };
 
-  setDeviceIds = () => {
-    this.startTimer('setDeviceIds');
-    this.deviceIds = _.map(this.dimension.byDeviceId.group().all(), 'key');
-    this.endTimer('setDeviceIds');
+  /* eslint-disable no-param-reassign */
+  setDevices = () => {
+    this.startTimer('setDevices');
+    const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
+    this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
+      const upload = uploadsById[value];
+      let device = { id: key };
+
+      if (upload) {
+        const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
+        const deviceModel = _.get(upload, 'deviceModel', '');
+        device = {
+          bgm: _.includes(upload.deviceTags, 'bgm'),
+          cgm: _.includes(upload.deviceTags, 'cgm'),
+          id: key,
+          label: deviceManufacturer || deviceModel ? [deviceManufacturer, deviceModel].join(' ') : id,
+          pump: _.includes(upload.deviceTags, 'insulin-pump'),
+          serialNumber: upload.deviceSerialNumber,
+        };
+      }
+
+      result.push(device);
+      return result;
+    }, []);
+    this.endTimer('setDevices');
   }
+  /* eslint-enable no-param-reassign */
 
   setMetaData = () => {
     this.startTimer('setMetaData');
@@ -731,7 +759,7 @@ export class DataUtil {
     this.setActiveDays();
     this.setTypes();
     this.setUploadMap();
-    this.setDeviceIds();
+    this.setDevices();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.endTimer('setMetaData');
@@ -1137,7 +1165,7 @@ export class DataUtil {
       'latestPumpUpload',
       'patientId',
       'size',
-      'deviceIds',
+      'devices',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
