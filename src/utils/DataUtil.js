@@ -736,7 +736,7 @@ export class DataUtil {
           bgm: _.includes(upload.deviceTags, 'bgm'),
           cgm: _.includes(upload.deviceTags, 'cgm'),
           id: key,
-          label: deviceManufacturer || deviceModel ? [deviceManufacturer, deviceModel].join(' ') : id,
+          label: deviceManufacturer || deviceModel ? [deviceManufacturer, deviceModel].join(' ') : key,
           pump: _.includes(upload.deviceTags, 'insulin-pump'),
           serialNumber: upload.deviceSerialNumber,
         };
