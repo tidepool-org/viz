@@ -2119,18 +2119,18 @@ describe('DataUtil', () => {
     });
   });
 
-  describe('setDeviceIds', () => {
-    it('should set the device Ids of the current data set', () => {
+  describe('setDevices', () => {
+    it('should set the devices of the current data set', () => {
       const deviceEventData = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [], deviceId: 'device1' },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }], deviceId: 'device2' },
       ];
 
       initDataUtil(deviceEventData);
-      delete(dataUtil.deviceIds);
+      delete(dataUtil.devices);
 
-      dataUtil.setDeviceIds();
-      expect(dataUtil.deviceIds).to.eql(['device1', 'device2']);
+      dataUtil.setDevices();
+      expect(dataUtil.devices).to.eql([{ id: 'device1' }, { id: 'device2' }]);
     });
   });
 
@@ -2144,7 +2144,7 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setActiveDays');
       sinon.spy(dataUtil, 'setTypes');
       sinon.spy(dataUtil, 'setUploadMap');
-      sinon.spy(dataUtil, 'setDeviceIds');
+      sinon.spy(dataUtil, 'setDevices');
       sinon.spy(dataUtil, 'setLatestPumpUpload');
       sinon.spy(dataUtil, 'setIncompleteSuspends');
 
@@ -2158,7 +2158,7 @@ describe('DataUtil', () => {
       sinon.assert.calledOnce(dataUtil.setActiveDays);
       sinon.assert.calledOnce(dataUtil.setTypes);
       sinon.assert.calledOnce(dataUtil.setUploadMap);
-      sinon.assert.calledOnce(dataUtil.setDeviceIds);
+      sinon.assert.calledOnce(dataUtil.setDevices);
       sinon.assert.calledOnce(dataUtil.setLatestPumpUpload);
       sinon.assert.calledOnce(dataUtil.setIncompleteSuspends);
 
@@ -2966,7 +2966,7 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'latestDatumByType',
         'bgSources',
-        'deviceIds',
+        'devices',
       ];
 
       const resultWithoutMetaData = dataUtil.query(defaultQuery);
