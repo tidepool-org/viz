@@ -189,6 +189,14 @@ export class DataUtil {
     }
 
     // Generate a map of devices by deviceId
+    if (!d.deviceId && _.get(d, 'origin.name') === 'com.apple.HealthKit') {
+      const deviceId = ['HealthKit'];
+      if (_.get(d, 'origin.payload.sourceRevision.source.name')) {
+        deviceId.push(_.get(d, 'origin.payload.sourceRevision.source.name'));
+      }
+      deviceId.push(d.uploadId.slice(0, 6));
+      d.deviceId = deviceId.join(' ');
+    }
     if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
       this.deviceUploadMap[d.deviceId] = d.uploadId;
     }
@@ -482,10 +490,12 @@ export class DataUtil {
       this.bolusDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
       this.latestDatumByType = {};
+      this.deviceUploadMap = {};
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
       delete this.latestPumpUpload;
+      delete this.devices;
       this.init();
     }
   };
@@ -726,7 +736,7 @@ export class DataUtil {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const upload = uploadsById[value];
+      const upload = uploadsById[value]; //
       let device = { id: key };
 
       if (upload) {
