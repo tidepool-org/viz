@@ -190,12 +190,16 @@ export class DataUtil {
 
     // Generate a map of devices by deviceId
     if (!d.deviceId && _.get(d, 'origin.name') === 'com.apple.HealthKit') {
-      const deviceId = ['HealthKit'];
+      const HKdeviceId = ['HealthKit'];
       if (_.get(d, 'origin.payload.sourceRevision.source.name')) {
-        deviceId.push(_.get(d, 'origin.payload.sourceRevision.source.name'));
+        HKdeviceId.push(_.get(d, 'origin.payload.sourceRevision.source.name'));
       }
-      deviceId.push(d.uploadId.slice(0, 6));
-      d.deviceId = deviceId.join(' ');
+      HKdeviceId.push(d.uploadId.slice(0, 6));
+      d.deviceId = HKdeviceId.join(' ');
+    }
+    if (!d.deviceId && _.get(d, 'payload.transmitterId', false)) {
+      const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
+      d.deviceId = dexDeviceId.join(' ');
     }
     if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
       this.deviceUploadMap[d.deviceId] = d.uploadId;
@@ -736,17 +740,26 @@ export class DataUtil {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const upload = uploadsById[value]; //
+      const upload = uploadsById[value];
       let device = { id: key };
 
       if (upload) {
+        const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
         const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
         const deviceModel = _.get(upload, 'deviceModel', '');
+        let label = key;
+        if (deviceManufacturer || deviceModel) {
+          if (deviceManufacturer === 'Dexcom' && isContinuous) {
+            label = 'Dexcom API';
+          } else {
+            label = [deviceManufacturer, deviceModel].join(' ');
+          }
+        }
         device = {
           bgm: _.includes(upload.deviceTags, 'bgm'),
           cgm: _.includes(upload.deviceTags, 'cgm'),
           id: key,
-          label: deviceManufacturer || deviceModel ? [deviceManufacturer, deviceModel].join(' ') : key,
+          label,
           pump: _.includes(upload.deviceTags, 'insulin-pump'),
           serialNumber: upload.deviceSerialNumber,
         };
