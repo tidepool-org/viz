@@ -322,6 +322,7 @@ stories.add('Query Generator', (props) => {
     bgSources: 'bgSources',
     latestDatumByType: 'latestDatumByType',
     latestPumpUpload: 'latestPumpUpload',
+    devices: 'devices',
     size: 'size',
   };
 
