@@ -538,6 +538,10 @@ export class DataUtil {
     this.dimension.byType = this.data.dimension(d => d.type);
   };
 
+  buildByDeviceIdDimension = () => {
+    this.dimension.byDeviceId = this.data.dimension(d => d.deviceId || '');
+  };
+
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
   // which would introduce additional performance overhead as per crossfilter docs.
   buildDimensions = () => {
@@ -549,6 +553,7 @@ export class DataUtil {
     this.buildBySubTypeDimension();
     this.buildByTimeDimension();
     this.buildByTypeDimension();
+    this.buildByDeviceIdDimension();
     this.endTimer('buildDimensions');
   };
 
@@ -576,6 +581,8 @@ export class DataUtil {
       return this.dimension.bySubType.filterExact(subType);
     };
 
+    this.filter.byDeviceIds = (deviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(deviceIds, deviceId));
+
     this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
@@ -597,6 +604,7 @@ export class DataUtil {
     this.dimension.bySubType.filterAll();
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
+    this.dimension.byDeviceId.filterAll();
     this.endTimer('clearFilters');
   };
 
@@ -707,6 +715,12 @@ export class DataUtil {
     this.endTimer('setSize');
   };
 
+  setDeviceIds = () => {
+    this.startTimer('setDeviceIds');
+    this.deviceIds = _.map(this.dimension.byDeviceId.group().all(), 'key');
+    this.endTimer('setDeviceIds');
+  }
+
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -717,6 +731,7 @@ export class DataUtil {
     this.setActiveDays();
     this.setTypes();
     this.setUploadMap();
+    this.setDeviceIds();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.endTimer('setMetaData');
@@ -910,6 +925,12 @@ export class DataUtil {
     this.returnRawData = returnRaw;
   };
 
+  setExcludedDevices = (deviceIds = []) => {
+    this.startTimer('setExcludedDevices');
+    this.excludedDevices = deviceIds;
+    this.endTimer('setExcludedDevices');
+  }
+
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -928,6 +949,7 @@ export class DataUtil {
       timePrefs,
       types,
       raw,
+      excludedDevices,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -944,6 +966,7 @@ export class DataUtil {
     if (timePrefs) this.setTimePrefs(timePrefs);
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
+    this.setExcludedDevices(excludedDevices);
 
     const data = {};
 
@@ -957,6 +980,9 @@ export class DataUtil {
 
       // Filter out any inactive days of the week
       this.filter.byActiveDays(this.activeDays);
+
+      // Filter out any excluded devices
+      this.filter.byDeviceIds(this.excludedDevices);
 
       // Generate the stats for current range
       if (this.stats.length && rangeKey === 'current') {
@@ -1111,6 +1137,7 @@ export class DataUtil {
       'latestPumpUpload',
       'patientId',
       'size',
+      'deviceIds',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
