@@ -1837,6 +1837,7 @@ describe('DataUtil', () => {
       expect(dataUtil.dimension.bySubType).to.be.an('object');
       expect(dataUtil.dimension.byTime).to.be.an('object');
       expect(dataUtil.dimension.byType).to.be.an('object');
+      expect(dataUtil.dimension.byDeviceId).to.be.an('object');
     });
   });
 
@@ -1850,6 +1851,7 @@ describe('DataUtil', () => {
       expect(dataUtil.filter.byTypes).to.be.a('function');
       expect(dataUtil.filter.bySubType).to.be.a('function');
       expect(dataUtil.filter.byId).to.be.a('function');
+      expect(dataUtil.filter.byDeviceIds).to.be.a('function');
     });
   });
 
@@ -1868,12 +1870,14 @@ describe('DataUtil', () => {
       const clearbySubTypeSpy = sinon.spy(dataUtil.dimension.bySubType, 'filterAll');
       const clearbyIdSpy = sinon.spy(dataUtil.dimension.byId, 'filterAll');
       const clearbyDayOfWeekSpy = sinon.spy(dataUtil.dimension.byDayOfWeek, 'filterAll');
+      const clearbyDeviceIdSpy = sinon.spy(dataUtil.dimension.byDeviceId, 'filterAll');
 
       sinon.assert.callCount(clearbyTimeSpy, 0);
       sinon.assert.callCount(clearbyTypeSpy, 0);
       sinon.assert.callCount(clearbySubTypeSpy, 0);
       sinon.assert.callCount(clearbyIdSpy, 0);
       sinon.assert.callCount(clearbyDayOfWeekSpy, 0);
+      sinon.assert.callCount(clearbyDeviceIdSpy, 0);
 
       dataUtil.clearFilters();
 
@@ -1882,6 +1886,7 @@ describe('DataUtil', () => {
       sinon.assert.callCount(clearbySubTypeSpy, 1);
       sinon.assert.callCount(clearbyIdSpy, 1);
       sinon.assert.callCount(clearbyDayOfWeekSpy, 1);
+      sinon.assert.callCount(clearbyDeviceIdSpy, 1);
     });
   });
 
@@ -2114,6 +2119,21 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('setDevices', () => {
+    it('should set the devices of the current data set', () => {
+      const deviceEventData = [
+        { ...new Types.DeviceEvent({ ...useRawData }), annotations: [], deviceId: 'device1' },
+        { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }], deviceId: 'device2' },
+      ];
+
+      initDataUtil(deviceEventData);
+      delete(dataUtil.devices);
+
+      dataUtil.setDevices();
+      expect(dataUtil.devices).to.eql([{ id: 'device1' }, { id: 'device2' }]);
+    });
+  });
+
   describe('setMetaData', () => {
     it('should call all the metadata setters and in the correct order where required', () => {
       sinon.spy(dataUtil, 'setSize');
@@ -2124,6 +2144,7 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setActiveDays');
       sinon.spy(dataUtil, 'setTypes');
       sinon.spy(dataUtil, 'setUploadMap');
+      sinon.spy(dataUtil, 'setDevices');
       sinon.spy(dataUtil, 'setLatestPumpUpload');
       sinon.spy(dataUtil, 'setIncompleteSuspends');
 
@@ -2137,6 +2158,7 @@ describe('DataUtil', () => {
       sinon.assert.calledOnce(dataUtil.setActiveDays);
       sinon.assert.calledOnce(dataUtil.setTypes);
       sinon.assert.calledOnce(dataUtil.setUploadMap);
+      sinon.assert.calledOnce(dataUtil.setDevices);
       sinon.assert.calledOnce(dataUtil.setLatestPumpUpload);
       sinon.assert.calledOnce(dataUtil.setIncompleteSuspends);
 
@@ -2530,6 +2552,22 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('setExcludedDevices', () => {
+    it('should set `excludedDevices` to provided arg', () => {
+      expect(dataUtil.excludedDevices).to.be.undefined;
+      dataUtil.setExcludedDevices(['1']);
+      expect(dataUtil.excludedDevices).to.eql(['1']);
+      dataUtil.setExcludedDevices(['2']);
+      expect(dataUtil.excludedDevices).to.eql(['2']);
+    });
+
+    it('should set `excludedDevices` to `[]` if no arg provided', () => {
+      expect(dataUtil.excludedDevices).to.be.undefined;
+      dataUtil.setExcludedDevices();
+      expect(dataUtil.excludedDevices).to.eql([]);
+    });
+  });
+
   describe('query', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
@@ -2543,6 +2581,7 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setTimePrefs');
       sinon.spy(dataUtil, 'setEndpoints');
       sinon.spy(dataUtil, 'setActiveDays');
+      sinon.spy(dataUtil, 'setExcludedDevices');
 
       dataUtil.query(createQuery({
         bgSource: 'cbg',
@@ -2562,6 +2601,7 @@ describe('DataUtil', () => {
       sinon.assert.calledOnce(dataUtil.setTimePrefs);
       sinon.assert.calledOnce(dataUtil.setEndpoints);
       sinon.assert.calledOnce(dataUtil.setActiveDays);
+      sinon.assert.calledOnce(dataUtil.setExcludedDevices);
 
       sinon.assert.callOrder(
         dataUtil.clearFilters,
@@ -2572,6 +2612,7 @@ describe('DataUtil', () => {
         dataUtil.setTimePrefs,
         dataUtil.setEndpoints,
         dataUtil.setActiveDays,
+        dataUtil.setExcludedDevices,
       );
     });
 
@@ -2669,6 +2710,17 @@ describe('DataUtil', () => {
       sinon.assert.calledWith(dataUtil.setActiveDays, [0, 1]);
     });
 
+    it('should call `setExcludedDevices` with `devices` as specified in the query', () => {
+      sinon.spy(dataUtil, 'setExcludedDevices');
+
+      dataUtil.query({});
+      sinon.assert.calledWith(dataUtil.setExcludedDevices, undefined);
+
+      dataUtil.query({ excludedDevices: ['device1'] });
+      sinon.assert.calledTwice(dataUtil.setExcludedDevices);
+      sinon.assert.calledWith(dataUtil.setExcludedDevices, ['device1']);
+    });
+
     context('generating data', () => {
       it('should filter by endpoints for each range', () => {
         sinon.spy(dataUtil.filter, 'byEndpoints');
@@ -2714,6 +2766,27 @@ describe('DataUtil', () => {
           dataUtil.filter.byActiveDays,
           dataUtil.filter.byEndpoints,
           dataUtil.filter.byActiveDays,
+        );
+      });
+
+      it('should filter by device Ids after filtering by endpoints for each range', () => {
+        sinon.spy(dataUtil.filter, 'byEndpoints');
+        sinon.spy(dataUtil.filter, 'byDeviceIds');
+
+        dataUtil.query(createQuery({
+          endpoints: dayEndpoints,
+          nextDays: 1,
+          prevDays: 1,
+        }));
+
+        sinon.assert.calledThrice(dataUtil.filter.byDeviceIds);
+        sinon.assert.callOrder(
+          dataUtil.filter.byEndpoints,
+          dataUtil.filter.byDeviceIds,
+          dataUtil.filter.byEndpoints,
+          dataUtil.filter.byDeviceIds,
+          dataUtil.filter.byEndpoints,
+          dataUtil.filter.byDeviceIds,
         );
       });
 
@@ -2893,6 +2966,7 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'latestDatumByType',
         'bgSources',
+        'devices',
       ];
 
       const resultWithoutMetaData = dataUtil.query(defaultQuery);
