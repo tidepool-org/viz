@@ -74,6 +74,7 @@ export class DataUtil {
 
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.deviceUploadMap = this.deviceUploadMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
 
@@ -185,6 +186,23 @@ export class DataUtil {
     }
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
+    }
+
+    // Generate a map of devices by deviceId
+    if (!d.deviceId && _.get(d, 'origin.name') === 'com.apple.HealthKit') {
+      const HKdeviceId = ['HealthKit'];
+      if (_.get(d, 'origin.payload.sourceRevision.source.name')) {
+        HKdeviceId.push(_.get(d, 'origin.payload.sourceRevision.source.name'));
+      }
+      HKdeviceId.push(d.uploadId.slice(0, 6));
+      d.deviceId = HKdeviceId.join(' ');
+    }
+    if (!d.deviceId && _.get(d, 'payload.transmitterId', false)) {
+      const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
+      d.deviceId = dexDeviceId.join(' ');
+    }
+    if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
+      this.deviceUploadMap[d.deviceId] = d.uploadId;
     }
   };
 
@@ -476,10 +494,12 @@ export class DataUtil {
       this.bolusDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
       this.latestDatumByType = {};
+      this.deviceUploadMap = {};
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
       delete this.latestPumpUpload;
+      delete this.devices;
       this.init();
     }
   };
@@ -538,6 +558,10 @@ export class DataUtil {
     this.dimension.byType = this.data.dimension(d => d.type);
   };
 
+  buildByDeviceIdDimension = () => {
+    this.dimension.byDeviceId = this.data.dimension(d => d.deviceId || '');
+  };
+
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
   // which would introduce additional performance overhead as per crossfilter docs.
   buildDimensions = () => {
@@ -549,6 +573,7 @@ export class DataUtil {
     this.buildBySubTypeDimension();
     this.buildByTimeDimension();
     this.buildByTypeDimension();
+    this.buildByDeviceIdDimension();
     this.endTimer('buildDimensions');
   };
 
@@ -576,6 +601,8 @@ export class DataUtil {
       return this.dimension.bySubType.filterExact(subType);
     };
 
+    this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
+
     this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
@@ -597,6 +624,7 @@ export class DataUtil {
     this.dimension.bySubType.filterAll();
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
+    this.dimension.byDeviceId.filterAll();
     this.endTimer('clearFilters');
   };
 
@@ -707,6 +735,43 @@ export class DataUtil {
     this.endTimer('setSize');
   };
 
+  /* eslint-disable no-param-reassign */
+  setDevices = () => {
+    this.startTimer('setDevices');
+    const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
+    this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
+      const upload = uploadsById[value];
+      let device = { id: key };
+
+      if (upload) {
+        const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
+        const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
+        const deviceModel = _.get(upload, 'deviceModel', '');
+        let label = key;
+        if (deviceManufacturer || deviceModel) {
+          if (deviceManufacturer === 'Dexcom' && isContinuous) {
+            label = 'Dexcom API';
+          } else {
+            label = [deviceManufacturer, deviceModel].join(' ');
+          }
+        }
+        device = {
+          bgm: _.includes(upload.deviceTags, 'bgm'),
+          cgm: _.includes(upload.deviceTags, 'cgm'),
+          id: key,
+          label,
+          pump: _.includes(upload.deviceTags, 'insulin-pump'),
+          serialNumber: upload.deviceSerialNumber,
+        };
+      }
+
+      result.push(device);
+      return result;
+    }, []);
+    this.endTimer('setDevices');
+  }
+  /* eslint-enable no-param-reassign */
+
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -717,6 +782,7 @@ export class DataUtil {
     this.setActiveDays();
     this.setTypes();
     this.setUploadMap();
+    this.setDevices();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.endTimer('setMetaData');
@@ -910,6 +976,12 @@ export class DataUtil {
     this.returnRawData = returnRaw;
   };
 
+  setExcludedDevices = (deviceIds = []) => {
+    this.startTimer('setExcludedDevices');
+    this.excludedDevices = deviceIds;
+    this.endTimer('setExcludedDevices');
+  }
+
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -928,6 +1000,7 @@ export class DataUtil {
       timePrefs,
       types,
       raw,
+      excludedDevices,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -944,6 +1017,7 @@ export class DataUtil {
     if (timePrefs) this.setTimePrefs(timePrefs);
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
+    this.setExcludedDevices(excludedDevices);
 
     const data = {};
 
@@ -957,6 +1031,9 @@ export class DataUtil {
 
       // Filter out any inactive days of the week
       this.filter.byActiveDays(this.activeDays);
+
+      // Filter out any excluded devices
+      this.filter.byDeviceIds(this.excludedDevices);
 
       // Generate the stats for current range
       if (this.stats.length && rangeKey === 'current') {
@@ -1111,6 +1188,7 @@ export class DataUtil {
       'latestPumpUpload',
       'patientId',
       'size',
+      'devices',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
