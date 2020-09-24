@@ -46,6 +46,18 @@ export class StatUtil {
     return data;
   };
 
+  getBgExtentsData = () => {
+    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
+
+    const data = {
+      bgMax: _.get(_.maxBy(bgData, 'value'), 'value', null),
+      bgMin: _.get(_.minBy(bgData, 'value'), 'value', null),
+    };
+
+    return data;
+  };
+
   getBasalBolusData = () => {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
