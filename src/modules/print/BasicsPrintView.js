@@ -459,13 +459,16 @@ class BasicsPrintView extends PrintView {
 
     const columnWidth = this.getActiveColumnWidth();
 
-    this.renderSectionHeading(title, {
+    let headingMoveDown = 0.25;
+
+    const renderSectionHeading = (moveDown = 0) => this.renderSectionHeading(title, {
       width: columnWidth,
       fontSize: this.largeFontSize,
-      moveDown: 0.25,
+      moveDown,
     });
 
     if (disabled) {
+      renderSectionHeading(headingMoveDown);
       this.renderEmptyText(emptyText);
     } else {
       const isSiteChange = type === 'siteChange';
@@ -516,18 +519,60 @@ class BasicsPrintView extends PrintView {
         return values;
       });
 
+      this.doc.fontSize(this.largeFontSize);
+      const headingHeight = this.doc.heightOfString(' ');
+      let headingYPos = this.doc.y;
+
       this.doc.fontSize(this.smallFontSize);
+      const headerHeight = this.doc.heightOfString(' ');
 
-      const currentYPos = this.doc.y;
-      const headerHeight = this.doc.currentLineHeight();
+      this.doc.moveDown(headingMoveDown);
+      const currentYPos = headingHeight + this.doc.y;
 
-      this.doc.y = currentYPos + (headerHeight - 9.25);
+      this.doc.y = currentYPos + headerHeight;
 
       this.calendar.pos[type] = {
-        y: currentYPos + headerHeight + 4,
+        y: currentYPos + headerHeight + 4.25,
         pageIndex: this.currentPageIndex,
       };
 
+      if (!this.calendar.rowHeight) {
+        // Calculate row height by rendering a single row with invisible fill and stroke
+        this.doc.fillOpacity(0);
+        this.doc.strokeOpacity(0);
+        this.lockFillandStroke();
+
+        this.renderTable(this.calendar.columns, [rows[0]], {
+          bottomMargin: 0,
+        });
+
+        this.calendar.rowHeight = this.doc.y - this.calendar.pos[type].y;
+
+        // Reset fill and stroke opacities
+        this.unlockFillandStroke();
+        this.doc.fillOpacity(1);
+        this.doc.strokeOpacity(1);
+      } else {
+        // Check to see if there's room on the current page, and if not, render on a new page
+        const calendarHeight = this.calendar.pos[type].y + (this.calendar.rowHeight * rows.length);
+
+        if (calendarHeight + bottomMargin > this.chartArea.bottomEdge) {
+          this.doc.addPage();
+          this.doc.moveDown(headingMoveDown);
+          headingMoveDown = 0;
+          headingYPos = this.chartArea.topEdge;
+
+          this.calendar.pos[type] = {
+            y: headingYPos + headingHeight + headerHeight + 4.25,
+            pageIndex: this.currentPageIndex,
+          };
+        }
+      }
+
+      this.doc.y = headingYPos;
+      renderSectionHeading(headingMoveDown);
+
+      this.doc.fontSize(this.smallFontSize);
       this.renderTable(this.calendar.columns, rows, {
         bottomMargin,
       });
