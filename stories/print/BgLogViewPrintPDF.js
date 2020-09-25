@@ -25,8 +25,6 @@ import PrintView from '../../src/modules/print/PrintView';
 
 import * as profiles from '../../data/patient/profiles';
 
-import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
-
 /* global PDFDocument, blobStream, window */
 
 const stories = storiesOf('BG Log View PDF', module);
@@ -39,40 +37,16 @@ try {
   queries = {};
 }
 
-const bgBounds = {
-  [MGDL_UNITS]: {
-    veryHighThreshold: 250,
-    targetUpperBound: 180,
-    targetLowerBound: 70,
-    veryLowThreshold: 54,
-  },
-  [MMOLL_UNITS]: {
-    veryHighThreshold: 13.9,
-    targetUpperBound: 10,
-    targetLowerBound: 3.9,
-    veryLowThreshold: 3.0,
-  },
-};
-
-function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
+function openPDF(dataUtil, { patient }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
-    bgPrefs: {
-      bgBounds: bgBounds[bgUnits],
-      bgUnits,
-    },
-    timePrefs: {
-      timezoneAware: true,
-      timezoneName: 'US/Eastern',
-    },
-    numDays: {
-      bgLog: 30,
-    },
+    bgPrefs: queries.bgLog.bgPrefs,
+    timePrefs: queries.bgLog.timePrefs,
     patient,
   };
 
-  const data = queries ? dataUtil.query(queries.bgLog) : {};
+  const data = queries.bgLog ? dataUtil.query(queries.bgLog) : {};
 
   createPrintView('bgLog', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
@@ -84,18 +58,16 @@ function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   });
 }
 
-const notes = `Run \`window.downloadPrintViewData()\` from the console on a Tidepool Web data view.
-Save the resulting file to the \`local/\` directory of viz as \`print-view.json\`,
+const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
+Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`.
+
+After generating a PDF in Tidepool web using the same account you just exported data from,
+run \`window.downloadPDFDataQueries()\` from the console on a Tidepool Web data view.
+Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.json\`,
 and then use this story to iterate on the BG Log Print PDF outside of Tidepool Web!`;
 
-stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
+stories.add('standard account', ({ dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
-    Open PDF in new tab
-  </button>
-), { notes });
-
-stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
-  <button onClick={() => openPDF(dataUtil, { patient: profiles.standard, bgUnits: MMOLL_UNITS })}>
     Open PDF in new tab
   </button>
 ), { notes });

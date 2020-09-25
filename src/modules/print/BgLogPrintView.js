@@ -41,8 +41,7 @@ class BgLogPrintView extends PrintView {
     this.doc.addPage();
 
     const dates = _.keys(this.aggregationsByDate.dataByDate).sort();
-    const numDays = _.min([this.numDays, dates.length]);
-    this.chartDates = _.slice(dates, -Math.abs(numDays)).reverse();
+    this.chartDates = dates.reverse();
 
     // Auto-bind callback methods
     this.getBGLabelYOffset = this.getBGLabelYOffset.bind(this);
