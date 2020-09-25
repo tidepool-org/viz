@@ -332,13 +332,25 @@ class PrintView {
     });
   }
 
+  lockFillandStroke() {
+    this.fillLocked = true;
+    this.strokeLocked = true;
+  }
+
+  unlockFillandStroke() {
+    this.fillLocked = false;
+    this.strokeLocked = false;
+  }
+
   setFill(color = 'black', opacity = 1) {
+    if (this.fillLocked) return;
     this.doc
       .fillColor(color)
       .fillOpacity(opacity);
   }
 
   setStroke(color = 'black', opacity = 1) {
+    if (this.strokeLocked) return;
     this.doc
       .strokeColor(color)
       .strokeOpacity(opacity);
