@@ -483,12 +483,12 @@ class BasicsPrintView extends PrintView {
         let dayType = day.type;
 
         if (isSiteChange) {
-          if (dayType !== 'future') {
+          if (dayType === 'inRange') {
             dayType = data[day.date] ? SITE_CHANGE : NO_SITE_CHANGE;
           }
 
           if (dayType === NO_SITE_CHANGE && priorToFirstSiteChange) {
-            dayType = 'past';
+            dayType = 'outOfRange';
           }
 
           if (dayType === SITE_CHANGE && priorToFirstSiteChange) {
@@ -547,7 +547,7 @@ class BasicsPrintView extends PrintView {
       const xPos = pos.x + padding.left;
       const yPos = pos.y + padding.top;
 
-      this.setFill(type === 'future' ? this.colors.lightGrey : 'black', 1);
+      this.setFill(type === 'outOfRange' ? this.colors.lightGrey : 'black', 1);
 
       this.doc
         .fontSize(this.extraSmallFontSize)
