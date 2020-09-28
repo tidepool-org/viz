@@ -206,9 +206,10 @@ class DailyPrintView extends PrintView {
   }
 
   calculateChartMinimums(chartArea) {
+    const legendHeight = this.doc.fontSize(9).currentLineHeight() * 5;
     this.doc.fontSize(this.defaultFontSize);
     const { topEdge, bottomEdge } = chartArea;
-    const totalHeight = bottomEdge - topEdge;
+    const totalHeight = bottomEdge - legendHeight - topEdge;
     const perChart = totalHeight / 3.25;
     this.chartMinimums = {
       notesEtc: perChart * (3 / 20),

@@ -555,8 +555,7 @@ class BasicsPrintView extends PrintView {
       } else {
         // Check to see if there's room on the current page, and if not, render on a new page
         const calendarHeight = this.calendar.pos[type].y + (this.calendar.rowHeight * rows.length);
-
-        if (calendarHeight + bottomMargin > this.chartArea.bottomEdge) {
+        if (calendarHeight > this.chartArea.bottomEdge) {
           this.doc.addPage();
           this.doc.moveDown(headingMoveDown);
           headingMoveDown = 0;

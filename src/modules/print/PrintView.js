@@ -938,7 +938,7 @@ class PrintView {
   setFooterSize() {
     this.doc.fontSize(this.footerFontSize);
     const lineHeight = this.doc.currentLineHeight();
-    this.chartArea.bottomEdge = this.chartArea.bottomEdge - lineHeight * 9;
+    this.chartArea.bottomEdge = this.chartArea.bottomEdge - lineHeight * 3;
 
     return this;
   }
