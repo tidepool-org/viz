@@ -190,6 +190,10 @@ class BgLogPrintView extends PrintView {
 
     this.summaryTable = {};
 
+    if (this.chartArea.bottomEdge - this.doc.y < 45) {
+      this.doc.addPage();
+    }
+
     this.doc.x = this.leftEdge + this.bgChart.columnWidth;
 
     this.summaryTable.columnWidth = (this.chartArea.width - this.bgChart.columnWidth) / 4;
@@ -223,7 +227,7 @@ class BgLogPrintView extends PrintView {
     ];
 
     this.renderTable(this.summaryTable.columns, this.summaryTable.rows, {
-      bottomMargin: 20,
+      bottomMargin: 0,
       columnDefaults: {
         align: 'center',
         headerAlign: 'center',
