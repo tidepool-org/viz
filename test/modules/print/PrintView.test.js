@@ -1708,7 +1708,7 @@ describe('PrintView', () => {
     });
 
     it('should set the footer size', () => {
-      const bottomEdge = Renderer.chartArea.bottomEdge - Renderer.doc.currentLineHeight() * 9;
+      const bottomEdge = Renderer.chartArea.bottomEdge - Renderer.doc.currentLineHeight() * 3;
 
       Renderer.setFooterSize();
       expect(Renderer.chartArea.bottomEdge).to.equal(bottomEdge);

@@ -278,7 +278,7 @@ describe('basics data utils', () => {
     });
   });
 
-  describe.only('findBasicsDays', () => {
+  describe('findBasicsDays', () => {
     it('should always return at least 7 days, Monday thru Friday', () => {
       expect(_.map(dataUtils.findBasicsDays([
         '2015-09-07T07:00:00.000Z',
