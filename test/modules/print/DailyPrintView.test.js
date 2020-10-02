@@ -194,8 +194,9 @@ describe('DailyPrintView', () => {
   describe('calculateChartMinimums', () => {
     it('should calculate the minimum area available to the charts', () => {
       Renderer.calculateChartMinimums(Renderer.initialChartArea);
+      const legendHeight = Renderer.doc.fontSize(9).currentLineHeight() * 5;
       const { topEdge, bottomEdge } = Renderer.initialChartArea;
-      const totalHeight = bottomEdge - topEdge;
+      const totalHeight = bottomEdge - legendHeight - topEdge;
 
       expect(Renderer.chartMinimums.total).to.equal(totalHeight / 3.25);
     });

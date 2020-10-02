@@ -96,8 +96,12 @@ function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   });
 }
 
-const notes = `Run \`window.downloadPrintViewData()\` from the console on a Tidepool Web data view.
-Save the resulting file to the \`local/\` directory of viz as \`print-view.json\`,
+const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
+Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`.
+
+After generating a PDF in Tidepool web using the same account you just exported data from,
+run \`window.downloadPDFDataQueries()\` from the console on a Tidepool Web data view.
+Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.json\`,
 and then use this story to iterate on the Combined Print PDF outside of Tidepool Web!`;
 
 profiles.longName = _.cloneDeep(profiles.standard);

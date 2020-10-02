@@ -633,7 +633,9 @@ describe('BasicsPrintView', () => {
       });
 
       sinon.assert.calledWith(Renderer.renderSectionHeading, 'My Active Section');
-      sinon.assert.calledOnce(Renderer.renderTable);
+
+      // Table rendered once with just one row, to calculate height, and then with all the rows
+      sinon.assert.calledTwice(Renderer.renderTable);
       sinon.assert.calledWith(Renderer.renderTable, [
         sinon.match({ header: 'Mon', renderer: Renderer.renderCalendarCell }),
         sinon.match({ header: 'Tue', renderer: Renderer.renderCalendarCell }),

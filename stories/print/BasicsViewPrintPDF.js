@@ -26,8 +26,6 @@ import PrintView from '../../src/modules/print/PrintView';
 import * as profiles from '../../data/patient/profiles';
 import * as settings from '../../data/patient/settings';
 
-import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
-
 /* global PDFDocument, blobStream, window */
 
 const stories = storiesOf('Basics View PDF', module);
@@ -40,37 +38,16 @@ try {
   queries = {};
 }
 
-const bgBounds = {
-  [MGDL_UNITS]: {
-    veryHighThreshold: 250,
-    targetUpperBound: 180,
-    targetLowerBound: 70,
-    veryLowThreshold: 54,
-  },
-  [MMOLL_UNITS]: {
-    veryHighThreshold: 13.9,
-    targetUpperBound: 10,
-    targetLowerBound: 3.9,
-    veryLowThreshold: 3.0,
-  },
-};
-
-function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
+function openPDF(dataUtil, { patient }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
-    bgPrefs: {
-      bgBounds: bgBounds[bgUnits],
-      bgUnits,
-    },
-    timePrefs: {
-      timezoneAware: true,
-      timezoneName: 'US/Eastern',
-    },
+    bgPrefs: queries.basics.bgPrefs,
+    timePrefs: queries.basics.timePrefs,
     patient,
   };
 
-  const data = queries ? dataUtil.query(queries.basics) : {};
+  const data = queries.basics ? dataUtil.query(queries.basics) : {};
 
   createPrintView('basics', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
@@ -82,60 +59,63 @@ function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   });
 }
 
-const notes = `Run \`window.downloadPrintViewData()\` from the console on a Tidepool Web data view.
-Save the resulting file to the \`local/\` directory of viz as \`print-view.json\`,
+const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
+Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`.
+
+After generating a PDF in Tidepool web using the same account you just exported data from,
+run \`window.downloadPDFDataQueries()\` from the console on a Tidepool Web data view.
+Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.json\`,
 and then use this story to iterate on the Basics Print PDF outside of Tidepool Web!`;
 
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
 
-stories.add(`cannula prime (${MGDL_UNITS})`, ({ dataUtil }) => (
+stories.add('cannula prime', ({ dataUtil }) => (
   <button
-    onClick={() => openPDF(dataUtil, { patient: {
-      ...profiles.standard,
-      ...settings.cannulaPrimeSelected,
-    } })}
+    onClick={() => openPDF(dataUtil, {
+      patient: {
+        ...profiles.standard,
+        ...settings.cannulaPrimeSelected,
+      },
+    })}
   >
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add(`tubing prime (${MMOLL_UNITS})`, ({ dataUtil }) => (
+stories.add('tubing prime', ({ dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.tubingPrimeSelected,
       },
-      bgUnits: MMOLL_UNITS,
     })}
   >
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add(`reservoir change (${MGDL_UNITS})`, ({ dataUtil }) => (
+stories.add('reservoir change', ({ dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.reservoirChangeSelected,
       },
-      bgUnits: MGDL_UNITS,
     })}
   >
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add(`site change source undefined (${MMOLL_UNITS})`, ({ dataUtil }) => (
+stories.add('site change source undefined', ({ dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
         ...profiles.standard,
         ...settings.siteChangeSourceUndefined,
       },
-      bgUnits: MMOLL_UNITS,
     })}
   >
     Open PDF in new tab

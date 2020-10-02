@@ -41,8 +41,7 @@ class BgLogPrintView extends PrintView {
     this.doc.addPage();
 
     const dates = _.keys(this.aggregationsByDate.dataByDate).sort();
-    const numDays = _.min([this.numDays, dates.length]);
-    this.chartDates = _.slice(dates, -Math.abs(numDays)).reverse();
+    this.chartDates = dates.reverse();
 
     // Auto-bind callback methods
     this.getBGLabelYOffset = this.getBGLabelYOffset.bind(this);
@@ -191,6 +190,10 @@ class BgLogPrintView extends PrintView {
 
     this.summaryTable = {};
 
+    if (this.chartArea.bottomEdge - this.doc.y < 45) {
+      this.doc.addPage();
+    }
+
     this.doc.x = this.leftEdge + this.bgChart.columnWidth;
 
     this.summaryTable.columnWidth = (this.chartArea.width - this.bgChart.columnWidth) / 4;
@@ -224,7 +227,7 @@ class BgLogPrintView extends PrintView {
     ];
 
     this.renderTable(this.summaryTable.columns, this.summaryTable.rows, {
-      bottomMargin: 20,
+      bottomMargin: 0,
       columnDefaults: {
         align: 'center',
         headerAlign: 'center',

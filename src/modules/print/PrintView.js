@@ -332,13 +332,25 @@ class PrintView {
     });
   }
 
+  lockFillandStroke() {
+    this.fillLocked = true;
+    this.strokeLocked = true;
+  }
+
+  unlockFillandStroke() {
+    this.fillLocked = false;
+    this.strokeLocked = false;
+  }
+
   setFill(color = 'black', opacity = 1) {
+    if (this.fillLocked) return;
     this.doc
       .fillColor(color)
       .fillOpacity(opacity);
   }
 
   setStroke(color = 'black', opacity = 1) {
+    if (this.strokeLocked) return;
     this.doc
       .strokeColor(color)
       .strokeOpacity(opacity);
@@ -926,7 +938,7 @@ class PrintView {
   setFooterSize() {
     this.doc.fontSize(this.footerFontSize);
     const lineHeight = this.doc.currentLineHeight();
-    this.chartArea.bottomEdge = this.chartArea.bottomEdge - lineHeight * 9;
+    this.chartArea.bottomEdge = this.chartArea.bottomEdge - lineHeight * 3;
 
     return this;
   }

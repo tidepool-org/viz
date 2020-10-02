@@ -295,17 +295,16 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
  */
 export function findBasicsDays(range, timezone = 'UTC') {
   const days = [];
-  let currentDate = moment.utc(range[0]).tz(timezone).toDate();
-  const dateOfUpload = moment.utc(range[1]).subtract(1, 'ms').tz(timezone).format('YYYY-MM-DD');
-  while (currentDate < moment.utc(range[1]).subtract(1, 'ms').tz(timezone).endOf('isoWeek')) {
+  const rangeStartDate = moment.utc(range[0]).tz(timezone).format('YYYY-MM-DD');
+  const rangeEndDate = moment.utc(range[1]).tz(timezone).subtract(1, 'ms').format('YYYY-MM-DD');
+  let currentDate = moment.utc(range[0]).tz(timezone).startOf('isoWeek').toDate();
+  while (currentDate < moment.utc(range[1]).tz(timezone).endOf('isoWeek')) {
     const date = moment.utc(currentDate).tz(timezone).format('YYYY-MM-DD');
     const dateObj = { date };
-    if (date < dateOfUpload) {
-      dateObj.type = 'past';
-    } else if (date === dateOfUpload) {
-      dateObj.type = 'mostRecent';
+    if (date < rangeStartDate || date > rangeEndDate) {
+      dateObj.type = 'outOfRange';
     } else {
-      dateObj.type = 'future';
+      dateObj.type = 'inRange';
     }
     days.push(dateObj);
     currentDate = moment.utc(currentDate).tz(timezone).add(1, 'days').toDate();
@@ -320,7 +319,7 @@ export function findBasicsDays(range, timezone = 'UTC') {
  * @returns {String} ISO date string relative to provided timezone
  */
 export function findBasicsStart(timestamp, timezone = 'UTC') {
-  return moment.utc(Date.parse(timestamp)).tz(timezone)
+  return moment.utc(_.isInteger(timestamp) ? timestamp : Date.parse(timestamp)).tz(timezone)
     .startOf('isoWeek')
     .subtract(14, 'days')
     .toDate();
