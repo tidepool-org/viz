@@ -39,6 +39,10 @@
   overflow: hidden;
 }
 
+.statChildren {
+  padding: 0 0.625em .375em;
+}
+
 .chartTitle {
   composes: largeSize from '../../../styles/typography.css';
   font-weight: 500;

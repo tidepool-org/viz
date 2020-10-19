@@ -204,6 +204,12 @@ class Stat extends PureComponent {
     </div>
   );
 
+  renderChildren = () => (
+    <div className={styles.statChildren}>
+      {this.props.children}
+    </div>
+  );
+
   renderStatHeader = () => (
     <div className={styles.statHeader}>
       {this.renderChartTitle()}
@@ -346,6 +352,7 @@ class Stat extends PureComponent {
             </div>
           )}
           {this.props.type === statTypes.input && this.renderInput()}
+          {this.props.children && this.renderChildren()}
           {this.state.showFooter && this.renderStatFooter()}
         </div>
         {this.state.showMessages && this.renderTooltip()}
