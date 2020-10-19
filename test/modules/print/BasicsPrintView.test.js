@@ -312,6 +312,7 @@ describe('BasicsPrintView', () => {
 
       Renderer.stats = {
         carbs: 'carbsStub',
+        coefficientOfVariation: 'coefficientOfVariationStub',
         totalInsulin: 'totalInsulinStub',
         timeInAuto: 'timeInAutoStub',
         timeInRange: 'timeInRangeStub',
@@ -400,6 +401,12 @@ describe('BasicsPrintView', () => {
       Renderer.stats.carbs = 'carbsStub';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderSimpleStat, 'carbsStub');
+    });
+
+    it('should render the coefficientOfVariation stat', () => {
+      Renderer.stats.coefficientOfVariation = 'coefficientOfVariationStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderSimpleStat, 'coefficientOfVariationStub');
     });
 
     it('should render the averageDailyDose stat', () => {

@@ -79,6 +79,9 @@ export const basicsData = {
           carbs: 33.63157894736842,
           total: 40,
         },
+        coefficientOfVariation: {
+          coefficientOfVariation: 38.656,
+        },
         averageDailyDose: {
           totalInsulin: 1.9647894736842106,
         },

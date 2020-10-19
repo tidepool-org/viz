@@ -198,15 +198,18 @@ class BasicsPrintView extends PrintView {
 
   renderAggregatedStats() {
     const {
+      averageDailyDose,
       carbs,
-      totalInsulin,
+      coefficientOfVariation,
+      glucoseManagementIndicator,
+      readingsInRange,
+      sensorUsage,
       timeInAuto,
       timeInRange,
-      readingsInRange,
-      averageDailyDose,
-      sensorUsage,
-      glucoseManagementIndicator,
+      totalInsulin,
     } = this.stats;
+
+    console.log('coefficientOfVariation', coefficientOfVariation);
 
     if (timeInRange) {
       this.renderHorizontalBarStat(
@@ -256,8 +259,8 @@ class BasicsPrintView extends PrintView {
 
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
-
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
+    this.renderSimpleStat(coefficientOfVariation);
   }
 
   defineStatColumns(opts = {}) {
