@@ -363,7 +363,7 @@ describe('BasicsPrintView', () => {
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
         'totalInsulinStub',
         {
-          heading: 'Insulin Ratio',
+          heading: 'Avg. Daily Insulin Ratio',
           secondaryFormatKey: 'tooltip',
           fillOpacity: 0.5,
         }

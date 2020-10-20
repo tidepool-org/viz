@@ -237,7 +237,7 @@ class BasicsPrintView extends PrintView {
     this.renderHorizontalBarStat(
       totalInsulin,
       {
-        heading: 'Insulin Ratio',
+        heading: 'Avg. Daily Insulin Ratio',
         secondaryFormatKey: 'tooltip',
         fillOpacity: 0.5,
       }
