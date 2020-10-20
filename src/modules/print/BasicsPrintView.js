@@ -138,7 +138,10 @@ class BasicsPrintView extends PrintView {
     });
 
     this.renderCalendarSection({
-      title: this.sections.boluses.title,
+      title: {
+        text: this.sections.boluses.title,
+        subText: _.get(this.data, 'query.excludeDaysWithoutBolus') ? '(days with no boluses have been excluded)' : false,
+      },
       data: this.aggregationsByDate.boluses.byDate,
       type: 'bolus',
       disabled: this.sections.boluses.disabled,
@@ -150,7 +153,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSection({
       title: {
         text: this.sections.siteChanges.title,
-        subText: siteChangesSubTitle ? `from '${this.sections.siteChanges.subTitle}'` : false,
+        subText: siteChangesSubTitle ? `(from '${this.sections.siteChanges.subTitle}')` : false,
       },
       data: this.aggregationsByDate.siteChanges.byDate,
       type: 'siteChange',
@@ -591,7 +594,10 @@ class BasicsPrintView extends PrintView {
       const xPos = pos.x + padding.left;
       const yPos = pos.y + padding.top;
 
-      this.setFill(type === 'outOfRange' ? this.colors.lightGrey : 'black', 1);
+      const isEmptyBolusDay = color === this.colors.bolus && count === 0;
+      const isExcludedBolusDay = isEmptyBolusDay && _.get(this.data, 'query.excludeDaysWithoutBolus', false);
+
+      this.setFill((type === 'outOfRange' || isExcludedBolusDay) ? this.colors.lightGrey : 'black', 1);
 
       this.doc
         .fontSize(this.extraSmallFontSize)
