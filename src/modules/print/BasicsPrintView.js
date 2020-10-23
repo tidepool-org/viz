@@ -212,8 +212,6 @@ class BasicsPrintView extends PrintView {
       totalInsulin,
     } = this.stats;
 
-    console.log('coefficientOfVariation', coefficientOfVariation);
-
     if (timeInRange) {
       this.renderHorizontalBarStat(
         timeInRange,
