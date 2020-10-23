@@ -982,6 +982,10 @@ export class DataUtil {
     this.endTimer('setExcludedDevices');
   }
 
+  setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
+    this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
+  }
+
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -992,15 +996,16 @@ export class DataUtil {
       bgPrefs,
       bgSource,
       endpoints,
+      excludeDaysWithoutBolus,
+      excludedDevices,
       fillData,
       metaData,
       nextDays,
       prevDays,
+      raw,
       stats,
       timePrefs,
       types,
-      raw,
-      excludedDevices,
     } = query;
 
     // N.B. Must ensure that we get the desired endpoints in UTC time so that when we display in
@@ -1018,6 +1023,7 @@ export class DataUtil {
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
+    this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
 
     const data = {};
 
@@ -1035,14 +1041,27 @@ export class DataUtil {
       // Filter out any excluded devices
       this.filter.byDeviceIds(this.excludedDevices);
 
-      // Generate the stats for current range
-      if (this.stats.length && rangeKey === 'current') {
-        data[rangeKey].stats = this.getStats(this.stats);
-      }
+      if (rangeKey === 'current') {
+        // Generate the aggregations for current range
+        if (aggregationsByDate) {
+          data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
+        }
 
-      // Generate the aggregations for current range
-      if (aggregationsByDate && rangeKey === 'current') {
-        data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
+        if (this.excludeDaysWithoutBolus) {
+          // Determine count of days with boluses for current range
+          const bolusesByDate = _.get(
+            data,
+            [rangeKey, 'aggregationsByDate'],
+            this.getAggregationsByDate('boluses')
+          ).boluses.byDate;
+
+          this.activeEndpoints.bolusDays = _.keys(bolusesByDate).length;
+        }
+
+        // Generate the stats for current range
+        if (this.stats.length) {
+          data[rangeKey].stats = this.getStats(this.stats);
+        }
       }
 
       data[rangeKey].endpoints = this.activeEndpoints;

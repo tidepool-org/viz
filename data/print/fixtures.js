@@ -49,6 +49,7 @@ export const basicsData = {
   timePrefs,
   bgPrefs,
   metaData,
+  query: { excludeDaysWithoutBolus: true },
   data: {
     current: {
       endpoints: {
