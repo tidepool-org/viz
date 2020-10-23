@@ -272,7 +272,11 @@ export class AggregationUtil {
       }
     });
 
-    return this.summarizeProcessedData(processedData);
+    const days = this.dataUtil.excludeDaysWithoutBolus
+      ? _.keys(processedData).length
+      : this.dataUtil.activeEndpoints.activeDays;
+
+    return this.summarizeProcessedData(processedData, days);
   };
 
   /**
@@ -557,9 +561,9 @@ export class AggregationUtil {
   };
   /* eslint-enable lodash/prefer-lodash-method */
 
-  summarizeProcessedData = (processedData) => {
+  summarizeProcessedData = (processedData, days = this.dataUtil.activeEndpoints.activeDays) => {
     const total = _.sumBy(_.values(processedData), dateData => dateData.total);
-    const avgPerDay = total / this.dataUtil.activeEndpoints.activeDays;
+    const avgPerDay = total / days;
     return {
       summary: {
         avgPerDay,

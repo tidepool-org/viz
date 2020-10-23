@@ -465,6 +465,7 @@ describe('basics data utils', () => {
       },
       bgPrefs: bgPrefs[MGDL_UNITS],
       timePrefs,
+      query: { excludeDaysWithoutBolus: true },
     };
 
     const aggregations = {
@@ -538,7 +539,7 @@ describe('basics data utils', () => {
 
     it('should return formatted text for Basics data', () => {
       const result = dataUtils.basicsText(patient, data, stats, aggregations);
-      expect(result).to.equal('Basics Header, Basics Dates, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, ');
+      expect(result).to.equal('Basics Header, Basics Dates, Basics Line, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, ');
     });
 
     it('should build the document header section', () => {
@@ -550,6 +551,11 @@ describe('basics data utils', () => {
     it('should build the document dates section', () => {
       dataUtils.basicsText(patient, data, stats, aggregations);
       sinon.assert.callCount(textUtilStub.buildDocumentDates, 1);
+    });
+
+    it('should add a note regarding excluded basics bolus days', () => {
+      dataUtils.basicsText(patient, data, stats, aggregations);
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Days with no boluses have been excluded from bolus calculations');
     });
 
     it('should build the basics stats section', () => {

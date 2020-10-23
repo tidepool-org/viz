@@ -447,7 +447,14 @@ stories.add('Total Insulin', () => {
         muteOthersOnHover={muteOthersOnHover}
         title="Total Insulin"
         type={statTypes.barHorizontal}
-      />
+      >
+        <label htmlFor="no-bolus" style={{ 'font-size': '.8em' }}>
+          <input id="no-bolus" type="checkbox" style={{ margin: '0 .5em 0 0' }} />
+          <span style={{ position: 'relative', top: '-.1em' }}>
+            Exclude days with no boluses
+          </span>
+        </label>
+      </Stat>
     </Container>
   );
 });
