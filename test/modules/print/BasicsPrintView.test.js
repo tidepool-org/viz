@@ -214,7 +214,10 @@ describe('BasicsPrintView', () => {
       Renderer.renderCalendars();
 
       sinon.assert.calledWithMatch(Renderer.renderCalendarSection, {
-        title: Renderer.sections.boluses.title,
+        title: {
+          text: Renderer.sections.boluses.title,
+          subText: '(days with no boluses have been excluded)',
+        },
         data: Renderer.aggregationsByDate.boluses.byDate,
         type: 'bolus',
         disabled: Renderer.sections.boluses.disabled,
@@ -229,7 +232,7 @@ describe('BasicsPrintView', () => {
       sinon.assert.calledWithMatch(Renderer.renderCalendarSection, {
         title: {
           text: Renderer.sections.siteChanges.title,
-          subText: `from '${Renderer.sections.siteChanges.subTitle}'`,
+          subText: `(from '${Renderer.sections.siteChanges.subTitle}')`,
         },
         data: Renderer.aggregationsByDate.siteChanges.byDate,
         type: 'siteChange',
@@ -312,6 +315,7 @@ describe('BasicsPrintView', () => {
 
       Renderer.stats = {
         carbs: 'carbsStub',
+        coefficientOfVariation: 'coefficientOfVariationStub',
         totalInsulin: 'totalInsulinStub',
         timeInAuto: 'timeInAutoStub',
         timeInRange: 'timeInRangeStub',
@@ -363,7 +367,7 @@ describe('BasicsPrintView', () => {
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
         'totalInsulinStub',
         {
-          heading: 'Insulin Ratio',
+          heading: 'Avg. Daily Insulin Ratio',
           secondaryFormatKey: 'tooltip',
           fillOpacity: 0.5,
         }
@@ -400,6 +404,12 @@ describe('BasicsPrintView', () => {
       Renderer.stats.carbs = 'carbsStub';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderSimpleStat, 'carbsStub');
+    });
+
+    it('should render the coefficientOfVariation stat', () => {
+      Renderer.stats.coefficientOfVariation = 'coefficientOfVariationStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderSimpleStat, 'coefficientOfVariationStub');
     });
 
     it('should render the averageDailyDose stat', () => {
