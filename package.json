@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "1.14.0",
+  "version": "1.15.0",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
@@ -87,6 +87,7 @@
     "@babel/preset-env": "7.1.0",
     "@babel/preset-react": "7.0.0",
     "@babel/runtime": "7.0.0",
+    "@hot-loader/react-dom": "16.11.0",
     "@storybook/addon-knobs": "5.0.10",
     "@storybook/addon-notes": "5.0.10",
     "@storybook/addon-viewport": "5.0.10",
@@ -147,6 +148,7 @@
     "lodash": "4.x",
     "moment-timezone": "0.x",
     "react": "16.x",
+    "react-dom": "16.x",
     "react-addons-update": "16.x",
     "react-redux": "5.x",
     "redux": "3.x"

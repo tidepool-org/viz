@@ -6,3 +6,4 @@ local/
 node_modules/
 web/
 *.log
+package-lock.json
