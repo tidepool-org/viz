@@ -124,6 +124,22 @@ const normalBolus = {
   wizard: { type: 'string', pattern: patterns.id, ...optional },
 };
 
+const automatedBolus = {
+  ...common,
+  normal: minZero,
+  expectedNormal: {
+    type: 'withDependantFields',
+    schema: { ...minZero, ...optional },
+    fields: ['normal'],
+    ...optional,
+  },
+  duration: forbidden,
+  extended: forbidden,
+  expectedExtended: forbidden,
+  subType: { type: 'string', enum: ['automated'] },
+  wizard: { type: 'string', pattern: patterns.id, ...optional },
+};
+
 const extendedBolus = {
   ...common,
   duration: minZero,
@@ -340,6 +356,7 @@ export default {
     normal: v.compile(normalBolus),
     extended: v.compile(extendedBolus),
     combination: v.compile(combinationBolus),
+    automated: v.compile(automatedBolus),
   },
   cbg: v.compile(bg),
   common: v.compile(common),
