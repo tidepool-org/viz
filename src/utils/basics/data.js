@@ -344,12 +344,18 @@ export function basicsText(patient, data, stats, aggregations) {
     },
     bgPrefs,
     timePrefs,
+    query,
   } = data;
 
   const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
 
   let basicsString = textUtil.buildDocumentHeader('Basics');
   basicsString += textUtil.buildDocumentDates();
+
+  if (_.get(query, 'excludeDaysWithoutBolus')) {
+    basicsString += textUtil.buildTextLine(t('Days with no boluses have been excluded from bolus calculations'));
+  }
+
   basicsString += utils.statsText(stats, textUtil, bgPrefs);
 
   const getSummaryTableData = (dimensions, statData, header) => {

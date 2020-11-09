@@ -443,7 +443,7 @@ describe('Stat', () => {
         type: stat.statTypes.barHorizontal,
       }));
 
-      statLegend = () => wrapper.find(StatLegend).dive();
+      statLegend = () => wrapper.find(StatLegend).last().dive();
     });
 
     it('should render the legendTitle text for each item passed to the `StatLegend` component', () => {

@@ -49,6 +49,7 @@ export const basicsData = {
   timePrefs,
   bgPrefs,
   metaData,
+  query: { excludeDaysWithoutBolus: true },
   data: {
     current: {
       endpoints: {
@@ -78,6 +79,9 @@ export const basicsData = {
         carbs: {
           carbs: 33.63157894736842,
           total: 40,
+        },
+        coefficientOfVariation: {
+          coefficientOfVariation: 38.656,
         },
         averageDailyDose: {
           totalInsulin: 1.9647894736842106,
