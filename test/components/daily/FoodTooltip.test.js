@@ -44,6 +44,26 @@ const large = {
   },
 };
 
+const roundToInt = {
+  type: 'food',
+  nutrition: {
+    carbohydrate: {
+      net: 15.04,
+      units: 'grams',
+    },
+  },
+};
+
+const roundTo1DecimalPlace = {
+  type: 'food',
+  nutrition: {
+    carbohydrate: {
+      net: 15.05,
+      units: 'grams',
+    },
+  },
+};
+
 const nonCarb = {
   type: 'food',
   nutrition: {
@@ -77,6 +97,16 @@ describe('FoodTooltip', () => {
       const wrapper = mount(<FoodTooltip {...props} food={large} />);
       expect(wrapper.instance().getCarbs(large)).to.equal(200);
       expect(wrapper.find(carbValue).text()).to.equal('200');
+    });
+    it('should return 15 for a 15.04 gram net food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={roundToInt} />);
+      expect(wrapper.instance().getCarbs(roundToInt)).to.equal(15);
+      expect(wrapper.find(carbValue).text()).to.equal('15');
+    });
+    it('should return 15.1 for a 15.05 gram net food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={roundTo1DecimalPlace} />);
+      expect(wrapper.instance().getCarbs(roundTo1DecimalPlace)).to.equal(15.1);
+      expect(wrapper.find(carbValue).text()).to.equal('15.1');
     });
     it('should return 0 for a non-carbohydrate food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={nonCarb} />);
