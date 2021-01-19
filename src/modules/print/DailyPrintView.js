@@ -280,7 +280,7 @@ class DailyPrintView extends PrintView {
       ])
       .clamp(true);
     dateChart.bolusScale = scaleLinear() // eslint-disable-line no-param-reassign
-      .domain([0, this.bolusRange[1]])
+      .domain([0, this.bolusRange[1] || 1])
       .range([
         dateChart.topEdge + notesEtc + bgEtcChart,
         dateChart.topEdge + notesEtc + (bgEtcChart / 3),
@@ -818,7 +818,7 @@ class DailyPrintView extends PrintView {
           .fontSize(this.carbsFontSize)
           .fillColor('black')
           .text(
-            carbs,
+            Math.round(carbs),
             carbsX - this.carbRadius * 2,
             carbsY - textOffset,
             { align: 'center', width: this.carbRadius * 4 }

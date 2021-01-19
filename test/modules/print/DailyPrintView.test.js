@@ -613,7 +613,7 @@ describe('DailyPrintView', () => {
   });
 
   describe('renderFoodCarbs', () => {
-    it('should graph food carb events', () => {
+    it('should graph food carb events, rounded to nearest integer', () => {
       Renderer.renderFoodCarbs(Renderer.chartsByDate[sampleDate]);
 
       sinon.assert.calledOnce(Renderer.doc.circle);
