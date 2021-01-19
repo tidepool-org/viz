@@ -818,7 +818,7 @@ class DailyPrintView extends PrintView {
           .fontSize(this.carbsFontSize)
           .fillColor('black')
           .text(
-            carbs,
+            Math.round(carbs),
             carbsX - this.carbRadius * 2,
             carbsY - textOffset,
             { align: 'center', width: this.carbRadius * 4 }
