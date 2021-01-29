@@ -247,22 +247,6 @@ const withCarbInput = {
   insulinCarbRatio: 15,
 };
 
-const withCarbExchangeInput = {
-  type: 'wizard',
-  bolus: {
-    normal: 5,
-    normalTime: '2017-11-11T05:45:52.000Z',
-  },
-  recommended: {
-    carb: 5,
-    correction: 0,
-    net: 5,
-  },
-  carbInput: 5,
-  carbUnits: 'exchanges',
-  insulinCarbRatio: 15,
-};
-
 const withBGInput = {
   type: 'wizard',
   bgTarget: {
@@ -577,18 +561,6 @@ storiesOf('BolusTooltip', module)
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withCarbInput} />
-    </div>
-  ))
-  .add('withCarbExchangeInput', () => (
-    <div>
-      {refDiv}
-      <BolusTooltip {...props} bolus={withCarbExchangeInput} />
-    </div>
-  ))
-  .add('withCarbExchangeInputZero', () => (
-    <div>
-      {refDiv}
-      <BolusTooltip {...props} bolus={{ ...withCarbExchangeInput, carbInput: 0 }} />
     </div>
   ))
   .add('withBGInput', () => (
