@@ -59,7 +59,10 @@ const randomValueByType = (type, bgUnits, opts = {}) => {
       return _.random(4, 15, true);
 
     case 'carb':
-      return _.random(5, 100, true);
+      return {
+        grams: _.random(0, 100, true),
+        exchanges: _.random(0, 7, true),
+      };
 
     case 'cv':
       return _.random(24, 40, true);
@@ -676,7 +679,10 @@ stories.add('Coefficient of Variation', () => {
 let carbData = {
   data: [
     {
-      value: 60,
+      value: {
+        grams: 60,
+        exchanges: 3.5,
+      },
     },
   ],
 };

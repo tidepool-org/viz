@@ -141,9 +141,18 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       break;
 
     case statFormats.carbs:
-      if (value >= 0) {
-        value = formatDecimalNumber(value);
-        suffix = 'g';
+      if (value.grams > 0 || value.exchanges > 0) {
+        const { grams, exchanges } = value;
+        value = [];
+        suffix = [];
+        if (grams > 0) {
+          value.push(formatDecimalNumber(grams));
+          suffix.push('g');
+        }
+        if (exchanges > 0) {
+          value.push(formatDecimalNumber(exchanges));
+          suffix.push('exch');
+        }
       } else {
         disableStat();
       }
@@ -444,7 +453,10 @@ export const getStatData = (data, type, opts = {}) => {
     case commonStats.carbs:
       statData.data = [
         {
-          value: ensureNumeric(data.carbs),
+          value: {
+            grams: ensureNumeric(data.carbs.grams),
+            exchanges: ensureNumeric(data.carbs.exchanges),
+          },
         },
       ];
 

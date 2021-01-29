@@ -55,8 +55,13 @@
 }
 
 .summaryData {
-  display: inline;
+  display: inline-block;
   white-space: nowrap;
+  padding-right: 1em;
+}
+
+.summaryData:last-child {
+  padding-right: 0;
 }
 
 .summaryValue {
