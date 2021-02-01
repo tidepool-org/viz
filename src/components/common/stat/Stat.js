@@ -165,7 +165,9 @@ class Stat extends PureComponent {
     const summaryData = this.getFormattedDataByKey('summary');
     const showSummary = this.props.alwaysShowSummary || !this.state.isOpened;
     let summaryDataValue = _.get(summaryData, 'value');
+    let summaryDataSuffix = _.get(summaryData, 'suffix');
     if (!_.isArray(summaryDataValue)) summaryDataValue = _.compact([summaryDataValue]);
+    if (!_.isArray(summaryDataSuffix)) summaryDataSuffix = _.compact([summaryDataSuffix]);
 
     return (
       <div className={styles.chartSummary}>
@@ -177,10 +179,10 @@ class Stat extends PureComponent {
             }}
           >
             <span className={styles.summaryValue}>
-              {summaryData.value[i]}
+              {value}
             </span>
             <span className={styles.summarySuffix}>
-              {summaryData.suffix[i]}
+              {summaryDataSuffix[i]}
             </span>
           </div>
         ))}
