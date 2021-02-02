@@ -42,6 +42,7 @@ import {
   getMaxDuration,
   getMaxValue,
   getNormalPercentage,
+  getWizardFromInsulinEvent,
 } from '../../utils/bolus';
 import {
   formatLocalizedFromUTC,
@@ -790,7 +791,7 @@ class DailyPrintView extends PrintView {
       const carbs = getCarbs(insulinEvent);
       const circleOffset = 1;
       const textOffset = 1.75;
-      const carbUnits = _.get(insulinEvent, 'wizard.carbUnits');
+      const carbUnits = _.get(getWizardFromInsulinEvent(insulinEvent), 'carbUnits');
       const carbFillColor = (carbUnits === 'exchanges') ? this.colors.carbExchanges : this.colors.carbs;
       if (carbs) {
         const carbsX = xScale(getBolusFromInsulinEvent(insulinEvent).normalTime);

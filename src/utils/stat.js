@@ -108,7 +108,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     forcePlainTextValues: false,
   });
 
-  const total = _.get(opts, 'data.total.value'); // TODO: need this for percentage calcs
+  const total = _.get(opts, 'data.total.value');
 
   const disableStat = () => {
     id = 'statDisabled';
@@ -141,7 +141,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       break;
 
     case statFormats.carbs:
-      if (value.grams > 0 || value.exchanges > 0) {
+      if (_.isPlainObject(value) && (value.grams > 0 || value.exchanges > 0)) {
         const { grams, exchanges } = value;
         value = [];
         suffix = [];
@@ -150,7 +150,9 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
           suffix.push('g');
         }
         if (exchanges > 0) {
-          value.push(formatDecimalNumber(exchanges));
+          // Note: the + converts the rounded, fixed string back to a number
+          // This allows 2.67777777 to render as 2.7 and 3.0000001 to render as 3 (not 3.0)
+          value.push(+formatDecimalNumber(exchanges, 1));
           suffix.push('exch');
         }
       } else {
@@ -454,8 +456,8 @@ export const getStatData = (data, type, opts = {}) => {
       statData.data = [
         {
           value: {
-            grams: ensureNumeric(data.carbs.grams),
-            exchanges: ensureNumeric(data.carbs.exchanges),
+            grams: ensureNumeric(_.get(data, 'carbs.grams')),
+            exchanges: ensureNumeric(_.get(data, 'carbs.exchanges')),
           },
         },
       ];

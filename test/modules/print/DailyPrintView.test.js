@@ -608,7 +608,20 @@ describe('DailyPrintView', () => {
 
       expect(Renderer.renderEventPath.callCount >= bolusCount).to.be.true;
       sinon.assert.calledOnce(Renderer.doc.circle);
+      sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbExchanges);
       sinon.assert.calledWith(Renderer.doc.text, 80);
+    });
+
+    it('should graph carb exchange events', () => {
+      Renderer.chartsByDate[sampleDate].data.bolus[2].carbUnits = 'exchanges';
+      Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput = 3;
+      Renderer.renderInsulinEvents(Renderer.chartsByDate[sampleDate]);
+
+      sinon.assert.calledOnce(Renderer.doc.circle);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.carbExchanges);
+      sinon.assert.calledWith(Renderer.doc.text, 3);
     });
   });
 
@@ -716,7 +729,8 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Interrupted');
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carbs');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
+      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb Exch.');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
 
       // All of the bolus visual elements are called by renderEventPath
@@ -727,6 +741,25 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.doc.circle, 12);
 
       sinon.assert.callCount(Renderer.renderBasalPaths, 1);
+    });
+
+    it('should render the legend with carb exchanges when present in dataset', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        data: { current: { data: { wizard: [{ type: 'wizard', carbUnits: 'exchanges' }] } } },
+      }, opts);
+
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carb Exch.');
+
+      // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
+      sinon.assert.callCount(Renderer.doc.circle, 13);
     });
   });
 });
