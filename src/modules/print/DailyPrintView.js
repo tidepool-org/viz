@@ -1084,7 +1084,7 @@ class DailyPrintView extends PrintView {
     const legendVerticalMiddle = legendTop + lineHeight * 2;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
     const legendItemLeftOffset = 9;
-    const legendItemLabelOffset = 6;
+    const legendItemLabelOffset = 4.5;
 
     let cursor = this.margins.left + legendItemLeftOffset;
 
@@ -1117,7 +1117,7 @@ class DailyPrintView extends PrintView {
         .circle(cursor + horizOffset, legendVerticalMiddle + adjustedVertOffset, this.cbgRadius)
         .fill(this.colors[fill]);
     });
-    cursor += 16 + legendItemLabelOffset * 0.75;
+    cursor += 16 + legendItemLabelOffset;
     this.doc.fillColor('black').text(t('CGM'), cursor, legendTextMiddle);
     cursor += this.doc.widthOfString(t('CGM')) + legendItemLeftOffset * 2;
 
@@ -1133,7 +1133,7 @@ class DailyPrintView extends PrintView {
       .fill(this.colors.high);
     this.doc.circle(smbgPositions.low[0], smbgPositions.low[1], this.smbgRadius)
       .fill(this.colors.low);
-    cursor += this.smbgRadius * 3 + legendItemLabelOffset * 0.75;
+    cursor += this.smbgRadius * 3 + legendItemLabelOffset;
     this.doc.fillColor('black').text(t('BGM'), cursor, legendTextMiddle);
     cursor += this.doc.widthOfString(t('BGM')) + legendItemLeftOffset * 2;
 
@@ -1161,7 +1161,7 @@ class DailyPrintView extends PrintView {
     _.each(normalPaths, (path) => {
       this.renderEventPath(path);
     });
-    cursor += this.bolusWidth + legendItemLabelOffset * 0.75;
+    cursor += this.bolusWidth + legendItemLabelOffset;
     this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
     cursor += this.doc.widthOfString(t('Bolus')) + legendItemLeftOffset * 2;
 
@@ -1209,7 +1209,7 @@ class DailyPrintView extends PrintView {
     _.each(underridePaths, (path) => {
       this.renderEventPath(path);
     });
-    cursor += this.bolusWidth * 3 + legendItemLabelOffset * 0.75;
+    cursor += this.bolusWidth * 3 + legendItemLabelOffset;
     this.doc.fillColor('black').text(t('Override up & down'), cursor, legendTextMiddle);
     cursor += this.doc.widthOfString(t('Override up & down')) + legendItemLeftOffset * 2;
 
@@ -1230,7 +1230,7 @@ class DailyPrintView extends PrintView {
     _.each(interruptedPaths, (path) => {
       this.renderEventPath(path);
     });
-    cursor += this.bolusWidth + legendItemLabelOffset * 0.75;
+    cursor += this.bolusWidth + legendItemLabelOffset;
     this.doc.fillColor('black').text(t('Interrupted'), cursor, legendTextMiddle);
     cursor += this.doc.widthOfString(t('Interrupted')) + legendItemLeftOffset * 2;
 
@@ -1252,7 +1252,7 @@ class DailyPrintView extends PrintView {
     _.each(extendedPaths, (path) => {
       this.renderEventPath(path);
     });
-    cursor += this.bolusWidth / 2 + 10 + legendItemLabelOffset * 0.75;
+    cursor += this.bolusWidth / 2 + 10 + legendItemLabelOffset;
     this.doc
       .fillColor('black')
       .text(t('Combo /'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
@@ -1309,7 +1309,7 @@ class DailyPrintView extends PrintView {
     }
 
     this.doc.fontSize(this.smallFontSize);
-    cursor += this.carbRadius + legendItemLabelOffset * 0.75;
+    cursor += this.carbRadius + legendItemLabelOffset;
     this.doc
       .fillColor('black')
       .text(t('Carbs (g)'), cursor, carbsYPos.label);
@@ -1392,7 +1392,7 @@ class DailyPrintView extends PrintView {
       data,
       xScale: legendBasalXScale,
     });
-    cursor += 50 + legendItemLabelOffset * 0.75;
+    cursor += 50 + legendItemLabelOffset;
     this.doc.fillColor('black').text(t('Basals'), cursor, legendTextMiddle);
 
     return this;
