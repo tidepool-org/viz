@@ -597,8 +597,6 @@ class DailyPrintView extends PrintView {
         first = false;
       }
 
-      const units = _.get(this, 'latestPumpUpload.settings.units.carb') === 'exchanges' ? 'exch' : 'g';
-
       this.doc.fontSize(this.smallFontSize).font(this.boldFont)
         .text(
           t('Total Carbs'),
@@ -608,7 +606,7 @@ class DailyPrintView extends PrintView {
         )
         .font(this.font)
         .text(
-          `${formatDecimalNumber(carbs, 0)} ${units}`,
+          `${formatDecimalNumber(carbs, 0)} g`,
           { align: 'right' }
         );
     }

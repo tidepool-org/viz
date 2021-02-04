@@ -152,7 +152,7 @@ const NonTandem = (props) => {
     const title = {
       label: {
         main: ratio.title,
-        secondary: _.get(pumpSettings, 'units.carb') === 'exchanges' ? 'U/exch' : 'g/U',
+        secondary: 'g/U',
       },
       className: styles.bolusSettingsHeader,
     };
