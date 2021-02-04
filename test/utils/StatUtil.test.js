@@ -204,6 +204,7 @@ describe('StatUtil', () => {
     new Types.Wizard({
       deviceTime: '2018-02-01T04:00:00',
       carbInput: 2,
+      carbUnits: 'exchanges',
       ...useRawData,
     }),
     new Types.Wizard({
@@ -395,7 +396,7 @@ describe('StatUtil', () => {
     it('should return the total carbs from wizard and food data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
       expect(statUtil.getCarbsData()).to.eql({
-        carbs: 22,
+        carbs: { grams: 20, exchanges: 2 },
         total: 5,
       });
     });
@@ -403,7 +404,7 @@ describe('StatUtil', () => {
     it('should return the avg daily carbs from wizard and food data when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       expect(statUtil.getCarbsData()).to.eql({
-        carbs: 22.5,
+        carbs: { grams: 21.5, exchanges: 1 },
         total: 7,
       });
     });
