@@ -46,6 +46,11 @@
   margin-left: 10px;
 }
 
+.unitsWide {
+  min-width: 2.2em;
+  margin-left: 6px;
+}
+
 .title {
   composes: smallSize from '../../../styles/typography.css';
   text-align: right;
