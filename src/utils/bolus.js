@@ -118,17 +118,21 @@ export function getProgrammed(insulinEvent) {
  * @return {Number} total recommended insulin dose
  */
 export function getRecommended(insulinEvent) {
+  let wizard = insulinEvent;
+  if (_.get(insulinEvent, 'type') === 'bolus') {
+    wizard = getWizardFromInsulinEvent(insulinEvent);
+  }
   // a simple manual/"quick" bolus won't have a `recommended` field
-  if (!insulinEvent.recommended) {
+  if (!wizard.recommended) {
     return NaN;
   }
-  const netRecommendation = _.get(insulinEvent, ['recommended', 'net'], null);
+  const netRecommendation = _.get(wizard, ['recommended', 'net'], null);
   if (netRecommendation !== null) {
     return netRecommendation;
   }
   let rec = 0;
-  rec += _.get(insulinEvent, ['recommended', 'carb'], 0);
-  rec += _.get(insulinEvent, ['recommended', 'correction'], 0);
+  rec += _.get(wizard, ['recommended', 'carb'], 0);
+  rec += _.get(wizard, ['recommended', 'correction'], 0);
 
   return fixFloatingPoint(rec);
 }
