@@ -29,7 +29,7 @@ import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
 import { getPumpVocabulary } from '../../utils/device';
-import { getStatDefinition } from '../../utils/stat';
+import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
   classifyBgValue,
   getOutOfRangeThreshold,
@@ -588,7 +588,11 @@ class DailyPrintView extends PrintView {
       yPos.small();
     }
 
-    if (carbs > 0) {
+    if (_.get(carbs, 'grams') > 0 || _.get(carbs, 'exchanges') > 0) {
+      const formattedCarbs = formatDatum({ value: carbs }, statFormats.carbs);
+      const carbValues = _.get(formattedCarbs, 'value');
+      const carbSuffixes = _.get(formattedCarbs, 'suffix');
+
       if (!first) {
         this.doc.moveTo(this.margins.left, yPos.update())
           .lineTo(this.summaryArea.rightEdge, yPos.current())
@@ -596,8 +600,6 @@ class DailyPrintView extends PrintView {
       } else {
         first = false;
       }
-
-      const units = _.get(this, 'latestPumpUpload.settings.units.carb') === 'exchanges' ? 'exch' : 'g';
 
       this.doc.fontSize(this.smallFontSize).font(this.boldFont)
         .text(
@@ -608,7 +610,7 @@ class DailyPrintView extends PrintView {
         )
         .font(this.font)
         .text(
-          `${formatDecimalNumber(carbs, 0)} ${units}`,
+          _.map(carbValues, (value, i) => `${value} ${carbSuffixes[i]}`).join(', '),
           { align: 'right' }
         );
     }

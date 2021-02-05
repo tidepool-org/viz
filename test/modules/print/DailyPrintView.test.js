@@ -342,7 +342,10 @@ describe('DailyPrintView', () => {
           averageGlucose: 120,
         },
         carbs: {
-          carbs: 10.2,
+          carbs: {
+            grams: 10.2,
+            exchanges: 2.45,
+          },
         },
         timeInRange: {
           target: MS_IN_HOUR * 3,
@@ -414,7 +417,7 @@ describe('DailyPrintView', () => {
 
     it('should render the total carbs intake', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Total Carbs');
-      sinon.assert.calledWith(Renderer.doc.text, '10 g');
+      sinon.assert.calledWith(Renderer.doc.text, '10 g, 2.5 exch');
     });
 
     context('mmol/L support', () => {
