@@ -733,7 +733,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb Exch.');
+      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
 
       // All of the bolus visual elements are called by renderEventPath
@@ -759,7 +759,7 @@ describe('DailyPrintView', () => {
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carb Exch.');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch');
 
       // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
       sinon.assert.callCount(Renderer.doc.circle, 13);

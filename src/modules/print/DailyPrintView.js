@@ -1317,7 +1317,7 @@ class DailyPrintView extends PrintView {
       .text(t('Carbs (g)'), cursor, carbsYPos.label);
 
     if (this.hasCarbExchanges) {
-      this.doc.text(t('Carb Exch.'));
+      this.doc.text(t('Carb exch'));
     }
 
     cursor += this.doc.widthOfString(t('Carbs (g)')) + legendItemLeftOffset * 2;
