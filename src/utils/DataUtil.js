@@ -217,6 +217,16 @@ export class DataUtil {
     }
   };
 
+  getDeconvertedCarbExchange = d => {
+    const deconvertedCarbInput = d.carbInput / 15;
+    let precision = 2;
+    if (deconvertedCarbInput < 0.1) precision = 3;
+    if (deconvertedCarbInput >= 10) precision = 1;
+    return +deconvertedCarbInput.toFixed(precision);
+  };
+
+  getDataSourceFromUpload = d => _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
+
   tagDatum = d => {
     if (d.type === 'basal') {
       d.tags = {
@@ -316,7 +326,7 @@ export class DataUtil {
     if (d.uploadId && (normalizeAllFields || _.includes(fields, 'deviceSerialNumber'))) {
       d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
     }
-    if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
+    if (!d.source) d.source = this.getDataSourceFromUpload(d);
 
     // Additional post-processing by type
     if (d.type === 'basal') {
@@ -374,6 +384,13 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
 
       if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
+
+      // TODO: figure out how to get this _before_ adding data to crossfilter
+      // Since this only gets picked up on rendered datums, but not on stat data
+      // Though... could determine the source in StatUtil.getCarbsData and do the same deconversion
+      if (d.source === 'Medtronic' && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput)) {
+        d.carbInput = this.getDeconvertedCarbExchange(d);
+      }
     }
 
     if (d.type === 'bolus') {
