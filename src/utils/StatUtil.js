@@ -85,8 +85,18 @@ export class StatUtil {
 
     const wizardCarbs = _.reduce(
       wizardData,
-      (result, datum) => result + _.get(datum, 'carbInput', 0),
-      0
+      (result, datum) => {
+        const units = _.get(datum, 'carbUnits', 'grams');
+
+        return {
+          ...result,
+          [units]: result[units] + _.get(datum, 'carbInput', 0),
+        };
+      },
+      {
+        grams: 0,
+        exchanges: 0,
+      },
     );
 
     const foodCarbs = _.reduce(
@@ -95,10 +105,16 @@ export class StatUtil {
       0
     );
 
-    let carbs = wizardCarbs + foodCarbs;
+    let carbs = {
+      grams: wizardCarbs.grams + foodCarbs,
+      exchanges: wizardCarbs.exchanges,
+    };
 
     if (this.activeDays > 1) {
-      carbs = carbs / this.activeDays;
+      carbs = {
+        grams: carbs.grams / this.activeDays,
+        exchanges: carbs.exchanges / this.activeDays,
+      };
     }
 
     return {

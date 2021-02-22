@@ -360,6 +360,7 @@ export class Wizard extends Common {
 
     this.bgInput = opts.bgInput;
     this.carbInput = opts.carbInput;
+    this.carbUnits = opts.carbUnits;
     this.deviceTime = opts.deviceTime;
     this.insulinCarbRatio = opts.insulinCarbRatio;
     this.insulinSensitivity = opts.insulinSensitivity;

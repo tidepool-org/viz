@@ -630,7 +630,7 @@ export const dailyData = {
               {
                 nutrition: {
                   carbohydrate: {
-                    net: 65,
+                    net: 64.7551123,
                   },
                 },
               },

@@ -337,6 +337,23 @@ describe('Stat', () => {
         expect(summaryData()).to.have.length(1);
         expect(summaryData().first().props().style.color).to.equal(colors.bolus);
       });
+
+      it('should render 2 stat values with suffixes when 2 values are provided', () => {
+        wrapper.setProps(props({
+          data: _.assign({}, defaultProps.data, {
+            data: [{
+              id: 'carbs',
+              value: [60, 3],
+              suffix: ['g', 'exch'],
+            }],
+          }),
+        }));
+        expect(summaryData()).to.have.length(2);
+        expect(summaryData().at(0).childAt(0).text()).to.equal('60');
+        expect(summaryData().at(0).childAt(1).text()).to.equal('g');
+        expect(summaryData().at(1).childAt(0).text()).to.equal('3');
+        expect(summaryData().at(1).childAt(1).text()).to.equal('exch');
+      });
     });
 
     context('summary data is not present', () => {

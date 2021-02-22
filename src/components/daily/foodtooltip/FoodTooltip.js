@@ -30,7 +30,7 @@ const t = i18next.t.bind(i18next);
 
 class FoodTooltip extends PureComponent {
   getCarbs(food) {
-    return _.get(food, 'nutrition.carbohydrate.net', 0);
+    return _.round(_.get(food, 'nutrition.carbohydrate.net', 0), 1);
   }
 
   renderFood() {
