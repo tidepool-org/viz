@@ -217,12 +217,21 @@ export class DataUtil {
     }
   };
 
+  /**
+   * Medtronic 5 and 7 series carb exchange data is converted to carbs at a rounded 1:15 ratio in
+   * the uploader, and needs to be de-converted back into exchanges
+   */
+  needsCarbToExchangeConversion = (d, source) => source === 'Medtronic' && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput);
+
+  /**
+   * When deconverting the carbs to exchanges, we use a 15:1 ratio, and round to the nearest 0.5,
+   * since that is the increment used when entering exchange values in the pump
+   */
   getDeconvertedCarbExchange = d => {
     const deconvertedCarbInput = d.carbInput / 15;
-    let precision = 2;
-    if (deconvertedCarbInput < 0.1) precision = 3;
-    if (deconvertedCarbInput >= 10) precision = 1;
-    return +deconvertedCarbInput.toFixed(precision);
+    const increment = 0.5;
+    const inverse = 1 / increment;
+    return Math.round(deconvertedCarbInput * inverse) / inverse;
   };
 
   getDataSourceFromUpload = d => _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
@@ -385,10 +394,7 @@ export class DataUtil {
 
       if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
 
-      // TODO: figure out how to get this _before_ adding data to crossfilter
-      // Since this only gets picked up on rendered datums, but not on stat data
-      // Though... could determine the source in StatUtil.getCarbsData and do the same deconversion
-      if (d.source === 'Medtronic' && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput)) {
+      if (this.needsCarbToExchangeConversion(d, d.source)) {
         d.carbInput = this.getDeconvertedCarbExchange(d);
       }
     }
