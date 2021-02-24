@@ -395,7 +395,9 @@ export class DataUtil {
       if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
 
       if (this.needsCarbToExchangeConversion(d, d.source)) {
+        console.log('d', d);
         d.carbInput = this.getDeconvertedCarbExchange(d);
+        d.insulinCarbRatio = d.insulinCarbRatio / 100 * 15;
       }
     }
 
