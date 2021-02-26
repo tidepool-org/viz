@@ -87,9 +87,8 @@ export class StatUtil {
       wizardData,
       (result, datum) => {
         const units = _.get(datum, 'carbUnits', 'grams');
-        const source = this.dataUtil.getDataSourceFromUpload(datum);
 
-        const carbInput = this.dataUtil.needsCarbToExchangeConversion(datum, source)
+        const carbInput = this.dataUtil.needsCarbToExchangeConversion(datum)
           ? this.dataUtil.getDeconvertedCarbExchange(datum)
           : _.get(datum, 'carbInput', 0);
 

@@ -35,11 +35,34 @@ class BolusTooltip extends PureComponent {
     const carbs = bolusUtils.getCarbs(props.bolus);
     const carbsInput = _.isFinite(carbs) && carbs > 0;
     this.carbUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'exch' : 'g';
+    this.carbRatioUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'U/exch' : 'g/U';
     this.unitStyles = (carbsInput && this.carbUnits === 'exch') ? styles.unitsWide : styles.units;
   }
 
   formatBgValue(val) {
     return formatBgValue(val, this.props.bgPrefs);
+  }
+
+  isMedronicDeconvertedExchange() {
+    const annotations = bolusUtils.getAnnotations(this.props.bolus);
+    const isMedronicDeconvertedExchange = _.findIndex(annotations, { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' }) !== -1;
+    return isMedronicDeconvertedExchange;
+  }
+
+  medronicDeconvertedExchangeMessage() {
+    let content = null;
+
+    if (this.isMedronicDeconvertedExchange()) {
+      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(this.props.bolus));
+
+      content = (
+        <div className={styles.annotation}>
+          {_.find(messages, { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' }).message.value}
+        </div>
+      );
+    }
+
+    return content;
   }
 
   isAnimasExtended() {
@@ -195,6 +218,7 @@ class BolusTooltip extends PureComponent {
     const programmed = bolusUtils.getProgrammed(wizard);
     const hasExtended = bolusUtils.hasExtended(wizard);
     const isAnimasExtended = this.isAnimasExtended();
+    const isMedronicDeconvertedExchange = this.isMedronicDeconvertedExchange();
 
     let overrideLine = null;
     if (bolusUtils.isOverride(wizard)) {
@@ -261,8 +285,8 @@ class BolusTooltip extends PureComponent {
     const icRatioLine = !!carbsInput &&
       !!carbRatio && (
       <div className={styles.carbRatio}>
-        <div className={styles.label}>{t('I:C Ratio')}</div>
-        <div className={styles.value}>{`1:${carbRatio}`}</div>
+        <div className={styles.label}>{t('I:C Ratio')}{isMedronicDeconvertedExchange && '*'} {` (${this.carbRatioUnits})`}</div>
+        <div className={styles.value}>{carbRatio}</div>
         <div className={this.unitStyles} />
       </div>
     );
@@ -286,13 +310,14 @@ class BolusTooltip extends PureComponent {
         {overrideLine}
         {interruptedLine}
         {deliveredLine}
-        {(icRatioLine || isfLine || bg || isAnimasExtended) && (
+        {(icRatioLine || isfLine || bg || isAnimasExtended || isMedronicDeconvertedExchange) && (
           <div className={styles.dividerLarge} />
         )}
         {icRatioLine}
         {isfLine}
         {!!bg && this.getTarget()}
         {this.animasExtendedAnnotationMessage()}
+        {this.medronicDeconvertedExchangeMessage()}
       </div>
     );
   }

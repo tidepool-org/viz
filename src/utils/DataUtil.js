@@ -221,7 +221,7 @@ export class DataUtil {
    * Medtronic 5 and 7 series carb exchange data is converted to carbs at a rounded 1:15 ratio in
    * the uploader, and needs to be de-converted back into exchanges
    */
-  needsCarbToExchangeConversion = (d, source) => source === 'Medtronic' && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput);
+  needsCarbToExchangeConversion = d => d.deviceId.indexOf('MedT-') === 0 && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput);
 
   /**
    * When deconverting the carbs to exchanges, we use a 15:1 ratio, and round to the nearest 0.5,
@@ -233,8 +233,6 @@ export class DataUtil {
     const inverse = 1 / increment;
     return Math.round(deconvertedCarbInput * inverse) / inverse;
   };
-
-  getDataSourceFromUpload = d => _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
 
   tagDatum = d => {
     if (d.type === 'basal') {
@@ -335,7 +333,7 @@ export class DataUtil {
     if (d.uploadId && (normalizeAllFields || _.includes(fields, 'deviceSerialNumber'))) {
       d.deviceSerialNumber = _.get(this.uploadMap, [d.uploadId, 'deviceSerialNumber']);
     }
-    if (!d.source) d.source = this.getDataSourceFromUpload(d);
+    if (!d.source) d.source = _.get(this.uploadMap, [d.uploadId, 'source'], 'Unspecified Data Source');
 
     // Additional post-processing by type
     if (d.type === 'basal') {
@@ -394,10 +392,14 @@ export class DataUtil {
 
       if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
 
-      if (this.needsCarbToExchangeConversion(d, d.source)) {
-        console.log('d', d);
+      if (this.needsCarbToExchangeConversion(d)) {
         d.carbInput = this.getDeconvertedCarbExchange(d);
-        d.insulinCarbRatio = d.insulinCarbRatio / 100 * 15;
+        d.insulinCarbRatio = _.round(15 / d.insulinCarbRatio, 1);
+
+        if (_.isObject(d.bolus)) {
+          d.bolus.annotations = d.bolus.annotations || [];
+          d.bolus.annotations.push({ code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' });
+        }
       }
     }
 
