@@ -218,10 +218,11 @@ export class DataUtil {
   };
 
   /**
-   * Medtronic 5 and 7 series carb exchange data is converted to carbs at a rounded 1:15 ratio in
-   * the uploader, and needs to be de-converted back into exchanges
+   * Medtronic 5 and 7 series (which always have a deviceId starting with 'MedT-') carb exchange
+   * data is converted to carbs at a rounded 1:15 ratio in the uploader, and needs to be
+   * de-converted back into exchanges.
    */
-  needsCarbToExchangeConversion = d => d.deviceId.indexOf('MedT-') === 0 && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput);
+  needsCarbToExchangeConversion = d => (d.deviceId && d.deviceId.indexOf('MedT-') === 0) && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput);
 
   /**
    * When deconverting the carbs to exchanges, we use a 15:1 ratio, and round to the nearest 0.5,

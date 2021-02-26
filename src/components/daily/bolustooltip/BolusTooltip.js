@@ -43,6 +43,26 @@ class BolusTooltip extends PureComponent {
     return formatBgValue(val, this.props.bgPrefs);
   }
 
+  isAnimasExtended() {
+    const annotations = bolusUtils.getAnnotations(this.props.bolus);
+    const isAnimasExtended =
+      _.findIndex(annotations, { code: 'animas/bolus/extended-equal-split' }) !== -1;
+    return isAnimasExtended;
+  }
+
+  animasExtendedAnnotationMessage() {
+    let content = null;
+    if (this.isAnimasExtended()) {
+      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(this.props.bolus));
+      content = (
+        <div className={styles.annotation}>
+          {_.find(messages, { code: 'animas/bolus/extended-equal-split' }).message.value}
+        </div>
+      );
+    }
+    return content;
+  }
+
   isMedronicDeconvertedExchange() {
     const annotations = bolusUtils.getAnnotations(this.props.bolus);
     const isMedronicDeconvertedExchange = _.findIndex(annotations, { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' }) !== -1;
@@ -62,26 +82,6 @@ class BolusTooltip extends PureComponent {
       );
     }
 
-    return content;
-  }
-
-  isAnimasExtended() {
-    const annotations = bolusUtils.getAnnotations(this.props.bolus);
-    const isAnimasExtended =
-      _.findIndex(annotations, { code: 'animas/bolus/extended-equal-split' }) !== -1;
-    return isAnimasExtended;
-  }
-
-  animasExtendedAnnotationMessage() {
-    let content = null;
-    if (this.isAnimasExtended()) {
-      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(this.props.bolus));
-      content = (
-        <div className={styles.annotation}>
-          {_.find(messages, { code: 'animas/bolus/extended-equal-split' }).message.value}
-        </div>
-      );
-    }
     return content;
   }
 
