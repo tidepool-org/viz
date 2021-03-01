@@ -203,12 +203,9 @@ const carbExchangesMedtronic = {
 
 const deconvertedCarbExchangeRatioMedtronic = {
   ...carbExchangesMedtronic,
-  bolus: {
-    ...carbExchangesMedtronic.bolus,
-    annotations: [
-      { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' },
-    ],
-  },
+  annotations: [
+    { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' },
+  ],
 };
 
 const extendedUnderride = {

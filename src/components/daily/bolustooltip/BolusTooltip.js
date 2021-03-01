@@ -64,8 +64,8 @@ class BolusTooltip extends PureComponent {
   }
 
   isMedronicDeconvertedExchange() {
-    const annotations = bolusUtils.getAnnotations(this.props.bolus);
-    const isMedronicDeconvertedExchange = _.findIndex(annotations, { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' }) !== -1;
+    const annotations = _.get(this.props.bolus, 'annotations', []);
+    const isMedronicDeconvertedExchange = _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) !== -1;
     return isMedronicDeconvertedExchange;
   }
 
@@ -73,11 +73,11 @@ class BolusTooltip extends PureComponent {
     let content = null;
 
     if (this.isMedronicDeconvertedExchange()) {
-      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(this.props.bolus));
+      const messages = getAnnotationMessages(this.props.bolus);
 
       content = (
         <div className={styles.annotation}>
-          {_.find(messages, { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' }).message.value}
+          {_.find(messages, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }).message.value}
         </div>
       );
     }

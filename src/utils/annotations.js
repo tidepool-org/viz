@@ -52,7 +52,7 @@ const medtronic600BGMessages = {
 const simpleAnnotationMessages = {
   'animas/bolus/extended-equal-split':
     t("* Animas pumps don't capture the details of how combo boluses are split between the normal and extended amounts."),
-  'medtronic/bolus/carb-to-exchange-ratio-deconverted':
+  'medtronic/wizard/carb-to-exchange-ratio-deconverted':
     t('* Due to how carb ratios are uploaded from this pump, there may be a slight discrepancy between the value entered on the pump and the value displayed here.'),
 };
 

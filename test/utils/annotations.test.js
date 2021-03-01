@@ -78,7 +78,7 @@ const medtronicDeconvertedCarbToExchangeRatioBolus = {
   duration: 18000000,
   normalTime: '2017-11-11T05:45:52.000Z',
   annotations: [
-    { code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' },
+    { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' },
   ],
 };
 
