@@ -677,6 +677,17 @@ describe('DataUtil', () => {
       expect(dataUtil.needsCarbToExchangeConversion(bolus)).to.be.true;
     });
 
+    it('should return false if datum is already annotated as being de-converted', () => {
+      expect(dataUtil.needsCarbToExchangeConversion({
+        ...bolus,
+        annotations: [
+          { code: 'foo' },
+          { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' },
+          { code: 'bar' },
+        ],
+      })).to.be.false;
+    });
+
     it('should return false if deviceId does not begin with "MedT-" and carbUnits are exchanges', () => {
       expect(dataUtil.needsCarbToExchangeConversion({
         ...bolus,
@@ -1405,26 +1416,25 @@ describe('DataUtil', () => {
             type: 'wizard',
             carbInput: 60,
             insulinCarbRatio: 10,
-            bolus: {},
           };
 
           dataUtil.normalizeDatumOut(datumWithoutBolusAnnotations);
-          expect(datumWithoutBolusAnnotations.bolus.annotations).to.have.lengthOf(1);
-          expect(datumWithoutBolusAnnotations.bolus.annotations[0]).to.eql({
-            code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted',
+          expect(datumWithoutBolusAnnotations.annotations).to.have.lengthOf(1);
+          expect(datumWithoutBolusAnnotations.annotations[0]).to.eql({
+            code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted',
           });
 
           const datumWithBolusAnnotations = {
             type: 'wizard',
             carbInput: 60,
             insulinCarbRatio: 10,
-            bolus: { annotations: [{ code: 'foo' }] },
+            annotations: [{ code: 'foo' }],
           };
 
           dataUtil.normalizeDatumOut(datumWithBolusAnnotations);
-          expect(datumWithBolusAnnotations.bolus.annotations).to.have.lengthOf(2);
-          expect(datumWithBolusAnnotations.bolus.annotations[1]).to.eql({
-            code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted',
+          expect(datumWithBolusAnnotations.annotations).to.have.lengthOf(2);
+          expect(datumWithBolusAnnotations.annotations[1]).to.eql({
+            code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted',
           });
         });
       });

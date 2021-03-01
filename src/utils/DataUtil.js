@@ -222,7 +222,14 @@ export class DataUtil {
    * data is converted to carbs at a rounded 1:15 ratio in the uploader, and needs to be
    * de-converted back into exchanges.
    */
-  needsCarbToExchangeConversion = d => (d.deviceId && d.deviceId.indexOf('MedT-') === 0) && d.carbUnits === 'exchanges' && _.isFinite(d.carbInput);
+  needsCarbToExchangeConversion = d => {
+    const annotations = _.get(d, 'annotations', []);
+
+    return (d.deviceId && d.deviceId.indexOf('MedT-') === 0)
+      && d.carbUnits === 'exchanges'
+      && _.isFinite(d.carbInput)
+      && _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) === -1;
+  };
 
   /**
    * When deconverting the carbs to exchanges, we use a 15:1 ratio, and round to the nearest 0.5,
@@ -396,11 +403,8 @@ export class DataUtil {
       if (this.needsCarbToExchangeConversion(d)) {
         d.carbInput = this.getDeconvertedCarbExchange(d);
         d.insulinCarbRatio = _.round(15 / d.insulinCarbRatio, 1);
-
-        if (_.isObject(d.bolus)) {
-          d.bolus.annotations = d.bolus.annotations || [];
-          d.bolus.annotations.push({ code: 'medtronic/bolus/carb-to-exchange-ratio-deconverted' });
-        }
+        d.annotations = d.annotations || [];
+        d.annotations.push({ code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' });
       }
     }
 
