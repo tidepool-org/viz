@@ -54,7 +54,7 @@ and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
 const Results = ({ results, showData, showStats }) => {
   const statData = _.get(results, 'data.current.stats');
-  const days = _.get(results, 'data.current.endpoints.daysInRange', 1);
+  const days = _.get(results, 'data.current.endpoints.days', 1);
   const allStats = [];
 
   const wrapperStyles = {

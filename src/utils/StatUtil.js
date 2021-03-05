@@ -296,6 +296,30 @@ export class StatUtil {
     return durations;
   };
 
+  getTimeInOverrideData = () => {
+    const deviceEventData = _.cloneDeep(this.dataUtil.sort.byTime(this.dataUtil.filter.byType('deviceEvent').top(Infinity)));
+    const pumpSettingsOverrideData = _.filter(deviceEventData, { subType: 'pumpSettingsOverride' });
+
+    let durations = pumpSettingsOverrideData.length
+      ? _.transform(
+        _.groupBy(pumpSettingsOverrideData, 'overrideType'),
+        (result, value, key) => {
+          result[key] = _.sumBy(value, 'duration');
+          return result;
+        },
+        {},
+      )
+      : NaN;
+
+    if (this.activeDays > 1 && !_.isNaN(durations)) {
+      durations.total = this.activeDays * MS_IN_DAY;
+      durations = this.getDailyAverageDurations(durations);
+      delete durations.total;
+    }
+
+    return durations;
+  };
+
   getTimeInRangeData = () => {
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));

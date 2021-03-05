@@ -81,6 +81,9 @@ export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
+export const SETTINGS_OVERRIDE = 'settingsOverride';
+export const SLEEP = 'sleep';
+export const PHYSICAL_ACTIVITY = 'exercise';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
@@ -111,6 +114,11 @@ export const pumpVocabulary = {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
     [SITE_CHANGE_TUBING]: t('Fill Tubing'),
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Activity'),
+    [SLEEP]: t('Sleep'),
+    [PHYSICAL_ACTIVITY]: t('Excercise'),
   },
   default: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
@@ -118,11 +126,19 @@ export const pumpVocabulary = {
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
     [AUTOMATED_DELIVERY]: t('Automated'),
     [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Settings Override'),
+    [SLEEP]: t('Sleep'),
+    [PHYSICAL_ACTIVITY]: t('Excercise'),
   },
 };
 
 export const AUTOMATED_BASAL_DEVICE_MODELS = {
   [MEDTRONIC]: ['1580', '1581', '1582', '1780', '1781', '1782'],
+  [TANDEM]: ['1002717'],
+};
+
+export const SETTINGS_OVERRIDE_DEVICE_MODELS = {
+  [TANDEM]: ['1002717'],
 };
 
 export const BG_COLORS = {

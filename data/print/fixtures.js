@@ -40,6 +40,7 @@ const metaData = {
   latestPumpUpload: {
     deviceModel: 'OmniPod',
     isAutomatedBasalDevice: false,
+    isSettingsOverrideDevice: false,
     manufacturer: 'insulet',
     settings: new types.Settings(),
   },
