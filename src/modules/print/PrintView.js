@@ -110,6 +110,8 @@ class PrintView {
       ...BG_COLORS,
       basal: '#19A0D7',
       basalAutomated: '#00D3E6',
+      sleep: '#0079C0',
+      physicalActivity: '#00B2C3',
       bolus: '#7CD0F0',
       smbg: '#6480FB',
       siteChange: '#FCD144',
@@ -286,6 +288,11 @@ class PrintView {
     this.doc.x = this.layoutColumns.columns[index].x;
     this.doc.y = this.layoutColumns.columns[index].y;
     this.layoutColumns.activeIndex = index;
+  }
+
+  goToPage(index) {
+    this.doc.switchToPage(this.initialTotalPages + index);
+    this.currentPageIndex = index;
   }
 
   getShortestLayoutColumn() {
@@ -589,6 +596,12 @@ class PrintView {
         maxY: this.chartArea.bottomEdge,
       },
     });
+
+    // There is a bug in the PDF table plugin where it will render empty headers even if showHeaders
+    // is false when a table spills over onto a new page. We remove the header border and padding in
+    // to work around this, and cause it to effectively render nothing.
+    // eslint-disable-next-line no-param-reassign
+    if (opts.showHeaders === false) columns = columns.map(column => ({ ...column, headerBorder: '', headerPadding: [0, 0, 0, 0] }));
 
     const {
       flexColumn,

@@ -144,7 +144,6 @@ class BgLogPrintView extends PrintView {
     this.bgChart.pos = {
       x: this.doc.x,
       y: this.doc.y,
-      currentPage: this.initialTotalPages + this.currentPageIndex,
       currentPageIndex: this.currentPageIndex,
     };
 
@@ -158,8 +157,7 @@ class BgLogPrintView extends PrintView {
     });
 
     // Reposition to the original bgChart rendering postion, and render over top with the data
-    this.doc.switchToPage(this.bgChart.pos.currentPage);
-    this.currentPageIndex = this.bgChart.pos.currentPageIndex;
+    this.goToPage(this.bgChart.pos.currentPageIndex);
 
     this.doc.x = this.bgChart.pos.x;
     this.doc.y = this.bgChart.pos.y;

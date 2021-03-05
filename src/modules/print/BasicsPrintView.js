@@ -39,6 +39,7 @@ import {
   SITE_CHANGE_RESERVOIR,
   SITE_CHANGE_TUBING,
   NO_SITE_CHANGE,
+  SETTINGS_OVERRIDE,
   SITE_CHANGE,
 } from '../../utils/constants';
 
@@ -121,11 +122,13 @@ class BasicsPrintView extends PrintView {
   }
 
   renderStats() {
+    this.goToPage(0);
     this.goToLayoutColumnPosition(0);
     this.renderAggregatedStats();
   }
 
   renderCalendars() {
+    this.goToPage(0);
     this.goToLayoutColumnPosition(1);
     this.initCalendar();
 
@@ -172,6 +175,7 @@ class BasicsPrintView extends PrintView {
   }
 
   RenderCalendarSummaries() {
+    this.goToPage(0);
     this.goToLayoutColumnPosition(2);
 
     this.renderCalendarSummary({
@@ -208,6 +212,7 @@ class BasicsPrintView extends PrintView {
       readingsInRange,
       sensorUsage,
       timeInAuto,
+      timeInOverride,
       timeInRange,
       totalInsulin,
     } = this.stats;
@@ -253,6 +258,17 @@ class BasicsPrintView extends PrintView {
         timeInAuto,
         {
           heading: `Time In ${automatedLabel} Ratio`,
+          fillOpacity: 0.5,
+        }
+      );
+    }
+
+    if (timeInOverride) {
+      const overrideLabel = getPumpVocabulary(this.manufacturer)[SETTINGS_OVERRIDE];
+      this.renderHorizontalBarStat(
+        timeInOverride,
+        {
+          heading: `Time In ${overrideLabel}`,
           fillOpacity: 0.5,
         }
       );
@@ -571,7 +587,12 @@ class BasicsPrintView extends PrintView {
         // Check to see if there's room on the current page, and if not, render on a new page
         const calendarHeight = this.calendar.pos[type].y + (this.calendar.rowHeight * rows.length);
         if (calendarHeight > this.chartArea.bottomEdge) {
-          this.doc.addPage();
+          if (this.currentPageIndex + 1 < this.totalPages) {
+            this.goToPage(this.currentPageIndex + 1);
+          } else {
+            this.doc.addPage();
+          }
+
           this.doc.moveDown(headingMoveDown);
           headingMoveDown = 0;
           headingYPos = this.chartArea.topEdge;
@@ -809,7 +830,7 @@ class BasicsPrintView extends PrintView {
       tableColumns[0].headerFont = this.font;
 
       if (_.get(this, `calendar.pos[${type}]`)) {
-        this.doc.switchToPage(this.calendar.pos[type].pageIndex);
+        this.goToPage(this.calendar.pos[type].pageIndex);
         this.doc.y = this.calendar.pos[type].y;
       }
 
