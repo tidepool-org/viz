@@ -37,7 +37,7 @@ import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 import { formatBgValue } from './utils/format';
 import { reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
-import { isAutomatedBasalDevice } from './utils/device';
+import { isAutomatedBasalDevice, isSettingsOverrideDevice } from './utils/device';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
 import {
@@ -111,6 +111,7 @@ const utils = {
   },
   device: {
     isAutomatedBasalDevice,
+    isSettingsOverrideDevice,
   },
   stat: {
     commonStats,

@@ -1,6 +1,11 @@
 import _ from 'lodash';
 
-import { AUTOMATED_BASAL_DEVICE_MODELS, pumpVocabulary } from './constants';
+import {
+  AUTOMATED_BASAL_DEVICE_MODELS,
+  SETTINGS_OVERRIDE_DEVICE_MODELS,
+  pumpVocabulary,
+} from './constants';
+
 import { deviceName } from './settings/data';
 
 /**
@@ -31,6 +36,19 @@ export function getLastManualBasalSchedule(basalData = []) {
 export function isAutomatedBasalDevice(manufacturer, deviceModel) {
   return _.includes(
     _.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),
+    deviceModel
+  );
+}
+
+/**
+ * Check if the provided upload datum was for a settings-overrideable device
+ * @param {String} manufacturer Manufacturer name
+ * @param {String} deviceModel Device model number
+ * @returns {Boolean}
+ */
+export function isSettingsOverrideDevice(manufacturer, deviceModel) {
+  return _.includes(
+    _.get(SETTINGS_OVERRIDE_DEVICE_MODELS, deviceName(manufacturer), []),
     deviceModel
   );
 }

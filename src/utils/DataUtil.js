@@ -7,6 +7,7 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isAutomatedBasalDevice,
+  isSettingsOverrideDevice,
 } from './device';
 
 import {
@@ -666,6 +667,7 @@ export class DataUtil {
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
+      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, deviceModel);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
@@ -675,6 +677,7 @@ export class DataUtil {
       this.latestPumpUpload = {
         deviceModel,
         isAutomatedBasalDevice: pumpIsAutomatedBasalDevice,
+        isSettingsOverrideDevice: pumpIsSettingsOverrideDevice,
         manufacturer,
         settings: latestPumpSettings,
       };
