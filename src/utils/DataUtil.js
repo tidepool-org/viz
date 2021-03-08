@@ -666,8 +666,8 @@ export class DataUtil {
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
-      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, deviceModel);
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel, latestPumpSettings);
+      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettings);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));

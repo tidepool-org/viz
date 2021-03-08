@@ -2,7 +2,6 @@ import _ from 'lodash';
 
 import {
   AUTOMATED_BASAL_DEVICE_MODELS,
-  SETTINGS_OVERRIDE_DEVICE_MODELS,
   pumpVocabulary,
 } from './constants';
 
@@ -31,26 +30,24 @@ export function getLastManualBasalSchedule(basalData = []) {
  * Check if the provided upload datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
  * @param {String} deviceModel Device model number
+ * @param {Object} pumpSettings Tidepool pumpSettings datum
  * @returns {Boolean}
  */
-export function isAutomatedBasalDevice(manufacturer, deviceModel) {
+export function isAutomatedBasalDevice(manufacturer, deviceModel, pumpSettings) {
   return _.includes(
     _.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),
     deviceModel
-  );
+  ) || (manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900);
 }
 
 /**
  * Check if the provided upload datum was for a settings-overrideable device
  * @param {String} manufacturer Manufacturer name
- * @param {String} deviceModel Device model number
+ * @param {Object} pumpSettings Tidepool pumpSettings datum
  * @returns {Boolean}
  */
-export function isSettingsOverrideDevice(manufacturer, deviceModel) {
-  return _.includes(
-    _.get(SETTINGS_OVERRIDE_DEVICE_MODELS, deviceName(manufacturer), []),
-    deviceModel
-  );
+export function isSettingsOverrideDevice(manufacturer, pumpSettings) {
+  return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900;
 }
 
 /**
