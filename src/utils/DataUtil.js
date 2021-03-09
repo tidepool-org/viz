@@ -7,11 +7,13 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isAutomatedBasalDevice,
+  isAutomatedBolusDevice,
   isSettingsOverrideDevice,
 } from './device';
 
 import {
   hasExtended,
+  isAutomated,
   isCorrection,
   isInterruptedBolus,
   isOverride,
@@ -228,10 +230,11 @@ export class DataUtil {
 
     if (d.type === 'bolus') {
       d.tags = {
+        automated: isAutomated(d),
         correction: isCorrection(d),
         extended: hasExtended(d),
         interrupted: isInterruptedBolus(d),
-        manual: !d.wizard,
+        manual: !d.wizard && !isAutomated(d),
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!d.wizard,
@@ -666,7 +669,8 @@ export class DataUtil {
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel, latestPumpSettings);
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettings, deviceModel);
+      const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettings);
       const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettings);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
@@ -677,6 +681,7 @@ export class DataUtil {
       this.latestPumpUpload = {
         deviceModel,
         isAutomatedBasalDevice: pumpIsAutomatedBasalDevice,
+        isAutomatedBolusDevice: pumpIsAutomatedBolusDevice,
         isSettingsOverrideDevice: pumpIsSettingsOverrideDevice,
         manufacturer,
         settings: latestPumpSettings,
