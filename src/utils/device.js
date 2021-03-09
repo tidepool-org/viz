@@ -29,15 +29,25 @@ export function getLastManualBasalSchedule(basalData = []) {
 /**
  * Check if the provided upload datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
- * @param {String} deviceModel Device model number
  * @param {Object} pumpSettings Tidepool pumpSettings datum
+ * @param {String} deviceModel Device model number
  * @returns {Boolean}
  */
-export function isAutomatedBasalDevice(manufacturer, deviceModel, pumpSettings) {
+export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceModel) {
   return _.includes(
     _.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),
     deviceModel
   ) || (manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900);
+}
+
+/**
+ * Check if the provided upload datum was for an automated bolus device
+ * @param {String} manufacturer Manufacturer name
+ * @param {Object} pumpSettings Tidepool pumpSettings datum
+ * @returns {Boolean}
+ */
+export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
+  return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900;
 }
 
 /**
@@ -46,7 +56,7 @@ export function isAutomatedBasalDevice(manufacturer, deviceModel, pumpSettings) 
  * @param {Object} pumpSettings Tidepool pumpSettings datum
  * @returns {Boolean}
  */
-export function isSettingsOverrideDevice(manufacturer, pumpSettings) {
+export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
   return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900;
 }
 
