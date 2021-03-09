@@ -68,6 +68,7 @@ export class AggregationUtil {
     reducer.dataList(true);
 
     const tags = [
+      'automated',
       'correction',
       'extended',
       'interrupted',
@@ -243,6 +244,7 @@ export class AggregationUtil {
     _.each(data, dataForDay => {
       const {
         value: {
+          automated,
           correction,
           dataList,
           extended,
@@ -260,6 +262,7 @@ export class AggregationUtil {
         processedData[dataForDay.key] = {
           total,
           subtotals: {
+            automated: automated.count,
             correction: correction.count,
             extended: extended.count,
             interrupted: interrupted.count,
