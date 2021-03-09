@@ -315,6 +315,26 @@ const pumpSettingsTandem = {
   basalSchedules,
 };
 
+const pumpSettingsMicroTech = {
+  ...common,
+  bgTarget: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        ...settingsScheduleStart,
+        target: forbidden,
+        range: forbidden,
+        low: minZero,
+        high: minZero,
+      },
+    },
+  },
+  carbRatio,
+  insulinSensitivity,
+  basalSchedules,
+};
+
 const wizard = {
   ...common,
   bgInput: { ...minZero, ...optional },
@@ -350,6 +370,7 @@ export default {
     medtronic: v.compile(pumpSettingsMedtronic),
     omnipod: v.compile(pumpSettingsOmnipod),
     tandem: v.compile(pumpSettingsTandem),
+    microtech: v.compile(pumpSettingsMicroTech),
   },
   smbg: v.compile(bg),
   wizard: v.compile(wizard),
