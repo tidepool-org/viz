@@ -19,6 +19,7 @@
   --basal: #19A0D7;
   --basal-automated: #00D3E6;
   --bolus: #7CD0F0;
+  --bolus-automated: #00D3E6;
   --bolus--interrupted: #FF8B7C;
   --bolus--ride: #107EA8;
   --bolus--undelivered: #BCECFA;
@@ -61,8 +62,9 @@
 
 :export {
   bolus: #7CD0F0;
+  bolusAutomated: #00D3E6;
   basal: #19A0D7;
-  basalAutomated: #00e9fa;
+  basalAutomated: #00D3E6;
   sleep: #0079C0;
   physicalActivity: #00B2C3;
   statDark: #27385b;

@@ -113,6 +113,7 @@ class PrintView {
       sleep: '#0079C0',
       physicalActivity: '#00B2C3',
       bolus: '#7CD0F0',
+      bolusAutomated: '#00D3E6',
       smbg: '#6480FB',
       siteChange: '#FCD144',
       basalHeader: '#DCF1F9',
