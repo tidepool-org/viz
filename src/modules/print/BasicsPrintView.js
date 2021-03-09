@@ -63,6 +63,7 @@ class BasicsPrintView extends PrintView {
       defineBasicsAggregations(
         this.bgPrefs,
         this.manufacturer,
+        this.latestPumpUpload,
       ),
       this.aggregationsByDate,
       this.patient,
