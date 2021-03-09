@@ -366,18 +366,44 @@ describe('stat', () => {
     });
 
     context('carbs format', () => {
-      it('should return correctly formatted data when `value >= 0`', () => {
-        expect(stat.formatDatum({
-          value: 84.645,
-        }, statFormats.carbs)).to.include({
-          suffix: 'g',
-          value: '85',
-        });
+      it('should return correctly formatted carb data in grams or exchanges when `value > 0`', () => {
+        const onlyGrams = stat.formatDatum({
+          value: {
+            grams: 84.645,
+            exchanges: 0,
+          },
+        }, statFormats.carbs);
+
+        expect(onlyGrams.suffix).to.be.an('array').and.have.members(['g']);
+        expect(onlyGrams.value).to.be.an('array').and.have.members(['85']);
+
+        const onlyExchanges = stat.formatDatum({
+          value: {
+            grams: 0,
+            exchanges: 6.25,
+          },
+        }, statFormats.carbs);
+
+        expect(onlyExchanges.suffix).to.be.an('array').and.have.members(['exch']);
+        expect(onlyExchanges.value).to.be.an('array').and.have.members([6.3]);
+
+        const carbsAndExchanges = stat.formatDatum({
+          value: {
+            grams: 84.645,
+            exchanges: 2,
+          },
+        }, statFormats.carbs);
+
+        expect(carbsAndExchanges.suffix).to.be.an('array').and.have.members(['g', 'exch']);
+        expect(carbsAndExchanges.value).to.be.an('array').and.have.members(['85', 2]);
       });
 
-      it('should return the empty placeholder text and id when `value < 0`', () => {
+      it('should return the empty placeholder text and id when neither grams nor exchange values are > 0', () => {
         expect(stat.formatDatum({
-          value: -1,
+          value: {
+            grams: 0,
+            exchanges: 0,
+          },
         }, statFormats.carbs)).to.include({
           id: 'statDisabled',
           value: '--',
@@ -1138,14 +1164,13 @@ describe('stat', () => {
 
     it('should format and return `carbs` data', () => {
       const data = {
-        carbs: 30,
+        carbs: { grams: 30, exchanges: 2 },
       };
 
       const statData = stat.getStatData(data, commonStats.carbs, opts);
-
       expect(statData.data).to.eql([
         {
-          value: 30,
+          value: { grams: 30, exchanges: 2 },
         },
       ]);
 
