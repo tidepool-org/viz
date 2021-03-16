@@ -64,8 +64,6 @@ PumpSettingsOverrideTooltip.propTypes = {
   tail: PropTypes.bool.isRequired,
   side: PropTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
   tailColor: PropTypes.string,
-  tailWidth: PropTypes.number.isRequired,
-  tailHeight: PropTypes.number.isRequired,
   backgroundColor: PropTypes.string,
   borderColor: PropTypes.string,
   borderWidth: PropTypes.number.isRequired,
@@ -82,8 +80,6 @@ PumpSettingsOverrideTooltip.defaultProps = {
   tail: false,
   side: 'top',
   offset: { top: -2, left: 0 },
-  tailWidth: 9,
-  tailHeight: 17,
   borderWidth: 2,
 };
 
