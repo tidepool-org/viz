@@ -255,7 +255,7 @@ function targetRows(settings, units, manufacturer) {
     animas: { columnTwo: 'target', columnThree: 'range' },
     insulet: { columnTwo: 'target', columnThree: 'high' },
     medtronic: { columnTwo: 'low', columnThree: 'high' },
-    microtech: { columnTwo: 'lower', columnThree: 'upper' },
+    microtech: { columnTwo: 'low', columnThree: 'high' },
   };
   return data.processBgTargetData(
     settings.bgTarget,
