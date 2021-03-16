@@ -29,6 +29,7 @@ import PumpSettingsContainer from './components/settings/common/PumpSettingsCont
 import TrendsContainer from './components/trends/common/TrendsContainer';
 import Tooltip from './components/common/tooltips/Tooltip';
 import BolusTooltip from './components/daily/bolustooltip/BolusTooltip';
+import PumpSettingsOverrideTooltip from './components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import SMBGTooltip from './components/daily/smbgtooltip/SMBGTooltip';
 import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
@@ -80,6 +81,7 @@ const components = {
   TwoOptionToggle,
   Tooltip,
   BolusTooltip,
+  PumpSettingsOverrideTooltip,
   SMBGTooltip,
   Stat,
   CBGTooltip,

@@ -83,7 +83,7 @@ export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 export const SETTINGS_OVERRIDE = 'settingsOverride';
 export const SLEEP = 'sleep';
-export const PHYSICAL_ACTIVITY = 'exercise';
+export const PHYSICAL_ACTIVITY = 'physicalActivity';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
