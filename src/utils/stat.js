@@ -975,10 +975,13 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
         opts
       );
 
+      if (!_.isArray(formatted.value)) formatted.value = _.compact([formatted.value]);
+      if (!_.isArray(formatted.suffix)) formatted.suffix = _.compact([formatted.suffix]);
+
       statsString += '\n';
       statsString += textUtil.buildTextLine({
         label: stat.title,
-        value: `${formatted.value}${formatted.suffix || (stat.units ? ` ${stat.units}` : '')}`,
+        value: _.map(formatted.value, (value, i) => `${value}${formatted.suffix[i] || (stat.units ? ` ${stat.units}` : '')}`).join(' '),
       });
     }
   });

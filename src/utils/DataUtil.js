@@ -220,6 +220,31 @@ export class DataUtil {
     }
   };
 
+  /**
+   * Medtronic 5 and 7 series (which always have a deviceId starting with 'MedT-') carb exchange
+   * data is converted to carbs at a rounded 1:15 ratio in the uploader, and needs to be
+   * de-converted back into exchanges.
+   */
+  needsCarbToExchangeConversion = d => {
+    const annotations = _.get(d, 'annotations', []);
+
+    return (d.deviceId && d.deviceId.indexOf('MedT-') === 0)
+      && d.carbUnits === 'exchanges'
+      && _.isFinite(d.carbInput)
+      && _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) === -1;
+  };
+
+  /**
+   * When deconverting the carbs to exchanges, we use a 15:1 ratio, and round to the nearest 0.5,
+   * since that is the increment used when entering exchange values in the pump
+   */
+  getDeconvertedCarbExchange = d => {
+    const deconvertedCarbInput = d.carbInput / 15;
+    const increment = 0.5;
+    const inverse = 1 / increment;
+    return Math.round(deconvertedCarbInput * inverse) / inverse;
+  };
+
   tagDatum = d => {
     if (d.type === 'basal') {
       d.tags = {
@@ -378,6 +403,13 @@ export class DataUtil {
       this.normalizeDatumBgUnits(d, [], ['insulinSensitivity']);
 
       if (_.isObject(d.bolus)) this.normalizeDatumOut(d.bolus, fields);
+
+      if (this.needsCarbToExchangeConversion(d)) {
+        d.carbInput = this.getDeconvertedCarbExchange(d);
+        d.insulinCarbRatio = _.round(15 / d.insulinCarbRatio, 1);
+        d.annotations = d.annotations || [];
+        d.annotations.push({ code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' });
+      }
     }
 
     if (d.type === 'bolus') {
