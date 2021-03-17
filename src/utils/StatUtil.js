@@ -88,9 +88,13 @@ export class StatUtil {
       (result, datum) => {
         const units = _.get(datum, 'carbUnits', 'grams');
 
+        const carbInput = this.dataUtil.needsCarbToExchangeConversion(datum)
+          ? this.dataUtil.getDeconvertedCarbExchange(datum)
+          : _.get(datum, 'carbInput', 0);
+
         return {
           ...result,
-          [units]: result[units] + _.get(datum, 'carbInput', 0),
+          [units]: result[units] + carbInput,
         };
       },
       {

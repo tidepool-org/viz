@@ -72,6 +72,16 @@ const animasBolus = {
   ],
 };
 
+const medtronicDeconvertedCarbToExchangeRatioBolus = {
+  type: 'bolus',
+  extended: 1.2,
+  duration: 18000000,
+  normalTime: '2017-11-11T05:45:52.000Z',
+  annotations: [
+    { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' },
+  ],
+};
+
 describe('annotation utilities', () => {
   describe('getAnnotations', () => {
     it('should be a function', () => {
@@ -144,6 +154,9 @@ describe('annotation utilities', () => {
       ]);
       expect(annotations.getAnnotationMessages(animasBolus)[0].message.value).to.equal(
         "* Animas pumps don't capture the details of how combo boluses are split between the normal and extended amounts."
+      );
+      expect(annotations.getAnnotationMessages(medtronicDeconvertedCarbToExchangeRatioBolus)[0].message.value).to.equal(
+        '* Due to how carb ratios are uploaded from this pump, there may be a slight discrepancy between the value entered on the pump and the value displayed here.'
       );
     });
   });
