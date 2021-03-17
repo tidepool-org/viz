@@ -109,21 +109,25 @@ class DailyPrintView extends PrintView {
     this.triangleHeight = 1.25;
 
     const undelivered = '#B2B2B2';
+    const delivered = '#71bddb';
+    const automated = '#02becf';
+    const marker = 'black';
 
     this.colors = _.assign(this.colors, {
       axes: '#858585',
       bolus: {
-        delivered: 'black',
-        extendedPath: 'black',
+        automated,
+        delivered,
+        extendedPath: delivered,
         extendedExpectationPath: undelivered,
-        extendedTriangle: 'black',
+        extendedTriangle: delivered,
         extendedTriangleInterrupted: undelivered,
-        interrupted: 'white',
-        overrideTriangle: 'white',
-        programmed: 'black',
+        interrupted: marker,
+        overrideTriangle: marker,
+        programmed: delivered,
         undelivered,
         underride: undelivered,
-        underrideTriangle: 'white',
+        underrideTriangle: marker,
       },
       carbs: '#FFD47C',
       carbExchanges: '#FFB686',
@@ -350,7 +354,7 @@ class DailyPrintView extends PrintView {
         .stroke(this.colors.bolus[path.type]);
     } else {
       this.doc.path(path.d)
-        .fill(this.colors.bolus[path.type]);
+        .fill(_.get(this.colors.bolus, path.subType, this.colors.bolus[path.type]));
     }
   }
 

@@ -145,6 +145,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
       d: path,
       key: `delivered-${bolus.id}`,
       type: 'delivered',
+      subType: insulinEvent.subType,
     });
   }
 
