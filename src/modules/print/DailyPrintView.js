@@ -109,25 +109,22 @@ class DailyPrintView extends PrintView {
     this.triangleHeight = 1.25;
 
     const undelivered = '#B2B2B2';
-    const delivered = '#71bddb';
-    const automated = '#02becf';
-    const marker = 'black';
 
     this.colors = _.assign(this.colors, {
       axes: '#858585',
       bolus: {
-        automated,
-        delivered,
-        extendedPath: delivered,
+        automated: '#B2B2B2',
+        delivered: 'black',
+        extendedPath: 'black',
         extendedExpectationPath: undelivered,
-        extendedTriangle: delivered,
+        extendedTriangle: 'black',
         extendedTriangleInterrupted: undelivered,
-        interrupted: marker,
-        overrideTriangle: marker,
-        programmed: delivered,
+        interrupted: 'white',
+        overrideTriangle: 'white',
+        programmed: 'black',
         undelivered,
         underride: undelivered,
-        underrideTriangle: marker,
+        underrideTriangle: 'white',
       },
       carbs: '#FFD47C',
       carbExchanges: '#FFB686',
@@ -348,10 +345,16 @@ class DailyPrintView extends PrintView {
 
   renderEventPath(path) {
     if (path.type === 'programmed') {
-      this.doc.path(path.d)
-        .lineWidth(0.5)
-        .dash(0.5, { space: 1 })
-        .stroke(this.colors.bolus[path.type]);
+      if (path.subType === 'automated') {
+        this.doc.path(path.d)
+          .lineWidth(0.5)
+          .stroke(this.colors.bolus[path.type]);
+      } else {
+        this.doc.path(path.d)
+          .lineWidth(0.5)
+          .dash(0.5, { space: 1 })
+          .stroke(this.colors.bolus[path.type]);
+      }
     } else {
       this.doc.path(path.d)
         .fill(_.get(this.colors.bolus, path.subType, this.colors.bolus[path.type]));
