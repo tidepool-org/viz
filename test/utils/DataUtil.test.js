@@ -1,7 +1,7 @@
 import _ from 'lodash';
 import moment from 'moment';
-
 import DataUtil from '../../src/utils/DataUtil';
+
 import { types as Types, generateGUID } from '../../data/types';
 import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 
@@ -666,6 +666,70 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('needsCarbToExchangeConversion', () => {
+    const bolus = {
+      deviceId: 'MedT-123456',
+      carbUnits: 'exchanges',
+      carbInput: 2,
+    };
+
+    it('should return true if deviceId begins with "MedT-" and carbUnits are exchanges', () => {
+      expect(dataUtil.needsCarbToExchangeConversion(bolus)).to.be.true;
+    });
+
+    it('should return false if datum is already annotated as being de-converted', () => {
+      expect(dataUtil.needsCarbToExchangeConversion({
+        ...bolus,
+        annotations: [
+          { code: 'foo' },
+          { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' },
+          { code: 'bar' },
+        ],
+      })).to.be.false;
+    });
+
+    it('should return false if deviceId does not begin with "MedT-" and carbUnits are exchanges', () => {
+      expect(dataUtil.needsCarbToExchangeConversion({
+        ...bolus,
+        deviceId: 'MMT-123456',
+      })).to.be.false;
+    });
+
+    it('should return false if deviceId begins with "MedT-" and carbUnits are grams', () => {
+      expect(dataUtil.needsCarbToExchangeConversion({
+        ...bolus,
+        carbUnits: 'grams',
+      })).to.be.false;
+    });
+
+    it('should return false if deviceId begins with "MedT-" and carbUnits are exchanges and carbInput is non-finite', () => {
+      expect(dataUtil.needsCarbToExchangeConversion({
+        ...bolus,
+        carbInput: '4',
+      })).to.be.false;
+    });
+  });
+
+  describe('getDeconvertedCarbExchange', () => {
+    it('should divide carbInput values by 15 and round to the nearest 0.5', () => {
+      expect(dataUtil.getDeconvertedCarbExchange({
+        carbInput: 60,
+      })).to.equal(4);
+
+      expect(dataUtil.getDeconvertedCarbExchange({
+        carbInput: 55, // 55/15 = 3.6666
+      })).to.equal(3.5);
+
+      expect(dataUtil.getDeconvertedCarbExchange({
+        carbInput: 50, // 50/15 = 3.3333
+      })).to.equal(3.5);
+
+      expect(dataUtil.getDeconvertedCarbExchange({
+        carbInput: 48, // 48/15 = 3.2
+      })).to.equal(3);
+    });
+  });
+
   describe('tagDatum', () => {
     context('basal', () => {
       const basal = new Types.Basal({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
@@ -1318,6 +1382,78 @@ describe('DataUtil', () => {
 
         dataUtil.normalizeDatumOut(datumWithBolusObject, fields);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithBolusObject.bolus, fields);
+      });
+
+      context('needsCarbToExchangeConversion is `true`', () => {
+        it('should convert the carbInput and insulinCarbRatio to exchanges', () => {
+          sinon.stub(dataUtil, 'needsCarbToExchangeConversion').returns(true);
+
+          const datum = {
+            type: 'wizard',
+            carbInput: 60,
+            insulinCarbRatio: 10,
+          };
+
+          dataUtil.normalizeDatumOut(datum);
+
+          expect(datum.carbInput).to.equal(4);
+          expect(datum.insulinCarbRatio).to.equal(1.5);
+        });
+
+        it('should add an annotation to the bolus object if it exists', () => {
+          sinon.stub(dataUtil, 'needsCarbToExchangeConversion').returns(true);
+
+          const datumWithoutBolus = {
+            type: 'wizard',
+            carbInput: 60,
+            insulinCarbRatio: 10,
+          };
+
+          dataUtil.normalizeDatumOut(datumWithoutBolus);
+          expect(datumWithoutBolus.bolus).to.be.undefined;
+
+          const datumWithoutBolusAnnotations = {
+            type: 'wizard',
+            carbInput: 60,
+            insulinCarbRatio: 10,
+          };
+
+          dataUtil.normalizeDatumOut(datumWithoutBolusAnnotations);
+          expect(datumWithoutBolusAnnotations.annotations).to.have.lengthOf(1);
+          expect(datumWithoutBolusAnnotations.annotations[0]).to.eql({
+            code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted',
+          });
+
+          const datumWithBolusAnnotations = {
+            type: 'wizard',
+            carbInput: 60,
+            insulinCarbRatio: 10,
+            annotations: [{ code: 'foo' }],
+          };
+
+          dataUtil.normalizeDatumOut(datumWithBolusAnnotations);
+          expect(datumWithBolusAnnotations.annotations).to.have.lengthOf(2);
+          expect(datumWithBolusAnnotations.annotations[1]).to.eql({
+            code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted',
+          });
+        });
+      });
+
+      context('needsCarbToExchangeConversion is `false`', () => {
+        it('should not convert the carbInput and insulinCarbRatio to exchanges', () => {
+          sinon.stub(dataUtil, 'needsCarbToExchangeConversion').returns(false);
+
+          const datum = {
+            type: 'wizard',
+            carbInput: 60,
+            insulinCarbRatio: 10,
+          };
+
+          dataUtil.normalizeDatumOut(datum);
+
+          expect(datum.carbInput).to.equal(60);
+          expect(datum.insulinCarbRatio).to.equal(10);
+        });
       });
     });
 

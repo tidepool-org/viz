@@ -29,7 +29,7 @@ import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
 import { getPumpVocabulary } from '../../utils/device';
-import { getStatDefinition } from '../../utils/stat';
+import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
   classifyBgValue,
   getOutOfRangeThreshold,
@@ -42,6 +42,7 @@ import {
   getMaxDuration,
   getMaxValue,
   getNormalPercentage,
+  getWizardFromInsulinEvent,
 } from '../../utils/bolus';
 import {
   formatLocalizedFromUTC,
@@ -76,6 +77,11 @@ class DailyPrintView extends PrintView {
     super(doc, data, opts);
 
     this.isAutomatedBasalDevice = _.get(this, 'latestPumpUpload.isAutomatedBasalDevice', false);
+
+    this.hasCarbExchanges = _.some(
+      _.get(data, 'data.current.data.wizard', []),
+      { type: 'wizard', carbUnits: 'exchanges' }
+    );
 
     const deviceLabels = getPumpVocabulary(this.manufacturer);
 
@@ -119,7 +125,8 @@ class DailyPrintView extends PrintView {
         underride: undelivered,
         underrideTriangle: 'white',
       },
-      carbs: '#CFCFCF',
+      carbs: '#FFD47C',
+      carbExchanges: '#FFB686',
       lightDividers: '#D8D8D8',
     });
 
@@ -581,7 +588,11 @@ class DailyPrintView extends PrintView {
       yPos.small();
     }
 
-    if (carbs > 0) {
+    if (_.get(carbs, 'grams') > 0 || _.get(carbs, 'exchanges') > 0) {
+      const formattedCarbs = formatDatum({ value: carbs }, statFormats.carbs);
+      const carbValues = _.get(formattedCarbs, 'value');
+      const carbSuffixes = _.get(formattedCarbs, 'suffix');
+
       if (!first) {
         this.doc.moveTo(this.margins.left, yPos.update())
           .lineTo(this.summaryArea.rightEdge, yPos.current())
@@ -599,7 +610,7 @@ class DailyPrintView extends PrintView {
         )
         .font(this.font)
         .text(
-          `${formatDecimalNumber(carbs, 0)} g`,
+          _.map(carbValues, (value, i) => `${value} ${carbSuffixes[i]}`).join(', '),
           { align: 'right' }
         );
     }
@@ -782,11 +793,13 @@ class DailyPrintView extends PrintView {
       const carbs = getCarbs(insulinEvent);
       const circleOffset = 1;
       const textOffset = 1.75;
+      const carbUnits = _.get(getWizardFromInsulinEvent(insulinEvent), 'carbUnits');
+      const carbFillColor = (carbUnits === 'exchanges') ? this.colors.carbExchanges : this.colors.carbs;
       if (carbs) {
         const carbsX = xScale(getBolusFromInsulinEvent(insulinEvent).normalTime);
         const carbsY = bolusScale(getMaxValue(insulinEvent)) - this.carbRadius - circleOffset;
         this.doc.circle(carbsX, carbsY, this.carbRadius)
-          .fill(this.colors.carbs);
+          .fill(carbFillColor);
         this.doc.font(this.font)
           .fontSize(this.carbsFontSize)
           .fillColor('black')
@@ -1073,7 +1086,7 @@ class DailyPrintView extends PrintView {
     const legendVerticalMiddle = legendTop + lineHeight * 2;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
     const legendItemLeftOffset = 9;
-    const legendItemLabelOffset = 6;
+    const legendItemLabelOffset = 4.5;
 
     let cursor = this.margins.left + legendItemLeftOffset;
 
@@ -1250,20 +1263,64 @@ class DailyPrintView extends PrintView {
     cursor += this.doc.widthOfString(t('Extended')) + legendItemLeftOffset * 2;
 
     // carbohydrates
-    this.doc.circle(cursor, legendVerticalMiddle, this.carbRadius)
+    const carbsYPos = {
+      circle: legendVerticalMiddle,
+      carbs: legendVerticalMiddle - this.carbRadius / 2,
+      label: legendTextMiddle,
+    };
+
+    const exchangesYPos = {
+      circle: carbsYPos.circle + this.doc.currentLineHeight() / 2 + 1.5,
+      carbs: carbsYPos.carbs + this.doc.currentLineHeight() / 2 + 1.5,
+    };
+
+    if (this.hasCarbExchanges) {
+      carbsYPos.circle = carbsYPos.circle - this.doc.currentLineHeight() / 2 - 1;
+      carbsYPos.carbs = carbsYPos.carbs - this.doc.currentLineHeight() / 2 - 1;
+      carbsYPos.label = carbsYPos.label - this.doc.currentLineHeight() / 2;
+    }
+
+    this.doc
+      .circle(cursor, carbsYPos.circle, this.carbRadius)
       .fill(this.colors.carbs);
-    this.doc.fillColor('black')
+
+    if (this.hasCarbExchanges) {
+      this.doc
+        .circle(cursor, exchangesYPos.circle, this.carbRadius)
+        .fill(this.colors.carbExchanges);
+    }
+
+    this.doc
+      .fillColor('black')
       .fontSize(this.carbsFontSize)
       .text(
         '25',
         cursor - this.carbRadius,
-        legendVerticalMiddle - this.carbRadius / 2,
+        carbsYPos.carbs,
         { align: 'center', width: this.carbRadius * 2 }
       );
+
+    if (this.hasCarbExchanges) {
+      this.doc
+        .text(
+          '2',
+          cursor - this.carbRadius,
+          exchangesYPos.carbs,
+          { align: 'center', width: this.carbRadius * 2 }
+        );
+    }
+
     this.doc.fontSize(this.smallFontSize);
     cursor += this.carbRadius + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Carbs'), cursor, legendTextMiddle);
-    cursor += this.doc.widthOfString(t('Carbs')) + legendItemLeftOffset * 2;
+    this.doc
+      .fillColor('black')
+      .text(t('Carbs (g)'), cursor, carbsYPos.label);
+
+    if (this.hasCarbExchanges) {
+      this.doc.text(t('Carb exch'));
+    }
+
+    cursor += this.doc.widthOfString(t('Carbs (g)')) + legendItemLeftOffset * 2;
 
     /* basals */
     const legendBasalYScale = scaleLinear()

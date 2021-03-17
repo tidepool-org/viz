@@ -400,6 +400,12 @@ describe('bolus utilities', () => {
       expect(Number.isNaN(bolusUtils.getRecommended(normal))).to.be.true;
     });
 
+    it('should return NaN if type `bolus` and no `wizard.recommended` attached', () => {
+      expect(Number.isNaN(bolusUtils.getRecommended({ type: 'bolus' }))).to.be.true;
+      expect(Number.isNaN(bolusUtils.getRecommended({ type: 'bolus', wizard: { foo: 'bar' } }))).to.be.true;
+      expect(Number.isNaN(bolusUtils.getRecommended({ type: 'bolus', wizard: { recommended: 2 } }))).to.be.false;
+    });
+
     it('should return total when both `carb` and `correction` recs exist', () => {
       const { recommended: { carb, correction: correctionValue } } = underride;
       expect(bolusUtils.getRecommended(underride)).to.equal(carb + correctionValue);

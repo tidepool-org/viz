@@ -108,7 +108,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     forcePlainTextValues: false,
   });
 
-  const total = _.get(opts, 'data.total.value'); // TODO: need this for percentage calcs
+  const total = _.get(opts, 'data.total.value');
 
   const disableStat = () => {
     id = 'statDisabled';
@@ -141,9 +141,20 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       break;
 
     case statFormats.carbs:
-      if (value >= 0) {
-        value = formatDecimalNumber(value);
-        suffix = 'g';
+      if (_.isPlainObject(value) && (value.grams > 0 || value.exchanges > 0)) {
+        const { grams, exchanges } = value;
+        value = [];
+        suffix = [];
+        if (grams > 0) {
+          value.push(formatDecimalNumber(grams));
+          suffix.push('g');
+        }
+        if (exchanges > 0) {
+          // Note: the + converts the rounded, fixed string back to a number
+          // This allows 2.67777777 to render as 2.7 and 3.0000001 to render as 3 (not 3.0)
+          value.push(+formatDecimalNumber(exchanges, 1));
+          suffix.push('exch');
+        }
       } else {
         disableStat();
       }
@@ -444,7 +455,10 @@ export const getStatData = (data, type, opts = {}) => {
     case commonStats.carbs:
       statData.data = [
         {
-          value: ensureNumeric(data.carbs),
+          value: {
+            grams: ensureNumeric(_.get(data, 'carbs.grams')),
+            exchanges: ensureNumeric(_.get(data, 'carbs.exchanges')),
+          },
         },
       ];
 
@@ -899,10 +913,13 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
         opts
       );
 
+      if (!_.isArray(formatted.value)) formatted.value = _.compact([formatted.value]);
+      if (!_.isArray(formatted.suffix)) formatted.suffix = _.compact([formatted.suffix]);
+
       statsString += '\n';
       statsString += textUtil.buildTextLine({
         label: stat.title,
-        value: `${formatted.value}${formatted.suffix || (stat.units ? ` ${stat.units}` : '')}`,
+        value: _.map(formatted.value, (value, i) => `${value}${formatted.suffix[i] || (stat.units ? ` ${stat.units}` : '')}`).join(' '),
       });
     }
   });

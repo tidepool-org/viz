@@ -258,6 +258,16 @@ class BasicsPrintView extends PrintView {
       );
     }
 
+    const hasCarbGramsData = _.get(carbs, 'data.raw.carbs.grams', 0) > 0;
+    const hasCarbExchangeData = _.get(carbs, 'data.raw.carbs.exchanges', 0) > 0;
+
+    if (hasCarbGramsData && hasCarbExchangeData) {
+      carbs.title = [
+        carbs.title,
+        t('Avg. Daily Carb Exchanges'),
+      ];
+    }
+
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
@@ -316,7 +326,7 @@ class BasicsPrintView extends PrintView {
   }
 
   renderSimpleStat(stat) {
-    const label = stat.title;
+    const label = !_.isArray(stat.title) ? _.compact([stat.title]) : stat.title;
 
     const value = formatDatum(
       _.get(stat.data, _.get(stat.data, 'dataPaths.summary')),
@@ -324,19 +334,20 @@ class BasicsPrintView extends PrintView {
       { bgPrefs: this.bgPrefs, data: stat.data }
     );
 
+    if (!_.isArray(value.value)) value.value = _.compact([value.value]);
+    if (!_.isArray(value.suffix)) value.suffix = _.compact([value.suffix]);
+
     const tableColumns = this.defineStatColumns();
 
     this.setFill(value.id === 'statDisabled' ? this.colors.lightGrey : 'black', 1);
 
-    const rows = [
-      {
-        label,
-        value: {
-          text: `${value.value}`,
-          subText: `${value.suffix}`,
-        },
+    const rows = _.map(value.value, (v, i) => ({
+      label: label[i] || '',
+      value: {
+        text: `${v}`,
+        subText: `${_.get(value, ['suffix', i], '')}`,
       },
-    ];
+    }));
 
     this.renderTable(tableColumns, rows, {
       showHeaders: false,
