@@ -77,6 +77,7 @@ class DailyPrintView extends PrintView {
     super(doc, data, opts);
 
     this.isAutomatedBasalDevice = _.get(this, 'latestPumpUpload.isAutomatedBasalDevice', false);
+    this.isAutomatedBolusDevice = _.get(this, 'latestPumpUpload.isAutomatedBolusDevice', false);
 
     this.hasCarbExchanges = _.some(
       _.get(data, 'data.current.data.wizard', []),
@@ -1091,8 +1092,13 @@ class DailyPrintView extends PrintView {
 
     const legendVerticalMiddle = legendTop + lineHeight * 2;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
-    const legendItemLeftOffset = 9;
-    const legendItemLabelOffset = 4.5;
+    let legendItemLeftOffset = 9;
+    let legendItemLabelOffset = 4.5;
+
+    if (this.isAutomatedBolusDevice) {
+      legendItemLeftOffset = 7;
+      legendItemLabelOffset = 4;
+    }
 
     let cursor = this.margins.left + legendItemLeftOffset;
 
@@ -1169,9 +1175,30 @@ class DailyPrintView extends PrintView {
     _.each(normalPaths, (path) => {
       this.renderEventPath(path);
     });
-    cursor += this.bolusWidth + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
-    cursor += this.doc.widthOfString(t('Bolus')) + legendItemLeftOffset * 2;
+
+    if (this.isAutomatedBolusDevice) {
+      const automatedPaths = getBolusPaths(
+        { normal: 6, normalTime: 5, subType: 'automated' },
+        normalBolusXScale,
+        legendBolusYScale,
+        bolusOpts
+      );
+      _.each(automatedPaths, (path) => {
+        this.renderEventPath(path);
+      });
+
+      cursor += this.bolusWidth * 3 + legendItemLabelOffset;
+      this.doc
+        .fillColor('black')
+        .text(t('Bolus'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
+        .text(t('manual & automated'));
+
+      cursor += this.doc.widthOfString(t('manual & automated')) + legendItemLeftOffset * 2;
+    } else {
+      cursor += this.bolusWidth + legendItemLabelOffset;
+      this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
+      cursor += this.doc.widthOfString(t('Bolus')) + legendItemLeftOffset * 2;
+    }
 
     // underride & override boluses
     const rideBolusXScale = scaleLinear()
@@ -1217,9 +1244,20 @@ class DailyPrintView extends PrintView {
     _.each(underridePaths, (path) => {
       this.renderEventPath(path);
     });
+
     cursor += this.bolusWidth * 3 + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Override up & down'), cursor, legendTextMiddle);
-    cursor += this.doc.widthOfString(t('Override up & down')) + legendItemLeftOffset * 2;
+
+    if (this.isAutomatedBolusDevice) {
+      this.doc
+        .fillColor('black')
+        .text(t('Override'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
+        .text(t('up & down'));
+
+      cursor += this.doc.widthOfString(t('up & down')) + legendItemLeftOffset * 2;
+    } else {
+      this.doc.fillColor('black').text(t('Override up & down'), cursor, legendTextMiddle);
+      cursor += this.doc.widthOfString(t('Override up & down')) + legendItemLeftOffset * 2;
+    }
 
     // interrupted bolus
     const interruptedBolusXScale = scaleLinear()
@@ -1401,7 +1439,10 @@ class DailyPrintView extends PrintView {
       xScale: legendBasalXScale,
     });
     cursor += 50 + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Basals'), cursor, legendTextMiddle);
+    this.doc
+      .fontSize(this.smallFontSize)
+      .fillColor('black')
+      .text(t('Basals'), cursor, legendTextMiddle);
 
     return this;
   }
