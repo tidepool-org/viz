@@ -117,8 +117,8 @@ export const pumpVocabulary = {
     [AUTOMATED_DELIVERY]: t('Automation'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Activity'),
-    [SLEEP]: t('Sleep'),
-    [PHYSICAL_ACTIVITY]: t('Excercise'),
+    [SLEEP]: { label: t('Sleep'), marker: t('Z') },
+    [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
   },
   default: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
@@ -127,8 +127,8 @@ export const pumpVocabulary = {
     [AUTOMATED_DELIVERY]: t('Automated'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Settings Override'),
-    [SLEEP]: t('Sleep'),
-    [PHYSICAL_ACTIVITY]: t('Excercise'),
+    [SLEEP]: { label: t('Sleep'), marker: t('Z') },
+    [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
   },
 };
 
