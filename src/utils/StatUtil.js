@@ -302,16 +302,32 @@ export class StatUtil {
 
   getTimeInOverrideData = () => {
     const deviceEventData = _.cloneDeep(this.dataUtil.sort.byTime(this.dataUtil.filter.byType('deviceEvent').top(Infinity)));
-    const pumpSettingsOverrideData = _.filter(deviceEventData, { subType: 'pumpSettingsOverride' });
+    const rawPumpSettingsOverrideData = _.filter(deviceEventData, { subType: 'pumpSettingsOverride' });
+
+    const pumpSettingsOverrideData = this.dataUtil
+      .addPumpSettingsOverrideOverlappingStart(rawPumpSettingsOverrideData);
 
     let durations = pumpSettingsOverrideData.length
       ? _.transform(
         _.groupBy(pumpSettingsOverrideData, 'overrideType'),
-        (result, value, key) => {
-          result[key] = _.sumBy(value, 'duration');
+        (result, data, key) => {
+          const trimmedDurationData = _.map(data, datum => {
+            const normalTime = _.max([this.endpoints[0], datum.normalTime]);
+            const normalEnd = _.min([this.endpoints[1], datum.normalEnd]);
+            const duration = normalEnd - normalTime;
+
+            return {
+              ...datum,
+              normalTime,
+              normalEnd,
+              duration,
+            };
+          });
+
+          result[key] = _.sumBy(trimmedDurationData, 'duration');
           return result;
         },
-        {},
+        {}
       )
       : NaN;
 

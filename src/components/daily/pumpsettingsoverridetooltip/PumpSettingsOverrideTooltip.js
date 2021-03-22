@@ -13,7 +13,7 @@ class PumpSettingsOverrideTooltip extends PureComponent {
   renderPumpSettingsOverride() {
     const vocabulary = getPumpVocabulary(get(this.props.override, 'source'));
     const overrideLabel = vocabulary[SETTINGS_OVERRIDE];
-    const overrideType = vocabulary[get(this.props.override, 'overrideType')];
+    const overrideType = get(vocabulary[get(this.props.override, 'overrideType')], 'label');
 
     const rows = [
       <div key={'override type'} className={styles.overrideType}>
@@ -28,7 +28,7 @@ class PumpSettingsOverrideTooltip extends PureComponent {
   render() {
     const overrideType = get(this.props.override, 'overrideType');
     const start = get(this.props.override, 'normalTime');
-    const end = start + get(this.props.override, 'duration', 0);
+    const end = get(this.props.override, 'normalEnd');
 
     const title = this.props.title ? this.props.title : (
       <div className={styles.title}>
