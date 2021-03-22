@@ -57,10 +57,12 @@ import {
 } from '../../utils/format';
 
 import {
+  AUTOMATED_DELIVERY,
   MMOLL_UNITS,
   MS_IN_MIN,
-  AUTOMATED_DELIVERY,
+  PHYSICAL_ACTIVITY,
   SCHEDULED_DELIVERY,
+  SLEEP,
 } from '../../utils/constants';
 
 import {
@@ -89,6 +91,11 @@ class DailyPrintView extends PrintView {
     this.basalGroupLabels = {
       automated: deviceLabels[AUTOMATED_DELIVERY],
       manual: deviceLabels[SCHEDULED_DELIVERY],
+    };
+
+    this.pumpSettingsOverrideLabels = {
+      [SLEEP]: deviceLabels[SLEEP],
+      [PHYSICAL_ACTIVITY]: deviceLabels[PHYSICAL_ACTIVITY],
     };
 
     this.bgAxisFontSize = 5;
@@ -375,6 +382,7 @@ class DailyPrintView extends PrintView {
         .renderBolusDetails(dateChart)
         .renderBasalPaths(dateChart)
         .renderBasalRates(dateChart)
+        .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
     });
   }
@@ -1055,6 +1063,78 @@ class DailyPrintView extends PrintView {
         }
       });
     }
+
+    return this;
+  }
+
+  renderPumpSettingsOverrides({ basalScale, data: { deviceEvent }, xScale, utcBounds }) {
+    const overrideData = _.filter(deviceEvent, { subType: 'pumpSettingsOverride' });
+
+    const isFabricatedNewDayOverride = datum => _.includes(
+      _.map(_.get(datum, 'annotations', []), 'code'),
+      'tandem/pumpSettingsOverride/fabricated-from-new-day'
+    );
+
+    // Because the new datums are fabricated at upload when they cross midnight, we stitch them
+    // together by adding the fabricated datum's duration to the previous one, so long as the
+    // previous one is not also a fabricated datum.
+    const stitchedData = _.reduce(overrideData, (res, datum) => {
+      const prevDatum = res[res.length - 1];
+
+      if (prevDatum && (
+        isFabricatedNewDayOverride(datum) && !isFabricatedNewDayOverride(prevDatum))
+      ) {
+        res[res.length - 1].normalEnd = datum.normalEnd;
+        res[res.length - 1].duration += datum.duration;
+      } else {
+        res.push(datum);
+      }
+
+      return res;
+    }, []);
+
+    _.each(stitchedData, datum => {
+      const overrideStart = _.max([datum.normalTime, utcBounds[0]]);
+      const overrideEnd = _.min([datum.normalTime + datum.duration, utcBounds[1]]);
+      const xPos = xScale(overrideStart);
+      const yPos = basalScale.range()[1] + this.markerRadius + 1;
+      const bottomOfScale = basalScale.range()[0];
+      const label = _.get(this.pumpSettingsOverrideLabels, [datum.overrideType, 'marker'], (datum.overrideType || 'O').toUpperCase()).charAt(0);
+      const labelColor = 'white';
+      const color = this.colors[datum.overrideType];
+
+      const labelWidth = this.doc
+        .fontSize(5)
+        .widthOfString(label);
+
+      this.doc
+        .circle(xPos, yPos, this.markerRadius)
+        .fillColor(color)
+        .fillOpacity(1)
+        .fill();
+
+      this.doc
+        .moveTo(xPos, yPos)
+        .lineWidth(0.75)
+        .lineTo(xPos, bottomOfScale)
+        .stroke(color);
+
+      this.doc
+        .moveTo(xPos, yPos)
+        .lineWidth(0.5)
+        .lineTo(xScale(overrideEnd), yPos)
+        .dash(1, { space: 2 })
+        .stroke(color);
+
+      this.doc.undash();
+
+      this.doc
+        .fillColor(labelColor)
+        .text(label, xPos - (labelWidth / 2), yPos - 2, {
+          width: labelWidth,
+          align: 'center',
+        });
+    });
 
     return this;
   }
