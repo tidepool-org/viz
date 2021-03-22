@@ -485,11 +485,24 @@ export class AggregationUtil {
       const groupedData = _.groupBy(sortedData, 'type');
       const groupedBasals = _.cloneDeep(groupedData.basal || []);
 
+      const groupedPumpSettingsOverrides = _.filter(
+        _.cloneDeep(groupedData.deviceEvent || []),
+        { subType: 'pumpSettingsOverride' }
+      );
+
+      const initialGroupedPumpSettingsOverridesLength = groupedPumpSettingsOverrides.length;
+
       this.dataUtil.addBasalOverlappingStart(groupedBasals);
+      this.dataUtil.addPumpSettingsOverrideOverlappingStart(groupedPumpSettingsOverrides);
 
       _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
 
       if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+
+      if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
+        groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
+      }
+
       processedData[dataForDay.key] = groupedData;
     });
 
