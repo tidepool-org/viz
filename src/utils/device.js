@@ -37,7 +37,7 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceMo
   return _.includes(
     _.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),
     deviceModel
-  ) || (manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900);
+  ) || (manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 10) >= 105900);
 }
 
 /**
@@ -47,7 +47,7 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceMo
  * @returns {Boolean}
  */
 export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
-  return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900;
+  return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 10) >= 105900;
 }
 
 /**
