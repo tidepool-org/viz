@@ -13,7 +13,7 @@ import {
 
 /* eslint-disable max-len */
 
-describe('stat', () => {
+describe.skip('stat', () => {
   const {
     commonStats,
     dailyDoseUnitOptions,

@@ -17,7 +17,7 @@
 
 import * as constants from '../../src/utils/constants';
 
-describe('constants', () => {
+describe.skip('constants', () => {
   describe('BG_HIGH', () => {
     it('should be `High`', () => {
       expect(constants.BG_HIGH).to.equal('High');

@@ -24,7 +24,7 @@ import { ANIMAS, TANDEM, INSULET, MEDTRONIC, pumpVocabulary } from '../../src/ut
 import { types as Types } from '../../data/types';
 import * as device from '../../src/utils/device';
 
-describe('device utility functions', () => {
+describe.skip('device utility functions', () => {
   describe('getLatestPumpUpload', () => {
     it('should return a pump with proper data', () => {
       const data = [

@@ -1,7 +1,7 @@
 import colors from '../../src/styles/colors.css';
 import _ from 'lodash';
 
-describe('colors', () => {
+describe.skip('colors', () => {
   it('should export all required colors', () => {
     expect(_.toLower(colors.bolus)).to.equal('#7cd0f0');
     expect(_.toLower(colors.basal)).to.equal('#19a0d7');
