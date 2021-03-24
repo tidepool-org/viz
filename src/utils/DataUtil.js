@@ -1320,6 +1320,7 @@ export class DataUtil {
       const returnAllFields = fields[0] === '*';
 
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
+      _.each(typeData, d => this.normalizeDatumOut(d, fields));
 
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
@@ -1349,8 +1350,6 @@ export class DataUtil {
         };
 
         const trimOverlappingEnd = () => {
-          _.each(typeData, d => this.normalizeDatumOut(d, fields));
-
           // Trim last datum if it has a duration that overlaps the range end
           const indexOfLastDurationDatum = _.findLastIndex(typeData, d => _.isFinite(d.duration));
           if (indexOfLastDurationDatum > -1) {
@@ -1361,6 +1360,8 @@ export class DataUtil {
           }
         };
 
+        // _.each(typeData, d => this.normalizeDatumOut(d, fields));
+
         if (this.activeRange === 'prev') {
           trimOverlappingStart();
         } else if (this.activeRange === 'next') {
@@ -1369,8 +1370,6 @@ export class DataUtil {
           if (!this.endpoints.prev) trimOverlappingStart();
           if (!this.endpoints.next) trimOverlappingEnd();
         }
-      } else {
-        _.each(typeData, d => this.normalizeDatumOut(d, fields));
       }
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
 
@@ -1404,7 +1403,9 @@ export class DataUtil {
   };
 
   addBasalOverlappingStart = (basalData, normalizeFields) => {
-    _.each(basalData, d => this.normalizeDatumOut(d, normalizeFields));
+    _.each(basalData, d => {
+      if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
+    });
 
     if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {
       // We need to ensure all the days of the week are active to ensure we get all basals
@@ -1442,7 +1443,9 @@ export class DataUtil {
   };
 
   addPumpSettingsOverrideOverlappingStart = (pumpSettingsOverrideData, normalizeFields) => {
-    _.each(pumpSettingsOverrideData, d => this.normalizeDatumOut(d, normalizeFields));
+    _.each(pumpSettingsOverrideData, d => {
+      if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
+    });
 
     if (pumpSettingsOverrideData.length
       && pumpSettingsOverrideData[0].normalTime > this.activeEndpoints.range[0]
