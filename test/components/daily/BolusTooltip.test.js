@@ -190,6 +190,24 @@ const extendedAnimasUnderride = {
   },
 };
 
+const carbExchangesMedtronic = {
+  type: 'wizard',
+  bolus: {
+    normal: 5,
+    normalTime: '2017-11-11T05:45:52.000Z',
+  },
+  carbUnits: 'exchanges',
+  carbInput: 4,
+  insulinCarbRatio: 2.5,
+};
+
+const deconvertedCarbExchangeRatioMedtronic = {
+  ...carbExchangesMedtronic,
+  annotations: [
+    { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' },
+  ],
+};
+
 const extendedUnderride = {
   type: 'wizard',
   bolus: {
@@ -515,6 +533,13 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.carbRatio))).to.have.length(1);
   });
 
+  it('should render carbRatio for bolus with carb exchange input', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={carbExchangesMedtronic} />);
+    const carbRatio = wrapper.find(formatClassesAsSelector(styles.carbRatio));
+    expect(carbRatio.find(formatClassesAsSelector(styles.label)).text()).to.equal('I:C Ratio  (U/exch)');
+    expect(carbRatio.find(formatClassesAsSelector(styles.value)).text()).to.equal('2.5');
+  });
+
   it('should render delivered, bg, iob, isf and target for bg and iob bolus', () => {
     const wrapper = mount(<BolusTooltip {...props} bolus={withBGInputAndIOB} />);
     expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
@@ -585,6 +610,19 @@ describe('BolusTooltip', () => {
     });
   });
 
+  describe('isMedronicDeconvertedExchange', () => {
+    it('should return true if annotations include Medtronic deconverted carb-to-exchange ratio', () => {
+      const wrapper = mount(
+        <BolusTooltip {...props} bolus={deconvertedCarbExchangeRatioMedtronic} />
+      );
+      expect(wrapper.instance().isMedronicDeconvertedExchange()).to.be.true;
+    });
+    it('should return false for non-deconverted bolus', () => {
+      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
+      expect(wrapper.instance().isMedronicDeconvertedExchange()).to.be.false;
+    });
+  });
+
   describe('getExtended', () => {
     const extendedStyle = formatClassesAsSelector(styles.extended);
     const normalStyle = formatClassesAsSelector(styles.normal);
@@ -618,6 +656,17 @@ describe('BolusTooltip', () => {
     it('should return a div for Animas extended', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimas} />);
       expect(shallow(wrapper.instance().animasExtendedAnnotationMessage()).type()).to.equal('div');
+    });
+    it('should return null for normal bolus', () => {
+      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
+      expect(wrapper.instance().animasExtendedAnnotationMessage()).to.be.null;
+    });
+  });
+
+  describe('medronicDeconvertedExchangeMessage', () => {
+    it('should return a div for Medtronic deconverted carb-to-exchange ratio', () => {
+      const wrapper = mount(<BolusTooltip {...props} bolus={deconvertedCarbExchangeRatioMedtronic} />);
+      expect(shallow(wrapper.instance().medronicDeconvertedExchangeMessage()).type()).to.equal('div');
     });
     it('should return null for normal bolus', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);

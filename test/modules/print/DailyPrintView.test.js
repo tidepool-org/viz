@@ -342,7 +342,10 @@ describe('DailyPrintView', () => {
           averageGlucose: 120,
         },
         carbs: {
-          carbs: 10.2,
+          carbs: {
+            grams: 10.2,
+            exchanges: 2.45,
+          },
         },
         timeInRange: {
           target: MS_IN_HOUR * 3,
@@ -414,7 +417,7 @@ describe('DailyPrintView', () => {
 
     it('should render the total carbs intake', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Total Carbs');
-      sinon.assert.calledWith(Renderer.doc.text, '10 g');
+      sinon.assert.calledWith(Renderer.doc.text, '10 g, 2.5 exch');
     });
 
     context('mmol/L support', () => {
@@ -730,7 +733,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb Exch.');
+      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
 
       // All of the bolus visual elements are called by renderEventPath
@@ -756,7 +759,7 @@ describe('DailyPrintView', () => {
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carb Exch.');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch');
 
       // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
       sinon.assert.callCount(Renderer.doc.circle, 13);
