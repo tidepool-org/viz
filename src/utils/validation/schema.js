@@ -120,7 +120,7 @@ const normalBolus = {
   duration: forbidden,
   extended: forbidden,
   expectedExtended: forbidden,
-  subType: { type: 'string', enum: ['normal'] },
+  subType: { type: 'string', enum: ['normal', 'automated'] },
   wizard: { type: 'string', pattern: patterns.id, ...optional },
 };
 
