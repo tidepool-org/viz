@@ -2329,28 +2329,28 @@ describe('DataUtil', () => {
     });
 
     it('should set a list of deviceEvents datums that represent incomplete suspends', () => {
-      const deviceEventData = [
+      const deviceEvents = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [] },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }] },
       ];
 
-      initDataUtil(deviceEventData);
+      initDataUtil(deviceEvents);
       delete(dataUtil.incompleteSuspends);
 
       dataUtil.setIncompleteSuspends();
       expect(dataUtil.incompleteSuspends).to.be.an('array');
-      expect(dataUtil.incompleteSuspends[0].id).to.equal(deviceEventData[1].id);
+      expect(dataUtil.incompleteSuspends[0].id).to.equal(deviceEvents[1].id);
     });
   });
 
   describe('setSize', () => {
     it('should set the size property to the current data count', () => {
-      const deviceEventData = [
+      const deviceEvents = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [] },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }] },
       ];
 
-      initDataUtil(deviceEventData);
+      initDataUtil(deviceEvents);
       delete(dataUtil.size);
 
       dataUtil.setSize();
@@ -2360,12 +2360,12 @@ describe('DataUtil', () => {
 
   describe('setDevices', () => {
     it('should set the devices of the current data set', () => {
-      const deviceEventData = [
+      const deviceEvents = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [], deviceId: 'device1' },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }], deviceId: 'device2' },
       ];
 
-      initDataUtil(deviceEventData);
+      initDataUtil(deviceEvents);
       delete(dataUtil.devices);
 
       dataUtil.setDevices();
