@@ -13,7 +13,7 @@ import {
 
 /* eslint-disable max-len */
 
-describe.skip('stat', () => {
+describe('stat', () => {
   const {
     commonStats,
     dailyDoseUnitOptions,
@@ -89,6 +89,7 @@ describe.skip('stat', () => {
         sensorUsage: 'sensorUsage',
         standardDev: 'standardDev',
         timeInAuto: 'timeInAuto',
+        timeInOverride: 'timeInOverride',
         timeInRange: 'timeInRange',
         totalInsulin: 'totalInsulin',
       });
@@ -108,6 +109,7 @@ describe.skip('stat', () => {
         sensorUsage: 'getSensorUsage',
         standardDev: 'getStandardDevData',
         timeInAuto: 'getTimeInAutoData',
+        timeInOverride: 'getTimeInOverrideData',
         timeInRange: 'getTimeInRangeData',
         totalInsulin: 'getBasalBolusData',
       });
@@ -940,6 +942,22 @@ describe.skip('stat', () => {
       });
     });
 
+    describe('timeInOverride', () => {
+      it('should return annotations for `timeInOverride` stat when viewing a single day of data', () => {
+        expect(stat.getStatAnnotations(data, commonStats.timeInOverride, singleDayOpts)).to.have.ordered.members([
+          '**Time In Settings Override:** Time spent in a settings override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in Settings Override.',
+        ]);
+      });
+
+      it('should return annotations for `timeInOverride` stat when viewing multiple days of data', () => {
+        expect(stat.getStatAnnotations(data, commonStats.timeInOverride, multiDayOpts)).to.have.ordered.members([
+          '**Time In Settings Override:** Daily average of the time spent in a settings override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in Settings Override.',
+        ]);
+      });
+    });
+
     describe('timeInRange', () => {
       it('should return annotations for `timeInRange` stat when viewing a single day of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInRange, singleDayOpts)).to.have.ordered.members([
@@ -1342,6 +1360,37 @@ describe.skip('stat', () => {
       });
     });
 
+    it('should format and return `timeInOverride` data', () => {
+      const data = {
+        physicalActivity: 20000,
+        sleep: 100000,
+      };
+
+      const statData = stat.getStatData(data, commonStats.timeInOverride, opts);
+
+      expect(statData.data).to.eql([
+        {
+          id: 'physicalActivity',
+          value: 20000,
+          title: 'Time In Exercise',
+          legendTitle: 'Exercise',
+        },
+        {
+          id: 'sleep',
+          value: 100000,
+          title: 'Time In Sleep',
+          legendTitle: 'Sleep',
+        },
+      ]);
+
+      expect(statData.sum).to.eql({ value: 120000 });
+      expect(statData.total).to.eql({ value: MS_IN_DAY });
+
+      expect(statData.dataPaths).to.eql({
+        summary: 'sum',
+      });
+    });
+
     it('should format and return `timeInRange` data', () => {
       const data = {
         veryLow: 10000,
@@ -1533,6 +1582,16 @@ describe.skip('stat', () => {
       });
     });
 
+    describe('timeInOverride', () => {
+      it('should return title for `timeInOverride` stat when viewing a single day of data', () => {
+        expect(stat.getStatTitle(commonStats.timeInOverride, singleDayOpts)).to.equal('Time In Settings Override');
+      });
+
+      it('should return title for `timeInOverride` stat when viewing multiple days of data', () => {
+        expect(stat.getStatTitle(commonStats.timeInOverride, multiDayOpts)).to.equal('Avg. Daily Time In Settings Override');
+      });
+    });
+
     describe('timeInRange', () => {
       it('should return title for `timeInRange` stat when viewing a single day of data', () => {
         expect(stat.getStatTitle(commonStats.timeInRange, singleDayOpts)).to.equal('Time In Range');
@@ -1692,6 +1751,19 @@ describe.skip('stat', () => {
       expect(def.alwaysShowTooltips).to.be.true;
     });
 
+    it('should define the `timeInOverride` stat', () => {
+      const def = stat.getStatDefinition(data, commonStats.timeInOverride, opts);
+      expect(def).to.include.all.keys(commonStatProperties);
+      expect(def.id).to.equal(commonStats.timeInOverride);
+      expect(def.type).to.equal(statTypes.barHorizontal);
+      expect(def.dataFormat).to.eql({
+        label: statFormats.percentage,
+        summary: statFormats.percentage,
+        tooltip: statFormats.duration,
+      });
+      expect(def.alwaysShowTooltips).to.be.true;
+    });
+
     it('should define the `timeInRange` stat', () => {
       const def = stat.getStatDefinition(data, commonStats.timeInRange, opts);
       expect(def).to.include.all.keys(commonStatProperties);
@@ -1752,6 +1824,8 @@ describe.skip('stat', () => {
     const readingsInRange = { ...defaultStat, id: 'readingsInRange', title: 'readingsInRange' };
     const totalInsulin = { ...defaultStat, id: 'totalInsulin', title: 'totalInsulin' };
     const timeInAuto = { ...defaultStat, id: 'timeInAuto', title: 'timeInAuto' };
+    const timeInOverride = { ...defaultStat, id: 'timeInOverride', title: 'timeInOverride' };
+    const bgExtents = { ...defaultStat, id: 'bgExtents', title: 'bgExtents' };
 
     // Stats formatted as lines
     const averageGlucose = { ...defaultStat, id: 'averageGlucose', title: 'averageGlucose' };
@@ -1767,6 +1841,8 @@ describe.skip('stat', () => {
       readingsInRange,
       totalInsulin,
       timeInAuto,
+      timeInOverride,
+      bgExtents,
       averageGlucose,
       averageDailyDose,
       carbs,
@@ -1803,14 +1879,18 @@ describe.skip('stat', () => {
         readingsInRange,
         totalInsulin,
         timeInAuto,
+        timeInOverride,
+        bgExtents,
       ], textUtil, defaultBgPrefs);
 
-      sinon.assert.callCount(textUtil.buildTextTable, 4);
+      sinon.assert.callCount(textUtil.buildTextTable, 6);
       sinon.assert.callCount(textUtil.buildTextLine, 0);
       sinon.assert.calledWith(textUtil.buildTextTable, 'timeInRange');
       sinon.assert.calledWith(textUtil.buildTextTable, 'readingsInRange');
       sinon.assert.calledWith(textUtil.buildTextTable, 'totalInsulin');
       sinon.assert.calledWith(textUtil.buildTextTable, 'timeInAuto');
+      sinon.assert.calledWith(textUtil.buildTextTable, 'timeInOverride');
+      sinon.assert.calledWith(textUtil.buildTextTable, 'bgExtents');
 
       expect(result).to.be.a('string').and.include('text table');
     });
@@ -1844,7 +1924,7 @@ describe.skip('stat', () => {
 
       stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
 
-      sinon.assert.callCount(formatDatumSpy, 11);
+      sinon.assert.callCount(formatDatumSpy, 13);
       sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
 
       formatDatumSpy.restore();

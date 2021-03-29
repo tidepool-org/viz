@@ -57,7 +57,7 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
  * @returns {Boolean}
  */
 export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
-  return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 16) >= 105900;
+  return manufacturer === 'tandem' && parseInt(pumpSettings.firmwareVersion, 10) >= 105900;
 }
 
 /**

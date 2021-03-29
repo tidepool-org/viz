@@ -79,7 +79,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
     let dimensions;
     let title = '';
     let summaryTitle;
-    let emptyText;
     const active = true;
     let perRow = 3;
 
@@ -149,7 +148,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
     sections[section] = {
       active,
       dimensions,
-      emptyText,
       perRow,
       summaryTitle,
       title,

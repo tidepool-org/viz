@@ -68,10 +68,10 @@ PumpSettingsOverrideTooltip.propTypes = {
   borderColor: PropTypes.string,
   borderWidth: PropTypes.number.isRequired,
   override: PropTypes.shape({
-    duration: PropTypes.number.isRequired,
+    normalEnd: PropTypes.number.isRequired,
+    normalTime: PropTypes.number.isRequired,
     overrideType: PropTypes.string.isRequired,
     source: PropTypes.string.isRequired,
-    normalTime: PropTypes.number.isRequired,
   }).isRequired,
   timePrefs: PropTypes.object.isRequired,
 };

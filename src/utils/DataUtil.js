@@ -1360,8 +1360,6 @@ export class DataUtil {
           }
         };
 
-        // _.each(typeData, d => this.normalizeDatumOut(d, fields));
-
         if (this.activeRange === 'prev') {
           trimOverlappingStart();
         } else if (this.activeRange === 'next') {

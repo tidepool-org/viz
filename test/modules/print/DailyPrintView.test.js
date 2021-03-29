@@ -134,7 +134,10 @@ describe('DailyPrintView', () => {
         } },
         { prop: 'chartArea', type: 'object' },
         { prop: 'isAutomatedBasalDevice', type: 'boolean' },
+        { prop: 'isAutomatedBolusDevice', type: 'boolean' },
+        { prop: 'hasCarbExchanges', type: 'boolean' },
         { prop: 'basalGroupLabels', type: 'object' },
+        { prop: 'pumpSettingsOverrideLabels', type: 'object' },
         { prop: 'initialChartArea', type: 'object', value: {
           bottomEdge: opts.margins.top + opts.height,
           leftEdge: opts.margins.left +
@@ -278,16 +281,36 @@ describe('DailyPrintView', () => {
         type: 'programmed',
       };
 
+      const automatedPath = {
+        d: 'automatedPath',
+        type: 'programmed',
+        subType: 'automated',
+      };
+
       Renderer.renderEventPath(path);
       sinon.assert.calledWith(Renderer.doc.path, path.d);
       sinon.assert.calledOnce(Renderer.doc.path);
       sinon.assert.calledOnce(Renderer.doc.fill);
 
+      Renderer.doc.path.resetHistory();
+      Renderer.doc.fill.resetHistory();
+
       Renderer.renderEventPath(programmedPath);
       sinon.assert.calledWith(Renderer.doc.path, programmedPath.d);
-      sinon.assert.calledTwice(Renderer.doc.path);
+      sinon.assert.calledOnce(Renderer.doc.path);
       sinon.assert.calledOnce(Renderer.doc.lineWidth);
       sinon.assert.calledOnce(Renderer.doc.dash);
+      sinon.assert.calledOnce(Renderer.doc.stroke);
+
+      Renderer.doc.path.resetHistory();
+      Renderer.doc.lineWidth.resetHistory();
+      Renderer.doc.dash.resetHistory();
+      Renderer.doc.stroke.resetHistory();
+
+      Renderer.renderEventPath(automatedPath);
+      sinon.assert.calledWith(Renderer.doc.path, automatedPath.d);
+      sinon.assert.calledOnce(Renderer.doc.path);
+      sinon.assert.calledOnce(Renderer.doc.lineWidth);
       sinon.assert.calledOnce(Renderer.doc.stroke);
     });
   });
@@ -304,13 +327,15 @@ describe('DailyPrintView', () => {
       sinon.stub(Renderer, 'renderBolusDetails').returns(Renderer);
       sinon.stub(Renderer, 'renderBasalPaths').returns(Renderer);
       sinon.stub(Renderer, 'renderBasalRates').returns(Renderer);
+      sinon.stub(Renderer, 'renderPumpSettingsOverrides').returns(Renderer);
       sinon.stub(Renderer, 'renderChartDivider').returns(Renderer);
+      sinon.stub(Renderer, 'goToPage');
 
       const numCharts = _.keys(Renderer.chartsByDate).length;
 
       Renderer.render();
 
-      sinon.assert.callCount(Renderer.doc.switchToPage, numCharts);
+      sinon.assert.callCount(Renderer.goToPage, numCharts);
 
       sinon.assert.callCount(Renderer.renderSummary, numCharts);
       sinon.assert.callCount(Renderer.renderXAxes, numCharts);
@@ -322,6 +347,7 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.renderBolusDetails, numCharts);
       sinon.assert.callCount(Renderer.renderBasalPaths, numCharts);
       sinon.assert.callCount(Renderer.renderBasalRates, numCharts);
+      sinon.assert.callCount(Renderer.renderPumpSettingsOverrides, numCharts);
       sinon.assert.callCount(Renderer.renderChartDivider, numCharts);
     });
   });
@@ -702,6 +728,25 @@ describe('DailyPrintView', () => {
     });
   });
 
+  describe('renderPumpSettingsOverrides', () => {
+    it('should render basal group markers', () => {
+      const deviceEventData = Renderer.chartsByDate[sampleDate].data.deviceEvent;
+      const overrideData = _.filter(deviceEventData, { subType: 'pumpSettingsOverride' });
+
+      Renderer.renderPumpSettingsOverrides(Renderer.chartsByDate[sampleDate]);
+
+      expect(overrideData.length).to.equal(2);
+
+      const expectedMarkersCount = 2;
+
+      sinon.assert.callCount(Renderer.doc.circle, expectedMarkersCount);
+      sinon.assert.callCount(Renderer.doc.lineTo, expectedMarkersCount * 2);
+      sinon.assert.callCount(Renderer.doc.text, expectedMarkersCount);
+      sinon.assert.calledWith(Renderer.doc.text, 'E');
+      sinon.assert.calledWith(Renderer.doc.text, 'Z');
+    });
+  });
+
   describe('renderChartDivider', () => {
     it('should not render a chart divider if it\'s not the last one on a page', () => {
       Renderer.renderChartDivider(Renderer.chartsByDate['2017-01-01']);
@@ -763,6 +808,18 @@ describe('DailyPrintView', () => {
 
       // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
       sinon.assert.callCount(Renderer.doc.circle, 13);
+    });
+
+    it('should render the legend with automated boluses when pump is an automated bolus device', () => {
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.isAutomatedBolusDevice = true;
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
+      sinon.assert.calledWith(Renderer.doc.text, 'manual & automated');
     });
   });
 });

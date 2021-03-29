@@ -434,6 +434,21 @@ describe('PrintView', () => {
     });
   });
 
+  describe('goToPage', () => {
+    it('should set `currentPageIndex` to the provided index', () => {
+      Renderer.initialTotalPages = 0;
+      Renderer.currentPageIndex = 2;
+      Renderer.goToPage(1);
+      expect(Renderer.currentPageIndex).to.equal(1);
+    });
+
+    it('should call `doc.switchToPage` with the provided index + initialTotalPages ', () => {
+      Renderer.initialTotalPages = 2;
+      Renderer.goToPage(1);
+      sinon.assert.calledWith(Renderer.doc.switchToPage, 3);
+    });
+  });
+
   describe('getShortestLayoutColumn', () => {
     it('should return the index of the column with the top-most y position', () => {
       Renderer.doc.y = 100;
