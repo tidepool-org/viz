@@ -134,7 +134,7 @@ class DailyPrintView extends PrintView {
         underride: undelivered,
         underrideTriangle: 'white',
       },
-      carbs: '#FFD47C',
+      carbs: '#F8D48E',
       carbExchanges: '#FFB686',
       lightDividers: '#D8D8D8',
     });
@@ -1036,7 +1036,7 @@ class DailyPrintView extends PrintView {
             ? this.basalGroupLabels.automated.charAt(0)
             : this.basalGroupLabels.manual.charAt(0);
 
-          const labelColor = isAutomated ? this.colors.darkGrey : 'white';
+          const labelColor = 'white';
 
           const labelWidth = this.doc
             .fontSize(5)
