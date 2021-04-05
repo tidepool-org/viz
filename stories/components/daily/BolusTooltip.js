@@ -34,6 +34,12 @@ const immediatelyCancelled = {
   subType: 'normal',
 };
 
+const automated = {
+  normal: 5,
+  subType: 'automated',
+  normalTime: '2017-11-11T05:45:52.000Z',
+};
+
 const override = {
   type: 'wizard',
   bolus: {
@@ -475,6 +481,12 @@ storiesOf('BolusTooltip', module)
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={immediatelyCancelled} />
+    </div>
+  ))
+  .add('automated', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={automated} />
     </div>
   ))
   .add('override', () => (

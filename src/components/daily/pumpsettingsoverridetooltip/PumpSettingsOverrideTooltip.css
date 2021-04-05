@@ -1,0 +1,40 @@
+ @import '../../../styles/colors.css';
+
+ .container {
+   opacity: 1;
+   display: flex;
+   flex-direction: column;
+   min-width: 80px;
+   margin: 2px 0;
+   max-width: 180px;
+ }
+
+ .row {
+   composes: smallSize from '../../../styles/typography.css';
+   display: flex;
+   flex-direction: row;
+   justify-content: space-between;
+   line-height: 20px;
+ }
+
+ .label {
+   flex-grow: 1;
+ }
+
+ .value {
+   margin-left: 20px;
+ }
+
+ .title {
+   composes: smallSize from '../../../styles/typography.css';
+   text-align: center;
+ }
+
+ .overrideType {
+   composes: row;
+   font-weight: normal;
+ }
+
+ .overrideType div:last-child {
+   font-weight: bold;
+ }

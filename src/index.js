@@ -29,6 +29,7 @@ import PumpSettingsContainer from './components/settings/common/PumpSettingsCont
 import TrendsContainer from './components/trends/common/TrendsContainer';
 import Tooltip from './components/common/tooltips/Tooltip';
 import BolusTooltip from './components/daily/bolustooltip/BolusTooltip';
+import PumpSettingsOverrideTooltip from './components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import SMBGTooltip from './components/daily/smbgtooltip/SMBGTooltip';
 import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
@@ -37,7 +38,6 @@ import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 import { formatBgValue } from './utils/format';
 import { reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
-import { isAutomatedBasalDevice } from './utils/device';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
 import {
@@ -81,6 +81,7 @@ const components = {
   TwoOptionToggle,
   Tooltip,
   BolusTooltip,
+  PumpSettingsOverrideTooltip,
   SMBGTooltip,
   Stat,
   CBGTooltip,
@@ -108,9 +109,6 @@ const utils = {
     findBasicsStart,
     getLocalizedCeiling,
     getTimezoneFromTimePrefs,
-  },
-  device: {
-    isAutomatedBasalDevice,
   },
   stat: {
     commonStats,

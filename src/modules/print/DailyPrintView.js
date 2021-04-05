@@ -57,10 +57,12 @@ import {
 } from '../../utils/format';
 
 import {
+  AUTOMATED_DELIVERY,
   MMOLL_UNITS,
   MS_IN_MIN,
-  AUTOMATED_DELIVERY,
+  PHYSICAL_ACTIVITY,
   SCHEDULED_DELIVERY,
+  SLEEP,
 } from '../../utils/constants';
 
 import {
@@ -77,6 +79,7 @@ class DailyPrintView extends PrintView {
     super(doc, data, opts);
 
     this.isAutomatedBasalDevice = _.get(this, 'latestPumpUpload.isAutomatedBasalDevice', false);
+    this.isAutomatedBolusDevice = _.get(this, 'latestPumpUpload.isAutomatedBolusDevice', false);
 
     this.hasCarbExchanges = _.some(
       _.get(data, 'data.current.data.wizard', []),
@@ -88,6 +91,11 @@ class DailyPrintView extends PrintView {
     this.basalGroupLabels = {
       automated: deviceLabels[AUTOMATED_DELIVERY],
       manual: deviceLabels[SCHEDULED_DELIVERY],
+    };
+
+    this.pumpSettingsOverrideLabels = {
+      [SLEEP]: deviceLabels[SLEEP],
+      [PHYSICAL_ACTIVITY]: deviceLabels[PHYSICAL_ACTIVITY],
     };
 
     this.bgAxisFontSize = 5;
@@ -113,6 +121,7 @@ class DailyPrintView extends PrintView {
     this.colors = _.assign(this.colors, {
       axes: '#858585',
       bolus: {
+        automated: '#B2B2B2',
         delivered: 'black',
         extendedPath: 'black',
         extendedExpectationPath: undelivered,
@@ -125,7 +134,7 @@ class DailyPrintView extends PrintView {
         underride: undelivered,
         underrideTriangle: 'white',
       },
-      carbs: '#FFD47C',
+      carbs: '#F8D48E',
       carbExchanges: '#FFB686',
       lightDividers: '#D8D8D8',
     });
@@ -203,8 +212,7 @@ class DailyPrintView extends PrintView {
   }
 
   newPage() {
-    const pageIndex = this.currentPageIndex + this.initialTotalPages + 1;
-    const charts = _.filter(this.chartsByDate, chart => chart.page === pageIndex);
+    const charts = _.filter(this.chartsByDate, chart => chart.page === this.currentPageIndex + 1);
     const start = _.head(charts).date;
     const end = _.last(charts).date;
 
@@ -327,7 +335,7 @@ class DailyPrintView extends PrintView {
     }
     for (let i = startingIndexThisPage; i < startingIndexThisPage + chartsOnThisPage; ++i) {
       const chart = this.chartsByDate[dates[i]];
-      chart.page = this.totalPages;
+      chart.page = this.currentPageIndex + 1;
       if (i === startingIndexThisPage) {
         chart.topEdge = this.chartArea.topEdge;
         chart.bottomEdge = this.chartArea.topEdge + chart.chartHeight;
@@ -345,19 +353,25 @@ class DailyPrintView extends PrintView {
 
   renderEventPath(path) {
     if (path.type === 'programmed') {
-      this.doc.path(path.d)
-        .lineWidth(0.5)
-        .dash(0.5, { space: 1 })
-        .stroke(this.colors.bolus[path.type]);
+      if (path.subType === 'automated') {
+        this.doc.path(path.d)
+          .lineWidth(0.5)
+          .stroke(this.colors.bolus[path.type]);
+      } else {
+        this.doc.path(path.d)
+          .lineWidth(0.5)
+          .dash(0.5, { space: 1 })
+          .stroke(this.colors.bolus[path.type]);
+      }
     } else {
       this.doc.path(path.d)
-        .fill(this.colors.bolus[path.type]);
+        .fill(_.get(this.colors.bolus, path.subType, this.colors.bolus[path.type]));
     }
   }
 
   render() {
     _.each(this.chartsByDate, (dateChart) => {
-      this.doc.switchToPage(dateChart.page);
+      this.goToPage(dateChart.page);
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
         .renderYAxes(dateChart)
@@ -368,6 +382,7 @@ class DailyPrintView extends PrintView {
         .renderBolusDetails(dateChart)
         .renderBasalPaths(dateChart)
         .renderBasalRates(dateChart)
+        .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
     });
   }
@@ -1021,7 +1036,7 @@ class DailyPrintView extends PrintView {
             ? this.basalGroupLabels.automated.charAt(0)
             : this.basalGroupLabels.manual.charAt(0);
 
-          const labelColor = isAutomated ? this.colors.darkGrey : 'white';
+          const labelColor = 'white';
 
           const labelWidth = this.doc
             .fontSize(5)
@@ -1048,6 +1063,78 @@ class DailyPrintView extends PrintView {
         }
       });
     }
+
+    return this;
+  }
+
+  renderPumpSettingsOverrides({ basalScale, data: { deviceEvent }, xScale, utcBounds }) {
+    const overrideData = _.filter(deviceEvent, { subType: 'pumpSettingsOverride' });
+
+    const isFabricatedNewDayOverride = datum => _.includes(
+      _.map(_.get(datum, 'annotations', []), 'code'),
+      'tandem/pumpSettingsOverride/fabricated-from-new-day'
+    );
+
+    // Because the new datums are fabricated at upload when they cross midnight, we stitch them
+    // together by adding the fabricated datum's duration to the previous one, so long as the
+    // previous one is not also a fabricated datum.
+    const stitchedData = _.reduce(overrideData, (res, datum) => {
+      const prevDatum = res[res.length - 1];
+
+      if (prevDatum && (
+        isFabricatedNewDayOverride(datum) && !isFabricatedNewDayOverride(prevDatum))
+      ) {
+        res[res.length - 1].normalEnd = datum.normalEnd;
+        res[res.length - 1].duration += datum.duration;
+      } else {
+        res.push(datum);
+      }
+
+      return res;
+    }, []);
+
+    _.each(stitchedData, datum => {
+      const overrideStart = _.max([datum.normalTime, utcBounds[0]]);
+      const overrideEnd = _.min([datum.normalTime + datum.duration, utcBounds[1]]);
+      const xPos = xScale(overrideStart);
+      const yPos = basalScale.range()[1] + this.markerRadius + 1;
+      const bottomOfScale = basalScale.range()[0];
+      const label = _.get(this.pumpSettingsOverrideLabels, [datum.overrideType, 'marker'], (datum.overrideType || 'O').toUpperCase()).charAt(0);
+      const labelColor = 'white';
+      const color = this.colors[datum.overrideType];
+
+      const labelWidth = this.doc
+        .fontSize(5)
+        .widthOfString(label);
+
+      this.doc
+        .circle(xPos, yPos, this.markerRadius)
+        .fillColor(color)
+        .fillOpacity(1)
+        .fill();
+
+      this.doc
+        .moveTo(xPos, yPos)
+        .lineWidth(0.75)
+        .lineTo(xPos, bottomOfScale)
+        .stroke(color);
+
+      this.doc
+        .moveTo(xPos, yPos)
+        .lineWidth(0.5)
+        .lineTo(xScale(overrideEnd), yPos)
+        .dash(1, { space: 2 })
+        .stroke(color);
+
+      this.doc.undash();
+
+      this.doc
+        .fillColor(labelColor)
+        .text(label, xPos - (labelWidth / 2), yPos - 2, {
+          width: labelWidth,
+          align: 'center',
+        });
+    });
 
     return this;
   }
@@ -1085,8 +1172,13 @@ class DailyPrintView extends PrintView {
 
     const legendVerticalMiddle = legendTop + lineHeight * 2;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
-    const legendItemLeftOffset = 9;
-    const legendItemLabelOffset = 4.5;
+    let legendItemLeftOffset = 9;
+    let legendItemLabelOffset = 4.5;
+
+    if (this.isAutomatedBolusDevice) {
+      legendItemLeftOffset = 7;
+      legendItemLabelOffset = 4;
+    }
 
     let cursor = this.margins.left + legendItemLeftOffset;
 
@@ -1163,9 +1255,30 @@ class DailyPrintView extends PrintView {
     _.each(normalPaths, (path) => {
       this.renderEventPath(path);
     });
-    cursor += this.bolusWidth + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
-    cursor += this.doc.widthOfString(t('Bolus')) + legendItemLeftOffset * 2;
+
+    if (this.isAutomatedBolusDevice) {
+      const automatedPaths = getBolusPaths(
+        { normal: 6, normalTime: 5, subType: 'automated' },
+        normalBolusXScale,
+        legendBolusYScale,
+        bolusOpts
+      );
+      _.each(automatedPaths, (path) => {
+        this.renderEventPath(path);
+      });
+
+      cursor += this.bolusWidth * 3 + legendItemLabelOffset;
+      this.doc
+        .fillColor('black')
+        .text(t('Bolus'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
+        .text(t('manual & automated'));
+
+      cursor += this.doc.widthOfString(t('manual & automated')) + legendItemLeftOffset * 2;
+    } else {
+      cursor += this.bolusWidth + legendItemLabelOffset;
+      this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
+      cursor += this.doc.widthOfString(t('Bolus')) + legendItemLeftOffset * 2;
+    }
 
     // underride & override boluses
     const rideBolusXScale = scaleLinear()
@@ -1211,9 +1324,20 @@ class DailyPrintView extends PrintView {
     _.each(underridePaths, (path) => {
       this.renderEventPath(path);
     });
+
     cursor += this.bolusWidth * 3 + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Override up & down'), cursor, legendTextMiddle);
-    cursor += this.doc.widthOfString(t('Override up & down')) + legendItemLeftOffset * 2;
+
+    if (this.isAutomatedBolusDevice) {
+      this.doc
+        .fillColor('black')
+        .text(t('Override'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
+        .text(t('up & down'));
+
+      cursor += this.doc.widthOfString(t('up & down')) + legendItemLeftOffset * 2;
+    } else {
+      this.doc.fillColor('black').text(t('Override up & down'), cursor, legendTextMiddle);
+      cursor += this.doc.widthOfString(t('Override up & down')) + legendItemLeftOffset * 2;
+    }
 
     // interrupted bolus
     const interruptedBolusXScale = scaleLinear()
@@ -1395,7 +1519,10 @@ class DailyPrintView extends PrintView {
       xScale: legendBasalXScale,
     });
     cursor += 50 + legendItemLabelOffset;
-    this.doc.fillColor('black').text(t('Basals'), cursor, legendTextMiddle);
+    this.doc
+      .fontSize(this.smallFontSize)
+      .fillColor('black')
+      .text(t('Basals'), cursor, legendTextMiddle);
 
     return this;
   }

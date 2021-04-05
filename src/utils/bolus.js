@@ -361,6 +361,17 @@ export function isCorrection(insulinEvent) {
 }
 
 /**
+ * isAutomated
+ * @param {Object} insulinEvent - a Tidepool bolus or wizard object
+ *
+ * @return {Boolean} whether the bolus was automated
+ */
+export function isAutomated(insulinEvent) {
+  const bolus = getBolusFromInsulinEvent(insulinEvent);
+  return _.get(bolus, 'subType') === 'automated';
+}
+
+/**
  * getAnnoations
  * @param {Object} insulinEvent - a Tidebool bolus or wizard object
  *

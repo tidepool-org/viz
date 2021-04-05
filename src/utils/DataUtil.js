@@ -7,10 +7,13 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isAutomatedBasalDevice,
+  isAutomatedBolusDevice,
+  isSettingsOverrideDevice,
 } from './device';
 
 import {
   hasExtended,
+  isAutomated,
   isCorrection,
   isInterruptedBolus,
   isOverride,
@@ -252,10 +255,11 @@ export class DataUtil {
 
     if (d.type === 'bolus') {
       d.tags = {
+        automated: isAutomated(d),
         correction: isCorrection(d),
         extended: hasExtended(d),
         interrupted: isInterruptedBolus(d),
-        manual: !d.wizard,
+        manual: !d.wizard && !isAutomated(d),
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!d.wizard,
@@ -410,6 +414,10 @@ export class DataUtil {
 
     if (d.type === 'bolus') {
       if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard, fields);
+    }
+
+    if (d.type === 'deviceEvent') {
+      if (_.isFinite(d.duration)) d.normalEnd = d.normalTime + d.duration;
     }
 
     if (d.type === 'fill') {
@@ -697,7 +705,9 @@ export class DataUtil {
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, deviceModel);
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettings, deviceModel);
+      const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettings);
+      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettings);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
@@ -707,6 +717,8 @@ export class DataUtil {
       this.latestPumpUpload = {
         deviceModel,
         isAutomatedBasalDevice: pumpIsAutomatedBasalDevice,
+        isAutomatedBolusDevice: pumpIsAutomatedBolusDevice,
+        isSettingsOverrideDevice: pumpIsSettingsOverrideDevice,
         manufacturer,
         settings: latestPumpSettings,
       };
@@ -1308,35 +1320,54 @@ export class DataUtil {
       const returnAllFields = fields[0] === '*';
 
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
+      _.each(typeData, d => this.normalizeDatumOut(d, fields));
 
       // Normalize data
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
-      if (type === 'basal' && _.includes(['prev', 'next'], this.activeRange)) {
+      if (_.includes(['basal', 'deviceEvent'], type)) {
         typeData = this.sort.byTime(typeData);
-        if (this.activeRange === 'prev') {
-          // Normalize the basal data and add any basals overlapping the start
-          typeData = this.addBasalOverlappingStart(typeData, fields);
 
-          // Trim the first basal if it overlaps the start
-          if (typeData.length) {
+        const trimOverlappingStart = () => {
+          // Normalize the data data and add any datums overlapping the start
+          let data = _.cloneDeep(typeData || []);
+          if (type === 'deviceEvent') data = _.filter(data, { subType: 'pumpSettingsOverride' });
+
+          const initalDataLength = data.length;
+
+          data = type === 'deviceEvent'
+            ? this.addPumpSettingsOverrideOverlappingStart(data, fields)
+            : this.addBasalOverlappingStart(data, fields);
+
+          if (data.length > initalDataLength) typeData.unshift(data[0]);
+
+          // Trim the first datum if it overlaps the start
+          if (typeData.length && _.isFinite(typeData[0].duration)) {
             typeData[0].normalTime = _.max([
               typeData[0].normalTime,
               this.activeEndpoints.range[0],
             ]);
           }
-        } else {
-          _.each(typeData, d => this.normalizeDatumOut(d, fields));
+        };
 
-          // Trim last basal if it overlaps the range end
-          if (typeData.length) {
-            typeData[typeData.length - 1].normalEnd = _.min([
-              typeData[typeData.length - 1].normalEnd,
+        const trimOverlappingEnd = () => {
+          // Trim last datum if it has a duration that overlaps the range end
+          const indexOfLastDurationDatum = _.findLastIndex(typeData, d => _.isFinite(d.duration));
+          if (indexOfLastDurationDatum > -1) {
+            typeData[indexOfLastDurationDatum].normalEnd = _.min([
+              typeData[indexOfLastDurationDatum].normalEnd,
               this.activeEndpoints.range[1],
             ]);
           }
+        };
+
+        if (this.activeRange === 'prev') {
+          trimOverlappingStart();
+        } else if (this.activeRange === 'next') {
+          trimOverlappingEnd();
+        } else if (this.activeRange === 'current') {
+          if (!this.endpoints.prev) trimOverlappingStart();
+          if (!this.endpoints.next) trimOverlappingEnd();
         }
-      } else {
-        _.each(typeData, d => this.normalizeDatumOut(d, fields));
       }
       this.endTimer(`normalize | ${type} | ${this.activeRange}`);
 
@@ -1370,7 +1401,9 @@ export class DataUtil {
   };
 
   addBasalOverlappingStart = (basalData, normalizeFields) => {
-    _.each(basalData, d => this.normalizeDatumOut(d, normalizeFields));
+    _.each(basalData, d => {
+      if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
+    });
 
     if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {
       // We need to ensure all the days of the week are active to ensure we get all basals
@@ -1403,7 +1436,51 @@ export class DataUtil {
       this.filter.byEndpoints(this.activeEndpoints.range);
       this.filter.byActiveDays(this.activeDays);
     }
+
     return basalData;
+  };
+
+  addPumpSettingsOverrideOverlappingStart = (pumpSettingsOverrideData, normalizeFields) => {
+    _.each(pumpSettingsOverrideData, d => {
+      if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
+    });
+
+    if (pumpSettingsOverrideData.length
+      && pumpSettingsOverrideData[0].normalTime > this.activeEndpoints.range[0]
+    ) {
+      // We need to ensure all the days of the week are active to ensure we get all basals
+      this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
+
+      // Set the endpoints filter to the previous day
+      this.filter.byEndpoints([
+        this.activeEndpoints.range[0] - MS_IN_DAY,
+        this.activeEndpoints.range[0],
+      ]);
+
+      // Fetch last basal from previous day
+      const previousPumpSettingsOverrideDatum = _.cloneDeep(_.filter(
+        this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity)),
+        { subType: 'pumpSettingsOverride' }
+      ).reverse()[0]);
+
+      if (previousPumpSettingsOverrideDatum) {
+        this.normalizeDatumOut(previousPumpSettingsOverrideDatum, normalizeFields);
+
+        // Add to top of pumpSettingsOverride data array if it overlaps the start endpoint
+        const datumOverlapsStart = previousPumpSettingsOverrideDatum.normalTime < this.activeEndpoints.range[0]
+          && previousPumpSettingsOverrideDatum.normalEnd > this.activeEndpoints.range[0];
+
+        if (datumOverlapsStart) {
+          pumpSettingsOverrideData.unshift(previousPumpSettingsOverrideDatum);
+        }
+      }
+
+      // Reset the endpoints and activeDays filters to the back to what they were
+      this.filter.byEndpoints(this.activeEndpoints.range);
+      this.filter.byActiveDays(this.activeDays);
+    }
+
+    return pumpSettingsOverrideData;
   };
 }
 

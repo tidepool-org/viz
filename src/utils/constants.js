@@ -81,6 +81,9 @@ export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
+export const SETTINGS_OVERRIDE = 'settingsOverride';
+export const SLEEP = 'sleep';
+export const PHYSICAL_ACTIVITY = 'physicalActivity';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
@@ -111,6 +114,11 @@ export const pumpVocabulary = {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
     [SITE_CHANGE_TUBING]: t('Fill Tubing'),
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Activity'),
+    [SLEEP]: { label: t('Sleep'), marker: t('Z') },
+    [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
   },
   default: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
@@ -118,6 +126,9 @@ export const pumpVocabulary = {
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
     [AUTOMATED_DELIVERY]: t('Automated'),
     [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Settings Override'),
+    [SLEEP]: { label: t('Sleep'), marker: t('Z') },
+    [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
   },
 };
 

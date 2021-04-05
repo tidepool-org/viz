@@ -287,6 +287,8 @@ export class DeviceEvent extends Common {
       units: 'mg/dL',
       value: 100,
       primeTarget: 'cannula',
+      overrideType: 'sleep',
+      duration: 36e5,
     });
 
     this.type = 'deviceEvent';
@@ -296,12 +298,22 @@ export class DeviceEvent extends Common {
       this.primeTarget = opts.primeTarget;
     }
 
+    if (opts.subType === 'pumpSettingsOverride') {
+      this.overrideType = opts.overrideType;
+      this.duration = opts.duration;
+    }
+
     this.deviceTime = opts.deviceTime;
 
     this.time = this.makeTime();
     this.createdTime = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    if (!opts.raw) this.normalTime = this.makeNormalTime();
+    if (!opts.raw) {
+      this.normalTime = this.makeNormalTime();
+      if (opts.subType === 'pumpSettingsOverride') {
+        this.normalEnd = this.normalTime + duration;
+      }
+    }
   }
 }
 
