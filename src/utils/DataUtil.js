@@ -2,6 +2,7 @@ import bows from 'bows';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import {
   getLatestPumpUpload,
@@ -43,6 +44,8 @@ import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
 import { statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
+
+const t = i18next.t.bind(i18next);
 
 /* global __DEV__ */
 
@@ -783,6 +786,7 @@ export class DataUtil {
   setDevices = () => {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
+
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
       const upload = uploadsById[value];
       let device = { id: key };
@@ -792,13 +796,17 @@ export class DataUtil {
         const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
         const deviceModel = _.get(upload, 'deviceModel', '');
         let label = key;
+
         if (deviceManufacturer || deviceModel) {
           if (deviceManufacturer === 'Dexcom' && isContinuous) {
-            label = 'Dexcom API';
+            label = t('Dexcom API');
           } else {
             label = [deviceManufacturer, deviceModel].join(' ');
           }
         }
+
+        if (key.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
+
         device = {
           bgm: _.includes(upload.deviceTags, 'bgm'),
           cgm: _.includes(upload.deviceTags, 'cgm'),
@@ -812,6 +820,21 @@ export class DataUtil {
       result.push(device);
       return result;
     }, []);
+
+    const allDeviceIds = _.keys(this.deviceUploadMap);
+    const excludedDevices = this.excludedDevices || [];
+
+    _.each(this.devices, device => {
+      if (device.id.indexOf('tandemCIQ') === 0) {
+        // Exclude pre-control-iq tandem uploads by default if we have data from the same device
+        // from a version of uploader supports control-iq data. Otherwise, we have duplicate data.
+        const preCIQDeviceID = device.id.replace('tandemCIQ', 'tandem');
+        if (_.includes(allDeviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
+      }
+    });
+
+    this.setExcludedDevices(excludedDevices);
+
     this.endTimer('setDevices');
   }
   /* eslint-enable no-param-reassign */
@@ -1020,7 +1043,7 @@ export class DataUtil {
     this.returnRawData = returnRaw;
   };
 
-  setExcludedDevices = (deviceIds = []) => {
+  setExcludedDevices = (deviceIds = this.excludedDevices) => {
     this.startTimer('setExcludedDevices');
     this.excludedDevices = deviceIds;
     this.endTimer('setExcludedDevices');
@@ -1252,6 +1275,7 @@ export class DataUtil {
       'patientId',
       'size',
       'devices',
+      'excludedDevices',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
