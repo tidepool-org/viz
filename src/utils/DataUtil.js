@@ -801,7 +801,7 @@ export class DataUtil {
           if (deviceManufacturer === 'Dexcom' && isContinuous) {
             label = t('Dexcom API');
           } else {
-            label = [deviceManufacturer, deviceModel].join(' ');
+            label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }
         }
 
@@ -833,7 +833,7 @@ export class DataUtil {
       }
     });
 
-    this.setExcludedDevices(excludedDevices);
+    this.setExcludedDevices(_.uniq(excludedDevices));
 
     this.endTimer('setDevices');
   }
