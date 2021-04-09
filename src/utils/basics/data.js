@@ -80,7 +80,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
     let title = '';
     let summaryTitle;
     let perRow = 3;
-    const active = true;
 
     switch (section) {
       case 'basals':
@@ -146,7 +145,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
     }
 
     sections[section] = {
-      active,
       dimensions,
       perRow,
       summaryTitle,
