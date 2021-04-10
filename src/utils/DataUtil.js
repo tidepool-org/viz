@@ -78,11 +78,12 @@ export class DataUtil {
   addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
 
-    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
-    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
+    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
+    this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
 
@@ -189,6 +190,7 @@ export class DataUtil {
     if (d.type === 'wizard' && _.isString(d.bolus)) {
       this.wizardDatumsByIdMap[d.id] = d;
       this.bolusToWizardIdMap[d.bolus] = d.id;
+      this.wizardToBolusIdMap[d.id] = d.bolus;
     }
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
@@ -216,10 +218,23 @@ export class DataUtil {
     if (_.includes(['bolus', 'wizard'], d.type)) {
       const isWizard = d.type === 'wizard';
       const fieldToPopulate = isWizard ? 'bolus' : 'wizard';
-      const idMap = isWizard ? _.invert(this.bolusToWizardIdMap) : this.bolusToWizardIdMap;
+      const idMap = isWizard ? this.wizardToBolusIdMap : this.bolusToWizardIdMap;
       const datumMap = isWizard ? this.bolusDatumsByIdMap : this.wizardDatumsByIdMap;
 
-      if (idMap[d.id]) d[fieldToPopulate] = _.omit(datumMap[idMap[d.id]], d.type);
+      if (idMap[d.id]) {
+        const datumToPopulate = _.omit(datumMap[idMap[d.id]], d.type);
+
+        if (isWizard && d.uploadId !== datumToPopulate.uploadId) {
+          // Due to an issue stemming from a fix for wizard datums in Upoader >= v2.35.0, we have a
+          // possibility of duplicates of older wizard datums from previous uploads. The boluses and
+          // corrected wizards should both reference the same uploadId, so we can safely reject
+          // wizards that don't reference the same upload as the bolus it's referencing.
+          d.reject = true;
+          d.rejectReason = ['Upload ID does not match referenced bolus'];
+        } else {
+          d[fieldToPopulate] = datumToPopulate;
+        }
+      }
     }
   };
 

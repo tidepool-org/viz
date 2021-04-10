@@ -373,6 +373,31 @@ describe('DataUtil', () => {
       expect(dataUtil.bolusToWizardIdMap[newBolus.id]).to.equal(newWizard.id);
     });
 
+    it('should create and/or update the `wizardToBolusIdMap`', () => {
+      delete dataUtil.wizardToBolusIdMap;
+      expect(dataUtil.wizardToBolusIdMap).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+      expect(dataUtil.wizardToBolusIdMap).to.be.an('object').and.have.keys([
+        wizardData[0].id,
+        wizardData[1].id,
+        wizardData[2].id,
+      ]);
+
+      const newBolus = new Types.Bolus({ ...useRawData });
+      const newWizard = new Types.Wizard({ bolus: newBolus, ...useRawData });
+      dataUtil.addData([newBolus, newWizard], defaultPatientId);
+
+      expect(dataUtil.wizardToBolusIdMap).to.be.an('object').and.have.keys([
+        wizardData[0].id,
+        wizardData[1].id,
+        wizardData[2].id,
+        newWizard.id,
+      ]);
+
+      expect(dataUtil.wizardToBolusIdMap[newWizard.id]).to.equal(newBolus.id);
+    });
+
     it('should create and/or update the `bolusDatumsByIdMap`', () => {
       delete dataUtil.bolusDatumsByIdMap;
       expect(dataUtil.bolusDatumsByIdMap).to.be.undefined;
@@ -679,6 +704,18 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(wizardWithBolusString);
         expect(dataUtil.bolusToWizardIdMap['12345']).to.equal('2');
       });
+
+      it('should add the datum id to the `wizardToBolusIdMap` with the wizard id as a key if bolus field is a string', () => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+
+        const wizardWithBolusObject = { type: 'wizard', id: '1', bolus: { id: '12345' } };
+        dataUtil.normalizeDatumIn(wizardWithBolusObject);
+        expect(dataUtil.wizardToBolusIdMap['1']).to.be.undefined;
+
+        const wizardWithBolusString = { type: 'wizard', id: '2', bolus: '12345' };
+        dataUtil.normalizeDatumIn(wizardWithBolusString);
+        expect(dataUtil.wizardToBolusIdMap['2']).to.equal('12345');
+      });
     });
 
     context('bolus', () => {
@@ -695,13 +732,27 @@ describe('DataUtil', () => {
   describe('joinWizardAndBolus', () => {
     context('wizard datum', () => {
       it('should replace bolus id with a bolus datum with a stripped `wizard` field', () => {
-        const wizard = { type: 'wizard', id: 'wizard1', bolus: 'bolus1' };
-        const bolus = { type: 'bolus', id: 'bolus1', wizard };
+        const wizard = { type: 'wizard', id: 'wizard1', bolus: 'bolus1', uploadId: '12345' };
+        const bolus = { type: 'bolus', id: 'bolus1', wizard, uploadId: '12345' };
         dataUtil.bolusToWizardIdMap = { bolus1: 'wizard1' };
+        dataUtil.wizardToBolusIdMap = { wizard1: 'bolus1' };
         dataUtil.bolusDatumsByIdMap = { bolus1: bolus };
 
         dataUtil.joinWizardAndBolus(wizard);
-        expect(wizard.bolus).to.eql({ type: 'bolus', id: 'bolus1' });
+        expect(wizard.bolus).to.eql({ type: 'bolus', id: 'bolus1', uploadId: '12345' });
+      });
+
+      it('should reject a wizard datum that references a bolus with a non-matching `uploadId`', () => {
+        const wizard = { type: 'wizard', id: 'wizard1', bolus: 'bolus1', uploadId: '12345' };
+        const bolus = { type: 'bolus', id: 'bolus1', wizard, uploadId: '98765' };
+        dataUtil.bolusToWizardIdMap = { bolus1: 'wizard1' };
+        dataUtil.wizardToBolusIdMap = { wizard1: 'bolus1' };
+        dataUtil.bolusDatumsByIdMap = { bolus1: bolus };
+
+        dataUtil.joinWizardAndBolus(wizard);
+        expect(wizard.bolus).to.eql('bolus1');
+        expect(wizard.reject).to.be.true;
+        expect(wizard.rejectReason).to.eql(['Upload ID does not match referenced bolus']);
       });
     });
 
