@@ -9,7 +9,17 @@ import {
   reshapeBgClassesToBgBounds,
 } from './bloodglucose';
 
-import { BG_COLORS, LBS_PER_KG, AUTOMATED_DELIVERY, SCHEDULED_DELIVERY } from './constants';
+import {
+  AUTOMATED_DELIVERY,
+  BG_COLORS,
+  PHYSICAL_ACTIVITY,
+  LBS_PER_KG,
+  MS_IN_DAY,
+  SCHEDULED_DELIVERY,
+  SETTINGS_OVERRIDE,
+  SLEEP,
+} from './constants';
+
 import { getPumpVocabulary } from './device';
 import { formatDecimalNumber, formatBgValue } from './format';
 import { formatDuration } from './datetime';
@@ -70,6 +80,7 @@ export const commonStats = {
   sensorUsage: 'sensorUsage',
   standardDev: 'standardDev',
   timeInAuto: 'timeInAuto',
+  timeInOverride: 'timeInOverride',
   timeInRange: 'timeInRange',
   totalInsulin: 'totalInsulin',
 };
@@ -85,6 +96,7 @@ export const statFetchMethods = {
   [commonStats.sensorUsage]: 'getSensorUsage',
   [commonStats.standardDev]: 'getStandardDevData',
   [commonStats.timeInAuto]: 'getTimeInAutoData',
+  [commonStats.timeInOverride]: 'getTimeInOverrideData',
   [commonStats.timeInRange]: 'getTimeInRangeData',
   [commonStats.totalInsulin]: 'getBasalBolusData',
 };
@@ -345,6 +357,16 @@ export const getStatAnnotations = (data, type, opts = {}) => {
       }
       break;
 
+    case commonStats.timeInOverride:
+      if (days > 1) {
+        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+      } else {
+        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+      }
+      break;
+
     case commonStats.timeInRange:
       if (days > 1) {
         annotations.push(t('**Time In Range:** Daily average of the time spent in range, based on {{cbgLabel}} readings.', { cbgLabel: statBgSourceLabels.cbg }));
@@ -589,6 +611,29 @@ export const getStatData = (data, type, opts = {}) => {
       };
       break;
 
+    case commonStats.timeInOverride:
+      statData.data = [
+        {
+          id: 'physicalActivity',
+          value: ensureNumeric(data.physicalActivity),
+          title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [PHYSICAL_ACTIVITY, 'label']) }),
+          legendTitle: _.get(vocabulary, [PHYSICAL_ACTIVITY, 'label']),
+        },
+        {
+          id: 'sleep',
+          value: ensureNumeric(data.sleep),
+          title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [SLEEP, 'label']) }),
+          legendTitle: _.get(vocabulary, [SLEEP, 'label']),
+        },
+      ];
+
+      statData.sum = { value: getSum(statData.data) };
+      statData.total = { value: MS_IN_DAY };
+      statData.dataPaths = {
+        summary: 'sum',
+      };
+      break;
+
     case commonStats.timeInRange:
       statData.data = [
         {
@@ -712,6 +757,12 @@ export const getStatTitle = (type, opts = {}) => {
         : t('Time In {{automatedLabel}}', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] });
       break;
 
+    case commonStats.timeInOverride:
+      title = (days > 1)
+        ? t('Avg. Daily Time In {{overrideLabel}}', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] })
+        : t('Time In {{overrideLabel}}', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] });
+      break;
+
     case commonStats.timeInRange:
       title = (days > 1) ? t('Avg. Daily Time In Range') : t('Time In Range');
       break;
@@ -728,7 +779,7 @@ export const getStatTitle = (type, opts = {}) => {
   return title;
 };
 
-export const getStatDefinition = (data, type, opts = {}) => {
+export const getStatDefinition = (data = {}, type, opts = {}) => {
   let stat = {
     annotations: getStatAnnotations(data, type, opts),
     collapsible: false,
@@ -827,6 +878,16 @@ export const getStatDefinition = (data, type, opts = {}) => {
       stat.legend = true;
       break;
 
+    case commonStats.timeInOverride:
+      stat.alwaysShowTooltips = true;
+      stat.dataFormat = {
+        label: statFormats.percentage,
+        summary: statFormats.percentage,
+        tooltip: statFormats.duration,
+      };
+      stat.legend = true;
+      break;
+
     case commonStats.timeInRange:
       stat.alwaysShowTooltips = true;
       stat.dataFormat = {
@@ -876,11 +937,12 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
   _.each(stats, stat => {
     const renderTable = _.includes([
-      'timeInRange',
-      'readingsInRange',
-      'totalInsulin',
-      'timeInAuto',
-      'bgExtents',
+      commonStats.timeInRange,
+      commonStats.readingsInRange,
+      commonStats.totalInsulin,
+      commonStats.timeInAuto,
+      commonStats.timeInOverride,
+      commonStats.bgExtents,
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };

@@ -143,6 +143,17 @@ describe('bolus path generators', () => {
       });
     });
 
+    describe('automated boluses', () => {
+      it('should calculate two path for an automated bolus', () => {
+        const paths = getBolusPaths(boluses.automated, detailXScale, detailBolusScale, BOLUS_OPTS);
+        expect(paths.length).to.equal(2);
+        expect(paths[0].type).to.equal('delivered');
+        expect(paths[0].subType).to.equal('automated');
+        expect(paths[1].type).to.equal('programmed');
+        expect(paths[1].subType).to.equal('automated');
+      });
+    });
+
     describe('extended ("square") boluses', () => {
       it('should calculate three paths for an extended bolus', () => {
         const paths = getBolusPaths(

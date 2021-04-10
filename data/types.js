@@ -30,7 +30,7 @@ export const generateGUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace
 
 class Common {
   constructor(opts = {}) {
-    this.deviceId = 'Test Page Data - 123';
+    this.deviceId = opts.deviceId || 'Test Page Data - 123';
     this.source = opts.source || 'testpage';
     this.conversionOffset = 0;
     this.uploadId = opts.uploadId || 'uploadId123';
@@ -287,6 +287,8 @@ export class DeviceEvent extends Common {
       units: 'mg/dL',
       value: 100,
       primeTarget: 'cannula',
+      overrideType: 'sleep',
+      duration: 36e5,
     });
 
     this.type = 'deviceEvent';
@@ -296,12 +298,22 @@ export class DeviceEvent extends Common {
       this.primeTarget = opts.primeTarget;
     }
 
+    if (opts.subType === 'pumpSettingsOverride') {
+      this.overrideType = opts.overrideType;
+      this.duration = opts.duration;
+    }
+
     this.deviceTime = opts.deviceTime;
 
     this.time = this.makeTime();
     this.createdTime = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
-    if (!opts.raw) this.normalTime = this.makeNormalTime();
+    if (!opts.raw) {
+      this.normalTime = this.makeNormalTime();
+      if (opts.subType === 'pumpSettingsOverride') {
+        this.normalEnd = this.normalTime + duration;
+      }
+    }
   }
 }
 
@@ -319,6 +331,7 @@ export class Upload extends Common {
     this.source = opts.source;
     this.deviceTime = opts.deviceTime;
     this.deviceModel = opts.deviceModel;
+    this.deviceManufacturers = opts.deviceManufacturers;
     this.deviceSerialNumber = opts.deviceSerialNumber;
 
     this.time = this.makeTime();

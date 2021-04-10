@@ -107,6 +107,43 @@ describe('DataUtil', () => {
     }),
   ], _.toPlainObject);
 
+
+  const settingsOverrideDatumOverlappingStart = new Types.DeviceEvent({
+    duration: MS_IN_HOUR * 2,
+    deviceTime: '2018-01-31T23:00:00',
+    source: 'Tandem',
+    deviceModel: '12345',
+    subType: 'pumpSettingsOverride',
+    ...useRawData,
+  });
+
+  const deviceEventData = _.map([
+    new Types.DeviceEvent({
+      duration: MS_IN_HOUR,
+      deviceTime: '2018-02-01T01:00:00',
+      source: 'Tandem',
+      deviceModel: '12345',
+      subType: 'pumpSettingsOverride',
+      ...useRawData,
+    }),
+    new Types.DeviceEvent({
+      duration: MS_IN_HOUR,
+      deviceTime: '2018-02-01T02:00:00',
+      source: 'Tandem',
+      deviceModel: '12345',
+      subType: 'pumpSettingsOverride',
+      ...useRawData,
+    }),
+    new Types.DeviceEvent({
+      duration: MS_IN_HOUR,
+      deviceTime: '2018-02-01T03:00:00',
+      source: 'Tandem',
+      deviceModel: '12345',
+      subType: 'pumpSettingsOverride',
+      ...useRawData,
+    }),
+  ], _.toPlainObject);
+
   const foodData = _.map([
     new Types.Food({
       deviceTime: '2018-02-01T02:00:00',
@@ -173,7 +210,19 @@ describe('DataUtil', () => {
   const uploadData = _.map([
     new Types.Upload({
       deviceTags: ['insulin-pump'],
+      source: 'Tandem',
+      deviceManufacturers: ['Tandem'],
+      deviceModel: '12345',
+      deviceSerialNumber: 'sn-0',
+      deviceTime: '2018-01-01T00:00:00',
+      deviceId: 'tandemCIQ12345',
+      uploadId: 'upload-0',
+      ...useRawData,
+    }),
+    new Types.Upload({
+      deviceTags: ['insulin-pump'],
       source: 'Insulet',
+      deviceManufacturers: ['Insulet', 'Abbot'],
       deviceModel: 'dash',
       deviceSerialNumber: 'sn-1',
       deviceTime: '2018-01-02T00:00:00',
@@ -183,6 +232,7 @@ describe('DataUtil', () => {
     new Types.Upload({
       deviceTags: ['insulin-pump'],
       source: 'Medtronic',
+      deviceManufacturers: ['Medtronic'],
       deviceModel: '1780',
       deviceSerialNumber: 'sn-2',
       deviceTime: '2018-02-02T00:00:00',
@@ -215,6 +265,7 @@ describe('DataUtil', () => {
     ...basalData,
     ...bolusData,
     ...cbgData,
+    ...deviceEventData,
     ...foodData,
     ...pumpSettingsData,
     ...smbgData,
@@ -404,6 +455,7 @@ describe('DataUtil', () => {
         'basal',
         'bolus',
         'cbg',
+        'deviceEvent',
         'food',
         'pumpSettings',
         'smbg',
@@ -806,6 +858,7 @@ describe('DataUtil', () => {
       const extendedBolus = { ...bolus, extended: 1, duration: 1, subType: 'square' };
       const interruptedBolus = { ...bolus, normal: 1, expectedNormal: 2 };
       const manualBolus = { ...bolus, wizard: undefined };
+      const automatedBolus = { ...manualBolus, subType: 'automated' };
       const overrideBolus = { ...bolus, normal: 2, recommended: { net: 1 } };
       const underrideBolus = { ...bolus, normal: 1, recommended: { net: 2 } };
       const wizardBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', wizard: '12345' };
@@ -829,6 +882,7 @@ describe('DataUtil', () => {
         expect(extendedBolus.tags.extended).to.be.true;
         expect(extendedBolus.tags.interrupted).to.be.false;
         expect(extendedBolus.tags.manual).to.be.true;
+        expect(extendedBolus.tags.automated).to.be.false;
         expect(extendedBolus.tags.override).to.be.false;
         expect(extendedBolus.tags.underride).to.be.false;
         expect(extendedBolus.tags.wizard).to.be.false;
@@ -841,6 +895,7 @@ describe('DataUtil', () => {
         expect(interruptedBolus.tags.extended).to.be.false;
         expect(interruptedBolus.tags.interrupted).to.be.true;
         expect(interruptedBolus.tags.manual).to.be.true;
+        expect(interruptedBolus.tags.automated).to.be.false;
         expect(interruptedBolus.tags.override).to.be.false;
         expect(interruptedBolus.tags.underride).to.be.false;
         expect(interruptedBolus.tags.wizard).to.be.false;
@@ -853,9 +908,23 @@ describe('DataUtil', () => {
         expect(manualBolus.tags.extended).to.be.false;
         expect(manualBolus.tags.interrupted).to.be.false;
         expect(manualBolus.tags.manual).to.be.true;
+        expect(manualBolus.tags.automated).to.be.false;
         expect(manualBolus.tags.override).to.be.false;
         expect(manualBolus.tags.underride).to.be.false;
         expect(manualBolus.tags.wizard).to.be.false;
+      });
+
+      it('should tag an automated bolus with `automated`', () => {
+        expect(automatedBolus.tags).to.be.undefined;
+        dataUtil.tagDatum(automatedBolus);
+        expect(automatedBolus.tags.correction).to.be.false;
+        expect(automatedBolus.tags.extended).to.be.false;
+        expect(automatedBolus.tags.interrupted).to.be.false;
+        expect(automatedBolus.tags.manual).to.be.false;
+        expect(automatedBolus.tags.automated).to.be.true;
+        expect(automatedBolus.tags.override).to.be.false;
+        expect(automatedBolus.tags.underride).to.be.false;
+        expect(automatedBolus.tags.wizard).to.be.false;
       });
 
       it('should tag a manual override bolus with `override` and `manual`', () => {
@@ -865,6 +934,7 @@ describe('DataUtil', () => {
         expect(overrideBolus.tags.extended).to.be.false;
         expect(overrideBolus.tags.interrupted).to.be.false;
         expect(overrideBolus.tags.manual).to.be.true;
+        expect(overrideBolus.tags.automated).to.be.false;
         expect(overrideBolus.tags.override).to.be.true;
         expect(overrideBolus.tags.underride).to.be.false;
         expect(overrideBolus.tags.wizard).to.be.false;
@@ -877,6 +947,7 @@ describe('DataUtil', () => {
         expect(underrideBolus.tags.extended).to.be.false;
         expect(underrideBolus.tags.interrupted).to.be.false;
         expect(underrideBolus.tags.manual).to.be.true;
+        expect(underrideBolus.tags.automated).to.be.false;
         expect(underrideBolus.tags.override).to.be.false;
         expect(underrideBolus.tags.underride).to.be.true;
         expect(underrideBolus.tags.wizard).to.be.false;
@@ -889,6 +960,7 @@ describe('DataUtil', () => {
         expect(wizardBolus.tags.extended).to.be.false;
         expect(wizardBolus.tags.interrupted).to.be.false;
         expect(wizardBolus.tags.manual).to.be.false;
+        expect(wizardBolus.tags.automated).to.be.false;
         expect(wizardBolus.tags.override).to.be.false;
         expect(wizardBolus.tags.underride).to.be.false;
         expect(wizardBolus.tags.wizard).to.be.true;
@@ -1199,6 +1271,16 @@ describe('DataUtil', () => {
           sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed, fields);
           sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed.suppressed, fields);
         });
+      });
+    });
+
+    context('deviceEvent', () => {
+      it('should set `normalEnd` by adding the `normalTime` and `duration` fields', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
+        const datum = { type: 'deviceEvent', normalTime: 1000, duration: 500 };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(1500);
       });
     });
 
@@ -1783,23 +1865,23 @@ describe('DataUtil', () => {
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(26);
+        expect(dataUtil.data.size()).to.equal(30);
         dataUtil.removeData(d => (d.type === 'basal'));
-        expect(dataUtil.data.size()).to.equal(23);
+        expect(dataUtil.data.size()).to.equal(27);
       });
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(26);
+        expect(dataUtil.data.size()).to.equal(30);
         dataUtil.removeData({ type: 'basal' });
-        expect(dataUtil.data.size()).to.equal(23);
+        expect(dataUtil.data.size()).to.equal(27);
       });
     });
 
     context('predicate not provided', () => {
       it('should remove all data from the crossfilter', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(26);
+        expect(dataUtil.data.size()).to.equal(30);
         dataUtil.removeData();
         expect(dataUtil.data.size()).to.equal(0);
       });
@@ -2172,8 +2254,8 @@ describe('DataUtil', () => {
       sinon.assert.callOrder(dataUtil.filter.byType, dataUtil.sort.byTime);
     });
 
-    it('should return the make, model, latest settings, and automated delivery capability of the latest pump uploaded', () => {
-      const latestPumpSettings = { type: 'pumpSettings' };
+    it('should return the make, model, latest settings, and automated delivery and settings override capabilities of the latest pump uploaded', () => {
+      let latestPumpSettings = { type: 'pumpSettings' };
       dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
 
       dataUtil.setLatestPumpUpload();
@@ -2182,10 +2264,12 @@ describe('DataUtil', () => {
         manufacturer: 'medtronic',
         deviceModel: '1780',
         isAutomatedBasalDevice: true,
+        isAutomatedBolusDevice: false,
+        isSettingsOverrideDevice: false,
         settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
       });
 
-      dataUtil.removeData({ id: uploadData[1].id });
+      dataUtil.removeData({ id: uploadData[2].id });
 
       dataUtil.setLatestPumpUpload();
 
@@ -2193,7 +2277,24 @@ describe('DataUtil', () => {
         manufacturer: 'insulet',
         deviceModel: 'dash',
         isAutomatedBasalDevice: false,
+        isAutomatedBolusDevice: false,
+        isSettingsOverrideDevice: false,
         settings: { ...latestPumpSettings },
+      });
+
+      dataUtil.removeData({ id: uploadData[1].id });
+      latestPumpSettings = { type: 'pumpSettings', firmwareVersion: '105900' };
+      dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
+
+      dataUtil.setLatestPumpUpload();
+
+      expect(dataUtil.latestPumpUpload).to.eql({
+        manufacturer: 'tandem',
+        deviceModel: '12345',
+        isAutomatedBasalDevice: true,
+        isAutomatedBolusDevice: true,
+        isSettingsOverrideDevice: true,
+        settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
       });
     });
   });
@@ -2219,45 +2320,51 @@ describe('DataUtil', () => {
       expect(dataUtil.uploadMap).to.be.an('object').and.have.keys([
         uploadData[0].uploadId,
         uploadData[1].uploadId,
+        uploadData[2].uploadId,
       ]);
 
       expect(dataUtil.uploadMap[uploadData[0].uploadId]).to.eql({
+        source: 'Tandem',
+        deviceSerialNumber: 'sn-0',
+      });
+
+      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
         source: 'Insulet',
         deviceSerialNumber: 'sn-1',
       });
 
-      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+      expect(dataUtil.uploadMap[uploadData[2].uploadId]).to.eql({
         source: 'Medtronic',
         deviceSerialNumber: 'sn-2',
       });
     });
 
     it('should set `deviceSerialNumber` to unknown when not available', () => {
-      dataUtil.updateDatum({ ...uploadData[1], deviceSerialNumber: undefined });
+      dataUtil.updateDatum({ ...uploadData[2], deviceSerialNumber: undefined });
 
       dataUtil.setUploadMap();
-      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+      expect(dataUtil.uploadMap[uploadData[2].uploadId]).to.eql({
         source: 'Medtronic',
         deviceSerialNumber: 'Unknown',
       });
     });
 
     it('should set a missing `source` field to first deviceManufacturers array item', () => {
-      dataUtil.updateDatum({ ...uploadData[1], source: undefined, deviceManufacturers: ['pumpCo'] });
+      dataUtil.updateDatum({ ...uploadData[2], source: undefined, deviceManufacturers: ['pumpCo'] });
 
       dataUtil.setUploadMap();
-      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+      expect(dataUtil.uploadMap[uploadData[2].uploadId]).to.eql({
         source: 'pumpCo',
         deviceSerialNumber: 'sn-2',
       });
     });
 
     it('should fix `source` field for carelink uploads erroneously set to `Medtronic`', () => {
-      dataUtil.updateDatum({ ...uploadData[1], source: undefined, deviceManufacturers: ['Medtronic'] });
-      dataUtil.updateDatum({ ...pumpSettingsData[1], uploadId: uploadData[1].uploadId, source: 'carelink' });
+      dataUtil.updateDatum({ ...uploadData[2], source: undefined, deviceManufacturers: ['Medtronic'] });
+      dataUtil.updateDatum({ ...pumpSettingsData[1], uploadId: uploadData[2].uploadId, source: 'carelink' });
 
       dataUtil.setUploadMap();
-      expect(dataUtil.uploadMap[uploadData[1].uploadId]).to.eql({
+      expect(dataUtil.uploadMap[uploadData[2].uploadId]).to.eql({
         source: 'carelink',
         deviceSerialNumber: 'sn-2',
       });
@@ -2277,28 +2384,28 @@ describe('DataUtil', () => {
     });
 
     it('should set a list of deviceEvents datums that represent incomplete suspends', () => {
-      const deviceEventData = [
+      const deviceEvents = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [] },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }] },
       ];
 
-      initDataUtil(deviceEventData);
+      initDataUtil(deviceEvents);
       delete(dataUtil.incompleteSuspends);
 
       dataUtil.setIncompleteSuspends();
       expect(dataUtil.incompleteSuspends).to.be.an('array');
-      expect(dataUtil.incompleteSuspends[0].id).to.equal(deviceEventData[1].id);
+      expect(dataUtil.incompleteSuspends[0].id).to.equal(deviceEvents[1].id);
     });
   });
 
   describe('setSize', () => {
     it('should set the size property to the current data count', () => {
-      const deviceEventData = [
+      const deviceEvents = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [] },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }] },
       ];
 
-      initDataUtil(deviceEventData);
+      initDataUtil(deviceEvents);
       delete(dataUtil.size);
 
       dataUtil.setSize();
@@ -2308,16 +2415,80 @@ describe('DataUtil', () => {
 
   describe('setDevices', () => {
     it('should set the devices of the current data set', () => {
-      const deviceEventData = [
+      const deviceEvents = [
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [], deviceId: 'device1' },
         { ...new Types.DeviceEvent({ ...useRawData }), annotations: [{ code: 'status/incomplete-tuple' }], deviceId: 'device2' },
       ];
 
-      initDataUtil(deviceEventData);
+      initDataUtil(deviceEvents);
       delete(dataUtil.devices);
 
       dataUtil.setDevices();
       expect(dataUtil.devices).to.eql([{ id: 'device1' }, { id: 'device2' }]);
+    });
+
+    it('should add (Control-IQ) to a control-iq device label', () => {
+      initDataUtil([uploadData[0]]);
+      delete(dataUtil.devices);
+
+      dataUtil.setDevices();
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandemCIQ12345',
+          label: 'Tandem 12345 (Control-IQ)',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+      ]);
+    });
+
+    it('should exclude a non-Control-IQ device upload if a Control-IQ upload exists', () => {
+      initDataUtil([{ ...uploadData[0], deviceId: 'tandem12345' }]);
+      delete(dataUtil.devices);
+      delete(dataUtil.excludedDevices);
+
+      // add non-CIQ device upload. Should not be excluded
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandem12345',
+          label: 'Tandem 12345',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+      ]);
+
+      expect(dataUtil.excludedDevices).to.eql([]);
+
+      // add CIQ device upload and re-run. Should exclude the non-CIQ device
+      dataUtil.addData([uploadData[0]], defaultPatientId);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandem12345',
+          label: 'Tandem 12345',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandemCIQ12345',
+          label: 'Tandem 12345 (Control-IQ)',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+      ]);
+
+      expect(dataUtil.excludedDevices).to.eql(['tandem12345']);
     });
   });
 
@@ -2748,10 +2919,12 @@ describe('DataUtil', () => {
       expect(dataUtil.excludedDevices).to.eql(['2']);
     });
 
-    it('should set `excludedDevices` to `[]` if no arg provided', () => {
+    it('should set `excludedDevices` to `self.excludedDevices` if no arg provided', () => {
       expect(dataUtil.excludedDevices).to.be.undefined;
+      dataUtil.setExcludedDevices('foo');
+      expect(dataUtil.excludedDevices).to.equal('foo');
       dataUtil.setExcludedDevices();
-      expect(dataUtil.excludedDevices).to.eql([]);
+      expect(dataUtil.excludedDevices).to.eql('foo');
     });
   });
 
@@ -3327,6 +3500,8 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'patientId',
         'size',
+        'devices',
+        'excludedDevices',
       ];
 
       const result = dataUtil.getMetaData(metaData);
@@ -3336,7 +3511,17 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(26);
+      expect(result.size).to.equal(30);
+
+      expect(result.devices).to.eql([
+        { id: 'Test Page Data - 123' },
+        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
+        { id: 'Dexcom-XXX-XXXX' },
+        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+      ]);
+
+      expect(result.excludedDevices).to.eql([]);
     });
 
     it('should return metaData requested via a string', () => {
@@ -3348,6 +3533,8 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'patientId',
         'size',
+        'devices',
+        'excludedDevices',
       ];
 
       const result = dataUtil.getMetaData(_.join(metaData, ','));
@@ -3357,7 +3544,17 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(26);
+      expect(result.size).to.equal(30);
+
+      expect(result.devices).to.eql([
+        { id: 'Test Page Data - 123' },
+        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
+        { id: 'Dexcom-XXX-XXXX' },
+        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+      ]);
+
+      expect(result.excludedDevices).to.eql([]);
     });
 
     it('should normalize each datum returned in `latestDatumByType`', () => {
@@ -3374,6 +3571,7 @@ describe('DataUtil', () => {
         'basal',
         'bolus',
         'cbg',
+        'deviceEvent',
         'food',
         'pumpSettings',
         'smbg',
@@ -3404,6 +3602,8 @@ describe('DataUtil', () => {
       expect(result.latestPumpUpload).to.be.an('object').and.have.keys([
         'deviceModel',
         'isAutomatedBasalDevice',
+        'isAutomatedBolusDevice',
+        'isSettingsOverrideDevice',
         'manufacturer',
         'settings',
       ]);
@@ -3701,6 +3901,71 @@ describe('DataUtil', () => {
 
         expect(result).to.be.an('array').and.have.lengthOf(4);
         expect(result).to.eql(expectedNormalizedBasalData);
+      });
+    });
+  });
+
+  describe('addPumpSettingsOverrideOverlappingStart', () => {
+    /* eslint-disable no-param-reassign */
+    const normalizeExpectedDatum = d => {
+      d._time = d.time;
+      d._deviceTime = d.deviceTime;
+      d.time = Date.parse(d.time);
+      d.deviceTime = Date.parse(d.deviceTime);
+      d.normalTime = d.deviceTime;
+      d.normalEnd = d.normalTime + d.duration;
+      d.displayOffset = 0;
+      d.tags = { calibration: false, reservoirChange: false, cannulaPrime: false, tubingPrime: false };
+      return d;
+    };
+    /* eslint-enable no-param-reassign */
+
+    beforeEach(() => {
+      initDataUtil(defaultData);
+      dataUtil.setTimePrefs(defaultTimePrefs);
+    });
+
+    context('settings override does not overlap start endpoint', () => {
+      it('should return the normalized device event data with no datums added', () => {
+        const deviceEventDataClone = _.cloneDeep(deviceEventData);
+
+        const expectedNormalizedDeviceEventData = _.map(deviceEventDataClone, normalizeExpectedDatum);
+
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+        }));
+
+        const result = dataUtil.addPumpSettingsOverrideOverlappingStart(deviceEventDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(3);
+        expect(result).to.eql(expectedNormalizedDeviceEventData);
+      });
+    });
+
+    context('settings override overlaps start endpoint', () => {
+      it('should add the overlapping pump settings override datum to the beginning of deviceEventData array', () => {
+        const deviceEventDataClone = _.cloneDeep(deviceEventData);
+        const settingsOverrideDatumOverlappingStartClone = _.cloneDeep(settingsOverrideDatumOverlappingStart);
+
+        const expectedNormalizedDeviceEventData = _.map([
+          settingsOverrideDatumOverlappingStart.asObject(),
+          ...deviceEventDataClone,
+        ], normalizeExpectedDatum);
+
+        dataUtil.addData([settingsOverrideDatumOverlappingStartClone.asObject()], defaultPatientId);
+
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+        }));
+
+        dataUtil.activeEndpoints = dataUtil.endpoints.current;
+
+        const result = dataUtil.addPumpSettingsOverrideOverlappingStart(deviceEventDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(4);
+        expect(result).to.eql(expectedNormalizedDeviceEventData);
       });
     });
   });

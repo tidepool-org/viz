@@ -30,6 +30,12 @@ const normal = {
   normalTime: '2017-11-11T05:45:52.000Z',
 };
 
+const automated = {
+  normal: 5,
+  normalTime: '2017-11-11T05:45:52.000Z',
+  subType: 'automated',
+};
+
 const cancelled = {
   normal: 2,
   expectedNormal: 5,
@@ -547,6 +553,12 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
+  it('should render automated header label for automated bolus', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={automated} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.title))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.include('Automated');
   });
 
   describe('getTarget', () => {

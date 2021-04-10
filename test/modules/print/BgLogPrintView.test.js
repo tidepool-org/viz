@@ -363,7 +363,6 @@ describe('BgLogPrintView', () => {
       expect(Renderer.bgChart.pos).to.eql({
         x: 260,
         y: 80,
-        currentPage: 3,
         currentPageIndex: 1,
       });
     });
@@ -410,12 +409,14 @@ describe('BgLogPrintView', () => {
       Renderer.initialTotalPages = 2;
       Renderer.currentPageIndex = 1;
 
+      sinon.stub(Renderer, 'goToPage');
+
       Renderer.renderBGChart();
 
-      assert(Renderer.bgChart.pos.currentPage === 3);
+      assert(Renderer.bgChart.pos.currentPageIndex === 1);
 
-      sinon.assert.calledWith(Renderer.doc.switchToPage, 3);
-      sinon.assert.callOrder(Renderer.renderTable, Renderer.doc.switchToPage, Renderer.renderTable);
+      sinon.assert.calledWith(Renderer.goToPage, 1);
+      sinon.assert.callOrder(Renderer.renderTable, Renderer.goToPage, Renderer.renderTable);
     });
   });
 
