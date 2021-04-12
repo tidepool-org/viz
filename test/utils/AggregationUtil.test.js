@@ -224,12 +224,12 @@ describe('AggregationUtil', () => {
       groupByDate.dispose();
     });
 
-    it('should summarize total count for all bolus events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.total).to.equal(8);
+    it('should summarize total count for all non-automated bolus events in the entire date range', () => {
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.total).to.equal(7);
     });
 
     it('should summarize average daily number of bolus events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.avgPerDay).to.equal(4);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.avgPerDay).to.equal(3.5);
     });
 
 
@@ -245,18 +245,18 @@ describe('AggregationUtil', () => {
     });
 
     it('should summarize percentage of `correction`, `extended`, `interrupted`, `manual`, `automated`, `override`, `underride`, and `wizard` bolus events for the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.percentage).to.equal(6 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.underride.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.wizard.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.percentage).to.equal(1 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.percentage).to.equal(1 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.percentage).to.equal(1 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.percentage).to.equal(6 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.percentage).to.equal(1 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.percentage).to.equal(1 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.underride.percentage).to.equal(1 / 7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.wizard.percentage).to.equal(1 / 7);
     });
 
     it('should summarize total count for all bolus events for each date in the date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].total).to.equal(7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].total).to.equal(6);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].total).to.equal(1);
     });
 

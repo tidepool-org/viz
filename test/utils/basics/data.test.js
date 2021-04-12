@@ -133,6 +133,7 @@ describe('basics data utils', () => {
           expect(result[section].perRow).to.equal(section === 'boluses' ? 4 : 3);
         });
       });
+
       it('should add dimensions for manual and automated boluses', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
         expect(_.map(result.boluses.dimensions, 'key')).to.eql([
@@ -146,6 +147,12 @@ describe('basics data utils', () => {
           'manual',
           'automated',
         ]);
+      });
+
+      it('should set percentage to `false` for automated bolus dimension', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
+        expect(result.boluses.dimensions[8].key).to.equal('automated');
+        expect(result.boluses.dimensions[8].percentage).to.be.false;
       });
     });
 
