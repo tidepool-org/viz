@@ -615,13 +615,13 @@ export const getStatData = (data, type, opts = {}) => {
       statData.data = [
         {
           id: 'physicalActivity',
-          value: ensureNumeric(data.physicalActivity),
+          value: ensureNumeric(_.get(data, 'physicalActivity', 0)),
           title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [PHYSICAL_ACTIVITY, 'label']) }),
           legendTitle: _.get(vocabulary, [PHYSICAL_ACTIVITY, 'label']),
         },
         {
           id: 'sleep',
-          value: ensureNumeric(data.sleep),
+          value: ensureNumeric(_.get(data, 'sleep', 0)),
           title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [SLEEP, 'label']) }),
           legendTitle: _.get(vocabulary, [SLEEP, 'label']),
         },
