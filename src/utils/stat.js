@@ -350,20 +350,20 @@ export const getStatAnnotations = (data, type, opts = {}) => {
     case commonStats.timeInAuto:
       if (days > 1) {
         annotations.push(t('**Time In {{automatedLabel}}:** Daily average of the time spent in automated basal delivery.', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{automatedLabel}} divided the total duration of basals for this time period.\n\n**(time)** is 24 hours multiplied by % in {{automatedLabel}}.', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] }));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{automatedLabel}} divided by the total duration of basals for this time period.\n\n**(time)** is 24 hours multiplied by % in {{automatedLabel}}.', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] }));
       } else {
         annotations.push(t('**Time In {{automatedLabel}}:** Time spent in automated basal delivery.', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{automatedLabel}} divided the total duration of basals for this time period.\n\n**(time)** is total duration of time in {{automatedLabel}}.', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] }));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{automatedLabel}} divided by the total duration of basals for this time period.\n\n**(time)** is total duration of time in {{automatedLabel}}.', { automatedLabel: vocabulary[AUTOMATED_DELIVERY] }));
       }
       break;
 
     case commonStats.timeInOverride:
       if (days > 1) {
         annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided by the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
       } else {
         annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided by the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
       }
       break;
 
