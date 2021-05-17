@@ -40,6 +40,7 @@ const metaData = {
   latestPumpUpload: {
     deviceModel: 'OmniPod',
     isAutomatedBasalDevice: false,
+    isSettingsOverrideDevice: false,
     manufacturer: 'insulet',
     settings: new types.Settings(),
   },
@@ -613,6 +614,22 @@ export const dailyData = {
                 type: 'cbg',
                 value: 75,
                 utc: 1483353000000,
+              },
+            ],
+            deviceEvent: [
+              {
+                type: 'deviceEvent',
+                subType: 'pumpSettingsOverride',
+                overrideType: 'sleep',
+                normalTime: 1483313400000,
+                duration: 1000000,
+              },
+              {
+                type: 'deviceEvent',
+                subType: 'pumpSettingsOverride',
+                overrideType: 'physicalActivity',
+                normalTime: 1483314400000,
+                duration: 1000000,
               },
             ],
             smbg: [

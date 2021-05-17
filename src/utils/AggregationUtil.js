@@ -68,6 +68,7 @@ export class AggregationUtil {
     reducer.dataList(true);
 
     const tags = [
+      'automated',
       'correction',
       'extended',
       'interrupted',
@@ -243,6 +244,7 @@ export class AggregationUtil {
     _.each(data, dataForDay => {
       const {
         value: {
+          automated,
           correction,
           dataList,
           extended,
@@ -254,12 +256,15 @@ export class AggregationUtil {
         },
       } = dataForDay;
 
-      const total = dataList.length;
+      // Exclude automated boluses from total so that total and average per day only include
+      // patient-initiated boluses
+      const total = dataList.length - automated.count;
 
       if (total) {
         processedData[dataForDay.key] = {
           total,
           subtotals: {
+            automated: automated.count,
             correction: correction.count,
             extended: extended.count,
             interrupted: interrupted.count,
@@ -482,11 +487,24 @@ export class AggregationUtil {
       const groupedData = _.groupBy(sortedData, 'type');
       const groupedBasals = _.cloneDeep(groupedData.basal || []);
 
+      const groupedPumpSettingsOverrides = _.filter(
+        _.cloneDeep(groupedData.deviceEvent || []),
+        { subType: 'pumpSettingsOverride' }
+      );
+
+      const initialGroupedPumpSettingsOverridesLength = groupedPumpSettingsOverrides.length;
+
       this.dataUtil.addBasalOverlappingStart(groupedBasals);
+      this.dataUtil.addPumpSettingsOverrideOverlappingStart(groupedPumpSettingsOverrides);
 
       _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
 
       if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+
+      if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
+        groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
+      }
+
       processedData[dataForDay.key] = groupedData;
     });
 

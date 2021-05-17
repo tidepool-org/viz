@@ -104,6 +104,58 @@ describe('basics data utils', () => {
       });
     });
 
+    context('pump is not automated bolus device', () => {
+      it('should set `perRow` property to 3 for each section', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: false });
+        _.forEach(sectionNames, (section) => {
+          expect(result[section].perRow).to.equal(3);
+        });
+      });
+
+      it('should not add dimensions for manual and automated boluses', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: false });
+        expect(_.map(result.boluses.dimensions, 'key')).to.eql([
+          'total',
+          'wizard',
+          'correction',
+          'extended',
+          'interrupted',
+          'override',
+          'underride',
+        ]);
+      });
+    });
+
+    context('pump is automated bolus device', () => {
+      it('should set `perRow` property to 4 for the boluses section', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
+        _.forEach(sectionNames, (section) => {
+          expect(result[section].perRow).to.equal(section === 'boluses' ? 4 : 3);
+        });
+      });
+
+      it('should add dimensions for manual and automated boluses', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
+        expect(_.map(result.boluses.dimensions, 'key')).to.eql([
+          'total',
+          'wizard',
+          'correction',
+          'extended',
+          'interrupted',
+          'override',
+          'underride',
+          'manual',
+          'automated',
+        ]);
+      });
+
+      it('should set percentage to `false` for automated bolus dimension', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
+        expect(result.boluses.dimensions[8].key).to.equal('automated');
+        expect(result.boluses.dimensions[8].percentage).to.be.false;
+      });
+    });
+
     it('should set the veryLow and veryHigh fingerstick filter labels correctly for mg/dL data', () => {
       const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS]);
       const veryHighFilter = _.find(result.fingersticks.dimensions, { key: 'veryHigh' });

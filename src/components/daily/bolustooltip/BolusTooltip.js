@@ -375,12 +375,27 @@ class BolusTooltip extends PureComponent {
   }
 
   render() {
+    const isAutomated = _.get(this.props.bolus, 'subType') === 'automated';
+    const tailColor = this.props.tailColor || isAutomated ? colors.bolusAutomated : colors.bolus;
+
+    const borderColor = this.props.borderColor || isAutomated
+      ? colors.bolusAutomated
+      : colors.bolus;
+
     const title = (
       <div className={styles.title}>
         {formatLocalizedFromUTC(this.props.bolus.normalTime, this.props.timePrefs, 'h:mm a')}
+        {isAutomated && <div>{t('Automated')}</div>}
       </div>
     );
-    return <Tooltip {...this.props} title={title} content={this.renderBolus()} />;
+
+    return <Tooltip
+      {...this.props}
+      borderColor={borderColor}
+      tailColor={tailColor}
+      title={title}
+      content={this.renderBolus()}
+    />;
   }
 }
 
@@ -396,11 +411,11 @@ BolusTooltip.propTypes = {
   }),
   tail: PropTypes.bool.isRequired,
   side: PropTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
-  tailColor: PropTypes.string.isRequired,
+  tailColor: PropTypes.string,
   tailWidth: PropTypes.number.isRequired,
   tailHeight: PropTypes.number.isRequired,
   backgroundColor: PropTypes.string,
-  borderColor: PropTypes.string.isRequired,
+  borderColor: PropTypes.string,
   borderWidth: PropTypes.number.isRequired,
   bolus: PropTypes.shape({
     type: PropTypes.string.isRequired,
@@ -414,8 +429,6 @@ BolusTooltip.defaultProps = {
   side: 'right',
   tailWidth: 9,
   tailHeight: 17,
-  tailColor: colors.bolus,
-  borderColor: colors.bolus,
   borderWidth: 2,
 };
 

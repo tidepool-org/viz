@@ -82,11 +82,32 @@ describe('device utility functions', () => {
 
   describe('isAutomatedBasalDevice', () => {
     it('should return `true` for an upload record for a pump with automated basal delivery capabilities', () => {
-      expect(device.isAutomatedBasalDevice(MEDTRONIC, '1780')).to.be.true;
+      expect(device.isAutomatedBasalDevice(MEDTRONIC, {}, '1780')).to.be.true;
+      expect(device.isAutomatedBasalDevice('tandem', { firmwareVersion: '105900' })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without automated basal delivery capabilities', () => {
-      expect(device.isAutomatedBasalDevice(MEDTRONIC, '723')).to.be.false;
+      expect(device.isAutomatedBasalDevice(MEDTRONIC, {}, '723')).to.be.false;
+    });
+  });
+
+  describe('isAutomatedBolusDevice', () => {
+    it('should return `true` for an upload record for a pump with automated bolus delivery capabilities', () => {
+      expect(device.isAutomatedBolusDevice('tandem', { firmwareVersion: '105900' })).to.be.true;
+    });
+
+    it('should return `false` for an upload record for a pump without automated bolus delivery capabilities', () => {
+      expect(device.isAutomatedBolusDevice('tandem', { firmwareVersion: '105899' })).to.be.false;
+    });
+  });
+
+  describe('isSettingsOverrideDevice', () => {
+    it('should return `true` for an upload record for a pump with settings override capabilities', () => {
+      expect(device.isSettingsOverrideDevice('tandem', { firmwareVersion: '105900' })).to.be.true;
+    });
+
+    it('should return `false` for an upload record for a pump without settings override capabilities', () => {
+      expect(device.isSettingsOverrideDevice('tandem', { firmwareVersion: '105899' })).to.be.false;
     });
   });
 
@@ -107,18 +128,19 @@ describe('device utility functions', () => {
           'cannulaPrime',
           'automatedDelivery',
           'scheduledDelivery',
+          'settingsOverride',
+          'sleep',
+          'physicalActivity',
         ]);
       });
 
-      // Medtronic should have it's own unique key for automated basal delivery
+      // Medtronic and Tandem should have their own unique key for automated basal delivery
       expect(device.getPumpVocabulary(MEDTRONIC).automatedDelivery).to.equal(pumpVocabulary[MEDTRONIC].automatedDelivery);
+      expect(device.getPumpVocabulary(TANDEM).automatedDelivery).to.equal(pumpVocabulary[TANDEM].automatedDelivery);
 
       // Animas, Tandem, and Insulet should fall back to a default value
       expect(pumpVocabulary[ANIMAS].automatedDelivery).to.be.undefined;
       expect(device.getPumpVocabulary(ANIMAS).automatedDelivery).to.equal(pumpVocabulary.default.automatedDelivery);
-
-      expect(pumpVocabulary[TANDEM].automatedDelivery).to.be.undefined;
-      expect(device.getPumpVocabulary(TANDEM).automatedDelivery).to.equal(pumpVocabulary.default.automatedDelivery);
 
       expect(pumpVocabulary[INSULET].automatedDelivery).to.be.undefined;
       expect(device.getPumpVocabulary(INSULET).automatedDelivery).to.equal(pumpVocabulary.default.automatedDelivery);

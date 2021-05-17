@@ -24,6 +24,11 @@ const normal = {
   normal: 5,
 };
 
+const automated = {
+  ...normal,
+  subType: 'automated',
+};
+
 const cancelled = {
   normal: 2,
   expectedNormal: 5,
@@ -955,6 +960,32 @@ describe('bolus utilities', () => {
         ...correctionUnderride.bolus,
         wizard: correctionUnderride,
       })).to.be.true;
+    });
+  });
+
+  describe('isAutomated', () => {
+    it('should return `false` for all non-automated boluses', () => {
+      expect(bolusUtils.isAutomated(normal)).to.be.false;
+      expect(bolusUtils.isAutomated(cancelled)).to.be.false;
+      expect(bolusUtils.isAutomated(underride)).to.be.false;
+      expect(bolusUtils.isAutomated(override)).to.be.false;
+      expect(bolusUtils.isAutomated(combo)).to.be.false;
+      expect(bolusUtils.isAutomated(cancelledInNormalCombo)).to.be.false;
+      expect(bolusUtils.isAutomated(cancelledInExtendedCombo)).to.be.false;
+      expect(bolusUtils.isAutomated(comboOverride)).to.be.false;
+      expect(bolusUtils.isAutomated(comboUnderrideCancelled)).to.be.false;
+      expect(bolusUtils.isAutomated(extended)).to.be.false;
+      expect(bolusUtils.isAutomated(cancelledExtended)).to.be.false;
+      expect(bolusUtils.isAutomated(extendedUnderride)).to.be.false;
+      expect(bolusUtils.isAutomated(immediatelyCancelledExtended)).to.be.false;
+      expect(bolusUtils.isAutomated(withNetRec)).to.be.false;
+      expect(bolusUtils.isAutomated(correction)).to.be.false;
+      expect(bolusUtils.isAutomated(correctionOverride)).to.be.false;
+      expect(bolusUtils.isAutomated(correctionUnderride)).to.be.false;
+    });
+
+    it('should return `true` for all automated boluses', () => {
+      expect(bolusUtils.isAutomated(automated)).to.be.true;
     });
   });
 });

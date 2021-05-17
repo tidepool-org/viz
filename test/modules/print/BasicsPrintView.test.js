@@ -160,6 +160,14 @@ describe('BasicsPrintView', () => {
   });
 
   describe('renderStats', () => {
+    it('should set the pdf cursor to the first page', () => {
+      sinon.stub(Renderer, 'goToPage');
+
+      Renderer.renderStats();
+
+      sinon.assert.calledWith(Renderer.goToPage, 0);
+    });
+
     it('should set the pdf cursor in the left column', () => {
       sinon.stub(Renderer, 'goToLayoutColumnPosition');
 
@@ -178,6 +186,14 @@ describe('BasicsPrintView', () => {
   });
 
   describe('renderCalendars', () => {
+    it('should set the pdf cursor to the first page', () => {
+      sinon.stub(Renderer, 'goToPage');
+
+      Renderer.renderCalendars();
+
+      sinon.assert.calledWith(Renderer.goToPage, 0);
+    });
+
     it('should set the pdf cursor in the center column', () => {
       sinon.stub(Renderer, 'goToLayoutColumnPosition');
 
@@ -257,6 +273,14 @@ describe('BasicsPrintView', () => {
   });
 
   describe('RenderCalendarSummaries', () => {
+    it('should set the pdf cursor to the first page', () => {
+      sinon.stub(Renderer, 'goToPage');
+
+      Renderer.RenderCalendarSummaries();
+
+      sinon.assert.calledWith(Renderer.goToPage, 0);
+    });
+
     it('should set the pdf cursor in the right column', () => {
       sinon.stub(Renderer, 'goToLayoutColumnPosition');
 
@@ -395,6 +419,22 @@ describe('BasicsPrintView', () => {
         'timeInAutoStub',
         {
           heading: 'Time In Automated Ratio',
+          fillOpacity: 0.5,
+        }
+      );
+    });
+
+    it('should render the timeInOverride stat, but only if present', () => {
+      Renderer.stats.timeInOverride = null;
+      Renderer.renderAggregatedStats();
+      sinon.assert.neverCalledWith(Renderer.renderHorizontalBarStat, null);
+
+      Renderer.stats.timeInOverride = 'timeInOverrideStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
+        'timeInOverrideStub',
+        {
+          heading: 'Time In Settings Override',
           fillOpacity: 0.5,
         }
       );

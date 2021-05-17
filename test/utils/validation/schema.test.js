@@ -201,7 +201,7 @@ describe('schema validation', () => {
       it('should return an error for an invalid `subType`', () => {
         const result = Validator.bolus.normal(invalidSubType);
         expect(_.find(result, { field: 'subType' }).message).to.equal('The \'subType\' field does not match any of the allowed values!');
-        expect(_.find(result, { field: 'subType' }).expected).to.have.members(['normal']);
+        expect(_.find(result, { field: 'subType' }).expected).to.have.members(['normal', 'automated']);
       });
 
       it('should return an error for an invalid `wizard`', () => {

@@ -2,7 +2,6 @@ import _ from 'lodash';
 import bows from 'bows';
 import { extent } from 'd3-array';
 import { scaleLinear } from 'd3-scale';
-import { utcDay } from 'd3-time';
 import moment from 'moment-timezone';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
@@ -346,14 +345,20 @@ export class TrendsContainer extends PureComponent {
 
   goForward() {
     const { dateDomain: { end: newStart } } = this.state;
-    const end = utcDay.offset(new Date(newStart), this.props.extentSize).toISOString();
+    const end = getLocalizedOffset(newStart, {
+      amount: this.props.extentSize,
+      units: 'days',
+    }, this.props.timePrefs).toISOString();
     const newDomain = [newStart, end];
     this.setExtent(newDomain);
   }
 
   goToMostRecent() {
     const { mostRecent: end } = this.state;
-    const start = utcDay.offset(new Date(end), -this.props.extentSize).toISOString();
+    const start = getLocalizedOffset(end, {
+      amount: -this.props.extentSize,
+      units: 'days',
+    }, this.props.timePrefs).toISOString();
     const newDomain = [start, end];
     this.setExtent(newDomain);
   }

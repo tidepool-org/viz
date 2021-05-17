@@ -390,6 +390,70 @@ stories.add('Time In Auto', () => {
   );
 });
 
+let timeInOverrideData = {
+  data: [
+    {
+      id: 'physicalActivity',
+      value: convertPercentageToDayDuration(7),
+      title: 'Time In Exercise',
+      legendTitle: 'Exercise',
+    },
+    {
+      id: 'sleep',
+      value: convertPercentageToDayDuration(36),
+      title: 'Time In Sleep',
+      legendTitle: 'Sleep',
+    },
+  ],
+};
+timeInOverrideData.sum = { value: getSum(timeInOverrideData.data) };
+timeInOverrideData.total = { value: MS_IN_DAY };
+timeInOverrideData.dataPaths = {
+  summary: 'sum',
+};
+
+stories.add('Time In Override', () => {
+  const responsive = boolean('responsive', false, 'UI');
+  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)'], 'UI');
+  const collapsible = boolean('collapsible', false, 'UI');
+  const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
+  const isOpened = boolean('isOpened', true, 'UI');
+  const legend = boolean('legend', true, 'UI');
+  const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
+
+  button('Random Data', () => {
+    timeInOverrideData = generateRandomData(timeInOverrideData, 'duration');
+  }, 'DATA');
+
+  button('Empty Data', () => {
+    timeInOverrideData = generateEmptyData(timeInOverrideData);
+  }, 'DATA');
+
+  return (
+    <Container responsive={responsive}>
+      <Stat
+        alwaysShowTooltips={alwaysShowTooltips}
+        annotations={[
+          'Based on 50% pump data availability for this view.',
+        ]}
+        chartHeight={chartHeight}
+        collapsible={collapsible}
+        data={timeInOverrideData}
+        dataFormat={{
+          label: statFormats.percentage,
+          summary: statFormats.percentage,
+          tooltip: statFormats.duration,
+        }}
+        isOpened={isOpened}
+        legend={legend}
+        muteOthersOnHover={muteOthersOnHover}
+        title="Time In Activity"
+        type={statTypes.barHorizontal}
+      />
+    </Container>
+  );
+});
+
 let totalInsulinData = {
   data: [
     {

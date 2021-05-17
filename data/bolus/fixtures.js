@@ -34,6 +34,11 @@ export const normal = {
   id: '61b4d2ffc5a74d2b80b5a9ef44bf5c35',
 };
 
+export const automated = {
+  ...normal,
+  subType: 'automated',
+};
+
 export const interruptedNormal = {
   type: 'bolus',
   normal: 5,
