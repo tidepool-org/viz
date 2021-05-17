@@ -30,7 +30,7 @@ export const generateGUID = () => 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace
 
 class Common {
   constructor(opts = {}) {
-    this.deviceId = 'Test Page Data - 123';
+    this.deviceId = opts.deviceId || 'Test Page Data - 123';
     this.source = opts.source || 'testpage';
     this.conversionOffset = 0;
     this.uploadId = opts.uploadId || 'uploadId123';
@@ -331,6 +331,7 @@ export class Upload extends Common {
     this.source = opts.source;
     this.deviceTime = opts.deviceTime;
     this.deviceModel = opts.deviceModel;
+    this.deviceManufacturers = opts.deviceManufacturers;
     this.deviceSerialNumber = opts.deviceSerialNumber;
 
     this.time = this.makeTime();

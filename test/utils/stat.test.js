@@ -930,14 +930,14 @@ describe('stat', () => {
       it('should return annotations for `timeInAuto` stat when viewing a single day of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInAuto, singleDayOpts)).to.have.ordered.members([
           '**Time In Auto Mode:** Time spent in automated basal delivery.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Auto Mode divided the total duration of basals for this time period.\n\n**(time)** is total duration of time in Auto Mode.',
+          '**How we calculate this:**\n\n**(%)** is the duration in Auto Mode divided by the total duration of basals for this time period.\n\n**(time)** is total duration of time in Auto Mode.',
         ]);
       });
 
       it('should return annotations for `timeInAuto` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInAuto, multiDayOpts)).to.have.ordered.members([
           '**Time In Auto Mode:** Daily average of the time spent in automated basal delivery.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Auto Mode divided the total duration of basals for this time period.\n\n**(time)** is 24 hours multiplied by % in Auto Mode.',
+          '**How we calculate this:**\n\n**(%)** is the duration in Auto Mode divided by the total duration of basals for this time period.\n\n**(time)** is 24 hours multiplied by % in Auto Mode.',
         ]);
       });
     });
@@ -946,14 +946,14 @@ describe('stat', () => {
       it('should return annotations for `timeInOverride` stat when viewing a single day of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, singleDayOpts)).to.have.ordered.members([
           '**Time In Settings Override:** Time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in Settings Override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided by the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in Settings Override.',
         ]);
       });
 
       it('should return annotations for `timeInOverride` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, multiDayOpts)).to.have.ordered.members([
           '**Time In Settings Override:** Daily average of the time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in Settings Override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided by the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in Settings Override.',
         ]);
       });
     });

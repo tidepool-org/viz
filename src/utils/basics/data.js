@@ -116,7 +116,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         if (pumpUpload.isAutomatedBolusDevice) {
           dimensions.push(...[
             { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3 },
-            { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: true, selectorIndex: 7 },
+            { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 7 },
           ]);
           perRow = 4;
         }

@@ -81,6 +81,11 @@ describe('StatUtil', () => {
       value: 6,
       ...useRawData,
     }),
+    new Types.Bolus({
+      deviceTime: '2018-02-02T03:00:00',
+      value: 0,
+      ...useRawData,
+    }),
   ], _.toPlainObject);
 
   const cbgData = _.map([
@@ -246,21 +251,25 @@ describe('StatUtil', () => {
     new Types.Wizard({
       deviceTime: '2018-02-01T02:00:00',
       carbInput: 4,
+      bolus: bolusData[0],
       ...useRawData,
     }),
     new Types.Wizard({
       deviceTime: '2018-02-01T03:00:00',
+      bolus: bolusData[1],
       ...useRawData,
     }),
     new Types.Wizard({
       deviceTime: '2018-02-01T04:00:00',
       carbInput: 2,
       carbUnits: 'exchanges',
+      bolus: bolusData[2],
       ...useRawData,
     }),
     new Types.Wizard({
       deviceTime: '2018-02-02T04:00:00',
       carbInput: 10,
+      bolus: bolusData[3],
       ...useRawData,
     }),
   ], _.toPlainObject);

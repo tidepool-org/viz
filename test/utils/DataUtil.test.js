@@ -211,15 +211,18 @@ describe('DataUtil', () => {
     new Types.Upload({
       deviceTags: ['insulin-pump'],
       source: 'Tandem',
+      deviceManufacturers: ['Tandem'],
       deviceModel: '12345',
       deviceSerialNumber: 'sn-0',
       deviceTime: '2018-01-01T00:00:00',
+      deviceId: 'tandemCIQ12345',
       uploadId: 'upload-0',
       ...useRawData,
     }),
     new Types.Upload({
       deviceTags: ['insulin-pump'],
       source: 'Insulet',
+      deviceManufacturers: ['Insulet', 'Abbot'],
       deviceModel: 'dash',
       deviceSerialNumber: 'sn-1',
       deviceTime: '2018-01-02T00:00:00',
@@ -229,6 +232,7 @@ describe('DataUtil', () => {
     new Types.Upload({
       deviceTags: ['insulin-pump'],
       source: 'Medtronic',
+      deviceManufacturers: ['Medtronic'],
       deviceModel: '1780',
       deviceSerialNumber: 'sn-2',
       deviceTime: '2018-02-02T00:00:00',
@@ -367,6 +371,31 @@ describe('DataUtil', () => {
       ]);
 
       expect(dataUtil.bolusToWizardIdMap[newBolus.id]).to.equal(newWizard.id);
+    });
+
+    it('should create and/or update the `wizardToBolusIdMap`', () => {
+      delete dataUtil.wizardToBolusIdMap;
+      expect(dataUtil.wizardToBolusIdMap).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+      expect(dataUtil.wizardToBolusIdMap).to.be.an('object').and.have.keys([
+        wizardData[0].id,
+        wizardData[1].id,
+        wizardData[2].id,
+      ]);
+
+      const newBolus = new Types.Bolus({ ...useRawData });
+      const newWizard = new Types.Wizard({ bolus: newBolus, ...useRawData });
+      dataUtil.addData([newBolus, newWizard], defaultPatientId);
+
+      expect(dataUtil.wizardToBolusIdMap).to.be.an('object').and.have.keys([
+        wizardData[0].id,
+        wizardData[1].id,
+        wizardData[2].id,
+        newWizard.id,
+      ]);
+
+      expect(dataUtil.wizardToBolusIdMap[newWizard.id]).to.equal(newBolus.id);
     });
 
     it('should create and/or update the `bolusDatumsByIdMap`', () => {
@@ -675,6 +704,18 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(wizardWithBolusString);
         expect(dataUtil.bolusToWizardIdMap['12345']).to.equal('2');
       });
+
+      it('should add the datum id to the `wizardToBolusIdMap` with the wizard id as a key if bolus field is a string', () => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+
+        const wizardWithBolusObject = { type: 'wizard', id: '1', bolus: { id: '12345' } };
+        dataUtil.normalizeDatumIn(wizardWithBolusObject);
+        expect(dataUtil.wizardToBolusIdMap['1']).to.be.undefined;
+
+        const wizardWithBolusString = { type: 'wizard', id: '2', bolus: '12345' };
+        dataUtil.normalizeDatumIn(wizardWithBolusString);
+        expect(dataUtil.wizardToBolusIdMap['2']).to.equal('12345');
+      });
     });
 
     context('bolus', () => {
@@ -691,13 +732,27 @@ describe('DataUtil', () => {
   describe('joinWizardAndBolus', () => {
     context('wizard datum', () => {
       it('should replace bolus id with a bolus datum with a stripped `wizard` field', () => {
-        const wizard = { type: 'wizard', id: 'wizard1', bolus: 'bolus1' };
-        const bolus = { type: 'bolus', id: 'bolus1', wizard };
+        const wizard = { type: 'wizard', id: 'wizard1', bolus: 'bolus1', uploadId: '12345' };
+        const bolus = { type: 'bolus', id: 'bolus1', wizard, uploadId: '12345' };
         dataUtil.bolusToWizardIdMap = { bolus1: 'wizard1' };
+        dataUtil.wizardToBolusIdMap = { wizard1: 'bolus1' };
         dataUtil.bolusDatumsByIdMap = { bolus1: bolus };
 
         dataUtil.joinWizardAndBolus(wizard);
-        expect(wizard.bolus).to.eql({ type: 'bolus', id: 'bolus1' });
+        expect(wizard.bolus).to.eql({ type: 'bolus', id: 'bolus1', uploadId: '12345' });
+      });
+
+      it('should reject a wizard datum that references a bolus with a non-matching `uploadId`', () => {
+        const wizard = { type: 'wizard', id: 'wizard1', bolus: 'bolus1', uploadId: '12345' };
+        const bolus = { type: 'bolus', id: 'bolus1', wizard, uploadId: '98765' };
+        dataUtil.bolusToWizardIdMap = { bolus1: 'wizard1' };
+        dataUtil.wizardToBolusIdMap = { wizard1: 'bolus1' };
+        dataUtil.bolusDatumsByIdMap = { bolus1: bolus };
+
+        dataUtil.joinWizardAndBolus(wizard);
+        expect(wizard.bolus).to.eql('bolus1');
+        expect(wizard.reject).to.be.true;
+        expect(wizard.rejectReason).to.eql(['Upload ID does not match referenced bolus']);
       });
     });
 
@@ -2371,6 +2426,70 @@ describe('DataUtil', () => {
       dataUtil.setDevices();
       expect(dataUtil.devices).to.eql([{ id: 'device1' }, { id: 'device2' }]);
     });
+
+    it('should add (Control-IQ) to a control-iq device label', () => {
+      initDataUtil([uploadData[0]]);
+      delete(dataUtil.devices);
+
+      dataUtil.setDevices();
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandemCIQ12345',
+          label: 'Tandem 12345 (Control-IQ)',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+      ]);
+    });
+
+    it('should exclude a non-Control-IQ device upload if a Control-IQ upload exists', () => {
+      initDataUtil([{ ...uploadData[0], deviceId: 'tandem12345' }]);
+      delete(dataUtil.devices);
+      delete(dataUtil.excludedDevices);
+
+      // add non-CIQ device upload. Should not be excluded
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandem12345',
+          label: 'Tandem 12345',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+      ]);
+
+      expect(dataUtil.excludedDevices).to.eql([]);
+
+      // add CIQ device upload and re-run. Should exclude the non-CIQ device
+      dataUtil.addData([uploadData[0]], defaultPatientId);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandem12345',
+          label: 'Tandem 12345',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+        {
+          bgm: false,
+          cgm: false,
+          id: 'tandemCIQ12345',
+          label: 'Tandem 12345 (Control-IQ)',
+          pump: true,
+          serialNumber: 'sn-0',
+        },
+      ]);
+
+      expect(dataUtil.excludedDevices).to.eql(['tandem12345']);
+    });
   });
 
   describe('setMetaData', () => {
@@ -2800,10 +2919,12 @@ describe('DataUtil', () => {
       expect(dataUtil.excludedDevices).to.eql(['2']);
     });
 
-    it('should set `excludedDevices` to `[]` if no arg provided', () => {
+    it('should set `excludedDevices` to `self.excludedDevices` if no arg provided', () => {
       expect(dataUtil.excludedDevices).to.be.undefined;
+      dataUtil.setExcludedDevices('foo');
+      expect(dataUtil.excludedDevices).to.equal('foo');
       dataUtil.setExcludedDevices();
-      expect(dataUtil.excludedDevices).to.eql([]);
+      expect(dataUtil.excludedDevices).to.eql('foo');
     });
   });
 
@@ -3379,6 +3500,8 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'patientId',
         'size',
+        'devices',
+        'excludedDevices',
       ];
 
       const result = dataUtil.getMetaData(metaData);
@@ -3389,6 +3512,16 @@ describe('DataUtil', () => {
       expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
       expect(result.patientId).to.equal(defaultPatientId);
       expect(result.size).to.equal(30);
+
+      expect(result.devices).to.eql([
+        { id: 'Test Page Data - 123' },
+        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
+        { id: 'Dexcom-XXX-XXXX' },
+        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+      ]);
+
+      expect(result.excludedDevices).to.eql([]);
     });
 
     it('should return metaData requested via a string', () => {
@@ -3400,6 +3533,8 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'patientId',
         'size',
+        'devices',
+        'excludedDevices',
       ];
 
       const result = dataUtil.getMetaData(_.join(metaData, ','));
@@ -3410,6 +3545,16 @@ describe('DataUtil', () => {
       expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
       expect(result.patientId).to.equal(defaultPatientId);
       expect(result.size).to.equal(30);
+
+      expect(result.devices).to.eql([
+        { id: 'Test Page Data - 123' },
+        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
+        { id: 'Dexcom-XXX-XXXX' },
+        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+      ]);
+
+      expect(result.excludedDevices).to.eql([]);
     });
 
     it('should normalize each datum returned in `latestDatumByType`', () => {

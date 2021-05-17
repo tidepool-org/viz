@@ -2,6 +2,7 @@ import bows from 'bows';
 import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolved
 import moment from 'moment-timezone';
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import {
   getLatestPumpUpload,
@@ -44,6 +45,8 @@ import AggregationUtil from './AggregationUtil';
 import { statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
 
+const t = i18next.t.bind(i18next);
+
 /* global __DEV__ */
 
 export class DataUtil {
@@ -75,11 +78,12 @@ export class DataUtil {
   addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
 
-    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
-    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
+    this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
+    this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
 
@@ -186,6 +190,7 @@ export class DataUtil {
     if (d.type === 'wizard' && _.isString(d.bolus)) {
       this.wizardDatumsByIdMap[d.id] = d;
       this.bolusToWizardIdMap[d.bolus] = d.id;
+      this.wizardToBolusIdMap[d.id] = d.bolus;
     }
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
@@ -213,10 +218,23 @@ export class DataUtil {
     if (_.includes(['bolus', 'wizard'], d.type)) {
       const isWizard = d.type === 'wizard';
       const fieldToPopulate = isWizard ? 'bolus' : 'wizard';
-      const idMap = isWizard ? _.invert(this.bolusToWizardIdMap) : this.bolusToWizardIdMap;
+      const idMap = isWizard ? this.wizardToBolusIdMap : this.bolusToWizardIdMap;
       const datumMap = isWizard ? this.bolusDatumsByIdMap : this.wizardDatumsByIdMap;
 
-      if (idMap[d.id]) d[fieldToPopulate] = _.omit(datumMap[idMap[d.id]], d.type);
+      if (idMap[d.id]) {
+        const datumToPopulate = _.omit(datumMap[idMap[d.id]], d.type);
+
+        if (isWizard && d.uploadId !== datumToPopulate.uploadId) {
+          // Due to an issue stemming from a fix for wizard datums in Upoader >= v2.35.0, we have a
+          // possibility of duplicates of older wizard datums from previous uploads. The boluses and
+          // corrected wizards should both reference the same uploadId, so we can safely reject
+          // wizards that don't reference the same upload as the bolus it's referencing.
+          d.reject = true;
+          d.rejectReason = ['Upload ID does not match referenced bolus'];
+        } else {
+          d[fieldToPopulate] = datumToPopulate;
+        }
+      }
     }
   };
 
@@ -783,6 +801,7 @@ export class DataUtil {
   setDevices = () => {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
+
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
       const upload = uploadsById[value];
       let device = { id: key };
@@ -792,13 +811,17 @@ export class DataUtil {
         const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
         const deviceModel = _.get(upload, 'deviceModel', '');
         let label = key;
+
         if (deviceManufacturer || deviceModel) {
           if (deviceManufacturer === 'Dexcom' && isContinuous) {
-            label = 'Dexcom API';
+            label = t('Dexcom API');
           } else {
-            label = [deviceManufacturer, deviceModel].join(' ');
+            label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }
         }
+
+        if (key.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
+
         device = {
           bgm: _.includes(upload.deviceTags, 'bgm'),
           cgm: _.includes(upload.deviceTags, 'cgm'),
@@ -812,6 +835,21 @@ export class DataUtil {
       result.push(device);
       return result;
     }, []);
+
+    const allDeviceIds = _.keys(this.deviceUploadMap);
+    const excludedDevices = this.excludedDevices || [];
+
+    _.each(this.devices, device => {
+      if (device.id.indexOf('tandemCIQ') === 0) {
+        // Exclude pre-control-iq tandem uploads by default if we have data from the same device
+        // from a version of uploader supports control-iq data. Otherwise, we have duplicate data.
+        const preCIQDeviceID = device.id.replace('tandemCIQ', 'tandem');
+        if (_.includes(allDeviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
+      }
+    });
+
+    this.setExcludedDevices(_.uniq(excludedDevices));
+
     this.endTimer('setDevices');
   }
   /* eslint-enable no-param-reassign */
@@ -1020,7 +1058,7 @@ export class DataUtil {
     this.returnRawData = returnRaw;
   };
 
-  setExcludedDevices = (deviceIds = []) => {
+  setExcludedDevices = (deviceIds = this.excludedDevices) => {
     this.startTimer('setExcludedDevices');
     this.excludedDevices = deviceIds;
     this.endTimer('setExcludedDevices');
@@ -1252,6 +1290,7 @@ export class DataUtil {
       'patientId',
       'size',
       'devices',
+      'excludedDevices',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;

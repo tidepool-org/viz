@@ -256,7 +256,9 @@ export class AggregationUtil {
         },
       } = dataForDay;
 
-      const total = dataList.length;
+      // Exclude automated boluses from total so that total and average per day only include
+      // patient-initiated boluses
+      const total = dataList.length - automated.count;
 
       if (total) {
         processedData[dataForDay.key] = {
