@@ -145,7 +145,27 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
       d: path,
       key: `delivered-${bolus.id}`,
       type: 'delivered',
+      subType: insulinEvent.subType,
     });
+
+    const deliveredY = yScale(bolusUtils.getDelivered(insulinEvent));
+    const edges = getBolusEdges(bolusWidth, bolusCenter, bolusBottom, deliveredY);
+    const { left, right, top, bottom } = edges;
+    const fractionStroke = 0.5;
+
+    if (insulinEvent.subType === 'automated') {
+      paths.push({
+        d: `
+          M ${left + fractionStroke},${bottom}
+          L ${left + fractionStroke},${top + fractionStroke}
+          L ${right - fractionStroke},${top + fractionStroke}
+          L ${right - fractionStroke},${bottom}
+        `,
+        key: `programmed-${bolus.id}`,
+        type: 'programmed',
+        subType: insulinEvent.subType,
+      });
+    }
   }
 
   // this is a port of tideline's js/plot/util/drawbolus.js: extended

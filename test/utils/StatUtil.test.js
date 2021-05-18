@@ -81,6 +81,11 @@ describe('StatUtil', () => {
       value: 6,
       ...useRawData,
     }),
+    new Types.Bolus({
+      deviceTime: '2018-02-02T03:00:00',
+      value: 0,
+      ...useRawData,
+    }),
   ], _.toPlainObject);
 
   const cbgData = _.map([
@@ -112,6 +117,57 @@ describe('StatUtil', () => {
       deviceId: 'Dexcom-XXX-XXXX',
       value: 260,
       deviceTime: '2018-02-01T00:50:00',
+      ...useRawData,
+    }),
+  ], _.toPlainObject);
+
+
+  const settingsOverrideDatumOverlappingStart = new Types.DeviceEvent({
+    duration: MS_IN_HOUR * 2,
+    deviceTime: '2018-01-31T23:00:00',
+    source: 'Tandem',
+    deviceModel: '12345',
+    subType: 'pumpSettingsOverride',
+    overrideType: 'sleep',
+    ...useRawData,
+  });
+
+  const settingsOverrideDatumOverlappingEnd = new Types.DeviceEvent({
+    duration: MS_IN_HOUR * 3,
+    deviceTime: '2018-02-01T22:00:00',
+    source: 'Tandem',
+    deviceModel: '12345',
+    subType: 'pumpSettingsOverride',
+    overrideType: 'sleep',
+    ...useRawData,
+  });
+
+  const deviceEventData = _.map([
+    new Types.DeviceEvent({
+      duration: MS_IN_HOUR,
+      deviceTime: '2018-02-01T01:00:00',
+      source: 'Tandem',
+      deviceModel: '12345',
+      subType: 'pumpSettingsOverride',
+      overrideType: 'sleep',
+      ...useRawData,
+    }),
+    new Types.DeviceEvent({
+      duration: MS_IN_HOUR,
+      deviceTime: '2018-02-01T02:00:00',
+      source: 'Tandem',
+      deviceModel: '12345',
+      subType: 'pumpSettingsOverride',
+      overrideType: 'physicalActivity',
+      ...useRawData,
+    }),
+    new Types.DeviceEvent({
+      duration: MS_IN_HOUR,
+      deviceTime: '2018-02-01T03:00:00',
+      source: 'Tandem',
+      deviceModel: '12345',
+      subType: 'pumpSettingsOverride',
+      overrideType: 'sleep',
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -195,21 +251,25 @@ describe('StatUtil', () => {
     new Types.Wizard({
       deviceTime: '2018-02-01T02:00:00',
       carbInput: 4,
+      bolus: bolusData[0],
       ...useRawData,
     }),
     new Types.Wizard({
       deviceTime: '2018-02-01T03:00:00',
+      bolus: bolusData[1],
       ...useRawData,
     }),
     new Types.Wizard({
       deviceTime: '2018-02-01T04:00:00',
       carbInput: 2,
       carbUnits: 'exchanges',
+      bolus: bolusData[2],
       ...useRawData,
     }),
     new Types.Wizard({
       deviceTime: '2018-02-02T04:00:00',
       carbInput: 10,
+      bolus: bolusData[3],
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -218,6 +278,7 @@ describe('StatUtil', () => {
     ...basalData,
     ...bolusData,
     ...cbgData,
+    ...deviceEventData,
     ...foodData,
     ...smbgData,
     ...uploadData,
@@ -684,6 +745,44 @@ describe('StatUtil', () => {
         expect(statUtil.getTimeInAutoData()).to.eql({
           automated: MS_IN_HOUR * 3,
           manual: MS_IN_HOUR * 2,
+        });
+      });
+    });
+  });
+
+  describe('getTimeInOverrideData', () => {
+    it('should return the time spent in physicalActivity and sleep overrides when viewing 1 day', () => {
+      filterEndpoints(dayEndpoints);
+      expect(statUtil.getTimeInOverrideData()).to.eql({
+        physicalActivity: MS_IN_HOUR,
+        sleep: MS_IN_HOUR * 2,
+      });
+    });
+
+    it('should return the avg daily time spent in physicalActivity and sleep overrides when viewing more than 1 day', () => {
+      filterEndpoints(twoDayEndpoints);
+      expect(statUtil.getTimeInOverrideData()).to.eql({
+        physicalActivity: MS_IN_HOUR / 2,
+        sleep: (MS_IN_HOUR * 2) / 2,
+      });
+    });
+
+    context('settings override overlaps endpoints', () => {
+      it('should include the portion of delivery of a settings override datum that overlaps the start endpoint', () => {
+        filterEndpoints(dayEndpoints);
+        statUtil.dataUtil.addData([settingsOverrideDatumOverlappingStart], patientId);
+        expect(statUtil.getTimeInOverrideData()).to.eql({
+          physicalActivity: MS_IN_HOUR,
+          sleep: MS_IN_HOUR * 3,
+        });
+      });
+
+      it('should include the portion of delivery of a settings override datum that overlaps the end endpoint', () => {
+        filterEndpoints(dayEndpoints);
+        statUtil.dataUtil.addData([settingsOverrideDatumOverlappingEnd], patientId);
+        expect(statUtil.getTimeInOverrideData()).to.eql({
+          physicalActivity: MS_IN_HOUR,
+          sleep: MS_IN_HOUR * 4,
         });
       });
     });

@@ -240,6 +240,11 @@ describe('constants', () => {
           [constants.SITE_CHANGE_RESERVOIR]: 'Change Cartridge',
           [constants.SITE_CHANGE_TUBING]: 'Fill Tubing',
           [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
+          [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.SETTINGS_OVERRIDE]: 'Activity',
+          [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },
+          [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
         },
         default: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Change Cartridge',
@@ -247,6 +252,9 @@ describe('constants', () => {
           [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
           [constants.AUTOMATED_DELIVERY]: 'Automated',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.SETTINGS_OVERRIDE]: 'Settings Override',
+          [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },
+          [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
         },
       });
     });

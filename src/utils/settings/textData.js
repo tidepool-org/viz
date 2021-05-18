@@ -58,8 +58,9 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   );
 
   const ratio = nonTandemData.ratio(settings, manufacturer);
+  const ratioUnits = _.get(settings, 'units.carb') === 'exchanges' ? 'U/exch' : 'g/U';
   settingsString += textUtil.buildTextTable(
-    `${ratio.title} g/U`,
+    `${ratio.title} ${ratioUnits}`,
     ratio.rows,
     ratio.columns,
   );

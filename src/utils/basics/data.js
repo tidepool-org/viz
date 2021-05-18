@@ -54,9 +54,11 @@ export const utils = {
  * Define sections and dimensions used in the basics view
  *
  * @param {Object} bgPrefs - bgPrefs object containing viz-style bgBounds
+ * @param {String} manufacturer Manufacturer name
+ * @param {Object} pumpUpload Tidepool latest pump upload datum
  * @returns {Object} sections
  */
-export function defineBasicsAggregations(bgPrefs, manufacturer) {
+export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {}) {
   const bgLabels = generateBgRangeLabels(bgPrefs);
   bgLabels.veryLow = _.upperFirst(bgLabels.veryLow);
   bgLabels.veryHigh = _.upperFirst(bgLabels.veryHigh);
@@ -77,8 +79,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer) {
     let dimensions;
     let title = '';
     let summaryTitle;
-    let emptyText;
-    const active = true;
+    let perRow = 3;
 
     switch (section) {
       case 'basals':
@@ -106,11 +107,19 @@ export function defineBasicsAggregations(bgPrefs, manufacturer) {
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
           { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true, selectorIndex: 1 },
-          { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true, selectorIndex: 3 },
-          { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 4 },
+          { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true, selectorIndex: 4 },
+          { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 5 },
           { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
-          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 5 },
+          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
         ];
+
+        if (pumpUpload.isAutomatedBolusDevice) {
+          dimensions.push(...[
+            { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3 },
+            { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 7 },
+          ]);
+          perRow = 4;
+        }
         break;
 
       case 'fingersticks':
@@ -136,12 +145,11 @@ export function defineBasicsAggregations(bgPrefs, manufacturer) {
     }
 
     sections[section] = {
-      active,
-      title,
-      summaryTitle,
-      emptyText,
-      type,
       dimensions,
+      perRow,
+      summaryTitle,
+      title,
+      type,
     };
   });
 

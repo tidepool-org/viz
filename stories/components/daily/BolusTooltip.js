@@ -34,6 +34,12 @@ const immediatelyCancelled = {
   subType: 'normal',
 };
 
+const automated = {
+  normal: 5,
+  subType: 'automated',
+  normalTime: '2017-11-11T05:45:52.000Z',
+};
+
 const override = {
   type: 'wizard',
   bolus: {
@@ -244,6 +250,22 @@ const withCarbInput = {
     net: 5,
   },
   carbInput: 75,
+  insulinCarbRatio: 15,
+};
+
+const withCarbExchangeInput = {
+  type: 'wizard',
+  bolus: {
+    normal: 5,
+    normalTime: '2017-11-11T05:45:52.000Z',
+  },
+  recommended: {
+    carb: 5,
+    correction: 0,
+    net: 5,
+  },
+  carbInput: 5,
+  carbUnits: 'exchanges',
   insulinCarbRatio: 15,
 };
 
@@ -461,6 +483,12 @@ storiesOf('BolusTooltip', module)
       <BolusTooltip {...props} bolus={immediatelyCancelled} />
     </div>
   ))
+  .add('automated', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={automated} />
+    </div>
+  ))
   .add('override', () => (
     <div>
       {refDiv}
@@ -561,6 +589,18 @@ storiesOf('BolusTooltip', module)
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withCarbInput} />
+    </div>
+  ))
+  .add('withCarbExchangeInput', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={withCarbExchangeInput} />
+    </div>
+  ))
+  .add('withCarbExchangeInputZero', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={{ ...withCarbExchangeInput, carbInput: 0 }} />
     </div>
   ))
   .add('withBGInput', () => (

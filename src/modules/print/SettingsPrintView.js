@@ -380,7 +380,7 @@ class SettingsPrintView extends PrintView {
   }
 
   renderRatio() {
-    const units = 'g/U';
+    const units = _.get(this, 'latestPumpUpload.settings.units.carb') === 'exchanges' ? 'U/exch' : 'g/U';
     this.renderWizardSetting(
       ratio(this.latestPumpUpload.settings, this.manufacturer),
       units
