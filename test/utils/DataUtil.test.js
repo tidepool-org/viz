@@ -2283,7 +2283,7 @@ describe('DataUtil', () => {
       });
 
       dataUtil.removeData({ id: uploadData[1].id });
-      latestPumpSettings = { type: 'pumpSettings', firmwareVersion: '105900' };
+      latestPumpSettings = { type: 'pumpSettings', deviceId: 'tandemCIQ123456' };
       dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
 
       dataUtil.setLatestPumpUpload();
