@@ -83,7 +83,7 @@ describe('device utility functions', () => {
   describe('isAutomatedBasalDevice', () => {
     it('should return `true` for an upload record for a pump with automated basal delivery capabilities', () => {
       expect(device.isAutomatedBasalDevice(MEDTRONIC, {}, '1780')).to.be.true;
-      expect(device.isAutomatedBasalDevice('tandem', { firmwareVersion: '105900' })).to.be.true;
+      expect(device.isAutomatedBasalDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without automated basal delivery capabilities', () => {
@@ -93,21 +93,21 @@ describe('device utility functions', () => {
 
   describe('isAutomatedBolusDevice', () => {
     it('should return `true` for an upload record for a pump with automated bolus delivery capabilities', () => {
-      expect(device.isAutomatedBolusDevice('tandem', { firmwareVersion: '105900' })).to.be.true;
+      expect(device.isAutomatedBolusDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without automated bolus delivery capabilities', () => {
-      expect(device.isAutomatedBolusDevice('tandem', { firmwareVersion: '105899' })).to.be.false;
+      expect(device.isAutomatedBolusDevice('tandem', { deviceId: 'tandem123456' })).to.be.false;
     });
   });
 
   describe('isSettingsOverrideDevice', () => {
     it('should return `true` for an upload record for a pump with settings override capabilities', () => {
-      expect(device.isSettingsOverrideDevice('tandem', { firmwareVersion: '105900' })).to.be.true;
+      expect(device.isSettingsOverrideDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without settings override capabilities', () => {
-      expect(device.isSettingsOverrideDevice('tandem', { firmwareVersion: '105899' })).to.be.false;
+      expect(device.isSettingsOverrideDevice('tandem', { deviceId: 'tandem123456' })).to.be.false;
     });
   });
 
