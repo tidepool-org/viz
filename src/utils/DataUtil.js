@@ -558,6 +558,7 @@ export class DataUtil {
       delete this.timePrefs;
       delete this.latestPumpUpload;
       delete this.devices;
+      delete this.excludedDevices;
       this.init();
     }
   };
