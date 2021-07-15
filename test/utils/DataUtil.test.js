@@ -1921,6 +1921,18 @@ describe('DataUtil', () => {
         dataUtil.removeData();
         expect(dataUtil.latestPumpUpload).to.be.undefined;
       });
+
+      it('should delete the `devices` metadata', () => {
+        dataUtil.devices = [{ foo: 'bar' }];
+        dataUtil.removeData();
+        expect(dataUtil.devices).to.be.undefined;
+      });
+
+      it('should delete the `excludedDevices` metadata', () => {
+        dataUtil.excludedDevices = ['foo', 'bar'];
+        dataUtil.removeData();
+        expect(dataUtil.excludedDevices).to.be.undefined;
+      });
     });
   });
 
@@ -2283,7 +2295,7 @@ describe('DataUtil', () => {
       });
 
       dataUtil.removeData({ id: uploadData[1].id });
-      latestPumpSettings = { type: 'pumpSettings', firmwareVersion: '105900' };
+      latestPumpSettings = { type: 'pumpSettings', deviceId: 'tandemCIQ123456' };
       dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
 
       dataUtil.setLatestPumpUpload();
