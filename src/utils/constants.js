@@ -91,6 +91,7 @@ export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
 export const MEDTRONIC = 'Medtronic';
+export const MICROTECH = 'Microtech';
 
 export const pumpVocabulary = {
   [ANIMAS]: {
@@ -109,6 +110,11 @@ export const pumpVocabulary = {
     [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
     [AUTOMATED_DELIVERY]: t('Auto Mode'),
     [SCHEDULED_DELIVERY]: t('Manual'),
+  },
+  [MICROTECH]: {
+    [SITE_CHANGE_RESERVOIR]: t('Rewind'),
+    [SITE_CHANGE_TUBING]: t('Prime Reservoir'),
+    [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
   },
   [TANDEM]: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),

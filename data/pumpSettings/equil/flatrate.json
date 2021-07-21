@@ -1,0 +1,73 @@
+{
+    "activeSchedule": "Program 2",
+    "basalSchedules": [
+        {
+            "name": "Program 2",
+            "value": [
+                {
+                    "rate": 0.15000000000000002,
+                    "start": 0
+                }
+            ]
+        }
+    ],
+    "bgTarget": [
+        {
+            "high": 180.00006514650002,
+            "low": 69.9999352568,
+            "start": 0
+        },
+        {
+            "high": 208.9999405254,
+            "low": 69.9999352568,
+            "start": 16200000
+        },
+        {
+            "high": 250.0000004033,
+            "low": 69.9999352568,
+            "start": 37800000
+        }
+    ],
+    "carbRatio": [
+        {
+            "amount": 1,
+            "start": 0
+        },
+        {
+            "amount": 16,
+            "start": 86400000
+        }
+    ],
+    "conversionOffset": 0,
+    "deviceId": "equil-C0210B",
+    "deviceTime": 1626859633000,
+    "id": "72c0997583244df09d3f763e1f043a74",
+    "insulinSensitivity": [
+        {
+            "amount": 1.0000454009,
+            "start": 0
+        },
+        {
+            "amount": 22.999963285299998,
+            "start": 86400000
+        }
+    ],
+    "manufacturers": [
+        "Microtech"
+    ],
+    "serialNumber": "C0210B",
+    "time": 1626856029000,
+    "timezoneOffset": 0,
+    "type": "pumpSettings",
+    "units": {
+        "bg": "mg/dL",
+        "carb": "grams"
+    },
+    "uploadId": "b74d248548461cad70124d3749cf2e05",
+    "_time": "2021-07-21T08:27:09.000Z",
+    "_deviceTime": "2021-07-21T10:27:13",
+    "normalTime": 1626856029000,
+    "displayOffset": 60,
+    "deviceSerialNumber": "C0210B",
+    "source": "Microtech"
+}

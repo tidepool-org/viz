@@ -33,6 +33,7 @@ const medtronicSettings = require('../../../../data/pumpSettings/medtronic/multi
 const medtronicAutomatedSettings = require('../../../../data/pumpSettings/medtronic/automated.json');
 const omnipodSettings = require('../../../../data/pumpSettings/omnipod/multirate.json');
 const tandemSettings = require('../../../../data/pumpSettings/tandem/multirate.json');
+const equilSettings = require('../../../../data/pumpSettings/equil/multirate.json');
 
 describe('PumpSettingsContainer', () => {
   const user = {
@@ -239,6 +240,20 @@ describe('PumpSettingsContainer', () => {
           />
         );
         expect(wrapper.find(Tandem)).to.have.length(1);
+      });
+
+      it('should render `NonTandem` for manufacturerKey of `microtech`', () => {
+        const manufacturerKey = 'microtech';
+        const wrapper = mount(
+          <PumpSettingsContainer
+            {...props}
+            manufacturerKey={manufacturerKey}
+            pumpSettings={equilSettings}
+            settingsState={touched(equilSettings, manufacturerKey)}
+          />
+        );
+        expect(wrapper.find(NonTandem)).to.have.length(1);
+        expect(wrapper.find(NonTandem).prop('deviceKey')).to.equal('microtech');
       });
 
       it('should console.warn and render `null` if unknown manufacturerKey provided', () => {

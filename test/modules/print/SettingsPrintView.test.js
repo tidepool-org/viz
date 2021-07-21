@@ -27,6 +27,7 @@ import medtronicFlatrate from '../../../data/pumpSettings/medtronic/flatrate.jso
 import medtronicAutomated from '../../../data/pumpSettings/medtronic/automated.json';
 import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.json';
 import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.json';
+import equilMultirate from '../../../data/pumpSettings/equil/multirate.json';
 
 import {
   ratio,
@@ -57,6 +58,7 @@ const data = {
   medtronicFlatrate,
   medtronicAutomated,
   omnipodMultirate,
+  equilMultirate,
 };
 
 describe('SettingsPrintView', () => {
@@ -129,6 +131,11 @@ describe('SettingsPrintView', () => {
     {
       name: 'omnipod',
       data: omnipodMultirate,
+      opts,
+    },
+    {
+      name: 'equil',
+      data: equilMultirate,
       opts,
     },
   ];
@@ -292,6 +299,13 @@ describe('SettingsPrintView', () => {
       Renderer.renderDeviceMeta();
 
       sinon.assert.calledWith(Renderer.doc.text, 'OmniPod');
+    });
+
+    it('should render the device name for Equil devices', () => {
+      Renderer = createRenderer(data.equilMultirate);
+      Renderer.renderDeviceMeta();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Equil');
     });
 
     it('should render the device name for Tandem devices', () => {

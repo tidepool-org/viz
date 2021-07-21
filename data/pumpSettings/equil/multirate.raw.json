@@ -1,0 +1,97 @@
+{
+     "time": "2021-07-21T08:27:09.000Z",
+     "timezoneOffset": 0,
+     "clockDriftOffset": 0,
+     "conversionOffset": 0,
+     "deviceTime": "2021-07-21T10:27:13",
+     "deviceId": "equil-C0210B",
+     "type": "pumpSettings",
+     "activeSchedule": "test",
+     "units": {
+         "carb": "grams",
+         "bg": "mg/dL"
+     },
+     "basalSchedules": {
+         "test": [
+             {
+                 "start": 0,
+                 "rate": 0.35000000000000003
+             },
+             {
+                 "start": 10800000,
+                 "rate": 0.65
+             },
+             {
+                 "start": 32400000,
+                 "rate": 0.5
+             },
+             {
+                 "start": 43200000,
+                 "rate": 0.45
+             },
+             {
+                 "start": 57600000,
+                 "rate": 0.55
+             },
+             {
+                 "start": 72000000,
+                 "rate": 0.4
+             }
+         ],
+         "Program 2": [
+             {
+                 "start": 0,
+                 "rate": 0.15000000000000002
+             }
+         ],
+         "Program 3": [
+             {
+                 "start": 0,
+                 "rate": 0.5
+             }
+         ]
+     },
+     "carbRatio": [
+         {
+             "amount": 1,
+             "start": 0
+         },
+         {
+             "amount": 16,
+             "start": 86400000
+         }
+     ],
+     "insulinSensitivity": [
+         {
+             "amount": 1,
+             "start": 0
+         },
+         {
+             "amount": 23,
+             "start": 86400000
+         }
+     ],
+     "bgTarget": [
+         {
+             "start": 0,
+             "low": 70,
+             "high": 180
+         },
+         {
+             "start": 16200000,
+             "low": 70,
+             "high": 209
+         },
+         {
+             "start": 37800000,
+             "low": 70,
+             "high": 250
+         }
+     ],
+     "serialNumber": "C0210B",
+     "source": "MicroTech",
+     "guid": "929bcfc1-b9fe-4b6d-9bf7-499d6b09c948",
+     "id": "897a76c611234fb6a540af93325b6e32",
+     "deviceSerialNumber": "C0210B",
+     "uploadId": "SampleUploadId"
+ }
