@@ -35,6 +35,7 @@ import {
   TANDEM,
   ANIMAS,
   MEDTRONIC,
+  MICROTECH,
   pumpVocabulary,
 } from '../constants';
 
@@ -190,7 +191,7 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     if (!_.includes(allowedSources, siteChangeSource)) {
       siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
     }
-  } else if (manufacturer === _.lowerCase(INSULET)) {
+  } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
   }
 
