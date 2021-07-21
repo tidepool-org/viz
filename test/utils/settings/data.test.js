@@ -46,6 +46,7 @@ describe('[settings] data utils', () => {
       expect(data.deviceName('insulet')).to.equal('OmniPod');
       expect(data.deviceName('medtronic')).to.equal('Medtronic');
       expect(data.deviceName('tandem')).to.equal('Tandem');
+      expect(data.deviceName('microtech')).to.equal('Equil');
     });
 
     it('should return the manufacturer key if a device name mapping does not exist', () => {

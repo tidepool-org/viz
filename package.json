@@ -148,8 +148,8 @@
     "lodash": "4.x",
     "moment-timezone": "0.x",
     "react": "16.x",
-    "react-dom": "16.x",
     "react-addons-update": "16.x",
+    "react-dom": "16.x",
     "react-redux": "5.x",
     "redux": "3.x"
   },

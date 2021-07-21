@@ -36,6 +36,8 @@ const omnipodFlatRateData = require('../../../data/pumpSettings/omnipod/flatrate
 const omnipodMultiRateData = require('../../../data/pumpSettings/omnipod/multirate.json');
 const medtronicMultiRateData = require('../../../data/pumpSettings/medtronic/multirate.json');
 const medtronicAutomatedData = require('../../../data/pumpSettings/medtronic/automated.json');
+const equilMultiRateData = require('../../../data/pumpSettings/equil/multirate.json');
+const equilFlatRateData = require('../../../data/pumpSettings/equil/flatrate.json');
 
 const copySettingsClicked = sinon.spy();
 const timePrefs = { timezoneAware: false, timezoneName: 'Europe/London' };
@@ -754,6 +756,222 @@ describe('NonTandem', () => {
         expect(carbRatioTable.someWhere(
           n => (n.text().search(medtronicMultiRateData.carbRatio[3].amount) !== -1)
         )).to.be.true;
+      });
+    });
+  });
+
+  describe('Equil', () => {
+    it('should have a header', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'microtech'}
+          openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+          pumpSettings={equilMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('Header')).to.have.length(1);
+    });
+
+    it('should have Equil as the Header deviceDisplayName', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'microtech'}
+          openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+          pumpSettings={equilMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('Header').props().deviceDisplayName).to.equal('Equil');
+    });
+
+    // these tables are the bolus settings + basal schedules
+    it('should have six Tables', () => {
+      const wrapper = shallow(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'microtech'}
+          openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+          pumpSettings={equilMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('Table')).to.have.length(6);
+    });
+
+    // these containers are the basal schedules
+    it('should have three CollapsibleContainers', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'microtech'}
+          openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+          pumpSettings={equilMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find(CollapsibleContainer)).to.have.length(3);
+    });
+
+    it('should preserve user capitalization of schedule name', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'microtech'}
+          openedSections={{ [equilFlatRateData.activeSchedule]: true }}
+          pumpSettings={equilFlatRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('.label').someWhere(n => (n.text().search('Program 2') !== -1)))
+        .to.be.true;
+    });
+
+    it('should have `Active at Upload` text somewhere', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'microtech'}
+          openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+          pumpSettings={equilMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('.label').someWhere(n => (n.text().search(activeAtUploadText) !== -1)))
+        .to.be.true;
+    });
+
+    describe('bolus settings', () => {
+      it('should surface the expected value for Insulin Sensitivity', () => {
+        const wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'microtech'}
+            openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+            pumpSettings={equilMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const isfTable = wrapper.find('table')
+          .filterWhere(n => (n.text().search('Insulin Sensitivity') !== -1));
+        expect(isfTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.insulinSensitivity[0].amount, 1)
+          ) !== -1)
+        )).to.be.true;
+      });
+
+      it('should surface the expected lower & upper values for Target BG', () => {
+        const wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'microtech'}
+            openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+            pumpSettings={equilMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const bgTargetTable = wrapper.find('table')
+          .filterWhere(n => (n.text().search('Target BG') !== -1));
+
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.bgTarget[0].low, 1)
+          ) !== -1)
+        )).to.be.true;
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.bgTarget[0].high, 1)
+          ) !== -1)
+        )).to.be.true;
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.bgTarget[1].low, 1)
+          ) !== -1)
+        )).to.be.true;
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.bgTarget[1].high, 1)
+          ) !== -1)
+        )).to.be.true;
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.bgTarget[2].low, 1)
+          ) !== -1)
+        )).to.be.true;
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(equilMultiRateData.bgTarget[2].high, 1)
+          ) !== -1)
+        )).to.be.true;
+      });
+
+      it('should surface the expected value for carb ratio', () => {
+        const wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'microtech'}
+            openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+            pumpSettings={equilMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const carbRatioTable = wrapper.find('table')
+          .filterWhere(n => (n.text().search('Carbohydrate Ratio') !== -1));
+        expect(carbRatioTable.someWhere(
+          n => (n.text().search(equilMultiRateData.carbRatio[0].amount) !== -1)
+        )).to.be.true;
+        expect(carbRatioTable.someWhere(
+          n => (n.text().search(equilMultiRateData.carbRatio[1].amount) !== -1)
+        )).to.be.true;
+      });
+
+      it('should have a button to copy settings', () => {
+        const mounted = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'microtech'}
+            openedSections={{ [equilMultiRateData.activeSchedule]: true }}
+            pumpSettings={equilMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const clipBoardButton = mounted.find('ClipboardButton').at(0);
+        expect(copySettingsClicked.callCount).to.equal(0);
+        clipBoardButton.prop('onSuccess')();
+        expect(copySettingsClicked.callCount).to.equal(1);
       });
     });
   });

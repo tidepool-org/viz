@@ -315,7 +315,7 @@ const pumpSettingsTandem = {
   basalSchedules,
 };
 
-const pumpSettingsMicroTech = {
+const pumpSettingsEquil = {
   ...common,
   bgTarget: {
     type: 'array',
@@ -370,7 +370,7 @@ export default {
     medtronic: v.compile(pumpSettingsMedtronic),
     omnipod: v.compile(pumpSettingsOmnipod),
     tandem: v.compile(pumpSettingsTandem),
-    microtech: v.compile(pumpSettingsMicroTech),
+    equil: v.compile(pumpSettingsEquil),
   },
   smbg: v.compile(bg),
   wizard: v.compile(wizard),

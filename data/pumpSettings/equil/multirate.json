@@ -1,0 +1,111 @@
+{
+    "activeSchedule": "test",
+    "basalSchedules": [
+        {
+            "name": "Program 2",
+            "value": [
+                {
+                    "rate": 0.5,
+                    "start": 0
+                }
+            ]
+        },
+        {
+            "name": "Program 3",
+            "value": [
+                {
+                    "rate": 0.5,
+                    "start": 0
+                }
+            ]
+        },
+        {
+            "name": "test",
+            "value": [
+                {
+                    "rate": 0.35000000000000003,
+                    "start": 0
+                },
+                {
+                    "rate": 0.65,
+                    "start": 10800000
+                },
+                {
+                    "rate": 0.5,
+                    "start": 32400000
+                },
+                {
+                    "rate": 0.45,
+                    "start": 43200000
+                },
+                {
+                    "rate": 0.55,
+                    "start": 57600000
+                },
+                {
+                    "rate": 0.4,
+                    "start": 72000000
+                }
+            ]
+        }
+    ],
+    "bgTarget": [
+        {
+            "high": 180.00006514650002,
+            "low": 69.9999352568,
+            "start": 0
+        },
+        {
+            "high": 208.9999405254,
+            "low": 69.9999352568,
+            "start": 16200000
+        },
+        {
+            "high": 250.0000004033,
+            "low": 69.9999352568,
+            "start": 37800000
+        }
+    ],
+    "carbRatio": [
+        {
+            "amount": 1,
+            "start": 0
+        },
+        {
+            "amount": 16,
+            "start": 86400000
+        }
+    ],
+    "conversionOffset": 0,
+    "deviceId": "equil-C0210B",
+    "deviceTime": 1626858677000,
+    "id": "5d362baa3ef405563ba03aec9682f15d",
+    "insulinSensitivity": [
+        {
+            "amount": 1.0000454009,
+            "start": 0
+        },
+        {
+            "amount": 22.999963285299998,
+            "start": 86400000
+        }
+    ],
+    "manufacturers": [
+        "Microtech"
+    ],
+    "serialNumber": "C0210B",
+    "time": 1626855073000,
+    "timezoneOffset": 0,
+    "type": "pumpSettings",
+    "units": {
+        "bg": "mg/dL",
+        "carb": "grams"
+    },
+    "uploadId": "9bf5ddef1ecde8bd8d6bb281868d2fe1",
+    "_time": "2021-07-21T08:11:13.000Z",
+    "_deviceTime": "2021-07-21T10:11:17",
+    "normalTime": 1626855073000,
+    "displayOffset": 60,
+    "deviceSerialNumber": "C0210B",
+    "source": "Microtech"
+}
