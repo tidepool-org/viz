@@ -1924,7 +1924,8 @@ describe('stat', () => {
 
       stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
 
-      sinon.assert.callCount(formatDatumSpy, 13);
+      // 13 stats, but readingsInRange is called an extra time for the secondary value
+      sinon.assert.callCount(formatDatumSpy, 14);
       sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
 
       formatDatumSpy.restore();
