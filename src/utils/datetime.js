@@ -191,11 +191,11 @@ export function formatDuration(duration, opts = {}) {
   const minutes = momentDuration.minutes();
   const seconds = momentDuration.seconds();
 
-  const QUARTER = '¼';
-  const THIRD = '⅓';
-  const HALF = '½';
-  const TWO_THIRDS = '⅔';
-  const THREE_QUARTERS = '¾';
+  const QUARTER = opts.ascii ? ' 1/4' : '¼';
+  const THIRD = opts.ascii ? ' 1/3' : '⅓';
+  const HALF = opts.ascii ? ' 1/2' : '½';
+  const TWO_THIRDS = opts.ascii ? ' 2/3' : '⅔';
+  const THREE_QUARTERS = opts.ascii ? ' 3/4' : '¾';
 
   if (opts.condensed) {
     const formatted = {

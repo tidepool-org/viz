@@ -51,7 +51,7 @@ export function processBolusRange(dataByDate, timezoneName) {
     // eslint-disable-next-line no-param-reassign
     bolus.threeHrBin = Math.floor(moment.utc(bolus.normalTime).tz(timezoneName).hours() / 3) * 3;
   });
-  return extent(boluses, (d) => (d.normal + (d.extended || 0)));
+  return extent(boluses, (d) => ((d.normal || 0) + (d.extended || 0)));
 }
 
 /**
