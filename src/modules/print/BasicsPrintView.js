@@ -207,6 +207,7 @@ class BasicsPrintView extends PrintView {
   renderAggregatedStats() {
     const {
       averageDailyDose,
+      averageGlucose,
       carbs,
       coefficientOfVariation,
       glucoseManagementIndicator,
@@ -242,6 +243,7 @@ class BasicsPrintView extends PrintView {
       );
     }
 
+    if (averageGlucose) this.renderSimpleStat(averageGlucose);
     if (sensorUsage) this.renderSimpleStat(sensorUsage);
 
     this.renderHorizontalBarStat(

@@ -338,6 +338,7 @@ describe('BasicsPrintView', () => {
       sinon.stub(Renderer, 'renderHorizontalBarStat');
 
       Renderer.stats = {
+        averageGlucose: 'averageGlucoseStub',
         carbs: 'carbsStub',
         coefficientOfVariation: 'coefficientOfVariationStub',
         totalInsulin: 'totalInsulinStub',
@@ -396,6 +397,16 @@ describe('BasicsPrintView', () => {
           fillOpacity: 0.5,
         }
       );
+    });
+
+    it('should render the averageGlucose stat, but only if present', () => {
+      Renderer.stats.averageGlucose = null;
+      Renderer.renderAggregatedStats();
+      sinon.assert.neverCalledWith(Renderer.renderSimpleStat, null);
+
+      Renderer.stats.averageGlucose = 'averageGlucoseStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderSimpleStat, 'averageGlucoseStub');
     });
 
     it('should render the sensorUsage stat, but only if present', () => {
