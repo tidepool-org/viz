@@ -213,6 +213,7 @@ class BasicsPrintView extends PrintView {
       glucoseManagementIndicator,
       readingsInRange,
       sensorUsage,
+      standardDev,
       timeInAuto,
       timeInOverride,
       timeInRange,
@@ -290,6 +291,7 @@ class BasicsPrintView extends PrintView {
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
+    this.renderSimpleStat(standardDev);
     this.renderSimpleStat(coefficientOfVariation);
   }
 

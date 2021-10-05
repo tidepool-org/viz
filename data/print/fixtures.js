@@ -84,6 +84,9 @@ export const basicsData = {
         coefficientOfVariation: {
           coefficientOfVariation: 38.656,
         },
+        standardDev: {
+          standardDev: 4.3,
+        },
         averageDailyDose: {
           totalInsulin: 1.9647894736842106,
         },

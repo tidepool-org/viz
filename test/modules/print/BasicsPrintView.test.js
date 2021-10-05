@@ -347,6 +347,7 @@ describe('BasicsPrintView', () => {
         readingsInRange: 'readingsInRangeStub',
         averageDailyDose: 'averageDailyDoseStub',
         sensorUsage: 'sensorUsageStub',
+        standardDev: 'standardDevStub',
       };
     });
 
@@ -461,6 +462,12 @@ describe('BasicsPrintView', () => {
       Renderer.stats.coefficientOfVariation = 'coefficientOfVariationStub';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderSimpleStat, 'coefficientOfVariationStub');
+    });
+
+    it('should render the standardDev stat', () => {
+      Renderer.stats.standardDev = 'standardDevStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderSimpleStat, 'standardDevStub');
     });
 
     it('should render the averageDailyDose stat', () => {
