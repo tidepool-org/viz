@@ -384,6 +384,7 @@ describe('BasicsPrintView', () => {
             text: 'BG Distribution',
             note: 'Showing BGM data',
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
