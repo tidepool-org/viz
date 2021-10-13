@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "1.22.0-web-698-basics-std-dev.1",
+  "version": "1.22.0-web-1202-pdf-bgm-range-percentages.1",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
