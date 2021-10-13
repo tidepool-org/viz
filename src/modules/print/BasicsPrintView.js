@@ -240,6 +240,7 @@ class BasicsPrintView extends PrintView {
             text: 'BG Distribution',
             note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
