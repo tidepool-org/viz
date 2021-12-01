@@ -48,8 +48,10 @@ const GROUP_UNITS = 'UNITS';
 const GROUP_STATS = 'STATS';
 const GROUP_RESULTS = 'RESULTS';
 
-const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
-Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`,
+const notes = `**RUN** the \`accountTool.py export\` command from the \`tidepool-org/tools-private\` repo
+\n\r**OR** Run \`downloadPatientData({raw: true})\` from the console in a Tidepool Web data view
+\n\r**OR** Fetch data directly from the Tidepool API, and
+\n\r**THEN** Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`,
 and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
 const Results = ({ results, showData, showStats }) => {
