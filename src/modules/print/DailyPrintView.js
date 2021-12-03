@@ -903,7 +903,8 @@ class DailyPrintView extends PrintView {
         if (bolus.extended != null) {
           const normalPercentage = getNormalPercentage(bolus);
           const extendedPercentage = getExtendedPercentage(bolus);
-          const durationText = `${formatDuration(getMaxDuration(bolus))}`;
+          const durationOpts = { ascii: true };
+          const durationText = `${formatDuration(getMaxDuration(bolus), durationOpts)}`;
           const percentagesText = Number.isNaN(normalPercentage) ?
             `over ${durationText}` : `${extendedPercentage} ${durationText}`;
           this.doc.text(
