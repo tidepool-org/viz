@@ -945,6 +945,10 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
       commonStats.bgExtents,
     ], stat.id);
 
+    const renderSecondaryValue = _.includes([
+      commonStats.readingsInRange,
+    ], stat.id);
+
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
 
     if (renderTable) {
@@ -957,9 +961,21 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
             opts
           );
 
+          let formattedText = `${formatted.value}${formatted.suffix || ''}`;
+
+          if (renderSecondaryValue) {
+            const secondary = formatFn(
+              datum,
+              stat.dataFormat.tooltip,
+              opts
+            );
+
+            formattedText += ` (${secondary.value}${secondary.suffix || ''})`;
+          }
+
           return {
             label: datum.legendTitle || datum.title,
-            value: `${formatted.value}${formatted.suffix || ''}`,
+            value: formattedText,
           };
         }),
         [
