@@ -127,7 +127,7 @@ class Stat extends PureComponent {
 
     return (
       <div className={styles.chartTitle}>
-        {this.state.chartTitle}
+        <span className={styles.chartTitleText}>{this.state.chartTitle}</span>
         {titleDataValue && titleDataValue !== this.props.emptyDataPlaceholder && (
           <span className={styles.chartTitleData}>
             (&nbsp;
@@ -355,7 +355,7 @@ class Stat extends PureComponent {
             </div>
           )}
           {this.props.type === statTypes.input && this.renderInput()}
-          {this.props.children && this.renderChildren()}
+          {this.state.isOpened && this.props.children && this.renderChildren()}
           {this.state.showFooter && this.renderStatFooter()}
         </div>
         {this.state.showMessages && this.renderTooltip()}

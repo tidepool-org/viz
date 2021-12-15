@@ -782,7 +782,7 @@ export const getStatTitle = (type, opts = {}) => {
 export const getStatDefinition = (data = {}, type, opts = {}) => {
   let stat = {
     annotations: getStatAnnotations(data, type, opts),
-    collapsible: false,
+    collapsible: _.get(opts, 'collapsible', false),
     data: getStatData(data, type, opts),
     id: type,
     title: getStatTitle(type, opts),
