@@ -29,6 +29,10 @@
   overflow: hidden;
 }
 
+:global(.statCollapse) {
+  transition: height 250ms;
+}
+
 .statFooter {
   display: flex;
   flex-wrap: nowrap;

@@ -71,6 +71,7 @@ class Stat extends PureComponent {
     isOpened: PropTypes.bool,
     legend: PropTypes.bool,
     muteOthersOnHover: PropTypes.bool,
+    onCollapse: PropTypes.func,
     onInputChange: PropTypes.func,
     reverseLegendOrder: PropTypes.bool,
     title: PropTypes.string.isRequired,
@@ -251,7 +252,7 @@ class Stat extends PureComponent {
     return (
       <Collapse
         isOpened={this.state.isOpened}
-        springConfig={{ stiffness: 200, damping: 23 }}
+        theme={{ collapse: 'statCollapse' }}
       >
         <div className={styles.chartWrapper}>
           <Renderer {...chartProps} width={size.width || 298} />
@@ -706,7 +707,10 @@ class Stat extends PureComponent {
   handleCollapse = () => {
     this.setState(state => ({
       isOpened: !state.isOpened,
-    }), () => this.setState(this.getStateByType(this.props)));
+    }), () => {
+      this.setState(this.getStateByType(this.props));
+      if (_.isFunction(this.props.onCollapse)) this.props.onCollapse(!this.state.isOpened);
+    });
   };
 
   handleTooltipIconMouseOver = () => {

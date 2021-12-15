@@ -36,7 +36,7 @@ const CollapsibleContainer = (props) => {
       <Collapse
         className={styles.collapsibleContainer}
         isOpened={opened}
-        springConfig={{ stiffness: 120, damping: 20 }}
+        theme={{ collapse: 'containerCollapse' }}
       >
         <div>{props.children}</div>
       </Collapse>
