@@ -51,6 +51,19 @@ const Tandem = (props) => {
 
   const tables = _.map(tandemData.basalSchedules(pumpSettings), (schedule) => {
     const basal = tandemData.basal(schedule, pumpSettings, bgUnits, styles);
+    const maxBolus = _.get(pumpSettings, `bolus[${schedule.name}].amountMaximum.value`);
+    const insulinDuration = _.get(pumpSettings, `bolus[${schedule.name}].calculator.insulin.duration`);
+
+    const columns = [
+      { key: 'setting' },
+      { key: 'value' },
+    ];
+
+    // TODO: Get pump-specific nomenclature from constants file
+    const rows = [
+      { setting: 'Max Bolus', value: maxBolus ? `${maxBolus} U` : '-' },
+      { setting: 'Insulin Duration', value: insulinDuration ? `${insulinDuration} min` : '-' },
+    ];
 
     return (
       <div className="settings-table-container" key={basal.scheduleName}>
@@ -65,6 +78,15 @@ const Tandem = (props) => {
             rows={basal.rows}
             columns={basal.columns}
             tableStyle={styles.profileTable}
+          />
+          <Table
+            rows={rows}
+            title={{
+              label: { main: 'Insulin Settings' },
+              className: styles.insulinSettingsHeader,
+            }}
+            columns={columns}
+            tableStyle={styles.settingsTableInverted}
           />
         </CollapsibleContainer>
       </div>

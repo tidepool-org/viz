@@ -67,6 +67,39 @@ const NonTandem = (props) => {
     return _.get(openedSections, sectionName, false);
   }
 
+  function renderInsulinSettings() {
+    const maxBasal = _.get(pumpSettings, 'basal.rateMaximum.value');
+    const maxBolus = _.get(pumpSettings, 'bolus.amountMaximum.value');
+    const insulinDuration = _.get(pumpSettings, 'bolus.calculator.insulin.duration');
+
+    const columns = [
+      { key: 'setting' },
+      { key: 'value' },
+    ];
+
+    // TODO: Get pump-specific nomenclature and only render available rows
+    const rows = [
+      { setting: 'Max Basal', value: maxBasal ? `${maxBasal} U/hr` : '-' },
+      { setting: 'Max Bolus', value: maxBolus ? `${maxBolus} U` : '-' },
+      { setting: 'Insulin Duration', value: insulinDuration ? `${insulinDuration} min` : '-' },
+    ];
+
+    return (
+      <div className={styles.categoryContainer}>
+        {buildTable(
+          rows,
+          columns,
+          {
+            label: { main: 'Insulin Settings' },
+            className: styles.insulinSettingsHeader,
+          },
+          // {},
+          styles.settingsTableInverted,
+        )}
+      </div>
+    );
+  }
+
   function renderBasalsData() {
     return _.map(nonTandemData.basalSchedules(pumpSettings), (schedule) => {
       const basal = nonTandemData.basal(schedule, pumpSettings, deviceKey);
@@ -203,6 +236,12 @@ const NonTandem = (props) => {
           onSuccess={copySettingsClicked}
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
+      </div>
+      <div className={styles.settingsContainer}>
+        <div className={styles.insulinSettingsContainer}>
+          {/* <div className={styles.categoryTitle}>{t('Pump Settings')}</div> */}
+          {renderInsulinSettings()}
+        </div>
       </div>
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>

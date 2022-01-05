@@ -344,6 +344,8 @@ export function processTimedSettings(pumpSettings, schedule, bgUnits) {
       startTime,
       bgUnits,
     ),
+    // maxBolus: _.get(pumpSettings, `bolus.${schedule.name}.amountMaximum.value`, '-'),
+    // insulinDuration: _.get(pumpSettings, `bolus.${schedule.name}.calculator.insulin.duration`, '-'),
   }));
 
   data.push({
@@ -354,6 +356,8 @@ export function processTimedSettings(pumpSettings, schedule, bgUnits) {
     bgTarget: '',
     carbRatio: '',
     insulinSensitivity: '',
+    // maxBolus: '',
+    // insulinDuration: '',
   });
   return data;
 }

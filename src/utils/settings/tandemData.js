@@ -89,6 +89,18 @@ function basalColumns(styles = {}, units) {
         secondary: `${units}/U`,
       },
       className: styles.bolusSettingsHeader },
+    // { key: 'maxBolus',
+    //   label: {
+    //     main: 'Max Bolus',
+    //     secondary: 'U',
+    //   },
+    //   className: styles.bolusSettingsHeader },
+    // { key: 'insulinDuration',
+    //   label: {
+    //     main: 'Insulin Duration',
+    //     secondary: 'min',
+    //   },
+    //   className: styles.bolusSettingsHeader },
   ];
 }
 
