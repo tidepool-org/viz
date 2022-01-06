@@ -178,7 +178,7 @@ export class DataUtil {
     // for easier reference when debugging.
     /* eslint-disable no-underscore-dangle */
     d._time = d.time;
-    d._deviceTime = d.deviceTime;
+    d._deviceTime = d.deviceTime || d.time;
     /* eslint-enable no-underscore-dangle */
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;

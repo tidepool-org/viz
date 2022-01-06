@@ -207,11 +207,13 @@ class BasicsPrintView extends PrintView {
   renderAggregatedStats() {
     const {
       averageDailyDose,
+      averageGlucose,
       carbs,
       coefficientOfVariation,
       glucoseManagementIndicator,
       readingsInRange,
       sensorUsage,
+      standardDev,
       timeInAuto,
       timeInOverride,
       timeInRange,
@@ -238,10 +240,12 @@ class BasicsPrintView extends PrintView {
             text: 'BG Distribution',
             note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
 
+    if (averageGlucose) this.renderSimpleStat(averageGlucose);
     if (sensorUsage) this.renderSimpleStat(sensorUsage);
 
     this.renderHorizontalBarStat(
@@ -288,6 +292,7 @@ class BasicsPrintView extends PrintView {
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
+    this.renderSimpleStat(standardDev);
     this.renderSimpleStat(coefficientOfVariation);
   }
 
