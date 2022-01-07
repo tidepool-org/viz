@@ -163,16 +163,20 @@ class Stat extends PureComponent {
   };
 
   renderChartSummary = () => {
+    const { alwaysShowSummary, hideSummaryUnits, units } = this.props;
     const summaryData = this.getFormattedDataByKey('summary');
-    const showSummary = this.props.alwaysShowSummary || !this.state.isOpened;
+    const showSummary = alwaysShowSummary || !this.state.isOpened;
     let summaryDataValue = _.get(summaryData, 'value');
     let summaryDataSuffix = _.get(summaryData, 'suffix');
+
+    // Ensure zero values are not stripped by _.compact when setting values array
+    if (summaryDataValue === 0) summaryDataValue = [summaryDataValue];
     if (!_.isArray(summaryDataValue)) summaryDataValue = _.compact([summaryDataValue]);
     if (!_.isArray(summaryDataSuffix)) summaryDataSuffix = _.compact([summaryDataSuffix]);
 
     return (
       <div className={styles.chartSummary}>
-        {summaryDataValue.length && showSummary && _.map(summaryDataValue, (value, i) => (
+        {summaryDataValue.length > 0 && showSummary && _.map(summaryDataValue, (value, i) => (
           <div
             className={styles.summaryData}
             style={{
@@ -188,7 +192,7 @@ class Stat extends PureComponent {
           </div>
         ))}
 
-        {this.props.units && !this.state.showFooter && this.renderStatUnits()}
+        {units && !hideSummaryUnits && !this.state.showFooter && this.renderStatUnits()}
 
         {this.state.isCollapsible && (
           <div className={styles.chartCollapse}>
