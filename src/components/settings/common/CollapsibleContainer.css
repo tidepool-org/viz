@@ -18,3 +18,7 @@
 .secondaryLabel {
   composes: secondaryText from '../settings.css';
 }
+
+:global(.containerCollapse) {
+  transition: height 250ms;
+}

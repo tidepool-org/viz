@@ -269,8 +269,8 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     if (_.includes(diabetesDataTypes, type)) {
       disabled = !hasDataInRange(aggregationData[type]);
     } else if (type === 'fingersticks') {
-      const hasSMBG = hasDataInRange(aggregationData[type].smbg);
-      const hasCalibrations = hasDataInRange(aggregationData[type].calibration);
+      const hasSMBG = hasDataInRange(aggregationData[type]?.smbg);
+      const hasCalibrations = hasDataInRange(aggregationData[type]?.calibration);
       disabled = !hasSMBG && !hasCalibrations;
     } else if (type === 'siteChanges') {
       aggregations[key].source = getSiteChangeSource(patient, manufacturer);
