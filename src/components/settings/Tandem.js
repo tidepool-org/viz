@@ -79,6 +79,9 @@ const Tandem = (props) => {
             columns={basal.columns}
             tableStyle={styles.profileTable}
           />
+
+          <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
+
           <Table
             rows={rows}
             title={{

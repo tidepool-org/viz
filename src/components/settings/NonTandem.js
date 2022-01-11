@@ -93,7 +93,6 @@ const NonTandem = (props) => {
             label: { main: 'Insulin Settings' },
             className: styles.insulinSettingsHeader,
           },
-          // {},
           styles.settingsTableInverted,
         )}
       </div>
@@ -239,7 +238,7 @@ const NonTandem = (props) => {
       </div>
       <div className={styles.settingsContainer}>
         <div className={styles.insulinSettingsContainer}>
-          {/* <div className={styles.categoryTitle}>{t('Pump Settings')}</div> */}
+          <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
           {renderInsulinSettings()}
         </div>
       </div>

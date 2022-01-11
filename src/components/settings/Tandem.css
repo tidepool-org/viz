@@ -80,9 +80,16 @@
   padding-bottom: 10px;
 }
 
+.categoryTitle {
+  composes: mediumContrastText from '../../styles/typography.css';
+  width: 100%;
+  padding-bottom: 10px;
+  margin-left: 40px;
+  margin-top: 15px;
+}
+
 .settingsTableInverted {
-  /* composes: settingsTableInverted from './settings.css'; */
-  composes: settingsTable from './settings.css';
+  composes: settingsTableInverted from './settings.css';
   margin-bottom: 1em;
   margin-left: 40px;
   width: 25%;
@@ -95,11 +102,7 @@
 }
 
 .insulinSettingsHeader {
-  composes: settingsHeader from './settings.css';
-  background-color: var(--table-stripe--light);
-  padding-left: 14px;
-  /* composes: bolusHeaderBackground settingsHeader from './settings.css'; */
-  /* background-image: linear-gradient(to right, var(--table-stripe--light) 0, var(--table-stripe--light) 14px, var(--table-stripe--light) 14px, var(--table-stripe--light) 100%); */
+  composes: bolusHeaderBackground settingsHeader from './settings.css';
 }
 
 @media print {

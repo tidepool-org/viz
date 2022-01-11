@@ -33,7 +33,7 @@
 .insulinSettingsContainer {
   width: 25%;
   min-width: 240px;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
 }
 
 .basalSettingsContainer {
@@ -89,10 +89,6 @@
 .settingsTableInverted td:first-child, .settingsTableInverted th:first-child {
   padding-left: 28px;
 }
-
-/* .insulinSettingsContainer .settingsTableInverted td:first-child {
-  padding-left: 14px;
-} */
 
 .singleLineBasalScheduleHeader {
   composes: basalHeaderBackground settingsHeader from './settings.css';
