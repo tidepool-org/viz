@@ -24,10 +24,18 @@ import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
 
-import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
+import {
+  MGDL_UNITS,
+  MMOLL_UNITS,
+  MAX_BOLUS,
+  MAX_BASAL,
+  INSULIN_DURATION,
+} from '../../utils/constants';
+
 import * as nonTandemData from '../../utils/settings/nonTandemData';
 import { deviceName } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
+import { getPumpVocabulary } from '../../utils/device';
 
 import styles from './NonTandem.css';
 
@@ -51,6 +59,8 @@ const NonTandem = (props) => {
   if (deviceKey === 'carelink') {
     lookupKey = 'medtronic';
   }
+
+  const deviceLabels = getPumpVocabulary(lookupKey);
 
   function buildTable(rows, columns, title, tableStyle) {
     return (
@@ -77,11 +87,10 @@ const NonTandem = (props) => {
       { key: 'value' },
     ];
 
-    // TODO: Get pump-specific nomenclature and only render available rows
     const rows = [
-      { setting: 'Max Basal', value: maxBasal ? `${maxBasal} U/hr` : '-' },
-      { setting: 'Max Bolus', value: maxBolus ? `${maxBolus} U` : '-' },
-      { setting: 'Insulin Duration', value: insulinDuration ? `${insulinDuration} min` : '-' },
+      { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
+      { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
+      { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
     ];
 
     return (
@@ -236,12 +245,14 @@ const NonTandem = (props) => {
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
-      <div className={styles.settingsContainer}>
-        <div className={styles.insulinSettingsContainer}>
-          <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
-          {renderInsulinSettings()}
+      {lookupKey !== 'animas' && (
+        <div className={styles.settingsContainer}>
+          <div className={styles.insulinSettingsContainer}>
+            <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
+            {renderInsulinSettings()}
+          </div>
         </div>
-      </div>
+      )}
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>
           <div className={styles.categoryTitle}>{t('Basal Rates')}</div>

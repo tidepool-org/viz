@@ -68,7 +68,7 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
 export function getPumpVocabulary(manufacturer) {
   const vocabulary = _.cloneDeep(pumpVocabulary);
   return _.defaults(
-    _.get(vocabulary, deviceName(manufacturer), {}),
+    _.get(vocabulary, _.upperFirst(manufacturer), {}),
     vocabulary.default
   );
 }
