@@ -16,6 +16,7 @@
  */
 
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import PrintView from './PrintView';
 
@@ -38,6 +39,8 @@ import {
   basal as tandemBasal,
 } from '../../utils/settings/tandemData';
 
+const t = i18next.t.bind(i18next);
+
 class SettingsPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
@@ -49,7 +52,7 @@ class SettingsPrintView extends PrintView {
   }
 
   newPage() {
-    super.newPage(`Uploaded on: ${this.deviceMeta.uploaded}`);
+    super.newPage(t('Uploaded on: {{uploadDate}}', { uploadDate: this.deviceMeta.uploaded }));
   }
 
   render() {
@@ -64,13 +67,13 @@ class SettingsPrintView extends PrintView {
   }
 
   renderDeviceMeta() {
-    const device = deviceName(this.manufacturer) || 'Unknown';
+    const device = deviceName(this.manufacturer) || t('Unknown');
     this.doc
       .font(this.boldFont)
       .fontSize(this.defaultFontSize)
       .text(device, { continued: true })
       .font(this.font)
-      .text(` › Serial Number: ${this.deviceMeta.serial}`)
+      .text(' › ' + t('Serial Number: {{serial}}', { serial: this.deviceMeta.serial })) // eslint-disable-line prefer-template
       .moveDown();
 
     this.resetText();
@@ -78,7 +81,7 @@ class SettingsPrintView extends PrintView {
   }
 
   renderTandemProfiles() {
-    this.renderSectionHeading('Profile Settings');
+    this.renderSectionHeading(t('Profile Settings'));
 
     const basalSchedules = profileSchedules(this.latestPumpUpload.settings);
 
@@ -189,8 +192,12 @@ class SettingsPrintView extends PrintView {
     });
   }
 
+  renderPumpSettings() {
+    this.renderSectionHeading(t('Pump Settings'));
+  }
+
   renderBasalSchedules() {
-    this.renderSectionHeading('Basal Rates');
+    this.renderSectionHeading(t('Basal Rates'));
 
     this.setLayoutColumns({
       width: this.chartArea.width,
