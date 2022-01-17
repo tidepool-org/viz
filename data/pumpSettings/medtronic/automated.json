@@ -2,6 +2,15 @@
   "type": "pumpSettings",
   "activeSchedule": "Auto Mode",
   "lastManualBasalSchedule": "Standard",
+  "basal": {
+      "rateMaximum": {
+          "units": "Units/hour",
+          "value": 2
+      },
+      "temporary": {
+          "type": "percent"
+      }
+  },
   "basalSchedules": [
     {
       "name": "Auto Mode",
@@ -46,6 +55,22 @@
       "high": 8.3261219865683
     }
   ],
+  "bolus": {
+    "amountMaximum": {
+        "units": "Units",
+        "value": 9.5
+    },
+    "calculator": {
+        "enabled": true,
+        "insulin": {
+            "duration": 240,
+            "units": "minutes"
+        }
+    },
+    "extended": {
+        "enabled": true
+    }
+  },
   "carbRatio": [
     {
       "amount": 24,
