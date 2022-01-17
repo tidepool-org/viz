@@ -19,6 +19,13 @@ import _ from 'lodash';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
+import { getPumpVocabulary } from '../device';
+
+import {
+  MAX_BOLUS,
+  MAX_BASAL,
+  INSULIN_DURATION,
+} from '../../utils/constants';
 
 const DISPLAY_PRECISION_PLACES = 3;
 
@@ -344,8 +351,6 @@ export function processTimedSettings(pumpSettings, schedule, bgUnits) {
       startTime,
       bgUnits,
     ),
-    // maxBolus: _.get(pumpSettings, `bolus.${schedule.name}.amountMaximum.value`, '-'),
-    // insulinDuration: _.get(pumpSettings, `bolus.${schedule.name}.calculator.insulin.duration`, '-'),
   }));
 
   data.push({
@@ -356,8 +361,6 @@ export function processTimedSettings(pumpSettings, schedule, bgUnits) {
     bgTarget: '',
     carbRatio: '',
     insulinSensitivity: '',
-    // maxBolus: '',
-    // insulinDuration: '',
   });
   return data;
 }
@@ -373,4 +376,36 @@ export function startTimeAndValue(valueKey) {
     { key: 'start', label: 'Start time' },
     { key: valueKey, label: 'Value' },
   ];
+}
+
+/**
+ * insulinSettings
+ *
+ * @param  {Object} settings       object with pump settings data
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic
+ */
+export function insulinSettings(settings, manufacturer, scheduleName) {
+  const deviceLabels = getPumpVocabulary(manufacturer);
+  const maxBasal = _.get(settings, scheduleName ? `basal[${scheduleName}].rateMaximum.value` : 'basal.rateMaximum.value');
+  const maxBolus = _.get(settings, scheduleName ? `bolus[${scheduleName}].amountMaximum.value` : 'bolus.amountMaximum.value');
+  const insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
+
+  const columns = [
+    { key: 'setting' },
+    { key: 'value' },
+  ];
+
+  const rows = [
+    { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
+    { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
+    { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
+  ];
+
+  // Tandem insulin settings do not have max basal
+  if (manufacturer === 'tandem') rows.shift();
+
+  return {
+    columns,
+    rows,
+  };
 }

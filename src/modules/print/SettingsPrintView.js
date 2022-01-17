@@ -23,6 +23,7 @@ import PrintView from './PrintView';
 import {
   deviceName,
   getDeviceMeta,
+  insulinSettings,
   startTimeAndValue,
 } from '../../utils/settings/data';
 
@@ -33,12 +34,6 @@ import {
   sensitivity,
   target,
 } from '../../utils/settings/nonTandemData';
-
-import {
-  MAX_BOLUS,
-  MAX_BASAL,
-  INSULIN_DURATION,
-} from '../../utils/constants';
 
 import { getPumpVocabulary } from '../../utils/device';
 
@@ -226,26 +221,16 @@ class SettingsPrintView extends PrintView {
     this.doc.moveDown();
   }
 
-  renderInsulinSettings(settings, tandemSchedule) {
+  renderInsulinSettings(settings, scheduleName) {
     const columnWidth = this.getActiveColumnWidth();
-    const maxBasal = _.get(settings, 'basal.rateMaximum.value');
-    const maxBolus = _.get(settings, tandemSchedule ? `bolus[${tandemSchedule}].amountMaximum.value` : 'bolus.amountMaximum.value');
-    const insulinDuration = _.get(settings, tandemSchedule ? `bolus[${tandemSchedule}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
     const valueWidth = 50;
+    const { rows: tableRows, columns } = insulinSettings(settings, this.manufacturer, scheduleName);
 
-    const tableColumns = [
-      { id: 'setting', align: 'left', width: columnWidth - valueWidth },
-      { id: 'value', align: 'right', width: valueWidth },
-    ];
-
-    const tableRows = [
-      { setting: this.deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
-      { setting: this.deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
-      { setting: this.deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
-    ];
-
-    // Tandem insulin settings do not have max basal
-    if (tandemSchedule) tableRows.shift();
+    const tableColumns = _.map(columns, (column, index) => ({
+      id: column.key,
+      align: index === 0 ? 'left' : 'right',
+      width: index === 0 ? columnWidth - valueWidth : valueWidth,
+    }));
 
     const heading = {
       text: t('Insulin Settings'),
@@ -259,7 +244,7 @@ class SettingsPrintView extends PrintView {
         },
         width: columnWidth,
       },
-      fontSize: tandemSchedule ? this.defaultFontSize : this.largeFontSize,
+      fontSize: scheduleName ? this.defaultFontSize : this.largeFontSize,
     });
 
     this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);

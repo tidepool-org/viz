@@ -23,19 +23,10 @@ import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
-
-import {
-  MGDL_UNITS,
-  MMOLL_UNITS,
-  MAX_BOLUS,
-  MAX_BASAL,
-  INSULIN_DURATION,
-} from '../../utils/constants';
-
+import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
-import { deviceName } from '../../utils/settings/data';
+import { deviceName, insulinSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
-import { getPumpVocabulary } from '../../utils/device';
 
 import styles from './NonTandem.css';
 
@@ -60,8 +51,6 @@ const NonTandem = (props) => {
     lookupKey = 'medtronic';
   }
 
-  const deviceLabels = getPumpVocabulary(lookupKey);
-
   function buildTable(rows, columns, title, tableStyle) {
     return (
       <Table
@@ -78,20 +67,7 @@ const NonTandem = (props) => {
   }
 
   function renderInsulinSettings() {
-    const maxBasal = _.get(pumpSettings, 'basal.rateMaximum.value');
-    const maxBolus = _.get(pumpSettings, 'bolus.amountMaximum.value');
-    const insulinDuration = _.get(pumpSettings, 'bolus.calculator.insulin.duration');
-
-    const columns = [
-      { key: 'setting' },
-      { key: 'value' },
-    ];
-
-    const rows = [
-      { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
-      { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
-      { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
-    ];
+    const { rows, columns } = insulinSettings(pumpSettings, lookupKey);
 
     return (
       <div className={styles.categoryContainer}>
