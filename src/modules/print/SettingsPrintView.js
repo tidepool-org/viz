@@ -35,6 +35,14 @@ import {
 } from '../../utils/settings/nonTandemData';
 
 import {
+  MAX_BOLUS,
+  MAX_BASAL,
+  INSULIN_DURATION,
+} from '../../utils/constants';
+
+import { getPumpVocabulary } from '../../utils/device';
+
+import {
   basalSchedules as profileSchedules,
   basal as tandemBasal,
 } from '../../utils/settings/tandemData';
@@ -47,6 +55,7 @@ class SettingsPrintView extends PrintView {
 
     this.isTandem = this.manufacturer === 'tandem';
     this.deviceMeta = getDeviceMeta(this.latestPumpUpload.settings, this.timePrefs);
+    this.deviceLabels = getPumpVocabulary(this.manufacturer);
 
     this.doc.addPage();
   }
@@ -61,6 +70,7 @@ class SettingsPrintView extends PrintView {
     if (this.isTandem) {
       this.renderTandemProfiles();
     } else {
+      if (this.manufacturer !== 'animas') this.renderPumpSettings();
       this.renderBasalSchedules();
       this.renderWizardSettings();
     }
@@ -111,15 +121,17 @@ class SettingsPrintView extends PrintView {
         },
       });
 
+      const widths = {
+        rate: 105,
+        bgTarget: 105,
+        carbRatio: 105,
+        insulinSensitivity: 155,
+      };
+
+      const firstColumnWidth = this.chartArea.width - _.sum(_.values(widths));
+
       const tableColumns = _.map(profile.columns, (column, index) => {
         const isFirst = index === 0;
-
-        const widths = {
-          rate: 105,
-          bgTarget: 105,
-          carbRatio: 105,
-          insulinSensitivity: 155,
-        };
 
         const fills = {
           grey: {
@@ -183,17 +195,86 @@ class SettingsPrintView extends PrintView {
       });
 
       this.renderTable(tableColumns, rows, {
+        bottomMargin: 0,
         columnDefaults: {
           zebra: true,
           headerFill: true,
         },
         flexColumn: 'start',
       });
+
+      this.setLayoutColumns({
+        width: firstColumnWidth + widths.rate,
+        count: 1,
+      });
+
+      this.renderInsulinSettings(this.latestPumpUpload.settings, schedule.name);
+      this.doc.moveDown();
     });
   }
 
   renderPumpSettings() {
     this.renderSectionHeading(t('Pump Settings'));
+
+    this.setLayoutColumns({
+      width: this.chartArea.width,
+      count: 3,
+      gutter: 15,
+    });
+
+    this.renderInsulinSettings(this.latestPumpUpload.settings);
+    this.doc.moveDown();
+  }
+
+  renderInsulinSettings(settings, tandemSchedule) {
+    const columnWidth = this.getActiveColumnWidth();
+    const maxBasal = _.get(settings, 'basal.rateMaximum.value');
+    const maxBolus = _.get(settings, tandemSchedule ? `bolus[${tandemSchedule}].amountMaximum.value` : 'bolus.amountMaximum.value');
+    const insulinDuration = _.get(settings, tandemSchedule ? `bolus[${tandemSchedule}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
+    const valueWidth = 50;
+
+    const tableColumns = [
+      { id: 'setting', align: 'left', width: columnWidth - valueWidth },
+      { id: 'value', align: 'right', width: valueWidth },
+    ];
+
+    const tableRows = [
+      { setting: this.deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
+      { setting: this.deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
+      { setting: this.deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
+    ];
+
+    // Tandem insulin settings do not have max basal
+    if (tandemSchedule) tableRows.shift();
+
+    const heading = {
+      text: t('Insulin Settings'),
+    };
+
+    this.renderTableHeading(heading, {
+      columnDefaults: {
+        fill: {
+          color: this.colors.basal,
+          opacity: 0.15,
+        },
+        width: columnWidth,
+      },
+      fontSize: tandemSchedule ? this.defaultFontSize : this.largeFontSize,
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+
+    this.renderTable(tableColumns, tableRows, {
+      bottomMargin: 15,
+      columnDefaults: {
+        zebra: true,
+        headerFill: true,
+      },
+      showHeaders: false,
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+    this.resetText();
   }
 
   renderBasalSchedules() {
