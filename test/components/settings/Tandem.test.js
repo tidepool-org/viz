@@ -81,8 +81,8 @@ describe('Tandem', () => {
     expect(wrapper.find('Header').props().deviceDisplayName).to.equal('Tandem');
   });
 
-  it('should have three Tables', () => {
-    expect(wrapper.find('Table')).to.have.length(3);
+  it('should have six Tables - a profile and an insulin settings table for each profile', () => {
+    expect(wrapper.find('Table')).to.have.length(6);
   });
 
   it('should have three CollapsibleContainers', () => {

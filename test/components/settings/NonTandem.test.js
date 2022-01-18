@@ -279,8 +279,8 @@ describe('NonTandem', () => {
       expect(wrapper.find('Header').props().deviceDisplayName).to.equal('OmniPod');
     });
 
-    // these tables are the bolus settings + basal schedules
-    it('should have five Tables', () => {
+    // these tables are the insulin settings, bolus settings + basal schedules
+    it('should have six Tables', () => {
       const wrapper = shallow(
         <NonTandem
           bgUnits={MGDL_UNITS}
@@ -293,7 +293,7 @@ describe('NonTandem', () => {
           toggleBasalScheduleExpansion={() => {}}
         />
       );
-      expect(wrapper.find('Table')).to.have.length(5);
+      expect(wrapper.find('Table')).to.have.length(6);
     });
 
     // these containers are the basal schedules
@@ -472,8 +472,8 @@ describe('NonTandem', () => {
       expect(wrapper.find('Header').props().deviceDisplayName).to.equal('Medtronic');
     });
 
-    // these tables are the bolus settings + basal schedules
-    it('should have six Tables', () => {
+    // these tables are the insulin settings, bolus settings + basal schedules
+    it('should have seven Tables', () => {
       const wrapper = shallow(
         <NonTandem
           bgUnits={MGDL_UNITS}
@@ -486,7 +486,7 @@ describe('NonTandem', () => {
           toggleBasalScheduleExpansion={() => {}}
         />
       );
-      expect(wrapper.find('Table')).to.have.length(6);
+      expect(wrapper.find('Table')).to.have.length(7);
     });
 
     // these containers are the basal schedules

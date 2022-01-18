@@ -331,8 +331,8 @@ describe('SettingsPrintView', () => {
 
       Renderer.renderTandemProfiles();
 
-      // ensure it's rendering a table heading for each schedule
-      sinon.assert.callCount(Renderer.renderTableHeading, schedules.length);
+      // ensure it's rendering 2 table headings for each schedule (profile table and insulin settings)
+      sinon.assert.callCount(Renderer.renderTableHeading, schedules.length * 2);
 
       // ensure it's writing the schedule name
       let activeIndex;
@@ -353,8 +353,8 @@ describe('SettingsPrintView', () => {
       expect(activeCall.args[0].text).to.equal(Renderer.latestPumpUpload.settings.activeSchedule);
       expect(activeCall.args[0].subText).to.equal(' Active at upload');
 
-      // ensure it's rendering a table for each schedule
-      sinon.assert.callCount(Renderer.renderTable, schedules.length);
+      // ensure it's rendering 2 tables for each schedule
+      sinon.assert.callCount(Renderer.renderTable, schedules.length * 2);
     });
   });
 
