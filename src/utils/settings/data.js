@@ -383,12 +383,19 @@ export function startTimeAndValue(valueKey) {
  *
  * @param  {Object} settings       object with pump settings data
  * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic
+ * @param  {String} [scheduleName] name of schedule for tandem settings
  */
 export function insulinSettings(settings, manufacturer, scheduleName) {
   const deviceLabels = getPumpVocabulary(manufacturer);
   const maxBasal = _.get(settings, scheduleName ? `basal[${scheduleName}].rateMaximum.value` : 'basal.rateMaximum.value');
   const maxBolus = _.get(settings, scheduleName ? `bolus[${scheduleName}].amountMaximum.value` : 'bolus.amountMaximum.value');
   const insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
+  const insulinDurationRawUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units', '');
+
+  const insulinDurationUnits = {
+    minutes: 'min',
+    hours: 'hrs',
+  }[insulinDurationRawUnits] || insulinDurationRawUnits;
 
   const columns = [
     { key: 'setting' },
@@ -398,7 +405,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   const rows = [
     { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
-    { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
+    { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} ${insulinDurationUnits}` : '-' },
   ];
 
   // Tandem insulin settings do not have max basal

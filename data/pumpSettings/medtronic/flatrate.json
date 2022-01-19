@@ -58,8 +58,8 @@
     "calculator": {
         "enabled": true,
         "insulin": {
-            "duration": 240,
-            "units": "minutes"
+            "duration": 4,
+            "units": "hours"
         }
     },
     "extended": {
