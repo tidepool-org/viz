@@ -949,6 +949,9 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
     const renderSecondaryValue = _.includes([
       commonStats.readingsInRange,
+      commonStats.timeInAuto,
+      commonStats.timeInOverride,
+      commonStats.timeInRange,
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };

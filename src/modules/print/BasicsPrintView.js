@@ -228,6 +228,7 @@ class BasicsPrintView extends PrintView {
             text: 'BG Distribution',
             note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -267,6 +268,7 @@ class BasicsPrintView extends PrintView {
         {
           heading: t('Time In {{automatedLabel}} Ratio', { automatedLabel }),
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -278,6 +280,7 @@ class BasicsPrintView extends PrintView {
         {
           heading: t('Time In {{overrideLabel}}', { overrideLabel }),
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
