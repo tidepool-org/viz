@@ -387,7 +387,7 @@ describe('SettingsPrintView', () => {
       sinon.assert.calledWith(Renderer.renderSectionHeading, 'Pump Settings');
     });
 
-    it('should call `renderInsulinSettings` with teh pump settings', () => {
+    it('should call `renderInsulinSettings` with the pump settings', () => {
       sinon.stub(Renderer, 'renderInsulinSettings');
       Renderer.renderPumpSettings();
       sinon.assert.calledWith(Renderer.renderInsulinSettings, data.omnipodMultirate);
