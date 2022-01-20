@@ -71,6 +71,7 @@ class Stat extends PureComponent {
     isOpened: PropTypes.bool,
     legend: PropTypes.bool,
     muteOthersOnHover: PropTypes.bool,
+    onCollapse: PropTypes.func,
     onInputChange: PropTypes.func,
     reverseLegendOrder: PropTypes.bool,
     title: PropTypes.string.isRequired,
@@ -127,7 +128,7 @@ class Stat extends PureComponent {
 
     return (
       <div className={styles.chartTitle}>
-        {this.state.chartTitle}
+        <span className={styles.chartTitleText}>{this.state.chartTitle}</span>
         {titleDataValue && titleDataValue !== this.props.emptyDataPlaceholder && (
           <span className={styles.chartTitleData}>
             (&nbsp;
@@ -162,16 +163,20 @@ class Stat extends PureComponent {
   };
 
   renderChartSummary = () => {
+    const { alwaysShowSummary, hideSummaryUnits, units } = this.props;
     const summaryData = this.getFormattedDataByKey('summary');
-    const showSummary = this.props.alwaysShowSummary || !this.state.isOpened;
+    const showSummary = alwaysShowSummary || !this.state.isOpened;
     let summaryDataValue = _.get(summaryData, 'value');
     let summaryDataSuffix = _.get(summaryData, 'suffix');
+
+    // Ensure zero values are not stripped by _.compact when setting values array
+    if (summaryDataValue === 0) summaryDataValue = [summaryDataValue];
     if (!_.isArray(summaryDataValue)) summaryDataValue = _.compact([summaryDataValue]);
     if (!_.isArray(summaryDataSuffix)) summaryDataSuffix = _.compact([summaryDataSuffix]);
 
     return (
       <div className={styles.chartSummary}>
-        {summaryDataValue.length && showSummary && _.map(summaryDataValue, (value, i) => (
+        {summaryDataValue.length > 0 && showSummary && _.map(summaryDataValue, (value, i) => (
           <div
             className={styles.summaryData}
             style={{
@@ -187,7 +192,7 @@ class Stat extends PureComponent {
           </div>
         ))}
 
-        {this.props.units && !this.state.showFooter && this.renderStatUnits()}
+        {units && !hideSummaryUnits && !this.state.showFooter && this.renderStatUnits()}
 
         {this.state.isCollapsible && (
           <div className={styles.chartCollapse}>
@@ -251,7 +256,7 @@ class Stat extends PureComponent {
     return (
       <Collapse
         isOpened={this.state.isOpened}
-        springConfig={{ stiffness: 200, damping: 23 }}
+        theme={{ collapse: 'statCollapse' }}
       >
         <div className={styles.chartWrapper}>
           <Renderer {...chartProps} width={size.width || 298} />
@@ -355,7 +360,7 @@ class Stat extends PureComponent {
             </div>
           )}
           {this.props.type === statTypes.input && this.renderInput()}
-          {this.props.children && this.renderChildren()}
+          {this.state.isOpened && this.props.children && this.renderChildren()}
           {this.state.showFooter && this.renderStatFooter()}
         </div>
         {this.state.showMessages && this.renderTooltip()}
@@ -706,7 +711,10 @@ class Stat extends PureComponent {
   handleCollapse = () => {
     this.setState(state => ({
       isOpened: !state.isOpened,
-    }), () => this.setState(this.getStateByType(this.props)));
+    }), () => {
+      this.setState(this.getStateByType(this.props));
+      if (_.isFunction(this.props.onCollapse)) this.props.onCollapse(!this.state.isOpened);
+    });
   };
 
   handleTooltipIconMouseOver = () => {

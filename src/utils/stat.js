@@ -782,7 +782,7 @@ export const getStatTitle = (type, opts = {}) => {
 export const getStatDefinition = (data = {}, type, opts = {}) => {
   let stat = {
     annotations: getStatAnnotations(data, type, opts),
-    collapsible: false,
+    collapsible: _.get(opts, 'collapsible', false),
     data: getStatData(data, type, opts),
     id: type,
     title: getStatTitle(type, opts),
@@ -847,6 +847,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
         tooltipTitle: statFormats.bgRange,
       };
       stat.legend = true;
+      stat.hideSummaryUnits = true;
       stat.reverseLegendOrder = true;
       stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
@@ -897,6 +898,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
         tooltipTitle: statFormats.bgRange,
       };
       stat.legend = true;
+      stat.hideSummaryUnits = true;
       stat.reverseLegendOrder = true;
       stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
@@ -991,6 +993,8 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
         opts
       );
 
+      // Ensure zero values are not stripped by _.compact when setting values array
+      if (formatted.value === 0) formatted.value = [formatted.value];
       if (!_.isArray(formatted.value)) formatted.value = _.compact([formatted.value]);
       if (!_.isArray(formatted.suffix)) formatted.suffix = _.compact([formatted.suffix]);
 

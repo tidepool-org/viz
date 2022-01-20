@@ -29,6 +29,10 @@
   overflow: hidden;
 }
 
+:global(.statCollapse) {
+  transition: height 250ms;
+}
+
 .statFooter {
   display: flex;
   flex-wrap: nowrap;
@@ -46,6 +50,16 @@
   white-space: nowrap;
   margin-top: .25em;
   color: var(--stat--default);
+  width: 100%;
+  min-width: 0;
+  display: flex;
+}
+
+.chartTitleText {
+  display: inline-block;
+  min-width: 0;
+  overflow-x: clip;
+  text-overflow: ellipsis;
 }
 
 .chartSummary {
@@ -57,7 +71,8 @@
 .summaryData {
   display: inline-block;
   white-space: nowrap;
-  padding-right: 1em;
+  padding-right: .35em;
+  padding-left: .35em;
 }
 
 .summaryData:last-child {
@@ -86,7 +101,7 @@
   font-weight: normal;
   align-self: center;
   line-height: 24px;
-  padding-left: .75em;
+  padding-left: .5em;
 }
 
 .chartTitleData {
