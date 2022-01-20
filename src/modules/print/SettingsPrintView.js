@@ -16,12 +16,14 @@
  */
 
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import PrintView from './PrintView';
 
 import {
   deviceName,
   getDeviceMeta,
+  insulinSettings,
   startTimeAndValue,
 } from '../../utils/settings/data';
 
@@ -33,10 +35,14 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
+import { getPumpVocabulary } from '../../utils/device';
+
 import {
   basalSchedules as profileSchedules,
   basal as tandemBasal,
 } from '../../utils/settings/tandemData';
+
+const t = i18next.t.bind(i18next);
 
 class SettingsPrintView extends PrintView {
   constructor(doc, data, opts) {
@@ -44,12 +50,13 @@ class SettingsPrintView extends PrintView {
 
     this.isTandem = this.manufacturer === 'tandem';
     this.deviceMeta = getDeviceMeta(this.latestPumpUpload.settings, this.timePrefs);
+    this.deviceLabels = getPumpVocabulary(this.manufacturer);
 
     this.doc.addPage();
   }
 
   newPage() {
-    super.newPage(`Uploaded on: ${this.deviceMeta.uploaded}`);
+    super.newPage(t('Uploaded on: {{uploadDate}}', { uploadDate: this.deviceMeta.uploaded }));
   }
 
   render() {
@@ -58,19 +65,20 @@ class SettingsPrintView extends PrintView {
     if (this.isTandem) {
       this.renderTandemProfiles();
     } else {
+      if (this.manufacturer !== 'animas') this.renderPumpSettings();
       this.renderBasalSchedules();
       this.renderWizardSettings();
     }
   }
 
   renderDeviceMeta() {
-    const device = deviceName(this.manufacturer) || 'Unknown';
+    const device = deviceName(this.manufacturer) || t('Unknown');
     this.doc
       .font(this.boldFont)
       .fontSize(this.defaultFontSize)
       .text(device, { continued: true })
       .font(this.font)
-      .text(` › Serial Number: ${this.deviceMeta.serial}`)
+      .text(' › ' + t('Serial Number: {{serial}}', { serial: this.deviceMeta.serial })) // eslint-disable-line prefer-template
       .moveDown();
 
     this.resetText();
@@ -78,7 +86,7 @@ class SettingsPrintView extends PrintView {
   }
 
   renderTandemProfiles() {
-    this.renderSectionHeading('Profile Settings');
+    this.renderSectionHeading(t('Profile Settings'));
 
     const basalSchedules = profileSchedules(this.latestPumpUpload.settings);
 
@@ -108,15 +116,17 @@ class SettingsPrintView extends PrintView {
         },
       });
 
+      const widths = {
+        rate: 105,
+        bgTarget: 105,
+        carbRatio: 105,
+        insulinSensitivity: 155,
+      };
+
+      const firstColumnWidth = this.chartArea.width - _.sum(_.values(widths));
+
       const tableColumns = _.map(profile.columns, (column, index) => {
         const isFirst = index === 0;
-
-        const widths = {
-          rate: 105,
-          bgTarget: 105,
-          carbRatio: 105,
-          insulinSensitivity: 155,
-        };
 
         const fills = {
           grey: {
@@ -180,17 +190,80 @@ class SettingsPrintView extends PrintView {
       });
 
       this.renderTable(tableColumns, rows, {
+        bottomMargin: 0,
         columnDefaults: {
           zebra: true,
           headerFill: true,
         },
         flexColumn: 'start',
       });
+
+      this.setLayoutColumns({
+        width: firstColumnWidth + widths.rate,
+        count: 1,
+      });
+
+      this.renderInsulinSettings(this.latestPumpUpload.settings, schedule.name);
+      this.doc.moveDown();
     });
   }
 
+  renderPumpSettings() {
+    this.renderSectionHeading(t('Pump Settings'));
+
+    this.setLayoutColumns({
+      width: this.chartArea.width,
+      count: 3,
+      gutter: 15,
+    });
+
+    this.renderInsulinSettings(this.latestPumpUpload.settings);
+    this.doc.moveDown();
+  }
+
+  renderInsulinSettings(settings, scheduleName) {
+    const columnWidth = this.getActiveColumnWidth();
+    const valueWidth = 50;
+    const { rows: tableRows, columns } = insulinSettings(settings, this.manufacturer, scheduleName);
+
+    const tableColumns = _.map(columns, (column, index) => ({
+      id: column.key,
+      align: index === 0 ? 'left' : 'right',
+      width: index === 0 ? columnWidth - valueWidth : valueWidth,
+    }));
+
+    const heading = {
+      text: t('Insulin Settings'),
+    };
+
+    this.renderTableHeading(heading, {
+      columnDefaults: {
+        fill: {
+          color: this.colors.basal,
+          opacity: 0.15,
+        },
+        width: columnWidth,
+      },
+      fontSize: scheduleName ? this.defaultFontSize : this.largeFontSize,
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+
+    this.renderTable(tableColumns, tableRows, {
+      bottomMargin: 15,
+      columnDefaults: {
+        zebra: true,
+        headerFill: true,
+      },
+      showHeaders: false,
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+    this.resetText();
+  }
+
   renderBasalSchedules() {
-    this.renderSectionHeading('Basal Rates');
+    this.renderSectionHeading(t('Basal Rates'));
 
     this.setLayoutColumns({
       width: this.chartArea.width,

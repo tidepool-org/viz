@@ -17,9 +17,10 @@
 
 import * as data from '../../../src/utils/settings/data';
 
-const multirateSettingsData = require('../../../data/pumpSettings/medtronic/multirate.json');
-const settingsData = require('../../../data/pumpSettings/tandem/flatrate.json');
-const timedSettingsData = require('../../../data/pumpSettings/tandem/multirate.json');
+const medtronicMultirateData = require('../../../data/pumpSettings/medtronic/multirate.json');
+const omnipodMultirateData = require('../../../data/pumpSettings/omnipod/multirate.json');
+const tandemFlatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
+const tandemMultirateData = require('../../../data/pumpSettings/tandem/multirate.json');
 
 describe('[settings] data utils', () => {
   describe('noData', () => {
@@ -57,8 +58,8 @@ describe('[settings] data utils', () => {
     it('should return formatted objects', () => {
       expect(
         data.processBgTargetData(
-          multirateSettingsData.bgTarget,
-          multirateSettingsData.units.bg,
+          medtronicMultirateData.bgTarget,
+          medtronicMultirateData.units.bg,
           { columnTwo: 'low', columnThree: 'high' },
         )
       )
@@ -71,8 +72,8 @@ describe('[settings] data utils', () => {
     it('should return empty string for BG value if not found', () => {
       expect(
         data.processBgTargetData(
-          multirateSettingsData.bgTarget,
-          multirateSettingsData.units.bg,
+          medtronicMultirateData.bgTarget,
+          medtronicMultirateData.units.bg,
           { columnTwo: 'target', columnThree: 'high' },
         )
       )
@@ -87,7 +88,7 @@ describe('[settings] data utils', () => {
     it('should return formatted objects', () => {
       expect(
         data.processCarbRatioData(
-          multirateSettingsData.carbRatio,
+          medtronicMultirateData.carbRatio,
         )
       )
       .to.have.length(4)
@@ -102,8 +103,8 @@ describe('[settings] data utils', () => {
     it('should return formatted objects', () => {
       expect(
         data.processSensitivityData(
-          multirateSettingsData.insulinSensitivity,
-          multirateSettingsData.units.bg,
+          medtronicMultirateData.insulinSensitivity,
+          medtronicMultirateData.units.bg,
         )
       )
       .to.have.length(1)
@@ -115,7 +116,7 @@ describe('[settings] data utils', () => {
     it('should return formatted objects', () => {
       expect(
         data.processBasalRateData(
-          multirateSettingsData.basalSchedules[0],
+          medtronicMultirateData.basalSchedules[0],
         )
       )
       .to.have.length(5)
@@ -130,7 +131,7 @@ describe('[settings] data utils', () => {
     it('should cope with empty shedules', () => {
       expect(
         data.processBasalRateData(
-          multirateSettingsData.basalSchedules[1].value,
+          medtronicMultirateData.basalSchedules[1].value,
         )
       )
       .to.have.length(1)
@@ -172,9 +173,9 @@ describe('[settings] data utils', () => {
     it('should return formatted objects', () => {
       expect(
         data.processTimedSettings(
-          timedSettingsData,
+          tandemMultirateData,
           { name: 'Sick', position: 1 },
-          timedSettingsData.units.bg,
+          tandemMultirateData.units.bg,
         )
       )
       .to.have.length(5)
@@ -261,7 +262,7 @@ describe('[settings] data utils', () => {
   describe('getTimedSchedules', () => {
     it('should return the timed settings schedule names', () => {
       expect(
-        data.getTimedSchedules(settingsData.basalSchedules)
+        data.getTimedSchedules(tandemFlatrateData.basalSchedules)
       )
       .to.have.length(2)
       .to.deep.include({ name: 'Normal', position: 0 })
@@ -273,7 +274,7 @@ describe('[settings] data utils', () => {
     it('should return the rate total for multi rate settings', () => {
       expect(
         data.getTotalBasalRates(
-          multirateSettingsData.basalSchedules[0].value,
+          medtronicMultirateData.basalSchedules[0].value,
         )
       ).to.equal('20.725');
     });
@@ -281,7 +282,7 @@ describe('[settings] data utils', () => {
     it('should return the rate total for flatrate settings', () => {
       expect(
         data.getTotalBasalRates(
-          settingsData.basalSchedules[0].value,
+          tandemFlatrateData.basalSchedules[0].value,
         )
       ).to.equal('10.800');
     });
@@ -294,13 +295,13 @@ describe('[settings] data utils', () => {
     };
     it('[timezone-naive] should return the serial, schedule and date uploaded device', () => {
       expect(
-        data.getDeviceMeta(settingsData, timePrefs)
+        data.getDeviceMeta(tandemFlatrateData, timePrefs)
       ).to.have.property('serial').equal('0987654321');
       expect(
-        data.getDeviceMeta(settingsData, timePrefs)
+        data.getDeviceMeta(tandemFlatrateData, timePrefs)
       ).to.have.property('schedule').equal('sick');
       expect(
-        data.getDeviceMeta({ ...settingsData, normalTime: settingsData.deviceTime }, timePrefs)
+        data.getDeviceMeta({ ...tandemFlatrateData, normalTime: tandemFlatrateData.deviceTime }, timePrefs)
       ).to.have.property('uploaded').equal('Jul 12, 2016');
     });
 
@@ -310,13 +311,13 @@ describe('[settings] data utils', () => {
         timezoneName: 'US/Mountain',
       };
       expect(
-        data.getDeviceMeta(settingsData, timezoneAwarePrefs)
+        data.getDeviceMeta(tandemFlatrateData, timezoneAwarePrefs)
       ).to.have.property('serial').equal('0987654321');
       expect(
-        data.getDeviceMeta(settingsData, timezoneAwarePrefs)
+        data.getDeviceMeta(tandemFlatrateData, timezoneAwarePrefs)
       ).to.have.property('schedule').equal('sick');
       expect(
-        data.getDeviceMeta({ ...settingsData, normalTime: settingsData.time }, timezoneAwarePrefs)
+        data.getDeviceMeta({ ...tandemFlatrateData, normalTime: tandemFlatrateData.time }, timezoneAwarePrefs)
       ).to.have.property('uploaded').equal('Jul 13, 2016');
     });
 
@@ -341,6 +342,63 @@ describe('[settings] data utils', () => {
       }, {
         key: valueKey, label: 'Value',
       }]);
+    });
+  });
+
+  describe('insulinSettings', () => {
+    it('should return columns and rows for insulin settings from Tandem pump settings', () => {
+      expect(data.insulinSettings(tandemMultirateData, 'tandem', 'Normal')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Max Bolus', value: '12 U' },
+          { setting: 'Insulin Duration', value: '300 min' },
+        ],
+      });
+    });
+
+    it('should return columns and rows for insulin settings from Omnipod pump settings', () => {
+      expect(data.insulinSettings(omnipodMultirateData, 'insulet')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Max Basal Rate', value: '2 U/hr' },
+          { setting: 'Maximum Bolus', value: '9.5 U' },
+          { setting: 'Duration of Insulin Action', value: '240 min' },
+        ],
+      });
+    });
+
+    it('should return columns and rows for insulin settings from Medtronic pump settings', () => {
+      expect(data.insulinSettings(medtronicMultirateData, 'medtronic')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Max Basal', value: '2 U/hr' },
+          { setting: 'Max Bolus', value: '9.5 U' },
+          { setting: 'Active Insulin Time', value: '4 hrs' },
+        ],
+      });
+    });
+
+    it('should return columns and rows with default labels and empty settings placeholder', () => {
+      expect(data.insulinSettings({}, 'fooPump')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Max Basal', value: '-' },
+          { setting: 'Max Bolus', value: '-' },
+          { setting: 'Insulin Duration', value: '-' },
+        ],
+      });
     });
   });
 });

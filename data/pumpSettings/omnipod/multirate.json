@@ -1,6 +1,15 @@
 {
   "type": "pumpSettings",
   "activeSchedule": "Normal",
+  "basal": {
+      "rateMaximum": {
+          "units": "Units/hour",
+          "value": 2
+      },
+      "temporary": {
+          "type": "percent"
+      }
+  },
   "basalSchedules": [
     {
       "name": "Normal",
@@ -45,6 +54,22 @@
       ]
     }
   ],
+  "bolus": {
+    "amountMaximum": {
+        "units": "Units",
+        "value": 9.5
+    },
+    "calculator": {
+        "enabled": true,
+        "insulin": {
+            "duration": 240,
+            "units": "minutes"
+        }
+    },
+    "extended": {
+        "enabled": true
+    }
+  },
   "units": {
     "carbs": "grams",
     "bg": "mmol/L"
