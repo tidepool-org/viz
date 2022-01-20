@@ -365,6 +365,7 @@ describe('BasicsPrintView', () => {
             text: 'BG Distribution',
             note: 'Showing CGM data',
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -374,15 +375,15 @@ describe('BasicsPrintView', () => {
       Renderer.renderAggregatedStats();
       sinon.assert.neverCalledWith(Renderer.renderHorizontalBarStat, null);
 
-      Renderer.stats.readingsInRange = 'readingsInRangeStub';
+      Renderer.stats.readingsInRange = { data: { raw: { total: 11 } } };
       Renderer.bgSource = 'smbg';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
-        'readingsInRangeStub',
+        { data: { raw: { total: 11 } } },
         {
           heading: {
             text: 'BG Distribution',
-            note: 'Showing BGM data',
+            note: 'BGM data from 11 readings',
           },
           secondaryFormatKey: 'tooltip',
         }
@@ -433,6 +434,7 @@ describe('BasicsPrintView', () => {
         {
           heading: 'Time In Automated Ratio',
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -449,6 +451,7 @@ describe('BasicsPrintView', () => {
         {
           heading: 'Time In Settings Override',
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
