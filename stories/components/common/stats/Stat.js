@@ -308,9 +308,9 @@ stories.add('Readings In Range', () => {
         collapsible={collapsible}
         data={readingsInRangeData}
         dataFormat={{
-          label: statFormats.bgCount,
-          summary: statFormats.bgCount,
-          tooltip: statFormats.percentage,
+          label: statFormats.percentage,
+          summary: statFormats.percentage,
+          tooltip: statFormats.bgCount,
           tooltipTitle: statFormats.bgRange,
         }}
         isOpened={isOpened}
