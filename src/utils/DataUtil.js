@@ -1037,6 +1037,7 @@ export class DataUtil {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
       bgClasses = {},
       bgUnits = MGDL_UNITS,
+      ...rest
     } = bgPrefs;
 
     // bgClasses required for legacy tideline charts until we deprecate them
@@ -1051,6 +1052,7 @@ export class DataUtil {
       bgBounds,
       bgClasses,
       bgUnits,
+      ...rest,
     };
     this.endTimer('setBgPrefs');
   };
