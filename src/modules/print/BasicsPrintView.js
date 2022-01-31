@@ -356,6 +356,8 @@ class BasicsPrintView extends PrintView {
       { bgPrefs: this.bgPrefs, data: stat.data }
     );
 
+    // Ensure zero values are not stripped by _.compact when setting values array
+    if (value.value === 0) value.value = [value.value];
     if (!_.isArray(value.value)) value.value = _.compact([value.value]);
     if (!_.isArray(value.suffix)) value.suffix = _.compact([value.suffix]);
 
