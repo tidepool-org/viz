@@ -2904,6 +2904,30 @@ describe('DataUtil', () => {
         bgUnits: 'mmol/L',
       });
     });
+
+    it('should persist any additional parameters set on the provided `bgPrefs` arg', () => {
+      delete(dataUtil.bgPrefs);
+      dataUtil.setBgPrefs({
+        bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          low: { boundary: 3.1 },
+          target: { boundary: 10.2 },
+        },
+        bgUnits: MMOLL_UNITS,
+        foo: 'McBar',
+      });
+      expect(dataUtil.bgPrefs).to.eql({
+        bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          'very-low': { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryLowThreshold },
+          low: { boundary: 3.1 },
+          target: { boundary: 10.2 },
+          high: { boundary: DEFAULT_BG_BOUNDS[MMOLL_UNITS].veryHighThreshold },
+        },
+        bgUnits: 'mmol/L',
+        foo: 'McBar',
+      });
+    });
   });
 
   describe('setReturnRawData', () => {
