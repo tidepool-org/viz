@@ -75,8 +75,13 @@ class Table extends PureComponent {
 
   render() {
     const normalizedColumns = this.normalizeColumns();
+    const hasColumnLabels = _.some(normalizedColumns, 'label');
 
-    let tableContents = [];
+    const tableContents = [
+      this.renderRows(normalizedColumns),
+    ];
+
+    if (hasColumnLabels) tableContents.unshift(this.renderHeader(normalizedColumns));
 
     if (!_.isEmpty(this.props.title)) {
       const { className, label: { main, secondary } } = this.props.title;
@@ -88,16 +93,7 @@ class Table extends PureComponent {
           {main}<span className={styles.secondaryLabelWithMain}>{secondary}</span>
         </caption>
       );
-      tableContents = [
-        title,
-        this.renderHeader(normalizedColumns),
-        this.renderRows(normalizedColumns),
-      ];
-    } else {
-      tableContents = [
-        this.renderHeader(normalizedColumns),
-        this.renderRows(normalizedColumns),
-      ];
+      tableContents.unshift(title);
     }
 
     return (

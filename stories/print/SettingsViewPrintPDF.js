@@ -62,9 +62,10 @@ function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
       metaData: {
         latestPumpUpload: {
           manufacturer,
-          settings: dataFixture,
+          settings: { ...dataFixture, normalTime: dataFixture.time },
         },
       },
+      bgPrefs: { bgUnits: dataFixture.units?.bg },
     };
   }
 

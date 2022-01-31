@@ -21,6 +21,34 @@
       ]
     }
   ],
+  "bolus": {
+    "Normal": {
+      "amountMaximum": {
+        "units": "Units",
+        "value": 12
+      },
+      "calculator": {
+        "enabled": true,
+        "insulin": {
+          "duration": 300,
+          "units": "minutes"
+        }
+      }
+    },
+    "sick": {
+      "amountMaximum": {
+        "units": "Units",
+        "value": 10
+      },
+      "calculator": {
+        "enabled": true,
+        "insulin": {
+          "duration": 240,
+          "units": "minutes"
+        }
+      }
+    }
+  },
   "units": {
     "carbs": "grams",
     "bg": "mmol/L"
