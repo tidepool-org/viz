@@ -131,6 +131,9 @@ describe('device utility functions', () => {
           'settingsOverride',
           'sleep',
           'physicalActivity',
+          'maxBolus',
+          'maxBasal',
+          'insulinDuration',
         ]);
       });
 

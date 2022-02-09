@@ -27,6 +27,13 @@
   align-items: flex-start;
   display: flex;
   justify-content: space-between;
+  gap: 10px;
+}
+
+.insulinSettingsContainer {
+  width: 25%;
+  min-width: 240px;
+  margin-bottom: 15px;
 }
 
 .basalSettingsContainer {
@@ -36,13 +43,14 @@
 .bolusSettingsContainer {
   display: flex;
   flex-wrap: wrap;
-  flex-grow: 1;
+  flex-basis: 75%;
 }
 
 .bolusSettingsInnerContainer {
   display: flex;
   flex-flow: row wrap;
   width: 100%;
+  gap: 10px;
 }
 
 .categoryTitle {
@@ -52,10 +60,9 @@
 }
 
 .categoryContainer {
-  padding-right: 10px;
   margin-bottom: 10px;
   width: 100%;
-  flex-basis: calc(100% / 3);
+  flex: 1;
 }
 
 .bolusSettingsInnerContainer .categoryContainer:last-child {
@@ -74,7 +81,12 @@
   composes: settingsTable from './settings.css';
 }
 
-.settingsTable td:first-child, .settingsTable th:first-child {
+.settingsTableInverted {
+  composes: settingsTableInverted from './settings.css';
+}
+
+.settingsTable td:first-child, .settingsTable th:first-child,
+.settingsTableInverted td:first-child, .settingsTableInverted th:first-child {
   padding-left: 28px;
 }
 
@@ -96,6 +108,10 @@
 
 .twoLineBasalScheduleHeader > div:first-child {
   padding-left: 0;
+}
+
+.insulinSettingsHeader {
+  composes: bolusHeaderBackground settingsHeader from './settings.css';
 }
 
 .bolusSettingsHeader {

@@ -16,11 +16,14 @@
  */
 
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import TextUtil from '../text/TextUtil';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
+import { insulinSettings } from './data';
 
+const t = i18next.t.bind(i18next);
 
 /**
  * nonTandemText
@@ -33,6 +36,17 @@ import * as nonTandemData from './nonTandemData';
 export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
+
+  if (manufacturer !== 'animas') {
+    const { rows, columns } = insulinSettings(settings, manufacturer);
+
+    settingsString += textUtil.buildTextTable(
+      t('Insulin Settings'),
+      rows,
+      columns,
+      { showHeader: false }
+    );
+  }
 
   _.map(nonTandemData.basalSchedules(settings), (schedule) => {
     const basal = nonTandemData.basal(schedule, settings, manufacturer);
@@ -87,11 +101,21 @@ export function tandemText(patient, settings, units) {
 
   _.map(tandemData.basalSchedules(settings), (schedule) => {
     const basal = tandemData.basal(schedule, settings, units, styles);
+    const { rows, columns } = insulinSettings(settings, 'tandem', schedule.name);
+
     settingsString += textUtil.buildTextTable(
       basal.scheduleName,
       basal.rows,
       basal.columns,
     );
+
+    settingsString += textUtil.buildTextTable(
+      t('Insulin Settings'),
+      rows,
+      columns,
+      { showHeader: false }
+    );
   });
+
   return settingsString;
 }

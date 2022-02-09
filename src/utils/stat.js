@@ -841,9 +841,9 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
     case commonStats.readingsInRange:
       stat.alwaysShowTooltips = true;
       stat.dataFormat = {
-        label: statFormats.bgCount,
-        summary: statFormats.bgCount,
-        tooltip: statFormats.percentage,
+        label: statFormats.percentage,
+        summary: statFormats.percentage,
+        tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
       };
       stat.legend = true;
@@ -949,13 +949,21 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
     const renderSecondaryValue = _.includes([
       commonStats.readingsInRange,
+      commonStats.timeInAuto,
+      commonStats.timeInOverride,
+      commonStats.timeInRange,
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
+    let statTitle = `${stat.title}${stat.units ? ` (${stat.units})` : ''}`;
+
+    if (stat.id === 'readingsInRange' && stat.data?.raw?.total > 0) {
+      statTitle += t(' from {{count}} readings', { count: stat.data.raw.total });
+    }
 
     if (renderTable) {
       statsString += textUtil.buildTextTable(
-        `${stat.title}${stat.units ? ` (${stat.units})` : ''}`,
+        statTitle,
         _.map(_.reverse([...stat.data.data]), datum => {
           const formatted = formatFn(
             datum,
@@ -972,6 +980,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
               opts
             );
 
+            if (stat.id === 'readingsInRange') secondary.suffix += ' readings/day';
             formattedText += ` (${secondary.value}${secondary.suffix || ''})`;
           }
 

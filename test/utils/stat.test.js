@@ -1708,9 +1708,9 @@ describe('stat', () => {
       expect(def.id).to.equal(commonStats.readingsInRange);
       expect(def.type).to.equal(statTypes.barHorizontal);
       expect(def.dataFormat).to.eql({
-        label: statFormats.bgCount,
-        summary: statFormats.bgCount,
-        tooltip: statFormats.percentage,
+        label: statFormats.percentage,
+        summary: statFormats.percentage,
+        tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
       });
       expect(def.alwaysShowTooltips).to.be.true;
@@ -1924,8 +1924,8 @@ describe('stat', () => {
 
       stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
 
-      // 13 stats, but readingsInRange is called an extra time for the secondary value
-      sinon.assert.callCount(formatDatumSpy, 14);
+      // 13 stats, but readingsInRange, timeInAuto, timeInOverride, timeInRange are called an extra time for the secondary value
+      sinon.assert.callCount(formatDatumSpy, 17);
       sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
 
       formatDatumSpy.restore();

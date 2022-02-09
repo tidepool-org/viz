@@ -81,8 +81,8 @@ describe('Tandem', () => {
     expect(wrapper.find('Header').props().deviceDisplayName).to.equal('Tandem');
   });
 
-  it('should have three Tables', () => {
-    expect(wrapper.find('Table')).to.have.length(3);
+  it('should have six Tables - a profile and an insulin settings table for each profile', () => {
+    expect(wrapper.find('Table')).to.have.length(6);
   });
 
   it('should have three CollapsibleContainers', () => {
@@ -159,6 +159,34 @@ describe('Tandem', () => {
           formatDecimalNumber(flatrateData.insulinSensitivities.sick[0].target, 1),
         ))
       )).to.be.true;
+    });
+  });
+
+  describe('insulin settings', () => {
+    let mounted;
+    let insulinSettingsTable;
+
+    before(() => {
+      props.pumpSettings = flatrateData;
+      props.bgUnits = MMOLL_UNITS;
+      props.openedSections = { [flatrateData.activeSchedule]: true };
+      mounted = mount(
+        <Tandem {...props} />
+      );
+
+      insulinSettingsTable = mounted.find('table').filterWhere(
+        n => (n.text().search('Insulin Settings') !== -1)
+      );
+    });
+
+    it('should surface the expected value for max bolus', () => {
+      expect(insulinSettingsTable.find('tr').at(0).text()).contains('Max Bolus');
+      expect(insulinSettingsTable.find('tr').at(0).text()).contains(flatrateData.bolus[flatrateData.activeSchedule].amountMaximum.value);
+    });
+
+    it('should surface the expected value for insulin duration', () => {
+      expect(insulinSettingsTable.find('tr').at(1).text()).contains('Insulin Duration');
+      expect(insulinSettingsTable.find('tr').at(1).text()).contains(flatrateData.bolus[flatrateData.activeSchedule].calculator.insulin.duration);
     });
   });
 });
