@@ -20,7 +20,7 @@
 import _ from 'lodash';
 import * as bgUtils from '../../src/utils/bloodglucose';
 
-import { MS_IN_MIN } from '../../src/utils/constants';
+import { DEFAULT_BG_BOUNDS, MGDL_UNITS, MMOLL_UNITS, MS_IN_MIN } from '../../src/utils/constants';
 
 describe('blood glucose utilities', () => {
   const bgBounds = {
@@ -407,6 +407,59 @@ describe('blood glucose utilities', () => {
         deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
       };
       expect(bgUtils.cgmSampleFrequency(libreDatum)).to.equal(15 * MS_IN_MIN);
+    });
+  });
+
+  describe('isCustomBgRange', () => {
+    const defaultBGPrefsMgdl = {
+      bgBounds: DEFAULT_BG_BOUNDS[MGDL_UNITS],
+      bgUnits: MGDL_UNITS,
+    };
+
+    const defaultBGPrefsMmoll = {
+      bgBounds: DEFAULT_BG_BOUNDS[MMOLL_UNITS],
+      bgUnits: MMOLL_UNITS,
+    };
+
+    it('should return `false` if the provided BG range is using the default BG bounds', () => {
+      expect(bgUtils.isCustomBgRange(defaultBGPrefsMgdl)).to.be.false;
+      expect(bgUtils.isCustomBgRange(defaultBGPrefsMmoll)).to.be.false;
+    });
+
+    it('should return `true` if the provided BG range is using a custom lower target', () => {
+      expect(bgUtils.isCustomBgRange({
+        ...defaultBGPrefsMgdl,
+        bgBounds: {
+          ...defaultBGPrefsMgdl.bgBounds,
+          targetLowerBound: 90,
+        },
+      })).to.be.true;
+
+      expect(bgUtils.isCustomBgRange({
+        ...defaultBGPrefsMmoll,
+        bgBounds: {
+          ...defaultBGPrefsMmoll.bgBounds,
+          targetLowerBound: 3.5,
+        },
+      })).to.be.true;
+    });
+
+    it('should return `true` if the provided BG range is using a custom upper target', () => {
+      expect(bgUtils.isCustomBgRange({
+        ...defaultBGPrefsMgdl,
+        bgBounds: {
+          ...defaultBGPrefsMgdl.bgBounds,
+          targetUpperBound: 190,
+        },
+      })).to.be.true;
+
+      expect(bgUtils.isCustomBgRange({
+        ...defaultBGPrefsMmoll,
+        bgBounds: {
+          ...defaultBGPrefsMmoll.bgBounds,
+          targetUpperBound: 10.5,
+        },
+      })).to.be.true;
     });
   });
 });
