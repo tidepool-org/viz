@@ -221,7 +221,7 @@ const NonTandem = (props) => {
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
-      {lookupKey !== 'animas' && (
+      {!_.includes(['animas', 'microtech'], lookupKey) && (
         <div className={styles.settingsContainer}>
           <div className={styles.insulinSettingsContainer}>
             <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
@@ -250,7 +250,7 @@ const NonTandem = (props) => {
 NonTandem.propTypes = {
   bgUnits: PropTypes.oneOf([MMOLL_UNITS, MGDL_UNITS]).isRequired,
   copySettingsClicked: PropTypes.func.isRequired,
-  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic']).isRequired,
+  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech']).isRequired,
   openedSections: PropTypes.object.isRequired,
   pumpSettings: PropTypes.shape({
     activeSchedule: PropTypes.string.isRequired,
