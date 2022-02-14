@@ -246,6 +246,12 @@ describe('constants', () => {
     });
   });
 
+  describe('MICROTECH', () => {
+    it('should be `Microtech`', () => {
+      expect(constants.MICROTECH).to.equal('Microtech');
+    });
+  });
+
   describe('pumpVocabulary', () => {
     it('should define common terms per device manufacturer', () => {
       expect(constants.pumpVocabulary).to.eql({
@@ -283,6 +289,11 @@ describe('constants', () => {
           [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
           [constants.MAX_BOLUS]: 'Max Bolus',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
+        },
+        [constants.MICROTECH]: {
+          [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
+          [constants.SITE_CHANGE_TUBING]: 'Prime Reservoir',
+          [constants.SITE_CHANGE_CANNULA]: 'Prime Cannula',
         },
         default: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Change Cartridge',
