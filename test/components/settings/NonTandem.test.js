@@ -281,8 +281,8 @@ describe('NonTandem', () => {
       expect(wrapper.find('Header').props().deviceDisplayName).to.equal('OmniPod');
     });
 
-    // these tables are the bolus settings + basal schedules
-    it('should have five Tables', () => {
+    // these tables are the insulin settings, bolus settings + basal schedules
+    it('should have six Tables', () => {
       const wrapper = shallow(
         <NonTandem
           bgUnits={MGDL_UNITS}
@@ -295,7 +295,7 @@ describe('NonTandem', () => {
           toggleBasalScheduleExpansion={() => {}}
         />
       );
-      expect(wrapper.find('Table')).to.have.length(5);
+      expect(wrapper.find('Table')).to.have.length(6);
     });
 
     // these containers are the basal schedules
@@ -439,6 +439,45 @@ describe('NonTandem', () => {
         expect(copySettingsClicked.callCount).to.equal(1);
       });
     });
+
+    describe('insulin settings', () => {
+      let wrapper;
+      let insulinSettingsTable;
+
+      before(() => {
+        wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'insulet'}
+            openedSections={{ [omnipodMultiRateData.activeSchedule]: true }}
+            pumpSettings={omnipodMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+
+        insulinSettingsTable = wrapper.find('table').filterWhere(
+          n => (n.text().search('Insulin Settings') !== -1)
+        );
+      });
+
+      it('should surface the expected value for max basal', () => {
+        expect(insulinSettingsTable.find('tr').at(0).text()).contains('Max Basal Rate');
+        expect(insulinSettingsTable.find('tr').at(0).text()).contains(omnipodMultiRateData.basal.rateMaximum.value);
+      });
+
+      it('should surface the expected value for max bolus', () => {
+        expect(insulinSettingsTable.find('tr').at(1).text()).contains('Maximum Bolus');
+        expect(insulinSettingsTable.find('tr').at(1).text()).contains(omnipodMultiRateData.bolus.amountMaximum.value);
+      });
+
+      it('should surface the expected value for insulin duration', () => {
+        expect(insulinSettingsTable.find('tr').at(2).text()).contains('Duration of Insulin Action');
+        expect(insulinSettingsTable.find('tr').at(2).text()).contains(omnipodMultiRateData.bolus.calculator.insulin.duration);
+      });
+    });
   });
 
   describe('CareLink/Medtronic', () => {
@@ -474,8 +513,8 @@ describe('NonTandem', () => {
       expect(wrapper.find('Header').props().deviceDisplayName).to.equal('Medtronic');
     });
 
-    // these tables are the bolus settings + basal schedules
-    it('should have six Tables', () => {
+    // these tables are the insulin settings, bolus settings + basal schedules
+    it('should have seven Tables', () => {
       const wrapper = shallow(
         <NonTandem
           bgUnits={MGDL_UNITS}
@@ -488,7 +527,7 @@ describe('NonTandem', () => {
           toggleBasalScheduleExpansion={() => {}}
         />
       );
-      expect(wrapper.find('Table')).to.have.length(6);
+      expect(wrapper.find('Table')).to.have.length(7);
     });
 
     // these containers are the basal schedules
@@ -756,6 +795,45 @@ describe('NonTandem', () => {
         expect(carbRatioTable.someWhere(
           n => (n.text().search(medtronicMultiRateData.carbRatio[3].amount) !== -1)
         )).to.be.true;
+      });
+    });
+
+    describe('insulin settings', () => {
+      let wrapper;
+      let insulinSettingsTable;
+
+      before(() => {
+        wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'medtronic'}
+            openedSections={{ [medtronicMultiRateData.activeSchedule]: true }}
+            pumpSettings={medtronicMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+
+        insulinSettingsTable = wrapper.find('table').filterWhere(
+          n => (n.text().search('Insulin Settings') !== -1)
+        );
+      });
+
+      it('should surface the expected value for max basal', () => {
+        expect(insulinSettingsTable.find('tr').at(0).text()).contains('Max Basal');
+        expect(insulinSettingsTable.find('tr').at(0).text()).contains(medtronicMultiRateData.basal.rateMaximum.value);
+      });
+
+      it('should surface the expected value for max bolus', () => {
+        expect(insulinSettingsTable.find('tr').at(1).text()).contains('Max Bolus');
+        expect(insulinSettingsTable.find('tr').at(1).text()).contains(medtronicMultiRateData.bolus.amountMaximum.value);
+      });
+
+      it('should surface the expected value for insulin duration', () => {
+        expect(insulinSettingsTable.find('tr').at(2).text()).contains('Active Insulin Time');
+        expect(insulinSettingsTable.find('tr').at(2).text()).contains(medtronicMultiRateData.bolus.calculator.insulin.duration);
       });
     });
   });

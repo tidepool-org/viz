@@ -25,10 +25,11 @@ import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
-import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, MAX_BOLUS, INSULIN_DURATION } from '../../utils/constants';
 import { deviceName } from '../../utils/settings/data';
 import * as tandemData from '../../utils/settings/tandemData';
 import { tandemText } from '../../utils/settings/textData';
+import { getPumpVocabulary } from '../../utils/device';
 
 import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
@@ -49,8 +50,22 @@ const Tandem = (props) => {
     return _.get(openedSections, sectionName, false);
   }
 
+  const deviceLabels = getPumpVocabulary('tandem');
+
   const tables = _.map(tandemData.basalSchedules(pumpSettings), (schedule) => {
     const basal = tandemData.basal(schedule, pumpSettings, bgUnits, styles);
+    const maxBolus = _.get(pumpSettings, `bolus[${schedule.name}].amountMaximum.value`);
+    const insulinDuration = _.get(pumpSettings, `bolus[${schedule.name}].calculator.insulin.duration`);
+
+    const columns = [
+      { key: 'setting' },
+      { key: 'value' },
+    ];
+
+    const rows = [
+      { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
+      { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} min` : '-' },
+    ];
 
     return (
       <div className="settings-table-container" key={basal.scheduleName}>
@@ -65,6 +80,18 @@ const Tandem = (props) => {
             rows={basal.rows}
             columns={basal.columns}
             tableStyle={styles.profileTable}
+          />
+
+          <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
+
+          <Table
+            rows={rows}
+            title={{
+              label: { main: 'Insulin Settings' },
+              className: styles.insulinSettingsHeader,
+            }}
+            columns={columns}
+            tableStyle={styles.settingsTableInverted}
           />
         </CollapsibleContainer>
       </div>

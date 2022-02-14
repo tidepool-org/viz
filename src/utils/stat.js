@@ -782,7 +782,7 @@ export const getStatTitle = (type, opts = {}) => {
 export const getStatDefinition = (data = {}, type, opts = {}) => {
   let stat = {
     annotations: getStatAnnotations(data, type, opts),
-    collapsible: false,
+    collapsible: _.get(opts, 'collapsible', false),
     data: getStatData(data, type, opts),
     id: type,
     title: getStatTitle(type, opts),
@@ -841,12 +841,13 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
     case commonStats.readingsInRange:
       stat.alwaysShowTooltips = true;
       stat.dataFormat = {
-        label: statFormats.bgCount,
-        summary: statFormats.bgCount,
-        tooltip: statFormats.percentage,
+        label: statFormats.percentage,
+        summary: statFormats.percentage,
+        tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
       };
       stat.legend = true;
+      stat.hideSummaryUnits = true;
       stat.reverseLegendOrder = true;
       stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
@@ -897,6 +898,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
         tooltipTitle: statFormats.bgRange,
       };
       stat.legend = true;
+      stat.hideSummaryUnits = true;
       stat.reverseLegendOrder = true;
       stat.units = _.get(opts, 'bgPrefs.bgUnits');
       break;
@@ -945,11 +947,23 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
       commonStats.bgExtents,
     ], stat.id);
 
+    const renderSecondaryValue = _.includes([
+      commonStats.readingsInRange,
+      commonStats.timeInAuto,
+      commonStats.timeInOverride,
+      commonStats.timeInRange,
+    ], stat.id);
+
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
+    let statTitle = `${stat.title}${stat.units ? ` (${stat.units})` : ''}`;
+
+    if (stat.id === 'readingsInRange' && stat.data?.raw?.total > 0) {
+      statTitle += t(' from {{count}} readings', { count: stat.data.raw.total });
+    }
 
     if (renderTable) {
       statsString += textUtil.buildTextTable(
-        `${stat.title}${stat.units ? ` (${stat.units})` : ''}`,
+        statTitle,
         _.map(_.reverse([...stat.data.data]), datum => {
           const formatted = formatFn(
             datum,
@@ -957,9 +971,22 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
             opts
           );
 
+          let formattedText = `${formatted.value}${formatted.suffix || ''}`;
+
+          if (renderSecondaryValue) {
+            const secondary = formatFn(
+              datum,
+              stat.dataFormat.tooltip,
+              opts
+            );
+
+            if (stat.id === 'readingsInRange') secondary.suffix += ' readings/day';
+            formattedText += ` (${secondary.value}${secondary.suffix || ''})`;
+          }
+
           return {
             label: datum.legendTitle || datum.title,
-            value: `${formatted.value}${formatted.suffix || ''}`,
+            value: formattedText,
           };
         }),
         [
@@ -975,6 +1002,8 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
         opts
       );
 
+      // Ensure zero values are not stripped by _.compact when setting values array
+      if (formatted.value === 0) formatted.value = [formatted.value];
       if (!_.isArray(formatted.value)) formatted.value = _.compact([formatted.value]);
       if (!_.isArray(formatted.suffix)) formatted.suffix = _.compact([formatted.suffix]);
 

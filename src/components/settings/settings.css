@@ -24,6 +24,10 @@
   border-collapse: separate;
 }
 
+.settingsTableInverted {
+  composes: settingsTable;
+}
+
 .settingsTable td, .settingsTable th {
   padding: 10px;
   text-align: right;
@@ -39,6 +43,14 @@
 
 .settingsTable tbody tr:nth-child(even), .settingsTable thead tr {
   background-color: var(--table-stripe--light);
+}
+
+.settingsTableInverted tbody tr:nth-child(odd) {
+  background-color: var(--table-stripe--light);
+}
+
+.settingsTableInverted tbody tr:nth-child(even), .settingsTableInverted thead tr {
+  background-color: var(--table-stripe--dark);
 }
 
 .basalTable {

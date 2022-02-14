@@ -144,7 +144,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSection({
       title: {
         text: this.sections.boluses.title,
-        subText: _.get(this.data, 'query.excludeDaysWithoutBolus') ? '(days with no boluses have been excluded)' : false,
+        subText: _.get(this.data, 'query.excludeDaysWithoutBolus') ? t('(days with no boluses have been excluded)') : false,
       },
       data: this.aggregationsByDate.boluses.byDate,
       type: 'bolus',
@@ -157,7 +157,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSection({
       title: {
         text: this.sections.siteChanges.title,
-        subText: siteChangesSubTitle ? `(from '${this.sections.siteChanges.subTitle}')` : false,
+        subText: siteChangesSubTitle ? t("(from '{{source}}')", { source: this.sections.siteChanges.subTitle }) : false,
       },
       data: this.aggregationsByDate.siteChanges.byDate,
       type: 'siteChange',
@@ -207,11 +207,13 @@ class BasicsPrintView extends PrintView {
   renderAggregatedStats() {
     const {
       averageDailyDose,
+      averageGlucose,
       carbs,
       coefficientOfVariation,
       glucoseManagementIndicator,
       readingsInRange,
       sensorUsage,
+      standardDev,
       timeInAuto,
       timeInOverride,
       timeInRange,
@@ -224,8 +226,9 @@ class BasicsPrintView extends PrintView {
         {
           heading: {
             text: 'BG Distribution',
-            note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
+            note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -236,18 +239,23 @@ class BasicsPrintView extends PrintView {
         {
           heading: {
             text: 'BG Distribution',
-            note: `Showing ${statBgSourceLabels[this.bgSource]} data`,
+            note: t('{{source}} data from {{count}} readings', {
+              source: statBgSourceLabels[this.bgSource],
+              count: readingsInRange.data?.raw?.total,
+            }),
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
 
+    if (averageGlucose) this.renderSimpleStat(averageGlucose);
     if (sensorUsage) this.renderSimpleStat(sensorUsage);
 
     this.renderHorizontalBarStat(
       totalInsulin,
       {
-        heading: 'Avg. Daily Insulin Ratio',
+        heading: t('Avg. Daily Insulin Ratio'),
         secondaryFormatKey: 'tooltip',
         fillOpacity: 0.5,
       }
@@ -258,8 +266,9 @@ class BasicsPrintView extends PrintView {
       this.renderHorizontalBarStat(
         timeInAuto,
         {
-          heading: `Time In ${automatedLabel} Ratio`,
+          heading: t('Time In {{automatedLabel}} Ratio', { automatedLabel }),
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -269,8 +278,9 @@ class BasicsPrintView extends PrintView {
       this.renderHorizontalBarStat(
         timeInOverride,
         {
-          heading: `Time In ${overrideLabel}`,
+          heading: t('Time In {{overrideLabel}}', { overrideLabel }),
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -288,6 +298,7 @@ class BasicsPrintView extends PrintView {
     this.renderSimpleStat(carbs);
     this.renderSimpleStat(averageDailyDose);
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
+    this.renderSimpleStat(standardDev);
     this.renderSimpleStat(coefficientOfVariation);
   }
 
@@ -351,6 +362,8 @@ class BasicsPrintView extends PrintView {
       { bgPrefs: this.bgPrefs, data: stat.data }
     );
 
+    // Ensure zero values are not stripped by _.compact when setting values array
+    if (value.value === 0) value.value = [value.value];
     if (!_.isArray(value.value)) value.value = _.compact([value.value]);
     if (!_.isArray(value.suffix)) value.suffix = _.compact([value.suffix]);
 
@@ -421,8 +434,7 @@ class BasicsPrintView extends PrintView {
           height: 35,
           fontSize: this.largeFontSize,
           font: this.boldFont,
-          noteFontSize: this.smallFontSize,
-          subTextFontSize: this.smallFontSize,
+          noteFontSize: this.smallFontSize - 1,
           align: 'left',
         },
       ];
@@ -451,6 +463,7 @@ class BasicsPrintView extends PrintView {
             { bgPrefs: this.bgPrefs, data: stat.data }
           );
 
+          if (stat.id === 'readingsInRange') secondaryValue.suffix += 'readings/day';
           note += ` (${secondaryValue.value} ${secondaryValue.suffix})`;
         }
 

@@ -545,19 +545,22 @@ class PrintView {
   }
 
   renderTableHeading(heading = {}, opts = {}) {
+    const fontSize = _.get(opts, 'fontSize', this.largeFontSize);
+    const cellHeight = fontSize * 2;
+
     this.doc
       .font(this.font)
-      .fontSize(this.largeFontSize);
+      .fontSize(fontSize);
 
     const columns = [
       {
         id: 'heading',
         align: _.get(opts, 'align', 'left'),
-        height: _.get(opts, 'height', _.get(heading, 'note') ? 37 : 24),
+        height: _.get(opts, 'height', _.get(heading, 'note') ? cellHeight + 13 : cellHeight),
         cache: false,
         renderer: this.renderCustomTextCell,
         font: _.get(opts, 'font', this.boldFont),
-        fontSize: _.get(opts, 'fontSize', this.largeFontSize),
+        fontSize,
       },
     ];
 

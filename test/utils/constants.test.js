@@ -186,6 +186,36 @@ describe('constants', () => {
     });
   });
 
+  describe('SLEEP', () => {
+    it('should be `sleep`', () => {
+      expect(constants.SLEEP).to.equal('sleep');
+    });
+  });
+
+  describe('PHYSICAL_ACTIVITY', () => {
+    it('should be `physicalActivity`', () => {
+      expect(constants.PHYSICAL_ACTIVITY).to.equal('physicalActivity');
+    });
+  });
+
+  describe('MAX_BOLUS', () => {
+    it('should be `maxBolus`', () => {
+      expect(constants.MAX_BOLUS).to.equal('maxBolus');
+    });
+  });
+
+  describe('MAX_BASAL', () => {
+    it('should be `maxBasal`', () => {
+      expect(constants.MAX_BASAL).to.equal('maxBasal');
+    });
+  });
+
+  describe('INSULIN_DURATION', () => {
+    it('should be `insulinDuration`', () => {
+      expect(constants.INSULIN_DURATION).to.equal('insulinDuration');
+    });
+  });
+
   describe('SITE_CHANGE_TYPE_UNDECLARED', () => {
     it('should be `undeclared`', () => {
       expect(constants.SITE_CHANGE_TYPE_UNDECLARED).to.equal('undeclared');
@@ -234,6 +264,9 @@ describe('constants', () => {
           [constants.SITE_CHANGE_RESERVOIR]: 'Change Pod',
           [constants.SITE_CHANGE_TUBING]: 'Activate Pod',
           [constants.SITE_CHANGE_CANNULA]: 'Prime',
+          [constants.MAX_BOLUS]: 'Maximum Bolus',
+          [constants.MAX_BASAL]: 'Max Basal Rate',
+          [constants.INSULIN_DURATION]: 'Duration of Insulin Action',
         },
         [constants.MEDTRONIC]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
@@ -241,6 +274,9 @@ describe('constants', () => {
           [constants.SITE_CHANGE_CANNULA]: 'Prime Cannula',
           [constants.AUTOMATED_DELIVERY]: 'Auto Mode',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.MAX_BOLUS]: 'Max Bolus',
+          [constants.MAX_BASAL]: 'Max Basal',
+          [constants.INSULIN_DURATION]: 'Active Insulin Time',
         },
         [constants.TANDEM]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Change Cartridge',
@@ -251,6 +287,8 @@ describe('constants', () => {
           [constants.SETTINGS_OVERRIDE]: 'Activity',
           [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },
           [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
+          [constants.MAX_BOLUS]: 'Max Bolus',
+          [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
         [constants.MICROTECH]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
@@ -266,6 +304,9 @@ describe('constants', () => {
           [constants.SETTINGS_OVERRIDE]: 'Settings Override',
           [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },
           [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
+          [constants.MAX_BOLUS]: 'Max Bolus',
+          [constants.MAX_BASAL]: 'Max Basal',
+          [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
       });
     });

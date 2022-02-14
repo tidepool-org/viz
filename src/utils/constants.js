@@ -84,6 +84,9 @@ export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 export const SETTINGS_OVERRIDE = 'settingsOverride';
 export const SLEEP = 'sleep';
 export const PHYSICAL_ACTIVITY = 'physicalActivity';
+export const MAX_BOLUS = 'maxBolus';
+export const MAX_BASAL = 'maxBasal';
+export const INSULIN_DURATION = 'insulinDuration';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
@@ -103,6 +106,9 @@ export const pumpVocabulary = {
     [SITE_CHANGE_RESERVOIR]: t('Change Pod'),
     [SITE_CHANGE_TUBING]: t('Activate Pod'),
     [SITE_CHANGE_CANNULA]: t('Prime'),
+    [MAX_BOLUS]: t('Maximum Bolus'),
+    [MAX_BASAL]: t('Max Basal Rate'),
+    [INSULIN_DURATION]: t('Duration of Insulin Action'),
   },
   [MEDTRONIC]: {
     [SITE_CHANGE_RESERVOIR]: t('Rewind'),
@@ -110,6 +116,9 @@ export const pumpVocabulary = {
     [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
     [AUTOMATED_DELIVERY]: t('Auto Mode'),
     [SCHEDULED_DELIVERY]: t('Manual'),
+    [MAX_BOLUS]: t('Max Bolus'),
+    [MAX_BASAL]: t('Max Basal'),
+    [INSULIN_DURATION]: t('Active Insulin Time'),
   },
   [MICROTECH]: {
     [SITE_CHANGE_RESERVOIR]: t('Rewind'),
@@ -125,6 +134,8 @@ export const pumpVocabulary = {
     [SETTINGS_OVERRIDE]: t('Activity'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
+    [MAX_BOLUS]: t('Max Bolus'),
+    [INSULIN_DURATION]: t('Insulin Duration'),
   },
   default: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
@@ -135,6 +146,9 @@ export const pumpVocabulary = {
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
+    [MAX_BOLUS]: t('Max Bolus'),
+    [MAX_BASAL]: t('Max Basal'),
+    [INSULIN_DURATION]: t('Insulin Duration'),
   },
 };
 

@@ -178,7 +178,7 @@ export class DataUtil {
     // for easier reference when debugging.
     /* eslint-disable no-underscore-dangle */
     d._time = d.time;
-    d._deviceTime = d.deviceTime;
+    d._deviceTime = d.deviceTime || d.time;
     /* eslint-enable no-underscore-dangle */
     d.time = Date.parse(d.time);
     d.deviceTime = d.deviceTime ? Date.parse(d.deviceTime) : d.time;
@@ -1037,6 +1037,7 @@ export class DataUtil {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
       bgClasses = {},
       bgUnits = MGDL_UNITS,
+      ...rest
     } = bgPrefs;
 
     // bgClasses required for legacy tideline charts until we deprecate them
@@ -1051,6 +1052,7 @@ export class DataUtil {
       bgBounds,
       bgClasses,
       bgUnits,
+      ...rest,
     };
     this.endTimer('setBgPrefs');
   };

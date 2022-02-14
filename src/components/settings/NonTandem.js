@@ -23,10 +23,9 @@ import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
-
 import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
-import { deviceName } from '../../utils/settings/data';
+import { deviceName, insulinSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
 
 import styles from './NonTandem.css';
@@ -65,6 +64,24 @@ const NonTandem = (props) => {
 
   function openSection(sectionName) {
     return _.get(openedSections, sectionName, false);
+  }
+
+  function renderInsulinSettings() {
+    const { rows, columns } = insulinSettings(pumpSettings, lookupKey);
+
+    return (
+      <div className={styles.categoryContainer}>
+        {buildTable(
+          rows,
+          columns,
+          {
+            label: { main: 'Insulin Settings' },
+            className: styles.insulinSettingsHeader,
+          },
+          styles.settingsTableInverted,
+        )}
+      </div>
+    );
   }
 
   function renderBasalsData() {
@@ -204,6 +221,14 @@ const NonTandem = (props) => {
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
+      {lookupKey !== 'animas' && (
+        <div className={styles.settingsContainer}>
+          <div className={styles.insulinSettingsContainer}>
+            <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
+            {renderInsulinSettings()}
+          </div>
+        </div>
+      )}
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>
           <div className={styles.categoryTitle}>{t('Basal Rates')}</div>

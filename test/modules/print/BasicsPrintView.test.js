@@ -338,6 +338,7 @@ describe('BasicsPrintView', () => {
       sinon.stub(Renderer, 'renderHorizontalBarStat');
 
       Renderer.stats = {
+        averageGlucose: 'averageGlucoseStub',
         carbs: 'carbsStub',
         coefficientOfVariation: 'coefficientOfVariationStub',
         totalInsulin: 'totalInsulinStub',
@@ -346,6 +347,7 @@ describe('BasicsPrintView', () => {
         readingsInRange: 'readingsInRangeStub',
         averageDailyDose: 'averageDailyDoseStub',
         sensorUsage: 'sensorUsageStub',
+        standardDev: 'standardDevStub',
       };
     });
 
@@ -363,6 +365,7 @@ describe('BasicsPrintView', () => {
             text: 'BG Distribution',
             note: 'Showing CGM data',
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -372,16 +375,17 @@ describe('BasicsPrintView', () => {
       Renderer.renderAggregatedStats();
       sinon.assert.neverCalledWith(Renderer.renderHorizontalBarStat, null);
 
-      Renderer.stats.readingsInRange = 'readingsInRangeStub';
+      Renderer.stats.readingsInRange = { data: { raw: { total: 11 } } };
       Renderer.bgSource = 'smbg';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
-        'readingsInRangeStub',
+        { data: { raw: { total: 11 } } },
         {
           heading: {
             text: 'BG Distribution',
-            note: 'Showing BGM data',
+            note: 'BGM data from 11 readings',
           },
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -396,6 +400,16 @@ describe('BasicsPrintView', () => {
           fillOpacity: 0.5,
         }
       );
+    });
+
+    it('should render the averageGlucose stat, but only if present', () => {
+      Renderer.stats.averageGlucose = null;
+      Renderer.renderAggregatedStats();
+      sinon.assert.neverCalledWith(Renderer.renderSimpleStat, null);
+
+      Renderer.stats.averageGlucose = 'averageGlucoseStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderSimpleStat, 'averageGlucoseStub');
     });
 
     it('should render the sensorUsage stat, but only if present', () => {
@@ -420,6 +434,7 @@ describe('BasicsPrintView', () => {
         {
           heading: 'Time In Automated Ratio',
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -436,6 +451,7 @@ describe('BasicsPrintView', () => {
         {
           heading: 'Time In Settings Override',
           fillOpacity: 0.5,
+          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -450,6 +466,12 @@ describe('BasicsPrintView', () => {
       Renderer.stats.coefficientOfVariation = 'coefficientOfVariationStub';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderSimpleStat, 'coefficientOfVariationStub');
+    });
+
+    it('should render the standardDev stat', () => {
+      Renderer.stats.standardDev = 'standardDevStub';
+      Renderer.renderAggregatedStats();
+      sinon.assert.calledWith(Renderer.renderSimpleStat, 'standardDevStub');
     });
 
     it('should render the averageDailyDose stat', () => {

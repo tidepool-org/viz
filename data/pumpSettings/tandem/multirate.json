@@ -1,6 +1,47 @@
 {
   "type": "pumpSettings",
   "activeSchedule": "Normal",
+  "bolus": {
+    "Normal": {
+      "amountMaximum": {
+        "units": "Units",
+        "value": 12
+      },
+      "calculator": {
+        "enabled": true,
+        "insulin": {
+          "duration": 300,
+          "units": "minutes"
+        }
+      }
+    },
+    "Sick": {
+      "amountMaximum": {
+        "units": "Units",
+        "value": 10
+      },
+      "calculator": {
+        "enabled": true,
+        "insulin": {
+          "duration": 240,
+          "units": "minutes"
+        }
+      }
+    },
+    "Sports": {
+      "amountMaximum": {
+        "units": "Units",
+        "value": 10
+      },
+      "calculator": {
+        "enabled": true,
+        "insulin": {
+          "duration": 240,
+          "units": "minutes"
+        }
+      }
+    }
+  },
   "basalSchedules": [
     {
       "name": "Normal",

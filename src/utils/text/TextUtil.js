@@ -49,7 +49,8 @@ export class TextUtil {
 
   buildTextTable = (name, rows, columns, opts) => {
     const tableText = this.getTable(rows, columns, opts);
-    return name ? `\n${name}\n${tableText}\n` : `\n${tableText}\n`;
+    if (name && tableText) return `\n${name}\n${tableText}\n`;
+    return name ? `\n${name}\n` : `\n${tableText}\n`;
   }
 
   getTable = (rows, columns, opts = {}) => {

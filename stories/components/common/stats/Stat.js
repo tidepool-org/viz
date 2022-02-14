@@ -224,6 +224,7 @@ stories.add('Time In Range', () => {
         isOpened={isOpened}
         legend={legend}
         muteOthersOnHover={muteOthersOnHover}
+        hideSummaryUnits
         reverseLegendOrder={reverseLegendOrder}
         title="Time In Range"
         type={statTypes.barHorizontal}
@@ -249,7 +250,7 @@ let readingsInRangeData = {
     },
     {
       id: 'target',
-      value: 3,
+      value: 0,
       title: 'Readings In Range',
       legendTitle: '70-180',
     },
@@ -281,7 +282,7 @@ stories.add('Readings In Range', () => {
   const bgUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS], 'DATA');
   const bgPrefs = bgPrefsValues[bgUnits];
   const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
+  const collapsible = boolean('collapsible', true, 'UI');
   const isOpened = boolean('isOpened', true, 'UI');
   const legend = boolean('legend', true, 'UI');
   const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
@@ -307,14 +308,15 @@ stories.add('Readings In Range', () => {
         collapsible={collapsible}
         data={readingsInRangeData}
         dataFormat={{
-          label: statFormats.bgCount,
-          summary: statFormats.bgCount,
-          tooltip: statFormats.percentage,
+          label: statFormats.percentage,
+          summary: statFormats.percentage,
+          tooltip: statFormats.bgCount,
           tooltipTitle: statFormats.bgRange,
         }}
         isOpened={isOpened}
         legend={legend}
         muteOthersOnHover={muteOthersOnHover}
+        hideSummaryUnits
         reverseLegendOrder={reverseLegendOrder}
         title="Readings In Range"
         type={statTypes.barHorizontal}

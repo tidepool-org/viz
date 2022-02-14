@@ -251,12 +251,30 @@ describe('SettingsPrintView', () => {
       Renderer = createRenderer(data.omnipodMultirate);
 
       sinon.stub(Renderer, 'renderDeviceMeta');
+      sinon.stub(Renderer, 'renderPumpSettings');
       sinon.stub(Renderer, 'renderBasalSchedules');
       sinon.stub(Renderer, 'renderWizardSettings');
 
       Renderer.render();
 
       sinon.assert.calledOnce(Renderer.renderDeviceMeta);
+      sinon.assert.calledOnce(Renderer.renderPumpSettings);
+      sinon.assert.calledOnce(Renderer.renderBasalSchedules);
+      sinon.assert.calledOnce(Renderer.renderWizardSettings);
+    });
+
+    it('should not call `renderPumpSettings` for Animas devices', () => {
+      Renderer = createRenderer(data.animasFlatrate);
+
+      sinon.stub(Renderer, 'renderDeviceMeta');
+      sinon.stub(Renderer, 'renderPumpSettings');
+      sinon.stub(Renderer, 'renderBasalSchedules');
+      sinon.stub(Renderer, 'renderWizardSettings');
+
+      Renderer.render();
+
+      sinon.assert.calledOnce(Renderer.renderDeviceMeta);
+      sinon.assert.notCalled(Renderer.renderPumpSettings);
       sinon.assert.calledOnce(Renderer.renderBasalSchedules);
       sinon.assert.calledOnce(Renderer.renderWizardSettings);
     });
@@ -345,8 +363,8 @@ describe('SettingsPrintView', () => {
 
       Renderer.renderTandemProfiles();
 
-      // ensure it's rendering a table heading for each schedule
-      sinon.assert.callCount(Renderer.renderTableHeading, schedules.length);
+      // ensure it's rendering 2 table headings for each schedule (profile table and insulin settings)
+      sinon.assert.callCount(Renderer.renderTableHeading, schedules.length * 2);
 
       // ensure it's writing the schedule name
       let activeIndex;
@@ -367,8 +385,73 @@ describe('SettingsPrintView', () => {
       expect(activeCall.args[0].text).to.equal(Renderer.latestPumpUpload.settings.activeSchedule);
       expect(activeCall.args[0].subText).to.equal(' Active at upload');
 
-      // ensure it's rendering a table for each schedule
-      sinon.assert.callCount(Renderer.renderTable, schedules.length);
+      // ensure it's rendering 2 tables for each schedule
+      sinon.assert.callCount(Renderer.renderTable, schedules.length * 2);
+    });
+  });
+
+  describe('renderPumpSettings', () => {
+    beforeEach(() => {
+      Renderer = createRenderer(data.omnipodMultirate);
+    });
+
+    it('should render a section heading', () => {
+      sinon.stub(Renderer, 'renderSectionHeading');
+      Renderer.renderPumpSettings();
+      sinon.assert.calledWith(Renderer.renderSectionHeading, 'Pump Settings');
+    });
+
+    it('should call `renderInsulinSettings` with the pump settings', () => {
+      sinon.stub(Renderer, 'renderInsulinSettings');
+      Renderer.renderPumpSettings();
+      sinon.assert.calledWith(Renderer.renderInsulinSettings, data.omnipodMultirate);
+    });
+  });
+
+  describe('renderInsulinSettings', () => {
+    it('should render a heading', () => {
+      Renderer = createRenderer(data.tandemMultirate);
+      Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'updateLayoutColumnPosition');
+      sinon.stub(Renderer, 'getActiveColumnWidth').returns(300);
+      Renderer.renderInsulinSettings(data.tandemMultirate, 'Normal');
+      sinon.assert.calledWith(Renderer.renderTableHeading, { text: 'Insulin Settings' });
+    });
+
+    it('should render Tandem insulin settings', () => {
+      Renderer = createRenderer(data.tandemMultirate);
+      Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'renderTable');
+      sinon.stub(Renderer, 'updateLayoutColumnPosition');
+      sinon.stub(Renderer, 'getActiveColumnWidth').returns(300);
+      Renderer.renderInsulinSettings(data.tandemMultirate, 'Normal');
+
+      sinon.assert.calledWith(Renderer.renderTable, [
+        { id: 'setting', align: 'left', width: 250 },
+        { id: 'value', align: 'right', width: 50 },
+      ], [
+        { setting: 'Max Bolus', value: '12 U' },
+        { setting: 'Insulin Duration', value: '300 min' },
+      ]);
+    });
+
+    it('should render non-Tandem insulin settings', () => {
+      Renderer = createRenderer(data.omnipodMultirate);
+      Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'renderTable');
+      sinon.stub(Renderer, 'updateLayoutColumnPosition');
+      sinon.stub(Renderer, 'getActiveColumnWidth').returns(300);
+      Renderer.renderInsulinSettings(data.omnipodMultirate);
+
+      sinon.assert.calledWith(Renderer.renderTable, [
+        { id: 'setting', align: 'left', width: 250 },
+        { id: 'value', align: 'right', width: 50 },
+      ], [
+        { setting: 'Max Basal Rate', value: '2 U/hr' },
+        { setting: 'Maximum Bolus', value: '9.5 U' },
+        { setting: 'Duration of Insulin Action', value: '240 min' },
+      ]);
     });
   });
 

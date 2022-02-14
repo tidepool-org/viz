@@ -191,3 +191,14 @@ export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
   return deviceId.indexOf('AbbottFreeStyleLibre') === 0 ? 15 * MS_IN_MIN : 5 * MS_IN_MIN;
 }
+
+/**
+ * Determine if a patient is using a custom target bg range
+ *
+ * @param {Object} bgPrefs - bgPrefs object containing viz-style bgBounds and the bgUnits
+ */
+export function isCustomBgRange(bgPrefs) {
+  const { bgBounds, bgUnits } = bgPrefs;
+  return bgBounds.targetUpperBound !== DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound
+    || bgBounds.targetLowerBound !== DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound;
+}
