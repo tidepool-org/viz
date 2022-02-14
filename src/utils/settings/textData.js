@@ -37,7 +37,7 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
-  if (manufacturer !== 'animas') {
+  if (!_.includes(['animas', 'microtech'], manufacturer)) {
     const { rows, columns } = insulinSettings(settings, manufacturer);
 
     settingsString += textUtil.buildTextTable(

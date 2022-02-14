@@ -221,7 +221,7 @@ const NonTandem = (props) => {
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
-      {lookupKey !== 'animas' && (
+      {!_.includes(['animas', 'microtech'], lookupKey) && (
         <div className={styles.settingsContainer}>
           <div className={styles.insulinSettingsContainer}>
             <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
