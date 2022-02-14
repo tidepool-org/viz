@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "1.24.0-web-1213-bg-range-copy-text-annotation.1",
+  "version": "1.25.0-microtech-equil.1",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
@@ -148,8 +148,8 @@
     "lodash": "4.x",
     "moment-timezone": "0.x",
     "react": "16.x",
-    "react-dom": "16.x",
     "react-addons-update": "16.x",
+    "react-dom": "16.x",
     "react-redux": "5.x",
     "redux": "3.x"
   },

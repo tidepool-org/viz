@@ -7,6 +7,7 @@ import animasMultirate from '../../../data/pumpSettings/animas/multirate.raw.jso
 import medtronicMultirate from '../../../data/pumpSettings/medtronic/multirate.raw.json';
 import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.raw.json';
 import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.raw.json';
+import equilMultirate from '../../../data/pumpSettings/equil/multirate.raw.json';
 
 /* eslint-disable max-len */
 
@@ -915,6 +916,148 @@ describe('schema validation', () => {
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
         expect(_.find(Validator.pumpSettings.omnipod(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
+      });
+    });
+
+    context('equil', () => {
+      const bgTargetZeroStart = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], start: 0 }] };
+      const bgTargetNegativeStart = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], start: -1 }] };
+      const bgTargetMsInDayStart = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], start: MS_IN_DAY }] };
+      const bgTargetAboveMsInDayStart = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], start: MS_IN_DAY + 1 }] };
+      const bgTargetZeroLow = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], low: 0 }] };
+      const bgTargetNegativeLow = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], low: -1 }] };
+      const bgTargetZeroHigh = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], high: 0 }] };
+      const bgTargetNegativeHigh = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], high: -1 }] };
+      const bgTargetForbiddenTarget = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], target: 1 }] };
+      const bgTargetForbiddenRange = { ...equilMultirate, bgTarget: [{ ...equilMultirate.bgTarget[0], range: 1 }] };
+
+      const carbRatioZeroStart = { ...equilMultirate, carbRatio: [{ ...equilMultirate.carbRatio[0], start: 0 }] };
+      const carbRatioNegativeStart = { ...equilMultirate, carbRatio: [{ ...equilMultirate.carbRatio[0], start: -1 }] };
+      const carbRatioMsInDayStart = { ...equilMultirate, carbRatio: [{ ...equilMultirate.carbRatio[0], start: MS_IN_DAY }] };
+      const carbRatioAboveMsInDayStart = { ...equilMultirate, carbRatio: [{ ...equilMultirate.carbRatio[0], start: MS_IN_DAY + 1 }] };
+      const carbRatioZeroAmount = { ...equilMultirate, carbRatio: [{ ...equilMultirate.carbRatio[0], amount: 0 }] };
+      const carbRatioNegativeAmount = { ...equilMultirate, carbRatio: [{ ...equilMultirate.carbRatio[0], amount: -1 }] };
+
+      const insulinSensitivityZeroStart = { ...equilMultirate, insulinSensitivity: [{ ...equilMultirate.insulinSensitivity[0], start: 0 }] };
+      const insulinSensitivityNegativeStart = { ...equilMultirate, insulinSensitivity: [{ ...equilMultirate.insulinSensitivity[0], start: -1 }] };
+      const insulinSensitivityMsInDayStart = { ...equilMultirate, insulinSensitivity: [{ ...equilMultirate.insulinSensitivity[0], start: MS_IN_DAY }] };
+      const insulinSensitivityAboveMsInDayStart = { ...equilMultirate, insulinSensitivity: [{ ...equilMultirate.insulinSensitivity[0], start: MS_IN_DAY + 1 }] };
+      const insulinSensitivityZeroAmount = { ...equilMultirate, insulinSensitivity: [{ ...equilMultirate.insulinSensitivity[0], amount: 0 }] };
+      const insulinSensitivityNegativeAmount = { ...equilMultirate, insulinSensitivity: [{ ...equilMultirate.insulinSensitivity[0], amount: -1 }] };
+
+      const basalSchedulesZeroStart = { ...equilMultirate, basalSchedules: { ...equilMultirate.basalSchedules, NewSchedule: [{ start: 0, rate: 1 }] } };
+      const basalSchedulesNegativeStart = { ...equilMultirate, basalSchedules: { ...equilMultirate.basalSchedules, NewSchedule: [{ start: -1, rate: 1 }] } };
+      const basalSchedulesMsInDayStart = { ...equilMultirate, basalSchedules: { ...equilMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY, rate: 1 }] } };
+      const basalSchedulesAboveMsInDayStart = { ...equilMultirate, basalSchedules: { ...equilMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY + 1, rate: 1 }] } };
+      const basalSchedulesZeroRate = { ...equilMultirate, basalSchedules: { ...equilMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: 0 }] } };
+      const basalSchedulesNegativeRate = { ...equilMultirate, basalSchedules: { ...equilMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: -1 }] } };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings.equil(equilMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(equilMultirate, 'equil');
+      });
+
+      it('should pass for zero `bgTarget[0].start`', () => {
+        expect(Validator.pumpSettings.equil(bgTargetZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTarget[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.equil(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `bgTarget[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.equil(bgTargetMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.equil(bgTargetAboveMsInDayStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `bgTarget[0].low`', () => {
+        expect(Validator.pumpSettings.equil(bgTargetZeroLow)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTarget[0].low`', () => {
+        expect(_.find(Validator.pumpSettings.equil(bgTargetNegativeLow), { field: 'bgTarget[0].low' }).message).to.equal('The \'bgTarget[0].low\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `bgTarget[0].high`', () => {
+        expect(Validator.pumpSettings.equil(bgTargetZeroHigh)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTarget[0].high`', () => {
+        expect(_.find(Validator.pumpSettings.equil(bgTargetNegativeHigh), { field: 'bgTarget[0].high' }).message).to.equal('The \'bgTarget[0].high\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a forbidden `bgTarget[0].target`', () => {
+        expect(_.find(Validator.pumpSettings.equil(bgTargetForbiddenTarget), { field: 'bgTarget[0].target' }).message).to.equal('The \'bgTarget[0].target\' field is forbidden!');
+      });
+
+      it('should return an error for a forbidden `bgTarget[0].range`', () => {
+        expect(_.find(Validator.pumpSettings.equil(bgTargetForbiddenRange), { field: 'bgTarget[0].range' }).message).to.equal('The \'bgTarget[0].range\' field is forbidden!');
+      });
+
+      it('should pass for zero `carbRatio[0].start`', () => {
+        expect(Validator.pumpSettings.equil(carbRatioZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatio[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.equil(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `carbRatio[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.equil(carbRatioMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.equil(carbRatioAboveMsInDayStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `carbRatio[0].amount`', () => {
+        expect(Validator.pumpSettings.equil(carbRatioZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatio[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings.equil(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `insulinSensitivity[0].start`', () => {
+        expect(Validator.pumpSettings.equil(insulinSensitivityZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivity[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.equil(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `insulinSensitivity[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.equil(insulinSensitivityMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.equil(insulinSensitivityAboveMsInDayStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `insulinSensitivity[0].amount`', () => {
+        expect(Validator.pumpSettings.equil(insulinSensitivityZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivity[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings.equil(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
+        expect(Validator.pumpSettings.equil(basalSchedulesZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.equil(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.equil(basalSchedulesMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.equil(basalSchedulesAboveMsInDayStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(Validator.pumpSettings.equil(basalSchedulesZeroRate)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(_.find(Validator.pumpSettings.equil(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
 

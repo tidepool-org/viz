@@ -94,6 +94,7 @@ export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
 export const MEDTRONIC = 'Medtronic';
+export const MICROTECH = 'Microtech';
 
 export const pumpVocabulary = {
   [ANIMAS]: {
@@ -118,6 +119,11 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Active Insulin Time'),
+  },
+  [MICROTECH]: {
+    [SITE_CHANGE_RESERVOIR]: t('Rewind'),
+    [SITE_CHANGE_TUBING]: t('Prime Reservoir'),
+    [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
   },
   [TANDEM]: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
