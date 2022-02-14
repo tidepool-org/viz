@@ -31,6 +31,7 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE_TYPE_UNDECLARED,
   AUTOMATED_DELIVERY,
+  AUTOMATED_SUSPEND,
   INSULET,
   TANDEM,
   ANIMAS,
@@ -86,18 +87,25 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         title = 'Basals';
         summaryTitle = t('Total basal events');
         dimensions = [
-          { path: 'summary', key: 'total', label: t('Basal Events'), primary: true },
-          { path: 'summary.subtotals', key: 'temp', label: t('Temp Basals') },
-          { path: 'summary.subtotals', key: 'suspend', label: t('Suspends') },
+          { path: 'basal.summary', key: 'total', label: t('Basal Events'), primary: true },
+          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals') },
+          { path: 'basal.summary.subtotals', key: 'suspend', label: t('Suspends') },
           {
-            path: 'summary.subtotals',
+            path: 'basal.summary.subtotals',
             key: 'automatedStop',
             label: t('{{automatedLabel}} Exited', {
               automatedLabel: deviceLabels[AUTOMATED_DELIVERY],
             }),
             hideEmpty: true,
           },
+          {
+            path: 'automatedSuspend.summary.subtotals',
+            key: 'automatedSuspend',
+            label: deviceLabels[AUTOMATED_SUSPEND],
+            hideEmpty: true,
+          },
         ];
+        perRow = 4;
         break;
 
       case 'boluses':
@@ -228,11 +236,6 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     processedData && (_.keys(processedData.byDate).length > 0)
   );
 
-  const diabetesDataTypes = [
-    'basals',
-    'boluses',
-  ];
-
   const getEmptyText = (aggregation, aggregationKey) => {
     /* eslint-disable max-len */
     let emptyText;
@@ -266,8 +269,12 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     const type = aggregation.type;
     let disabled = false;
 
-    if (_.includes(diabetesDataTypes, type)) {
+    if (type === 'boluses') {
       disabled = !hasDataInRange(aggregationData[type]);
+    } else if (type === 'basals') {
+      const hasBasal = hasDataInRange(aggregationData[type]?.basal);
+      const hasAutomatedSuspend = hasDataInRange(aggregationData[type]?.automatedSuspend);
+      disabled = !hasBasal && !hasAutomatedSuspend;
     } else if (type === 'fingersticks') {
       const hasSMBG = hasDataInRange(aggregationData[type]?.smbg);
       const hasCalibrations = hasDataInRange(aggregationData[type]?.calibration);

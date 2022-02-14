@@ -80,6 +80,7 @@ export const SITE_CHANGE_TUBING = 'tubingPrime';
 export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
+export const AUTOMATED_SUSPEND = 'automatedSuspend';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 export const SETTINGS_OVERRIDE = 'settingsOverride';
 export const SLEEP = 'sleep';
@@ -136,6 +137,7 @@ export const pumpVocabulary = {
     [SITE_CHANGE_TUBING]: t('Fill Tubing'),
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
     [AUTOMATED_DELIVERY]: t('Automated'),
+    [AUTOMATED_SUSPEND]: t('Automated Suspend'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },

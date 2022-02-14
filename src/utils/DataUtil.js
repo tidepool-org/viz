@@ -293,6 +293,12 @@ export class DataUtil {
 
     if (d.type === 'deviceEvent') {
       d.tags = {
+        automatedSuspend: (
+          d.subType === 'status'
+          && d.status === 'suspended'
+          && d.reason?.suspended === 'automatic'
+          && d.payload?.suspended?.reason === 'Auto suspend by PLGS'
+        ),
         calibration: d.subType === 'calibration',
         reservoirChange: d.subType === 'reservoirChange',
         cannulaPrime: d.subType === 'prime' && d.primeTarget === 'cannula',
