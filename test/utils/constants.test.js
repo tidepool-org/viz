@@ -180,6 +180,12 @@ describe('constants', () => {
     });
   });
 
+  describe('AUTOMATED_SUSPEND', () => {
+    it('should be `automatedSuspend`', () => {
+      expect(constants.AUTOMATED_SUSPEND).to.equal('automatedSuspend');
+    });
+  });
+
   describe('SCHEDULED_DELIVERY', () => {
     it('should be `scheduledDelivery`', () => {
       expect(constants.SCHEDULED_DELIVERY).to.equal('scheduledDelivery');
@@ -300,6 +306,7 @@ describe('constants', () => {
           [constants.SITE_CHANGE_TUBING]: 'Fill Tubing',
           [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
           [constants.AUTOMATED_DELIVERY]: 'Automated',
+          [constants.AUTOMATED_SUSPEND]: 'Automated Suspend',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
           [constants.SETTINGS_OVERRIDE]: 'Settings Override',
           [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },

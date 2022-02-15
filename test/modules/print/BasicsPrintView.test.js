@@ -264,7 +264,7 @@ describe('BasicsPrintView', () => {
 
       sinon.assert.calledWithMatch(Renderer.renderCalendarSection, {
         title: Renderer.sections.basals.title,
-        data: Renderer.aggregationsByDate.basals.byDate,
+        data: Renderer.aggregationsByDate.basals.basal.byDate,
         type: 'basal',
         disabled: Renderer.sections.basals.disabled,
         emptyText: Renderer.sections.basals.emptyText,
@@ -956,8 +956,8 @@ describe('BasicsPrintView', () => {
 
       sinon.assert.calledOnce(Renderer.defineStatColumns);
       sinon.assert.calledWith(Renderer.defineStatColumns, {
-        labelWidth: 75,
-        valueWidth: 25,
+        labelWidth: 80,
+        valueWidth: 20,
         height: 20,
         labelHeader: 'Total basal events',
         valueHeader: '10',
