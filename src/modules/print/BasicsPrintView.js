@@ -167,7 +167,7 @@ class BasicsPrintView extends PrintView {
 
     this.renderCalendarSection({
       title: this.sections.basals.title,
-      data: this.aggregationsByDate.basals.basal.byDate, // TODO: do we need to also add the suspend deviceEvents here?
+      data: this.aggregationsByDate.basals.basal.byDate,
       type: 'basal',
       disabled: this.sections.basals.disabled,
       emptyText: this.sections.basals.emptyText,
