@@ -19,7 +19,14 @@
 
 import _ from 'lodash';
 
-import { ANIMAS, TANDEM, INSULET, MEDTRONIC, pumpVocabulary } from '../../src/utils/constants';
+import {
+  ANIMAS,
+  TANDEM,
+  INSULET,
+  MEDTRONIC,
+  MICROTECH,
+  pumpVocabulary,
+} from '../../src/utils/constants';
 
 import { types as Types } from '../../data/types';
 import * as device from '../../src/utils/device';
@@ -118,6 +125,7 @@ describe('device utility functions', () => {
         INSULET,
         MEDTRONIC,
         TANDEM,
+        MICROTECH,
         'default',
       ];
 
@@ -127,6 +135,7 @@ describe('device utility functions', () => {
           'tubingPrime',
           'cannulaPrime',
           'automatedDelivery',
+          'automatedSuspend',
           'scheduledDelivery',
           'settingsOverride',
           'sleep',

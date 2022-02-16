@@ -20,11 +20,20 @@ describe('AggregationUtil', () => {
   const automatedBasal = { ...basal, deliveryType: 'automated' };
   const tempBasal = { ...basal, deliveryType: 'temp' };
   const suspendedBasal = { ...basal, deviceTime: '2018-02-02T01:00:00', deliveryType: 'suspend', rate: 0 };
+  const automatedSuspendBasal = new Types.DeviceEvent({
+    deviceTime: '2018-02-01T01:00:00',
+    subType: 'status',
+    status: 'suspended',
+    reason: { suspended: 'automatic' },
+    payload: { suspended: { reason: 'Auto suspend by PLGS' } },
+    ...useRawData,
+  });
 
   const basalData = _.map([
     automatedBasal,
     tempBasal,
     suspendedBasal,
+    automatedSuspendBasal,
   ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
 
   const bolus = new Types.Bolus({ deviceTime: '2018-02-01T01:00:00', value: 1, ...useRawData });
@@ -182,34 +191,58 @@ describe('AggregationUtil', () => {
     });
 
     it('should summarize total count for all basal events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.total).to.equal(3);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.total).to.equal(3);
     });
 
     it('should summarize average daily number of basal events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.avgPerDay).to.equal(1.5);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.avgPerDay).to.equal(1.5);
     });
 
     it('should summarize total `suspend`, `automatedStop`, and `temp` basal events for the entire date range', () => {
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.subtotals.automatedStop.count).to.equal(1);
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.subtotals.temp.count).to.equal(1);
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.subtotals.suspend.count).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.subtotals.automatedStop.count).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.subtotals.temp.count).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.subtotals.suspend.count).to.equal(1);
     });
 
     it('should summarize percentage of `suspend`, `automatedStop`, and `temp` basal events for the entire date range', () => {
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.subtotals.automatedStop.percentage).to.equal(1 / 3);
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.subtotals.temp.percentage).to.equal(1 / 3);
-      expect(aggregationUtil.aggregateBasals(groupByDate).summary.subtotals.suspend.percentage).to.equal(1 / 3);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.subtotals.automatedStop.percentage).to.equal(1 / 3);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.subtotals.temp.percentage).to.equal(1 / 3);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.summary.subtotals.suspend.percentage).to.equal(1 / 3);
     });
 
     it('should summarize total count for all basal events for each date in the date range', () => {
-      expect(aggregationUtil.aggregateBasals(groupByDate).byDate['2018-02-01'].total).to.equal(2);
-      expect(aggregationUtil.aggregateBasals(groupByDate).byDate['2018-02-02'].total).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.byDate['2018-02-01'].total).to.equal(2);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.byDate['2018-02-02'].total).to.equal(1);
     });
 
     it('should count total `suspend`, `automatedStop`, and `temp` basal events for each date in the date range', () => {
-      expect(aggregationUtil.aggregateBasals(groupByDate).byDate['2018-02-01'].subtotals.automatedStop).to.equal(1);
-      expect(aggregationUtil.aggregateBasals(groupByDate).byDate['2018-02-01'].subtotals.temp).to.equal(1);
-      expect(aggregationUtil.aggregateBasals(groupByDate).byDate['2018-02-02'].subtotals.suspend).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.byDate['2018-02-01'].subtotals.automatedStop).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.byDate['2018-02-01'].subtotals.temp).to.equal(1);
+      expect(aggregationUtil.aggregateBasals(groupByDate).basal.byDate['2018-02-02'].subtotals.suspend).to.equal(1);
+    });
+
+    it('should summarize total count for all automatedSuspend events in the entire date range', () => {
+      expect(aggregationUtil.aggregateBasals(groupByDate).automatedSuspend.summary.total).to.equal(1);
+    });
+
+    it('should summarize average daily number of automatedSuspend events in the entire date range', () => {
+      expect(aggregationUtil.aggregateBasals(groupByDate).automatedSuspend.summary.avgPerDay).to.equal(0.5);
+    });
+
+    it('should summarize total `automatedSuspend` events for the entire date range', () => {
+      expect(aggregationUtil.aggregateBasals(groupByDate).automatedSuspend.summary.subtotals.automatedSuspend.count).to.equal(1);
+    });
+
+    it('should summarize percentage of `automatedSuspend` events for the entire date range', () => {
+      expect(aggregationUtil.aggregateBasals(groupByDate).automatedSuspend.summary.subtotals.automatedSuspend.percentage).to.equal(1);
+    });
+
+    it('should summarize total count for all automatedSuspend events for each date in the date range', () => {
+      expect(aggregationUtil.aggregateBasals(groupByDate).automatedSuspend.byDate['2018-02-01'].total).to.equal(1);
+    });
+
+    it('should count total `automatedSuspend` events for each date in the date range', () => {
+      expect(aggregationUtil.aggregateBasals(groupByDate).automatedSuspend.byDate['2018-02-01'].subtotals.automatedSuspend).to.equal(1);
     });
   });
 

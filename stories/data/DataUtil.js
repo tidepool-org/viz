@@ -138,6 +138,7 @@ stories.add('Query Generator', (props) => {
     deviceTime: 'deviceTime',
     _deviceTime: '_deviceTime',
     id: 'id',
+    tags: 'tags',
     time: 'time',
     _time: '_time',
     uploadId: 'uploadId',
@@ -235,6 +236,9 @@ stories.add('Query Generator', (props) => {
     deviceEvent: {
       ...commonFields,
       ...computedFields,
+      payload: 'payload',
+      reason: 'reason',
+      status: 'status',
       subType: 'subType',
     },
     message: {
