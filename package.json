@@ -115,7 +115,7 @@
     "jsdoc-to-markdown": "4.0.1",
     "json-loader": "0.5.7",
     "jsx-ast-utils": "2.0.1",
-    "karma": "4.4.1",
+    "karma": "6.3.14",
     "karma-chai": "0.1.0",
     "karma-chrome-launcher": "3.1.0",
     "karma-coverage": "2.0.1",
