@@ -379,7 +379,12 @@ class Stat extends PureComponent {
 
     const state = {
       chartTitle: props.title,
-      isDisabled: _.sum(_.map(data.data, d => _.get(d, 'deviation.value', d.value))) <= 0,
+      // Because all NaN values get converted to -1, we first filter out negative values.
+      // Stat is disabled if remaining values sum is not greater than zero
+      isDisabled: !_.sum(_.filter(
+        _.map(data.data, d => _.get(d, 'deviation.value', d.value)),
+        n => n >= 0
+      )) > 0,
     };
 
     switch (props.type) {
