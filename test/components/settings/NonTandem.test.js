@@ -15,7 +15,7 @@
  * == BSD2 LICENSE ==
  */
 
- /* eslint no-console:0 */
+/* eslint no-console:0 */
 
 import React from 'react';
 // because the component is wrapped, can't use shallow
@@ -475,7 +475,8 @@ describe('NonTandem', () => {
 
       it('should surface the expected value for insulin duration', () => {
         expect(insulinSettingsTable.find('tr').at(2).text()).contains('Duration of Insulin Action');
-        expect(insulinSettingsTable.find('tr').at(2).text()).contains(omnipodMultiRateData.bolus.calculator.insulin.duration);
+        assert.equal(omnipodMultiRateData.bolus.calculator.insulin.duration, 245);
+        expect(insulinSettingsTable.find('tr').at(2).text()).contains('4:05 hrs');
       });
     });
   });
