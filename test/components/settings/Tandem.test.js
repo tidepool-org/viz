@@ -186,7 +186,8 @@ describe('Tandem', () => {
 
     it('should surface the expected value for insulin duration', () => {
       expect(insulinSettingsTable.find('tr').at(1).text()).contains('Insulin Duration');
-      expect(insulinSettingsTable.find('tr').at(1).text()).contains(flatrateData.bolus[flatrateData.activeSchedule].calculator.insulin.duration);
+      assert.equal(flatrateData.bolus[flatrateData.activeSchedule].calculator.insulin.duration, 245);
+      expect(insulinSettingsTable.find('tr').at(1).text()).contains('4:05 hrs');
     });
   });
 });

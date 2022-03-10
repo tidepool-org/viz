@@ -355,7 +355,7 @@ describe('[settings] data utils', () => {
         ],
         rows: [
           { setting: 'Max Bolus', value: '12 U' },
-          { setting: 'Insulin Duration', value: '300 min' },
+          { setting: 'Insulin Duration', value: '5 hrs' },
         ],
       });
     });
@@ -369,7 +369,7 @@ describe('[settings] data utils', () => {
         rows: [
           { setting: 'Max Basal Rate', value: '2 U/hr' },
           { setting: 'Maximum Bolus', value: '9.5 U' },
-          { setting: 'Duration of Insulin Action', value: '240 min' },
+          { setting: 'Duration of Insulin Action', value: '4:05 hrs' },
         ],
       });
     });

@@ -390,23 +390,27 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   const deviceLabels = getPumpVocabulary(manufacturer);
   const maxBasal = _.get(settings, scheduleName ? `basal[${scheduleName}].rateMaximum.value` : 'basal.rateMaximum.value');
   const maxBolus = _.get(settings, scheduleName ? `bolus[${scheduleName}].amountMaximum.value` : 'bolus.amountMaximum.value');
-  const insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
-  const insulinDurationRawUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units', '');
-
-  const insulinDurationUnits = {
-    minutes: 'min',
-    hours: 'hrs',
-  }[insulinDurationRawUnits] || insulinDurationRawUnits;
+  const insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
+  let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
 
   const columns = [
     { key: 'setting' },
     { key: 'value' },
   ];
 
+  if (insulinDurationUnits === 'minutes') {
+    const durationInHours = Math.floor(insulinDuration / 60);
+    const minutesRemainder = insulinDuration % 60;
+
+    insulinDuration = (minutesRemainder > 0)
+      ? `${durationInHours}:${_.padStart(minutesRemainder, 2, '0')}`
+      : durationInHours;
+  }
+
   const rows = [
     { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
-    { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} ${insulinDurationUnits}` : '-' },
+    { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
 
   // Tandem insulin settings do not have max basal
