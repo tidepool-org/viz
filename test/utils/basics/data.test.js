@@ -105,10 +105,11 @@ describe('basics data utils', () => {
     });
 
     context('pump is not automated bolus device', () => {
-      it('should set `perRow` property to 3 for each section', () => {
+      it('should set appropriate `perRow` property for each section', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: false });
         _.forEach(sectionNames, (section) => {
-          expect(result[section].perRow).to.equal(3);
+          const expectedPerRow = section === 'basals' ? 4 : 3;
+          expect(result[section].perRow).to.equal(expectedPerRow);
         });
       });
 
@@ -130,7 +131,8 @@ describe('basics data utils', () => {
       it('should set `perRow` property to 4 for the boluses section', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
         _.forEach(sectionNames, (section) => {
-          expect(result[section].perRow).to.equal(section === 'boluses' ? 4 : 3);
+          const expectedPerRow = _.includes(['basals', 'boluses'], section) ? 4 : 3;
+          expect(result[section].perRow).to.equal(expectedPerRow);
         });
       });
 
@@ -276,7 +278,10 @@ describe('basics data utils', () => {
     };
 
     const data = {
-      basals: { byDate: {} },
+      basals: {
+        basal: { byDate: {} },
+        automatedSuspend: { byDate: {} },
+      },
       boluses: { byDate: {} },
       fingersticks: {
         calibration: { byDate: {} },
@@ -501,12 +506,22 @@ describe('basics data utils', () => {
             },
           },
           basals: {
-            summary: {
-              total: 6,
-              subtotals: {
-                temp: { count: 1 },
-                suspend: { count: 2 },
-                automatedStop: { count: 3 },
+            basal: {
+              summary: {
+                total: 6,
+                subtotals: {
+                  temp: { count: 1 },
+                  suspend: { count: 2 },
+                  automatedStop: { count: 3 },
+                },
+              },
+            },
+            automatedSuspend: {
+              summary: {
+                total: 4,
+                subtotals: {
+                  automatedSuspend: { count: 4 },
+                },
               },
             },
           },
@@ -526,10 +541,11 @@ describe('basics data utils', () => {
         title: 'Basals',
         summaryTitle: 'Total basal events',
         dimensions: [
-          { path: 'summary', key: 'total', label: 'Basal Events', primary: true },
-          { path: 'summary.subtotals', key: 'temp', label: 'Temp Basals' },
-          { path: 'summary.subtotals', key: 'suspend', label: 'Suspends' },
-          { path: 'summary.subtotals', key: 'automatedStop', label: 'Auto Mode Exited', hideEmpty: true },
+          { path: 'basal.summary', key: 'total', label: 'Basal Events', primary: true },
+          { path: 'basal.summary.subtotals', key: 'temp', label: 'Temp Basals' },
+          { path: 'basal.summary.subtotals', key: 'suspend', label: 'Suspends' },
+          { path: 'basal.summary.subtotals', key: 'automatedStop', label: 'Auto Mode Exited', hideEmpty: true },
+          { path: 'automatedSuspend.summary.subtotals', key: 'automatedSuspend', label: 'Automated Suspend', hideEmpty: true },
         ],
       },
       boluses: {
@@ -672,7 +688,7 @@ describe('basics data utils', () => {
       sinon.assert.calledWith(
         textUtilStub.buildTextTable,
         '',
-        [{ label: 'Total basal events', value: '6' }, { label: 'Temp Basals', value: '1' }, { label: 'Suspends', value: '2' }, { label: 'Auto Mode Exited', value: '3' }],
+        [{ label: 'Total basal events', value: '6' }, { label: 'Temp Basals', value: '1' }, { label: 'Suspends', value: '2' }, { label: 'Auto Mode Exited', value: '3' }, { label: 'Automated Suspend', value: '4' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );
     });

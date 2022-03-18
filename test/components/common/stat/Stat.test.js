@@ -891,7 +891,7 @@ describe('Stat', () => {
         expect(instance.getStateByType(instance.props).chartTitle).to.equal('My Stat Title');
       });
 
-      it('should set the `isDisabled` state to `true` if the sum of all data, including deviation data, is <= 0', () => {
+      it('should set the `isDisabled` state to `true` if the sum of all positive data values, including deviation data, is not > 0', () => {
         wrapper.setProps(props({
           data: _.assign({}, defaultProps.data, {
             data: [
@@ -937,6 +937,25 @@ describe('Stat', () => {
               },
               {
                 value: 0,
+              },
+            ],
+            dataPaths: {
+              summary: 'data.0',
+            },
+          }),
+        }));
+
+        expect(instance.getStateByType(instance.props).isDisabled).to.be.false;
+
+        wrapper.setProps(props({
+          data: _.assign({}, defaultProps.data, {
+            data: [
+              {
+                value: 0,
+                deviation: { value: 0.5 },
+              },
+              {
+                value: -1,
               },
             ],
             dataPaths: {

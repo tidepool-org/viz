@@ -167,7 +167,7 @@ class BasicsPrintView extends PrintView {
 
     this.renderCalendarSection({
       title: this.sections.basals.title,
-      data: this.aggregationsByDate.basals.byDate,
+      data: this.aggregationsByDate.basals.basal.byDate,
       type: 'basal',
       disabled: this.sections.basals.disabled,
       emptyText: this.sections.basals.emptyText,
@@ -834,8 +834,8 @@ class BasicsPrintView extends PrintView {
       });
 
       const tableColumns = this.defineStatColumns({
-        labelWidth: columnWidth * 0.75,
-        valueWidth: columnWidth * 0.25,
+        labelWidth: columnWidth * 0.8,
+        valueWidth: columnWidth * 0.2,
         height: 20,
         labelHeader: primaryDimension.label,
         valueHeader: (primaryDimension.value || 0).toString(),
