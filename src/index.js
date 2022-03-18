@@ -36,7 +36,7 @@ import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
 import { formatBgValue } from './utils/format';
-import { reshapeBgClassesToBgBounds } from './utils/bloodglucose';
+import { isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
@@ -100,6 +100,7 @@ const utils = {
   },
   bg: {
     formatBgValue,
+    isCustomBgRange,
     reshapeBgClassesToBgBounds,
   },
   constants: {

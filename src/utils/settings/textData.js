@@ -29,7 +29,7 @@ const t = i18next.t.bind(i18next);
  * nonTandemText
  * @param  {Object} patient     the patient object that contains the profile
  * @param  {String} units         MGDL_UNITS or MMOLL_UNITS
- * @param  {String} manufacturer  one of: animas, carelink, insulet, medtronic
+ * @param  {String} manufacturer  one of: animas, carelink, insulet, medtronic, microtech
  *
  * @return {String}               non tandem settings as a string table
  */
@@ -37,7 +37,7 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
-  if (manufacturer !== 'animas') {
+  if (!_.includes(['animas', 'microtech'], manufacturer)) {
     const { rows, columns } = insulinSettings(settings, manufacturer);
 
     settingsString += textUtil.buildTextTable(
