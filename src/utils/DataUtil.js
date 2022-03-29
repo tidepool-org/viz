@@ -68,6 +68,7 @@ export class DataUtil {
   init = () => {
     this.startTimer('init total');
     this.data = crossfilter([]);
+    this.queryDataCount = 0;
 
     this.buildDimensions();
     this.buildFilters();
@@ -136,6 +137,7 @@ export class DataUtil {
         'latestPumpUpload',
         'patientId',
         'size',
+        'queryDataCount',
       ]),
     };
 
@@ -993,6 +995,8 @@ export class DataUtil {
 
       groupByType.dispose();
     }
+
+    if (this.types.length) this.queryDataCount += 1;
     this.endTimer('setTypes');
   };
 
@@ -1300,6 +1304,7 @@ export class DataUtil {
       'size',
       'devices',
       'excludedDevices',
+      'queryDataCount',
     ];
 
     const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
