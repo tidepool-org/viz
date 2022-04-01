@@ -293,6 +293,9 @@ export class DeviceEvent extends Common {
 
     this.type = 'deviceEvent';
     this.subType = opts.subType;
+    if (opts.status) this.status = opts.status;
+    if (opts.reason) this.reason = opts.reason;
+    if (opts.payload) this.payload = opts.payload;
 
     if (opts.subType === 'prime') {
       this.primeTarget = opts.primeTarget;
@@ -311,7 +314,7 @@ export class DeviceEvent extends Common {
     if (!opts.raw) {
       this.normalTime = this.makeNormalTime();
       if (opts.subType === 'pumpSettingsOverride') {
-        this.normalEnd = this.normalTime + duration;
+        this.normalEnd = this.normalTime + this.duration;
       }
     }
   }

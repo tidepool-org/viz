@@ -93,55 +93,83 @@ export const basicsData = {
       },
       aggregationsByDate: {
         basals: {
-          summary: {
-            avgPerDay: 0.5263157894736842,
-            total: 10,
-            subtotals: {
-              suspend: {
-                count: 2,
-                percentage: 0.2,
+          basal: {
+            summary: {
+              avgPerDay: 0.5263157894736842,
+              total: 10,
+              subtotals: {
+                suspend: {
+                  count: 2,
+                  percentage: 0.2,
+                },
+                temp: {
+                  count: 8,
+                  percentage: 0.8,
+                },
+                automatedStop: {
+                  count: 0,
+                  percentage: 0,
+                },
               },
-              temp: {
-                count: 8,
-                percentage: 0.8,
+            },
+            byDate: {
+              '2019-07-23': {
+                total: 4,
+                subtotals: {
+                  suspend: 0,
+                  temp: 4,
+                  automatedStop: 0,
+                },
               },
-              automatedStop: {
-                count: 0,
-                percentage: 0,
+              '2019-07-24': {
+                total: 1,
+                subtotals: {
+                  suspend: 0,
+                  temp: 1,
+                  automatedStop: 0,
+                },
+              },
+              '2019-07-25': {
+                total: 2,
+                subtotals: {
+                  suspend: 2,
+                  temp: 0,
+                  automatedStop: 0,
+                },
+              },
+              '2019-07-26': {
+                total: 3,
+                subtotals: {
+                  suspend: 0,
+                  temp: 3,
+                  automatedStop: 0,
+                },
               },
             },
           },
-          byDate: {
-            '2019-07-23': {
-              total: 4,
+          automatedSuspend: {
+            summary: {
+              avgPerDay: 3.5,
+              total: 7,
               subtotals: {
-                suspend: 0,
-                temp: 4,
-                automatedStop: 0,
+                automatedSuspend: {
+                  count: 5,
+                  percentage: 1,
+                },
               },
             },
-            '2019-07-24': {
-              total: 1,
-              subtotals: {
-                suspend: 0,
-                temp: 1,
-                automatedStop: 0,
+            byDate: {
+              '2019-07-23': {
+                total: 5,
+                subtotals: {
+                  automatedSuspend: 5,
+                },
               },
-            },
-            '2019-07-25': {
-              total: 2,
-              subtotals: {
-                suspend: 2,
-                temp: 0,
-                automatedStop: 0,
-              },
-            },
-            '2019-07-26': {
-              total: 3,
-              subtotals: {
-                suspend: 0,
-                temp: 3,
-                automatedStop: 0,
+              '2019-07-24': {
+                total: 2,
+                subtotals: {
+                  automatedSuspend: 5,
+                },
               },
             },
           },

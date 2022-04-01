@@ -35,6 +35,7 @@ export class AggregationUtil {
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
     reductio.registerPostProcessor('postProcessBolusAggregations', this.postProcessBolusAggregations);
     reductio.registerPostProcessor('postProcessCalibrationAggregations', this.postProcessCalibrationAggregations);
+    reductio.registerPostProcessor('postProcessAutoSuspendAggregations', this.postProcessAutoSuspendAggregations);
     reductio.registerPostProcessor('postProcessSiteChangeAggregations', this.postProcessSiteChangeAggregations);
     reductio.registerPostProcessor('postProcessSMBGAggregations', this.postProcessSMBGAggregations);
     reductio.registerPostProcessor('postProcessDataByDateAggregations', this.postProcessDataByDateAggregations);
@@ -45,10 +46,10 @@ export class AggregationUtil {
     this.dataUtil.filter.byType('basal');
     this.dataUtil.filter.byDeviceIds(this.excludedDevices);
 
-    const reducer = reductio();
+    let reducer = reductio();
     reducer.dataList(true);
 
-    const tags = [
+    let tags = [
       'suspend',
       'temp',
     ];
@@ -57,7 +58,25 @@ export class AggregationUtil {
 
     reducer(group);
 
-    return group.post().postProcessBasalAggregations(this)();
+    const result = {
+      basal: group.post().postProcessBasalAggregations()(),
+    };
+
+    this.dataUtil.filter.byType('deviceEvent');
+
+    reducer = reductio();
+    reducer.dataList(true);
+
+    tags = [
+      'automatedSuspend',
+    ];
+
+    _.each(tags, tag => this.reduceByTag(tag, 'deviceEvent', reducer));
+
+    reducer(group);
+
+    result.automatedSuspend = group.post().postProcessAutoSuspendAggregations()();
+    return result;
   };
 
   aggregateBoluses = group => {
@@ -310,6 +329,40 @@ export class AggregationUtil {
           total,
           subtotals: {
             calibration: calibration.count,
+          },
+        };
+      }
+    });
+
+    return this.summarizeProcessedData(processedData);
+  };
+
+  /**
+   * postProcessAutoSuspendAggregations
+   *
+   * Post processor for crossfilter reductio automatedSuspend aggregations
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} formatted total and subtotal data for automatedSuspend aggregations
+   */
+  postProcessAutoSuspendAggregations = priorResults => () => {
+    const data = this.filterByActiveRange(priorResults());
+    const processedData = {};
+
+    _.each(data, dataForDay => {
+      const {
+        value: {
+          automatedSuspend,
+        },
+      } = dataForDay;
+
+      const total = automatedSuspend.count;
+
+      if (total) {
+        processedData[dataForDay.key] = {
+          total,
+          subtotals: {
+            automatedSuspend: automatedSuspend.count,
           },
         };
       }

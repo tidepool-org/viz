@@ -994,6 +994,15 @@ describe('DataUtil', () => {
       const reservoirChange = { ...siteChange, subType: 'reservoirChange' };
       const tubingPrime = { ...siteChange, deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing' };
 
+      const automatedSuspendBasal = new Types.DeviceEvent({
+        deviceTime: '2018-02-01T01:00:00',
+        subType: 'status',
+        status: 'suspended',
+        reason: { suspended: 'automatic' },
+        payload: { suspended: { reason: 'Auto suspend by PLGS' } },
+        ...useRawData,
+      });
+
       it('should tag a calibration deviceEvent with `calibration`', () => {
         expect(calibration.tags).to.be.undefined;
         dataUtil.tagDatum(calibration);
@@ -1028,6 +1037,12 @@ describe('DataUtil', () => {
         expect(tubingPrime.tags.reservoirChange).to.be.false;
         expect(tubingPrime.tags.cannulaPrime).to.be.false;
         expect(tubingPrime.tags.tubingPrime).to.be.true;
+      });
+
+      it('should tag a LBGS suspend deviceEvent with `automatedSuspend`', () => {
+        expect(automatedSuspendBasal.tags).to.be.undefined;
+        dataUtil.tagDatum(automatedSuspendBasal);
+        expect(automatedSuspendBasal.tags.automatedSuspend).to.be.true;
       });
     });
   });
@@ -3400,7 +3415,7 @@ describe('DataUtil', () => {
     it('should generate and return requested aggregations passed in as string', () => {
       const result = dataUtil.getAggregationsByDate('basals, boluses, fingersticks, siteChanges, dataByDate, statsByDate');
 
-      expect(result.basals).to.be.an('object').and.include.keys(['summary', 'byDate']);
+      expect(result.basals).to.be.an('object').and.include.keys(['basal', 'automatedSuspend']);
       expect(result.boluses).to.be.an('object').and.include.keys(['summary', 'byDate']);
       expect(result.fingersticks).to.be.an('object').and.include.keys(['smbg', 'calibration']);
       expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
@@ -3411,7 +3426,7 @@ describe('DataUtil', () => {
     it('should generate and return requested aggregations passed in as array', () => {
       const result = dataUtil.getAggregationsByDate(['basals', 'boluses', 'fingersticks', 'siteChanges', 'dataByDate', 'statsByDate']);
 
-      expect(result.basals).to.be.an('object').and.include.keys(['summary', 'byDate']);
+      expect(result.basals).to.be.an('object').and.include.keys(['basal', 'automatedSuspend']);
       expect(result.boluses).to.be.an('object').and.include.keys(['summary', 'byDate']);
       expect(result.fingersticks).to.be.an('object').and.include.keys(['smbg', 'calibration']);
       expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
@@ -3951,7 +3966,7 @@ describe('DataUtil', () => {
       d.normalTime = d.deviceTime;
       d.normalEnd = d.normalTime + d.duration;
       d.displayOffset = 0;
-      d.tags = { calibration: false, reservoirChange: false, cannulaPrime: false, tubingPrime: false };
+      d.tags = { automatedSuspend: false, calibration: false, reservoirChange: false, cannulaPrime: false, tubingPrime: false };
       return d;
     };
     /* eslint-enable no-param-reassign */
