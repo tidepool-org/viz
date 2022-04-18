@@ -514,6 +514,7 @@ describe('DataUtil', () => {
         'latestPumpUpload',
         'patientId',
         'size',
+        'queryDataCount',
       ]);
     });
 
@@ -2773,6 +2774,45 @@ describe('DataUtil', () => {
 
       dataUtil.setTypes(typesAsObject); // Should transform object types to array format
       expect(dataUtil.types).to.eql(typesAsArray);
+    });
+
+    it('should increment the `queryDataCount` metadata if types are provided', () => {
+      const typesAsArray = [
+        {
+          type: 'cbg',
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+        {
+          type: 'smbg',
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+      ];
+
+      const typesAsObject = {
+        cbg: {
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+        smbg: {
+          select: 'id,normalTime',
+          sort: 'normalTime,asc',
+        },
+      };
+
+      initDataUtil([new Types.CBG({ ...useRawData })]);
+
+      expect(dataUtil.queryDataCount).to.eql(0);
+
+      dataUtil.setTypes(typesAsArray); // Should increment, as types arg is not empty
+      expect(dataUtil.queryDataCount).to.eql(1);
+
+      dataUtil.setTypes(); // Should not increment, as types arg is empty
+      expect(dataUtil.queryDataCount).to.eql(1);
+
+      dataUtil.setTypes(typesAsObject); // Should increment, as types arg is not empty
+      expect(dataUtil.queryDataCount).to.eql(2);
     });
   });
 
