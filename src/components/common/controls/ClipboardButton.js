@@ -17,12 +17,12 @@ const t = i18next.t.bind(i18next);
 class ClipboardButton extends PureComponent {
   static propTypes = {
     buttonTitle: PropTypes.string.isRequired,
-    buttonText: PropTypes.string.isRequired,
+    buttonText: PropTypes.node.isRequired,
     clipboardText: PropTypes.string,
     getText: PropTypes.func,
     onClick: PropTypes.func,
     onSuccess: PropTypes.func,
-    successText: PropTypes.string.isRequired,
+    successText: PropTypes.node.isRequired,
   };
 
   static defaultProps = {
