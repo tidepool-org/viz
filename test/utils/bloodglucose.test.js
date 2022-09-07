@@ -209,6 +209,43 @@ describe('blood glucose utilities', () => {
       });
     });
 
+    it('should generate segmented formatted range labels for mg/dL BG prefs when segmented option set', () => {
+      const bgPrefs = {
+        bgBounds: bounds.mgdl,
+        bgUnits: 'mg/dL',
+      };
+
+      const result = bgUtils.generateBgRangeLabels(bgPrefs, { segmented: true });
+
+      expect(result).to.eql({
+        veryLow: {
+          prefix: 'below',
+          suffix: bgPrefs.bgUnits,
+          value: '55',
+        },
+        low: {
+          prefix: 'between',
+          suffix: bgPrefs.bgUnits,
+          value: '55-70',
+        },
+        target: {
+          prefix: 'between',
+          suffix: bgPrefs.bgUnits,
+          value: '70-180',
+        },
+        high: {
+          prefix: 'between',
+          suffix: bgPrefs.bgUnits,
+          value: '180-300',
+        },
+        veryHigh: {
+          prefix: 'above',
+          suffix: bgPrefs.bgUnits,
+          value: '300',
+        },
+      });
+    });
+
     it('should generate formatted range labels for mmol/L BG prefs', () => {
       const bgPrefs = {
         bgBounds: bounds.mmoll,
@@ -240,6 +277,43 @@ describe('blood glucose utilities', () => {
         target: '3.9-10.0',
         high: '10.0-16.7',
         veryHigh: '>16.7',
+      });
+    });
+
+    it('should generate segmented formatted range labels for mmol/L BG prefs when segmented option set', () => {
+      const bgPrefs = {
+        bgBounds: bounds.mmoll,
+        bgUnits: 'mmol/L',
+      };
+
+      const result = bgUtils.generateBgRangeLabels(bgPrefs, { segmented: true });
+
+      expect(result).to.eql({
+        veryLow: {
+          prefix: 'below',
+          suffix: bgPrefs.bgUnits,
+          value: '3.1',
+        },
+        low: {
+          prefix: 'between',
+          suffix: bgPrefs.bgUnits,
+          value: '3.1-3.9',
+        },
+        target: {
+          prefix: 'between',
+          suffix: bgPrefs.bgUnits,
+          value: '3.9-10.0',
+        },
+        high: {
+          prefix: 'between',
+          suffix: bgPrefs.bgUnits,
+          value: '10.0-16.7',
+        },
+        veryHigh: {
+          prefix: 'above',
+          suffix: bgPrefs.bgUnits,
+          value: '16.7',
+        },
       });
     });
   });

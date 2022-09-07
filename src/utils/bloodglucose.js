@@ -135,6 +135,36 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
     };
   }
 
+  if (opts.segmented) {
+    return {
+      veryLow: {
+        prefix: 'below',
+        suffix: bgUnits,
+        value: `${thresholds.veryLowThreshold}`,
+      },
+      low: {
+        prefix: 'between',
+        suffix: bgUnits,
+        value: `${thresholds.veryLowThreshold}-${thresholds.targetLowerBound}`,
+      },
+      target: {
+        prefix: 'between',
+        suffix: bgUnits,
+        value: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
+      },
+      high: {
+        prefix: 'between',
+        suffix: bgUnits,
+        value: `${thresholds.targetUpperBound}-${thresholds.veryHighThreshold}`,
+      },
+      veryHigh: {
+        prefix: 'above',
+        suffix: bgUnits,
+        value: `${thresholds.veryHighThreshold}`,
+      },
+    };
+  }
+
   return {
     veryLow: `below ${thresholds.veryLowThreshold} ${bgUnits}`,
     low: `between ${thresholds.veryLowThreshold} - ${thresholds.targetLowerBound} ${bgUnits}`,
