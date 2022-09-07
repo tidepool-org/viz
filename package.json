@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "1.28.0-web-1695-tir-filter-update.1",
+  "version": "1.29.0",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
