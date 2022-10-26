@@ -8,6 +8,7 @@ import * as profiles from '../../../../data/patient/profiles';
 import { tandemText, nonTandemText } from '../../../../src/utils/settings/textData';
 import { trendsText } from '../../../../src/utils/trends/data';
 import { basicsText } from '../../../../src/utils/basics/data';
+import { bgLogText } from '../../../../src/utils/bgLog/data';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 const stories = storiesOf('ClipboardButton', module);
@@ -66,9 +67,16 @@ try {
   data.basics = {};
 }
 
-const notes = `Run \`window.downloadChartData()\` from the console on a Tidepool Web basics and/or
+try {
+  // eslint-disable-next-line global-require, import/no-unresolved
+  data.bgLog = require('../../../../local/data-bgLog.json');
+} catch (e) {
+  data.bgLog = {};
+}
+
+const notes = `Run \`window.downloadChartData()\` from the console on a Tidepool Web basics, bgLog and/or
 trends data view. Save the resulting file to the \`local/\` directory of viz as
-\`data-[basics|trends].json\`, and then use this story to iterate on the copied text`;
+\`data-[basics|bgLog|trends].json\`, and then use this story to iterate on the copied text`;
 
 const Wrapper = ({ children }) => (
   <div
@@ -221,6 +229,15 @@ stories.add('Basics Data', () => (
     <ClipboardButton
       onSuccess={_.noop}
       getText={basicsText.bind(this, profiles.standard, data.basics.data, data.basics.stats, data.basics.aggregations)}
+    />
+  </Wrapper>
+), { notes });
+
+stories.add('BG Log Data', () => (
+  <Wrapper>
+    <ClipboardButton
+      onSuccess={_.noop}
+      getText={bgLogText.bind(this, profiles.standard, data.bgLog.data, data.bgLog.stats)}
     />
   </Wrapper>
 ), { notes });

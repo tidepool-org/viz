@@ -260,6 +260,7 @@ export class SMBG extends Common {
     });
 
     this.type = 'smbg';
+    this.subType = opts.subType;
 
     this.deviceTime = opts.deviceTime;
     this.units = opts.units;

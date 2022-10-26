@@ -55,6 +55,7 @@ import {
   statFetchMethods,
 } from './utils/stat';
 
+import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
 import TextUtil from './utils/text/TextUtil';
 
@@ -129,6 +130,7 @@ const utils = {
     TextUtil,
     trendsText,
     basicsText,
+    bgLogText,
   },
 };
 
