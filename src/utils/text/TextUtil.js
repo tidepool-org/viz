@@ -27,9 +27,12 @@ export class TextUtil {
   buildDocumentHeader = (source) => {
     const fullname = this.buildTextLine(getPatientFullName(this.patient));
     const bday = this.buildTextLine({ label: t('Date of birth'), value: formatBirthdate(this.patient) });
-    const diagnosis = this.buildTextLine({ label: t('Date of diagnosis'), value: formatDiagnosisDate(this.patient) });
+    const diagnosis = formatDiagnosisDate(this.patient);
+    const diagnosisText = diagnosis ? this.buildTextLine({ label: t('Date of diagnosis'), value: diagnosis }) : '';
+    const mrn = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
+    const mrnText = mrn ? this.buildTextLine({ label: t('MRN'), value: mrn }) : '';
     const exported = this.buildTextLine({ label: `${t('Exported from Tidepool')}${source ? ` ${source}` : ''}`, value: formatCurrentDate() });
-    return `${fullname}${bday}${diagnosis}${exported}`;
+    return `${fullname}${bday}${diagnosisText}${mrnText}${exported}`;
   };
 
   buildDocumentDates = () => {
