@@ -56,7 +56,7 @@
     "lodash": "4.17.21",
     "memorystream": "0.3.1",
     "moment": "2.29.4",
-    "moment-timezone": "0.5.21",
+    "moment-timezone": "0.5.35",
     "parse-svg-path": "0.1.2",
     "prop-types": "15.6.2",
     "react": "16.12.0",
