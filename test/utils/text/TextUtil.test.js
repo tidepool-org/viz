@@ -7,6 +7,7 @@ describe('TextUtil', () => {
       patient: {
         birthday: '2000-01-01',
         diagnosisDate: '2014-12-31',
+        mrn: 'mrn123',
       },
     },
   };
@@ -58,6 +59,34 @@ describe('TextUtil', () => {
       const result = textUtil.buildDocumentHeader();
       sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Date of diagnosis', value: 'Dec 31, 2014' });
       expect(result).to.include('Date of diagnosis: Dec 31, 2014');
+    });
+
+    it('should print the patient\'s mrn', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'MRN', value: 'mrn123' });
+      expect(result).to.include('MRN: mrn123');
+    });
+
+    context('patient profile is missing fields', () => {
+      beforeEach(() => {
+        const patientWithMissingFields = { ...patient };
+        delete patientWithMissingFields.profile.patient.mrn;
+        delete patientWithMissingFields.profile.patient.diagnosisDate;
+        textUtil = new TextUtil(patientWithMissingFields, endpoints, timePrefs);
+      });
+
+      it('should not print the diagnosis date', () => {
+        sinon.spy(textUtil, 'buildTextLine');
+        const result = textUtil.buildDocumentHeader();
+        expect(result).to.not.include('Date of diagnosis');
+      });
+
+      it('should not print the mrn', () => {
+        sinon.spy(textUtil, 'buildTextLine');
+        const result = textUtil.buildDocumentHeader();
+        expect(result).to.not.include('MRN');
+      });
     });
 
     it('should print the export source when provided', () => {
