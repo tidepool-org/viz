@@ -128,7 +128,7 @@
     "mocha": "5.2.0",
     "object-invariant-test-helper": "0.1.1",
     "optional": "0.1.4",
-    "postcss": "7.0.2",
+    "postcss": "7.0.36",
     "postcss-calc": "6.0.1",
     "postcss-custom-properties": "7.0.0",
     "postcss-loader": "3.0.0",
