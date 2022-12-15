@@ -37,6 +37,7 @@ import {
   ANIMAS,
   MEDTRONIC,
   MICROTECH,
+  SOOIL,
   pumpVocabulary,
 } from '../constants';
 
@@ -192,7 +193,7 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
 
   let siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
 
-  if (_.includes(_.map([ANIMAS, MEDTRONIC, TANDEM], _.lowerCase), manufacturer)) {
+  if (_.includes(_.map([ANIMAS, MEDTRONIC, TANDEM, SOOIL], _.lowerCase), manufacturer)) {
     siteChangeSource = _.get(settings, 'siteChangeSource');
     const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
 

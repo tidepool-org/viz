@@ -44,7 +44,7 @@ export function deviceMeta(settings, timePrefs) {
 
 /**
  * bolusTitle
- * @param  {String} manufacturer one of: animas, carelink, insulet, medtronic, microtech
+ * @param  {String} manufacturer one of: animas, carelink, insulet, medtronic, microtech, sooil
  *
  * @return {String}              bolus title for given manufacturer
  */
@@ -54,6 +54,7 @@ export function bolusTitle(manufacturer) {
     insulet: t('Bolus Calculator'),
     medtronic: t('Bolus Wizard'),
     microtech: t('Bolus Calculator'),
+    sooil: t('BG Bolus Calculator'),
   };
   return BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[manufacturer];
 }
@@ -86,7 +87,7 @@ function basalColumns() {
  * basal
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, sooil
  * @return {Object}                object with basal title, columns and rows
  */
 export function basal(schedule, settings, manufacturer) {
@@ -118,6 +119,7 @@ function sensitivityTitle(manufacturer) {
     insulet: t('Correction factor'),
     medtronic: t('Sensitivity'),
     microtech: t('Insulin Sensitivity'),
+    sooil: t('CF'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -145,7 +147,7 @@ function sensitivityRows(settings, units) {
  * sensitivity
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, sooil
  * @param  {String} units          MGDL_UNITS or MMOLL_UNITS
  * @return {Object}                object with sensitivity title, columns and rows
  */
@@ -167,6 +169,7 @@ function ratioTitle(manufacturer) {
     insulet: t('IC ratio'),
     medtronic: t('Carb Ratios'),
     microtech: t('Carbohydrate Ratio'),
+    sooil: t('CIR'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -212,6 +215,7 @@ function targetTitle(manufacturer) {
     insulet: t('Target BG'),
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
+    sooil: t('Ideal BG'),
   };
   return BG_TARGET_BY_MANUFACTURER[manufacturer];
 }
@@ -242,6 +246,10 @@ function targetColumns(manufacturer) {
       { key: 'columnTwo', label: t('Lower') },
       { key: 'columnThree', label: t('Upper') },
     ],
+    sooil: [
+      { key: 'start', label: t('Start time') },
+      { key: 'columnTwo', label: t('Target') },
+    ],
   };
   return BG_TARGET_COLS_BY_MANUFACTURER[manufacturer];
 }
@@ -256,6 +264,7 @@ function targetRows(settings, units, manufacturer) {
     insulet: { columnTwo: 'target', columnThree: 'high' },
     medtronic: { columnTwo: 'low', columnThree: 'high' },
     microtech: { columnTwo: 'low', columnThree: 'high' },
+    sooil: { columnTwo: 'target' },
   };
   return data.processBgTargetData(
     settings.bgTarget,
@@ -268,7 +277,7 @@ function targetRows(settings, units, manufacturer) {
  * target
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, sooil
  * @param  {String} units          MGDL_UNITS or MMOLL_UNITS
  * @return {Object}                object with target title, columns and rows
  */
