@@ -8,6 +8,7 @@ import medtronicMultirate from '../../../data/pumpSettings/medtronic/multirate.r
 import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.raw.json';
 import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.raw.json';
 import equilMultirate from '../../../data/pumpSettings/equil/multirate.raw.json';
+import danaMultirate from '../../../data/pumpSettings/dana/multirate.raw.json';
 
 /* eslint-disable max-len */
 
@@ -1058,6 +1059,144 @@ describe('schema validation', () => {
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
         expect(_.find(Validator.pumpSettings.equil(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
+      });
+    });
+
+    context('dana', () => {
+      const bgTargetZeroStart = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], start: 0 }] };
+      const bgTargetNegativeStart = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], start: -1 }] };
+      const bgTargetMsInDayStart = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], start: MS_IN_DAY }] };
+      const bgTargetAboveMsInDayStart = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], start: MS_IN_DAY + 1 }] };
+
+      const bgTargetZeroTarget = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], target: 0 }] };
+      const bgTargetNegativeTarget = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], target: -1 }] };
+      const bgTargetForbiddenRange = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], range: 1 }] };
+      const bgTargetForbiddenLow = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], low: 1 }] };
+      const bgTargetForbiddenHigh = { ...danaMultirate, bgTarget: [{ ...danaMultirate.bgTarget[0], high: 1 }] };
+
+      const carbRatioZeroStart = { ...danaMultirate, carbRatio: [{ ...danaMultirate.carbRatio[0], start: 0 }] };
+      const carbRatioNegativeStart = { ...danaMultirate, carbRatio: [{ ...danaMultirate.carbRatio[0], start: -1 }] };
+      const carbRatioMsInDayStart = { ...danaMultirate, carbRatio: [{ ...danaMultirate.carbRatio[0], start: MS_IN_DAY }] };
+      const carbRatioAboveMsInDayStart = { ...danaMultirate, carbRatio: [{ ...danaMultirate.carbRatio[0], start: MS_IN_DAY + 1 }] };
+      const carbRatioZeroAmount = { ...danaMultirate, carbRatio: [{ ...danaMultirate.carbRatio[0], amount: 0 }] };
+      const carbRatioNegativeAmount = { ...danaMultirate, carbRatio: [{ ...danaMultirate.carbRatio[0], amount: -1 }] };
+
+      const insulinSensitivityZeroStart = { ...danaMultirate, insulinSensitivity: [{ ...danaMultirate.insulinSensitivity[0], start: 0 }] };
+      const insulinSensitivityNegativeStart = { ...danaMultirate, insulinSensitivity: [{ ...danaMultirate.insulinSensitivity[0], start: -1 }] };
+      const insulinSensitivityMsInDayStart = { ...danaMultirate, insulinSensitivity: [{ ...danaMultirate.insulinSensitivity[0], start: MS_IN_DAY }] };
+      const insulinSensitivityAboveMsInDayStart = { ...danaMultirate, insulinSensitivity: [{ ...danaMultirate.insulinSensitivity[0], start: MS_IN_DAY + 1 }] };
+      const insulinSensitivityZeroAmount = { ...danaMultirate, insulinSensitivity: [{ ...danaMultirate.insulinSensitivity[0], amount: 0 }] };
+      const insulinSensitivityNegativeAmount = { ...danaMultirate, insulinSensitivity: [{ ...danaMultirate.insulinSensitivity[0], amount: -1 }] };
+
+      const basalSchedulesZeroStart = { ...danaMultirate, basalSchedules: { ...danaMultirate.basalSchedules, NewSchedule: [{ start: 0, rate: 1 }] } };
+      const basalSchedulesNegativeStart = { ...danaMultirate, basalSchedules: { ...danaMultirate.basalSchedules, NewSchedule: [{ start: -1, rate: 1 }] } };
+      const basalSchedulesMsInDayStart = { ...danaMultirate, basalSchedules: { ...danaMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY, rate: 1 }] } };
+      const basalSchedulesAboveMsInDayStart = { ...danaMultirate, basalSchedules: { ...danaMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY + 1, rate: 1 }] } };
+      const basalSchedulesZeroRate = { ...danaMultirate, basalSchedules: { ...danaMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: 0 }] } };
+      const basalSchedulesNegativeRate = { ...danaMultirate, basalSchedules: { ...danaMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: -1 }] } };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings.dana(danaMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(danaMultirate, 'dana');
+      });
+
+      it('should pass for zero `bgTarget[0].start`', () => {
+        expect(Validator.pumpSettings.dana(bgTargetZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTarget[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.dana(bgTargetNegativeStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `bgTarget[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.dana(bgTargetMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.dana(bgTargetAboveMsInDayStart), { field: 'bgTarget[0].start' }).message).to.equal('The \'bgTarget[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `bgTarget[0].target`', () => {
+        expect(Validator.pumpSettings.dana(bgTargetZeroTarget)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTarget[0].target`', () => {
+        expect(_.find(Validator.pumpSettings.dana(bgTargetNegativeTarget), { field: 'bgTarget[0].target' }).message).to.equal('The \'bgTarget[0].target\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a forbidden bgTarget[0].low`', () => {
+        expect(_.find(Validator.pumpSettings.dana(bgTargetForbiddenLow), { field: 'bgTarget[0].low' }).message).to.equal('The \'bgTarget[0].low\' field is forbidden!');
+      });
+
+      it('should return an error for a forbidden `bgTarget[0].high`', () => {
+        expect(_.find(Validator.pumpSettings.dana(bgTargetForbiddenHigh), { field: 'bgTarget[0].high' }).message).to.equal('The \'bgTarget[0].high\' field is forbidden!');
+      });
+
+      it('should return an error for a forbidden `bgTarget[0].range`', () => {
+        expect(_.find(Validator.pumpSettings.dana(bgTargetForbiddenRange), { field: 'bgTarget[0].range' }).message).to.equal('The \'bgTarget[0].range\' field is forbidden!');
+      });
+
+      it('should pass for zero `carbRatio[0].start`', () => {
+        expect(Validator.pumpSettings.dana(carbRatioZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatio[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.dana(carbRatioNegativeStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `carbRatio[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.dana(carbRatioMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.dana(carbRatioAboveMsInDayStart), { field: 'carbRatio[0].start' }).message).to.equal('The \'carbRatio[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `carbRatio[0].amount`', () => {
+        expect(Validator.pumpSettings.dana(carbRatioZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatio[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings.dana(carbRatioNegativeAmount), { field: 'carbRatio[0].amount' }).message).to.equal('The \'carbRatio[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `insulinSensitivity[0].start`', () => {
+        expect(Validator.pumpSettings.dana(insulinSensitivityZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivity[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.dana(insulinSensitivityNegativeStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `insulinSensitivity[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.dana(insulinSensitivityMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.dana(insulinSensitivityAboveMsInDayStart), { field: 'insulinSensitivity[0].start' }).message).to.equal('The \'insulinSensitivity[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `insulinSensitivity[0].amount`', () => {
+        expect(Validator.pumpSettings.dana(insulinSensitivityZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivity[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings.dana(insulinSensitivityNegativeAmount), { field: 'insulinSensitivity[0].amount' }).message).to.equal('The \'insulinSensitivity[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
+        expect(Validator.pumpSettings.dana(basalSchedulesZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
+        expect(_.find(Validator.pumpSettings.dana(basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings.dana(basalSchedulesMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings.dana(basalSchedulesAboveMsInDayStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(Validator.pumpSettings.dana(basalSchedulesZeroRate)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(_.find(Validator.pumpSettings.dana(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
 

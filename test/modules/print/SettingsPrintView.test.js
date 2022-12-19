@@ -28,6 +28,7 @@ import medtronicAutomated from '../../../data/pumpSettings/medtronic/automated.j
 import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.json';
 import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.json';
 import equilMultirate from '../../../data/pumpSettings/equil/multirate.json';
+import danaMultirate from '../../../data/pumpSettings/dana/multirate.json';
 
 import {
   ratio,
@@ -59,6 +60,7 @@ const data = {
   medtronicAutomated,
   omnipodMultirate,
   equilMultirate,
+  danaMultirate,
 };
 
 describe('SettingsPrintView', () => {
@@ -136,6 +138,11 @@ describe('SettingsPrintView', () => {
     {
       name: 'equil',
       data: equilMultirate,
+      opts,
+    },
+    {
+      name: 'dana',
+      data: danaMultirate,
       opts,
     },
   ];
@@ -324,6 +331,13 @@ describe('SettingsPrintView', () => {
       Renderer.renderDeviceMeta();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Equil');
+    });
+
+    it('should render the device name for DANA-i devices', () => {
+      Renderer = createRenderer(data.danaMultirate);
+      Renderer.renderDeviceMeta();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'DANA-i');
     });
 
     it('should render the device name for Tandem devices', () => {
@@ -769,16 +783,16 @@ describe('SettingsPrintView', () => {
 
         Renderer.renderTarget(settings);
 
-        sinon.assert.calledWithMatch(
-          Renderer.renderWizardSetting,
-          {
-            columns: [
-              { key: 'start', label: 'Start time' },
-              { key: 'columnTwo', label: settings.columns[1].label },
-              { key: 'columnThree', label: settings.columns[2].label },
-            ],
-          }
-        );
+        const columns = [
+          { key: 'start', label: 'Start time' },
+          { key: 'columnTwo', label: settings.columns[1].label },
+        ];
+
+        if (settings.columns[2]) {
+          columns[2] = { key: 'columnThree', label: settings.columns[2].label };
+        }
+
+        sinon.assert.calledWithMatch(Renderer.renderWizardSetting, { columns });
       });
     });
   });

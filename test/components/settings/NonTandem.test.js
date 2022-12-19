@@ -38,6 +38,8 @@ const medtronicMultiRateData = require('../../../data/pumpSettings/medtronic/mul
 const medtronicAutomatedData = require('../../../data/pumpSettings/medtronic/automated.json');
 const equilMultiRateData = require('../../../data/pumpSettings/equil/multirate.json');
 const equilFlatRateData = require('../../../data/pumpSettings/equil/flatrate.json');
+const danaMultiRateData = require('../../../data/pumpSettings/dana/multirate.json');
+const danaFlatRateData = require('../../../data/pumpSettings/dana/flatrate.json');
 
 const copySettingsClicked = sinon.spy();
 const timePrefs = { timezoneAware: false, timezoneName: 'Europe/London' };
@@ -1042,6 +1044,194 @@ describe('NonTandem', () => {
             deviceKey={'microtech'}
             openedSections={{ [equilMultiRateData.activeSchedule]: true }}
             pumpSettings={equilMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const clipBoardButton = mounted.find('ClipboardButton').at(0);
+        expect(copySettingsClicked.callCount).to.equal(0);
+        clipBoardButton.prop('onSuccess')();
+        expect(copySettingsClicked.callCount).to.equal(1);
+      });
+    });
+  });
+
+  describe('Dana-i', () => {
+    it('should have a header', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'sooil'}
+          openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+          pumpSettings={danaMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('Header')).to.have.length(1);
+    });
+
+    it('should have Dana-i as the Header deviceDisplayName', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'sooil'}
+          openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+          pumpSettings={danaMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('Header').props().deviceDisplayName).to.equal('DANA-i');
+    });
+
+    // these tables are the bolus settings + basal schedules
+    it('should have seven Tables', () => {
+      const wrapper = shallow(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'sooil'}
+          openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+          pumpSettings={danaMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('Table')).to.have.length(7);
+    });
+
+    // these containers are the basal schedules
+    it('should have four CollapsibleContainers', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'sooil'}
+          openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+          pumpSettings={danaMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find(CollapsibleContainer)).to.have.length(4);
+    });
+
+    it('should preserve user capitalization of schedule name', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'sooil'}
+          openedSections={{ [danaFlatRateData.activeSchedule]: true }}
+          pumpSettings={danaFlatRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('.label').someWhere(n => (n.text().search('Profile B') !== -1)))
+        .to.be.true;
+    });
+
+    it('should have `Active at Upload` text somewhere', () => {
+      const wrapper = mount(
+        <NonTandem
+          bgUnits={MGDL_UNITS}
+          copySettingsClicked={copySettingsClicked}
+          deviceKey={'sooil'}
+          openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+          pumpSettings={danaMultiRateData}
+          timePrefs={timePrefs}
+          user={user}
+          toggleBasalScheduleExpansion={() => {}}
+        />
+      );
+      expect(wrapper.find('.label').someWhere(n => (n.text().search(activeAtUploadText) !== -1)))
+        .to.be.true;
+    });
+
+    describe('bolus settings', () => {
+      it('should surface the expected value for Insulin Sensitivity', () => {
+        const wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'sooil'}
+            openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+            pumpSettings={danaMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const isfTable = wrapper.find('table')
+          .filterWhere(n => (n.text().search('CF') !== -1));
+        expect(isfTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(danaMultiRateData.insulinSensitivity[0].amount, 1)
+          ) !== -1)
+        )).to.be.true;
+      });
+
+      it('should surface the expected lower & upper values for Target BG', () => {
+        const wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'sooil'}
+            openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+            pumpSettings={danaMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const bgTargetTable = wrapper.find('table')
+          .filterWhere(n => (n.text().search('Ideal BG') !== -1));
+
+        expect(bgTargetTable.someWhere(
+          n => (n.text().search(
+            formatDecimalNumber(danaMultiRateData.bgTarget[0].target, 1)
+          ) !== -1)
+        )).to.be.true;
+      });
+
+      it('should surface the expected value for carb ratio', () => {
+        const wrapper = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'sooil'}
+            openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+            pumpSettings={danaMultiRateData}
+            timePrefs={timePrefs}
+            user={user}
+            toggleBasalScheduleExpansion={() => {}}
+          />
+        );
+        const carbRatioTable = wrapper.find('table')
+          .filterWhere(n => (n.text().search('CIR') !== -1));
+        expect(carbRatioTable.someWhere(
+          n => (n.text().search(danaMultiRateData.carbRatio[0].amount) !== -1)
+        )).to.be.true;
+      });
+
+      it('should have a button to copy settings', () => {
+        const mounted = mount(
+          <NonTandem
+            bgUnits={MMOLL_UNITS}
+            copySettingsClicked={copySettingsClicked}
+            deviceKey={'sooil'}
+            openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+            pumpSettings={danaMultiRateData}
             timePrefs={timePrefs}
             user={user}
             toggleBasalScheduleExpansion={() => {}}

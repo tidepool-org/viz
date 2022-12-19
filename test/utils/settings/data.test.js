@@ -48,6 +48,7 @@ describe('[settings] data utils', () => {
       expect(data.deviceName('medtronic')).to.equal('Medtronic');
       expect(data.deviceName('tandem')).to.equal('Tandem');
       expect(data.deviceName('microtech')).to.equal('Equil');
+      expect(data.deviceName('sooil')).to.equal('DANA-i');
     });
 
     it('should return the manufacturer key if a device name mapping does not exist', () => {

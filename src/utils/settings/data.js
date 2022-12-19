@@ -41,7 +41,7 @@ export function noData(val) {
 
 /**
  * deviceName
- * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech
+ * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech, sooil
  *
  * @return {String}              name for given manufacturer
  */
