@@ -1,0 +1,84 @@
+{
+    "activeSchedule": "Profile B",
+    "basalSchedules": {
+        "Profile C": [
+            {
+                "rate": 0,
+                "start": 0
+            }
+        ],
+        "Profile D": [
+            {
+                "rate": 0,
+                "start": 0
+            }
+        ],
+        "Profile A": [
+            {
+                "rate": 0.2,
+                "start": 0
+            }
+        ],
+        "Profile B": [
+            {
+                "rate": 0.2,
+                "start": 0
+            },
+            {
+                "rate": 0.3,
+                "start": 14400000
+            },
+            {
+                "rate": 0.4,
+                "start": 28800000
+            },
+            {
+                "rate": 0.3,
+                "start": 32400000
+            },
+            {
+                "rate": 0.5,
+                "start": 43200000
+            },
+            {
+                "rate": 0.2,
+                "start": 50400000
+            },
+            {
+                "rate": 0.1,
+                "start": 57600000
+            }
+        ]
+    },
+    "bgTarget": [
+        {
+            "start": 0,
+            "target": 5.1
+        }
+    ],
+    "carbRatio": [
+        {
+            "amount": 0.25,
+            "start": 0
+        }
+    ],
+    "deviceId": "Dana-I5-WLL00056FI",
+    "deviceTime": "2022-12-15T11:43:09",
+    "insulinSensitivity": [
+        {
+            "amount": 2.8,
+            "start": 0
+        }
+    ],
+    "time": "2022-12-15T11:43:32.357+00:00",
+    "timezoneOffset": 0,
+    "type": "pumpSettings",
+    "units": {
+        "bg": "mmol/L",
+        "carb": "grams"
+    },
+    "uploadId": "SampleUploadId",
+    "guid": "5886768b-012e-453d-8e3e-2c5280995c48",
+    "id": "8372053933d14de3974c8d183c2a433e",
+    "source": "Sooil"
+}
