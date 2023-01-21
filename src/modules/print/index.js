@@ -25,6 +25,7 @@ import BasicsPrintView from './BasicsPrintView';
 import DailyPrintView from './DailyPrintView';
 import BgLogPrintView from './BgLogPrintView';
 import SettingsPrintView from './SettingsPrintView';
+import AGPPrintView from './AGPPrintView';
 
 import * as constants from './utils/constants';
 
@@ -44,6 +45,7 @@ export const utils = {
   DailyPrintView,
   BgLogPrintView,
   SettingsPrintView,
+  AGPPrintView,
 };
 
 /**
@@ -114,6 +116,14 @@ export function createPrintView(type, data, opts, doc) {
       });
       break;
 
+    case 'agp':
+      Renderer = utils.AGPPrintView;
+
+      renderOpts = _.assign(renderOpts, {
+        title: t('AGP Charts'),
+      });
+      break;
+
     default:
       return null;
   }
@@ -136,6 +146,7 @@ export function createPrintPDFPackage(data, opts) {
     daily = {},
     bgLog = {},
     settings = {},
+    agp = {},
   } = opts;
 
   if (_.get(patient, 'preferences.displayLanguageCode')) {
@@ -144,7 +155,7 @@ export function createPrintPDFPackage(data, opts) {
 
   const pdfOpts = _.cloneDeep(opts);
 
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     const DocLib = typeof PDFDocument !== 'undefined' ? PDFDocument : utils.PDFDocument;
     const streamLib = typeof blobStream !== 'undefined' ? blobStream : utils.blobStream;
 
@@ -159,6 +170,7 @@ export function createPrintPDFPackage(data, opts) {
     if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
     if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
     if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
+    if (!agp.disabled) await createPrintView('agp', data.agp, pdfOpts, doc).render();
 
     PrintView.renderPageNumbers(doc);
 
