@@ -15,7 +15,6 @@ import {
 import { MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { formatDecimalNumber } from '../../utils/format';
-import { createSvgRectWithBorderRadius, createImgSvgRectWithBorderRadius } from './utils/AGPUtils';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
 import moment from 'moment/moment';
 
@@ -40,6 +39,7 @@ class AGPPrintView extends PrintView {
     const chartRenderAreaTop = this.dpi * 0.75;
     const chartRenderAreaBottom = this.bottomEdge - (this.dpi * 0.75 - this.margins.bottom);
     const sectionGap = this.dpi * 0.25;
+    this.chartSectionBorderRadius = 8;
 
     this.sections = {};
     this.sections.timeInRanges = {
@@ -87,14 +87,6 @@ class AGPPrintView extends PrintView {
       text: text.dailyThumbnails,
     };
 
-    // console.log('this.sections', this.sections);
-
-    // console.log('this.cbgData', this.cbgData);
-    // console.log('this.cbgStats', this.cbgStats);
-
-    // console.log('this.data', this.data);
-    // console.log('this.stats', this.stats);
-
     this.doc.addPage();
     this.initLayout();
   }
@@ -118,7 +110,7 @@ class AGPPrintView extends PrintView {
     // this.renderGuides();
     this.renderSectionContainers();
     this.renderReportInfo();
-    // await this.renderTimeInRanges();
+    await this.renderTimeInRanges();
   }
 
   renderHeader() {
@@ -169,20 +161,19 @@ class AGPPrintView extends PrintView {
 
   renderSectionContainers() {
     const headerHeight = this.dpi * 0.25;
-    const borderRadius = 8;
     this.resetText();
 
     _.each(this.sections, section => {
       if (section.bordered) {
         // Draw section container
         this.doc
-          .roundedRect(section.x, section.y, section.width, section.height, 8)
+          .roundedRect(section.x, section.y, section.width, section.height, this.chartSectionBorderRadius)
           .fill(colors.background.shaded);
         this.doc
-          .rect(section.x + 1, section.y + 1 + headerHeight, section.width - 2, borderRadius)
+          .rect(section.x + 1, section.y + 1 + headerHeight, section.width - 2, this.chartSectionBorderRadius)
           .fill(colors.white);
         this.doc
-          .roundedRect(section.x + 1, section.y + 1 + headerHeight, section.width - 2, section.height - 2 - headerHeight, 8)
+          .roundedRect(section.x + 1, section.y + 1 + headerHeight, section.width - 2, section.height - 2 - headerHeight, this.chartSectionBorderRadius - 1)
           .fill(colors.white);
       }
 
@@ -230,8 +221,6 @@ class AGPPrintView extends PrintView {
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
     const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
-
-    console.log('this.stats.sensorUsage', this.stats.sensorUsage);
 
     let cgmDaysWornText = cgmDaysWorn === 1
       ? t('{{cgmDaysWorn}} Day', { cgmDaysWorn })
@@ -304,6 +293,15 @@ class AGPPrintView extends PrintView {
     const statHasData = _.get(stat, 'data.total.value') > 0;
     const { timeInRanges } = this.sections;
 
+    // Set chart plot within section borders
+    this.doc.x = timeInRanges.x + 1 + this.chartSectionBorderRadius;
+    this.doc.y = timeInRanges.y + 1 + this.dpi * 0.25;
+    const chartAreaWidth = timeInRanges.width - 2 - this.chartSectionBorderRadius * 2;
+    const chartAreaHeight = timeInRanges.height - 2 - this.dpi * 0.25;
+    const plotMarginX = this.dpi * 0.375;
+    const plotMarginY = this.dpi * 0.375;
+    const imageRenderScale = 8;
+
     if (statHasData) {
       const statDatums = _.get(stat, 'data.data', []);
       const statTotal = _.get(stat, 'data.total.value', 1);
@@ -313,95 +311,83 @@ class AGPPrintView extends PrintView {
         (res[i - 1] || 0) + _.max([_.toNumber(datum.value) / statTotal * 1, AGP_TIR_MIN_HEIGHT / 100]),
       ]), []);
 
+      console.log('statDatums', statDatums);
       const data = _.map(statDatums, datum => ({
         x: [stat.id],
-        // TODO: Multiply percentage by desired total bar height
+        // TODO: Multiply percentage by desired total bar height to ensure combined height === 1?
+        // This would ensure that we're always at the appropriate height, even if a couple ranges
+        // have no data and render the min height.  Would have to calculate the y-values ahead of
+        // time, in this case, summing them, then adjusting to total 1.0 to match chart domain
         y: [_.max([_.toNumber(datum.value) / statTotal * 1, AGP_TIR_MIN_HEIGHT / 100])],
-        // width: [0.2],
         name: datum.id,
         type: 'bar',
+        width: 0.25,
         marker: {
           color: _.toNumber(datum.value) > 6 ? colors.bgRange[datum.id] : colors.bgRange.empty,
           line: {
             color: colors.line.range.divider,
-            width: 4,
+            width: 1.5 * imageRenderScale,
           },
         },
-
+        cliponaxis: false,
         // TBD: Stat text
-        // text: stat.id,
+        // TODO: Use annotations instead - not enough positional flexibility with built-in text
+        text: datum.id,
+        textposition: 'outside',
+        constraintext: 'none',
         // texttemplate: '%{text} (%{y:.2f})',
-        // textposition: 'bottom center',
+        // textposition: 'center right', // this should allow the top and bottom to differ
+        textfont: {
+          color: colors.black,
+          family: 'Arial',
+          size: fontSizes.timeInRanges.values * imageRenderScale,
+        },
       }));
 
       const layout = {
-        autosize: false,
-        width: 300,
-        height: 300,
+        autosize: true,
+        barmode: 'stack',
+        width: chartAreaWidth * imageRenderScale,
+        height: chartAreaHeight * imageRenderScale,
         margin: {
           autoexpand: false,
-          l: 50,
-          r: 50,
-          b: 50,
-          t: 50,
-          pad: 4,
+          l: plotMarginX * imageRenderScale,
+          r: plotMarginX * imageRenderScale,
+          b: plotMarginY * imageRenderScale,
+          t: plotMarginY * imageRenderScale,
+          pad: 0,
         },
-        paper_bgcolor: '#7f7f7f',
-        plot_bgcolor: '#c7c7c7',
 
-
-        title: {
-          text: 'Time In Range',
-          font: {
-            color: colors.text.label,
-            family: 'Arial',
-            size: 12,
-          },
-          xref: 'paper',
-          x: 0.05,
-          // also, pad{l,r,t,b}, xanchor,yanchor
+        font: {
+          color: colors.black,
+          family: 'Arial',
+          size: 7 * imageRenderScale,
         },
-        barmode: 'stack',
-        // barnorm: 'percent', if prefer to use percentage over fraction
-
-        // likely not needed
-        bargap: 0,
-        bargroupgap: 0, // 0 is default
 
         showlegend: false,
-        // width: 300,
-        // height: 300,
-        // margin: {
-        //   autoexpand: false,
-        //   pad: 10,
-        //   t: 100,
-        //   b: 100,
-        //   l: 100,
-        //   r: 100,
-        // },
         xaxis: {
           range: [0, 1],
           zeroline: false,
           showgrid: false,
           showticklabels: false,
-
-          // TEMP: show lines for border
-          showline: true,
-          linewidth: 2,
-          mirror: 'ticks',
+          showline: false,
+          layer: 'below traces',
         },
         yaxis: {
-          // automargin: true,
           range: [0, 1],
           zeroline: false,
           showgrid: false,
-
-          // TEMP: show lines for border
-          showline: true,
-          linewidth: 2,
-          mirror: 'ticks',
-
-          tickvals: tickValues.slice(0, 4),
+          showline: false,
+          layer: 'below traces',
+          tickvals: tickValues.slice(0, 4), // TODO: set ticks in data array?
+          tickfont: {
+            color: colors.black,
+            size: fontSizes.timeInRanges.ticks * imageRenderScale,
+            family: 'Arial',
+            // can set color, family, size - can't see weight anywhere, though if I bundle the font family, should work
+          },
+          tickwidth: 8,
+          tickcolor: 'transparent',
           ticktext: [
             this.bgBounds.veryLowThreshold,
             this.bgBounds.targetLowerBound,
@@ -428,49 +414,21 @@ class AGPPrintView extends PrintView {
         //     },
         //   },
         // ],
-        images: [
-          {
-            layer: 'above',
-            source: createImgSvgRectWithBorderRadius(0, 0, timeInRanges.width, timeInRanges.height, { tl: 10, tr: 10, bl: 10, br: 10 }, '#ccc'),
-            // xref: 'x',
-            x: 0,
-            // yref: 'y',
-            y: 1.1,
-            sizex: 1.2,
-            sizey: 1.2,
-            opacity: 0.3,
-          },
-        ],
 
         // TBD:
-        template: {
-          // defaults to apply to a plot, such as colors, fonts, line widths, etc
-          // https://plotly.com/javascript/reference/layout/#layout-template
-        },
+        // template: {
+        //   // defaults to apply to a plot, such as colors, fonts, line widths, etc
+        //   // https://plotly.com/javascript/reference/layout/#layout-template
+        // },
 
-        meta: {
-          // custom text variables
-          // https://plotly.com/javascript/reference/layout/#layout-meta
-        },
-
-        grid: {
-          // subplot layout grid
-          rows: 1, // TBD: do we have numerous modals to render?
-          columns: 2,
-          pattern: 'independant', // no shared axes
-          xgap: 0.1,
-          ygap: 0.1,
-
-          // https://plotly.com/javascript/reference/layout/#layout-grid
-        },
-
-        // Debug
-        // paper_bgcolor: '#bbbbbb',
-        // plot_bgcolor: '#eeeeee',
+        // meta: {
+        //   // custom text variables - may come in useful for built-in data text (not necessary for annotations)
+        //   // https://plotly.com/javascript/reference/layout/#layout-meta
+        // },
       };
 
       const plotDataURL = await Plotly.toImage({ data, layout });
-      this.doc.image(plotDataURL);
+      this.doc.image(plotDataURL, undefined, undefined, { width: chartAreaWidth, height: chartAreaHeight });
     }
   }
 }

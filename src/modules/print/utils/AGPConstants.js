@@ -46,6 +46,10 @@ export const fontSizes = {
     subtitle: 8,
     description: 7,
   },
+  timeInRanges: {
+    values: 9,
+    ticks: 7,
+  },
 };
 
 const black = '#000000';
