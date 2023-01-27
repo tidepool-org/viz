@@ -32,7 +32,7 @@ async function openPDF(dataUtil, { patient }) {
   const data = queries.agp ? dataUtil.query(queries.agp) : {};
 
   await createPrintView('agp', data, opts, doc).render();
-  PrintView.renderPageNumbers(doc);
+  // PrintView.renderPageNumbers(doc);
 
   doc.end();
 
@@ -50,10 +50,10 @@ Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.j
 and then use this story to iterate on the AGP Print PDF outside of Tidepool Web!`;
 
 profiles.longName = _.cloneDeep(profiles.standard);
-profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
+profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
 stories.add('standard account', ({ dataUtil }) => (
-  <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName })}>
     Open PDF in new tab
   </button>
 ), { notes });
