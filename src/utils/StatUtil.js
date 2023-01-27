@@ -1,5 +1,6 @@
 import _ from 'lodash';
 import bows from 'bows';
+import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
@@ -124,6 +125,25 @@ export class StatUtil {
     return {
       carbs,
       total: wizardData.length + foodData.length,
+    };
+  };
+
+  getCGMDaysWorn = () => {
+    const rawCbgData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('cbg').top(Infinity));
+    const newest = _.last(rawCbgData)?.time;
+    const oldest = _.first(rawCbgData)?.time;
+    let cgmDaysWorn;
+
+    if (rawCbgData.length < 2) {
+      cgmDaysWorn = rawCbgData.length;
+    } else {
+      cgmDaysWorn = Math.ceil(moment.utc(newest).diff(moment.utc(oldest), 'days', true));
+    }
+
+    return {
+      cgmDaysWorn,
+      newest,
+      oldest,
     };
   };
 
