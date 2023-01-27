@@ -326,7 +326,7 @@ class PrintView {
     return this.layoutColumns.columns[this.layoutColumns.activeIndex].width;
   }
 
-  getDateRange(startDate, endDate, format) {
+  getDateRange(startDate, endDate, dateParseFormat, prefix, monthFormat) {
     let start = startDate;
     let end = endDate;
 
@@ -335,8 +335,9 @@ class PrintView {
       end = endDate - getOffset(endDate, this.timezone) * MS_IN_MIN;
     }
 
-    return t('Date range: {{dateRange}}', {
-      dateRange: formatDateRange(start, end, format),
+    return t('{{prefix}}{{dateRange}}', {
+      prefix,
+      dateRange: formatDateRange(start, end, dateParseFormat, monthFormat),
     });
   }
 

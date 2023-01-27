@@ -5,7 +5,7 @@ import moment from 'moment-timezone';
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
 import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
-import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
+import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -128,25 +128,6 @@ export class StatUtil {
     };
   };
 
-  getCGMDaysWorn = () => {
-    const rawCbgData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('cbg').top(Infinity));
-    const newest = _.last(rawCbgData)?.time;
-    const oldest = _.first(rawCbgData)?.time;
-    let cgmDaysWorn;
-
-    if (rawCbgData.length < 2) {
-      cgmDaysWorn = rawCbgData.length;
-    } else {
-      cgmDaysWorn = Math.ceil(moment.utc(newest).diff(moment.utc(oldest), 'days', true));
-    }
-
-    return {
-      cgmDaysWorn,
-      newest,
-      oldest,
-    };
-  };
-
   getCoefficientOfVariationData = () => {
     const {
       averageGlucose,
@@ -258,7 +239,23 @@ export class StatUtil {
 
   getSensorUsage = () => {
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const count = cbgData.length;
 
+    const rawCbgData = this.dataUtil.sort.byTime(cbgData);
+    const newestDatum = _.last(rawCbgData);
+    const oldestDatum = _.first(rawCbgData);
+    let cgmDaysWorn;
+    let cgmMinutesWorn;
+
+    if (rawCbgData.length < 2) {
+      cgmDaysWorn = rawCbgData.length;
+      cgmMinutesWorn = rawCbgData.length === 1 ? cgmSampleFrequency(newestDatum) : 0;
+    } else {
+      cgmDaysWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'days', true));
+      cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
+    }
+
+    // Data for Tidepool sensor usage stat
     const duration = _.reduce(
       cbgData,
       (result, datum) => {
@@ -270,8 +267,19 @@ export class StatUtil {
 
     const total = this.activeDays * MS_IN_DAY;
 
+    // Data for AGP sensor usage stat
+    const sensorUsageAGP = (
+      count /
+      ((cgmMinutesWorn / (cgmSampleFrequency(newestDatum) / MS_IN_MIN)) + 1)
+    ) * 100;
+
     return {
       sensorUsage: duration,
+      sensorUsageAGP,
+      cgmDaysWorn,
+      cgmMinutesWorn,
+      newestDatum,
+      oldestDatum,
       total,
     };
   };

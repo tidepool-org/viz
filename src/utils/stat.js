@@ -74,7 +74,6 @@ export const commonStats = {
   averageDailyDose: 'averageDailyDose',
   bgExtents: 'bgExtents',
   carbs: 'carbs',
-  cgmDaysWorn: 'cgmDaysWorn',
   coefficientOfVariation: 'coefficientOfVariation',
   glucoseManagementIndicator: 'glucoseManagementIndicator',
   readingsInRange: 'readingsInRange',
@@ -91,7 +90,6 @@ export const statFetchMethods = {
   [commonStats.averageDailyDose]: 'getTotalInsulinData',
   [commonStats.bgExtents]: 'getBgExtentsData',
   [commonStats.carbs]: 'getCarbsData',
-  [commonStats.cgmDaysWorn]: 'getCGMDaysWorn',
   [commonStats.coefficientOfVariation]: 'getCoefficientOfVariationData',
   [commonStats.glucoseManagementIndicator]: 'getGlucoseManagementIndicatorData',
   [commonStats.readingsInRange]: 'getReadingsInRangeData',
@@ -329,10 +327,6 @@ export const getStatAnnotations = (data, type, opts = {}) => {
       annotations.push(t('Derived from _**{{total}}**_ carb entries.', { total: data.total }));
       break;
 
-    case commonStats.cgmDaysWorn:
-      annotations.push(t('**CGM Days Worn:** The number of unique calendar days the {{cbgLabel}} device was worn.', { cbgLabel: statBgSourceLabels.cbg }));
-      break;
-
     case commonStats.coefficientOfVariation:
       annotations.push(t('**CV (Coefficient of Variation):** How far apart (wide) glucose values are; research suggests a target of 36% or lower.'));
       break;
@@ -487,21 +481,6 @@ export const getStatData = (data, type, opts = {}) => {
             grams: ensureNumeric(_.get(data, 'carbs.grams')),
             exchanges: ensureNumeric(_.get(data, 'carbs.exchanges')),
           },
-        },
-      ];
-
-      statData.dataPaths = {
-        summary: 'data.0',
-      };
-      break;
-
-    case commonStats.cgmDaysWorn:
-      statData.data = [
-        {
-          id: 'cgmDaysWorn',
-          value: ensureNumeric(data.cgmDaysWorn),
-          oldest: data.oldest,
-          newest: data.newest,
         },
       ];
 
@@ -752,10 +731,6 @@ export const getStatTitle = (type, opts = {}) => {
       title = (days > 1) ? t('Avg. Daily Carbs') : t('Total Carbs');
       break;
 
-    case commonStats.cgmDaysWorn:
-      title = t('{{cbgLabel}} Days Worn', { cbgLabel: statBgSourceLabels.cbg });
-      break;
-
     case commonStats.coefficientOfVariation:
       title = t('CV ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
       break;
@@ -814,10 +789,6 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
     type: statTypes.barHorizontal,
   };
 
-  if (type === commonStats.cgmDaysWorn) {
-    console.log('data', data);
-  }
-
   switch (type) {
     case commonStats.averageGlucose:
       stat.dataFormat = {
@@ -850,10 +821,6 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
       stat.dataFormat = {
         summary: statFormats.carbs,
       };
-      stat.type = statTypes.simple;
-      break;
-
-    case commonStats.cgmDaysWorn:
       stat.type = statTypes.simple;
       break;
 

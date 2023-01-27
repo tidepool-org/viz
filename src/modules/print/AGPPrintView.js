@@ -12,9 +12,12 @@ import {
   text,
 } from './utils/AGPConstants';
 
+import { MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
+import { formatDecimalNumber } from '../../utils/format';
 import { createSvgRectWithBorderRadius, createImgSvgRectWithBorderRadius } from './utils/AGPUtils';
-import { formatBirthdate } from '../../utils/datetime';
+import { formatBirthdate, getOffset } from '../../utils/datetime';
+import moment from 'moment/moment';
 
 const agpLogo = require('./images/capturAGP-logo.png');
 const t = i18next.t.bind(i18next);
@@ -226,6 +229,20 @@ class AGPPrintView extends PrintView {
     const section = this.sections.reportInfo;
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
+    const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
+
+    console.log('this.stats.sensorUsage', this.stats.sensorUsage);
+
+    let cgmDaysWornText = cgmDaysWorn === 1
+      ? t('{{cgmDaysWorn}} Day', { cgmDaysWorn })
+      : t('{{cgmDaysWorn}} Days', { cgmDaysWorn });
+
+    if (cgmDaysWorn >= 1) {
+      cgmDaysWornText += `: ${cgmDaysWorn === 1
+        ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
+        : this.getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM')
+      }`;
+    }
 
     const renderInfoRow = (mainText, subTextLabel, subText) => {
       const x = this.doc.x;
@@ -277,9 +294,9 @@ class AGPPrintView extends PrintView {
     this.doc.y = section.y + this.dpi * 0.05;
     renderInfoRow(patientName, text.reportInfo.dob, patientBirthdate);
     this.doc.moveDown(1);
-    renderInfoRow('foo');
+    renderInfoRow(cgmDaysWornText);
     this.doc.moveDown(1);
-    renderInfoRow('bar');
+    renderInfoRow(`Time CGM Active: ${formatDecimalNumber(sensorUsageAGP, 1)}%`);
   }
 
   async renderTimeInRanges() {

@@ -216,7 +216,7 @@ class DailyPrintView extends PrintView {
     const start = _.head(charts).date;
     const end = _.last(charts).date;
 
-    super.newPage(this.getDateRange(start, end, 'YYYY-MM-DD'));
+    super.newPage(this.getDateRange(start, end, 'YYYY-MM-DD', t('Date range: ')));
     this.renderLegend();
   }
 
