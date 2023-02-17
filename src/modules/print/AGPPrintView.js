@@ -3,8 +3,10 @@
 import _ from 'lodash';
 import i18next from 'i18next';
 import Plotly from 'plotly.js';
+import moment from 'moment/moment';
 
 import PrintView from './PrintView';
+
 import {
   AGP_TIR_MIN_HEIGHT,
   colors,
@@ -12,11 +14,11 @@ import {
   text,
 } from './utils/AGPConstants';
 
+import { boldText, renderScale } from './utils/AGPUtils';
 import { MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { formatDecimalNumber } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
-import moment from 'moment/moment';
 
 const agpLogo = require('./images/capturAGP-logo.png');
 const t = i18next.t.bind(i18next);
@@ -89,6 +91,9 @@ class AGPPrintView extends PrintView {
 
     this.doc.addPage();
     this.initLayout();
+
+    this.imageRenderScale = 10;
+    this.renderScale = renderScale.bind(null, this.imageRenderScale);
   }
 
   // we don't call the super here, since we don't want the standard tidepool header and footer
@@ -300,120 +305,229 @@ class AGPPrintView extends PrintView {
     const chartAreaHeight = timeInRanges.height - 2 - this.dpi * 0.25;
     const plotMarginX = this.dpi * 0.375;
     const plotMarginY = this.dpi * 0.375;
-    const imageRenderScale = 8;
+    const paperWidth = chartAreaWidth - (plotMarginX / 2);
+    const paperHeight = chartAreaHeight - (plotMarginY / 2);
+    const barWidth = this.dpi * 0.5;
+    const barSeparatorPixelWidth = 2;
+
+    const yScale = pixels => pixels / paperHeight;
+    const xScale = pixels => pixels / paperWidth;
 
     if (statHasData) {
       const statDatums = _.get(stat, 'data.data', []);
       const statTotal = _.get(stat, 'data.total.value', 1);
 
-      const tickValues = _.reduce(statDatums, (res, datum, i) => ([
-        ...res,
-        (res[i - 1] || 0) + _.max([_.toNumber(datum.value) / statTotal * 1, AGP_TIR_MIN_HEIGHT / 100]),
-      ]), []);
+      const chartData = _.reduce(statDatums, (res, datum, i) => {
+        const value = _.toNumber(datum.value) / statTotal * 1;
+        const renderedValue = _.max([value, AGP_TIR_MIN_HEIGHT / 100]);
+        res.raw.push(value);
+        res.rendered.push(renderedValue);
+        res.ticks.push((res.ticks[i - 1] || 0) + renderedValue);
+        return res;
+      }, { raw: [], rendered: [], ticks: [] });
+
+      // Needs y-scale correction since we may exceed y domain limits due to minimum bar height
+      const yScaleCorrection = 1 / _.last(chartData.ticks);
+      chartData.rendered = chartData.rendered.map(value => value * yScaleCorrection);
+      chartData.ticks = chartData.ticks.map(value => value * yScaleCorrection);
 
       console.log('statDatums', statDatums);
-      const data = _.map(statDatums, datum => ({
+      console.log('chartData', chartData);
+
+      const data = _.map(statDatums, (datum, index) => ({
         x: [stat.id],
-        // TODO: Multiply percentage by desired total bar height to ensure combined height === 1?
-        // This would ensure that we're always at the appropriate height, even if a couple ranges
-        // have no data and render the min height.  Would have to calculate the y-values ahead of
-        // time, in this case, summing them, then adjusting to total 1.0 to match chart domain
-        y: [_.max([_.toNumber(datum.value) / statTotal * 1, AGP_TIR_MIN_HEIGHT / 100])],
+        y: [chartData.rendered[index]],
         name: datum.id,
         type: 'bar',
-        width: 0.25,
+        width: barWidth / paperWidth * 2,
         marker: {
           color: _.toNumber(datum.value) > 6 ? colors.bgRange[datum.id] : colors.bgRange.empty,
           line: {
             color: colors.line.range.divider,
-            width: 1.5 * imageRenderScale,
+            width: this.renderScale(barSeparatorPixelWidth),
           },
         },
-        cliponaxis: false,
-        // TBD: Stat text
-        // TODO: Use annotations instead - not enough positional flexibility with built-in text
-        text: datum.id,
-        textposition: 'outside',
-        constraintext: 'none',
-        // texttemplate: '%{text} (%{y:.2f})',
-        // textposition: 'center right', // this should allow the top and bottom to differ
-        textfont: {
-          color: colors.black,
-          family: 'Arial',
-          size: fontSizes.timeInRanges.values * imageRenderScale,
-        },
       }));
+
+      const rangeAnnotationStyles = {
+        align: 'left',
+        arrowside: 'none',
+        font: {
+          color: colors.black,
+          size: this.renderScale(fontSizes.timeInRanges.values),
+          family: 'Arial',
+        },
+        showarrow: false,
+        x: 0,
+        xanchor: 'left',
+        xshift: this.renderScale(35),
+        y: 1,
+      };
+
+      const bgTicks = _.map([
+        this.bgBounds.veryLowThreshold,
+        this.bgBounds.targetLowerBound,
+        this.bgBounds.targetUpperBound,
+        this.bgBounds.veryHighThreshold,
+      ], (bound, index) => ({
+        align: 'right',
+        arrowside: 'none',
+        font: {
+          color: colors.black,
+          size: this.renderScale(fontSizes.timeInRanges.ticks),
+          family: 'Arial',
+        },
+        showarrow: false,
+        text: boldText(bound),
+        x: 0,
+        xanchor: 'right',
+        xshift: this.renderScale(-4),
+        y: chartData.ticks[index],
+        yanchor: 'middle',
+      }));
+
+      /* eslint-disable no-param-reassign */
+      const createBracketSVG = (posX, posX2, posY, posY2) => {
+        const minBracketYOffSet = yScale(22);
+
+        if (_.isNumber(posY2)) {
+          const maxSubBracketYOffset = yScale(24);
+          if (posY - posY2 < minBracketYOffSet) posY2 = posY - minBracketYOffSet;
+          const radiusX = xScale(5);
+          const radiusY = yScale(5);
+          const subBracketXOffset = (posX2 - posX) / 2;
+          const subBracketYOffset = _.min([(posY - posY2) / 2, maxSubBracketYOffset]);
+
+          return [
+            `M ${posX} ${posY}`,
+            `H ${posX + subBracketXOffset - radiusX}`,
+            `Q ${posX + subBracketXOffset} ${posY} ${posX + subBracketXOffset} ${posY - radiusY}`,
+            `V ${posY2 + radiusY}`,
+            `Q ${posX + subBracketXOffset} ${posY2} ${posX + subBracketXOffset - radiusX} ${posY2}`,
+            `H ${posX}`,
+            `M ${posX + subBracketXOffset} ${posY2 + subBracketYOffset}`,
+            `H ${posX2}`,
+          ].join(' ');
+        }
+
+        // Only a single Ypos is passed for the target bracket
+        // We need to ensure it's not too close to the range enxtents to avoid potential crowding
+        const targetBracketAllowedYRange = [
+          yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5),
+          1 - (yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5)),
+        ];
+
+        if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
+        if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
+
+        return [
+          `M ${posX} ${posY}`,
+          `H ${posX2}`,
+        ].join(' ');
+      };
+      /* eslint-enable no-param-reassign */
+
+      const bracketYPos = [
+        // High Brackets
+        chartData.ticks[4],
+        chartData.ticks[2] + ((chartData.ticks[3] - chartData.ticks[2]) / 2),
+
+        // Target Bracket
+        chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2),
+
+        // Low Brackets
+        chartData.ticks[0],
+        0,
+      ];
+
+      const bracketXExtents = [xScale(barWidth + 8), xScale(paperWidth - (barWidth + 8))];
+
+      const brackets = [
+        {
+          type: 'path',
+          path: createBracketSVG(...bracketXExtents, ...bracketYPos.slice(0, 2)),
+          line: { color: colors.line.default, width: this.renderScale(1) },
+          yref: 'paper',
+        },
+        {
+          type: 'path',
+          path: createBracketSVG(...bracketXExtents, bracketYPos[2]),
+          line: { color: colors.line.default, width: this.renderScale(1) },
+          yref: 'paper',
+        },
+        {
+          type: 'path',
+          path: createBracketSVG(...bracketXExtents, ...bracketYPos.slice(3)),
+          line: { color: colors.line.default, width: this.renderScale(1) },
+          yref: 'paper',
+        },
+      ];
 
       const layout = {
         autosize: true,
         barmode: 'stack',
-        width: chartAreaWidth * imageRenderScale,
-        height: chartAreaHeight * imageRenderScale,
+        width: this.renderScale(chartAreaWidth),
+        height: this.renderScale(chartAreaHeight),
         margin: {
           autoexpand: false,
-          l: plotMarginX * imageRenderScale,
-          r: plotMarginX * imageRenderScale,
-          b: plotMarginY * imageRenderScale,
-          t: plotMarginY * imageRenderScale,
+          l: this.renderScale(plotMarginX),
+          r: this.renderScale(plotMarginX),
+          b: this.renderScale(plotMarginY),
+          t: this.renderScale(plotMarginY),
           pad: 0,
         },
 
         font: {
           color: colors.black,
           family: 'Arial',
-          size: 7 * imageRenderScale,
+          size: this.renderScale(7),
         },
 
         showlegend: false,
+
         xaxis: {
           range: [0, 1],
-          zeroline: false,
           showgrid: false,
-          showticklabels: false,
           showline: false,
-          layer: 'below traces',
+          showticklabels: false,
+          zeroline: false,
         },
+
         yaxis: {
           range: [0, 1],
-          zeroline: false,
           showgrid: false,
           showline: false,
-          layer: 'below traces',
-          tickvals: tickValues.slice(0, 4), // TODO: set ticks in data array?
-          tickfont: {
-            color: colors.black,
-            size: fontSizes.timeInRanges.ticks * imageRenderScale,
-            family: 'Arial',
-            // can set color, family, size - can't see weight anywhere, though if I bundle the font family, should work
-          },
-          tickwidth: 8,
-          tickcolor: 'transparent',
-          ticktext: [
-            this.bgBounds.veryLowThreshold,
-            this.bgBounds.targetLowerBound,
-            this.bgBounds.targetUpperBound,
-            this.bgBounds.veryHighThreshold,
-          ],
+          showticklabels: false,
+          zeroline: false,
         },
-        // shapes: [
-        //   {
-        //     layer: 'above',
-        //     type: 'path',
-        //     path: createSvgRectWithBorderRadius(50, 50, { tl: 10, tr: 10, bl: 10, br: 10 }),
-        //     xsizemode: 'pixel',
-        //     xanchor: 0,
-        //     // x: 0,
-        //     ysizemode: 'pixel',
-        //     yanchor: 1.1,
-        //     // y: 10,
-        //     fillcolor: 'green',
-        //     opacity: 0.5,
-        //     line: {
-        //       color: 'grey',
-        //       width: 1,
-        //     },
-        //   },
-        // ],
+
+        annotations: [
+          ...bgTicks,
+          // {
+          //   ...rangeAnnotationStyles,
+          //   text: boldText(text.bgRanges.veryHigh),
+          // },
+          // {
+          //   ...rangeAnnotationStyles,
+          //   text: text.bgRanges.high,
+          // },
+          // {
+          //   ...rangeAnnotationStyles,
+          //   text: text.bgRanges.target,
+          // },
+          // {
+          //   ...rangeAnnotationStyles,
+          //   text: text.bgRanges.low,
+          // },
+          // {
+          //   ...rangeAnnotationStyles,
+          //   text: text.bgRanges.veryLow,
+          // },
+        ],
+
+        shapes: [
+          ...brackets,
+        ],
 
         // TBD:
         // template: {

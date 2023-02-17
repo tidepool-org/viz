@@ -7,7 +7,7 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   i18next.init({ returnEmptyString: false, nsSeparator: '|' });
 }
 
-export const AGP_TIR_MIN_HEIGHT = 5;
+export const AGP_TIR_MIN_HEIGHT = 4;
 
 export const text = {
   reportHeader: t('AGP Report:'),
@@ -30,6 +30,13 @@ export const text = {
   dailyThumbnails: {
     title: t('Daily Glucose Profiles'),
     description: t('Each daily profile represents a midnight-to-midnight period.'),
+  },
+  bgRanges: {
+    veryHigh: t('Very High'),
+    high: t('High'),
+    target: t('Target'),
+    low: t('Low'),
+    veryLow: t('Very Low'),
   },
 };
 
