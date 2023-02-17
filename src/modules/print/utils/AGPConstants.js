@@ -89,8 +89,7 @@ export const colors = {
   bgRange: {
     veryLow: '#CC0019',
     low: '#FF0000',
-    // target: '#4DFF26 ',
-    target: '#00AA51',
+    target: '#0BAD5A',
     high: '#FFBF00',
     veryHigh: '#FF6900',
     empty: '#626267',

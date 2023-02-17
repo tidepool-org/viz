@@ -299,15 +299,16 @@ class AGPPrintView extends PrintView {
     const { timeInRanges } = this.sections;
 
     // Set chart plot within section borders
-    this.doc.x = timeInRanges.x + 1 + this.chartSectionBorderRadius;
+    this.doc.x = timeInRanges.x + 1;
     this.doc.y = timeInRanges.y + 1 + this.dpi * 0.25;
-    const chartAreaWidth = timeInRanges.width - 2 - this.chartSectionBorderRadius * 2;
-    const chartAreaHeight = timeInRanges.height - 2 - this.dpi * 0.25;
-    const plotMarginX = this.dpi * 0.375;
-    const plotMarginY = this.dpi * 0.375;
-    const paperWidth = chartAreaWidth - (plotMarginX / 2);
-    const paperHeight = chartAreaHeight - (plotMarginY / 2);
-    const barWidth = this.dpi * 0.5;
+    const chartAreaWidth = timeInRanges.width - 2;
+    const chartAreaHeight = timeInRanges.height - 2 - this.dpi * 0.25 - this.chartSectionBorderRadius;
+    const plotMarginX = this.dpi * 0.5;
+    const plotMarginTop = this.dpi * 0.425;
+    const plotMarginBottom = this.dpi * 0.3;
+    const paperWidth = chartAreaWidth - (plotMarginX * 2);
+    const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
+    const barWidth = this.dpi * 0.375;
     const barSeparatorPixelWidth = 2;
 
     const yScale = pixels => pixels / paperHeight;
@@ -369,6 +370,7 @@ class AGPPrintView extends PrintView {
         this.bgBounds.targetLowerBound,
         this.bgBounds.targetUpperBound,
         this.bgBounds.veryHighThreshold,
+        this.bgUnits,
       ], (bound, index) => ({
         align: 'right',
         arrowside: 'none',
@@ -382,13 +384,15 @@ class AGPPrintView extends PrintView {
         x: 0,
         xanchor: 'right',
         xshift: this.renderScale(-4),
-        y: chartData.ticks[index],
+        y: index === 4 // bgUnits label
+          ? chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2)
+          : chartData.ticks[index],
         yanchor: 'middle',
       }));
 
       /* eslint-disable no-param-reassign */
       const getBracketPosValues = (posX, posX2, posY, posY2) => {
-        const minBracketYOffSet = yScale(22);
+        const minBracketYOffSet = yScale(10);
 
         if (_.isNumber(posY2)) {
           const maxSubBracketYOffset = yScale(24);
@@ -453,45 +457,79 @@ class AGPPrintView extends PrintView {
       };
 
       const bracketYPos = [
-        // High Brackets
-        chartData.ticks[4],
-        chartData.ticks[2] + ((chartData.ticks[3] - chartData.ticks[2]) / 2),
+        // Low Brackets
+        chartData.ticks[0],
+        yScale(-12),
 
         // Target Bracket
         chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2),
 
-        // Low Brackets
-        chartData.ticks[0],
-        0,
+        // High Brackets
+        chartData.ticks[4],
+        chartData.ticks[2] + ((chartData.ticks[3] - chartData.ticks[2]) / 2),
       ];
 
       const bracketXExtents = [xScale(barWidth + 8), xScale(paperWidth - (barWidth + 8))];
 
       const bracketPos = {
-        high: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(0, 2)),
+        low: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(0, 2)),
         target: getBracketPosValues(...bracketXExtents, bracketYPos[2]),
-        low: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(3)),
+        high: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(3)),
       };
 
       const brackets = _.map(_.values(bracketPos), pos => ({
         type: 'path',
         path: createBracketSVG(pos),
-        line: { color: colors.line.default, width: this.renderScale(1) },
+        line: { color: colors.line.default, width: this.renderScale(0.5) },
+        yref: 'paper',
+      }));
+
+      const createLeaderSVG = (posX, posX2, posY, posY2) => {
+        const isLowLeader = posY > posY2;
+        const radiusX = xScale(5);
+        const radiusY = isLowLeader ? yScale(-5) : yScale(5);
+
+        return [
+          `M ${posX} ${posY}`,
+          `V ${posY2 - radiusY}`,
+          `Q ${posX} ${posY2} ${posX + radiusX} ${posY2}`,
+          `H ${posX2}`,
+        ].join(' ');
+      };
+
+      const leaderYPos = [
+        // Very Low Leader
+        0,
+        bracketPos.low.posY2 + yScale(6),
+
+        // Very High Leader
+        1,
+        bracketPos.high.posY + yScale(6),
+      ];
+
+      const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 4)];
+
+      const leaderPos = {
+        veryLow: [...leaderXExtents, ...leaderYPos.slice(0, 2)],
+        veryHigh: [...leaderXExtents, ...leaderYPos.slice(2)],
+      };
+
+      const leaders = _.map(_.values(leaderPos), pos => ({
+        type: 'path',
+        path: createLeaderSVG(...pos),
+        line: { color: colors.black, width: this.renderScale(0.5) },
         yref: 'paper',
       }));
 
       const layout = {
-        autosize: true,
         barmode: 'stack',
         width: this.renderScale(chartAreaWidth),
         height: this.renderScale(chartAreaHeight),
         margin: {
-          autoexpand: false,
           l: this.renderScale(plotMarginX),
           r: this.renderScale(plotMarginX),
-          b: this.renderScale(plotMarginY),
-          t: this.renderScale(plotMarginY),
-          pad: 0,
+          b: this.renderScale(plotMarginBottom),
+          t: this.renderScale(plotMarginTop),
         },
 
         font: {
@@ -544,6 +582,7 @@ class AGPPrintView extends PrintView {
 
         shapes: [
           ...brackets,
+          ...leaders,
         ],
 
         // TBD:
