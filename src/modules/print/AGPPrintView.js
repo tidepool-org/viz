@@ -387,16 +387,52 @@ class AGPPrintView extends PrintView {
       }));
 
       /* eslint-disable no-param-reassign */
-      const createBracketSVG = (posX, posX2, posY, posY2) => {
+      const getBracketPosValues = (posX, posX2, posY, posY2) => {
         const minBracketYOffSet = yScale(22);
 
         if (_.isNumber(posY2)) {
           const maxSubBracketYOffset = yScale(24);
           if (posY - posY2 < minBracketYOffSet) posY2 = posY - minBracketYOffSet;
-          const radiusX = xScale(5);
-          const radiusY = yScale(5);
           const subBracketXOffset = (posX2 - posX) / 2;
           const subBracketYOffset = _.min([(posY - posY2) / 2, maxSubBracketYOffset]);
+
+          return {
+            posX,
+            posX2,
+            posY,
+            posY2,
+            subBracketXOffset,
+            subBracketYOffset,
+          };
+        }
+
+        // Only a single Ypos is passed for the target bracket
+        // We need to ensure it's not too close to the range enxtents to avoid potential crowding
+        const targetBracketAllowedYRange = [
+          yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5),
+          1 - (yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5)),
+        ];
+
+        if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
+        if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
+
+        return { posX, posX2, posY };
+      };
+      /* eslint-enable no-param-reassign */
+
+      const createBracketSVG = (pos) => {
+        const {
+          posX,
+          posX2,
+          posY,
+          posY2,
+          subBracketXOffset,
+          subBracketYOffset,
+        } = pos;
+
+        if (_.isNumber(posY2)) {
+          const radiusX = xScale(5);
+          const radiusY = yScale(5);
 
           return [
             `M ${posX} ${posY}`,
@@ -410,22 +446,11 @@ class AGPPrintView extends PrintView {
           ].join(' ');
         }
 
-        // Only a single Ypos is passed for the target bracket
-        // We need to ensure it's not too close to the range enxtents to avoid potential crowding
-        const targetBracketAllowedYRange = [
-          yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5),
-          1 - (yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5)),
-        ];
-
-        if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
-        if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
-
         return [
           `M ${posX} ${posY}`,
           `H ${posX2}`,
         ].join(' ');
       };
-      /* eslint-enable no-param-reassign */
 
       const bracketYPos = [
         // High Brackets
@@ -442,26 +467,18 @@ class AGPPrintView extends PrintView {
 
       const bracketXExtents = [xScale(barWidth + 8), xScale(paperWidth - (barWidth + 8))];
 
-      const brackets = [
-        {
-          type: 'path',
-          path: createBracketSVG(...bracketXExtents, ...bracketYPos.slice(0, 2)),
-          line: { color: colors.line.default, width: this.renderScale(1) },
-          yref: 'paper',
-        },
-        {
-          type: 'path',
-          path: createBracketSVG(...bracketXExtents, bracketYPos[2]),
-          line: { color: colors.line.default, width: this.renderScale(1) },
-          yref: 'paper',
-        },
-        {
-          type: 'path',
-          path: createBracketSVG(...bracketXExtents, ...bracketYPos.slice(3)),
-          line: { color: colors.line.default, width: this.renderScale(1) },
-          yref: 'paper',
-        },
-      ];
+      const bracketPos = {
+        high: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(0, 2)),
+        target: getBracketPosValues(...bracketXExtents, bracketYPos[2]),
+        low: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(3)),
+      };
+
+      const brackets = _.map(_.values(bracketPos), pos => ({
+        type: 'path',
+        path: createBracketSVG(pos),
+        line: { color: colors.line.default, width: this.renderScale(1) },
+        yref: 'paper',
+      }));
 
       const layout = {
         autosize: true,
