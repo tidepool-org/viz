@@ -32,7 +32,7 @@ async function openPDF(dataUtil, { patient }) {
   const data = queries.agp ? dataUtil.query(queries.agp) : {};
 
   await createPrintView('agp', data, opts, doc).render();
-  // PrintView.renderPageNumbers(doc);
+  PrintView.renderPageNumbers(doc);
 
   doc.end();
 

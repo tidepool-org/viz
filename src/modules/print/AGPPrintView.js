@@ -34,6 +34,7 @@ class AGPPrintView extends PrintView {
     const chartRenderAreaTop = this.dpi * 0.75;
     const chartRenderAreaBottom = this.bottomEdge - (this.dpi * 0.75 - this.margins.bottom);
     const sectionGap = this.dpi * 0.25;
+    this.footerYPadding = this.dpi * 0.25;
     this.chartSectionBorderRadius = 8;
 
     this.sections = {};
@@ -67,7 +68,7 @@ class AGPPrintView extends PrintView {
       x: this.leftEdge,
       y: this.dpi * 4,
       width: this.width,
-      height: this.dpi * 3.75,
+      height: this.dpi * 3.5,
       bordered: true,
       text: text.ambulatoryGlucoseProfile,
     };
@@ -75,7 +76,7 @@ class AGPPrintView extends PrintView {
     const dailyThumbnailsHeight = this.dpi * 2.25;
     this.sections.dailyThumbnails = {
       x: this.leftEdge,
-      y: chartRenderAreaBottom - dailyThumbnailsHeight,
+      y: chartRenderAreaBottom - dailyThumbnailsHeight - this.footerYPadding,
       width: this.width,
       height: dailyThumbnailsHeight,
       bordered: true,
@@ -91,7 +92,9 @@ class AGPPrintView extends PrintView {
 
   // we don't call the super here, since we don't want the standard tidepool header and footer
   // super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1));
-  newPage() {}
+  newPage() {
+    super.newPage();
+  }
 
   initLayout() {
     this.setLayoutColumns({
@@ -103,8 +106,6 @@ class AGPPrintView extends PrintView {
   }
 
   async render() {
-    this.renderHeader();
-    this.renderFooter();
     // this.renderGuides();
     this.renderSectionContainers();
     this.renderReportInfo();
@@ -122,12 +123,14 @@ class AGPPrintView extends PrintView {
       .text(`${text.reportHeader} `, xPos, yPos, { continued: true })
       .font(this.font)
       .text(text.reportSubHeader);
+
+    return this;
   }
 
   renderFooter() {
     this.doc.font(this.font).fontSize(fontSizes.reportFooter);
     const xPos = this.leftEdge;
-    const yPos = this.bottomEdge - this.doc.currentLineHeight() * 1.25;
+    const yPos = this.bottomEdge - this.doc.currentLineHeight() * 1.25 - this.footerYPadding;
 
     this.doc
       .fillColor(colors.text.reportFooter)
@@ -136,9 +139,12 @@ class AGPPrintView extends PrintView {
 
     this.logoWidth = 70;
     const logoX = this.doc.page.width - this.logoWidth - this.margins.right;
-    const logoY = this.bottomEdge - this.logoWidth * 0.175;
+    const logoY = this.bottomEdge - this.logoWidth * 0.175 - this.footerYPadding;
 
     this.doc.image(agpLogo, logoX, logoY, { width: this.logoWidth });
+    super.renderFooter();
+
+    return this;
   }
 
   renderGuides() {
@@ -356,7 +362,7 @@ class AGPPrintView extends PrintView {
         font: {
           color: colors.black,
           size: this.renderScale(fontSizes.timeInRanges.ticks),
-          family: 'Arial',
+          family: this.font,
         },
         showarrow: false,
         text: index === 4 // bgUnits label
@@ -516,7 +522,7 @@ class AGPPrintView extends PrintView {
         font: {
           color: colors.black,
           size: this.renderScale(fontSizes.timeInRanges.values),
-          family: 'Arial',
+          family: this.font,
         },
         showarrow: false,
         text: boldText(text.bgRanges[range]),
@@ -534,7 +540,7 @@ class AGPPrintView extends PrintView {
         font: {
           color: colors.black,
           size: this.renderScale(fontSizes.timeInRanges.values),
-          family: 'Arial',
+          family: this.font,
         },
         showarrow: false,
         text: boldText(formatPercentage(chartData.rawById[range])),
@@ -565,7 +571,7 @@ class AGPPrintView extends PrintView {
         font: {
           color: colors.black,
           size: this.renderScale(fontSizes.timeInRanges.summaries),
-          family: 'Arial',
+          family: this.font,
         },
         showarrow: false,
         text: boldText(formatPercentage(combinedRangeSummaryValues[range])),
@@ -617,7 +623,7 @@ class AGPPrintView extends PrintView {
         font: {
           color: colors.goals[range],
           size: this.renderScale(fontSizes.timeInRanges.goals),
-          family: 'Arial',
+          family: this.font,
         },
         showarrow: false,
         text: text.goals[range],
@@ -649,7 +655,7 @@ class AGPPrintView extends PrintView {
         font: {
           color: colors.subLabels[label],
           size: this.renderScale(fontSizes.timeInRanges.subLabels),
-          family: 'Arial',
+          family: this.font,
         },
         showarrow: false,
         text: text.subLabels[label],
@@ -671,7 +677,7 @@ class AGPPrintView extends PrintView {
 
         font: {
           color: colors.black,
-          family: 'Arial',
+          family: this.font,
           size: this.renderScale(7),
         },
 
