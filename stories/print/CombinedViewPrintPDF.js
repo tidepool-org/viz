@@ -86,6 +86,7 @@ function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   createPrintView('daily', data.daily, opts, doc).render();
   createPrintView('bgLog', data.bgLog, opts, doc).render();
   createPrintView('settings', data.settings, opts, doc).render();
+  createPrintView('agp', data.settings, opts, doc).render();
 
   PrintView.renderPageNumbers(doc);
 
