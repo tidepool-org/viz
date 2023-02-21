@@ -17,7 +17,7 @@ import {
 import { boldText, renderScale } from './utils/AGPUtils';
 import { MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
-import { formatDecimalNumber } from '../../utils/format';
+import { formatDecimalNumber, formatBgValue, formatPercentage } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
 
 const agpLogo = require('./images/capturAGP-logo.png');
@@ -26,13 +26,6 @@ const t = i18next.t.bind(i18next);
 class AGPPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
-
-    // TODO: override with AGP colors
-    this.colors = _.assign(this.colors, {
-      axes: '#858585',
-    });
-
-    console.log('this', this);
 
     this.cbgData = _.get(data, 'data.current.data.cbg', []);
     this.cbgStats = _.get(data, 'data.current.stats', {});
@@ -308,7 +301,7 @@ class AGPPrintView extends PrintView {
     const plotMarginBottom = this.dpi * 0.3;
     const paperWidth = chartAreaWidth - (plotMarginX * 2);
     const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
-    const barWidth = this.dpi * 0.375;
+    const barWidth = this.dpi * 0.35;
     const barSeparatorPixelWidth = 2;
 
     const yScale = pixels => pixels / paperHeight;
@@ -321,11 +314,12 @@ class AGPPrintView extends PrintView {
       const chartData = _.reduce(statDatums, (res, datum, i) => {
         const value = _.toNumber(datum.value) / statTotal * 1;
         const renderedValue = _.max([value, AGP_TIR_MIN_HEIGHT / 100]);
+        res.rawById[datum.id] = value;
         res.raw.push(value);
         res.rendered.push(renderedValue);
         res.ticks.push((res.ticks[i - 1] || 0) + renderedValue);
         return res;
-      }, { raw: [], rendered: [], ticks: [] });
+      }, { rawById: {}, raw: [], rendered: [], ticks: [] });
 
       // Needs y-scale correction since we may exceed y domain limits due to minimum bar height
       const yScaleCorrection = 1 / _.last(chartData.ticks);
@@ -350,28 +344,13 @@ class AGPPrintView extends PrintView {
         },
       }));
 
-      const rangeAnnotationStyles = {
-        align: 'left',
-        arrowside: 'none',
-        font: {
-          color: colors.black,
-          size: this.renderScale(fontSizes.timeInRanges.values),
-          family: 'Arial',
-        },
-        showarrow: false,
-        x: 0,
-        xanchor: 'left',
-        xshift: this.renderScale(35),
-        y: 1,
-      };
-
       const bgTicks = _.map([
         this.bgBounds.veryLowThreshold,
         this.bgBounds.targetLowerBound,
         this.bgBounds.targetUpperBound,
         this.bgBounds.veryHighThreshold,
         this.bgUnits,
-      ], (bound, index) => ({
+      ], (tick, index) => ({
         align: 'right',
         arrowside: 'none',
         font: {
@@ -380,7 +359,9 @@ class AGPPrintView extends PrintView {
           family: 'Arial',
         },
         showarrow: false,
-        text: boldText(bound),
+        text: index === 4 // bgUnits label
+          ? boldText(tick)
+          : boldText(formatBgValue(tick, this.bgPrefs)),
         x: 0,
         xanchor: 'right',
         xshift: this.renderScale(-4),
@@ -469,7 +450,7 @@ class AGPPrintView extends PrintView {
         chartData.ticks[2] + ((chartData.ticks[3] - chartData.ticks[2]) / 2),
       ];
 
-      const bracketXExtents = [xScale(barWidth + 8), xScale(paperWidth - (barWidth + 8))];
+      const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
 
       const bracketPos = {
         low: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(0, 2)),
@@ -507,7 +488,7 @@ class AGPPrintView extends PrintView {
         bracketPos.high.posY + yScale(6),
       ];
 
-      const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 4)];
+      const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 2)];
 
       const leaderPos = {
         veryLow: [...leaderXExtents, ...leaderYPos.slice(0, 2)],
@@ -519,6 +500,162 @@ class AGPPrintView extends PrintView {
         path: createLeaderSVG(...pos),
         line: { color: colors.black, width: this.renderScale(0.5) },
         yref: 'paper',
+      }));
+
+      const rangePosY = {
+        veryHigh: bracketPos.high.posY,
+        high: bracketPos.high.posY2,
+        target: bracketPos.target.posY,
+        low: bracketPos.low.posY,
+        veryLow: bracketPos.low.posY2,
+      };
+
+      const rangeLabels = _.map(_.keys(rangePosY), range => ({
+        align: 'left',
+        arrowside: 'none',
+        font: {
+          color: colors.black,
+          size: this.renderScale(fontSizes.timeInRanges.values),
+          family: 'Arial',
+        },
+        showarrow: false,
+        text: boldText(text.bgRanges[range]),
+        x: bracketXExtents[0],
+        xanchor: 'left',
+        y: rangePosY[range],
+        yanchor: 'bottom',
+        yref: 'paper',
+        yshift: this.renderScale(1),
+      }));
+
+      const rangeValues = _.map(_.keys(_.omit(rangePosY, 'target')), range => ({
+        align: 'right',
+        arrowside: 'none',
+        font: {
+          color: colors.black,
+          size: this.renderScale(fontSizes.timeInRanges.values),
+          family: 'Arial',
+        },
+        showarrow: false,
+        text: boldText(formatPercentage(chartData.rawById[range])),
+        x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
+        xanchor: 'right',
+        xshift: this.renderScale(-4),
+        y: rangePosY[range],
+        yanchor: 'bottom',
+        yref: 'paper',
+        yshift: this.renderScale(1),
+      }));
+
+      const rangeSummaryPosY = {
+        low: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
+        target: bracketPos.target.posY,
+        high: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
+      };
+
+      const combinedRangeSummaryValues = {
+        low: chartData.rawById.veryLow + chartData.rawById.low,
+        target: chartData.rawById.target,
+        high: chartData.rawById.veryHigh + chartData.rawById.high,
+      };
+
+      const rangeSummaryValues = _.map(_.keys(combinedRangeSummaryValues), range => ({
+        align: 'left',
+        arrowside: 'none',
+        font: {
+          color: colors.black,
+          size: this.renderScale(fontSizes.timeInRanges.summaries),
+          family: 'Arial',
+        },
+        showarrow: false,
+        text: boldText(formatPercentage(combinedRangeSummaryValues[range])),
+        x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
+        xanchor: 'left',
+        xshift: this.renderScale(4),
+        y: rangeSummaryPosY[range],
+        yanchor: 'bottom',
+        yref: 'paper',
+        yshift: this.renderScale(1),
+      }));
+
+      const goalsPos = {
+        veryLow: {
+          x: bracketXExtents[0],
+          xanchor: 'left',
+          y: bracketPos.low.posY2,
+          yshift: this.renderScale(-11),
+        },
+        lowCombined: {
+          x: bracketXExtents[1],
+          xanchor: 'right',
+          y: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
+          yshift: this.renderScale(2),
+        },
+        target: {
+          x: bracketXExtents[1],
+          xanchor: 'right',
+          y: bracketPos.target.posY,
+          yshift: this.renderScale(2),
+        },
+        highCombined: {
+          x: bracketXExtents[1],
+          xanchor: 'right',
+          y: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
+          yshift: this.renderScale(2),
+        },
+        veryHigh: {
+          x: bracketXExtents[0],
+          xanchor: 'left',
+          y: bracketPos.high.posY,
+          yshift: this.renderScale(11),
+        },
+      };
+
+      const goals = _.map(_.keys(goalsPos), range => ({
+        align: 'left',
+        arrowside: 'none',
+        font: {
+          color: colors.goals[range],
+          size: this.renderScale(fontSizes.timeInRanges.goals),
+          family: 'Arial',
+        },
+        showarrow: false,
+        text: text.goals[range],
+        yanchor: 'bottom',
+        yref: 'paper',
+        ...goalsPos[range],
+      }));
+
+      const subLabelsPos = {
+        TIRtarget: {
+          x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
+          xanchor: 'left',
+          xshift: this.renderScale(-20),
+          y: bracketPos.target.posY,
+          yshift: this.renderScale(-11),
+        },
+        TIRminutes: {
+          x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
+          xanchor: 'left',
+          xshift: this.renderScale(-7),
+          y: bracketPos.low.posY2,
+          yshift: this.renderScale(-11),
+        },
+      };
+
+      const subLabels = _.map(_.keys(subLabelsPos), label => ({
+        align: 'left',
+        arrowside: 'none',
+        font: {
+          color: colors.subLabels[label],
+          size: this.renderScale(fontSizes.timeInRanges.subLabels),
+          family: 'Arial',
+        },
+        showarrow: false,
+        text: text.subLabels[label],
+        yanchor: 'bottom',
+        yref: 'paper',
+        ...subLabelsPos[label],
       }));
 
       const layout = {
@@ -558,43 +695,17 @@ class AGPPrintView extends PrintView {
 
         annotations: [
           ...bgTicks,
-          // {
-          //   ...rangeAnnotationStyles,
-          //   text: boldText(text.bgRanges.veryHigh),
-          // },
-          // {
-          //   ...rangeAnnotationStyles,
-          //   text: text.bgRanges.high,
-          // },
-          // {
-          //   ...rangeAnnotationStyles,
-          //   text: text.bgRanges.target,
-          // },
-          // {
-          //   ...rangeAnnotationStyles,
-          //   text: text.bgRanges.low,
-          // },
-          // {
-          //   ...rangeAnnotationStyles,
-          //   text: text.bgRanges.veryLow,
-          // },
+          ...rangeLabels,
+          ...rangeValues,
+          ...rangeSummaryValues,
+          ...goals,
+          ...subLabels,
         ],
 
         shapes: [
           ...brackets,
           ...leaders,
         ],
-
-        // TBD:
-        // template: {
-        //   // defaults to apply to a plot, such as colors, fonts, line widths, etc
-        //   // https://plotly.com/javascript/reference/layout/#layout-template
-        // },
-
-        // meta: {
-        //   // custom text variables - may come in useful for built-in data text (not necessary for annotations)
-        //   // https://plotly.com/javascript/reference/layout/#layout-meta
-        // },
       };
 
       const plotDataURL = await Plotly.toImage({ data, layout });

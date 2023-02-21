@@ -7,7 +7,7 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   i18next.init({ returnEmptyString: false, nsSeparator: '|' });
 }
 
-export const AGP_TIR_MIN_HEIGHT = 4;
+export const AGP_TIR_MIN_HEIGHT = 5;
 
 export const text = {
   reportHeader: t('AGP Report:'),
@@ -38,6 +38,17 @@ export const text = {
     low: t('Low'),
     veryLow: t('Very Low'),
   },
+  goals: {
+    veryHigh: t('Goal: <5%'),
+    highCombined: t('Goal: <25%'),
+    target: t('Goal: >70%'),
+    lowCombined: t('Goal: <4%'),
+    veryLow: t('Goal: <1%'),
+  },
+  subLabels: {
+    TIRtarget: t('Each 5% increase is clinically beneficial'),
+    TIRminutes: t('Each 1% time in range = about 15 minutes'),
+  },
 };
 
 export const fontSizes = {
@@ -56,26 +67,32 @@ export const fontSizes = {
   timeInRanges: {
     values: 9,
     ticks: 7,
+    summaries: 12,
+    goals: 7,
+    subLabels: 7,
   },
 };
 
 const black = '#000000';
 const white = '#FFFFFF';
+const lightGrey = '#D9D9D9';
+const mediumGrey = '#7A7A7A';
+const darkGrey = '#626267';
 
 export const colors = {
   text: {
     reportHeader: '#522398',
-    label: '#626267',
+    label: darkGrey,
     reportFooter: black,
     section: {
       title: black,
-      subtitle: black,
+      subtitle: darkGrey,
       description: black,
     },
     reportInfo: black,
   },
   line: {
-    default: '#626267',
+    default: darkGrey,
     range: {
       target: '#00AA51',
       divider: white,
@@ -83,15 +100,31 @@ export const colors = {
   },
   white,
   black,
+  lightGrey,
+  mediumGrey,
+  darkGrey,
   background: {
-    shaded: '#D9D9D9',
+    shaded: lightGrey,
   },
   bgRange: {
     veryLow: '#CC0019',
     low: '#FF0000',
+    lowShaded: '#FF8080',
     target: '#0BAD5A',
     high: '#FFBF00',
+    highShaded: '#FFD180',
     veryHigh: '#FF6900',
-    empty: '#626267',
+    empty: darkGrey,
+  },
+  goals: {
+    veryHigh: darkGrey,
+    highCombined: mediumGrey,
+    target: mediumGrey,
+    lowCombined: mediumGrey,
+    veryLow: darkGrey,
+  },
+  subLabels: {
+    TIRtarget: darkGrey,
+    TIRminutes: black,
   },
 };
