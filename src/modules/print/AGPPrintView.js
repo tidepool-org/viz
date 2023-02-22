@@ -15,10 +15,11 @@ import {
 } from './utils/AGPConstants';
 
 import { boldText, renderScale } from './utils/AGPUtils';
-import { MS_IN_MIN } from '../../utils/constants';
+import { MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { formatDecimalNumber, formatBgValue, formatPercentage } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
+import { formatDatum } from '../../utils/stat';
 
 const agpLogo = require('./images/capturAGP-logo.png');
 const t = i18next.t.bind(i18next);
@@ -109,6 +110,7 @@ class AGPPrintView extends PrintView {
     // this.renderGuides();
     this.renderSectionContainers();
     this.renderReportInfo();
+    this.renderGlucoseMetrics();
     await this.renderTimeInRanges();
   }
 
@@ -292,6 +294,90 @@ class AGPPrintView extends PrintView {
     renderInfoRow(`Time CGM Active: ${formatDecimalNumber(sensorUsageAGP, 1)}%`);
   }
 
+  renderGlucoseMetrics() {
+    const section = this.sections.glucoseMetrics;
+    const paddingX = this.dpi * 0.2;
+    const xExtents = [section.x + paddingX, section.x + section.width - paddingX];
+
+    const glucoseStats = [
+      this.stats.averageGlucose,
+      this.stats.glucoseManagementIndicator,
+      this.stats.coefficientOfVariation,
+    ];
+
+    this.doc.x = section.x;
+    this.doc.y = section.y + this.dpi * 0.375;
+
+    _.each(glucoseStats, (stat, index) => {
+      const paddingY = 8;
+      const statWidth = xExtents[1] - xExtents[0];
+      const y = this.doc.y;
+      const isAverageGlucose = stat.id === 'averageGlucose';
+      const isShaded = index % 2 !== 0;
+
+      const { value, suffix } = formatDatum(
+        _.get(stat.data, _.get(stat.data, 'dataPaths.summary')),
+        _.get(stat, 'dataFormat.summaryAGP', _.get(stat, 'dataFormat.summary')),
+        { bgPrefs: this.bgPrefs, data: stat.data }
+      );
+
+      const units = suffix || this.bgUnits;
+
+      this.doc
+        .font(this.boldFont)
+        .fontSize(fontSizes.glucoseMetrics.labels)
+        .lineGap(-1.5);
+
+      if (isShaded) {
+        this.doc
+          .rect(section.x, y - paddingY, section.width, this.doc.currentLineHeight() * 2.25 + paddingY * 2)
+          .fill(colors.background.shaded);
+      }
+
+      this.setFill();
+
+      this.doc
+        .text(text.glucoseMetrics[stat.id].label, xExtents[0], y);
+
+      const valueYShift = (fontSizes.glucoseMetrics.values - fontSizes.glucoseMetrics.labels) / 2;
+      const unitsFontSize = isAverageGlucose ? fontSizes.glucoseMetrics.bgUnits : fontSizes.glucoseMetrics.values;
+      const unitsYShift = isAverageGlucose ? valueYShift - 2.15 : valueYShift;
+
+      this.doc
+        .fontSize(unitsFontSize)
+        .text(`${units}`, xExtents[0], y - unitsYShift, { align: 'right', width: statWidth });
+
+      const valueXShift = this.doc.widthOfString(units) + 1;
+
+      this.doc
+        .fontSize(fontSizes.glucoseMetrics.values)
+        .text(`${value}`, xExtents[0], y - valueYShift, { align: 'right', width: statWidth - valueXShift });
+
+      this.doc
+        .font(this.font)
+        .fontSize(fontSizes.glucoseMetrics.subLabels);
+
+      const bgUnitsKey = this.bgUnits === MGDL_UNITS ? 'mgdl' : 'mmoll';
+      const goal = isAverageGlucose
+        ? text.glucoseMetrics[stat.id].goal[bgUnitsKey]
+        : text.glucoseMetrics[stat.id].goal;
+
+      this.setFill(colors.text.goals.glucoseMetrics);
+
+      this.doc
+        .lineGap(1.3)
+        .text(goal);
+
+      this.doc
+        .fontSize(fontSizes.glucoseMetrics.subLabels);
+
+      if (text.glucoseMetrics[stat.id].subLabel) this.doc.text(text.glucoseMetrics[stat.id].subLabel);
+      this.doc.moveDown(1.25);
+    });
+
+    this.resetText();
+  }
+
   async renderTimeInRanges() {
     const stat = this.stats.timeInRange;
     const statHasData = _.get(stat, 'data.total.value') > 0;
@@ -331,9 +417,6 @@ class AGPPrintView extends PrintView {
       const yScaleCorrection = 1 / _.last(chartData.ticks);
       chartData.rendered = chartData.rendered.map(value => value * yScaleCorrection);
       chartData.ticks = chartData.ticks.map(value => value * yScaleCorrection);
-
-      console.log('statDatums', statDatums);
-      console.log('chartData', chartData);
 
       const data = _.map(statDatums, (datum, index) => ({
         x: [stat.id],
@@ -621,7 +704,7 @@ class AGPPrintView extends PrintView {
         align: 'left',
         arrowside: 'none',
         font: {
-          color: colors.goals[range],
+          color: colors.text.goals[range],
           size: this.renderScale(fontSizes.timeInRanges.goals),
           family: this.font,
         },
@@ -653,7 +736,7 @@ class AGPPrintView extends PrintView {
         align: 'left',
         arrowside: 'none',
         font: {
-          color: colors.subLabels[label],
+          color: colors.text.subLabels[label],
           size: this.renderScale(fontSizes.timeInRanges.subLabels),
           family: this.font,
         },

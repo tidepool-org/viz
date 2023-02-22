@@ -22,6 +22,22 @@ export const text = {
   },
   glucoseMetrics: {
     title: t('Glucose metrics'),
+    averageGlucose: {
+      label: t('Average Glucose'),
+      goal: {
+        mgdl: t('Goal: <154 mg/dL'),
+        mmoll: t('Goal: <8.6 mmol/L'),
+      },
+    },
+    glucoseManagementIndicator: {
+      label: t('Glucose Management Indicator (GMI)'),
+      goal: t('Goal: <7%'),
+    },
+    coefficientOfVariation: {
+      label: t('Glucose Variability'),
+      subLabel: t('Defined as percent coefficient of variation'),
+      goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+    },
   },
   ambulatoryGlucoseProfile: {
     title: t('Ambulatory Glucose Profile (AGP)'),
@@ -71,6 +87,13 @@ export const fontSizes = {
     goals: 7,
     subLabels: 7,
   },
+  glucoseMetrics: {
+    values: 12,
+    bgUnits: 8,
+    labels: 9,
+    subLabels: 8,
+    goals: 8,
+  },
 };
 
 const black = '#000000';
@@ -90,6 +113,19 @@ export const colors = {
       description: black,
     },
     reportInfo: black,
+    goals: {
+      veryHigh: darkGrey,
+      highCombined: mediumGrey,
+      target: mediumGrey,
+      lowCombined: mediumGrey,
+      veryLow: darkGrey,
+      glucoseMetrics: darkGrey,
+    },
+    subLabels: {
+      TIRtarget: darkGrey,
+      TIRminutes: black,
+      glucoseMetrics: darkGrey,
+    },
   },
   line: {
     default: darkGrey,
@@ -115,16 +151,5 @@ export const colors = {
     highShaded: '#FFD180',
     veryHigh: '#FF6900',
     empty: darkGrey,
-  },
-  goals: {
-    veryHigh: darkGrey,
-    highCombined: mediumGrey,
-    target: mediumGrey,
-    lowCombined: mediumGrey,
-    veryLow: darkGrey,
-  },
-  subLabels: {
-    TIRtarget: darkGrey,
-    TIRminutes: black,
   },
 };
