@@ -59,6 +59,7 @@ export const statFormats = {
   bgRange: 'bgRange',
   bgValue: 'bgValue',
   cv: 'cv',
+  cvAGP: 'cvAGP',
   carbs: 'carbs',
   duration: 'duration',
   gmi: 'gmi',
@@ -176,6 +177,16 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       if (value >= 0) {
         id = classifyCvValue(value);
         value = formatDecimalNumber(value);
+        suffix = '%';
+      } else {
+        disableStat();
+      }
+      break;
+
+    case statFormats.cvAGP:
+      if (value >= 0) {
+        id = classifyCvValue(value);
+        value = formatDecimalNumber(value, 1);
         suffix = '%';
       } else {
         disableStat();
@@ -827,6 +838,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
     case commonStats.coefficientOfVariation:
       stat.dataFormat = {
         summary: statFormats.cv,
+        summaryAGP: statFormats.cvAGP,
       };
       stat.type = statTypes.simple;
       break;
