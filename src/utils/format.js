@@ -61,7 +61,6 @@ export function bankersRound(value, precision = 0) {
   const x = value * (10 ** precision);
   const r = Math.round(x);
   const br = Math.abs(x) % 1 === 0.5 ? (r % 2 === 0 ? r : r - 1) : r;
-  console.log('banker!', value.toFixed(3), precision, br / (10 ** precision));
   return br / (10 ** precision);
   /* eslint-enable no-nested-ternary */
 }
