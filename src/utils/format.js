@@ -42,6 +42,31 @@ import { convertToMmolL } from './bloodglucose';
 import { BG_HIGH, BG_LOW, MMOLL_UNITS } from './constants';
 
 /**
+ * bankersRound
+ *
+ * Rounding with balanced tie-breaking to reduce upward bias in rounding by rounding the midway
+ * point digit (x.5) to the nearest even number, rather than always upwards.
+ * ref: https://stackoverflow.com/a/49080858
+ *
+ * Used as default rounding in AGP reports.
+ *
+ * @param {Number} value - numeric value to format
+ * @param {Number} [precision] - optional number of decimal places to display;
+ *                               if not provided, will display as integer (0 decimal places)
+ *
+ * @return {Number} numeric value rounded to the desired number of decimal places
+ */
+export function bankersRound(value, precision = 0) {
+  /* eslint-disable no-nested-ternary */
+  const x = value * (10 ** precision);
+  const r = Math.round(x);
+  const br = Math.abs(x) % 1 === 0.5 ? (r % 2 === 0 ? r : r - 1) : r;
+  console.log('banker!', value.toFixed(3), precision, br / (10 ** precision));
+  return br / (10 ** precision);
+  /* eslint-enable no-nested-ternary */
+}
+
+/**
  * formatBgValue
  * @param {Number} val - integer or float blood glucose value in either mg/dL or mmol/L
  * @param {Object} bgPrefs - object containing bgUnits String and bgBounds Object
@@ -50,11 +75,13 @@ import { BG_HIGH, BG_LOW, MMOLL_UNITS } from './constants';
  *
  * @return {String} formatted blood glucose value
  */
-export function formatBgValue(val, bgPrefs, outOfRangeThresholds) {
+export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) {
   const units = _.get(bgPrefs, 'bgUnits', '');
+
   if (!_.isEmpty(outOfRangeThresholds)) {
     let lowThreshold = outOfRangeThresholds.low;
     let highThreshold = outOfRangeThresholds.high;
+
     if (units === MMOLL_UNITS) {
       if (lowThreshold) {
         lowThreshold = convertToMmolL(lowThreshold);
@@ -70,10 +97,16 @@ export function formatBgValue(val, bgPrefs, outOfRangeThresholds) {
       return BG_HIGH;
     }
   }
+
   if (units === MMOLL_UNITS) {
-    return format('.1f')(val);
+    return useAGPFormat
+      ? bankersRound(val, 1).toFixed(1)
+      : format('.1f')(val);
   }
-  return format('d')(val);
+
+  return useAGPFormat
+    ? bankersRound(val)
+    : format('d')(val);
 }
 
 /**
@@ -90,7 +123,6 @@ export function formatDecimalNumber(val, places) {
   }
   return format(`.${places}f`)(val);
 }
-
 
 /**
  * formatInsulin
@@ -115,11 +147,13 @@ export function formatInsulin(val) {
  *
  * @return {String} percentage
  */
-export function formatPercentage(val, precision = 0) {
+export function formatPercentage(val, precision = 0, useAGPFormat) {
   if (Number.isNaN(val)) {
     return '--%';
   }
-  return format(`.${precision}%`)(val);
+  return useAGPFormat
+    ? `${bankersRound(val * 100, precision)}%`
+    : format(`.${precision}%`)(val);
 }
 
 /**

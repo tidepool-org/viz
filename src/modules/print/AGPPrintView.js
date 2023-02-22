@@ -17,7 +17,7 @@ import {
 import { boldText, renderScale } from './utils/AGPUtils';
 import { MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
-import { formatDecimalNumber, formatBgValue, formatPercentage } from '../../utils/format';
+import { bankersRound, formatBgValue, formatPercentage } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
 import { formatDatum } from '../../utils/stat';
 
@@ -291,7 +291,9 @@ class AGPPrintView extends PrintView {
     this.doc.moveDown(1);
     renderInfoRow(cgmDaysWornText);
     this.doc.moveDown(1);
-    renderInfoRow(`Time CGM Active: ${formatDecimalNumber(sensorUsageAGP, 1)}%`);
+    renderInfoRow(t('Time CGM Active: {{activeTime}}%', {
+      activeTime: bankersRound(sensorUsageAGP, 1),
+    }));
   }
 
   renderGlucoseMetrics() {
@@ -317,8 +319,8 @@ class AGPPrintView extends PrintView {
 
       const { value, suffix } = formatDatum(
         _.get(stat.data, _.get(stat.data, 'dataPaths.summary')),
-        _.get(stat, 'dataFormat.summaryAGP', _.get(stat, 'dataFormat.summary')),
-        { bgPrefs: this.bgPrefs, data: stat.data }
+        _.get(stat, 'dataFormat.summary'),
+        { bgPrefs: this.bgPrefs, data: stat.data, useAGPFormat: true }
       );
 
       const units = suffix || this.bgUnits;
@@ -450,7 +452,7 @@ class AGPPrintView extends PrintView {
         showarrow: false,
         text: index === 4 // bgUnits label
           ? boldText(tick)
-          : boldText(formatBgValue(tick, this.bgPrefs)),
+          : boldText(formatBgValue(tick, this.bgPrefs, undefined, true)),
         x: 0,
         xanchor: 'right',
         xshift: this.renderScale(-4),
@@ -626,7 +628,7 @@ class AGPPrintView extends PrintView {
           family: this.font,
         },
         showarrow: false,
-        text: boldText(formatPercentage(chartData.rawById[range])),
+        text: boldText(formatPercentage(chartData.rawById[range], 0, true)),
         x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
         xanchor: 'right',
         xshift: this.renderScale(-4),
@@ -657,7 +659,7 @@ class AGPPrintView extends PrintView {
           family: this.font,
         },
         showarrow: false,
-        text: boldText(formatPercentage(combinedRangeSummaryValues[range])),
+        text: boldText(formatPercentage(combinedRangeSummaryValues[range], 0, true)),
         x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
         xanchor: 'left',
         xshift: this.renderScale(4),

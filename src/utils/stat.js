@@ -21,7 +21,7 @@ import {
 } from './constants';
 
 import { getPumpVocabulary } from './device';
-import { formatDecimalNumber, formatBgValue } from './format';
+import { bankersRound, formatDecimalNumber, formatBgValue } from './format';
 import { formatDuration } from './datetime';
 
 const t = i18next.t.bind(i18next);
@@ -59,7 +59,6 @@ export const statFormats = {
   bgRange: 'bgRange',
   bgValue: 'bgValue',
   cv: 'cv',
-  cvAGP: 'cvAGP',
   carbs: 'carbs',
   duration: 'duration',
   gmi: 'gmi',
@@ -147,7 +146,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.bgValue:
       if (value >= 0) {
         id = classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), value);
-        value = formatBgValue(value, opts.bgPrefs);
+        value = formatBgValue(value, opts.bgPrefs, undefined, opts.useAGPFormat);
       } else {
         disableStat();
       }
@@ -176,17 +175,9 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.cv:
       if (value >= 0) {
         id = classifyCvValue(value);
-        value = formatDecimalNumber(value);
-        suffix = '%';
-      } else {
-        disableStat();
-      }
-      break;
-
-    case statFormats.cvAGP:
-      if (value >= 0) {
-        id = classifyCvValue(value);
-        value = formatDecimalNumber(value, 1);
+        value = opts.useAGPFormat
+          ? bankersRound(value, 1)
+          : formatDecimalNumber(value);
         suffix = '%';
       } else {
         disableStat();
@@ -203,7 +194,9 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
     case statFormats.gmi:
       if (value >= 0) {
-        value = formatDecimalNumber(value, 1);
+        value = opts.useAGPFormat
+          ? bankersRound(value, 1)
+          : formatDecimalNumber(value, 1);
         suffix = '%';
       } else {
         disableStat();
@@ -838,7 +831,6 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
     case commonStats.coefficientOfVariation:
       stat.dataFormat = {
         summary: statFormats.cv,
-        summaryAGP: statFormats.cvAGP,
       };
       stat.type = statTypes.simple;
       break;
