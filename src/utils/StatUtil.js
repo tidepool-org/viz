@@ -372,30 +372,42 @@ export class StatUtil {
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
-    let durations = _.reduce(
+    const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
         const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
         const duration = cgmSampleFrequency(datum);
-        result[classification] += duration;
-        result.total += duration;
+        result.durations[classification] += duration;
+        result.durations.total += duration;
+        result.counts[classification]++;
+        result.counts.total++;
         return result;
       },
       {
-        veryLow: 0,
-        low: 0,
-        target: 0,
-        high: 0,
-        veryHigh: 0,
-        total: 0,
+        durations: {
+          veryLow: 0,
+          low: 0,
+          target: 0,
+          high: 0,
+          veryHigh: 0,
+          total: 0,
+        },
+        counts: {
+          veryLow: 0,
+          low: 0,
+          target: 0,
+          high: 0,
+          veryHigh: 0,
+          total: 0,
+        },
       }
     );
 
     if (this.activeDays > 1) {
-      durations = this.getDailyAverageDurations(durations);
+      timeInRangeData.durations = this.getDailyAverageDurations(timeInRangeData.durations);
     }
 
-    return durations;
+    return timeInRangeData;
   };
 
   getTotalInsulinData = () => {

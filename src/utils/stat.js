@@ -642,31 +642,31 @@ export const getStatData = (data, type, opts = {}) => {
       statData.data = [
         {
           id: 'veryLow',
-          value: ensureNumeric(data.veryLow),
+          value: ensureNumeric(data.durations.veryLow),
           title: t('Time Below Range'),
           legendTitle: bgRanges.veryLow,
         },
         {
           id: 'low',
-          value: ensureNumeric(data.low),
+          value: ensureNumeric(data.durations.low),
           title: t('Time Below Range'),
           legendTitle: bgRanges.low,
         },
         {
           id: 'target',
-          value: ensureNumeric(data.target),
+          value: ensureNumeric(data.durations.target),
           title: t('Time In Range'),
           legendTitle: bgRanges.target,
         },
         {
           id: 'high',
-          value: ensureNumeric(data.high),
+          value: ensureNumeric(data.durations.high),
           title: t('Time Above Range'),
           legendTitle: bgRanges.high,
         },
         {
           id: 'veryHigh',
-          value: ensureNumeric(data.veryHigh),
+          value: ensureNumeric(data.durations.veryHigh),
           title: t('Time Above Range'),
           legendTitle: bgRanges.veryHigh,
         },

@@ -382,7 +382,7 @@ class AGPPrintView extends PrintView {
 
   async renderTimeInRanges() {
     const stat = this.stats.timeInRange;
-    const statHasData = _.get(stat, 'data.total.value') > 0;
+    const statTotal = _.get(stat, 'data.raw.counts.total', 0);
     const { timeInRanges } = this.sections;
 
     // Set chart plot within section borders
@@ -401,9 +401,16 @@ class AGPPrintView extends PrintView {
     const yScale = pixels => pixels / paperHeight;
     const xScale = pixels => pixels / paperWidth;
 
-    if (statHasData) {
-      const statDatums = _.get(stat, 'data.data', []);
-      const statTotal = _.get(stat, 'data.total.value', 1);
+    if (statTotal > 0) {
+      const rawCounts = _.get(stat, 'data.raw.counts', {});
+
+      const statDatums = [
+        { id: 'veryLow', value: rawCounts.veryLow },
+        { id: 'low', value: rawCounts.low },
+        { id: 'target', value: rawCounts.target },
+        { id: 'high', value: rawCounts.high },
+        { id: 'veryHigh', value: rawCounts.veryHigh },
+      ];
 
       const chartData = _.reduce(statDatums, (res, datum, i) => {
         const value = _.toNumber(datum.value) / statTotal * 1;
