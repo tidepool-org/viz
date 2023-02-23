@@ -434,7 +434,7 @@ class AGPPrintView extends PrintView {
         type: 'bar',
         width: barWidth / paperWidth * 2,
         marker: {
-          color: _.toNumber(datum.value) > 6 ? colors.bgRange[datum.id] : colors.bgRange.empty,
+          color: _.toNumber(datum.value) > 0 ? colors.bgRange[datum.id] : colors.bgRange.empty,
           line: {
             color: colors.line.range.divider,
             width: this.renderScale(barSeparatorPixelWidth),
