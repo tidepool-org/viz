@@ -70,8 +70,8 @@ describe('CBGSlicesContainer', () => {
         max: undefined,
         median: undefined,
         min: undefined,
-        ninetiethQuantile: undefined,
-        tenthQuantile: undefined,
+        upperQuantile: undefined,
+        lowerQuantile: undefined,
         thirdQuartile: undefined,
       };
       expect(CBGSlicesContainer.prototype.setState.firstCall.args[0])

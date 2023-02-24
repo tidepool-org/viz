@@ -133,11 +133,11 @@ describe('[trends] data utils', () => {
       data: {
         msFrom: 0,
         msTo: 10,
-        ninetiethQuantile: 90,
+        upperQuantile: 90,
         thirdQuartile: 75,
       },
     };
-    const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+    const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
     const cbgData = [{
       // ms in range, value = bottom of range
       localDate: '2016-12-31',
@@ -258,11 +258,11 @@ describe('[trends] data utils', () => {
       expect(emptyValsRes).to.deep.equal({
         id: binKey,
         min: undefined,
-        tenthQuantile: undefined,
+        lowerQuantile: undefined,
         firstQuartile: undefined,
         median: undefined,
         thirdQuartile: undefined,
-        ninetiethQuantile: undefined,
+        upperQuantile: undefined,
         max: undefined,
         msX: bin,
         msFrom: 0,
@@ -279,8 +279,8 @@ describe('[trends] data utils', () => {
       expect(res.min).to.equal(min);
     });
 
-    it('should add the 10th quantile as the `tenthQuantile` on the resulting object', () => {
-      expect(res.tenthQuantile).to.equal(10);
+    it('should add the 10th quantile as the `lowerQuantile` on the resulting object', () => {
+      expect(res.lowerQuantile).to.equal(10);
     });
 
     it('should add the first quartile as the `firstQuartile` on the resulting object', () => {
@@ -295,8 +295,8 @@ describe('[trends] data utils', () => {
       expect(res.thirdQuartile).to.equal(75);
     });
 
-    it('should add the 90th quantile as the `ninetiethQuantile` on the resulting object', () => {
-      expect(res.ninetiethQuantile).to.equal(90);
+    it('should add the 90th quantile as the `upperQuantile` on the resulting object', () => {
+      expect(res.upperQuantile).to.equal(90);
     });
 
     it('should add the maximum as the `max` on the resulting object', () => {

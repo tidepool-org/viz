@@ -125,17 +125,22 @@ export function findOutOfRangeAnnotations(data) {
  *
  * @return {Object} calculatedCbgStats
  */
-export function calculateCbgStatsForBin(binKey, binSize, data, outOfRange) {
+export function calculateCbgStatsForBin(binKey, binSize, data, outOfRange, outerQuantiles = []) {
+  const [
+    lowerQuantile = 0.1,
+    upperQuantile = 0.9,
+  ] = outerQuantiles;
+
   const sorted = _.sortBy(data, d => d);
   const centerOfBinMs = parseInt(binKey, 10);
   const stats = {
     id: binKey,
     min: min(sorted),
-    tenthQuantile: quantile(sorted, 0.1),
+    lowerQuantile: quantile(sorted, lowerQuantile),
     firstQuartile: quantile(sorted, 0.25),
     median: median(sorted),
     thirdQuartile: quantile(sorted, 0.75),
-    ninetiethQuantile: quantile(sorted, 0.9),
+    upperQuantile: quantile(sorted, upperQuantile),
     max: max(sorted),
     msX: centerOfBinMs,
     msFrom: centerOfBinMs - (binSize / 2),
