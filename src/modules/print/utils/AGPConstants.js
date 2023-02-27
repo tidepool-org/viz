@@ -2,12 +2,19 @@ import _ from 'lodash';
 import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
 
+import { DPI } from './constants';
+
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
   i18next.init({ returnEmptyString: false, nsSeparator: '|' });
 }
 
+export const AGP_FOOTER_Y_PADDING = DPI * 0.25;
 export const AGP_TIR_MIN_HEIGHT = 5;
+export const AGP_SECTION_BORDER_RADIUS = 8;
+
+// Preferring Helvetica instead of Arial since we don't have license and PDFkit doesn't include it
+export const AGP_FONT_FAMILY = 'Helvetica, Arial, Sans-Serif';
 
 export const text = {
   reportHeader: t('AGP Report:'),
@@ -43,7 +50,7 @@ export const text = {
     title: t('Ambulatory Glucose Profile (AGP)'),
     description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
   },
-  dailyThumbnails: {
+  dailyGlucoseProfiles: {
     title: t('Daily Glucose Profiles'),
     description: t('Each daily profile represents a midnight-to-midnight period.'),
   },

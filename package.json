@@ -75,6 +75,7 @@
     "redux": "3.5.2",
     "serialize-svg-path": "0.1.0",
     "sundial": "1.6.0",
+    "svg-to-pdfkit": "0.1.8",
     "text-table": "0.2.0",
     "translate-svg-path": "0.0.1",
     "victory": "31.3.0",

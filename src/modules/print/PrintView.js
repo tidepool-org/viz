@@ -22,6 +22,8 @@ import PdfTable from 'voilab-pdf-table';
 import PdfTableFitColumn from 'voilab-pdf-table/plugins/fitcolumn';
 import i18next from 'i18next';
 
+import SVGtoPDF from 'svg-to-pdfkit';
+
 import {
   getOffset,
   getTimezoneFromTimePrefs,
@@ -55,6 +57,7 @@ const logo = require('./images/tidepool-logo-408x46.png');
 class PrintView {
   constructor(doc, data = {}, opts) {
     this.doc = doc;
+    this.addSVG = SVGtoPDF.bind(null, this.doc);
 
     this.title = opts.title;
     this.data = _.cloneDeep(data);
