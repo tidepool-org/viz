@@ -10,6 +10,7 @@ import PrintView from './PrintView';
 import {
   AGP_FOOTER_Y_PADDING,
   AGP_SECTION_BORDER_RADIUS,
+  AGP_SECTION_HEADER_HEIGHT,
   colors,
   fontSizes,
   text,
@@ -54,7 +55,6 @@ class AGPPrintView extends PrintView {
 
   async render() {
     // this.renderGuides();
-    this.renderSectionContainers();
     this.renderReportInfo();
     this.renderGlucoseMetrics();
     await this.renderAmbulatoryGlucoseProfile();
@@ -113,52 +113,51 @@ class AGPPrintView extends PrintView {
     this.doc.undash();
   }
 
-  renderSectionContainers() {
-    const headerHeight = this.dpi * 0.25;
+  renderSectionContainer(section) {
     this.resetText();
 
-    _.each(this.sections, section => {
-      if (section.bordered) {
-        // Draw section container
-        this.doc
-          .roundedRect(section.x, section.y, section.width, section.height, AGP_SECTION_BORDER_RADIUS)
-          .fill(colors.background.shaded);
-        this.doc
-          .rect(section.x + 1, section.y + 1 + headerHeight, section.width - 2, AGP_SECTION_BORDER_RADIUS)
-          .fill(colors.white);
-        this.doc
-          .roundedRect(section.x + 1, section.y + 1 + headerHeight, section.width - 2, section.height - 2 - headerHeight, AGP_SECTION_BORDER_RADIUS - 1)
-          .fill(colors.white);
+    if (section.bordered) {
+      // Draw section container
+      this.doc
+        .roundedRect(section.x, section.y, section.width, section.height, AGP_SECTION_BORDER_RADIUS)
+        .fill(colors.background.shaded);
+      this.doc
+        .rect(section.x + 1, section.y + 1 + AGP_SECTION_HEADER_HEIGHT, section.width - 2, AGP_SECTION_BORDER_RADIUS)
+        .fill(colors.white);
+      this.doc
+        .roundedRect(section.x + 1, section.y + 1 + AGP_SECTION_HEADER_HEIGHT, section.width - 2, section.height - 2 - AGP_SECTION_HEADER_HEIGHT, AGP_SECTION_BORDER_RADIUS - 1)
+        .fill(colors.white);
+    }
+
+    // Add section titles, subtitles, and descriptions
+    if (section.text?.title) {
+      const titlePaddingX = 8;
+      const titleXPos = section.x + titlePaddingX;
+      const titleYPos = section.y + 1 + ((AGP_SECTION_HEADER_HEIGHT - this.doc.currentLineHeight()) / 2);
+      this.setFill(colors.text.section.title);
+
+      this.doc.font(this.boldFont)
+        .fontSize(fontSizes.section.title);
+
+      this.doc.text(section.text.title, titleXPos, titleYPos);
+
+      if (section.text?.subtitle) {
+        const subtitleXPos = titleXPos + this.doc.widthOfString(section.text.title) + (this.dpi * 0.4);
+
+        this.setFill(colors.text.section.subtitle);
+
+        this.doc.font(this.font)
+          .fontSize(fontSizes.section.subtitle);
+
+        this.doc.text(section.text.subtitle, subtitleXPos, section.y + 1 + ((AGP_SECTION_HEADER_HEIGHT - this.doc.currentLineHeight()) / 2));
       }
-
-      // Add section titles, subtitles, and descriptions
-      if (section.text?.title) {
-        const titlePaddingX = 8;
-        const titleXPos = section.x + titlePaddingX;
-        const titleYPos = section.y + 1 + ((headerHeight - this.doc.currentLineHeight()) / 2);
-        this.setFill(colors.text.section.title);
-
-        this.doc.font(this.boldFont)
-          .fontSize(fontSizes.section.title);
-
-        this.doc.text(section.text.title, titleXPos, titleYPos);
-
-        if (section.text.subtitle) {
-          const subtitleXPos = titleXPos + this.doc.widthOfString(section.text.title) + (this.dpi * 0.4);
-
-          this.setFill(colors.text.section.subtitle);
-
-          this.doc.font(this.font)
-            .fontSize(fontSizes.section.subtitle);
-
-          this.doc.text(section.text.subtitle, subtitleXPos, section.y + 1 + ((headerHeight - this.doc.currentLineHeight()) / 2));
-        }
-      }
-    });
+    }
   }
 
   renderReportInfo() {
     const section = this.sections.reportInfo;
+    this.renderSectionContainer(section);
+
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
     const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
@@ -233,6 +232,8 @@ class AGPPrintView extends PrintView {
 
   renderGlucoseMetrics() {
     const section = this.sections.glucoseMetrics;
+    this.renderSectionContainer(section);
+
     const paddingX = this.dpi * 0.2;
     const xExtents = [section.x + paddingX, section.x + section.width - paddingX];
 
@@ -317,6 +318,7 @@ class AGPPrintView extends PrintView {
 
   async renderTimeInRanges() {
     const section = this.sections.timeInRanges;
+    this.renderSectionContainer(section);
 
     // Set chart plot within section borders
     const chartAreaX = section.x + 1;
@@ -334,6 +336,7 @@ class AGPPrintView extends PrintView {
 
   async renderAmbulatoryGlucoseProfile() {
     const section = this.sections.ambulatoryGlucoseProfile;
+    this.renderSectionContainer(section);
 
     // Set chart plot within section borders
     const chartAreaX = section.x + 1;
@@ -351,6 +354,7 @@ class AGPPrintView extends PrintView {
 
   async renderDailyGlucoseProfiles() {
     const section = this.sections.dailyGlucoseProfiles;
+    this.renderSectionContainer(section);
 
     // Set chart plot within section borders
     const chartAreaX = section.x + 1;

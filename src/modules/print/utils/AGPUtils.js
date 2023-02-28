@@ -4,6 +4,7 @@ import {
   AGP_FONT_FAMILY,
   AGP_FOOTER_Y_PADDING,
   AGP_SECTION_BORDER_RADIUS,
+  AGP_SECTION_HEADER_HEIGHT,
   AGP_TIR_MIN_HEIGHT,
   colors,
   fontSizes,
@@ -563,7 +564,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, chartData, bgPre
 export const generateDailyGlucoseProfilesFigure = (section, chartData, bgPrefs) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
-  const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
+  const chartAreaHeight = section.height - 2 - AGP_SECTION_HEADER_HEIGHT - AGP_SECTION_BORDER_RADIUS;
   const plotMarginX = DPI * 0.5;
   const plotMarginTop = DPI * 0.425;
   const plotMarginBottom = DPI * 0.3;
