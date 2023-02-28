@@ -296,11 +296,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     }));
 
     const rangePosY = {
-      veryHigh: bracketPos.high.posY,
-      high: bracketPos.high.posY2,
-      target: bracketPos.target.posY,
-      low: bracketPos.low.posY,
       veryLow: bracketPos.low.posY2,
+      low: bracketPos.low.posY,
+      target: bracketPos.target.posY,
+      high: bracketPos.high.posY2,
+      veryHigh: bracketPos.high.posY,
     };
 
     const rangeLabels = _.map(_.keys(rangePosY), range => ({
@@ -451,6 +451,41 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       ...subLabelsPos[label],
     }));
 
+    const rangeAnnotations = {
+      veryLow: [
+        rangeLabels[0],
+        rangeValues[0],
+        goals[0],
+      ],
+      low: [
+        rangeLabels[1],
+        rangeValues[1],
+      ],
+      lowSummary: [
+        rangeSummaryValues[0],
+        goals[1],
+      ],
+      target: [
+        rangeLabels[2],
+        rangeSummaryValues[1],
+        goals[2],
+        subLabels[0],
+      ],
+      high: [
+        rangeLabels[3],
+        rangeValues[2],
+      ],
+      veryHigh: [
+        rangeLabels[4],
+        rangeValues[3],
+        goals[4],
+      ],
+      highSummary: [
+        rangeSummaryValues[2],
+        goals[3],
+      ],
+    };
+
     const layout = {
       barmode: 'stack',
       width: chartAreaWidth,
@@ -482,11 +517,14 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
 
       annotations: [
         ...bgTicks,
-        ...rangeLabels,
-        ...rangeValues,
-        ...rangeSummaryValues,
-        ...goals,
-        ...subLabels,
+        ...rangeAnnotations.veryHigh,
+        ...rangeAnnotations.high,
+        ...rangeAnnotations.highSummary,
+        ...rangeAnnotations.target,
+        ...rangeAnnotations.low,
+        ...rangeAnnotations.veryLow,
+        ...rangeAnnotations.lowSummary,
+        subLabels[1],
       ],
 
       shapes: [
