@@ -345,7 +345,8 @@ class AGPPrintView extends PrintView {
     const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
 
     // Generate image from Plotly figure
-    const figure = generateAmbulatoryGlucoseProfileFigure(section, this.data, this.bgPrefs);
+    const cbgData = this.data?.data?.current?.data?.cbg || [];
+    const figure = generateAmbulatoryGlucoseProfileFigure(section, cbgData, this.bgPrefs);
     const plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: chartAreaHeight });
     const plotDataURLArr = plotDataURL.split(',');
     const rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
@@ -363,7 +364,8 @@ class AGPPrintView extends PrintView {
     const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
 
     // Generate image from Plotly figure
-    const figure = generateDailyGlucoseProfilesFigure(section, this.data, this.bgPrefs);
+    const cbgData = this.data?.data?.current?.data?.cbg || [];
+    const figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs);
     const plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: chartAreaHeight });
     const plotDataURLArr = plotDataURL.split(',');
     const rawChartSVG = decodeURIComponent(plotDataURLArr[1]);

@@ -9,10 +9,14 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   i18next.init({ returnEmptyString: false, nsSeparator: '|' });
 }
 
+export const AGP_BG_CLAMP_MGDL = 350;
+export const AGP_BG_CLAMP_MMOLL = 19.4;
 export const AGP_FOOTER_Y_PADDING = DPI * 0.25;
 export const AGP_TIR_MIN_HEIGHT = 5;
 export const AGP_SECTION_BORDER_RADIUS = 8;
 export const AGP_SECTION_HEADER_HEIGHT = DPI * 0.25;
+export const AGP_LOWER_QUANTILE = 0.05;
+export const AGP_UPPER_QUANTILE = 0.95;
 
 // Preferring Helvetica instead of Arial since we don't have license and PDFkit doesn't include it
 export const AGP_FONT_FAMILY = 'Helvetica, Arial, Sans-Serif';

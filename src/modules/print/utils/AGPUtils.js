@@ -1,11 +1,15 @@
 import _ from 'lodash';
 
 import {
+  AGP_BG_CLAMP_MGDL,
+  AGP_BG_CLAMP_MMOLL,
   AGP_FONT_FAMILY,
   AGP_FOOTER_Y_PADDING,
+  AGP_LOWER_QUANTILE,
   AGP_SECTION_BORDER_RADIUS,
   AGP_SECTION_HEADER_HEIGHT,
   AGP_TIR_MIN_HEIGHT,
+  AGP_UPPER_QUANTILE,
   colors,
   fontSizes,
   text,
@@ -13,6 +17,9 @@ import {
 
 import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { formatBgValue, formatPercentage } from '../../../utils/format';
+import { ONE_HR } from '../../../utils/datetime';
+import { mungeBGDataBins } from '../../../utils/bloodglucose';
+import { MGDL_UNITS, MS_IN_DAY } from '../../../utils/constants';
 
 export const boldText = textString => `<b>${textString}</b>`;
 
@@ -574,7 +581,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
   return null; // TODO: insufficient data text
 };
 
-export const generateAmbulatoryGlucoseProfileFigure = (section, chartData, bgPrefs) => {
+export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
@@ -587,11 +594,35 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, chartData, bgPre
   const yScale = pixels => pixels / paperHeight;
   const xScale = pixels => pixels / paperWidth;
 
-  if (chartData !== 'insufficient') { // TODO: proper data sufficiency check
-    const data = [];
+  if (cbgData.length > 0) { // TODO: proper data sufficiency check
+    const chartData = mungeBGDataBins('cbg', ONE_HR, cbgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
+    console.log('chartData', chartData, bgPrefs);
+
+    const quantileKeys = [
+      'lowerQuantile',
+      'firstQuartile',
+      'median',
+      'thirdQuartile',
+      'upperQuantile',
+    ];
+
+    const data = _.map(quantileKeys, key => ({
+      x: _.map(chartData, 'msX'),
+      y: _.map(chartData, key),
+      fill: 'tonexty',
+      fillcolor: key === 'lowerQuantile' ? 'transparent' : undefined,
+      type: 'scatter',
+      mode: key === 'median' ? 'lines' : 'none',
+      line: {
+        simplify: false,
+        shape: 'spline',
+        smoothing: 0.75,
+      },
+    }));
+
+    const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
 
     const layout = {
-      barmode: 'stack',
       width: chartAreaWidth,
       height: chartAreaHeight,
       showlegend: false,
@@ -604,18 +635,18 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, chartData, bgPre
       },
 
       xaxis: {
-        range: [0, 1],
-        showgrid: false,
+        range: [0, MS_IN_DAY],
+        // showgrid: false,
         showline: false,
-        showticklabels: false,
+        // showticklabels: false,
         zeroline: false,
       },
 
       yaxis: {
-        range: [0, 1],
-        showgrid: false,
+        range: [0, yClamp],
+        // showgrid: false,
         showline: false,
-        showticklabels: false,
+        // showticklabels: false,
         zeroline: false,
       },
 
@@ -633,7 +664,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, chartData, bgPre
   return null; // TODO: insufficient data text
 };
 
-export const generateDailyGlucoseProfilesFigure = (section, chartData, bgPrefs) => {
+export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - AGP_SECTION_HEADER_HEIGHT - AGP_SECTION_BORDER_RADIUS;
@@ -646,7 +677,7 @@ export const generateDailyGlucoseProfilesFigure = (section, chartData, bgPrefs) 
   const yScale = pixels => pixels / paperHeight;
   const xScale = pixels => pixels / paperWidth;
 
-  if (chartData !== 'insufficient') { // TODO: proper data sufficiency check
+  if (cbgData.length > 0) { // TODO: proper data sufficiency check
     const data = [];
 
     const layout = {
