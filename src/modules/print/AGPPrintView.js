@@ -57,9 +57,9 @@ class AGPPrintView extends PrintView {
     // this.renderGuides();
     this.renderReportInfo();
     this.renderGlucoseMetrics();
+    await this.renderTimeInRanges();
     await this.renderAmbulatoryGlucoseProfile();
     await this.renderDailyGlucoseProfiles();
-    await this.renderTimeInRanges();
   }
 
   renderHeader() {

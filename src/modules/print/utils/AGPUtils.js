@@ -303,7 +303,15 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       veryHigh: bracketPos.high.posY,
     };
 
-    const rangeLabels = _.map(_.keys(rangePosY), range => ({
+    const rangePosYOrderedKeys = [
+      'veryLow',
+      'low',
+      'target',
+      'high',
+      'veryHigh',
+    ];
+
+    const rangeLabels = _.map(rangePosYOrderedKeys, range => ({
       align: 'left',
       arrowside: 'none',
       font: {
@@ -321,7 +329,14 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       yshift: 1,
     }));
 
-    const rangeValues = _.map(_.keys(_.omit(rangePosY, 'target')), range => ({
+    const rangeValuesOrderedKeys = [
+      'veryLow',
+      'low',
+      'high',
+      'veryHigh',
+    ];
+
+    const rangeValues = _.map(rangeValuesOrderedKeys, range => ({
       align: 'right',
       arrowside: 'none',
       font: {
@@ -352,7 +367,13 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       high: chartData.rawById.veryHigh + chartData.rawById.high,
     };
 
-    const rangeSummaryValues = _.map(_.keys(combinedRangeSummaryValues), range => ({
+    const rangeSummaryOrderedKeys = [
+      'low',
+      'target',
+      'high',
+    ];
+
+    const rangeSummaryValues = _.map(rangeSummaryOrderedKeys, range => ({
       align: 'left',
       arrowside: 'none',
       font: {
@@ -404,7 +425,15 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       },
     };
 
-    const goals = _.map(_.keys(goalsPos), range => ({
+    const goalsOrderedKeys = [
+      'veryLow',
+      'lowCombined',
+      'target',
+      'highCombined',
+      'veryHigh',
+    ];
+
+    const goals = _.map(goalsOrderedKeys, range => ({
       align: 'left',
       arrowside: 'none',
       font: {
@@ -436,7 +465,12 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       },
     };
 
-    const subLabels = _.map(_.keys(subLabelsPos), label => ({
+    const subLabelsOrderedKeys = [
+      'TIRtarget',
+      'TIRminutes',
+    ];
+
+    const subLabels = _.map(subLabelsOrderedKeys, label => ({
       align: 'left',
       arrowside: 'none',
       font: {
