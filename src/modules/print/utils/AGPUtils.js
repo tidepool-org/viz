@@ -145,10 +145,10 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     }));
 
     const bgTicks = _.map([
-      bgPrefs?.bgBounds.veryLowThreshold,
-      bgPrefs?.bgBounds.targetLowerBound,
-      bgPrefs?.bgBounds.targetUpperBound,
-      bgPrefs?.bgBounds.veryHighThreshold,
+      bgPrefs?.bgBounds?.veryLowThreshold,
+      bgPrefs?.bgBounds?.targetLowerBound,
+      bgPrefs?.bgBounds?.targetUpperBound,
+      bgPrefs?.bgBounds?.veryHighThreshold,
       bgPrefs?.bgUnits,
     ], (tick, index) => ({
       align: 'right',
@@ -595,9 +595,10 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   const xScale = pixels => pixels / paperWidth;
 
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
+    const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
     const chartData = mungeBGDataBins('cbg', ONE_HR, cbgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
-    console.log('chartData', chartData, bgPrefs);
 
+    // Smooth all bin quantiles according to AGP spec
     const quantileKeys = [
       'lowerQuantile',
       'firstQuartile',
@@ -606,21 +607,124 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       'upperQuantile',
     ];
 
-    const data = _.map(quantileKeys, key => ({
-      x: _.map(chartData, 'msX'),
-      y: _.map(chartData, key),
-      fill: 'tonexty',
-      fillcolor: key === 'lowerQuantile' ? 'transparent' : undefined,
+    const firstDatum = chartData[0];
+    const lastDatum = chartData[chartData.length - 1];
+
+    const smoothDatum = (prev, curr, next) => {
+      // return with current value if current bin, or both adjacent bins, are empty
+      if ((!prev && !next) || !curr) {
+        return curr;
+      } else if (!prev || !next) {
+        // Weight at 0-4-1 or 1-4-0 respectively if one of the adjacent bins is empty
+        return _.sum([prev || 0, curr * 4, next || 0]) / 5;
+      }
+      // Weight at 1-4-1
+      return _.sum([prev, curr * 4, next]) / 6;
+    };
+
+    const smoothedChartData = _.map(chartData, (datum, index) => ({
+      ...datum,
+      ..._.reduce(quantileKeys, (result, key) => {
+        result[key] = smoothDatum( // eslint-disable-line no-param-reassign
+          chartData[index - 1]?.[key] || lastDatum[key],
+          datum[key],
+          chartData[index + 1]?.[key] || firstDatum[key]
+        );
+        return result;
+      }, {}),
+    }));
+
+    // Prepend/append extent datums to opposite ends to allow fully cyclic traces across the entire
+    // X axis. Otherwise, the first and last 1/2 hours will not be rendered.
+    const firstSmoothedDatum = smoothedChartData[0];
+    const lastSmoothedDatum = smoothedChartData[smoothedChartData.length - 1];
+    smoothedChartData.unshift({ ...lastSmoothedDatum, msX: firstSmoothedDatum.msX - ONE_HR });
+    smoothedChartData.push({ ...firstSmoothedDatum, msX: lastSmoothedDatum.msX + ONE_HR });
+
+    const quantileBand = (upperKey, lowerKey, key, bgRange, index) => ({
+      name: key,
       type: 'scatter',
-      mode: key === 'median' ? 'lines' : 'none',
+      x: [..._.map(smoothedChartData, 'msX'), ..._.map(_.reverse([...smoothedChartData]), 'msX')],
+      y: [..._.map(smoothedChartData, upperKey), ..._.map(_.reverse([...smoothedChartData]), lowerKey)],
+      yaxis: index === 0 ? 'y' : `y${index + 1}`,
+      fill: 'tozerox',
+      fillcolor: colors.agp[key][bgRange],
+      mode: 'none',
       line: {
         simplify: false,
         shape: 'spline',
-        smoothing: 0.75,
+        smoothing: 0.5,
       },
-    }));
+    });
 
-    const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
+    const bgRangeKeys = [
+      'veryLow',
+      'low',
+      'target',
+      'high',
+      'veryHigh',
+    ];
+
+    const bgTicks = [
+      0,
+      bgPrefs?.bgBounds?.veryLowThreshold,
+      bgPrefs?.bgBounds?.targetLowerBound,
+      bgPrefs?.bgBounds?.targetUpperBound,
+      bgPrefs?.bgBounds?.veryHighThreshold,
+      yClamp,
+    ];
+
+    const percentileTicks = [
+      { id: 'lowerQuantile' },
+      { id: 'firstQuartile' },
+      { id: 'median' },
+      { id: 'thirdQuartile' },
+      { id: 'upperQuantile' },
+    ];
+
+    const data = [];
+    const yAxes = [];
+
+    _.each(bgRangeKeys, (bgRange, index) => {
+      data.push(quantileBand('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
+      data.push(quantileBand('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
+
+      data.push({
+        name: 'median',
+        type: 'scatter',
+        x: _.map(smoothedChartData, 'msX'),
+        y: _.map(smoothedChartData, 'median'),
+        yaxis: index === 0 ? 'y' : `y${index + 1}`,
+        mode: 'lines',
+        fill: 'none',
+        line: {
+          color: colors.agp.median[bgRange],
+          simplify: false,
+          shape: 'spline',
+          smoothing: 0.5,
+        },
+      });
+
+      const range = [bgTicks[index], bgTicks[index + 1]];
+
+      const yAxis = {
+        domain: [range[0] / yClamp, range[1] / yClamp],
+        range,
+        showgrid: false,
+        showline: false,
+        showticklabels: false,
+        zeroline: false,
+      };
+
+      if (index === 0) {
+        yAxis.tickMode = 'array';
+        yAxis.tickvals = [];
+        yAxis.ticktext = [];
+        yAxis.showticklabels = true;
+      }
+
+      yAxes.push(yAxis);
+    });
 
     const layout = {
       width: chartAreaWidth,
@@ -636,19 +740,18 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
 
       xaxis: {
         range: [0, MS_IN_DAY],
-        // showgrid: false,
+        showgrid: false,
         showline: false,
-        // showticklabels: false,
+        showticklabels: false,
         zeroline: false,
+        anchor: 'y2',
       },
 
-      yaxis: {
-        range: [0, yClamp],
-        // showgrid: false,
-        showline: false,
-        // showticklabels: false,
-        zeroline: false,
-      },
+      ..._.reduce(yAxes, (result, axis, index) => {
+        const axisKey = index === 0 ? 'yaxis' : `yaxis${index + 1}`;
+        result[axisKey] = axis; // eslint-disable-line no-param-reassign
+        return result;
+      }, {}),
 
       annotations: [
       ],
@@ -657,7 +760,17 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       ],
     };
 
-    const figure = { data, layout };
+    const groupedData = _.groupBy(data, 'name');
+
+    const figure = {
+      data: [
+        ...groupedData.outerQuantile,
+        ...groupedData.interQuartile,
+        ...groupedData.median,
+      ],
+      layout,
+    };
+
     return figure;
   }
 

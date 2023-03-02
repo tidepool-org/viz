@@ -164,4 +164,27 @@ export const colors = {
     veryHigh: '#FF6900',
     empty: darkGrey,
   },
+  agp: {
+    median: {
+      veryLow: '#A30014',
+      low: '#FF0000',
+      target: '#00AA51',
+      high: '#FFA600',
+      veryHigh: '#FF7538',
+    },
+    interQuartile: {
+      veryLow: '#A30014',
+      low: '#FF0000',
+      target: '#8BCD9E',
+      high: '#FFC966',
+      veryHigh: '#FFB380',
+    },
+    outerQuantile: {
+      veryLow: '#A30014',
+      low: '#FF8080',
+      target: '#BEE1C6',
+      high: '#FFE6B3',
+      veryHigh: '#FFD9BF',
+    },
+  },
 };
