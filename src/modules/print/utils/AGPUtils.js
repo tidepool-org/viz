@@ -739,6 +739,27 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       x: tick,
     }));
 
+    const bgRangeGridLines = _.map(bgTicks, (tick, index) => {
+      const isTarget = _.includes([2, 3], index);
+
+      return {
+        layer: isTarget ? 'above' : 'below',
+        line: {
+          color: isTarget ? colors.line.range.target : colors.line.range.default,
+          width: isTarget ? 2 : 1,
+        },
+        type: 'line',
+        x0: index === 5 ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: index === 5 ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        xref: 'paper',
+        xanchor: 0,
+        xsizemode: 'pixel',
+        y0: tick / yClamp,
+        y1: tick / yClamp,
+        yref: 'paper',
+      };
+    });
+
     const data = [];
     const yAxes = [];
 
@@ -758,6 +779,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
           color: colors.ambulatoryGlucoseProfile.median[bgRange],
           simplify: false,
           shape: 'spline',
+          width: 3,
           smoothing: 0.5,
         },
       });
@@ -828,6 +850,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       ],
 
       shapes: [
+        ...bgRangeGridLines,
       ],
     };
 

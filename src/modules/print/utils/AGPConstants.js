@@ -153,6 +153,7 @@ export const colors = {
     default: darkGrey,
     range: {
       target: '#00AA51',
+      default: 'lightGrey',
       divider: white,
     },
   },
