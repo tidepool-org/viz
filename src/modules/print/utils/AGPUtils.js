@@ -19,9 +19,23 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR } from '../../../utils/datetime';
 import { mungeBGDataBins } from '../../../utils/bloodglucose';
-import { MGDL_UNITS, MS_IN_DAY } from '../../../utils/constants';
+import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR } from '../../../utils/constants';
+import moment from 'moment';
 
-export const boldText = textString => `<b>${textString}</b>`;
+const boldText = textString => `<b>${String(textString)}</b>`;
+
+const createAnnotation = options => {
+  const annotation = _.defaultsDeep(options, {
+    arrowside: 'none',
+    font: {
+      color: colors.black,
+      family: AGP_FONT_FAMILY,
+    },
+    showarrow: false,
+  });
+
+  return annotation;
+};
 
 export const generateChartSections = () => {
   const reportInfoAndMetricsWidth = DPI * 3.375;
@@ -150,15 +164,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       bgPrefs?.bgBounds?.targetUpperBound,
       bgPrefs?.bgBounds?.veryHighThreshold,
       bgPrefs?.bgUnits,
-    ], (tick, index) => ({
+    ], (tick, index) => createAnnotation({
       align: 'right',
-      arrowside: 'none',
       font: {
-        color: colors.black,
         size: fontSizes.timeInRanges.ticks,
-        family: AGP_FONT_FAMILY,
       },
-      showarrow: false,
       text: index === 4 // bgUnits label
         ? boldText(tick)
         : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
@@ -318,15 +328,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       'veryHigh',
     ];
 
-    const rangeLabels = _.map(rangePosYOrderedKeys, range => ({
+    const rangeLabels = _.map(rangePosYOrderedKeys, range => createAnnotation({
       align: 'left',
-      arrowside: 'none',
       font: {
-        color: colors.black,
         size: fontSizes.timeInRanges.values,
-        family: AGP_FONT_FAMILY,
       },
-      showarrow: false,
       text: boldText(text.bgRanges[range]),
       x: bracketXExtents[0],
       xanchor: 'left',
@@ -343,15 +349,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       'veryHigh',
     ];
 
-    const rangeValues = _.map(rangeValuesOrderedKeys, range => ({
+    const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
-      arrowside: 'none',
       font: {
-        color: colors.black,
         size: fontSizes.timeInRanges.values,
-        family: AGP_FONT_FAMILY,
       },
-      showarrow: false,
       text: boldText(formatPercentage(chartData.rawById[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'right',
@@ -380,15 +382,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       'high',
     ];
 
-    const rangeSummaryValues = _.map(rangeSummaryOrderedKeys, range => ({
+    const rangeSummaryValues = _.map(rangeSummaryOrderedKeys, range => createAnnotation({
       align: 'left',
-      arrowside: 'none',
       font: {
-        color: colors.black,
         size: fontSizes.timeInRanges.summaries,
-        family: AGP_FONT_FAMILY,
       },
-      showarrow: false,
       text: boldText(formatPercentage(combinedRangeSummaryValues[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'left',
@@ -440,15 +438,12 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       'veryHigh',
     ];
 
-    const goals = _.map(goalsOrderedKeys, range => ({
+    const goals = _.map(goalsOrderedKeys, range => createAnnotation({
       align: 'left',
-      arrowside: 'none',
       font: {
         color: colors.text.goals[range],
         size: fontSizes.timeInRanges.goals,
-        family: AGP_FONT_FAMILY,
       },
-      showarrow: false,
       text: text.goals[range],
       yanchor: 'bottom',
       yref: 'paper',
@@ -477,15 +472,12 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       'TIRminutes',
     ];
 
-    const subLabels = _.map(subLabelsOrderedKeys, label => ({
+    const subLabels = _.map(subLabelsOrderedKeys, label => createAnnotation({
       align: 'left',
-      arrowside: 'none',
       font: {
         color: colors.text.subLabels[label],
         size: fontSizes.timeInRanges.subLabels,
-        family: AGP_FONT_FAMILY,
       },
-      showarrow: false,
       text: text.subLabels[label],
       yanchor: 'bottom',
       yref: 'paper',
@@ -648,7 +640,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       y: [..._.map(smoothedChartData, upperKey), ..._.map(_.reverse([...smoothedChartData]), lowerKey)],
       yaxis: index === 0 ? 'y' : `y${index + 1}`,
       fill: 'tozerox',
-      fillcolor: colors.agp[key][bgRange],
+      fillcolor: colors.ambulatoryGlucoseProfile[key][bgRange],
       mode: 'none',
       line: {
         simplify: false,
@@ -674,6 +666,23 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       yClamp,
     ];
 
+    const bgTickAnnotations = _.map(bgTicks, (tick, index) => createAnnotation({
+      align: 'center',
+      font: {
+        color: colors.ambulatoryGlucoseProfile.bgTicks,
+        size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
+      },
+      text: boldText(tick),
+      y: tick / yClamp,
+      yanchor: 'middle',
+      yref: 'paper',
+      yshift: index === 0 ? 3 : 0,
+      xanchor: 'right',
+      xref: 'x',
+      xshift: -4,
+      x: 0,
+    }));
+
     const percentileTicks = [
       { id: 'lowerQuantile' },
       { id: 'firstQuartile' },
@@ -681,6 +690,29 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       { id: 'thirdQuartile' },
       { id: 'upperQuantile' },
     ];
+
+    const quarterDayTicks = _.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 6);
+
+    const hourlyTicks = _.filter(
+      _.range(0, MS_IN_DAY + 1, MS_IN_HOUR),
+      tick => ((tick / MS_IN_HOUR) % 12 !== 0)
+    );
+
+    const hourlyTicksAnnotations = _.map(_.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 3), tick => createAnnotation({
+      align: 'center',
+      font: {
+        color: (tick / MS_IN_HOUR) % 12 === 0 ? colors.black : colors.darkGrey,
+        size: fontSizes.timeInRanges.subLabels,
+      },
+      text: boldText(moment.utc(tick).format('ha')),
+      y: 0,
+      yanchor: 'top',
+      yref: 'y',
+      yshift: -2,
+      xanchor: 'middle',
+      xref: 'x',
+      x: tick,
+    }));
 
     const data = [];
     const yAxes = [];
@@ -698,7 +730,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         mode: 'lines',
         fill: 'none',
         line: {
-          color: colors.agp.median[bgRange],
+          color: colors.ambulatoryGlucoseProfile.median[bgRange],
           simplify: false,
           shape: 'spline',
           smoothing: 0.5,
@@ -711,17 +743,12 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         domain: [range[0] / yClamp, range[1] / yClamp],
         range,
         showgrid: false,
-        showline: false,
+        showline: true,
+        linecolor: colors.lightGrey,
+        mirror: true,
         showticklabels: false,
         zeroline: false,
       };
-
-      if (index === 0) {
-        yAxis.tickMode = 'array';
-        yAxis.tickvals = [];
-        yAxis.ticktext = [];
-        yAxis.showticklabels = true;
-      }
 
       yAxes.push(yAxis);
     });
@@ -739,12 +766,28 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       },
 
       xaxis: {
+        gridcolor: colors.lightGrey,
+        linecolor: colors.lightGrey,
         range: [0, MS_IN_DAY],
+        showgrid: true,
+        showline: true,
+        showticklabels: false,
+        tickvals: quarterDayTicks,
+        zeroline: false,
+      },
+
+      // secondary axis for hourly ticks
+      xaxis2: {
+        range: [0, MS_IN_DAY],
+        overlaying: 'x',
         showgrid: false,
         showline: false,
         showticklabels: false,
+        ticks: 'inside',
+        tickcolor: colors.lightGrey,
+        ticklen: 5,
+        tickvals: hourlyTicks,
         zeroline: false,
-        anchor: 'y2',
       },
 
       ..._.reduce(yAxes, (result, axis, index) => {
@@ -754,6 +797,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       }, {}),
 
       annotations: [
+        ...hourlyTicksAnnotations,
+        ...bgTickAnnotations,
       ],
 
       shapes: [
@@ -767,6 +812,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         ...groupedData.outerQuantile,
         ...groupedData.interQuartile,
         ...groupedData.median,
+        // Dummy data to allow rendering overlay axes used for annotations, ticks, etc
+        { visible: false, xaxis: 'x2' },
       ],
       layout,
     };

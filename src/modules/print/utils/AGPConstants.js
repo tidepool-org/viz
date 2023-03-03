@@ -106,6 +106,10 @@ export const fontSizes = {
     subLabels: 8,
     goals: 8,
   },
+  ambulatoryGlucoseProfile: {
+    ticks: 7,
+    bgTicks: 9,
+  },
 };
 
 const black = '#000000';
@@ -138,6 +142,10 @@ export const colors = {
       TIRminutes: black,
       glucoseMetrics: darkGrey,
     },
+    ticks: {
+      bg: darkGrey,
+      hour: darkGrey,
+    },
   },
   line: {
     default: darkGrey,
@@ -164,7 +172,7 @@ export const colors = {
     veryHigh: '#FF6900',
     empty: darkGrey,
   },
-  agp: {
+  ambulatoryGlucoseProfile: {
     median: {
       veryLow: '#A30014',
       low: '#FF0000',
