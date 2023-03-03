@@ -174,7 +174,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
       x: 0,
       xanchor: 'right',
-      xshift: -4,
+      xshift: -2,
       y: index === 4 // bgUnits label
         ? chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2)
         : chartData.ticks[index],
@@ -336,10 +336,10 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       text: boldText(text.bgRanges[range]),
       x: bracketXExtents[0],
       xanchor: 'left',
+      xshift: -1,
       y: rangePosY[range],
       yanchor: 'bottom',
       yref: 'paper',
-      yshift: 1,
     }));
 
     const rangeValuesOrderedKeys = [
@@ -361,7 +361,6 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       y: rangePosY[range],
       yanchor: 'bottom',
       yref: 'paper',
-      yshift: 1,
     }));
 
     const rangeSummaryPosY = {
@@ -390,41 +389,46 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       text: boldText(formatPercentage(combinedRangeSummaryValues[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'left',
-      xshift: 4,
+      xshift: 3,
       y: rangeSummaryPosY[range],
       yanchor: 'bottom',
       yref: 'paper',
-      yshift: 1,
+      yshift: -1,
     }));
 
     const goalsPos = {
       veryLow: {
         x: bracketXExtents[0],
         xanchor: 'left',
+        xshift: -1,
         y: bracketPos.low.posY2,
-        yshift: -11,
+        yshift: -12,
       },
       lowCombined: {
         x: bracketXExtents[1],
         xanchor: 'right',
+        xshift: 1,
         y: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
-        yshift: 2,
+        yshift: 1,
       },
       target: {
         x: bracketXExtents[1],
         xanchor: 'right',
+        xshift: 1,
         y: bracketPos.target.posY,
-        yshift: 2,
+        yshift: 1,
       },
       highCombined: {
         x: bracketXExtents[1],
         xanchor: 'right',
+        xshift: 1,
         y: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
-        yshift: 2,
+        yshift: 1,
       },
       veryHigh: {
         x: bracketXExtents[0],
         xanchor: 'left',
+        xshift: -1,
         y: bracketPos.high.posY,
         yshift: 11,
       },
@@ -456,14 +460,15 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         xanchor: 'left',
         xshift: -20,
         y: bracketPos.target.posY,
-        yshift: -11,
+        yshift: -12,
       },
       TIRminutes: {
-        x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
-        xanchor: 'left',
-        xshift: -7,
+        x: xScale(paperWidth),
+        xanchor: 'right',
+        xref: 'paper',
+        xshift: plotMarginX - 7,
         y: bracketPos.low.posY2,
-        yshift: -11,
+        yshift: -12,
       },
     };
 
