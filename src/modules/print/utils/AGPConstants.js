@@ -107,8 +107,9 @@ export const fontSizes = {
     goals: 8,
   },
   ambulatoryGlucoseProfile: {
-    ticks: 7,
+    hourlyTicks: 7,
     bgTicks: 9,
+    percentileTicks: 8,
   },
 };
 
@@ -145,6 +146,7 @@ export const colors = {
     ticks: {
       bg: darkGrey,
       hour: darkGrey,
+      percentile: darkGrey,
     },
   },
   line: {

@@ -667,29 +667,49 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
     ];
 
     const bgTickAnnotations = _.map(bgTicks, (tick, index) => createAnnotation({
-      align: 'center',
+      align: 'right',
       font: {
-        color: colors.ambulatoryGlucoseProfile.bgTicks,
+        color: colors.text.ticks.bg,
         size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
       },
-      text: boldText(tick),
+      text: index === 0
+        ? boldText(tick)
+        : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
       y: tick / yClamp,
       yanchor: 'middle',
       yref: 'paper',
-      yshift: index === 0 ? 3 : 0,
+      yshift: index === 0 ? 2 : 0,
       xanchor: 'right',
       xref: 'x',
-      xshift: -4,
+      xshift: -2,
       x: 0,
     }));
 
-    const percentileTicks = [
-      { id: 'lowerQuantile' },
-      { id: 'firstQuartile' },
-      { id: 'median' },
-      { id: 'thirdQuartile' },
-      { id: 'upperQuantile' },
-    ];
+    const percentileTicks = _.map(quantileKeys, key => {
+      if (firstSmoothedDatum[key] && lastSmoothedDatum[key]) {
+        return (firstSmoothedDatum[key] + lastSmoothedDatum[key]) / 2;
+      }
+      return firstSmoothedDatum[key] || lastSmoothedDatum[key];
+    });
+
+    const percentileLabels = ['5%', '25%', '50%', '75%', '95%'];
+
+    const percentileTickAnnotations = _.map(percentileTicks, (tick, index) => createAnnotation({
+      align: 'left',
+      font: {
+        color: index === 2 ? colors.black : colors.text.ticks.percentile,
+        size: fontSizes.ambulatoryGlucoseProfile.percentileTicks,
+      },
+      text: boldText(percentileLabels[index]),
+      y: tick / yClamp,
+      yanchor: 'middle',
+      yref: 'paper',
+      yshift: 0, // TODO: shift if they run close together
+      xanchor: 'left',
+      xref: 'x',
+      xshift: 2,
+      x: MS_IN_DAY,
+    }));
 
     const quarterDayTicks = _.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 6);
 
@@ -702,7 +722,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       align: 'center',
       font: {
         color: (tick / MS_IN_HOUR) % 12 === 0 ? colors.black : colors.darkGrey,
-        size: fontSizes.timeInRanges.subLabels,
+        size: fontSizes.ambulatoryGlucoseProfile.hourlyTicks,
       },
       text: boldText(moment.utc(tick).format('ha')),
       y: 0,
@@ -797,8 +817,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       }, {}),
 
       annotations: [
-        ...hourlyTicksAnnotations,
         ...bgTickAnnotations,
+        ...percentileTickAnnotations,
+        ...hourlyTicksAnnotations,
       ],
 
       shapes: [
