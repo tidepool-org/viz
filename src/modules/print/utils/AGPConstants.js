@@ -151,9 +151,10 @@ export const colors = {
   },
   line: {
     default: darkGrey,
+    ticks: lightGrey,
     range: {
       target: '#00AA51',
-      default: 'lightGrey',
+      default: lightGrey,
       divider: white,
     },
   },

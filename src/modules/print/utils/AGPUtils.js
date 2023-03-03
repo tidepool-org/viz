@@ -671,24 +671,93 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       yClamp,
     ];
 
-    const bgTickAnnotations = _.map(bgTicks, (tick, index) => createAnnotation({
-      align: 'right',
-      font: {
-        color: colors.text.ticks.bg,
-        size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
+    const bgTickAnnotations = _.map(bgTicks, (tick, index) => {
+      const isTarget = _.includes([2, 3], index);
+      let yshift = 0;
+      if (index === 0) yshift = 2;
+      if (index === 1) yshift = -2;
+
+      return createAnnotation({
+        align: 'right',
+        font: {
+          color: isTarget ? colors.white : colors.text.ticks.bg,
+          size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
+        },
+        text: index === 0
+          ? boldText(tick)
+          : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
+        y: tick / yClamp,
+        yanchor: 'middle',
+        yref: 'paper',
+        yshift,
+        xanchor: 'right',
+        xref: 'x',
+        xshift: -2,
+        x: 0,
+      });
+    });
+
+    const createbgTargetMarkerSVG = (posX, posY) => {
+      const radiusX = 2;
+      const radiusY = 2;
+      const width = 22;
+      const height = 10;
+      const posXLeft = posX - width;
+      const posYTop = posY + height / 2;
+      const posYBottom = posY - height / 2;
+      const arrowHeight = height / 2 - 1;
+
+      return [
+        `M ${posX} ${posY}`,
+        `V ${posY - 1}`,
+        `L ${posX - arrowHeight} ${posYBottom}`,
+        `H ${posXLeft + radiusX}`,
+        `Q ${posXLeft} ${posYBottom} ${posXLeft} ${posYBottom + radiusY}`,
+        `V ${posYTop - radiusY}`,
+        `Q ${posXLeft} ${posYTop} ${posXLeft + radiusX} ${posYTop}`,
+        `H ${posX - arrowHeight}`,
+        `L ${posX} ${posY + 1}`,
+        `V ${posY}`,
+      ].join(' ');
+    };
+
+    const bgTargetMarkers = _.map(_.slice(bgTicks, 2, 4), (tick, index) => ({
+      // layer: 'below',
+      fillcolor: colors.line.range.target,
+      line: {
+        width: 0,
       },
-      text: index === 0
-        ? boldText(tick)
-        : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
-      y: tick / yClamp,
-      yanchor: 'middle',
+      tick,
+      path: createbgTargetMarkerSVG(-1, tick / yClamp * paperHeight),
+      type: 'path',
+      xanchor: 0,
+      xref: 'paper',
+      xsizemode: 'pixel',
+      yanchor: 0,
       yref: 'paper',
-      yshift: index === 0 ? 2 : 0,
-      xanchor: 'right',
-      xref: 'x',
-      xshift: -2,
-      x: 0,
+      ysizemode: 'pixel',
     }));
+
+    const bgGridLines = _.map(bgTicks, (tick, index) => {
+      const isTarget = _.includes([2, 3], index);
+
+      return {
+        layer: isTarget ? 'above' : 'below',
+        line: {
+          color: isTarget ? colors.line.range.target : colors.line.range.default,
+          width: isTarget ? 2 : 1,
+        },
+        type: 'line',
+        x0: index === 5 ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: index === 5 ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        xref: 'paper',
+        xanchor: 0,
+        xsizemode: 'pixel',
+        y0: tick / yClamp,
+        y1: tick / yClamp,
+        yref: 'paper',
+      };
+    });
 
     const percentileTicks = _.map(quantileKeys, key => {
       if (firstSmoothedDatum[key] && lastSmoothedDatum[key]) {
@@ -712,9 +781,27 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       yshift: 0, // TODO: shift if they run close together
       xanchor: 'left',
       xref: 'x',
-      xshift: 2,
+      xshift: 5,
       x: MS_IN_DAY,
     }));
+
+    const percentileTickLines = _.map(percentileTicks, (tick, index) => {
+      return {
+        line: {
+          color: colors.line.ticks,
+          width: 1,
+        },
+        type: 'line',
+        x0: paperWidth,
+        x1: paperWidth + 5,
+        xref: 'paper',
+        xanchor: 0,
+        xsizemode: 'pixel',
+        y0: tick / yClamp,
+        y1: tick / yClamp,
+        yref: 'paper',
+      };
+    });
 
     const quarterDayTicks = _.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 6);
 
@@ -738,27 +825,6 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       xref: 'x',
       x: tick,
     }));
-
-    const bgRangeGridLines = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([2, 3], index);
-
-      return {
-        layer: isTarget ? 'above' : 'below',
-        line: {
-          color: isTarget ? colors.line.range.target : colors.line.range.default,
-          width: isTarget ? 2 : 1,
-        },
-        type: 'line',
-        x0: index === 5 ? -1 : 0, // fills an empty pixel cap on top grid line
-        x1: index === 5 ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
-        xref: 'paper',
-        xanchor: 0,
-        xsizemode: 'pixel',
-        y0: tick / yClamp,
-        y1: tick / yClamp,
-        yref: 'paper',
-      };
-    });
 
     const data = [];
     const yAxes = [];
@@ -813,8 +879,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       },
 
       xaxis: {
-        gridcolor: colors.lightGrey,
-        linecolor: colors.lightGrey,
+        gridcolor: colors.line.ticks,
+        linecolor: colors.line.ticks,
         range: [0, MS_IN_DAY],
         showgrid: true,
         showline: true,
@@ -850,7 +916,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       ],
 
       shapes: [
-        ...bgRangeGridLines,
+        ...bgGridLines,
+        ...bgTargetMarkers,
+        ...percentileTickLines,
       ],
     };
 
