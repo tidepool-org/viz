@@ -583,8 +583,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
   const plotMarginX = DPI * 0.5;
-  const plotMarginTop = DPI * 0.425;
-  const plotMarginBottom = DPI * 0.3;
+  const plotMarginTop = DPI * 0.475;
+  const plotMarginBottom = DPI * 0.25;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
 
@@ -680,6 +680,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
           color: isTarget ? colors.white : colors.text.ticks.bg,
           size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
         },
+        height: 9,
         text: index === 0
           ? boldText(tick)
           : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
@@ -923,7 +924,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
           y: 1,
           yanchor: 'top',
           yref: 'paper',
-          yshift: plotMarginTop - 3,
+          yshift: plotMarginTop - 4,
         }),
 
         createAnnotation({
