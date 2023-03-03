@@ -588,9 +588,6 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
 
-  const yScale = pixels => pixels / paperHeight;
-  const xScale = pixels => pixels / paperWidth;
-
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
     const chartData = mungeBGDataBins('cbg', ONE_HR, cbgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
@@ -913,6 +910,52 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         ...bgTickAnnotations,
         ...percentileTickAnnotations,
         ...hourlyTicksAnnotations,
+
+        createAnnotation({
+          font: {
+            size: fontSizes.section.description,
+          },
+          text: text.ambulatoryGlucoseProfile.description,
+          x: 0,
+          xanchor: 'left',
+          xref: 'paper',
+          xshift: -(plotMarginX - 8),
+          y: 1,
+          yanchor: 'top',
+          yref: 'paper',
+          yshift: plotMarginTop - 3,
+        }),
+
+        createAnnotation({
+          font: {
+            color: colors.text.ticks.bg,
+            size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
+          },
+          text: bgPrefs.bgUnits,
+          x: 0,
+          xanchor: 'right',
+          xref: 'paper',
+          xshift: -2,
+          y: bgTicks[5] / yClamp,
+          yanchor: 'top',
+          yref: 'paper',
+          yshift: -4,
+        }),
+
+        createAnnotation({
+          font: {
+            color: colors.black,
+            size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
+          },
+          text: boldText(text.ambulatoryGlucoseProfile.targetRange),
+          x: 0,
+          xanchor: 'right',
+          xref: 'paper',
+          xshift: -2,
+          y: (bgTicks[2] + bgTicks[3]) / 2 / yClamp,
+          yanchor: 'middle',
+          yref: 'paper',
+        }),
       ],
 
       shapes: [
@@ -950,9 +993,6 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs) =>
   const plotMarginBottom = DPI * 0.3;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
-
-  const yScale = pixels => pixels / paperHeight;
-  const xScale = pixels => pixels / paperWidth;
 
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
     const data = [];

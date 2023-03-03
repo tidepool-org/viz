@@ -54,6 +54,7 @@ export const text = {
   ambulatoryGlucoseProfile: {
     title: t('Ambulatory Glucose Profile (AGP)'),
     description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
+    targetRange: t('Target<br>Range'),
   },
   dailyGlucoseProfiles: {
     title: t('Daily Glucose Profiles'),
@@ -110,6 +111,8 @@ export const fontSizes = {
     hourlyTicks: 7,
     bgTicks: 9,
     percentileTicks: 8,
+    bgUnits: 7,
+    targetRange: 9,
   },
 };
 
