@@ -773,7 +773,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         size: fontSizes.ambulatoryGlucoseProfile.percentileTicks,
       },
       text: boldText(percentileLabels[index]),
-      y: tick / yClamp,
+      y: _.min([tick / yClamp, 1]),
       yanchor: 'middle',
       yref: 'paper',
       yshift: 0, // TODO: shift if they run close together
@@ -795,8 +795,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         xref: 'paper',
         xanchor: 0,
         xsizemode: 'pixel',
-        y0: tick / yClamp,
-        y1: tick / yClamp,
+        y0: _.min([tick / yClamp, 1]),
+        y1: _.min([tick / yClamp, 1]),
         yref: 'paper',
       };
     });
