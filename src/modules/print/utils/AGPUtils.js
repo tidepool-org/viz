@@ -23,6 +23,9 @@ import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR } from '../../../utils/constants';
 import moment from 'moment';
 
 const boldText = textString => `<b>${String(textString)}</b>`;
+const chartScaleToPixels = (paperPixelDimension, scaleValue) => scaleValue * paperPixelDimension;
+const pixelsToChartScale = (paperPixelDimension, pixels) => pixels / paperPixelDimension;
+const pointsToPixels = points => points * 0.75;
 
 const createAnnotation = options => {
   const annotation = _.defaultsDeep(options, {
@@ -112,9 +115,8 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
   const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
   const barWidth = DPI * 0.35;
   const barSeparatorPixelWidth = 2;
-
-  const yScale = pixels => pixels / paperHeight;
-  const xScale = pixels => pixels / paperWidth;
+  const yScale = pixelsToChartScale.bind(null, paperHeight);
+  const xScale = pixelsToChartScale.bind(null, paperWidth);
 
   const statTotal = _.get(stat, 'data.raw.counts.total', 0);
   if (statTotal > 0) {
@@ -719,8 +721,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       ].join(' ');
     };
 
-    const bgTargetMarkers = _.map(_.slice(bgTicks, 2, 4), (tick, index) => ({
-      // layer: 'below',
+    const bgTargetMarkers = _.map(_.slice(bgTicks, 2, 4), tick => ({
       fillcolor: colors.line.range.target,
       line: {
         width: 0,
@@ -766,6 +767,17 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
 
     const percentileLabels = ['5%', '25%', '50%', '75%', '95%'];
 
+    // Ensure that percentile ticks and annotations don't crowd
+    const percentileTickYPositions = _.map(percentileTicks, tick => chartScaleToPixels(paperHeight, tick / yClamp));
+    const percentileTickShiftedYPositions = [...percentileTickYPositions];
+    const medianYPos = percentileTickYPositions[2];
+    const minGap = pointsToPixels(fontSizes.ambulatoryGlucoseProfile.percentileTicks) + 2;
+    percentileTickShiftedYPositions[1] = _.min([medianYPos - minGap, percentileTickShiftedYPositions[1]]);
+    percentileTickShiftedYPositions[0] = _.min([percentileTickShiftedYPositions[1] - minGap, percentileTickShiftedYPositions[0]]);
+    percentileTickShiftedYPositions[3] = _.max([medianYPos + minGap, percentileTickShiftedYPositions[3]]);
+    percentileTickShiftedYPositions[4] = _.max([percentileTickShiftedYPositions[3] + minGap, percentileTickShiftedYPositions[4]]);
+    const percentileTickYShifts = _.map(percentileTickShiftedYPositions, (shiftedYPos, index) => (shiftedYPos - percentileTickYPositions[index]));
+
     const percentileTickAnnotations = _.map(percentileTicks, (tick, index) => createAnnotation({
       align: 'left',
       font: {
@@ -777,7 +789,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       y: tick / yClamp,
       yanchor: 'middle',
       yref: 'paper',
-      yshift: 0, // TODO: shift if they run close together
+      yshift: percentileTickYShifts[index],
       xanchor: 'left',
       xref: 'x',
       xshift: 5,
@@ -798,7 +810,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         xanchor: 0,
         xsizemode: 'pixel',
         y0: tick / yClamp,
-        y1: tick / yClamp,
+        y1: tick / yClamp + pixelsToChartScale(paperHeight, percentileTickYShifts[index]),
         yref: 'paper',
       };
     });
