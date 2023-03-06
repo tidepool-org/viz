@@ -55,7 +55,7 @@ const bgBounds = {
   },
 };
 
-function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
+async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const opts = {
@@ -82,11 +82,11 @@ function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
     });
   }
 
-  createPrintView('basics', data.basics, opts, doc).render();
-  createPrintView('daily', data.daily, opts, doc).render();
-  createPrintView('bgLog', data.bgLog, opts, doc).render();
-  createPrintView('settings', data.settings, opts, doc).render();
-  createPrintView('agp', data.settings, opts, doc).render();
+  if (data.basics) createPrintView('basics', data.basics, opts, doc).render();
+  if (data.daily) createPrintView('daily', data.daily, opts, doc).render();
+  if (data.bgLog) createPrintView('bgLog', data.bgLog, opts, doc).render();
+  if (data.settings) createPrintView('settings', data.settings, opts, doc).render();
+  if (data.agp) await createPrintView('agp', data.agp, opts, doc).render();
 
   PrintView.renderPageNumbers(doc);
 
