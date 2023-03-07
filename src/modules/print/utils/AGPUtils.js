@@ -583,12 +583,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
 export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
-  const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
+  const chartAreaHeight = section.height - 2 - DPI * 0.5 - AGP_SECTION_BORDER_RADIUS;
   const plotMarginX = DPI * 0.5;
-  const plotMarginTop = DPI * 0.475;
-  const plotMarginBottom = DPI * 0.25;
+  const plotMarginY = DPI * 0.25;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
-  const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
+  const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
@@ -796,24 +795,22 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       x: MS_IN_DAY,
     }));
 
-    const percentileTickLines = _.map(percentileTicks, (tick, index) => {
-      return {
-        line: {
-          color: colors.line.ticks,
-          width: 1,
-        },
-        type: 'line',
-        visible: tick / yClamp <= 1,
-        x0: paperWidth,
-        x1: paperWidth + 5,
-        xref: 'paper',
-        xanchor: 0,
-        xsizemode: 'pixel',
-        y0: tick / yClamp,
-        y1: tick / yClamp + pixelsToChartScale(paperHeight, percentileTickYShifts[index]),
-        yref: 'paper',
-      };
-    });
+    const percentileTickLines = _.map(percentileTicks, (tick, index) => ({
+      line: {
+        color: colors.line.ticks,
+        width: 1,
+      },
+      type: 'line',
+      visible: tick / yClamp <= 1,
+      x0: paperWidth,
+      x1: paperWidth + 5,
+      xref: 'paper',
+      xanchor: 0,
+      xsizemode: 'pixel',
+      y0: tick / yClamp,
+      y1: tick / yClamp + pixelsToChartScale(paperHeight, percentileTickYShifts[index]),
+      yref: 'paper',
+    }));
 
     const quarterDayTicks = _.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 6);
 
@@ -886,8 +883,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       margin: {
         l: plotMarginX,
         r: plotMarginX,
-        b: plotMarginBottom,
-        t: plotMarginTop,
+        b: plotMarginY,
+        t: plotMarginY,
       },
 
       xaxis: {
@@ -925,21 +922,6 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         ...bgTickAnnotations,
         ...percentileTickAnnotations,
         ...hourlyTicksAnnotations,
-
-        createAnnotation({
-          font: {
-            size: fontSizes.section.description,
-          },
-          text: text.ambulatoryGlucoseProfile.description,
-          x: 0,
-          xanchor: 'left',
-          xref: 'paper',
-          xshift: -(plotMarginX - 8),
-          y: 1,
-          yanchor: 'top',
-          yref: 'paper',
-          yshift: plotMarginTop - 4,
-        }),
 
         createAnnotation({
           font: {

@@ -114,6 +114,7 @@ class AGPPrintView extends PrintView {
   }
 
   renderSectionContainer(section) {
+    const headerHeight = this.dpi * 0.25;
     this.resetText();
 
     if (section.bordered) {
@@ -151,6 +152,20 @@ class AGPPrintView extends PrintView {
 
         this.doc.text(section.text.subtitle, subtitleXPos, section.y + 1 + ((AGP_SECTION_HEADER_HEIGHT - this.doc.currentLineHeight()) / 2));
       }
+    }
+
+    if (section.text?.description) {
+      const descriptionPaddingX = 14;
+      const descriptionPaddingY = 8;
+      const descriptionXPos = section.x + descriptionPaddingX;
+      const descriptionYPos = section.y + headerHeight + descriptionPaddingY;
+
+      this.setFill(colors.text.section.description);
+
+      this.doc.font(this.font)
+        .fontSize(fontSizes.section.description);
+
+      this.doc.text(section.text.description, descriptionXPos, descriptionYPos);
     }
   }
 
@@ -340,9 +355,9 @@ class AGPPrintView extends PrintView {
 
     // Set chart plot within section borders
     const chartAreaX = section.x + 1;
-    const chartAreaY = section.y + 1 + this.dpi * 0.25;
+    const chartAreaY = section.y + 1 + this.dpi * 0.5;
     const chartAreaWidth = section.width - 2;
-    const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
+    const chartAreaHeight = section.height - 2 - this.dpi * 0.5 - AGP_SECTION_BORDER_RADIUS;
 
     // Generate image from Plotly figure
     const cbgData = this.data?.data?.current?.data?.cbg || [];
@@ -364,7 +379,11 @@ class AGPPrintView extends PrintView {
     const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
 
     // Generate image from Plotly figure
+
+    // TODO: Split data into 2 weeks by date here, or provide all the data and pass a range to the figure generation
     const cbgData = this.data?.data?.current?.data?.cbg || [];
+
+    // TODO: Split into 2 separate charts? week 1 and week 2, with a label format argument?
     const figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs);
     const plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: chartAreaHeight });
     const plotDataURLArr = plotDataURL.split(',');
