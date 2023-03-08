@@ -15,6 +15,7 @@ export const AGP_FOOTER_Y_PADDING = DPI * 0.25;
 export const AGP_TIR_MIN_HEIGHT = 5;
 export const AGP_SECTION_BORDER_RADIUS = 8;
 export const AGP_SECTION_HEADER_HEIGHT = DPI * 0.25;
+export const AGP_SECTION_DESCRIPTION_HEIGHT = DPI * 0.25;
 export const AGP_LOWER_QUANTILE = 0.05;
 export const AGP_UPPER_QUANTILE = 0.95;
 
@@ -114,6 +115,13 @@ export const fontSizes = {
     bgUnits: 7,
     targetRange: 9,
   },
+  dailyGlucoseProfiles: {
+    bgTicks: 7,
+    bgUnits: 7,
+    timeTicks: 7,
+    weekdayTicks: 8,
+    calendarDates: 8,
+  },
 };
 
 const black = '#000000';
@@ -200,6 +208,20 @@ export const colors = {
       target: '#BEE1C6',
       high: '#FFE6B3',
       veryHigh: '#FFD9BF',
+    },
+  },
+  dailyGlucoseProfiles: {
+    low: {
+      line: '#FF0000',
+      fill: '#FF8080',
+    },
+    target: {
+      line: '#FFA600',
+      fill: lightGrey,
+    },
+    high: {
+      line: '#FFA600',
+      fill: '#FFD180',
     },
   },
 };

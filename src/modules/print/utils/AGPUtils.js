@@ -7,6 +7,7 @@ import {
   AGP_FOOTER_Y_PADDING,
   AGP_LOWER_QUANTILE,
   AGP_SECTION_BORDER_RADIUS,
+  AGP_SECTION_DESCRIPTION_HEIGHT,
   AGP_SECTION_HEADER_HEIGHT,
   AGP_TIR_MIN_HEIGHT,
   AGP_UPPER_QUANTILE,
@@ -583,7 +584,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
 export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
-  const chartAreaHeight = section.height - 2 - DPI * 0.5 - AGP_SECTION_BORDER_RADIUS;
+  const chartAreaHeight = section.height - 2 - (AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT) - AGP_SECTION_BORDER_RADIUS;
   const plotMarginX = DPI * 0.5;
   const plotMarginY = DPI * 0.25;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
@@ -981,23 +982,171 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   return null; // TODO: insufficient data text
 };
 
-export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs) => {
+export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, dateLabelFormat) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - AGP_SECTION_HEADER_HEIGHT - AGP_SECTION_BORDER_RADIUS;
+  const plotHeight = chartAreaHeight / 2;
   const plotMarginX = DPI * 0.5;
-  const plotMarginTop = DPI * 0.425;
-  const plotMarginBottom = DPI * 0.3;
+  const plotMarginTop = DPI * 0.25;
+  const plotMarginBottom = 0;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
 
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
-    const data = [];
+    const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
 
+    const quantileBand = (upperKey, lowerKey, key, bgRange, index) => ({
+      name: key,
+      type: 'scatter',
+      x: [..._.map(smoothedChartData, 'msX'), ..._.map(_.reverse([...smoothedChartData]), 'msX')],
+      y: [..._.map(smoothedChartData, upperKey), ..._.map(_.reverse([...smoothedChartData]), lowerKey)],
+      yaxis: index === 0 ? 'y' : `y${index + 1}`,
+      fill: 'tozerox',
+      fillcolor: colors.ambulatoryGlucoseProfile[key][bgRange],
+      mode: 'none',
+      line: {
+        simplify: false,
+        shape: 'spline',
+        smoothing: 0.5,
+      },
+    });
+
+    const bgRangeKeys = [
+      'low',
+      'target',
+      'high',
+    ];
+
+    const bgTicks = [
+      0,
+      bgPrefs?.bgBounds?.veryLowThreshold,
+      bgPrefs?.bgBounds?.targetLowerBound,
+      bgPrefs?.bgBounds?.targetUpperBound,
+      bgPrefs?.bgBounds?.veryHighThreshold,
+      yClamp,
+    ];
+
+    const bgTickAnnotations = _.map(bgTicks, (tick, index) => {
+      const isTarget = _.includes([2, 3], index);
+      let yshift = 0;
+      if (index === 0) yshift = 2;
+      if (index === 1) yshift = -2;
+
+      return createAnnotation({
+        align: 'right',
+        font: {
+          color: isTarget ? colors.white : colors.text.ticks.bg,
+          size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
+        },
+        height: 9,
+        text: index === 0
+          ? boldText(tick)
+          : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
+        y: tick / yClamp,
+        yanchor: 'middle',
+        yref: 'paper',
+        yshift,
+        xanchor: 'right',
+        xref: 'x',
+        xshift: -2,
+        x: 0,
+      });
+    });
+
+
+
+    const bgGridLines = _.map(bgTicks, (tick, index) => {
+      const isTarget = _.includes([2, 3], index);
+
+      return {
+        layer: isTarget ? 'above' : 'below',
+        line: {
+          color: isTarget ? colors.line.range.target : colors.line.range.default,
+          width: isTarget ? 2 : 1,
+        },
+        type: 'line',
+        x0: index === 5 ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: index === 5 ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        xref: 'paper',
+        xanchor: 0,
+        xsizemode: 'pixel',
+        y0: tick / yClamp,
+        y1: tick / yClamp,
+        yref: 'paper',
+      };
+    });
+
+    const quarterDayTicks = _.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 6);
+
+    const hourlyTicks = _.filter(
+      _.range(0, MS_IN_DAY + 1, MS_IN_HOUR),
+      tick => ((tick / MS_IN_HOUR) % 12 !== 0)
+    );
+
+    const hourlyTicksAnnotations = _.map(_.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 3), tick => createAnnotation({
+      align: 'center',
+      font: {
+        color: (tick / MS_IN_HOUR) % 12 === 0 ? colors.black : colors.darkGrey,
+        size: fontSizes.ambulatoryGlucoseProfile.hourlyTicks,
+      },
+      text: boldText(moment.utc(tick).format('ha')),
+      y: 0,
+      yanchor: 'top',
+      yref: 'y',
+      yshift: -2,
+      xanchor: 'middle',
+      xref: 'x',
+      x: tick,
+    }));
+
+    const data = [];
+    const yAxes = [];
+
+    _.each(bgRangeKeys, (bgRange, index) => {
+      data.push(quantileBand('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
+      data.push(quantileBand('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
+
+      data.push({
+        name: 'median',
+        type: 'scatter',
+        x: _.map(smoothedChartData, 'msX'),
+        y: _.map(smoothedChartData, 'median'),
+        yaxis: index === 0 ? 'y' : `y${index + 1}`,
+        mode: 'lines',
+        fill: 'none',
+        line: {
+          color: colors.ambulatoryGlucoseProfile.median[bgRange],
+          simplify: false,
+          shape: 'spline',
+          width: 3,
+          smoothing: 0.5,
+        },
+      });
+
+      const range = [bgTicks[index], bgTicks[index + 1]];
+
+      const yAxis = {
+        domain: [range[0] / yClamp, range[1] / yClamp],
+        range,
+        showgrid: false,
+        showline: true,
+        linecolor: colors.lightGrey,
+        mirror: true,
+        showticklabels: false,
+        zeroline: false,
+      };
+
+      yAxes.push(yAxis);
+    });
+
+    // const data = _.map(cbgData, datum => ({
+
+    // }));
+    dataByDate
     const layout = {
-      barmode: 'stack',
       width: chartAreaWidth,
-      height: chartAreaHeight,
+      height: plotHeight,
       showlegend: false,
 
       margin: {
@@ -1008,29 +1157,90 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs) =>
       },
 
       xaxis: {
-        range: [0, 1],
-        showgrid: false,
-        showline: false,
+        gridcolor: colors.line.ticks,
+        linecolor: colors.line.ticks,
+        range: [0, MS_IN_DAY],
+        showgrid: true,
+        showline: true,
         showticklabels: false,
+        tickvals: quarterDayTicks,
         zeroline: false,
       },
 
-      yaxis: {
-        range: [0, 1],
+      // secondary axis for hourly ticks
+      xaxis2: {
+        range: [0, MS_IN_DAY],
+        overlaying: 'x',
         showgrid: false,
         showline: false,
         showticklabels: false,
+        ticks: 'inside',
+        tickcolor: colors.lightGrey,
+        ticklen: 5,
+        tickvals: hourlyTicks,
         zeroline: false,
       },
+
+      ..._.reduce(yAxes, (result, axis, index) => {
+        const axisKey = index === 0 ? 'yaxis' : `yaxis${index + 1}`;
+        result[axisKey] = axis; // eslint-disable-line no-param-reassign
+        return result;
+      }, {}),
 
       annotations: [
+        ...bgTickAnnotations,
+        ...hourlyTicksAnnotations,
+
+        createAnnotation({
+          font: {
+            color: colors.text.ticks.bg,
+            size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
+          },
+          text: bgPrefs.bgUnits,
+          x: 0,
+          xanchor: 'right',
+          xref: 'paper',
+          xshift: -2,
+          y: bgTicks[5] / yClamp,
+          yanchor: 'top',
+          yref: 'paper',
+          yshift: -4,
+        }),
+
+        createAnnotation({
+          font: {
+            color: colors.black,
+            size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
+          },
+          text: boldText(text.ambulatoryGlucoseProfile.targetRange),
+          x: 0,
+          xanchor: 'right',
+          xref: 'paper',
+          xshift: -2,
+          y: (bgTicks[2] + bgTicks[3]) / 2 / yClamp,
+          yanchor: 'middle',
+          yref: 'paper',
+        }),
       ],
 
       shapes: [
+        ...bgGridLines,
       ],
     };
 
-    const figure = { data, layout };
+    const groupedData = _.groupBy(data, 'name');
+
+    const figure = {
+      data: [
+        ...groupedData.outerQuantile,
+        ...groupedData.interQuartile,
+        ...groupedData.median,
+        // Dummy data to allow rendering overlay axes used for annotations, ticks, etc
+        { visible: false, xaxis: 'x2' },
+      ],
+      layout,
+    };
+
     return figure;
   }
 

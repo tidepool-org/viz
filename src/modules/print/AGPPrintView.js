@@ -10,6 +10,7 @@ import PrintView from './PrintView';
 import {
   AGP_FOOTER_Y_PADDING,
   AGP_SECTION_BORDER_RADIUS,
+  AGP_SECTION_DESCRIPTION_HEIGHT,
   AGP_SECTION_HEADER_HEIGHT,
   colors,
   fontSizes,
@@ -114,7 +115,6 @@ class AGPPrintView extends PrintView {
   }
 
   renderSectionContainer(section) {
-    const headerHeight = this.dpi * 0.25;
     this.resetText();
 
     if (section.bordered) {
@@ -158,7 +158,7 @@ class AGPPrintView extends PrintView {
       const descriptionPaddingX = 14;
       const descriptionPaddingY = 8;
       const descriptionXPos = section.x + descriptionPaddingX;
-      const descriptionYPos = section.y + headerHeight + descriptionPaddingY;
+      const descriptionYPos = section.y + AGP_SECTION_HEADER_HEIGHT + descriptionPaddingY;
 
       this.setFill(colors.text.section.description);
 
@@ -374,21 +374,39 @@ class AGPPrintView extends PrintView {
 
     // Set chart plot within section borders
     const chartAreaX = section.x + 1;
-    const chartAreaY = section.y + 1 + this.dpi * 0.25;
+    const chartAreaY = section.y + 1 + AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT;
     const chartAreaWidth = section.width - 2;
-    const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
+    const chartAreaHeight = section.height - 2 - (AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT) - AGP_SECTION_BORDER_RADIUS;
+    const plotHeight = chartAreaHeight / 2;
 
-    // Generate image from Plotly figure
+    // Generate images from Plotly figures
+    const cbgDataByDate = _.mapValues(this.data?.data?.current?.aggregationsByDate?.dataByDate, 'cbg');
 
-    // TODO: Split data into 2 weeks by date here, or provide all the data and pass a range to the figure generation
-    const cbgData = this.data?.data?.current?.data?.cbg || [];
+    // Group daily data by week
 
-    // TODO: Split into 2 separate charts? week 1 and week 2, with a label format argument?
-    const figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs);
-    const plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: chartAreaHeight });
-    const plotDataURLArr = plotDataURL.split(',');
-    const rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
-    this.addSVG(rawChartSVG, chartAreaX, chartAreaY, { assumePt: true });
+    const { newestDatum } = this.stats.sensorUsage?.data?.raw || {};
+
+    const weeklyDates = _.chunk(_.map(_.range(14), (val, index) => (
+      moment.utc(newestDatum.time).tz(this.timezone).subtract(index, 'days').format('YYYY-MM-DD')
+      )), 7);
+      console.log('weeklyDates', weeklyDates);
+
+    // const week1Data = _.map(_.)
+
+
+    // Render first week
+    // let figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs, 'ha');
+    // let plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: plotHeight });
+    // let plotDataURLArr = plotDataURL.split(',');
+    // let rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
+    // this.addSVG(rawChartSVG, chartAreaX, chartAreaY, { assumePt: true });
+
+    // // Render second week
+    // figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs, 'ha');
+    // plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: plotHeight });
+    // plotDataURLArr = plotDataURL.split(',');
+    // rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
+    // this.addSVG(rawChartSVG, chartAreaX, chartAreaY + plotHeight, { assumePt: true });
   }
 }
 
