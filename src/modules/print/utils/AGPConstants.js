@@ -156,6 +156,7 @@ export const colors = {
     },
     ticks: {
       bg: darkGrey,
+      dailyProfileBg: black,
       hour: darkGrey,
       percentile: darkGrey,
     },
@@ -165,6 +166,7 @@ export const colors = {
     ticks: lightGrey,
     range: {
       target: '#00AA51',
+      dailyProfileTarget: black,
       default: lightGrey,
       divider: white,
     },

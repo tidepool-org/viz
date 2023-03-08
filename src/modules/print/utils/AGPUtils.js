@@ -673,7 +673,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
     const bgTickAnnotations = _.map(bgTicks, (tick, index) => {
       const isTarget = _.includes([2, 3], index);
       let yshift = 0;
-      if (index === 0) yshift = 2;
+      if (index === 0) yshift = 4;
       if (index === 1) yshift = -2;
 
       return createAnnotation({
@@ -739,16 +739,17 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
 
     const bgGridLines = _.map(bgTicks, (tick, index) => {
       const isTarget = _.includes([2, 3], index);
+      const isClamp = index === 5;
 
       return {
-        layer: isTarget ? 'above' : 'below',
+        layer: isTarget || isClamp ? 'above' : 'below',
         line: {
           color: isTarget ? colors.line.range.target : colors.line.range.default,
           width: isTarget ? 2 : 1,
         },
         type: 'line',
-        x0: index === 5 ? -1 : 0, // fills an empty pixel cap on top grid line
-        x1: index === 5 ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        x0: isClamp ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: isClamp ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
         xref: 'paper',
         xanchor: 0,
         xsizemode: 'pixel',
@@ -830,7 +831,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       y: 0,
       yanchor: 'top',
       yref: 'y',
-      yshift: -2,
+      yshift: 0,
       xanchor: 'middle',
       xref: 'x',
       x: tick,
@@ -893,7 +894,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
         linecolor: colors.line.ticks,
         range: [0, MS_IN_DAY],
         showgrid: true,
-        showline: true,
+        showline: false,
         showticklabels: false,
         tickvals: quarterDayTicks,
         zeroline: false,
@@ -929,7 +930,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
             color: colors.text.ticks.bg,
             size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
           },
-          text: bgPrefs.bgUnits,
+          text: bgPrefs?.bgUnits,
           x: 0,
           xanchor: 'right',
           xref: 'paper',
@@ -950,7 +951,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
           xanchor: 'right',
           xref: 'paper',
           xshift: -2,
-          y: (bgTicks[2] + bgTicks[3]) / 2 / yClamp,
+          y: _.mean(_.slice(bgTicks, 2, 4)) / yClamp,
           yanchor: 'middle',
           yref: 'paper',
         }),
@@ -988,27 +989,28 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
   const chartAreaHeight = section.height - 2 - AGP_SECTION_HEADER_HEIGHT - AGP_SECTION_BORDER_RADIUS;
   const plotHeight = chartAreaHeight / 2;
   const plotMarginX = DPI * 0.5;
-  const plotMarginTop = DPI * 0.25;
+  const plotMarginTop = DPI * 0.2;
   const plotMarginBottom = 0;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
-  const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
 
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
 
-    const quantileBand = (upperKey, lowerKey, key, bgRange, index) => ({
+    const rangeFill = (upperKey, lowerKey, key, bgRange, index) => ({
       name: key,
       type: 'scatter',
-      x: [..._.map(smoothedChartData, 'msX'), ..._.map(_.reverse([...smoothedChartData]), 'msX')],
-      y: [..._.map(smoothedChartData, upperKey), ..._.map(_.reverse([...smoothedChartData]), lowerKey)],
+      x: _.map(cbgData, d => d.msPer24 + MS_IN_DAY * index),
+      y: _.map(cbgData, 'value'),
       yaxis: index === 0 ? 'y' : `y${index + 1}`,
-      fill: 'tozerox',
-      fillcolor: colors.ambulatoryGlucoseProfile[key][bgRange],
+      fill: 'tonexty',
+      fillcolor: colors.dailyGlucoseProfiles[bgRange].fill,
       mode: 'none',
       line: {
+        color: colors.dailyGlucoseProfiles[bgRange].line,
         simplify: false,
         shape: 'spline',
-        smoothing: 0.5,
+        smoothing: 0,
+        width: 1,
       },
     });
 
@@ -1020,54 +1022,55 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
 
     const bgTicks = [
       0,
-      bgPrefs?.bgBounds?.veryLowThreshold,
       bgPrefs?.bgBounds?.targetLowerBound,
       bgPrefs?.bgBounds?.targetUpperBound,
-      bgPrefs?.bgBounds?.veryHighThreshold,
       yClamp,
     ];
 
-    const bgTickAnnotations = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([2, 3], index);
-      let yshift = 0;
-      if (index === 0) yshift = 2;
-      if (index === 1) yshift = -2;
+    const targetRangeFill = {
+      layer: 'below',
+      line: { width: 0 },
+      fillcolor: colors.background.shaded,
+      type: 'rect',
+      x0: 0,
+      x1: paperWidth,
+      xref: 'paper',
+      xanchor: 0,
+      xsizemode: 'pixel',
+      y0: bgTicks[2] / yClamp,
+      y1: bgTicks[1] / yClamp,
+      yref: 'paper',
+    };
 
-      return createAnnotation({
-        align: 'right',
-        font: {
-          color: isTarget ? colors.white : colors.text.ticks.bg,
-          size: fontSizes.ambulatoryGlucoseProfile.bgTicks,
-        },
-        height: 9,
-        text: index === 0
-          ? boldText(tick)
-          : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
-        y: tick / yClamp,
-        yanchor: 'middle',
-        yref: 'paper',
-        yshift,
-        xanchor: 'right',
-        xref: 'x',
-        xshift: -2,
-        x: 0,
-      });
-    });
-
-
+    const bgTickAnnotations = _.map(_.slice(bgTicks, 1, 3), tick => createAnnotation({
+      align: 'right',
+      font: {
+        color: colors.text.ticks.dailyProfileBg,
+        size: fontSizes.dailyGlucoseProfiles.bgTicks,
+      },
+      text: boldText(formatBgValue(tick, bgPrefs, undefined, true)),
+      y: tick / yClamp,
+      yanchor: 'middle',
+      yref: 'paper',
+      xanchor: 'right',
+      xref: 'x',
+      xshift: -2,
+      x: 0,
+    }));
 
     const bgGridLines = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([2, 3], index);
+      const isTarget = _.includes([1, 2], index);
+      const isClamp = index === 3;
 
       return {
-        layer: isTarget ? 'above' : 'below',
+        layer: isTarget || isClamp ? 'above' : 'below',
         line: {
-          color: isTarget ? colors.line.range.target : colors.line.range.default,
-          width: isTarget ? 2 : 1,
+          color: isTarget ? colors.line.range.dailyProfileTarget : colors.line.range.default,
+          width: 1,
         },
         type: 'line',
-        x0: index === 5 ? -1 : 0, // fills an empty pixel cap on top grid line
-        x1: index === 5 ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        x0: isClamp ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: isClamp ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
         xref: 'paper',
         xanchor: 0,
         xsizemode: 'pixel',
@@ -1077,24 +1080,24 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       };
     });
 
-    const quarterDayTicks = _.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 6);
+    const halfDayTicks = _.range(0, MS_IN_DAY * 7 + 1, MS_IN_HOUR * 12);
 
-    const hourlyTicks = _.filter(
-      _.range(0, MS_IN_DAY + 1, MS_IN_HOUR),
-      tick => ((tick / MS_IN_HOUR) % 12 !== 0)
-    );
-
-    const hourlyTicksAnnotations = _.map(_.range(0, MS_IN_DAY + 1, MS_IN_HOUR * 3), tick => createAnnotation({
+    const halfDayTickAnnotations = _.map(_.filter(halfDayTicks, (tick, index) => index % 2 !== 0), (tick, index) => createAnnotation({
       align: 'center',
       font: {
-        color: (tick / MS_IN_HOUR) % 12 === 0 ? colors.black : colors.darkGrey,
-        size: fontSizes.ambulatoryGlucoseProfile.hourlyTicks,
+        color: colors.black,
+        size: dateLabelFormat === 'ha'
+          ? fontSizes.dailyGlucoseProfiles.timeTicks
+          : fontSizes.dailyGlucoseProfiles.weekdayTicks,
       },
-      text: boldText(moment.utc(tick).format('ha')),
-      y: 0,
-      yanchor: 'top',
-      yref: 'y',
-      yshift: -2,
+      text: dateLabelFormat === 'ha'
+        ? boldText(moment.utc(tick).format(dateLabelFormat))
+        // : String(cbgData[index][0]),
+        : boldText(moment.utc(String(cbgData[index][0])).format(dateLabelFormat)),
+      y: 1,
+      yanchor: 'bottom',
+      yref: 'paper',
+      yshift: 1,
       xanchor: 'middle',
       xref: 'x',
       x: tick,
@@ -1103,24 +1106,27 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
     const data = [];
     const yAxes = [];
 
+    const combinedData = _.flatten(_.map(cbgData, (d, index) => (_.map(d[1], dayData => ({
+      ...dayData,
+      msPer24: dayData.msPer24 + MS_IN_DAY * index,
+    })))));
+
     _.each(bgRangeKeys, (bgRange, index) => {
-      data.push(quantileBand('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
-      data.push(quantileBand('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
+      // data.push(rangeFill('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
+      // data.push(rangeFill('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
 
       data.push({
         name: 'median',
         type: 'scatter',
-        x: _.map(smoothedChartData, 'msX'),
-        y: _.map(smoothedChartData, 'median'),
+        x: _.map(combinedData, 'msPer24'),
+        y: _.map(combinedData, 'value'),
         yaxis: index === 0 ? 'y' : `y${index + 1}`,
         mode: 'lines',
         fill: 'none',
         line: {
           color: colors.ambulatoryGlucoseProfile.median[bgRange],
           simplify: false,
-          shape: 'spline',
-          width: 3,
-          smoothing: 0.5,
+          width: 1,
         },
       });
 
@@ -1140,10 +1146,6 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       yAxes.push(yAxis);
     });
 
-    // const data = _.map(cbgData, datum => ({
-
-    // }));
-    dataByDate
     const layout = {
       width: chartAreaWidth,
       height: plotHeight,
@@ -1159,25 +1161,11 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       xaxis: {
         gridcolor: colors.line.ticks,
         linecolor: colors.line.ticks,
-        range: [0, MS_IN_DAY],
+        range: [0, MS_IN_DAY * 7],
         showgrid: true,
-        showline: true,
-        showticklabels: false,
-        tickvals: quarterDayTicks,
-        zeroline: false,
-      },
-
-      // secondary axis for hourly ticks
-      xaxis2: {
-        range: [0, MS_IN_DAY],
-        overlaying: 'x',
-        showgrid: false,
         showline: false,
         showticklabels: false,
-        ticks: 'inside',
-        tickcolor: colors.lightGrey,
-        ticklen: 5,
-        tickvals: hourlyTicks,
+        tickvals: halfDayTicks,
         zeroline: false,
       },
 
@@ -1189,54 +1177,42 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
 
       annotations: [
         ...bgTickAnnotations,
-        ...hourlyTicksAnnotations,
+        ...halfDayTickAnnotations,
 
         createAnnotation({
           font: {
             color: colors.text.ticks.bg,
-            size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
+            size: fontSizes.dailyGlucoseProfiles.bgUnits,
           },
-          text: bgPrefs.bgUnits,
+          text: boldText(bgPrefs?.bgUnits),
+          textangle: 270,
           x: 0,
           xanchor: 'right',
           xref: 'paper',
-          xshift: -2,
-          y: bgTicks[5] / yClamp,
-          yanchor: 'top',
-          yref: 'paper',
-          yshift: -4,
-        }),
-
-        createAnnotation({
-          font: {
-            color: colors.black,
-            size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
-          },
-          text: boldText(text.ambulatoryGlucoseProfile.targetRange),
-          x: 0,
-          xanchor: 'right',
-          xref: 'paper',
-          xshift: -2,
-          y: (bgTicks[2] + bgTicks[3]) / 2 / yClamp,
+          xshift: -18,
+          y: _.mean(_.slice(bgTicks, 1, 3)) / yClamp,
           yanchor: 'middle',
           yref: 'paper',
+          yshift: 0,
         }),
       ],
 
       shapes: [
+        targetRangeFill,
         ...bgGridLines,
       ],
     };
 
     const groupedData = _.groupBy(data, 'name');
+    console.log('groupedData', groupedData);
 
     const figure = {
       data: [
-        ...groupedData.outerQuantile,
-        ...groupedData.interQuartile,
+        // ...groupedData.outerQuantile,
+        // ...groupedData.interQuartile,
         ...groupedData.median,
         // Dummy data to allow rendering overlay axes used for annotations, ticks, etc
-        { visible: false, xaxis: 'x2' },
+        // { visible: false, xaxis: 'x2' },
       ],
       layout,
     };

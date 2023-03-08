@@ -383,30 +383,28 @@ class AGPPrintView extends PrintView {
     const cbgDataByDate = _.mapValues(this.data?.data?.current?.aggregationsByDate?.dataByDate, 'cbg');
 
     // Group daily data by week
-
     const { newestDatum } = this.stats.sensorUsage?.data?.raw || {};
 
     const weeklyDates = _.chunk(_.map(_.range(14), (val, index) => (
       moment.utc(newestDatum.time).tz(this.timezone).subtract(index, 'days').format('YYYY-MM-DD')
-      )), 7);
-      console.log('weeklyDates', weeklyDates);
+    )).reverse(), 7);
 
-    // const week1Data = _.map(_.)
-
+    const week1Data = _.map(weeklyDates[0], date => ([[date], cbgDataByDate[date]]));
+    const week2Data = _.map(weeklyDates[1], date => ([[date], cbgDataByDate[date]]));
 
     // Render first week
-    // let figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs, 'ha');
-    // let plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: plotHeight });
-    // let plotDataURLArr = plotDataURL.split(',');
-    // let rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
-    // this.addSVG(rawChartSVG, chartAreaX, chartAreaY, { assumePt: true });
+    let figure = generateDailyGlucoseProfilesFigure(section, week1Data, this.bgPrefs, 'dddd');
+    let plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: plotHeight });
+    let plotDataURLArr = plotDataURL.split(',');
+    let rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
+    this.addSVG(rawChartSVG, chartAreaX, chartAreaY, { assumePt: true });
 
     // // Render second week
-    // figure = generateDailyGlucoseProfilesFigure(section, cbgData, this.bgPrefs, 'ha');
-    // plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: plotHeight });
-    // plotDataURLArr = plotDataURL.split(',');
-    // rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
-    // this.addSVG(rawChartSVG, chartAreaX, chartAreaY + plotHeight, { assumePt: true });
+    figure = generateDailyGlucoseProfilesFigure(section, week2Data, this.bgPrefs, 'ha');
+    plotDataURL = await Plotly.toImage(figure, { format: 'svg', width: chartAreaWidth, height: plotHeight });
+    plotDataURLArr = plotDataURL.split(',');
+    rawChartSVG = decodeURIComponent(plotDataURLArr[1]);
+    this.addSVG(rawChartSVG, chartAreaX, chartAreaY + plotHeight, { assumePt: true });
   }
 }
 
