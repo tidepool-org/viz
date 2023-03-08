@@ -738,8 +738,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
     }));
 
     const bgGridLines = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([2, 3], index);
       const isClamp = index === 5;
+      const isTarget = _.includes([2, 3], index);
+      const isZero = index === 0;
 
       return {
         layer: isTarget || isClamp ? 'above' : 'below',
@@ -748,8 +749,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
           width: isTarget ? 2 : 1,
         },
         type: 'line',
-        x0: isClamp ? -1 : 0, // fills an empty pixel cap on top grid line
-        x1: isClamp ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        x0: isClamp || isZero ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: isClamp || isZero ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
         xref: 'paper',
         xanchor: 0,
         xsizemode: 'pixel',
@@ -990,7 +991,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
   const plotHeight = chartAreaHeight / 2;
   const plotMarginX = DPI * 0.5;
   const plotMarginTop = DPI * 0.2;
-  const plotMarginBottom = 0;
+  const plotMarginBottom = 1;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
 
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
@@ -1059,8 +1060,9 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
     }));
 
     const bgGridLines = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([1, 2], index);
       const isClamp = index === 3;
+      const isTarget = _.includes([1, 2], index);
+      const isZero = index === 0;
 
       return {
         layer: isTarget || isClamp ? 'above' : 'below',
@@ -1069,8 +1071,8 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
           width: 1,
         },
         type: 'line',
-        x0: isClamp ? -1 : 0, // fills an empty pixel cap on top grid line
-        x1: isClamp ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        x0: isClamp || isZero ? -1 : 0, // fills an empty pixel cap on top grid line
+        x1: isClamp || isZero ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
         xref: 'paper',
         xanchor: 0,
         xsizemode: 'pixel',
