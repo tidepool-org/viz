@@ -218,7 +218,7 @@ export const colors = {
       fill: '#FF8080',
     },
     target: {
-      line: '#FFA600',
+      line: '#00AA51',
       fill: lightGrey,
     },
     high: {

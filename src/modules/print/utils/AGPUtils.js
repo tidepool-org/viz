@@ -965,14 +965,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
       ],
     };
 
-    const groupedData = _.groupBy(data, 'name');
-
     const figure = {
       data: [
-        ...groupedData.outerQuantile,
-        ...groupedData.interQuartile,
-        ...groupedData.median,
-        // Dummy data to allow rendering overlay axes used for annotations, ticks, etc
+        ...data,
         { visible: false, xaxis: 'x2' },
       ],
       layout,
@@ -997,24 +992,6 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
   if (cbgData.length > 0) { // TODO: proper data sufficiency check
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
 
-    const rangeFill = (upperKey, lowerKey, key, bgRange, index) => ({
-      name: key,
-      type: 'scatter',
-      x: _.map(cbgData, d => d.msPer24 + MS_IN_DAY * index),
-      y: _.map(cbgData, 'value'),
-      yaxis: index === 0 ? 'y' : `y${index + 1}`,
-      fill: 'tonexty',
-      fillcolor: colors.dailyGlucoseProfiles[bgRange].fill,
-      mode: 'none',
-      line: {
-        color: colors.dailyGlucoseProfiles[bgRange].line,
-        simplify: false,
-        shape: 'spline',
-        smoothing: 0,
-        width: 1,
-      },
-    });
-
     const bgRangeKeys = [
       'low',
       'target',
@@ -1027,21 +1004,6 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       bgPrefs?.bgBounds?.targetUpperBound,
       yClamp,
     ];
-
-    const targetRangeFill = {
-      layer: 'below',
-      line: { width: 0 },
-      fillcolor: colors.background.shaded,
-      type: 'rect',
-      x0: 0,
-      x1: paperWidth,
-      xref: 'paper',
-      xanchor: 0,
-      xsizemode: 'pixel',
-      y0: bgTicks[2] / yClamp,
-      y1: bgTicks[1] / yClamp,
-      yref: 'paper',
-    };
 
     const bgTickAnnotations = _.map(_.slice(bgTicks, 1, 3), tick => createAnnotation({
       align: 'right',
@@ -1094,7 +1056,6 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       },
       text: dateLabelFormat === 'ha'
         ? boldText(moment.utc(tick).format(dateLabelFormat))
-        // : String(cbgData[index][0]),
         : boldText(moment.utc(String(cbgData[index][0])).format(dateLabelFormat)),
       y: 1,
       yanchor: 'bottom',
@@ -1114,8 +1075,32 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
     })))));
 
     _.each(bgRangeKeys, (bgRange, index) => {
-      // data.push(rangeFill('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
-      // data.push(rangeFill('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
+      const isLow = index === 0;
+      const isTarget = index === 1;
+      const firstDatum = _.first(combinedData);
+      const lastDatum = _.last(combinedData);
+      const range = [bgTicks[index], bgTicks[index + 1]];
+      const fillYExentRangeIndex = isLow ? 1 : 0;
+
+      data.push({
+        name: 'rangeFill',
+        type: 'scatter',
+        x: isTarget
+          ? [0, MS_IN_DAY * 7, MS_IN_DAY * 7, 0]
+          : [firstDatum.msPer24, ..._.map(combinedData, 'msPer24'), lastDatum.msPer24, firstDatum.msPer24],
+        y: isTarget
+          ? [range[1], range[1], range[0], range[0]]
+          : [range[fillYExentRangeIndex], ..._.map(combinedData, 'value'), range[fillYExentRangeIndex], range[fillYExentRangeIndex]],
+        yaxis: index === 0 ? 'y' : `y${index + 1}`,
+        mode: 'none',
+        fill: 'tonextx',
+        fillcolor: colors.dailyGlucoseProfiles[bgRange].fill,
+        line: {
+          color: colors.dailyGlucoseProfiles[bgRange].line,
+          simplify: false,
+          width: 1,
+        },
+      });
 
       data.push({
         name: 'median',
@@ -1126,13 +1111,11 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
         mode: 'lines',
         fill: 'none',
         line: {
-          color: colors.ambulatoryGlucoseProfile.median[bgRange],
+          color: colors.dailyGlucoseProfiles[bgRange].line,
           simplify: false,
           width: 1,
         },
       });
-
-      const range = [bgTicks[index], bgTicks[index + 1]];
 
       const yAxis = {
         domain: [range[0] / yClamp, range[1] / yClamp],
@@ -1200,22 +1183,12 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       ],
 
       shapes: [
-        targetRangeFill,
         ...bgGridLines,
       ],
     };
 
-    const groupedData = _.groupBy(data, 'name');
-    console.log('groupedData', groupedData);
-
     const figure = {
-      data: [
-        // ...groupedData.outerQuantile,
-        // ...groupedData.interQuartile,
-        ...groupedData.median,
-        // Dummy data to allow rendering overlay axes used for annotations, ticks, etc
-        // { visible: false, xaxis: 'x2' },
-      ],
+      data,
       layout,
     };
 
