@@ -956,6 +956,12 @@ class PrintView {
     }
   }
 
+  renderSVGImage(svgDataURL, x, y, width, height) {
+    const svgDataURLArr = svgDataURL.split(',');
+    const rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
+    this.addSVG(rawChartSVG, x, y, { assumePt: true, width, height });
+  }
+
   setFooterSize() {
     this.doc.fontSize(this.footerFontSize);
     const lineHeight = this.doc.currentLineHeight();
