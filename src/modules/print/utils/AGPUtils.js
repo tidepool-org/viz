@@ -405,7 +405,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         xanchor: 'left',
         xshift: -1,
         y: bracketPos.low.posY2,
-        yshift: -12,
+        yshift: -11,
       },
       lowCombined: {
         x: bracketXExtents[1],
@@ -471,7 +471,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         xref: 'paper',
         xshift: plotMarginX - 7,
         y: bracketPos.low.posY2,
-        yshift: -12,
+        yshift: -11,
       },
     };
 
