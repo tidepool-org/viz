@@ -28,6 +28,7 @@ import SettingsPrintView from './SettingsPrintView';
 import AGPPrintView from './AGPPrintView';
 
 import * as constants from './utils/constants';
+export * from './utils/AGPUtils';
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
