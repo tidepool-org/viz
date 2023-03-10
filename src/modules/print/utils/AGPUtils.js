@@ -253,7 +253,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     const bracketYPos = [
       // Low Brackets
       chartData.ticks[0],
-      yScale(-12),
+      yScale(-11),
 
       // Target Bracket
       chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2),
@@ -405,7 +405,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         xanchor: 'left',
         xshift: -1,
         y: bracketPos.low.posY2,
-        yshift: -11,
+        yshift: -12,
       },
       lowCombined: {
         x: bracketXExtents[1],
@@ -471,7 +471,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         xref: 'paper',
         xshift: plotMarginX - 7,
         y: bracketPos.low.posY2,
-        yshift: -11,
+        yshift: -12,
       },
     };
 
