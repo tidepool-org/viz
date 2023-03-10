@@ -4,6 +4,8 @@ import { storiesOf } from '@storybook/react';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
+import { generateAGPSVGDataURLS } from '../../src/utils/print/plotly';
+
 import PrintView from '../../src/modules/print/PrintView';
 
 import * as profiles from '../../data/patient/profiles';
@@ -23,13 +25,14 @@ try {
 async function openPDF(dataUtil, { patient }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
+  const data = queries.agp ? dataUtil.query(queries.agp) : {};
+
   const opts = {
     bgPrefs: queries.agp.bgPrefs,
     timePrefs: queries.agp.timePrefs,
     patient,
+    svgDataURLS: await generateAGPSVGDataURLS(data),
   };
-
-  const data = queries.agp ? dataUtil.query(queries.agp) : {};
 
   await createPrintView('agp', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);

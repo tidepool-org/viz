@@ -956,7 +956,7 @@ class PrintView {
     }
   }
 
-  renderSVGImage(svgDataURL, x, y, width, height) {
+  renderSVGImage(svgDataURL = '', x, y, width, height) {
     const svgDataURLArr = svgDataURL.split(',');
     const rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
     this.addSVG(rawChartSVG, x, y, { assumePt: true, width, height });

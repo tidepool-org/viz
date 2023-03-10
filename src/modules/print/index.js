@@ -28,7 +28,6 @@ import SettingsPrintView from './SettingsPrintView';
 import AGPPrintView from './AGPPrintView';
 
 import * as constants from './utils/constants';
-export * from './utils/AGPUtils';
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
@@ -63,6 +62,7 @@ export const utils = {
 export function createPrintView(type, data, opts, doc) {
   const {
     patient,
+    svgDataURLS,
   } = opts;
 
   let Renderer;
@@ -78,6 +78,7 @@ export function createPrintView(type, data, opts, doc) {
     margins: constants.MARGINS,
     patient,
     smallFontSize: constants.SMALL_FONT_SIZE,
+    svgDataURLS,
     width: constants.WIDTH,
   };
 
