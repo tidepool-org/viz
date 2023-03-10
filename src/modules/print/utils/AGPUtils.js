@@ -586,7 +586,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - (AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT) - AGP_SECTION_BORDER_RADIUS;
   const plotMarginX = DPI * 0.5;
-  const plotMarginY = DPI * 0.25;
+  const plotMarginY = DPI * 0.2;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
@@ -982,7 +982,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
 export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, dateLabelFormat) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
-  const chartAreaHeight = section.height - 2 - AGP_SECTION_HEADER_HEIGHT - AGP_SECTION_BORDER_RADIUS;
+  const chartAreaHeight = section.height - 2 - (AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT) - AGP_SECTION_BORDER_RADIUS;
   const plotHeight = chartAreaHeight / 2;
   const plotMarginX = DPI * 0.5;
   const plotMarginTop = DPI * 0.2;
