@@ -2,6 +2,17 @@ import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
 
+import {
+  withKnobs,
+  optionsKnob as options,
+  date,
+  number,
+} from '@storybook/addon-knobs';
+
+import moment from 'moment';
+
+import { getOffset } from '../../src/utils/datetime';
+import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS, MS_IN_DAY } from '../../src/utils/constants';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import { generateAGPSVGDataURLS } from '../../src/utils/print/plotly';
@@ -13,6 +24,10 @@ import * as profiles from '../../data/patient/profiles';
 /* global PDFDocument, blobStream, window */
 
 const stories = storiesOf('AGP View PDF', module);
+stories.addDecorator(withKnobs);
+stories.addParameters({ options: { panelPosition: 'right' } });
+
+const GROUP_CONFIG = 'CONFIG';
 
 let queries;
 try {
@@ -22,10 +37,10 @@ try {
   queries = {};
 }
 
-async function openPDF(dataUtil, { patient }) {
+async function openPDF(dataUtil, { patient }, query) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
-  const data = queries.agp ? dataUtil.query(queries.agp) : {};
+  const data = dataUtil.query(query);
 
   const opts = {
     bgPrefs: queries.agp.bgPrefs,
@@ -55,8 +70,94 @@ and then use this story to iterate on the AGP Print PDF outside of Tidepool Web!
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('standard account', ({ dataUtil }) => (
-  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName })}>
-    Open PDF in new tab
-  </button>
-), { notes });
+stories.add('standard account', ({ dataUtil }) => {
+  const latestCBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType.cbg;
+  const daysInRange = 14;
+
+  const daysInRangeOptions = {
+    range: true,
+    min: 1,
+    max: 30,
+    step: 1,
+  };
+
+  const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_CONFIG);
+
+  const timezones = {
+    'US/Eastern': 'US/Eastern',
+    'US/Central': 'US/Central',
+    'US/Mountain': 'US/Mountain',
+    'US/Pacific': 'US/Pacific',
+    UTC: 'UTC',
+  };
+
+  const getTimePrefs = () => {
+    const timeZoneName = options(
+      'Time Zone',
+      timezones,
+      'US/Eastern',
+      { display: 'select' },
+      GROUP_CONFIG,
+    );
+    const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
+
+    return selectedTimeZone ? {
+      timezoneName: selectedTimeZone,
+      timezoneAware: true,
+    } : undefined;
+  };
+
+  const endMoment = () => moment.utc(latestCBGDatum?.normalTime).tz(getTimePrefs().timezoneName).startOf('day').add(1, 'day');
+
+  const getEndMoment = () => {
+    const endDate = date('End Date', endMoment().toDate(), GROUP_CONFIG);
+    return moment.utc(endDate).tz(getTimePrefs().timezoneName);
+  };
+
+  const getBGPrefs = () => {
+    const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS }, MGDL_UNITS, { display: 'select' }, GROUP_CONFIG);
+
+    return bgUnits !== 'None' ? {
+      bgUnits,
+      bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
+    } : undefined;
+  };
+
+  const getEndpoints = () => {
+    const endDate = getEndMoment();
+
+    const endpoints = [
+      endDate.clone().subtract(getDaysInRange(), 'd').startOf('day').valueOf(),
+      endDate.valueOf(),
+    ];
+
+    return endpoints;
+  };
+
+  getTimePrefs();
+  getEndpoints();
+  getBGPrefs();
+
+  const query = () => ({
+    endpoints: getEndpoints(),
+    timePrefs: getTimePrefs(),
+    bgPrefs: getBGPrefs(),
+    bgSource: 'cbg',
+    aggregationsByDate: 'dataByDate',
+    stats: [
+      'timeInRange',
+      'averageGlucose',
+      'sensorUsage',
+      'glucoseManagementIndicator',
+      'coefficientOfVariation',
+    ],
+    types: { cbg: {} },
+  });
+
+  return (
+    <button
+      onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query())}>
+      Open PDF in new tab
+    </button>
+  );
+}, { notes });
