@@ -1087,7 +1087,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
         type: 'scatter',
         x: isTarget
           ? [0, MS_IN_DAY * 7, MS_IN_DAY * 7, 0]
-          : [firstDatum.msPer24, ..._.map(combinedData, 'msPer24'), lastDatum.msPer24, firstDatum.msPer24],
+          : [firstDatum?.msPer24, ..._.map(combinedData, 'msPer24'), lastDatum?.msPer24, firstDatum?.msPer24],
         y: isTarget
           ? [range[1], range[1], range[0], range[0]]
           : [range[fillYExentRangeIndex], ..._.map(combinedData, 'value'), range[fillYExentRangeIndex], range[fillYExentRangeIndex]],
