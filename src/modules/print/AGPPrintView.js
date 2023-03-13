@@ -27,6 +27,7 @@ import { formatBirthdate, getOffset } from '../../utils/datetime';
 import { formatDatum } from '../../utils/stat';
 
 const agpLogo = require('./images/capturAGP-logo.png');
+const tidepoolLogo = require('./images/tidepool-logo-408x46.png');
 const t = i18next.t.bind(i18next);
 
 class AGPPrintView extends PrintView {
@@ -85,11 +86,23 @@ class AGPPrintView extends PrintView {
       .fillOpacity(1)
       .text(text.reportFooter, xPos, yPos);
 
-    this.logoWidth = 70;
-    const logoX = this.doc.page.width - this.logoWidth - this.margins.right;
-    const logoY = this.bottomEdge - this.logoWidth * 0.175 - AGP_FOOTER_Y_PADDING;
+    this.agpLogoWidth = 70;
+    this.tidepoolLogoWidth = 65;
+    const logoX = this.doc.page.width - this.agpLogoWidth - this.margins.right;
+    const logoY = this.bottomEdge - this.agpLogoWidth * 0.175 - AGP_FOOTER_Y_PADDING;
 
-    this.doc.image(agpLogo, logoX, logoY, { width: this.logoWidth });
+    // Render AGP Logo
+    this.doc.image(agpLogo, logoX, logoY, { width: this.agpLogoWidth });
+
+    // Render Tidepool Logo
+    this.doc.image(tidepoolLogo, logoX - (this.agpLogoWidth + 10), logoY + 2, { width: this.tidepoolLogoWidth });
+    this.setStroke(colors.mediumGrey);
+
+    this.doc
+      .moveTo(logoX - 8, logoY)
+      .lineTo(logoX - 8, logoY + 11)
+      .stroke();
+
     super.renderFooter();
 
     return this;
