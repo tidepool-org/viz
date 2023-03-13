@@ -1066,6 +1066,25 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       x: tick,
     }));
 
+    const calendarDays = _.flatten(_.map(cbgData, (d) => d[0]));
+
+    const calendarDayAnnotations = _.map(calendarDays, (date, index) => createAnnotation({
+      align: 'left',
+      font: {
+        color: colors.text.calendarDates,
+        size: fontSizes.dailyGlucoseProfiles.calendarDates,
+      },
+      text: boldText(moment.utc(date).format('D')),
+      y: 1,
+      yanchor: 'top',
+      yref: 'paper',
+      yshift: 0,
+      xanchor: 'left',
+      xref: 'x',
+      xshift: 0,
+      x: index * MS_IN_DAY,
+    }));
+
     const data = [];
     const yAxes = [];
 
@@ -1163,6 +1182,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       annotations: [
         ...bgTickAnnotations,
         ...halfDayTickAnnotations,
+        ...calendarDayAnnotations,
 
         createAnnotation({
           font: {

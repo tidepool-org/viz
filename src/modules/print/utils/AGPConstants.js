@@ -141,6 +141,7 @@ export const colors = {
       description: black,
     },
     reportInfo: black,
+    calendarDates: darkGrey,
     goals: {
       veryHigh: darkGrey,
       highCombined: mediumGrey,
