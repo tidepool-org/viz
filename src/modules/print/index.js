@@ -171,8 +171,8 @@ export function createPrintPDFPackage(data, opts) {
     if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
     if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
     if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
-    if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
     if (!agp.disabled) await createPrintView('agp', data.agp, pdfOpts, doc).render();
+    if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
 
     PrintView.renderPageNumbers(doc);
 
