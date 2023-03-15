@@ -186,7 +186,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
 
     /* eslint-disable no-param-reassign */
     const getBracketPosValues = (posX, posX2, posY, posY2) => {
-      const minBracketYOffSet = yScale(10);
+      const minBracketYOffSet = yScale(13);
 
       if (_.isNumber(posY2)) {
         const maxSubBracketYOffset = yScale(24);
