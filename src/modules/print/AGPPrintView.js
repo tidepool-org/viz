@@ -279,7 +279,7 @@ class AGPPrintView extends PrintView {
       const isShaded = index % 2 !== 0;
 
       const { value, suffix } = formatDatum(
-        _.get(stat.data, _.get(stat.data, 'dataPaths.summary')),
+        _.get(stat.data, _.get(stat.data, 'dataPaths.summaryAGP', stat.data?.dataPaths?.summary)),
         _.get(stat, 'dataFormat.summary'),
         { bgPrefs: this.bgPrefs, data: stat.data, useAGPFormat: true }
       );

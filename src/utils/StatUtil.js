@@ -189,21 +189,26 @@ export class StatUtil {
       || this.activeDays < 14
       || getTotalCbgDuration() < 14 * MS_IN_DAY * 0.7;
 
-    if (insufficientData) {
-      return {
-        glucoseManagementIndicator: NaN,
-        insufficientData: true,
-      };
-    }
-
     const meanInMGDL = this.bgUnits === MGDL_UNITS
       ? averageGlucose
       : averageGlucose * MGDL_PER_MMOLL;
 
     const glucoseManagementIndicator = (3.31 + 0.02392 * meanInMGDL);
+    const glucoseManagementIndicatorAGP = glucoseManagementIndicator;
+
+    if (insufficientData) {
+      // We still return values for AGP reports where the data sufficiency requirements are
+      // different from ours and are checked at time of report generation
+      return {
+        glucoseManagementIndicator: NaN,
+        glucoseManagementIndicatorAGP,
+        insufficientData: true,
+      };
+    }
 
     return {
       glucoseManagementIndicator,
+      glucoseManagementIndicatorAGP,
       total,
     };
   };

@@ -512,10 +512,15 @@ export const getStatData = (data, type, opts = {}) => {
           id: 'gmi',
           value: ensureNumeric(data.glucoseManagementIndicator),
         },
+        {
+          id: 'gmiAGP',
+          value: ensureNumeric(data.glucoseManagementIndicatorAGP),
+        },
       ];
 
       statData.dataPaths = {
         summary: 'data.0',
+        summaryAGP: 'data.1',
       };
       break;
 
@@ -567,10 +572,14 @@ export const getStatData = (data, type, opts = {}) => {
         {
           value: ensureNumeric(data.sensorUsage),
         },
+        {
+          value: ensureNumeric(data.sensorUsageAGP),
+        },
       ];
       statData.total = { value: ensureNumeric(data.total) };
       statData.dataPaths = {
         summary: 'data.0',
+        summaryAGP: 'data.1',
       };
       break;
 
