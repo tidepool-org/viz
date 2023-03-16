@@ -26,6 +26,7 @@ export const text = {
   reportHeader: t('AGP Report:'),
   reportSubHeader: t('Continuous glucose monitoring'),
   reportFooter: t('Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022'),
+  reportInsuffienctData: t('Insufficient data to generate an AGP Report.'),
   timeInRanges: {
     title: t('Time in Ranges'),
     subtitle: t('Goals for Type 1 and Type 2 Diabetes'),
@@ -56,6 +57,7 @@ export const text = {
     title: t('Ambulatory Glucose Profile (AGP)'),
     description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
     targetRange: t('Target<br>Range'),
+    insufficientData: t('Insufficient CGM data to generate AGP graph'),
   },
   dailyGlucoseProfiles: {
     title: t('Daily Glucose Profiles'),
@@ -93,6 +95,7 @@ export const fontSizes = {
     title: 9,
     subtitle: 8,
     description: 7,
+    insufficientData: 7,
   },
   timeInRanges: {
     values: 9,
@@ -139,6 +142,7 @@ export const colors = {
       title: black,
       subtitle: darkGrey,
       description: black,
+      insufficientData: black,
     },
     reportInfo: black,
     calendarDates: darkGrey,

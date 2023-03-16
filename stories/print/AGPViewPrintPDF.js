@@ -11,8 +11,7 @@ import {
 
 import moment from 'moment';
 
-import { getOffset } from '../../src/utils/datetime';
-import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS, MS_IN_DAY } from '../../src/utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import { generateAGPSVGDataURLS } from '../../src/utils/print/plotly';
@@ -143,7 +142,7 @@ stories.add('standard account', ({ dataUtil }) => {
     timePrefs: getTimePrefs(),
     bgPrefs: getBGPrefs(),
     bgSource: 'cbg',
-    aggregationsByDate: 'dataByDate',
+    aggregationsByDate: 'dataByDate,statsByDate',
     stats: [
       'timeInRange',
       'averageGlucose',

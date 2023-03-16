@@ -17,8 +17,8 @@ import {
 } from './AGPConstants';
 
 import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
-import { formatBgValue, formatPercentage } from '../../../utils/format';
-import { ONE_HR } from '../../../utils/datetime';
+import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
+import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { mungeBGDataBins } from '../../../utils/bloodglucose';
 import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR } from '../../../utils/constants';
 import moment from 'moment';
@@ -41,7 +41,95 @@ const createAnnotation = options => {
   return annotation;
 };
 
-export const generateChartSections = () => {
+export const calculateDataSufficiency = (data = {}) => {
+  const { statsByDate } = data.data?.current?.aggregationsByDate;
+
+  const {
+    cgmDaysWorn,
+    count,
+    newestDatum,
+    sampleFrequency,
+    sensorUsageAGP,
+  } = data.data?.current?.stats?.sensorUsage || {};
+
+  const sufficiencyBySection = {
+    ambulatoryGlucoseProfile: true,
+    dailyGlucoseProfiles: true,
+    glucoseMetrics: true,
+    timeInRanges: true,
+  };
+
+  const hoursOfCGMData = (count * sampleFrequency) / MS_IN_HOUR;
+
+  if (hoursOfCGMData < 24) {
+    // Show nothing if <24 hours total cgm time
+    return {
+      ambulatoryGlucoseProfile: false,
+      dailyGlucoseProfiles: false,
+      glucoseMetrics: false,
+      timeInRanges: false,
+    };
+  } else if (hoursOfCGMData === 24) {
+    // Hide agp if only 24 hours total cgm time, but show other sections conditional on sufficiency
+    const sufficencyMet = sensorUsageAGP >= 70;
+
+    return {
+      ambulatoryGlucoseProfile: false,
+      dailyGlucoseProfiles: sufficencyMet,
+      glucoseMetrics: sufficencyMet,
+      timeInRanges: sufficencyMet,
+    };
+  }
+
+  const cgmCalendarDays = _.map(_.range(_.max([cgmDaysWorn, 7])), (val, index) => (
+    moment.utc(newestDatum.time).tz(getTimezoneFromTimePrefs(data.timePrefs)).subtract(index, 'days').format('YYYY-MM-DD')
+  )).reverse();
+
+  const sensorUsageByDate = _.map(cgmCalendarDays, (date, index) => {
+    const {
+      count: countForDate,
+      sampleFrequency: sampleFrequencyForDate,
+      newestDatum: newestDatumForDate = {},
+      oldestDatum: oldestDatumForDate = {},
+    } = statsByDate[date]?.sensorUsage || {};
+
+    if (!sampleFrequencyForDate || !countForDate) {
+      return { sufficiencyMet: false, sensorUsage: 0 };
+    }
+
+    const minCount = MS_IN_HOUR / sampleFrequencyForDate;
+
+    let maxPossibleReadings = 0;
+    if (index === 0) {
+      maxPossibleReadings = bankersRound((MS_IN_DAY - oldestDatumForDate.msPer24) / sampleFrequencyForDate);
+    } else if (index === cgmCalendarDays.length - 1) {
+      maxPossibleReadings = bankersRound(newestDatumForDate.msPer24 / sampleFrequencyForDate);
+    } else {
+      maxPossibleReadings = bankersRound(MS_IN_DAY / sampleFrequencyForDate);
+    }
+
+    const sensorUsage = maxPossibleReadings > 0 ? countForDate / maxPossibleReadings * 100 : 0;
+    const sufficiencyMet = countForDate >= minCount;
+
+    return ({ count: countForDate, date, maxPossibleReadings, sensorUsage, sufficiencyMet });
+  });
+
+  // AGP section requires that each day in the top 7 have at least an hour of data, and an average
+  // sensore usage of 70%
+  const sufficientDays = _.filter(sensorUsageByDate, { sufficiencyMet: true });
+  const topSevenSufficientDays = _.slice(_.orderBy(sufficientDays, ['sensorUsage'], ['desc']), 0, 7);
+
+  if (topSevenSufficientDays.length < 7) {
+    sufficiencyBySection.ambulatoryGlucoseProfile = false;
+  } else {
+    const topSevenDaysSensorUsageMean = _.meanBy(topSevenSufficientDays, 'sensorUsage');
+    sufficiencyBySection.ambulatoryGlucoseProfile = topSevenDaysSensorUsageMean >= 70;
+  }
+
+  return sufficiencyBySection;
+};
+
+export const generateChartSections = (data) => {
   const reportInfoAndMetricsWidth = DPI * 3.375;
   const chartRenderAreaTop = DPI * 0.75;
   const rightEdge = MARGINS.left + WIDTH;
@@ -49,6 +137,7 @@ export const generateChartSections = () => {
   const chartRenderAreaBottom = bottomEdge - (DPI * 0.75 - MARGINS.bottom);
   const sectionGap = DPI * 0.25;
   const sections = {};
+  const dataSufficiency = calculateDataSufficiency(data);
 
   sections.timeInRanges = {
     x: MARGINS.left,
@@ -57,6 +146,7 @@ export const generateChartSections = () => {
     height: DPI * 3,
     bordered: true,
     text: text.timeInRanges,
+    sufficientData: dataSufficiency.timeInRanges,
   };
 
   sections.reportInfo = {
@@ -74,6 +164,7 @@ export const generateChartSections = () => {
     height: DPI * 1.875,
     bordered: true,
     text: text.glucoseMetrics,
+    sufficientData: dataSufficiency.glucoseMetrics,
   };
 
   sections.ambulatoryGlucoseProfile = {
@@ -83,6 +174,7 @@ export const generateChartSections = () => {
     height: DPI * 3.5,
     bordered: true,
     text: text.ambulatoryGlucoseProfile,
+    sufficientData: dataSufficiency.ambulatoryGlucoseProfile,
   };
 
   const dailyGlucoseProfilesHeight = DPI * 2.25;
@@ -93,6 +185,7 @@ export const generateChartSections = () => {
     height: dailyGlucoseProfilesHeight,
     bordered: true,
     text: text.dailyGlucoseProfiles,
+    sufficientData: dataSufficiency.dailyGlucoseProfiles,
   };
 
   return sections;
@@ -120,7 +213,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
   const xScale = pixelsToChartScale.bind(null, paperWidth);
 
   const statTotal = _.get(stat, 'data.raw.counts.total', 0);
-  if (statTotal > 0) {
+  if (section.sufficientData) {
     const rawCounts = _.get(stat, 'data.raw.counts', {});
 
     const statDatums = [
@@ -578,7 +671,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     return figure;
   }
 
-  return null; // TODO: insufficient data text
+  return null;
 };
 
 export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs) => {
@@ -590,7 +683,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
-  if (cbgData.length > 0) { // TODO: proper data sufficiency check
+  if (section.sufficientData) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
     const chartData = mungeBGDataBins('cbg', ONE_HR, cbgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
 
@@ -976,7 +1069,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
     return figure;
   }
 
-  return null; // TODO: insufficient data text
+  return null;
 };
 
 export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, dateLabelFormat) => {
@@ -989,7 +1082,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
   const plotMarginBottom = 1;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
 
-  if (cbgData.length > 0) { // TODO: proper data sufficiency check
+  if (section.sufficientData) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
 
     const bgRangeKeys = [
@@ -1215,5 +1308,5 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
     return figure;
   }
 
-  return null; // TODO: insufficient data text
+  return null;
 };

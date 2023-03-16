@@ -140,6 +140,7 @@ class PrintView {
 
     this.leftEdge = this.margins.left;
     this.rightEdge = this.margins.left + this.width;
+    this.topEdge = this.margins.top;
     this.bottomEdge = this.margins.top + this.height;
 
     this.chartArea = {

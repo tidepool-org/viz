@@ -246,20 +246,6 @@ export class StatUtil {
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
     const count = cbgData.length;
 
-    const rawCbgData = this.dataUtil.sort.byTime(cbgData);
-    const newestDatum = _.last(rawCbgData);
-    const oldestDatum = _.first(rawCbgData);
-    let cgmDaysWorn;
-    let cgmMinutesWorn;
-
-    if (rawCbgData.length < 2) {
-      cgmDaysWorn = rawCbgData.length;
-      cgmMinutesWorn = rawCbgData.length === 1 ? cgmSampleFrequency(newestDatum) : 0;
-    } else {
-      cgmDaysWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'days', true));
-      cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
-    }
-
     // Data for Tidepool sensor usage stat
     const duration = _.reduce(
       cbgData,
@@ -273,9 +259,27 @@ export class StatUtil {
     const total = this.activeDays * MS_IN_DAY;
 
     // Data for AGP sensor usage stat
+    const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
+    const newestDatum = _.last(rawCbgData);
+    const oldestDatum = _.first(rawCbgData);
+    const sampleFrequency = cgmSampleFrequency(newestDatum);
+    this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
+    this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
+
+    let cgmDaysWorn;
+    let cgmMinutesWorn;
+
+    if (rawCbgData.length < 2) {
+      cgmDaysWorn = rawCbgData.length;
+      cgmMinutesWorn = rawCbgData.length === 1 ? sampleFrequency : 0;
+    } else {
+      cgmDaysWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'days', true));
+      cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
+    }
+
     const sensorUsageAGP = (
       count /
-      ((cgmMinutesWorn / (cgmSampleFrequency(newestDatum) / MS_IN_MIN)) + 1)
+      ((cgmMinutesWorn / (sampleFrequency / MS_IN_MIN)) + 1)
     ) * 100;
 
     return {
@@ -286,6 +290,8 @@ export class StatUtil {
       newestDatum,
       oldestDatum,
       total,
+      sampleFrequency,
+      count,
     };
   };
 

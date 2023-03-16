@@ -17,6 +17,7 @@ import {
 } from './utils/AGPConstants';
 
 import {
+  calculateDataSufficiency,
   generateChartSections,
 } from './utils/AGPUtils';
 
@@ -33,9 +34,8 @@ const t = i18next.t.bind(i18next);
 class AGPPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
-    this.sections = generateChartSections();
+    this.sections = generateChartSections(data);
     this.doc.addPage();
-    this.initLayout();
     this.svgDataURLS = opts.svgDataURLS;
   }
 
@@ -43,22 +43,26 @@ class AGPPrintView extends PrintView {
     super.newPage();
   }
 
-  initLayout() {
-    this.setLayoutColumns({
-      width: this.width,
-      gutter: 15,
-      type: 'percentage',
-      widths: [25.5, 49, 25.5],
-    });
-  }
-
   async render() {
     // this.renderGuides(); // Uncomment to render section borders for debugging
     this.renderReportInfo();
-    this.renderGlucoseMetrics();
-    await this.renderTimeInRanges();
-    await this.renderAmbulatoryGlucoseProfile();
-    await this.renderDailyGlucoseProfiles();
+
+    if (
+      !this.sections.ambulatoryGlucoseProfile.sufficientData &&
+      !this.sections.dailyGlucoseProfiles.sufficientData &&
+      !this.sections.glucoseMetrics.sufficientData &&
+      !this.sections.timeInRanges.sufficientData
+    ) {
+      // If no sections have sufficient data we don't render any of them
+      this.renderInsufficientData();
+    } else {
+      // If at least one section has sufficient data we render all of them, and show any unmet
+      // data sufficiency text within the sections themselves
+      this.renderGlucoseMetrics();
+      await this.renderTimeInRanges();
+      await this.renderAmbulatoryGlucoseProfile();
+      await this.renderDailyGlucoseProfiles();
+    }
   }
 
   renderHeader() {
@@ -124,6 +128,16 @@ class AGPPrintView extends PrintView {
     this.doc.undash();
   }
 
+  renderInsufficientData() {
+    this.resetText();
+    const yPos = this.topEdge + (this.dpi * 0.3);
+    const xPos = this.leftEdge;
+
+    this.doc
+      .fontSize(fontSizes.reportInfo.default)
+      .text(text.reportInsuffienctData, xPos, yPos);
+  }
+
   renderSectionContainer(section) {
     this.resetText();
 
@@ -164,7 +178,19 @@ class AGPPrintView extends PrintView {
       }
     }
 
-    if (section.text?.description) {
+    if (section.text?.insufficientData) {
+      const insufficientDataPaddingX = 14;
+      const insufficientDataPaddingY = 8;
+      const insufficientDataXPos = section.x + insufficientDataPaddingX;
+      const insufficientDataYPos = section.y + AGP_SECTION_HEADER_HEIGHT + insufficientDataPaddingY;
+
+      this.setFill(colors.text.section.insufficientData);
+
+      this.doc.font(this.font)
+        .fontSize(fontSizes.section.insufficientData);
+
+      this.doc.text(section.text.insufficientData, insufficientDataXPos, insufficientDataYPos);
+    } else if (section.text?.description) {
       const descriptionPaddingX = 14;
       const descriptionPaddingY = 8;
       const descriptionXPos = section.x + descriptionPaddingX;
@@ -357,12 +383,14 @@ class AGPPrintView extends PrintView {
     const section = this.sections.ambulatoryGlucoseProfile;
     this.renderSectionContainer(section);
 
-    // Set chart plot within section borders
-    const chartAreaX = section.x + 1;
-    const chartAreaY = section.y + 1 + this.dpi * 0.5;
-    const chartAreaWidth = section.width - 2;
-    const chartAreaHeight = section.height - 2 - this.dpi * 0.5 - AGP_SECTION_BORDER_RADIUS;
-    this.renderSVGImage(this.svgDataURLS?.ambulatoryGlucoseProfile, chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight);
+    if (section.sufficientData) {
+      // Set chart plot within section borders
+      const chartAreaX = section.x + 1;
+      const chartAreaY = section.y + 1 + this.dpi * 0.5;
+      const chartAreaWidth = section.width - 2;
+      const chartAreaHeight = section.height - 2 - this.dpi * 0.5 - AGP_SECTION_BORDER_RADIUS;
+      this.renderSVGImage(this.svgDataURLS?.ambulatoryGlucoseProfile, chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight);
+    }
   }
 
   async renderDailyGlucoseProfiles() {
