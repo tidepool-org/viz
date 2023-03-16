@@ -17,7 +17,6 @@ import {
 } from './utils/AGPConstants';
 
 import {
-  calculateDataSufficiency,
   generateChartSections,
 } from './utils/AGPUtils';
 
@@ -178,7 +177,7 @@ class AGPPrintView extends PrintView {
       }
     }
 
-    if (section.text?.insufficientData) {
+    if (!section.sufficientData && section.text?.insufficientData) {
       const insufficientDataPaddingX = 14;
       const insufficientDataPaddingY = 8;
       const insufficientDataXPos = section.x + insufficientDataPaddingX;

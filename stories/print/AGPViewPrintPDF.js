@@ -142,7 +142,7 @@ stories.add('standard account', ({ dataUtil }) => {
     timePrefs: getTimePrefs(),
     bgPrefs: getBGPrefs(),
     bgSource: 'cbg',
-    aggregationsByDate: 'dataByDate,statsByDate',
+    aggregationsByDate: 'dataByDate, statsByDate',
     stats: [
       'timeInRange',
       'averageGlucose',

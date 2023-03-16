@@ -260,11 +260,11 @@ export class StatUtil {
 
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
-    const newestDatum = _.last(rawCbgData);
-    const oldestDatum = _.first(rawCbgData);
+    const newestDatum = _.cloneDeep(_.last(rawCbgData));
+    const oldestDatum = _.cloneDeep(_.first(rawCbgData));
     const sampleFrequency = cgmSampleFrequency(newestDatum);
-    this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
-    this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
+    if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
+    if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
     let cgmDaysWorn;
     let cgmMinutesWorn;
