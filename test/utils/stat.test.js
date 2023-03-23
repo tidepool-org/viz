@@ -1219,6 +1219,7 @@ describe('stat', () => {
     it('should format and return `glucoseManagementIndicator` data', () => {
       const data = {
         glucoseManagementIndicator: 36,
+        glucoseManagementIndicatorAGP: 37,
       };
 
       const statData = stat.getStatData(data, commonStats.glucoseManagementIndicator, opts);
@@ -1228,10 +1229,15 @@ describe('stat', () => {
           id: 'gmi',
           value: 36,
         },
+        {
+          id: 'gmiAGP',
+          value: 37,
+        },
       ]);
 
       expect(statData.dataPaths).to.eql({
         summary: 'data.0',
+        summaryAGP: 'data.1',
       });
     });
 
@@ -1289,6 +1295,7 @@ describe('stat', () => {
     it('should format and return `sensorUsage` data', () => {
       const data = {
         sensorUsage: 80,
+        sensorUsageAGP: 82,
         total: 200,
       };
 
@@ -1298,12 +1305,16 @@ describe('stat', () => {
         {
           value: 80,
         },
+        {
+          value: 82,
+        },
       ]);
 
       expect(statData.total).to.eql({ value: 200 });
 
       expect(statData.dataPaths).to.eql({
         summary: 'data.0',
+        summaryAGP: 'data.1',
       });
     });
 
@@ -1393,11 +1404,21 @@ describe('stat', () => {
 
     it('should format and return `timeInRange` data', () => {
       const data = {
-        veryLow: 10000,
-        low: 20000,
-        target: 30000,
-        high: 40000,
-        veryHigh: 50000,
+        durations: {
+          veryLow: 10000,
+          low: 20000,
+          target: 30000,
+          high: 40000,
+          veryHigh: 50000,
+        },
+        counts: {
+          veryLow: 1,
+          low: 2,
+          target: 3,
+          high: 4,
+          veryHigh: 5,
+          total: 15,
+        },
       };
 
       const statData = stat.getStatData(data, commonStats.timeInRange, opts);
@@ -1765,7 +1786,7 @@ describe('stat', () => {
     });
 
     it('should define the `timeInRange` stat', () => {
-      const def = stat.getStatDefinition(data, commonStats.timeInRange, opts);
+      const def = stat.getStatDefinition({ durations: data, counts: data }, commonStats.timeInRange, opts);
       expect(def).to.include.all.keys(commonStatProperties);
       expect(def.id).to.equal(commonStats.timeInRange);
       expect(def.type).to.equal(statTypes.barHorizontal);

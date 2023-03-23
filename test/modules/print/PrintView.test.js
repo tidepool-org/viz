@@ -508,13 +508,25 @@ describe('PrintView', () => {
   describe('getDateRange', () => {
     it('should return the formatted date range when provided date strings and format', () => {
       const result = Renderer.getDateRange('2017-12-01', '2017-12-10', 'YYYY-MM-DD');
-      expect(result).to.equal('Date range: Dec 1 - Dec 10, 2017');
+      expect(result).to.equal('Dec 1 - Dec 10, 2017');
     });
 
     it('should return the formatted date range when provided date timestamps', () => {
       Renderer.timezone = 'UTC';
       const result = Renderer.getDateRange(Date.parse('2017-12-01T00:00:00.000Z'), Date.parse('2017-12-10T00:00:00.000Z'));
-      expect(result).to.equal('Date range: Dec 1 - Dec 10, 2017');
+      expect(result).to.equal('Dec 1 - Dec 10, 2017');
+    });
+
+    it('should allow setting a custom prefix', () => {
+      Renderer.timezone = 'UTC';
+      const result = Renderer.getDateRange(Date.parse('2017-12-01T00:00:00.000Z'), Date.parse('2017-12-10T00:00:00.000Z'), null, 'My Prefix: ');
+      expect(result).to.equal('My Prefix: Dec 1 - Dec 10, 2017');
+    });
+
+    it('should allow setting a custom month format to use', () => {
+      Renderer.timezone = 'UTC';
+      const result = Renderer.getDateRange(Date.parse('2017-12-01T00:00:00.000Z'), Date.parse('2017-12-10T00:00:00.000Z'), null, '', 'MMMM');
+      expect(result).to.equal('December 1 - December 10, 2017');
     });
   });
 

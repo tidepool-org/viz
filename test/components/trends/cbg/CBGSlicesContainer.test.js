@@ -30,6 +30,7 @@ const {
 import bgBounds from '../../../helpers/bgBounds';
 
 import { THREE_HRS, TWENTY_FOUR_HRS } from '../../../../src/utils/datetime';
+import * as bgUtils from '../../../../src/utils/bloodglucose';
 import CBGSlicesContainer
   from '../../../../src/components/trends/cbg/CBGSlicesContainer';
 import CBGSliceAnimated from '../../../../src/components/trends/cbg/CBGSliceAnimated';
@@ -86,21 +87,19 @@ describe('CBGSlicesContainer', () => {
 
   describe('componentWillReceiveProps', () => {
     it('remunges data if binSize has changed', () => {
-      const instance = wrapper.instance();
-      sinon.spy(instance, 'mungeData');
-      expect(instance.mungeData.callCount).to.equal(0);
+      sinon.spy(bgUtils, 'mungeBGDataBins');
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
       wrapper.setProps({ binSize: THREE_HRS });
-      expect(instance.mungeData.callCount).to.equal(1);
-      instance.mungeData.restore();
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
+      bgUtils.mungeBGDataBins.restore();
     });
 
     it('remunges data if data has changed', () => {
-      const instance = wrapper.instance();
-      sinon.spy(instance, 'mungeData');
-      expect(instance.mungeData.callCount).to.equal(0);
+      sinon.spy(bgUtils, 'mungeBGDataBins');
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
       wrapper.setProps({ data: [{ id: 'a2b3c4', msPer24: 6000, value: 180 }] });
-      expect(instance.mungeData.callCount).to.equal(1);
-      instance.mungeData.restore();
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
+      bgUtils.mungeBGDataBins.restore();
     });
   });
 

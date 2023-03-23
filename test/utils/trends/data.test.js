@@ -18,15 +18,16 @@
 import { range, shuffle } from 'd3-array';
 
 import * as utils from '../../../src/utils/trends/data';
+import * as bgUtils from '../../../src/utils/bloodglucose';
 
 describe('[trends] data utils', () => {
   describe('determineRangeBoundaries', () => {
     it('should be a function', () => {
-      assert.isFunction(utils.determineRangeBoundaries);
+      assert.isFunction(bgUtils.determineRangeBoundaries);
     });
 
     it('should return the max of all provided `low` thresholds', () => {
-      expect(utils.determineRangeBoundaries([{
+      expect(bgUtils.determineRangeBoundaries([{
         value: 'low',
         threshold: 20,
       }, {
@@ -39,7 +40,7 @@ describe('[trends] data utils', () => {
     });
 
     it('should return the min of all provided `high` thresholds', () => {
-      expect(utils.determineRangeBoundaries([{
+      expect(bgUtils.determineRangeBoundaries([{
         value: 'high',
         threshold: 650,
       }, {
@@ -52,7 +53,7 @@ describe('[trends] data utils', () => {
     });
 
     it('should return both boundaries when a mix of out-of-range objects is provided', () => {
-      expect(utils.determineRangeBoundaries([{
+      expect(bgUtils.determineRangeBoundaries([{
         value: 'high',
         threshold: 500,
       }, {
@@ -67,22 +68,22 @@ describe('[trends] data utils', () => {
 
   describe('findBinForTimeOfDay', () => {
     it('should be a function', () => {
-      assert.isFunction(utils.findBinForTimeOfDay);
+      assert.isFunction(bgUtils.findBinForTimeOfDay);
     });
 
     describe('error conditions', () => {
       it('should error on a negative msPer24', () => {
-        const fn = () => (utils.findBinForTimeOfDay(1, -1));
+        const fn = () => (bgUtils.findBinForTimeOfDay(1, -1));
         expect(fn).to.throw('`msPer24` < 0 or >= 86400000 is invalid!');
       });
 
       it('should error on a msPer24 = 864e5', () => {
-        const fn = () => (utils.findBinForTimeOfDay(1, 86400000));
+        const fn = () => (bgUtils.findBinForTimeOfDay(1, 86400000));
         expect(fn).to.throw('`msPer24` < 0 or >= 86400000 is invalid!');
       });
 
       it('should error on a msPer24 > 864e5', () => {
-        const fn = () => (utils.findBinForTimeOfDay(1, 86400001));
+        const fn = () => (bgUtils.findBinForTimeOfDay(1, 86400001));
         expect(fn).to.throw('`msPer24` < 0 or >= 86400000 is invalid!');
       });
     });
@@ -91,19 +92,19 @@ describe('[trends] data utils', () => {
       const binSize = 1000 * 60 * 60;
 
       it('should assign a bin of `1800000` to a datum at time 0', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 0)).to.equal(1800000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 0)).to.equal(1800000);
       });
 
       it('should assign a bin of `1800000` to a datum at time 3599999', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 3599999)).to.equal(1800000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3599999)).to.equal(1800000);
       });
 
       it('should assign a bin of `5400000` to a datum at time 3600000', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 3600000)).to.equal(5400000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3600000)).to.equal(5400000);
       });
 
       it('should assign a bin of `5400000` to a datum at time 7199999', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 7199999)).to.equal(5400000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 7199999)).to.equal(5400000);
       });
     });
 
@@ -111,19 +112,19 @@ describe('[trends] data utils', () => {
       const binSize = 1000 * 60 * 30;
 
       it('should assign a bin of `900000` to a datum at time 0', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 0)).to.equal(900000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 0)).to.equal(900000);
       });
 
       it('should assign a bin of `2700000` to a datum at time 3599999', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 3599999)).to.equal(2700000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3599999)).to.equal(2700000);
       });
 
       it('should assign a bin of `4500000` to a datum at time 3600000', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 3600000)).to.equal(4500000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3600000)).to.equal(4500000);
       });
 
       it('should assign a bin of `6300000` to a datum at time 7199999', () => {
-        expect(utils.findBinForTimeOfDay(binSize, 7199999)).to.equal(6300000);
+        expect(bgUtils.findBinForTimeOfDay(binSize, 7199999)).to.equal(6300000);
       });
     });
   });
@@ -199,18 +200,18 @@ describe('[trends] data utils', () => {
 
   describe('findOutOfRangeAnnotations', () => {
     it('should be a function', () => {
-      assert.isFunction(utils.findOutOfRangeAnnotations);
+      assert.isFunction(bgUtils.findOutOfRangeAnnotations);
     });
 
     it('should return an empty array if none of the data is annotated `bg/out-of-range`', () => {
-      expect(utils.findOutOfRangeAnnotations([])).to.deep.equal([]);
-      expect(utils.findOutOfRangeAnnotations([{}, {}, {}])).to.deep.equal([]);
-      expect(utils.findOutOfRangeAnnotations([{}, { annotations: [{ code: 'foo' }] }]))
+      expect(bgUtils.findOutOfRangeAnnotations([])).to.deep.equal([]);
+      expect(bgUtils.findOutOfRangeAnnotations([{}, {}, {}])).to.deep.equal([]);
+      expect(bgUtils.findOutOfRangeAnnotations([{}, { annotations: [{ code: 'foo' }] }]))
         .to.deep.equal([]);
     });
 
     it('should return an array of the annotations w/unique thresholds', () => {
-      expect(utils.findOutOfRangeAnnotations([{
+      expect(bgUtils.findOutOfRangeAnnotations([{
         annotations: [{
           code: 'bg/out-of-range',
           value: 'high',
@@ -246,14 +247,14 @@ describe('[trends] data utils', () => {
     const max = 100;
     const data = shuffle(range(min, max + 1));
 
-    const res = utils.calculateCbgStatsForBin(binKey, binSize, data);
+    const res = bgUtils.calculateCbgStatsForBin(binKey, binSize, data);
 
     it('should be a function', () => {
-      assert.isFunction(utils.calculateCbgStatsForBin);
+      assert.isFunction(bgUtils.calculateCbgStatsForBin);
     });
 
     it('should produce result full of `undefined`s on empty values array', () => {
-      const emptyValsRes = utils.calculateCbgStatsForBin(binKey, binSize, []);
+      const emptyValsRes = bgUtils.calculateCbgStatsForBin(binKey, binSize, []);
       assert.isObject(emptyValsRes);
       expect(emptyValsRes).to.deep.equal({
         id: binKey,
@@ -329,7 +330,7 @@ describe('[trends] data utils', () => {
         value: 'high',
         threshold: 400,
       }];
-      const resWithOutOfRange = utils.calculateCbgStatsForBin(binKey, binSize, data, outOfRange);
+      const resWithOutOfRange = bgUtils.calculateCbgStatsForBin(binKey, binSize, data, outOfRange);
 
       it('should add `outOfRangeThresholds` to the resulting object', () => {
         expect(resWithOutOfRange.outOfRangeThresholds).to.deep.equal({
@@ -348,14 +349,14 @@ describe('[trends] data utils', () => {
     const max = 100;
     const data = shuffle(range(min, max + 1));
 
-    const res = utils.calculateSmbgStatsForBin(binKey, binSize, data);
+    const res = bgUtils.calculateSmbgStatsForBin(binKey, binSize, data);
 
     it('should be a function', () => {
-      assert.isFunction(utils.calculateSmbgStatsForBin);
+      assert.isFunction(bgUtils.calculateSmbgStatsForBin);
     });
 
     it('should produce result full of `undefined`s on empty values array', () => {
-      const emptyValsRes = utils.calculateSmbgStatsForBin(binKey, binSize, []);
+      const emptyValsRes = bgUtils.calculateSmbgStatsForBin(binKey, binSize, []);
       assert.isObject(emptyValsRes);
       expect(emptyValsRes).to.deep.equal({
         id: binKey,
@@ -403,7 +404,7 @@ describe('[trends] data utils', () => {
         value: 'high',
         threshold: 400,
       }];
-      const resWithOutOfRange = utils.calculateSmbgStatsForBin(binKey, binSize, data, outOfRange);
+      const resWithOutOfRange = bgUtils.calculateSmbgStatsForBin(binKey, binSize, data, outOfRange);
 
       it('should add `outOfRangeThresholds` to the resulting object', () => {
         expect(resWithOutOfRange.outOfRangeThresholds).to.deep.equal({

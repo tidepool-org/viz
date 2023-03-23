@@ -464,7 +464,16 @@ describe('AggregationUtil', () => {
         'averageGlucose',
       ]);
 
-      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-01'].timeInRange).to.be.an('object').and.have.keys([
+      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-01'].timeInRange.counts).to.be.an('object').and.have.keys([
+        'total',
+        'veryLow',
+        'low',
+        'target',
+        'high',
+        'veryHigh',
+      ]);
+
+      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-01'].timeInRange.durations).to.be.an('object').and.have.keys([
         'total',
         'veryLow',
         'low',
