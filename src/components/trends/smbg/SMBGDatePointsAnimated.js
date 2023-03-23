@@ -20,10 +20,9 @@ import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 import _ from 'lodash';
 
-import { classifyBgValue } from '../../../utils/bloodglucose';
+import { classifyBgValue, findBinForTimeOfDay } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import { THREE_HRS } from '../../../utils/datetime';
-import { findBinForTimeOfDay } from '../../../utils/trends/data';
 
 import styles from './SMBGDatePointsAnimated.css';
 
