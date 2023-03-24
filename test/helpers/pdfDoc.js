@@ -58,6 +58,7 @@ export default class Doc {
     this.circle = sinon.stub().returns(this);
     this.lineWidth = sinon.stub().returns(this);
     this.rect = sinon.stub().returns(this);
+    this.roundedRect = sinon.stub().returns(this);
     this.switchToPage = sinon.stub().returns(this);
     this.text = sinon.stub().returns(this);
     this.image = sinon.stub().returns(this);
