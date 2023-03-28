@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "1.32.0",
+  "version": "1.33.0-web-2051-agp-print-view.1",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
