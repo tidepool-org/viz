@@ -176,7 +176,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       if (value >= 0) {
         id = classifyCvValue(value);
         value = opts.useAGPFormat
-          ? bankersRound(value, 1)
+          ? bankersRound(value, 1).toString()
           : formatDecimalNumber(value);
         suffix = '%';
       } else {
@@ -195,7 +195,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.gmi:
       if (value >= 0) {
         value = opts.useAGPFormat
-          ? bankersRound(value, 1)
+          ? bankersRound(value, 1).toString()
           : formatDecimalNumber(value, 1);
         suffix = '%';
       } else {

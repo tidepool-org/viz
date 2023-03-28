@@ -104,7 +104,7 @@ export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) 
   }
 
   return useAGPFormat
-    ? bankersRound(val)
+    ? bankersRound(val).toString()
     : format('d')(val);
 }
 

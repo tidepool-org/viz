@@ -23,12 +23,12 @@ import { mungeBGDataBins } from '../../../utils/bloodglucose';
 import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR } from '../../../utils/constants';
 import moment from 'moment';
 
-const boldText = textString => `<b>${String(textString)}</b>`;
-const chartScaleToPixels = (paperPixelDimension, scaleValue) => scaleValue * paperPixelDimension;
-const pixelsToChartScale = (paperPixelDimension, pixels) => pixels / paperPixelDimension;
-const pointsToPixels = points => points * 0.75;
+export const boldText = textString => `<b>${String(textString)}</b>`;
+export const chartScaleToPixels = (paperPixelDimension, scaleValue) => scaleValue * paperPixelDimension;
+export const pixelsToChartScale = (paperPixelDimension, pixels) => pixels / paperPixelDimension;
+export const pointsToPixels = points => points * 0.75;
 
-const createAnnotation = options => {
+export const createAnnotation = options => {
   const annotation = _.defaultsDeep(options, {
     arrowside: 'none',
     font: {

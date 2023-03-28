@@ -937,10 +937,12 @@ export const agpData = {
   bgPrefs,
   data: {
     current: {
-      data: _.reduce(_.keys(agpDataByDate), (res, date) => {
-        res.push(...agpDataByDate[date].cbg);
-        return res;
-      }, []),
+      data: {
+        cbg: _.reduce(_.keys(agpDataByDate), (res, date) => {
+          res.push(...agpDataByDate[date].cbg);
+          return res;
+        }, []),
+      },
       endpoints: {
         range: [
           1677819600000,

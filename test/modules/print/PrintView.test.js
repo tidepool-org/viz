@@ -190,6 +190,7 @@ describe('PrintView', () => {
         { prop: 'boldFont', type: 'string' },
         { prop: 'colors', type: 'object' },
         { prop: 'tableSettings', type: 'object' },
+        { prop: 'topEdge', type: 'number', value: Renderer.margins.top },
         { prop: 'leftEdge', type: 'number', value: Renderer.margins.left },
         { prop: 'rightEdge', type: 'number', value: Renderer.margins.left + Renderer.width },
         { prop: 'bottomEdge', type: 'number', value: Renderer.margins.top + Renderer.height },
@@ -221,6 +222,10 @@ describe('PrintView', () => {
     it('should subtract the header and footer size from the chart area', () => {
       expect(Renderer.chartArea.topEdge).to.be.above(Renderer.initialChartArea.topEdge);
       expect(Renderer.chartArea.bottomEdge).to.be.below(Renderer.initialChartArea.bottomEdge);
+    });
+
+    it('should set up addSVG method', () => {
+      expect(Renderer.addSVG).to.be.a('function');
     });
   });
 
@@ -1726,6 +1731,25 @@ describe('PrintView', () => {
     it('should render the date printed', () => {
       Renderer.renderFooter();
       sinon.assert.calledWith(Renderer.doc.text, `Printed on: ${formatCurrentDate()}`);
+    });
+  });
+
+  describe('renderSVGImage', () => {
+    it('should be a function', () => {
+      expect(Renderer.renderSVGImage).to.be.a('function');
+    });
+
+    it('should call `addSVG` with appropriate args', () => {
+      const addSVGSpy = sinon.spy(Renderer, 'addSVG');
+      const svgDataURL = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDo';
+      const x = 1;
+      const y = 2;
+      const width = 3;
+      const height = 4;
+
+      Renderer.renderSVGImage(svgDataURL, x, y, width, height);
+      sinon.assert.calledWith(addSVGSpy, 'PHN2ZyB4bWxucz0iaHR0cDo', x, y, { assumePt: true, width, height });
+      addSVGSpy.restore();
     });
   });
 

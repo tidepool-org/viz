@@ -365,6 +365,34 @@ describe('stat', () => {
           value: '--',
         });
       });
+
+      it('should use agp-style bankers rounding when requested', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MGDL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 39,
+              targetLowerBound: 70,
+              targetUpperBound: 180,
+              veryHighThreshold: 250,
+            },
+          },
+        });
+
+        expect(stat.formatDatum({
+          value: 108.5,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'target',
+          value: '109',
+        });
+
+        expect(stat.formatDatum({
+          value: 108.5,
+        }, statFormats.bgValue, { ...customOpts, useAGPFormat: true })).to.include({
+          id: 'target',
+          value: '108',
+        });
+      });
     });
 
     context('carbs format', () => {
@@ -440,6 +468,24 @@ describe('stat', () => {
           value: '--',
         });
       });
+
+      it('should use agp-style bankers rounding and addtional precision when requested', () => {
+        expect(stat.formatDatum({
+          value: 36.65,
+        }, statFormats.cv, { useAGPFormat: undefined })).to.include({
+          id: 'high',
+          suffix: '%',
+          value: '37',
+        });
+
+        expect(stat.formatDatum({
+          value: 36.65,
+        }, statFormats.cv, { useAGPFormat: true })).to.include({
+          id: 'high',
+          suffix: '%',
+          value: '36.6',
+        });
+      });
     });
 
     context('duration format', () => {
@@ -494,6 +540,15 @@ describe('stat', () => {
         }, statFormats.gmi)).to.include({
           suffix: '%',
           value: '35.9',
+        });
+      });
+
+      it('should use agp-style bankers rounding when requested', () => {
+        expect(stat.formatDatum({
+          value: 35.85,
+        }, statFormats.gmi, { useAGPFormat: true })).to.include({
+          suffix: '%',
+          value: '35.8',
         });
       });
 
