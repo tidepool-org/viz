@@ -58,7 +58,7 @@
     "moment": "2.29.4",
     "moment-timezone": "0.5.21",
     "parse-svg-path": "0.1.2",
-    "plotly.js-dist-min": "2.20.0",
+    "plotly.js-basic-dist-min": "2.20.0",
     "prop-types": "15.6.2",
     "react": "16.12.0",
     "react-clipboard.js": "2.0.16",
