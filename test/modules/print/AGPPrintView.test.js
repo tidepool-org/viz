@@ -175,7 +175,7 @@ describe('AGPPrintView', () => {
     });
 
 
-    it('should call the newPage method of the parent class with no arguments', () => {
+    it('should call the renderFooter method of the parent class with no arguments', () => {
       sinon.assert.calledWithExactly(PrintView.prototype.renderFooter);
     });
   });
