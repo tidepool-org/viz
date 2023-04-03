@@ -1,6 +1,6 @@
 import _ from 'lodash';
 import moment from 'moment-timezone';
-import Plotly from 'plotly.js';
+import Plotly from 'plotly.js-dist-min';
 
 import { getStatDefinition } from '../stat';
 import { getTimezoneFromTimePrefs } from '../datetime';
