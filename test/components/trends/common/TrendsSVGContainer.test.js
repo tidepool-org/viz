@@ -169,11 +169,11 @@ describe('TrendsSVGContainer', () => {
             data: {
               msFrom: 0,
               msTo: 10000,
-              ninetiethQuantile: 200,
+              upperQuantile: 200,
               thirdQuartile: 75,
             },
           };
-          const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+          const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
           wrapper.setProps({ cbgData: props.cbgData, focusedSlice, focusedSliceKeys });
@@ -281,11 +281,11 @@ describe('TrendsSVGContainer', () => {
             data: {
               msFrom: 0,
               msTo: 10000,
-              ninetiethQuantile: 200,
+              upperQuantile: 200,
               thirdQuartile: 75,
             },
           };
-          const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+          const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
           wrapper.setProps({ cbgData: props.cbgData, focusedSlice, focusedSliceKeys });

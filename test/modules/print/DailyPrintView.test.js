@@ -374,9 +374,11 @@ describe('DailyPrintView', () => {
           },
         },
         timeInRange: {
-          target: MS_IN_HOUR * 3,
-          veryLow: MS_IN_HOUR,
-          total: MS_IN_HOUR * 4,
+          durations: {
+            target: MS_IN_HOUR * 3,
+            veryLow: MS_IN_HOUR,
+            total: MS_IN_HOUR * 4,
+          },
         },
         totalInsulin: {
           basal: 10,
@@ -455,9 +457,11 @@ describe('DailyPrintView', () => {
             averageGlucose: 12.25,
           },
           timeInRange: {
-            target: MS_IN_HOUR * 3,
-            veryLow: MS_IN_HOUR,
-            total: MS_IN_HOUR * 4,
+            durations: {
+              target: MS_IN_HOUR * 3,
+              veryLow: MS_IN_HOUR,
+              total: MS_IN_HOUR * 4,
+            },
           },
         };
         Renderer.renderSummary(args);

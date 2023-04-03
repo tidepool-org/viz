@@ -1,10 +1,11 @@
 import _ from 'lodash';
 import bows from 'bows';
+import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
 import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
-import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
+import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -188,21 +189,26 @@ export class StatUtil {
       || this.activeDays < 14
       || getTotalCbgDuration() < 14 * MS_IN_DAY * 0.7;
 
-    if (insufficientData) {
-      return {
-        glucoseManagementIndicator: NaN,
-        insufficientData: true,
-      };
-    }
-
     const meanInMGDL = this.bgUnits === MGDL_UNITS
       ? averageGlucose
       : averageGlucose * MGDL_PER_MMOLL;
 
     const glucoseManagementIndicator = (3.31 + 0.02392 * meanInMGDL);
+    const glucoseManagementIndicatorAGP = glucoseManagementIndicator;
+
+    if (insufficientData) {
+      // We still return values for AGP reports where the data sufficiency requirements are
+      // different from ours and are checked at time of report generation
+      return {
+        glucoseManagementIndicator: NaN,
+        glucoseManagementIndicatorAGP,
+        insufficientData: true,
+      };
+    }
 
     return {
       glucoseManagementIndicator,
+      glucoseManagementIndicatorAGP,
       total,
     };
   };
@@ -238,7 +244,9 @@ export class StatUtil {
 
   getSensorUsage = () => {
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const count = cbgData.length;
 
+    // Data for Tidepool sensor usage stat
     const duration = _.reduce(
       cbgData,
       (result, datum) => {
@@ -250,9 +258,40 @@ export class StatUtil {
 
     const total = this.activeDays * MS_IN_DAY;
 
+    // Data for AGP sensor usage stat
+    const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
+    const newestDatum = _.cloneDeep(_.last(rawCbgData));
+    const oldestDatum = _.cloneDeep(_.first(rawCbgData));
+    const sampleFrequency = cgmSampleFrequency(newestDatum);
+    if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
+    if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
+
+    let cgmDaysWorn;
+    let cgmMinutesWorn;
+
+    if (rawCbgData.length < 2) {
+      cgmDaysWorn = rawCbgData.length;
+      cgmMinutesWorn = rawCbgData.length === 1 ? sampleFrequency : 0;
+    } else {
+      cgmDaysWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'days', true));
+      cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
+    }
+
+    const sensorUsageAGP = (
+      count /
+      ((cgmMinutesWorn / (sampleFrequency / MS_IN_MIN)) + 1)
+    ) * 100;
+
     return {
       sensorUsage: duration,
+      sensorUsageAGP,
+      cgmDaysWorn,
+      cgmMinutesWorn,
+      newestDatum,
+      oldestDatum,
       total,
+      sampleFrequency,
+      count,
     };
   };
 
@@ -344,30 +383,42 @@ export class StatUtil {
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
-    let durations = _.reduce(
+    const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
         const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
         const duration = cgmSampleFrequency(datum);
-        result[classification] += duration;
-        result.total += duration;
+        result.durations[classification] += duration;
+        result.durations.total += duration;
+        result.counts[classification]++;
+        result.counts.total++;
         return result;
       },
       {
-        veryLow: 0,
-        low: 0,
-        target: 0,
-        high: 0,
-        veryHigh: 0,
-        total: 0,
+        durations: {
+          veryLow: 0,
+          low: 0,
+          target: 0,
+          high: 0,
+          veryHigh: 0,
+          total: 0,
+        },
+        counts: {
+          veryLow: 0,
+          low: 0,
+          target: 0,
+          high: 0,
+          veryHigh: 0,
+          total: 0,
+        },
       }
     );
 
     if (this.activeDays > 1) {
-      durations = this.getDailyAverageDurations(durations);
+      timeInRangeData.durations = this.getDailyAverageDurations(timeInRangeData.durations);
     }
 
-    return durations;
+    return timeInRangeData;
   };
 
   getTotalInsulinData = () => {

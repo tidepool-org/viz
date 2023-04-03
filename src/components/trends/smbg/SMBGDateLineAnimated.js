@@ -36,7 +36,7 @@ import cx from 'classnames';
 
 import { springConfig } from '../../../utils/constants';
 import { THREE_HRS } from '../../../utils/datetime';
-import { findBinForTimeOfDay } from '../../../utils/trends/data';
+import { findBinForTimeOfDay } from '../../../utils/bloodglucose';
 
 import styles from './SMBGDateLineAnimated.css';
 

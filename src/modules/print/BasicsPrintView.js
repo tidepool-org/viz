@@ -78,7 +78,7 @@ class BasicsPrintView extends PrintView {
   }
 
   newPage() {
-    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1));
+    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
   }
 
   initCalendar() {

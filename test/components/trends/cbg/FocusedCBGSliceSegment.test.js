@@ -25,12 +25,12 @@ describe('FocusedCBGSliceSegment', () => {
     position: {
       left: 10,
       yPositions: {
-        ninetiethQuantile: 90,
+        upperQuantile: 90,
         thirdQuartile: 75,
       },
     },
   };
-  const focusedSliceKeys = ['thirdQuartile', 'ninetiethQuantile'];
+  const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
 
   it('renders nothing if there\'s no `focusedSlice` in props', () => {
     const wrapper = shallow(<FocusedCBGSliceSegment focusedSliceKeys={focusedSliceKeys} />);

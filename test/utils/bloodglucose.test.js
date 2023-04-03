@@ -19,8 +19,9 @@
 
 import _ from 'lodash';
 import * as bgUtils from '../../src/utils/bloodglucose';
+import { range, shuffle } from 'd3-array';
 
-import { DEFAULT_BG_BOUNDS, MGDL_UNITS, MMOLL_UNITS, MS_IN_MIN } from '../../src/utils/constants';
+import { DEFAULT_BG_BOUNDS, MGDL_UNITS, MMOLL_UNITS, MS_IN_HOUR, MS_IN_MIN } from '../../src/utils/constants';
 
 describe('blood glucose utilities', () => {
   const bgBounds = {
@@ -534,6 +535,385 @@ describe('blood glucose utilities', () => {
           targetUpperBound: 10.5,
         },
       })).to.be.true;
+    });
+  });
+
+  describe('determineRangeBoundaries', () => {
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.determineRangeBoundaries);
+    });
+
+    it('should return the max of all provided `low` thresholds', () => {
+      expect(bgUtils.determineRangeBoundaries([{
+        value: 'low',
+        threshold: 20,
+      }, {
+        value: 'low',
+        threshold: 25,
+      }, {
+        value: 'low',
+        threshold: 15,
+      }])).to.deep.equal({ low: 25 });
+    });
+
+    it('should return the min of all provided `high` thresholds', () => {
+      expect(bgUtils.determineRangeBoundaries([{
+        value: 'high',
+        threshold: 650,
+      }, {
+        value: 'high',
+        threshold: 500,
+      }, {
+        value: 'high',
+        threshold: 600,
+      }])).to.deep.equal({ high: 500 });
+    });
+
+    it('should return both boundaries when a mix of out-of-range objects is provided', () => {
+      expect(bgUtils.determineRangeBoundaries([{
+        value: 'high',
+        threshold: 500,
+      }, {
+        value: 'low',
+        threshold: 20,
+      }, {
+        value: 'low',
+        threshold: 40,
+      }])).to.deep.equal({ low: 40, high: 500 });
+    });
+  });
+
+  describe('findBinForTimeOfDay', () => {
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.findBinForTimeOfDay);
+    });
+
+    describe('error conditions', () => {
+      it('should error on a negative msPer24', () => {
+        const fn = () => (bgUtils.findBinForTimeOfDay(1, -1));
+        expect(fn).to.throw('`msPer24` < 0 or >= 86400000 is invalid!');
+      });
+
+      it('should error on a msPer24 = 864e5', () => {
+        const fn = () => (bgUtils.findBinForTimeOfDay(1, 86400000));
+        expect(fn).to.throw('`msPer24` < 0 or >= 86400000 is invalid!');
+      });
+
+      it('should error on a msPer24 > 864e5', () => {
+        const fn = () => (bgUtils.findBinForTimeOfDay(1, 86400001));
+        expect(fn).to.throw('`msPer24` < 0 or >= 86400000 is invalid!');
+      });
+    });
+
+    describe('when `binSize` is one hour (3600000ms)', () => {
+      const binSize = 1000 * 60 * 60;
+
+      it('should assign a bin of `1800000` to a datum at time 0', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 0)).to.equal(1800000);
+      });
+
+      it('should assign a bin of `1800000` to a datum at time 3599999', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3599999)).to.equal(1800000);
+      });
+
+      it('should assign a bin of `5400000` to a datum at time 3600000', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3600000)).to.equal(5400000);
+      });
+
+      it('should assign a bin of `5400000` to a datum at time 7199999', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 7199999)).to.equal(5400000);
+      });
+    });
+
+    describe('when `binSize` is thirty minutes (1800000ms)', () => {
+      const binSize = 1000 * 60 * 30;
+
+      it('should assign a bin of `900000` to a datum at time 0', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 0)).to.equal(900000);
+      });
+
+      it('should assign a bin of `2700000` to a datum at time 3599999', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3599999)).to.equal(2700000);
+      });
+
+      it('should assign a bin of `4500000` to a datum at time 3600000', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 3600000)).to.equal(4500000);
+      });
+
+      it('should assign a bin of `6300000` to a datum at time 7199999', () => {
+        expect(bgUtils.findBinForTimeOfDay(binSize, 7199999)).to.equal(6300000);
+      });
+    });
+  });
+
+  describe('findOutOfRangeAnnotations', () => {
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.findOutOfRangeAnnotations);
+    });
+
+    it('should return an empty array if none of the data is annotated `bg/out-of-range`', () => {
+      expect(bgUtils.findOutOfRangeAnnotations([])).to.deep.equal([]);
+      expect(bgUtils.findOutOfRangeAnnotations([{}, {}, {}])).to.deep.equal([]);
+      expect(bgUtils.findOutOfRangeAnnotations([{}, { annotations: [{ code: 'foo' }] }]))
+        .to.deep.equal([]);
+    });
+
+    it('should return an array of the annotations w/unique thresholds', () => {
+      expect(bgUtils.findOutOfRangeAnnotations([{
+        annotations: [{
+          code: 'bg/out-of-range',
+          value: 'high',
+          threshold: 500,
+        }],
+      }, {
+        annotations: [{
+          code: 'bg/out-of-range',
+          value: 'low',
+          threshold: 25,
+        }],
+      }, {
+        annotations: [{
+          code: 'bg/out-of-range',
+          value: 'high',
+          threshold: 500,
+        }],
+      }])).to.deep.equal([{
+        value: 'high',
+        threshold: 500,
+      }, {
+        value: 'low',
+        threshold: 25,
+      }]);
+    });
+  });
+
+  describe('calculateCbgStatsForBin', () => {
+    const bin = 900000;
+    const binKey = bin.toString();
+    const binSize = 1000 * 60 * 30;
+    const min = 0;
+    const max = 100;
+    const data = shuffle(range(min, max + 1));
+
+    const res = bgUtils.calculateCbgStatsForBin(binKey, binSize, data);
+
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.calculateCbgStatsForBin);
+    });
+
+    it('should produce result full of `undefined`s on empty values array', () => {
+      const emptyValsRes = bgUtils.calculateCbgStatsForBin(binKey, binSize, []);
+      assert.isObject(emptyValsRes);
+      expect(emptyValsRes).to.deep.equal({
+        id: binKey,
+        min: undefined,
+        lowerQuantile: undefined,
+        firstQuartile: undefined,
+        median: undefined,
+        thirdQuartile: undefined,
+        upperQuantile: undefined,
+        max: undefined,
+        msX: bin,
+        msFrom: 0,
+        msTo: bin * 2,
+      });
+    });
+
+    it('should add the `binKey` as the `id` on the resulting object', () => {
+      assert.isString(res.id);
+      expect(res.id).to.equal(binKey);
+    });
+
+    it('should add the minimum as the `min` on the resulting object', () => {
+      expect(res.min).to.equal(min);
+    });
+
+    it('should add the 10th quantile as the `lowerQuantile` on the resulting object', () => {
+      expect(res.lowerQuantile).to.equal(10);
+    });
+
+    it('should add the first quartile as the `firstQuartile` on the resulting object', () => {
+      expect(res.firstQuartile).to.equal(25);
+    });
+
+    it('should add the median as `median` on the resulting object', () => {
+      expect(res.median).to.equal(50);
+    });
+
+    it('should add the third quartile as the `thirdQuartile` on the resulting object', () => {
+      expect(res.thirdQuartile).to.equal(75);
+    });
+
+    it('should add the 90th quantile as the `upperQuantile` on the resulting object', () => {
+      expect(res.upperQuantile).to.equal(90);
+    });
+
+    it('should add the maximum as the `max` on the resulting object', () => {
+      expect(res.max).to.equal(max);
+    });
+
+    it('should add the bin as `msX` on the resulting object', () => {
+      expect(res.msX).to.equal(bin);
+    });
+
+    it('should add a `msFrom` to the resulting object half a bin earlier', () => {
+      expect(res.msFrom).to.equal(0);
+    });
+
+    it('should add a `msTo` to the resulting object half a bin later', () => {
+      expect(res.msTo).to.equal(1800000);
+    });
+
+    describe('when an array of out-of-range annotations is provided', () => {
+      const outOfRange = [{
+        value: 'low',
+        threshold: 25,
+      }, {
+        value: 'low',
+        threshold: 40,
+      }, {
+        value: 'high',
+        threshold: 500,
+      }, {
+        value: 'high',
+        threshold: 400,
+      }];
+      const resWithOutOfRange = bgUtils.calculateCbgStatsForBin(binKey, binSize, data, outOfRange);
+
+      it('should add `outOfRangeThresholds` to the resulting object', () => {
+        expect(resWithOutOfRange.outOfRangeThresholds).to.deep.equal({
+          low: 40,
+          high: 400,
+        });
+      });
+    });
+  });
+
+  describe('calculateSmbgStatsForBin', () => {
+    const bin = 5400000;
+    const binKey = bin.toString();
+    const binSize = 1000 * 60 * 60 * 3;
+    const min = 0;
+    const max = 100;
+    const data = shuffle(range(min, max + 1));
+
+    const res = bgUtils.calculateSmbgStatsForBin(binKey, binSize, data);
+
+    it('should be a function', () => {
+      assert.isFunction(bgUtils.calculateSmbgStatsForBin);
+    });
+
+    it('should produce result full of `undefined`s on empty values array', () => {
+      const emptyValsRes = bgUtils.calculateSmbgStatsForBin(binKey, binSize, []);
+      assert.isObject(emptyValsRes);
+      expect(emptyValsRes).to.deep.equal({
+        id: binKey,
+        min: undefined,
+        mean: undefined,
+        max: undefined,
+        msX: bin,
+        msFrom: 0,
+        msTo: bin * 2,
+      });
+    });
+
+    it('should add the `binKey` as the `id` on the resulting object', () => {
+      assert.isString(res.id);
+      expect(res.id).to.equal(binKey);
+    });
+
+    it('should add the minimum as the `min` on the resulting object', () => {
+      expect(res.min).to.equal(min);
+    });
+
+    it('should add the mean as the `mean` on the resulting object', () => {
+      expect(res.mean).to.equal(50);
+    });
+
+    it('should add the maximum as the `max` on the resulting object', () => {
+      expect(res.max).to.equal(max);
+    });
+
+    it('should add the bin as `msX` on the resulting object', () => {
+      expect(res.msX).to.equal(bin);
+    });
+
+    describe('when an array of out-of-range annotations is provided', () => {
+      const outOfRange = [{
+        value: 'low',
+        threshold: 25,
+      }, {
+        value: 'low',
+        threshold: 40,
+      }, {
+        value: 'high',
+        threshold: 500,
+      }, {
+        value: 'high',
+        threshold: 400,
+      }];
+      const resWithOutOfRange = bgUtils.calculateSmbgStatsForBin(binKey, binSize, data, outOfRange);
+
+      it('should add `outOfRangeThresholds` to the resulting object', () => {
+        expect(resWithOutOfRange.outOfRangeThresholds).to.deep.equal({
+          low: 40,
+          high: 400,
+        });
+      });
+    });
+  });
+
+  describe('mungeBGDataBins', () => {
+    it('should munge SMBG data', () => {
+      const bgType = 'smbg';
+      const binSize = MS_IN_HOUR;
+
+      const data = [
+        { msPer24: 181000, value: 101 },
+        { msPer24: 182000, value: 102 },
+        { msPer24: 183000, value: 103 },
+        { msPer24: 84601000, value: 100 },
+        { msPer24: 84602000, value: 120 },
+        { msPer24: 84603000, value: 200 },
+      ];
+
+      const outerQuantiles = [0.1, 0.9];
+      const mungedData = bgUtils.mungeBGDataBins(bgType, binSize, data, outerQuantiles);
+      expect(mungedData).to.be.an('array').and.to.have.lengthOf(24);
+
+      expect(_.first(mungedData)).to.eql({
+        id: '1800000', min: 101, mean: 102, max: 103, msX: 1800000, msFrom: 0, msTo: 3600000,
+      });
+
+      expect(_.last(mungedData)).to.eql({
+        id: '84600000', min: 100, mean: 140, max: 200, msX: 84600000, msFrom: 82800000, msTo: 86400000,
+      });
+    });
+
+    it('should munge CBG data', () => {
+      const bgType = 'cbg';
+      const binSize = MS_IN_HOUR;
+
+      const data = [
+        { msPer24: 181000, value: 101 },
+        { msPer24: 182000, value: 102 },
+        { msPer24: 183000, value: 103 },
+        { msPer24: 84601000, value: 100 },
+        { msPer24: 84602000, value: 120 },
+        { msPer24: 84603000, value: 200 },
+      ];
+
+      const outerQuantiles = [0.1, 0.9];
+      const mungedData = bgUtils.mungeBGDataBins(bgType, binSize, data, outerQuantiles);
+      expect(mungedData).to.be.an('array').and.to.have.lengthOf(24);
+
+      expect(_.first(mungedData)).to.eql({
+        id: '1800000', min: 101, lowerQuantile: 101.2, firstQuartile: 101.5, median: 102, thirdQuartile: 102.5, upperQuantile: 102.8, max: 103, msX: 1800000, msFrom: 0, msTo: 3600000,
+      });
+
+      expect(_.last(mungedData)).to.eql({
+        id: '84600000', min: 100, lowerQuantile: 104, firstQuartile: 110, median: 120, thirdQuartile: 160, upperQuantile: 184, max: 200, msX: 84600000, msFrom: 82800000, msTo: 86400000,
+      });
     });
   });
 });
