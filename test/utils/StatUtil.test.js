@@ -121,6 +121,12 @@ describe('StatUtil', () => {
       deviceTime: '2018-02-01T00:50:00',
       ...useRawData,
     }),
+    new Types.CBG({
+      deviceId: 'Dexcom-XXX-XXXX',
+      value: 260,
+      deviceTime: '2018-02-02T00:00:00',
+      ...useRawData,
+    }),
   ], _.toPlainObject);
 
 
@@ -676,8 +682,8 @@ describe('StatUtil', () => {
     it('should return the duration of sensor usage and total duration of the endpoint range', () => {
       filterEndpoints(dayEndpoints);
       const expectedSampleFrequency = 300000;
-      const expectedCount = 5;
-      const expectedCGMMinutesWorn = 50;
+      let expectedCount = 5;
+      let expectedCGMMinutesWorn = 50;
 
       let result = statUtil.getSensorUsage();
       expect(result.sensorUsage).to.equal(MS_IN_MIN * 55); // 3 * 15m for libre readings, 2 * 5m for dex readings
@@ -693,12 +699,14 @@ describe('StatUtil', () => {
       expect(result.newestDatum.id).to.equal(cbgData[4].id);
       expect(result.oldestDatum.id).to.equal(cbgData[0].id);
 
+      expectedCount = 6;
+      expectedCGMMinutesWorn = 1440; // 1 full day between first and last datums
 
       filterEndpoints(twoWeekEndpoints);
       result = statUtil.getSensorUsage();
-      expect(result.sensorUsage).to.equal(MS_IN_MIN * 55); // 3 * 15m for libre readings, 2 * 5m for dex readings
+      expect(result.sensorUsage).to.equal(MS_IN_MIN * 60); // 3 * 15m for libre readings, 3 * 5m for dex readings
       expect(result.total).to.equal(MS_IN_DAY * 14);
-      expect(result.cgmDaysWorn).to.equal(1);
+      expect(result.cgmDaysWorn).to.equal(2);
       expect(result.cgmMinutesWorn).to.equal(expectedCGMMinutesWorn);
       expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
@@ -706,7 +714,7 @@ describe('StatUtil', () => {
         expectedCount /
         ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
       ) * 100);
-      expect(result.newestDatum.id).to.equal(cbgData[4].id);
+      expect(result.newestDatum.id).to.equal(cbgData[5].id);
       expect(result.oldestDatum.id).to.equal(cbgData[0].id);
     });
   });
@@ -850,8 +858,8 @@ describe('StatUtil', () => {
         low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
         target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
         high: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
-        veryHigh: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
-        total: MS_IN_MIN * 55,
+        veryHigh: ((MS_IN_MIN * 5) / totalDuration * MS_IN_DAY) * 2,
+        total: MS_IN_MIN * 60,
       });
 
       expect(statUtil.getTimeInRangeData().counts).to.eql({
@@ -859,8 +867,8 @@ describe('StatUtil', () => {
         low: 1,
         target: 1,
         high: 1,
-        veryHigh: 1,
-        total: 5,
+        veryHigh: 2,
+        total: 6,
       });
     });
   });

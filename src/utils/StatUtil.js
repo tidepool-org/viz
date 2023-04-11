@@ -273,7 +273,7 @@ export class StatUtil {
       cgmDaysWorn = rawCbgData.length;
       cgmMinutesWorn = rawCbgData.length === 1 ? sampleFrequency : 0;
     } else {
-      cgmDaysWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'days', true));
+      cgmDaysWorn = moment.utc(newestDatum?.localDate).diff(moment.utc(oldestDatum?.localDate), 'days', true) + 1;
       cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
     }
 
