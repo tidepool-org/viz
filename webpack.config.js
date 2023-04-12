@@ -49,8 +49,6 @@ const babelLoaderConfiguration = {
         cacheDirectory: true,
       },
     },
-    'ify-loader',
-    'transform-loader?plotly.js/tasks/compress_attributes.js',
   ],
 };
 
