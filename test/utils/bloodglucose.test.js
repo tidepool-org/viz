@@ -482,6 +482,11 @@ describe('blood glucose utilities', () => {
         deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
       };
       expect(bgUtils.cgmSampleFrequency(libreDatum)).to.equal(15 * MS_IN_MIN);
+
+      const libre3Datum = {
+        deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
+      };
+      expect(bgUtils.cgmSampleFrequency(libre3Datum)).to.equal(5 * MS_IN_MIN);
     });
   });
 

@@ -67,6 +67,9 @@ const randomValueByType = (type, bgUnits, opts = {}) => {
     case 'cv':
       return _.random(24, 40, true);
 
+    case 'sensorUsage':
+      return _.random(30, 100, true);
+
     case 'deviation':
       return _.random(
         isMGDL ? 12 : 12 / MGDL_PER_MMOLL,
@@ -736,6 +739,46 @@ stories.add('Coefficient of Variation', () => {
           summary: statFormats.cv,
         }}
         title="CV"
+        type={statTypes.simple}
+      />
+    </Container>
+  );
+});
+
+let sensorUsageData = {
+  data: [
+    {
+      value: 73,
+    },
+  ],
+};
+sensorUsageData.total = { value: 100 };
+sensorUsageData.dataPaths = {
+  summary: 'data.0',
+};
+
+stories.add('Sensor Usage', () => {
+  const responsive = boolean('responsive', false, 'UI');
+  button('Random Data', () => {
+    sensorUsageData = generateRandomData(sensorUsageData, 'sensorUsage');
+    sensorUsageData.total = { value: 100 };
+  }, 'DATA');
+
+  button('Empty Data', () => {
+    sensorUsageData = generateEmptyData(sensorUsageData);
+  }, 'DATA');
+
+  return (
+    <Container responsive={responsive}>
+      <Stat
+        annotations={[
+          'Sensor Usage is…',
+        ]}
+        data={sensorUsageData}
+        dataFormat={{
+          summary: statFormats.percentage,
+        }}
+        title="Sensor Usage"
         type={statTypes.simple}
       />
     </Container>
