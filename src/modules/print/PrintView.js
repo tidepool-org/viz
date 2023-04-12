@@ -22,6 +22,8 @@ import PdfTable from 'voilab-pdf-table';
 import PdfTableFitColumn from 'voilab-pdf-table/plugins/fitcolumn';
 import i18next from 'i18next';
 
+import SVGtoPDF from 'svg-to-pdfkit';
+
 import {
   getOffset,
   getTimezoneFromTimePrefs,
@@ -55,6 +57,7 @@ const logo = require('./images/tidepool-logo-408x46.png');
 class PrintView {
   constructor(doc, data = {}, opts) {
     this.doc = doc;
+    this.addSVG = SVGtoPDF.bind(null, this.doc);
 
     this.title = opts.title;
     this.data = _.cloneDeep(data);
@@ -137,6 +140,7 @@ class PrintView {
 
     this.leftEdge = this.margins.left;
     this.rightEdge = this.margins.left + this.width;
+    this.topEdge = this.margins.top;
     this.bottomEdge = this.margins.top + this.height;
 
     this.chartArea = {
@@ -326,7 +330,7 @@ class PrintView {
     return this.layoutColumns.columns[this.layoutColumns.activeIndex].width;
   }
 
-  getDateRange(startDate, endDate, format) {
+  getDateRange(startDate, endDate, dateParseFormat, prefix, monthFormat) {
     let start = startDate;
     let end = endDate;
 
@@ -335,8 +339,9 @@ class PrintView {
       end = endDate - getOffset(endDate, this.timezone) * MS_IN_MIN;
     }
 
-    return t('Date range: {{dateRange}}', {
-      dateRange: formatDateRange(start, end, format),
+    return t('{{prefix}}{{dateRange}}', {
+      prefix,
+      dateRange: formatDateRange(start, end, dateParseFormat, monthFormat),
     });
   }
 
@@ -950,6 +955,12 @@ class PrintView {
         { align: 'right' }
       );
     }
+  }
+
+  renderSVGImage(svgDataURL = '', x, y, width, height) {
+    const svgDataURLArr = svgDataURL.split(',');
+    const rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
+    this.addSVG(rawChartSVG, x, y, { assumePt: true, width, height });
   }
 
   setFooterSize() {

@@ -35,11 +35,11 @@ describe('CBGMedianAnimated', () => {
   const datum = {
     id: '2700000',
     min: 22,
-    tenthQuantile: 60,
+    lowerQuantile: 60,
     firstQuartile: 100,
     median: 140,
     thirdQuartile: 180,
-    ninetiethQuantile: 245,
+    upperQuantile: 245,
     max: 521,
     msX: 2700000,
     msFrom: 1800000,

@@ -20,6 +20,24 @@ import { BG_HIGH, BG_LOW, MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/consta
 import * as format from '../../src/utils/format';
 
 describe('format', () => {
+  describe('bankersRound', () => {
+    it('should round-half-to-even to the nearest integer when no precision is specified', () => {
+      expect(format.bankersRound(9.5)).to.equal(10);
+      expect(format.bankersRound(10.5)).to.equal(10);
+      expect(format.bankersRound(-9.5)).to.equal(-10);
+      expect(format.bankersRound(-10.5)).to.equal(-10);
+    });
+
+    it('should round-half-to-even to the precision specified', () => {
+      expect(format.bankersRound(9.35, 1)).to.equal(9.4);
+      expect(format.bankersRound(9.45, 1)).to.equal(9.4);
+      expect(format.bankersRound(1.535, 2)).to.equal(1.54);
+      expect(format.bankersRound(1.525, 2)).to.equal(1.52);
+      expect(format.bankersRound(-9.435, 2)).to.equal(-9.44);
+      expect(format.bankersRound(-9.445, 2)).to.equal(-9.44);
+    });
+  });
+
   describe('formatBgValue', () => {
     it('should be a function', () => {
       assert.isFunction(format.formatBgValue);
@@ -98,6 +116,15 @@ describe('format', () => {
         });
       });
     });
+
+    describe('agp formatting', () => {
+      it('should apply bankers rounding on the formatted value', () => {
+        expect(format.formatBgValue(12.35, { bgUnits: MMOLL_UNITS }, null, true)).to.equal('12.4');
+        expect(format.formatBgValue(12.45, { bgUnits: MMOLL_UNITS }, null, true)).to.equal('12.4');
+        expect(format.formatBgValue(351.5, { bgUnits: MGDL_UNITS }, null, true)).to.equal('352');
+        expect(format.formatBgValue(352.5, { bgUnits: MGDL_UNITS }, null, true)).to.equal('352');
+      });
+    });
   });
 
   describe('formatDecimalNumber', () => {
@@ -154,6 +181,15 @@ describe('format', () => {
     it('should round to a provided number of decimal places', () => {
       expect(format.formatPercentage(0.732, 2)).to.equal('73.20%');
       expect(format.formatPercentage(0.736548, 3)).to.equal('73.655%');
+    });
+
+    describe('agp formatting', () => {
+      it('should apply bankers rounding on the formatted value', () => {
+        expect(format.formatPercentage(0.735, 0, true)).to.equal('74%');
+        expect(format.formatPercentage(0.745, 0, true)).to.equal('74%');
+        expect(format.formatPercentage(0.7135, 1, true)).to.equal('71.4%');
+        expect(format.formatPercentage(0.7145, 1, true)).to.equal('71.4%');
+      });
     });
   });
 
