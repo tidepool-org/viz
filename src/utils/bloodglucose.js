@@ -221,7 +221,15 @@ export function weightedCGMCount(data) {
  */
 export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
-  return deviceId.indexOf('AbbottFreeStyleLibre') === 0 ? 15 * MS_IN_MIN : 5 * MS_IN_MIN;
+  if (deviceId.indexOf('AbbottFreeStyleLibre3') === 0) {
+    return 5 * MS_IN_MIN;
+  }
+
+  if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
+    return 15 * MS_IN_MIN;
+  }
+
+  return 5 * MS_IN_MIN;
 }
 
 /**
