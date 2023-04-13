@@ -407,7 +407,7 @@ class DailyPrintView extends PrintView {
       stats[statType] = stat;
     });
 
-    const { target, veryLow } = _.get(stats, 'timeInRange.data.raw', {});
+    const { target, veryLow } = _.get(stats, 'timeInRange.data.raw.durations', {});
     const totalCbgDuration = _.get(stats, 'timeInRange.data.total.value', {});
     const { averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
     const { carbs } = _.get(stats, 'carbs.data.raw', {});
