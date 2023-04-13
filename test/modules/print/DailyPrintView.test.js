@@ -407,7 +407,9 @@ describe('DailyPrintView', () => {
 
       sinon.assert.calledWith(Renderer.doc.text, 'Time in Target');
       sinon.assert.calledWith(Renderer.doc.text, `${targetLowerBound} - ${targetUpperBound}`);
+      sinon.assert.calledWith(Renderer.doc.text, '75%');
       sinon.assert.calledWith(Renderer.doc.text, `Below ${veryLowThreshold}`);
+      sinon.assert.calledWith(Renderer.doc.text, '25%');
     });
 
     it('should render the basal to bolus ratio for non-automated-basal devices', () => {
