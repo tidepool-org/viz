@@ -258,6 +258,12 @@ describe('constants', () => {
     });
   });
 
+  describe('SOOIL', () => {
+    it('should be `Sooil`', () => {
+      expect(constants.SOOIL).to.equal('Sooil');
+    });
+  });
+
   describe('pumpVocabulary', () => {
     it('should define common terms per device manufacturer', () => {
       expect(constants.pumpVocabulary).to.eql({
@@ -299,6 +305,11 @@ describe('constants', () => {
         [constants.MICROTECH]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
           [constants.SITE_CHANGE_TUBING]: 'Prime Reservoir',
+          [constants.SITE_CHANGE_CANNULA]: 'Prime Cannula',
+        },
+        [constants.SOOIL]: {
+          [constants.SITE_CHANGE_RESERVOIR]: 'Refill',
+          [constants.SITE_CHANGE_TUBING]: 'Prime',
           [constants.SITE_CHANGE_CANNULA]: 'Prime Cannula',
         },
         default: {

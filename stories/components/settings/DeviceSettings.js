@@ -153,3 +153,34 @@ storiesOf('Device Settings [Tandem]', module)
       user={user}
     />
   ));
+
+const danaFlatRateData = require('../../../data/pumpSettings/dana/flatrate.json');
+const danaMultiRateData = require('../../../data/pumpSettings/dana/multirate.json');
+
+storiesOf('Device Settings [Dana-i]', module)
+  .add('flat rate', () => (
+    <NonTandem
+      bgUnits={MMOLL_UNITS}
+      copySettingsClicked={() => {}}
+      deviceKey={'sooil'}
+      openedSections={{ [danaFlatRateData.activeSchedule]: true }}
+      view={'display'}
+      pumpSettings={danaFlatRateData}
+      timePrefs={timePrefs}
+      toggleBasalScheduleExpansion={() => {}}
+      user={user}
+    />
+  ))
+  .add('multi rate', () => (
+    <NonTandem
+      bgUnits={MMOLL_UNITS}
+      copySettingsClicked={() => {}}
+      deviceKey={'sooil'}
+      openedSections={{ [danaMultiRateData.activeSchedule]: true }}
+      view={'display'}
+      pumpSettings={danaMultiRateData}
+      timePrefs={timePrefs}
+      toggleBasalScheduleExpansion={() => {}}
+      user={user}
+    />
+  ));

@@ -335,6 +335,26 @@ const pumpSettingsEquil = {
   basalSchedules,
 };
 
+const pumpSettingsDana = {
+  ...common,
+  bgTarget: {
+    type: 'array',
+    items: {
+      type: 'object',
+      props: {
+        ...settingsScheduleStart,
+        target: minZero,
+        range: forbidden,
+        low: forbidden,
+        high: forbidden,
+      },
+    },
+  },
+  carbRatio,
+  insulinSensitivity,
+  basalSchedules,
+};
+
 const wizard = {
   ...common,
   bgInput: { ...minZero, ...optional },
@@ -371,6 +391,7 @@ export default {
     omnipod: v.compile(pumpSettingsOmnipod),
     tandem: v.compile(pumpSettingsTandem),
     equil: v.compile(pumpSettingsEquil),
+    dana: v.compile(pumpSettingsDana),
   },
   smbg: v.compile(bg),
   wizard: v.compile(wizard),

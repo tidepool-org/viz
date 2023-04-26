@@ -41,7 +41,7 @@ export function noData(val) {
 
 /**
  * deviceName
- * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech
+ * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech, sooil
  *
  * @return {String}              name for given manufacturer
  */
@@ -52,6 +52,7 @@ export function deviceName(manufacturer) {
     medtronic: 'Medtronic',
     tandem: 'Tandem',
     microtech: 'Equil',
+    sooil: 'DANA-i',
   };
   return DEVICE_DISPLAY_NAME_BY_MANUFACTURER[manufacturer] || manufacturer;
 }
@@ -152,7 +153,7 @@ export function getTotalBasalRates(scheduleData) {
  * getScheduleLabel
  * @param  {String} scheduleName  basal schedule name
  * @param  {String} activeName    name of active basal schedule at time of upload
- * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech
+ * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, sooil
  * @param  {Boolean} noUnits      whether units should be included in label object
  *
  * @return {Object}              object representing basal schedule label

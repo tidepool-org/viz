@@ -24,6 +24,8 @@ const equilFlatRateData = require('../../../../data/pumpSettings/equil/flatrate.
 const equilMultiRateData = require('../../../../data/pumpSettings/equil/multirate.json');
 const tandemFlatRateData = require('../../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultiRateData = require('../../../../data/pumpSettings/tandem/multirate.json');
+const danaFlatRateData = require('../../../../data/pumpSettings/dana/flatrate.json');
+const danaMultiRateData = require('../../../../data/pumpSettings/dana/multirate.json');
 
 /* eslint-disable max-len */
 
@@ -49,6 +51,10 @@ const data = {
     tandem: {
       flatrate: tandemFlatRateData,
       multirate: tandemMultiRateData,
+    },
+    dana: {
+      flatrate: danaFlatRateData,
+      multirate: danaMultiRateData,
     },
   },
 };
@@ -193,6 +199,24 @@ stories.add('Equil Multi Rate', () => (
     <ClipboardButton
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.equil.multirate, MGDL_UNITS, 'microtech')}
+    />
+  </Wrapper>
+));
+
+stories.add('Dana-i Flat Rate', () => (
+  <Wrapper>
+    <ClipboardButton
+      onSuccess={_.noop}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.dana.flatrate, MGDL_UNITS, 'sooil')}
+    />
+  </Wrapper>
+));
+
+stories.add('Dana-i Multi Rate', () => (
+  <Wrapper>
+    <ClipboardButton
+      onSuccess={_.noop}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.dana.multirate, MGDL_UNITS, 'sooil')}
     />
   </Wrapper>
 ));

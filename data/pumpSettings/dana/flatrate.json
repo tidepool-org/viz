@@ -1,0 +1,68 @@
+{
+    "activeSchedule": "Profile A",
+    "basalSchedules": [
+        {
+            "name": "Profile C",
+            "value": [
+                {
+                    "rate": 0,
+                    "start": 0
+                }
+            ]
+        },
+        {
+            "name": "Profile D",
+            "value": [
+                {
+                    "rate": 0,
+                    "start": 0
+                }
+            ]
+        },
+        {
+            "name": "Profile A",
+            "value": [
+                {
+                    "rate": 0.2,
+                    "start": 0
+                }
+            ]
+        },
+        {
+            "name": "Profile B",
+            "value": [
+                {
+                    "rate": 0,
+                    "start": 0
+                }
+            ]
+        }
+    ],
+    "bgTarget": [
+        {
+            "start": 0,
+            "target": 5.5
+        }
+    ],
+    "carbRatio": [
+        {
+            "amount": 0.25,
+            "start": 0
+        }
+    ],
+    "deviceId": "Dana-I5-WLL00056FI",
+    "deviceTime": "2022-12-14T14:05:23",
+    "insulinSensitivity": [
+        {
+            "amount": 2.8,
+            "start": 0
+        }
+    ],
+    "time": "2022-12-14T14:05:45.876+00:00",
+    "timezoneOffset": 0,
+    "type": "pumpSettings",
+    "units": {
+        "bg": "mmol/L",
+        "carb": "grams"
+    }
+}

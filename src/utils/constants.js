@@ -96,6 +96,7 @@ export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
+export const SOOIL = 'Sooil';
 
 export const pumpVocabulary = {
   [ANIMAS]: {
@@ -124,6 +125,11 @@ export const pumpVocabulary = {
   [MICROTECH]: {
     [SITE_CHANGE_RESERVOIR]: t('Rewind'),
     [SITE_CHANGE_TUBING]: t('Prime Reservoir'),
+    [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
+  },
+  [SOOIL]: {
+    [SITE_CHANGE_RESERVOIR]: t('Refill'),
+    [SITE_CHANGE_TUBING]: t('Prime'),
     [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
   },
   [TANDEM]: {
