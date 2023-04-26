@@ -288,6 +288,13 @@ describe('datetime', () => {
 
       expect(datetime.formatDateRange(start, end)).to.equal('Dec 1, 2017 - Jan 10, 2018');
     });
+
+    it('should properly format a range with custom month format', () => {
+      const start = new Date('2017-12-01').toISOString();
+      const end = new Date('2018-01-10').toISOString();
+
+      expect(datetime.formatDateRange(start, end, undefined, 'MMMM')).to.equal('December 1, 2017 - January 10, 2018');
+    });
   });
 
   describe('formatCurrentDate', () => {

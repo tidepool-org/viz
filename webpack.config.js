@@ -42,12 +42,14 @@ const babelLoaderConfiguration = {
     path.resolve(appDirectory, 'test'),
     path.resolve(appDirectory, 'data'),
   ],
-  use: {
-    loader: 'babel-loader',
-    options: {
-      cacheDirectory: true,
+  use: [
+    {
+      loader: 'babel-loader',
+      options: {
+        cacheDirectory: true,
+      },
     },
-  },
+  ],
 };
 
 // This is needed for webpack to import static images in JavaScript files

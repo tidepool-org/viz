@@ -365,6 +365,34 @@ describe('stat', () => {
           value: '--',
         });
       });
+
+      it('should use agp-style bankers rounding when requested', () => {
+        const customOpts = opts({
+          bgPrefs: {
+            bgUnits: MGDL_UNITS,
+            bgBounds: {
+              veryLowThreshold: 39,
+              targetLowerBound: 70,
+              targetUpperBound: 180,
+              veryHighThreshold: 250,
+            },
+          },
+        });
+
+        expect(stat.formatDatum({
+          value: 108.5,
+        }, statFormats.bgValue, customOpts)).to.include({
+          id: 'target',
+          value: '109',
+        });
+
+        expect(stat.formatDatum({
+          value: 108.5,
+        }, statFormats.bgValue, { ...customOpts, useAGPFormat: true })).to.include({
+          id: 'target',
+          value: '108',
+        });
+      });
     });
 
     context('carbs format', () => {
@@ -440,6 +468,24 @@ describe('stat', () => {
           value: '--',
         });
       });
+
+      it('should use agp-style bankers rounding and addtional precision when requested', () => {
+        expect(stat.formatDatum({
+          value: 36.65,
+        }, statFormats.cv, { useAGPFormat: undefined })).to.include({
+          id: 'high',
+          suffix: '%',
+          value: '37',
+        });
+
+        expect(stat.formatDatum({
+          value: 36.65,
+        }, statFormats.cv, { useAGPFormat: true })).to.include({
+          id: 'high',
+          suffix: '%',
+          value: '36.6',
+        });
+      });
     });
 
     context('duration format', () => {
@@ -494,6 +540,15 @@ describe('stat', () => {
         }, statFormats.gmi)).to.include({
           suffix: '%',
           value: '35.9',
+        });
+      });
+
+      it('should use agp-style bankers rounding when requested', () => {
+        expect(stat.formatDatum({
+          value: 35.85,
+        }, statFormats.gmi, { useAGPFormat: true })).to.include({
+          suffix: '%',
+          value: '35.8',
         });
       });
 
@@ -1219,6 +1274,7 @@ describe('stat', () => {
     it('should format and return `glucoseManagementIndicator` data', () => {
       const data = {
         glucoseManagementIndicator: 36,
+        glucoseManagementIndicatorAGP: 37,
       };
 
       const statData = stat.getStatData(data, commonStats.glucoseManagementIndicator, opts);
@@ -1228,10 +1284,15 @@ describe('stat', () => {
           id: 'gmi',
           value: 36,
         },
+        {
+          id: 'gmiAGP',
+          value: 37,
+        },
       ]);
 
       expect(statData.dataPaths).to.eql({
         summary: 'data.0',
+        summaryAGP: 'data.1',
       });
     });
 
@@ -1289,6 +1350,7 @@ describe('stat', () => {
     it('should format and return `sensorUsage` data', () => {
       const data = {
         sensorUsage: 80,
+        sensorUsageAGP: 82,
         total: 200,
       };
 
@@ -1298,12 +1360,16 @@ describe('stat', () => {
         {
           value: 80,
         },
+        {
+          value: 82,
+        },
       ]);
 
       expect(statData.total).to.eql({ value: 200 });
 
       expect(statData.dataPaths).to.eql({
         summary: 'data.0',
+        summaryAGP: 'data.1',
       });
     });
 
@@ -1393,11 +1459,21 @@ describe('stat', () => {
 
     it('should format and return `timeInRange` data', () => {
       const data = {
-        veryLow: 10000,
-        low: 20000,
-        target: 30000,
-        high: 40000,
-        veryHigh: 50000,
+        durations: {
+          veryLow: 10000,
+          low: 20000,
+          target: 30000,
+          high: 40000,
+          veryHigh: 50000,
+        },
+        counts: {
+          veryLow: 1,
+          low: 2,
+          target: 3,
+          high: 4,
+          veryHigh: 5,
+          total: 15,
+        },
       };
 
       const statData = stat.getStatData(data, commonStats.timeInRange, opts);
@@ -1765,7 +1841,7 @@ describe('stat', () => {
     });
 
     it('should define the `timeInRange` stat', () => {
-      const def = stat.getStatDefinition(data, commonStats.timeInRange, opts);
+      const def = stat.getStatDefinition({ durations: data, counts: data }, commonStats.timeInRange, opts);
       expect(def).to.include.all.keys(commonStatProperties);
       expect(def.id).to.equal(commonStats.timeInRange);
       expect(def.type).to.equal(statTypes.barHorizontal);

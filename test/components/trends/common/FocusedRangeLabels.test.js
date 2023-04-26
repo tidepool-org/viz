@@ -68,8 +68,8 @@ describe('FocusedRangeLabels', () => {
         msFrom: 0,
         msTo: 1800000,
         msX: 900000,
-        ninetiethQuantile: 382,
-        tenthQuantile: 67,
+        upperQuantile: 382,
+        lowerQuantile: 67,
         thirdQuartile: 270,
       },
       position: {
@@ -80,8 +80,8 @@ describe('FocusedRangeLabels', () => {
           max: 421,
           median: 100,
           min: 28,
-          ninetiethQuantile: 382,
-          tenthQuantile: 67,
+          upperQuantile: 382,
+          lowerQuantile: 67,
           thirdQuartile: 270,
           topMargin: 0,
         },
@@ -107,7 +107,7 @@ describe('FocusedRangeLabels', () => {
       before(() => {
         const bottom10Props = _.assign({}, props, {
           dataType: 'cbg',
-          focusedKeys: ['min', 'tenthQuantile'],
+          focusedKeys: ['min', 'lowerQuantile'],
           focusedSlice,
         });
         wrapper = mount(
@@ -115,8 +115,8 @@ describe('FocusedRangeLabels', () => {
         );
       });
 
-      it('should render a min and a tenthQuantile label', () => {
-        const keys = ['tenthQuantile', 'min'];
+      it('should render a min and a lowerQuantile label', () => {
+        const keys = ['lowerQuantile', 'min'];
         const labels = wrapper.find(formatClassesAsSelector(styles.number));
         expect(labels).to.have.length(2);
         labels.forEach((label, i) => { // eslint-disable-line lodash/prefer-lodash-method
@@ -136,7 +136,7 @@ describe('FocusedRangeLabels', () => {
       before(() => {
         const lower15Props = _.assign({}, props, {
           dataType: 'cbg',
-          focusedKeys: ['tenthQuantile', 'firstQuartile'],
+          focusedKeys: ['lowerQuantile', 'firstQuartile'],
           focusedSlice,
         });
         wrapper = mount(
@@ -144,8 +144,8 @@ describe('FocusedRangeLabels', () => {
         );
       });
 
-      it('should render a tenthQuantile and a firstQuartile label', () => {
-        const keys = ['firstQuartile', 'tenthQuantile'];
+      it('should render a lowerQuantile and a firstQuartile label', () => {
+        const keys = ['firstQuartile', 'lowerQuantile'];
         const labels = wrapper.find(formatClassesAsSelector(styles.number));
         expect(labels).to.have.length(2);
         labels.forEach((label, i) => { // eslint-disable-line lodash/prefer-lodash-method
@@ -194,7 +194,7 @@ describe('FocusedRangeLabels', () => {
       before(() => {
         const upper15Props = _.assign({}, props, {
           dataType: 'cbg',
-          focusedKeys: ['thirdQuartile', 'ninetiethQuantile'],
+          focusedKeys: ['thirdQuartile', 'upperQuantile'],
           focusedSlice,
         });
         wrapper = mount(
@@ -202,8 +202,8 @@ describe('FocusedRangeLabels', () => {
         );
       });
 
-      it('should render a thirdQuartile and a ninetiethQuantile label', () => {
-        const keys = ['ninetiethQuantile', 'thirdQuartile'];
+      it('should render a thirdQuartile and a upperQuantile label', () => {
+        const keys = ['upperQuantile', 'thirdQuartile'];
         const labels = wrapper.find(formatClassesAsSelector(styles.number));
         expect(labels).to.have.length(2);
         labels.forEach((label, i) => { // eslint-disable-line lodash/prefer-lodash-method
@@ -223,7 +223,7 @@ describe('FocusedRangeLabels', () => {
       before(() => {
         const lower15 = _.assign({}, props, {
           dataType: 'cbg',
-          focusedKeys: ['ninetiethQuantile', 'max'],
+          focusedKeys: ['upperQuantile', 'max'],
           focusedSlice,
         });
         wrapper = mount(
@@ -231,8 +231,8 @@ describe('FocusedRangeLabels', () => {
         );
       });
 
-      it('should render a ninetiethQuantile and a max label', () => {
-        const keys = ['max', 'ninetiethQuantile'];
+      it('should render a upperQuantile and a max label', () => {
+        const keys = ['max', 'upperQuantile'];
         const labels = wrapper.find(formatClassesAsSelector(styles.number));
         expect(labels).to.have.length(2);
         labels.forEach((label, i) => { // eslint-disable-line lodash/prefer-lodash-method

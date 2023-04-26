@@ -6,6 +6,8 @@ import { types as Types, generateGUID } from '../../data/types';
 import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, MS_IN_MIN } from '../../src/utils/constants';
 /* eslint-disable max-len, no-underscore-dangle */
 
+/* global sinon */
+
 describe('StatUtil', () => {
   let statUtil;
 
@@ -117,6 +119,12 @@ describe('StatUtil', () => {
       deviceId: 'Dexcom-XXX-XXXX',
       value: 260,
       deviceTime: '2018-02-01T00:50:00',
+      ...useRawData,
+    }),
+    new Types.CBG({
+      deviceId: 'Dexcom-XXX-XXXX',
+      value: 260,
+      deviceTime: '2018-02-02T00:00:00',
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -584,6 +592,7 @@ describe('StatUtil', () => {
 
       expect(statUtil.getGlucoseManagementIndicatorData()).to.eql({
         glucoseManagementIndicator: 9.5292,
+        glucoseManagementIndicatorAGP: 9.5292,
         total: 2823,
       });
     });
@@ -602,6 +611,7 @@ describe('StatUtil', () => {
 
       expect(statUtil.getGlucoseManagementIndicatorData()).to.eql({
         glucoseManagementIndicator: NaN,
+        glucoseManagementIndicatorAGP: 9.5292, // Always return glucoseManagementIndicatorAGP when possible
         insufficientData: true,
       });
     });
@@ -619,6 +629,7 @@ describe('StatUtil', () => {
 
       expect(statUtil.getGlucoseManagementIndicatorData()).to.eql({
         glucoseManagementIndicator: NaN,
+        glucoseManagementIndicatorAGP: 9.5292, // Always return glucoseManagementIndicatorAGP when possible
         insufficientData: true,
       });
     });
@@ -635,6 +646,7 @@ describe('StatUtil', () => {
 
       expect(statUtil.getGlucoseManagementIndicatorData()).to.eql({
         glucoseManagementIndicator: NaN,
+        glucoseManagementIndicatorAGP: NaN, // Can't return glucoseManagementIndicatorAGP when smbg is bg source
         insufficientData: true,
       });
     });
@@ -669,16 +681,41 @@ describe('StatUtil', () => {
   describe('getSensorUsage', () => {
     it('should return the duration of sensor usage and total duration of the endpoint range', () => {
       filterEndpoints(dayEndpoints);
-      expect(statUtil.getSensorUsage()).to.eql({
-        sensorUsage: MS_IN_MIN * 55, // 3 * 15m for libre readings, 2 * 5m for dex readings
-        total: MS_IN_DAY,
-      });
+      const expectedSampleFrequency = 300000;
+      let expectedCount = 5;
+      let expectedCGMMinutesWorn = 50;
+
+      let result = statUtil.getSensorUsage();
+      expect(result.sensorUsage).to.equal(MS_IN_MIN * 55); // 3 * 15m for libre readings, 2 * 5m for dex readings
+      expect(result.total).to.equal(MS_IN_DAY);
+      expect(result.cgmDaysWorn).to.equal(1);
+      expect(result.cgmMinutesWorn).to.equal(expectedCGMMinutesWorn);
+      expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
+      expect(result.count).to.equal(expectedCount);
+      expect(result.sensorUsageAGP).to.equal((
+        expectedCount /
+        ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
+      ) * 100);
+      expect(result.newestDatum.id).to.equal(cbgData[4].id);
+      expect(result.oldestDatum.id).to.equal(cbgData[0].id);
+
+      expectedCount = 6;
+      expectedCGMMinutesWorn = 1440; // 1 full day between first and last datums
 
       filterEndpoints(twoWeekEndpoints);
-      expect(statUtil.getSensorUsage()).to.eql({
-        sensorUsage: MS_IN_MIN * 55,
-        total: MS_IN_DAY * 14,
-      });
+      result = statUtil.getSensorUsage();
+      expect(result.sensorUsage).to.equal(MS_IN_MIN * 60); // 3 * 15m for libre readings, 3 * 5m for dex readings
+      expect(result.total).to.equal(MS_IN_DAY * 14);
+      expect(result.cgmDaysWorn).to.equal(2);
+      expect(result.cgmMinutesWorn).to.equal(expectedCGMMinutesWorn);
+      expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
+      expect(result.count).to.equal(expectedCount);
+      expect(result.sensorUsageAGP).to.equal((
+        expectedCount /
+        ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
+      ) * 100);
+      expect(result.newestDatum.id).to.equal(cbgData[5].id);
+      expect(result.oldestDatum.id).to.equal(cbgData[0].id);
     });
   });
 
@@ -791,7 +828,8 @@ describe('StatUtil', () => {
   describe('getTimeInRangeData', () => {
     it('should return the time in range data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
-      expect(statUtil.getTimeInRangeData()).to.eql({
+
+      expect(statUtil.getTimeInRangeData().durations).to.eql({
         veryLow: MS_IN_MIN * 15,
         low: MS_IN_MIN * 15,
         target: MS_IN_MIN * 15,
@@ -799,20 +837,38 @@ describe('StatUtil', () => {
         veryHigh: MS_IN_MIN * 5,
         total: MS_IN_MIN * 55,
       });
+
+      expect(statUtil.getTimeInRangeData().counts).to.eql({
+        veryLow: 1,
+        low: 1,
+        target: 1,
+        high: 1,
+        veryHigh: 1,
+        total: 5,
+      });
     });
 
     it('should return the avg daily time in range data when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
-
       const result = statUtil.getTimeInRangeData();
-      const totalDuration = result.total;
-      expect(result).to.eql({
+      const totalDuration = result.durations.total;
+
+      expect(result.durations).to.eql({
         veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
         low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
         target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
         high: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
-        veryHigh: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
-        total: MS_IN_MIN * 55,
+        veryHigh: ((MS_IN_MIN * 5) / totalDuration * MS_IN_DAY) * 2,
+        total: MS_IN_MIN * 60,
+      });
+
+      expect(statUtil.getTimeInRangeData().counts).to.eql({
+        veryLow: 1,
+        low: 1,
+        target: 1,
+        high: 1,
+        veryHigh: 2,
+        total: 6,
       });
     });
   });

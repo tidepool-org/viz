@@ -374,9 +374,11 @@ describe('DailyPrintView', () => {
           },
         },
         timeInRange: {
-          target: MS_IN_HOUR * 3,
-          veryLow: MS_IN_HOUR,
-          total: MS_IN_HOUR * 4,
+          durations: {
+            target: MS_IN_HOUR * 3,
+            veryLow: MS_IN_HOUR,
+            total: MS_IN_HOUR * 4,
+          },
         },
         totalInsulin: {
           basal: 10,
@@ -405,7 +407,9 @@ describe('DailyPrintView', () => {
 
       sinon.assert.calledWith(Renderer.doc.text, 'Time in Target');
       sinon.assert.calledWith(Renderer.doc.text, `${targetLowerBound} - ${targetUpperBound}`);
+      sinon.assert.calledWith(Renderer.doc.text, '75%');
       sinon.assert.calledWith(Renderer.doc.text, `Below ${veryLowThreshold}`);
+      sinon.assert.calledWith(Renderer.doc.text, '25%');
     });
 
     it('should render the basal to bolus ratio for non-automated-basal devices', () => {
@@ -455,9 +459,11 @@ describe('DailyPrintView', () => {
             averageGlucose: 12.25,
           },
           timeInRange: {
-            target: MS_IN_HOUR * 3,
-            veryLow: MS_IN_HOUR,
-            total: MS_IN_HOUR * 4,
+            durations: {
+              target: MS_IN_HOUR * 3,
+              veryLow: MS_IN_HOUR,
+              total: MS_IN_HOUR * 4,
+            },
           },
         };
         Renderer.renderSummary(args);

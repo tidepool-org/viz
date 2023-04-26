@@ -216,7 +216,7 @@ class DailyPrintView extends PrintView {
     const start = _.head(charts).date;
     const end = _.last(charts).date;
 
-    super.newPage(this.getDateRange(start, end, 'YYYY-MM-DD'));
+    super.newPage(this.getDateRange(start, end, 'YYYY-MM-DD', t('Date range: ')));
     this.renderLegend();
   }
 
@@ -407,7 +407,7 @@ class DailyPrintView extends PrintView {
       stats[statType] = stat;
     });
 
-    const { target, veryLow } = _.get(stats, 'timeInRange.data.raw', {});
+    const { target, veryLow } = _.get(stats, 'timeInRange.data.raw.durations', {});
     const totalCbgDuration = _.get(stats, 'timeInRange.data.total.value', {});
     const { averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
     const { carbs } = _.get(stats, 'carbs.data.raw', {});

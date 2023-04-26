@@ -88,7 +88,7 @@ Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.j
 and then use this story to iterate on the Settings Print PDF outside of Tidepool Web!`;
 
 profiles.longName = _.cloneDeep(profiles.standard);
-profiles.longName.profile.fullName = 'Super Duper Long Patient Name';
+profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
 stories.add('standard account', ({ dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>

@@ -25,6 +25,7 @@ const {
   trendsYScale: yScale,
 } = scales.trends;
 import bgBounds from '../../../helpers/bgBounds';
+import * as bgUtils from '../../../../src/utils/bloodglucose';
 import { THREE_HRS } from '../../../../src/utils/datetime';
 import SMBGRangeAvgContainer
   from '../../../../src/components/trends/smbg/SMBGRangeAvgContainer';
@@ -102,26 +103,24 @@ describe('SMBGRangeAvgContainer', () => {
 
   describe('componentWillReceiveProps', () => {
     it('remunges data if binSize has changed', () => {
-      const instance = wrapper.instance();
-      sinon.spy(instance, 'mungeData');
-      expect(instance.mungeData.callCount).to.equal(0);
+      sinon.spy(bgUtils, 'mungeBGDataBins');
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
       wrapper.setProps({ binSize: 1000 * 60 * 60 * 3 });
-      expect(instance.mungeData.callCount).to.equal(1);
-      instance.mungeData.restore();
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
+      bgUtils.mungeBGDataBins.restore();
     });
 
     it('remunges data if data has changed', () => {
-      const instance = wrapper.instance();
-      sinon.spy(instance, 'mungeData');
-      expect(instance.mungeData.callCount).to.equal(0);
+      sinon.spy(bgUtils, 'mungeBGDataBins');
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
       wrapper.setProps({
         data: [
           { id: 'b1', msPer24: 0, value: 90 },
           { id: 'b2', msPer24: 9000000, value: 90 },
         ],
       });
-      expect(instance.mungeData.callCount).to.equal(1);
-      instance.mungeData.restore();
+      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
+      bgUtils.mungeBGDataBins.restore();
     });
   });
 

@@ -16,8 +16,10 @@
  */
 
 import _ from 'lodash';
+import { max, mean, median, min, quantile, range } from 'd3-array';
 
 import { DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
+import { TWENTY_FOUR_HRS } from './datetime';
 
 import { formatBgValue } from './format.js';
 
@@ -219,7 +221,15 @@ export function weightedCGMCount(data) {
  */
 export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
-  return deviceId.indexOf('AbbottFreeStyleLibre') === 0 ? 15 * MS_IN_MIN : 5 * MS_IN_MIN;
+  if (deviceId.indexOf('AbbottFreeStyleLibre3') === 0) {
+    return 5 * MS_IN_MIN;
+  }
+
+  if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
+    return 15 * MS_IN_MIN;
+  }
+
+  return 5 * MS_IN_MIN;
 }
 
 /**
@@ -231,4 +241,154 @@ export function isCustomBgRange(bgPrefs) {
   const { bgBounds, bgUnits } = bgPrefs;
   return bgBounds.targetUpperBound !== DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound
     || bgBounds.targetLowerBound !== DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound;
+}
+
+/**
+ * determineRangeBoundaries
+ * @param {Array} outOfRange - Array of out-of-range objects w/threshold and value
+ *
+ * @return {Object} highAndLowThresholds - Object with high and low keys
+ */
+export function determineRangeBoundaries(outOfRange) {
+  const lowThresholds = _.filter(outOfRange, { value: 'low' });
+  const highThresholds = _.filter(outOfRange, { value: 'high' });
+  const boundaries = {};
+  if (!_.isEmpty(lowThresholds)) {
+    // if there is data from multiple devices present with different thresholds
+    // we want to use the more conservative (= higher) threshold for lows
+    boundaries.low = max(lowThresholds, (d) => (d.threshold));
+  }
+  if (!_.isEmpty(highThresholds)) {
+    // if there is data from multiple devices present with different thresholds
+    // we want to use the more conservative (= lower) threshold for highs
+    boundaries.high = min(highThresholds, (d) => (d.threshold));
+  }
+  return boundaries;
+}
+
+/**
+ * findBinForTimeOfDay
+ * @param {Number} binSize - natural number duration in milliseconds
+ * @param {Number} msPer24 - natural number milliseconds into a twenty-four hour day
+ *
+ * @return {Number} bin
+ */
+export function findBinForTimeOfDay(binSize, msPer24) {
+  if (msPer24 < 0 || msPer24 >= TWENTY_FOUR_HRS) {
+    throw new Error('`msPer24` < 0 or >= 86400000 is invalid!');
+  }
+
+  return Math.floor(msPer24 / binSize) * binSize + (binSize / 2);
+}
+
+/**
+ * findOutOfRangeAnnotations
+ * @param {Array} data - Array of `cbg` or `smbg` events
+ *
+ * @return {Array} thresholds - Array of objects with unique `threshold`
+ *                              (and `value` of 'low' or 'high')
+ */
+export function findOutOfRangeAnnotations(data) {
+  const isOutOfRangeAnnotation = (annotation) => (annotation.code === 'bg/out-of-range');
+  const eventsAnnotatedAsOutOfRange = _.filter(
+    data,
+    (d) => (_.some(d.annotations || [], isOutOfRangeAnnotation))
+  );
+  const annotations = _.map(eventsAnnotatedAsOutOfRange, (d) => (_.pick(
+    _.find(d.annotations || [], isOutOfRangeAnnotation),
+    ['threshold', 'value'],
+  )));
+  // the numerical `threshold` is our determiner of uniqueness
+  return _.uniqBy(annotations, (d) => (d.threshold));
+}
+
+/**
+ * calculateCbgStatsForBin
+ * @param {String} binKey - String of natural number milliseconds bin
+ * @param {Number} binSize - natural number duration in milliseconds
+ * @param {Array} data - Array of cbg values in mg/dL or mmol/L
+ * @param {Array} outOfRange - Array of out-of-range objects w/threshold and value
+ * @param {Array} outerQuantiles - Array of values to use for lower and upper quantiles
+ *
+ * @return {Object} calculatedCbgStats
+ */
+export function calculateCbgStatsForBin(binKey, binSize, data, outOfRange, outerQuantiles = []) {
+  const [
+    lowerQuantile = 0.1,
+    upperQuantile = 0.9,
+  ] = outerQuantiles;
+
+  const sorted = _.sortBy(data, d => d);
+  const centerOfBinMs = parseInt(binKey, 10);
+  const stats = {
+    id: binKey,
+    min: min(sorted),
+    lowerQuantile: quantile(sorted, lowerQuantile),
+    firstQuartile: quantile(sorted, 0.25),
+    median: median(sorted),
+    thirdQuartile: quantile(sorted, 0.75),
+    upperQuantile: quantile(sorted, upperQuantile),
+    max: max(sorted),
+    msX: centerOfBinMs,
+    msFrom: centerOfBinMs - (binSize / 2),
+    msTo: centerOfBinMs + (binSize / 2),
+  };
+  if (!_.isEmpty(outOfRange)) {
+    const thresholds = determineRangeBoundaries(outOfRange);
+    stats.outOfRangeThresholds = thresholds;
+  }
+  return stats;
+}
+
+/**
+ * calculateSmbgStatsForBin
+ * @param {String} binKey - String of natural number milliseconds bin
+ * @param {Number} binSize - natural number duration in milliseconds
+ * @param {Array} data - Array of smbg values in mg/dL or mmol/L
+ * @param {Array} outOfRange - Array of out-of-range objects w/threshold and value
+ *
+ * @return {Object} calculatedSmbgStats
+ */
+export function calculateSmbgStatsForBin(binKey, binSize, data, outOfRange) {
+  const centerOfBinMs = parseInt(binKey, 10);
+  const stats = {
+    id: binKey,
+    min: min(data),
+    mean: mean(data),
+    max: max(data),
+    msX: centerOfBinMs,
+    msFrom: centerOfBinMs - (binSize / 2),
+    msTo: centerOfBinMs + (binSize / 2),
+  };
+  if (!_.isEmpty(outOfRange)) {
+    const thresholds = determineRangeBoundaries(outOfRange);
+    stats.outOfRangeThresholds = thresholds;
+  }
+  return stats;
+}
+
+/**
+ * mungeBGDataBins
+ * @param {String} bgType - String - one of [smbg|cbg]
+ * @param {String} binKey - String of natural number milliseconds bin
+ * @param {Number} binSize - natural number duration in milliseconds
+ * @param {Array} data - Array of smbg values in mg/dL or mmol/L
+ * @param {Array} outerQuantiles - Array of values to use for lower and upper quantiles
+ * @returns munged bg bin data
+ */
+export function mungeBGDataBins(bgType, binSize, data, outerQuantiles) {
+  const binned = _.groupBy(data, (d) => (findBinForTimeOfDay(binSize, d.msPer24)));
+  const outOfRanges = findOutOfRangeAnnotations(data);
+  // we need *all* possible keys for TransitionMotion to work on enter/exit
+  // and the range starts with binSize/2 because the keys are centered in each bin
+  const binKeys = _.map(range(binSize / 2, TWENTY_FOUR_HRS, binSize), (d) => String(d));
+
+  const binCalculator = bgType === 'smbg' ? calculateSmbgStatsForBin : calculateCbgStatsForBin;
+  const valueExtractor = (d) => (d.value);
+  const mungedData = [];
+  for (let i = 0; i < binKeys.length; ++i) {
+    const values = _.map(_.get(binned, binKeys[i], []), valueExtractor);
+    mungedData.push(binCalculator(binKeys[i], binSize, values, outOfRanges, outerQuantiles));
+  }
+  return mungedData;
 }

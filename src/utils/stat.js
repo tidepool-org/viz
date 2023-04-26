@@ -21,7 +21,7 @@ import {
 } from './constants';
 
 import { getPumpVocabulary } from './device';
-import { formatDecimalNumber, formatBgValue } from './format';
+import { bankersRound, formatDecimalNumber, formatBgValue } from './format';
 import { formatDuration } from './datetime';
 
 const t = i18next.t.bind(i18next);
@@ -146,7 +146,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.bgValue:
       if (value >= 0) {
         id = classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), value);
-        value = formatBgValue(value, opts.bgPrefs);
+        value = formatBgValue(value, opts.bgPrefs, undefined, opts.useAGPFormat);
       } else {
         disableStat();
       }
@@ -175,7 +175,9 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.cv:
       if (value >= 0) {
         id = classifyCvValue(value);
-        value = formatDecimalNumber(value);
+        value = opts.useAGPFormat
+          ? bankersRound(value, 1).toString()
+          : formatDecimalNumber(value);
         suffix = '%';
       } else {
         disableStat();
@@ -192,7 +194,9 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
     case statFormats.gmi:
       if (value >= 0) {
-        value = formatDecimalNumber(value, 1);
+        value = opts.useAGPFormat
+          ? bankersRound(value, 1).toString()
+          : formatDecimalNumber(value, 1);
         suffix = '%';
       } else {
         disableStat();
@@ -508,10 +512,15 @@ export const getStatData = (data, type, opts = {}) => {
           id: 'gmi',
           value: ensureNumeric(data.glucoseManagementIndicator),
         },
+        {
+          id: 'gmiAGP',
+          value: ensureNumeric(data.glucoseManagementIndicatorAGP),
+        },
       ];
 
       statData.dataPaths = {
         summary: 'data.0',
+        summaryAGP: 'data.1',
       };
       break;
 
@@ -563,10 +572,14 @@ export const getStatData = (data, type, opts = {}) => {
         {
           value: ensureNumeric(data.sensorUsage),
         },
+        {
+          value: ensureNumeric(data.sensorUsageAGP),
+        },
       ];
       statData.total = { value: ensureNumeric(data.total) };
       statData.dataPaths = {
         summary: 'data.0',
+        summaryAGP: 'data.1',
       };
       break;
 
@@ -638,31 +651,31 @@ export const getStatData = (data, type, opts = {}) => {
       statData.data = [
         {
           id: 'veryLow',
-          value: ensureNumeric(data.veryLow),
+          value: ensureNumeric(data.durations.veryLow),
           title: t('Time Below Range'),
           legendTitle: bgRanges.veryLow,
         },
         {
           id: 'low',
-          value: ensureNumeric(data.low),
+          value: ensureNumeric(data.durations.low),
           title: t('Time Below Range'),
           legendTitle: bgRanges.low,
         },
         {
           id: 'target',
-          value: ensureNumeric(data.target),
+          value: ensureNumeric(data.durations.target),
           title: t('Time In Range'),
           legendTitle: bgRanges.target,
         },
         {
           id: 'high',
-          value: ensureNumeric(data.high),
+          value: ensureNumeric(data.durations.high),
           title: t('Time Above Range'),
           legendTitle: bgRanges.high,
         },
         {
           id: 'veryHigh',
-          value: ensureNumeric(data.veryHigh),
+          value: ensureNumeric(data.durations.veryHigh),
           title: t('Time Above Range'),
           legendTitle: bgRanges.veryHigh,
         },
