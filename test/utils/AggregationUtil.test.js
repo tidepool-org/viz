@@ -108,6 +108,11 @@ describe('AggregationUtil', () => {
     '2018-02-03T00:00:00.000Z',
   ];
 
+  const threeDayEndpoints = [
+    '2018-02-01T00:00:00.000Z',
+    '2018-02-04T00:00:00.000Z',
+  ];
+
   const defaultOpts = {
     bgPrefs,
     endpoints: twoDayEndpoints,
@@ -402,6 +407,22 @@ describe('AggregationUtil', () => {
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].smbg).to.be.an('array').and.have.lengthOf(3);
     });
 
+
+    it('should aggregate data by date correctly if endpoints go beyond the available data range', () => {
+      aggregationUtil = createAggregationUtil(data, {
+        ...defaultOpts,
+        endpoints: threeDayEndpoints,
+        types: { smbg: {}, bolus: {} },
+      });
+      groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
+
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-02'].bolus).to.be.an('array').and.have.lengthOf(1);
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].bolus).to.be.an('array').and.have.lengthOf(7);
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-02'].smbg).to.be.an('array').and.have.lengthOf(1);
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].smbg).to.be.an('array').and.have.lengthOf(3);
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-03']).to.be.undefined;
+    });
+
     it('should add basals overlapping start of each date range', () => {
       aggregationUtil = createAggregationUtil(data, {
         ...defaultOpts,
@@ -481,6 +502,40 @@ describe('AggregationUtil', () => {
         'high',
         'veryHigh',
       ]);
+    });
+
+    it('should aggregate stats by date correctly if endpoints go beyond the available data range', () => {
+      aggregationUtil = createAggregationUtil(data, {
+        ...defaultOpts,
+        endpoints: threeDayEndpoints,
+        stats: 'averageGlucose, timeInRange',
+      });
+      groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
+
+      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-02'].averageGlucose).to.be.an('object').and.have.keys([
+        'total',
+        'averageGlucose',
+      ]);
+
+      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-01'].timeInRange.counts).to.be.an('object').and.have.keys([
+        'total',
+        'veryLow',
+        'low',
+        'target',
+        'high',
+        'veryHigh',
+      ]);
+
+      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-01'].timeInRange.durations).to.be.an('object').and.have.keys([
+        'total',
+        'veryLow',
+        'low',
+        'target',
+        'high',
+        'veryHigh',
+      ]);
+
+      expect(aggregationUtil.aggregateStatsByDate(groupByDate)['2018-02-03']).to.be.undefined;
     });
 
     it('should reset endpoint filters to initial values after processing', () => {
