@@ -754,6 +754,7 @@ class PrintView {
   renderPatientInfo() {
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
+    const patientMRN = _.truncate(this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn, { length: 15 });
     const xOffset = this.margins.left;
     const yOffset = this.margins.top;
 
@@ -764,7 +765,7 @@ class PrintView {
         lineGap: 2,
       });
 
-    const patientNameWidth = this.patientInfoBox.width = this.doc.widthOfString(patientName);
+    const patientNameWidth = this.doc.widthOfString(patientName);
     const patientDOB = t('DOB: {{birthdate}}', { birthdate: patientBirthdate });
 
     this.doc
@@ -774,9 +775,21 @@ class PrintView {
     const patientBirthdayWidth = this.doc.widthOfString(patientDOB);
     this.patientInfoBox.height = this.doc.y;
 
-    if (patientNameWidth < patientBirthdayWidth) {
-      this.patientInfoBox.width = patientBirthdayWidth;
+    let patientMRNWidth = 0;
+
+    if (patientMRN) {
+      const patientMRNText = t('MRN: {{mrn}}', { mrn: patientMRN });
+
+      this.doc
+        .moveDown(0.15)
+        .fontSize(10)
+        .text(patientMRNText);
+
+      patientMRNWidth = this.doc.widthOfString(patientMRNText);
+      this.patientInfoBox.height = this.doc.y;
     }
+
+    this.patientInfoBox.width = _.max([patientNameWidth, patientBirthdayWidth, patientMRNWidth]);
 
     // Render the divider between the patient info and title
     const padding = 10;
@@ -895,7 +908,7 @@ class PrintView {
     this.doc.moveDown();
 
     const lineHeight = this.doc.fontSize(14).currentLineHeight();
-    const height = lineHeight * 2.25 + this.margins.top;
+    const height = lineHeight * 0.25 + this.patientInfoBox.height;
     this.doc
       .moveTo(this.margins.left, height)
       .lineTo(this.margins.left + this.width, height)
