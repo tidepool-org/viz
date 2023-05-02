@@ -515,50 +515,59 @@ export class AggregationUtil {
    */
   postProcessDataByDateAggregations = priorResults => () => {
     const data = this.filterByActiveRange(priorResults());
+    const datesWithData = _.map(data, 'key');
     const processedData = {};
 
-    _.each(_.sortBy(data, 'key').reverse(), (dataForDay, index) => {
-      const {
-        value: {
-          dataList,
-        },
-      } = dataForDay;
+    const activeRangeDates = _.map(_.range(this.initialActiveEndpoints.days || 0), (val, index) => (
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName)).subtract(index + 1, 'days').format('YYYY-MM-DD')
+    );
 
-      // Set the endpoints to filter current data for day
-      this.dataUtil.activeEndpoints = {
-        range: [
-          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
-          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
-        ],
-        days: 1,
-        activeDays: 1,
-      };
+    _.each(activeRangeDates, (date, index) => {
+      if (_.includes(datesWithData, date)) {
+        const dataForDay = _.find(data, { key: date });
 
-      this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+        const {
+          value: {
+            dataList,
+          },
+        } = dataForDay;
 
-      const sortedData = _.sortBy(dataList, this.dataUtil.activeTimeField);
-      const groupedData = _.groupBy(sortedData, 'type');
-      const groupedBasals = _.cloneDeep(groupedData.basal || []);
+        // Set the endpoints to filter current data for day
+        this.dataUtil.activeEndpoints = {
+          range: [
+            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
+          ],
+          days: 1,
+          activeDays: 1,
+        };
 
-      const groupedPumpSettingsOverrides = _.filter(
-        _.cloneDeep(groupedData.deviceEvent || []),
-        { subType: 'pumpSettingsOverride' }
-      );
+        this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
-      const initialGroupedPumpSettingsOverridesLength = groupedPumpSettingsOverrides.length;
+        const sortedData = _.sortBy(dataList, this.dataUtil.activeTimeField);
+        const groupedData = _.groupBy(sortedData, 'type');
+        const groupedBasals = _.cloneDeep(groupedData.basal || []);
 
-      this.dataUtil.addBasalOverlappingStart(groupedBasals);
-      this.dataUtil.addPumpSettingsOverrideOverlappingStart(groupedPumpSettingsOverrides);
+        const groupedPumpSettingsOverrides = _.filter(
+          _.cloneDeep(groupedData.deviceEvent || []),
+          { subType: 'pumpSettingsOverride' }
+        );
 
-      _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
+        const initialGroupedPumpSettingsOverridesLength = groupedPumpSettingsOverrides.length;
 
-      if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+        this.dataUtil.addBasalOverlappingStart(groupedBasals);
+        this.dataUtil.addPumpSettingsOverrideOverlappingStart(groupedPumpSettingsOverrides);
 
-      if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
-        groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
+        _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
+
+        if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+
+        if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
+          groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
+        }
+
+        processedData[dataForDay.key] = groupedData;
       }
-
-      processedData[dataForDay.key] = groupedData;
     });
 
     // Reset the activeEndpoints to it's initial value
@@ -578,23 +587,30 @@ export class AggregationUtil {
    */
   postProcessStatsByDateAggregations = priorResults => () => {
     const data = this.filterByActiveRange(priorResults());
+    const datesWithData = _.map(data, 'key');
     const processedData = {};
 
-    _.each(_.sortBy(data, 'key').reverse(), (dataForDay, index) => {
-      // Set the endpoints to filter current data for day
-      this.dataUtil.activeEndpoints = {
-        range: [
-          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
-          moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
-        ],
-        days: 1,
-        activeDays: 1,
-      };
+    const activeRangeDates = _.map(_.range(this.initialActiveEndpoints.days || 0), (val, index) => (
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName)).subtract(index + 1, 'days').format('YYYY-MM-DD')
+    );
 
-      this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+    _.each(activeRangeDates, (date, index) => {
+      if (_.includes(datesWithData, date)) {
+        // Set the endpoints to filter current data for day
+        this.dataUtil.activeEndpoints = {
+          range: [
+            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
+          ],
+          days: 1,
+          activeDays: 1,
+        };
 
-      // Fetch the stats with endpoints and activeDays set for the day
-      processedData[dataForDay.key] = this.dataUtil.getStats(this.dataUtil.stats);
+        this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+
+        // Fetch the stats with endpoints and activeDays set for the day
+        processedData[date] = this.dataUtil.getStats(this.dataUtil.stats);
+      }
     });
 
     // Reset the activeEndpoints to it's initial value
