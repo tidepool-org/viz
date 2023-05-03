@@ -238,7 +238,7 @@ describe('AGPPrintView', () => {
 
     it('should render the section container with appropriate args', () => {
       sinon.assert.calledWithMatch(renderSectionContainerSpy, {
-        text: { dob: 'DOB:' },
+        text: { dob: 'DOB:', mrn: 'MRN:' },
         height: sinon.match.number,
         width: sinon.match.number,
         x: sinon.match.number,
@@ -253,6 +253,11 @@ describe('AGPPrintView', () => {
     it('should render the patient DOB', () => {
       sinon.assert.calledWithMatch(Renderer.doc.text, 'DOB:');
       sinon.assert.calledWithMatch(Renderer.doc.text, 'Jan 31, 1983');
+    });
+
+    it('should render the patient MRN', () => {
+      sinon.assert.calledWithMatch(Renderer.doc.text, 'MRN:');
+      sinon.assert.calledWithMatch(Renderer.doc.text, 'mrn123');
     });
 
     it('should render the report date range', () => {

@@ -210,6 +210,7 @@ class AGPPrintView extends PrintView {
 
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
+    const patientMRN = _.truncate(this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn, { length: 15 });
     const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
 
     let cgmDaysWornText = cgmDaysWorn === 1
@@ -223,7 +224,7 @@ class AGPPrintView extends PrintView {
       }`;
     }
 
-    const renderInfoRow = (mainText, subTextLabel, subText) => {
+    const renderInfoRow = (mainText, subTextLabel, subText, underline = true) => {
       const x = this.doc.x;
       const y = this.doc.y;
       let subTextWidth = 0;
@@ -257,19 +258,28 @@ class AGPPrintView extends PrintView {
         .fontSize(fontSizes.reportInfo.default)
         .text(mainText, x, y);
 
-      const lineYPos = y + this.doc.currentLineHeight() + this.dpi * 0.025;
+      if (underline) {
+        const lineYPos = y + this.doc.currentLineHeight() + this.dpi * 0.025;
 
-      this.doc
-        .moveTo(section.x, lineYPos)
-        .lineWidth(0.25)
-        .lineTo(section.x + section.width, lineYPos)
-        .strokeColor(colors.line.default)
-        .stroke();
+        this.doc
+          .moveTo(section.x, lineYPos)
+          .lineWidth(0.25)
+          .lineTo(section.x + section.width, lineYPos)
+          .strokeColor(colors.line.default)
+          .stroke();
+      }
 
       this.doc.x = x;
     };
 
     this.doc.x = section.x;
+
+    if (patientMRN) {
+      this.doc.y = section.y + this.dpi * 0.05;
+      this.doc.moveUp(1);
+      renderInfoRow('', text.reportInfo.mrn, patientMRN, false);
+    }
+
     this.doc.y = section.y + this.dpi * 0.05;
     renderInfoRow(patientName, text.reportInfo.dob, patientBirthdate);
     this.doc.moveDown(1);

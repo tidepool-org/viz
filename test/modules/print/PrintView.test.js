@@ -1630,6 +1630,7 @@ describe('PrintView', () => {
       Renderer.renderPatientInfo();
       sinon.assert.calledWith(Renderer.doc.text, getPatientFullName(opts.patient));
       sinon.assert.calledWith(Renderer.doc.text, `DOB: ${formatBirthdate(opts.patient)}`);
+      sinon.assert.calledWith(Renderer.doc.text, 'MRN: mrn123');
 
       expect(Renderer.patientInfoBox.width).to.be.a('number');
       expect(Renderer.patientInfoBox.width > 0).to.be.true;
