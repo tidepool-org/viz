@@ -2,6 +2,7 @@ import AGPPrintView from '../../../src/modules/print/AGPPrintView';
 import PrintView from '../../../src/modules/print/PrintView';
 import * as patients from '../../../data/patient/profiles';
 import * as settings from '../../../data/patient/settings';
+import _ from 'lodash';
 
 import { agpData as data } from '../../../data/print/fixtures';
 
@@ -258,6 +259,20 @@ describe('AGPPrintView', () => {
     it('should render the patient MRN', () => {
       sinon.assert.calledWithMatch(Renderer.doc.text, 'MRN:');
       sinon.assert.calledWithMatch(Renderer.doc.text, 'mrn123');
+    });
+
+    it('should render a truncated MRN if over 15 characters', () => {
+      const patient = _.cloneDeep(opts.patient);
+      patient.profile.patient.mrn = '1234567890123456';
+
+      Renderer = new PrintView(doc, data, {
+        ...opts,
+        patient,
+      });
+
+      Renderer.renderPatientInfo();
+      sinon.assert.calledWithMatch(Renderer.doc.text, 'MRN:');
+      sinon.assert.calledWith(Renderer.doc.text, 'MRN: 12345…0123456');
     });
 
     it('should render the report date range', () => {
