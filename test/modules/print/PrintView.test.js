@@ -1638,6 +1638,19 @@ describe('PrintView', () => {
       expect(Renderer.patientInfoBox.height).to.be.a('number');
       expect(Renderer.patientInfoBox.height > 0).to.be.true;
     });
+
+    it('should render a truncated MRN if over 15 characters', () => {
+      const patient = _.cloneDeep(opts.patient);
+      patient.profile.patient.mrn = '1234567890123456';
+
+      Renderer = new PrintView(doc, data, {
+        ...opts,
+        patient,
+      });
+
+      Renderer.renderPatientInfo();
+      sinon.assert.calledWith(Renderer.doc.text, 'MRN: 12345…0123456');
+    });
   });
 
   describe('renderTitle', () => {

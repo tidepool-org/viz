@@ -754,7 +754,7 @@ class PrintView {
   renderPatientInfo() {
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
-    const patientMRN = _.truncate(this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn, { length: 15 });
+    let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
     const xOffset = this.margins.left;
     const yOffset = this.margins.top;
 
@@ -778,6 +778,10 @@ class PrintView {
     let patientMRNWidth = 0;
 
     if (patientMRN) {
+      if (patientMRN.length > 15) {
+        patientMRN = `${patientMRN.slice(0, 5)}\u2026${patientMRN.slice(-7)}`;
+      }
+
       const patientMRNText = t('MRN: {{mrn}}', { mrn: patientMRN });
 
       this.doc
