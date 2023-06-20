@@ -210,7 +210,7 @@ class AGPPrintView extends PrintView {
 
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
-    const patientMRN = _.truncate(this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn, { length: 15 });
+    let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
     const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
 
     let cgmDaysWornText = cgmDaysWorn === 1
@@ -275,6 +275,10 @@ class AGPPrintView extends PrintView {
     this.doc.x = section.x;
 
     if (patientMRN) {
+      if (patientMRN.length > 15) {
+        patientMRN = `${patientMRN.slice(0, 5)}\u2026${patientMRN.slice(-7)}`;
+      }
+
       this.doc.y = section.y + this.dpi * 0.05;
       this.doc.moveUp(1);
       renderInfoRow('', text.reportInfo.mrn, patientMRN, false);
