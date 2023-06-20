@@ -33,6 +33,7 @@ export const text = {
   },
   reportInfo: {
     dob: t('DOB:'),
+    mrn: t('MRN:'),
   },
   glucoseMetrics: {
     title: t('Glucose metrics'),

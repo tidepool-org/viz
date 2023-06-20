@@ -54,6 +54,7 @@ describe('AGPConstants', () => {
       },
       reportInfo: {
         dob: 'DOB:',
+        mrn: 'MRN:',
       },
       glucoseMetrics: {
         title: 'Glucose metrics',

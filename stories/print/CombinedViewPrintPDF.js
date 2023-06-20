@@ -22,6 +22,7 @@ import { storiesOf } from '@storybook/react';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { generateAGPSVGDataURLS } from '../../src/utils/print/plotly';
 
 import * as profiles from '../../data/patient/profiles';
 import * as settings from '../../data/patient/settings';
@@ -58,6 +59,15 @@ const bgBounds = {
 async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
+
+  const data = {};
+
+  if (queries) {
+    _.each(queries, (query, key) => {
+      data[key] = dataUtil.query(query);
+    });
+  }
+
   const opts = {
     bgPrefs: {
       bgBounds: bgBounds[bgUnits],
@@ -72,15 +82,8 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
       bgLog: 30,
     },
     patient,
+    svgDataURLS: await generateAGPSVGDataURLS(data.agp),
   };
-
-  const data = {};
-
-  if (queries) {
-    _.each(queries, (query, key) => {
-      data[key] = dataUtil.query(query);
-    });
-  }
 
   if (data.basics) createPrintView('basics', data.basics, opts, doc).render();
   if (data.daily) createPrintView('daily', data.daily, opts, doc).render();
@@ -123,6 +126,7 @@ stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
+        clinicPatientMRN: '1234567890123456',
         ...profiles.standard,
         ...settings.cannulaPrimeSelected,
       },

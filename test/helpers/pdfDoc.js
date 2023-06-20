@@ -67,6 +67,7 @@ export default class Doc {
     this.font = sinon.stub().returns(this);
     this.moveTo = sinon.stub().returns(this);
     this.moveDown = sinon.stub().returns(this);
+    this.moveUp = sinon.stub().returns(this);
     this.lineTo = sinon.stub().returns(this);
     this.lineGap = sinon.stub().returns(this);
     this.lineCap = sinon.stub().returns(this);
