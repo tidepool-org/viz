@@ -975,8 +975,13 @@ class PrintView {
   }
 
   renderSVGImage(svgDataURL = '', x, y, width, height) {
-    const svgDataURLArr = svgDataURL.split(',');
-    const rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
+    let rawChartSVG;
+    if (svgDataURL.startsWith('<svg')) {
+      rawChartSVG = svgDataURL;
+    } else {
+      const svgDataURLArr = svgDataURL.split(',');
+      rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
+    }
     this.addSVG(rawChartSVG, x, y, { assumePt: true, width, height });
   }
 

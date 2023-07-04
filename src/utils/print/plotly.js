@@ -1,6 +1,5 @@
 import _ from 'lodash';
 import moment from 'moment-timezone';
-import Plotly from 'plotly.js-basic-dist-min';
 
 import { getStatDefinition } from '../stat';
 import { getTimezoneFromTimePrefs } from '../datetime';
@@ -37,19 +36,13 @@ export async function generateAGPSVGDataURLS(data) {
 
   // Generate timeInRanges figure
   if (sections.timeInRanges.sufficientData) {
-    svgDataURLS.timeInRanges = await Plotly.toImage(
-      generateTimeInRangesFigure(sections.timeInRanges, stats.timeInRange, data.bgPrefs),
-      { format: 'svg' }
-    );
+    svgDataURLS.timeInRanges = generateTimeInRangesFigure(sections.timeInRanges, stats.timeInRange, data.bgPrefs);
   }
 
   // Generate ambulatoryGlucoseProfile figure
   if (sections.ambulatoryGlucoseProfile.sufficientData) {
     const cbgData = data?.data?.current?.data?.cbg || [];
-    svgDataURLS.ambulatoryGlucoseProfile = await Plotly.toImage(
-      generateAmbulatoryGlucoseProfileFigure(sections.ambulatoryGlucoseProfile, cbgData, data.bgPrefs),
-      { format: 'svg' }
-    );
+    svgDataURLS.ambulatoryGlucoseProfile = generateAmbulatoryGlucoseProfileFigure(sections.ambulatoryGlucoseProfile, cbgData, data.bgPrefs);
   }
 
   // Generate dailyGlucoseProfiles figures
@@ -67,14 +60,8 @@ export async function generateAGPSVGDataURLS(data) {
     const week2Data = _.map(weeklyDates[1], date => ([[date], cbgDataByDate[date]]));
 
     svgDataURLS.dailyGlucoseProfiles = [
-      await Plotly.toImage(
-        generateDailyGlucoseProfilesFigure(sections.dailyGlucoseProfiles, week1Data, data.bgPrefs, 'dddd'),
-        { format: 'svg' }
-      ),
-      await Plotly.toImage(
-        generateDailyGlucoseProfilesFigure(sections.dailyGlucoseProfiles, week2Data, data.bgPrefs, 'ha'),
-        { format: 'svg' }
-      ),
+      generateDailyGlucoseProfilesFigure(sections.dailyGlucoseProfiles, week1Data, data.bgPrefs, 'dddd'),
+      generateDailyGlucoseProfilesFigure(sections.dailyGlucoseProfiles, week2Data, data.bgPrefs, 'ha'),
     ];
   }
 
