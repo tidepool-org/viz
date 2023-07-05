@@ -65,6 +65,7 @@ describe('print module', () => {
   let doc;
 
   sinon.stub(Module.utils.PrintView, 'renderPageNumbers');
+  sinon.stub(Module.utils.PrintView, 'renderNoData');
   sinon.stub(Module.utils, 'BasicsPrintView').returns(new BasicsPrintView());
   sinon.stub(Module.utils, 'DailyPrintView').returns(new DailyPrintView());
   sinon.stub(Module.utils, 'BgLogPrintView').returns(new BgLogPrintView());
@@ -80,6 +81,7 @@ describe('print module', () => {
   afterEach(() => {
     sandbox.restore();
     Module.utils.PrintView.renderPageNumbers.resetHistory();
+    Module.utils.PrintView.renderNoData.resetHistory();
     Module.utils.BasicsPrintView.resetHistory();
     Module.utils.DailyPrintView.resetHistory();
     Module.utils.BgLogPrintView.resetHistory();
@@ -266,6 +268,29 @@ describe('print module', () => {
       sinon.assert.notCalled(Module.utils.DailyPrintView);
       sinon.assert.notCalled(Module.utils.BgLogPrintView);
       sinon.assert.notCalled(Module.utils.SettingsPrintView);
+    });
+  });
+
+  it('should render insufficient data message when all views are disabled', () => {
+    const allDisabledOpts = {
+      basics: { disabled: true },
+      daily: { disabled: true },
+      bgLog: { disabled: true },
+      settings: { disabled: true },
+      agp: { disabled: true },
+    };
+
+    const result = Module.createPrintPDFPackage(data, allDisabledOpts);
+    doc.stream.end();
+
+    result.then(() => {
+      sinon.assert.notCalled(Module.utils.AGPPrintView);
+      sinon.assert.notCalled(Module.utils.BasicsPrintView);
+      sinon.assert.notCalled(Module.utils.DailyPrintView);
+      sinon.assert.notCalled(Module.utils.BgLogPrintView);
+      sinon.assert.notCalled(Module.utils.SettingsPrintView);
+
+      sinon.assert.calledOnce(Module.utils.PrintView.renderNoData);
     });
   });
 

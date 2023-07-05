@@ -174,6 +174,15 @@ export function createPrintPDFPackage(data, opts) {
     if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
     if (!agp.disabled) await createPrintView('agp', data.agp, pdfOpts, doc).render();
 
+    if (
+      _.every(
+        [basics, daily, bgLog, settings, agp],
+        (section) => section.disabled
+      )
+    ) {
+      PrintView.renderNoData(doc);
+    }
+
     PrintView.renderPageNumbers(doc);
 
     doc.end();

@@ -974,6 +974,11 @@ class PrintView {
     }
   }
 
+  static renderNoData(doc) {
+    doc.addPage();
+    doc.text('Insufficient data for patient to generate any report.');
+  }
+
   renderSVGImage(svgDataURL = '', x, y, width, height) {
     let rawChartSVG;
     if (svgDataURL.startsWith('<svg')) {
