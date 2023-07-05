@@ -41,6 +41,7 @@ import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
 import {
+  formatDateRange,
   getLocalizedCeiling,
   getTimezoneFromTimePrefs,
 } from './utils/datetime';
@@ -114,6 +115,7 @@ const utils = {
   },
   datetime: {
     findBasicsStart,
+    formatDateRange,
     getLocalizedCeiling,
     getTimezoneFromTimePrefs,
   },
