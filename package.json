@@ -39,7 +39,7 @@
   "homepage": "https://github.com/tidepool-org/viz#readme",
   "dependencies": {
     "bluebird": "3.5.2",
-    "bows": "1.7.0",
+    "bows": "1.7.2",
     "classnames": "2.2.6",
     "crossfilter2": "1.5.2",
     "d3-array": "1.2.4",
