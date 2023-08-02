@@ -314,6 +314,21 @@ describe('basics data utils', () => {
       expect(result.fingersticks.disabled).to.be.true;
     });
 
+    it('should prioritize checking summary.total over existence of byDate keys to check data availability', () => {
+      const aggregationsData = {
+        ...data,
+        basals: {
+          basal: { byDate: { dateKey1: {}, dateKey2: {} }, summary: { total: 0 } },
+          automatedSuspend: { byDate: {} },
+        },
+        boluses: { byDate: { dateKey1: {}, dateKey2: {} } },
+      };
+      const result = dataUtils.processBasicsAggregations(aggregations, aggregationsData, patient, manufacturer);
+
+      expect(result.basals.disabled).to.be.true;
+      expect(result.boluses.disabled).to.be.false;
+    });
+
     it('should set empty text for sections for which there is no data available', () => {
       const resultWithMissingData = dataUtils.processBasicsAggregations({ ...aggregations }, data, patient, manufacturer);
 
