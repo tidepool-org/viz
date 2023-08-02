@@ -83,7 +83,7 @@ const oneWeekDates = [
   },
 ];
 
-describe.only('basics data utils', () => {
+describe('basics data utils', () => {
   describe('defineBasicsAggregations', () => {
     const sectionNames = [
       'basals',
