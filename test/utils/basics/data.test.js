@@ -314,7 +314,7 @@ describe('basics data utils', () => {
       expect(result.fingersticks.disabled).to.be.true;
     });
 
-    it('should prioritize checking summary.total over existence oc byDate keys to check data availability', () => {
+    it('should prioritize checking summary.total over existence of byDate keys to check data availability', () => {
       const aggregationsData = {
         ...data,
         basals: {
