@@ -46,6 +46,17 @@ describe('[bgLog] data utils', () => {
       },
       bgPrefs,
       timePrefs,
+      metaData: {
+        devices: [
+          { id: 'deviceWithLabelId', label: 'Device With Label' },
+          { id: 'deviceWithoutLabelId' },
+          { id: 'deviceNotUsedInCurrentDataId' },
+        ],
+        matchedDevices: {
+          deviceWithLabelId: true,
+          deviceWithoutLabelId: true,
+        },
+      },
     };
 
     let textUtilStub;
@@ -120,6 +131,14 @@ describe('[bgLog] data utils', () => {
           '(Meter)',
         ].join('\t'),
       ].join('\n'));
+    });
+
+    it('should output devices found in the current data set used for the report', () => {
+      utils.bgLogText(patient, data, stats);
+      sinon.assert.calledWith(textUtilStub.buildTextLine, '\n\nDevices Uploaded');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
+      sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');
     });
   });
 });

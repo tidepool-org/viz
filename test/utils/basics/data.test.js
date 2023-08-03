@@ -548,6 +548,17 @@ describe('basics data utils', () => {
       bgPrefs: bgPrefs[MGDL_UNITS],
       timePrefs,
       query: { excludeDaysWithoutBolus: true },
+      metaData: {
+        devices: [
+          { id: 'deviceWithLabelId', label: 'Device With Label' },
+          { id: 'deviceWithoutLabelId' },
+          { id: 'deviceNotUsedInCurrentDataId' },
+        ],
+        matchedDevices: {
+          deviceWithLabelId: true,
+          deviceWithoutLabelId: true,
+        },
+      },
     };
 
     const aggregations = {
@@ -622,7 +633,7 @@ describe('basics data utils', () => {
 
     it('should return formatted text for Basics data', () => {
       const result = dataUtils.basicsText(patient, data, stats, aggregations);
-      expect(result).to.equal('Basics Header, Basics Dates, Basics Line, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, ');
+      expect(result).to.equal('Basics Header, Basics Dates, Basics Line, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, Basics Line, Basics Line, Basics Line, ');
     });
 
     it('should build the document header section', () => {
@@ -706,6 +717,14 @@ describe('basics data utils', () => {
         [{ label: 'Total basal events', value: '6' }, { label: 'Temp Basals', value: '1' }, { label: 'Suspends', value: '2' }, { label: 'Auto Mode Exited', value: '3' }, { label: 'Automated Suspend', value: '4' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );
+    });
+
+    it('should output devices found in the current data set used for the report', () => {
+      dataUtils.basicsText(patient, data, stats, aggregations);
+      sinon.assert.calledWith(textUtilStub.buildTextLine, '\nDevices Uploaded');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
+      sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');
     });
   });
 });

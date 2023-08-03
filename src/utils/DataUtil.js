@@ -85,6 +85,7 @@ export class DataUtil {
     this.latestDatumByType = this.latestDatumByType || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
+    this.matchedDevices = this.matchedDevices || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
 
@@ -364,6 +365,8 @@ export class DataUtil {
     const { timezoneName } = this.timePrefs || {};
     const normalizeAllFields = fields[0] === '*';
 
+    if (d.deviceId && !this.matchedDevices[d.deviceId]) this.matchedDevices[d.deviceId] = true;
+
     // Normal time post-processing
     this.normalizeDatumOutTime(d, fields);
 
@@ -561,6 +564,7 @@ export class DataUtil {
       this.wizardDatumsByIdMap = {};
       this.latestDatumByType = {};
       this.deviceUploadMap = {};
+      this.clearMatchedDevices();
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
@@ -1077,6 +1081,10 @@ export class DataUtil {
     this.endTimer('setExcludedDevices');
   }
 
+  clearMatchedDevices = () => {
+    this.matchedDevices = {};
+  }
+
   setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
     this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
   }
@@ -1119,6 +1127,7 @@ export class DataUtil {
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
     this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
+    this.clearMatchedDevices();
 
     const data = {};
 
@@ -1304,6 +1313,7 @@ export class DataUtil {
       'size',
       'devices',
       'excludedDevices',
+      'matchedDevices',
       'queryDataCount',
     ];
 
