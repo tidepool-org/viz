@@ -233,8 +233,8 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
   /* eslint-disable no-param-reassign, max-len */
   const aggregationData = _.cloneDeep(data);
 
-  const hasDataInRange = processedData => (
-    processedData && (_.keys(processedData.byDate).length > 0)
+  const hasDataInRange = (processedData = {}) => (
+    _.get(processedData.summary, 'total', _.keys(processedData.byDate).length) > 0
   );
 
   const getEmptyText = (aggregation, aggregationKey) => {
