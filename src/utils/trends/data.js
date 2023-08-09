@@ -115,8 +115,11 @@ export function trendsText(patient, data, stats, chartPrefs) {
     smbg: 'bgm',
   };
 
+  // Only match pumps or devices that match the currently selected bg source
   const devices = _.filter(metaData?.devices, device => (
-    metaData?.matchedDevices?.[device.id] && device[bgSourceDeviceTypeMap[query?.bgSource]]
+    metaData?.matchedDevices?.[device.id] && (
+      device.pump || device[bgSourceDeviceTypeMap[query?.bgSource]]
+    )
   ));
 
   if (devices.length) {
