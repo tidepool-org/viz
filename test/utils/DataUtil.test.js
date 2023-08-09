@@ -471,27 +471,22 @@ describe('DataUtil', () => {
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(newWizard.id);
     });
 
-    it('should create and/or update the `matchedDevices`', () => {
+    it('should initialize the `matchedDevices` property if not already set', () => {
+      // Initialize if undefined
       delete dataUtil.matchedDevices;
       expect(dataUtil.matchedDevices).to.be.undefined;
 
       dataUtil.addData(defaultData, defaultPatientId);
 
-      expect(dataUtil.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
-        'Dexcom-XXX-XXXX': true,
-        DevId0987654321: true,
-      });
+      expect(dataUtil.matchedDevices).to.eql({});
+
+      // Persist if defined
+      dataUtil.matchedDevices = { foo: 'bar' };
 
       const newWizard = new Types.Wizard({ deviceTime: '2018-02-01T04:00:00', ...useRawData, deviceId: 'newDeviceID' });
       dataUtil.addData([newWizard], defaultPatientId);
 
-      expect(dataUtil.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
-        'Dexcom-XXX-XXXX': true,
-        DevId0987654321: true,
-        newDeviceID: true,
-      });
+      expect(dataUtil.matchedDevices).to.eql({ foo: 'bar' });
     });
 
     it('should call `normalizeDatumIn` on each incoming datum', () => {
@@ -1136,19 +1131,6 @@ describe('DataUtil', () => {
       dataUtil.normalizeDatumOut(datum, fields);
 
       sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum, fields);
-    });
-
-    it('should add newly-encountered device Ids to the `matchedDevices` property', () => {
-      const datum1 = { type: 'foo', deviceId: 'foo' };
-      const datum2 = { type: 'bar', deviceId: 'bar' };
-
-      dataUtil.matchedDevices = {};
-
-      dataUtil.normalizeDatumOut(datum1);
-      expect(dataUtil.matchedDevices).to.eql({ foo: true });
-
-      dataUtil.normalizeDatumOut(datum2);
-      expect(dataUtil.matchedDevices).to.eql({ foo: true, bar: true });
     });
 
     it('should add the `deviceSerialNumber` from the `uploadMap` when `uploadId` is present and the field is requested', () => {
@@ -3110,13 +3092,13 @@ describe('DataUtil', () => {
         dataUtil.clearFilters,
         dataUtil.setBgSources,
         dataUtil.clearFilters,
+        dataUtil.clearMatchedDevices,
         dataUtil.setTypes,
         dataUtil.setBgPrefs,
         dataUtil.setTimePrefs,
         dataUtil.setEndpoints,
         dataUtil.setActiveDays,
         dataUtil.setExcludedDevices,
-        dataUtil.clearMatchedDevices,
       );
     });
 
@@ -3667,12 +3649,7 @@ describe('DataUtil', () => {
       ]);
 
       expect(result.excludedDevices).to.eql([]);
-
-      expect(result.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
-        'Dexcom-XXX-XXXX': true,
-        DevId0987654321: true,
-      });
+      expect(result.matchedDevices).to.eql({});
     });
 
     it('should return metaData requested via a string', () => {
