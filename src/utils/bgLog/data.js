@@ -59,7 +59,7 @@ export function bgLogText(patient, data, stats) {
   ].join('\t'))).join('\n');
 
 
-  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices[id]);
+  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
 
   if (devices.length) {
     const textLines = [
