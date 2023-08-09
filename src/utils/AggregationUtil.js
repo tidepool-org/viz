@@ -44,7 +44,6 @@ export class AggregationUtil {
 
   aggregateBasals = group => {
     this.dataUtil.filter.byType('basal');
-    this.dataUtil.filter.byDeviceIds(this.excludedDevices);
 
     let reducer = reductio();
     reducer.dataList(true);
@@ -81,7 +80,6 @@ export class AggregationUtil {
 
   aggregateBoluses = group => {
     this.dataUtil.filter.byType('bolus');
-    this.dataUtil.filter.byDeviceIds(this.excludedDevices);
 
     const reducer = reductio();
     reducer.dataList(true);
@@ -106,7 +104,6 @@ export class AggregationUtil {
 
   aggregateFingersticks = group => {
     this.dataUtil.filter.byType('smbg');
-    this.dataUtil.filter.byDeviceIds(this.excludedDevices);
 
     let reducer = reductio();
     reducer.dataList(true);
@@ -151,7 +148,6 @@ export class AggregationUtil {
 
   aggregateSiteChanges = group => {
     this.dataUtil.filter.byType('deviceEvent');
-    this.dataUtil.filter.byDeviceIds(this.excludedDevices);
 
     const reducer = reductio();
     reducer.dataList(true);
@@ -172,7 +168,6 @@ export class AggregationUtil {
   aggregateDataByDate = group => {
     const types = _.map(this.dataUtil.types, d => d.type);
     this.dataUtil.filter.byTypes(types);
-    this.dataUtil.filter.byDeviceIds(this.excludedDevices);
 
     const reducer = reductio();
     reducer.dataList(true);
@@ -183,7 +178,6 @@ export class AggregationUtil {
   };
 
   aggregateStatsByDate = group => {
-    this.dataUtil.filter.byDeviceIds(this.excludedDevices);
     const reducer = reductio();
     reducer.dataList(true);
 
@@ -457,7 +451,6 @@ export class AggregationUtil {
         }
       });
     });
-
 
     return {
       byDate: processedData,
