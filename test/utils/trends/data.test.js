@@ -116,7 +116,7 @@ describe('[trends] data utils', () => {
     class TextUtilStub {
       buildDocumentHeader = sinon.stub().returns('Trends Header, ');
       buildDocumentDates = sinon.stub().returns('Trends Dates, ');
-      buildTextLine = sinon.stub().returns('Trends Excluded Dates Text, ');
+      buildTextLine = sinon.stub().returns('Trends Line, ');
     }
     /* eslint-enable lines-between-class-members */
 
@@ -142,6 +142,17 @@ describe('[trends] data utils', () => {
       },
       bgPrefs,
       timePrefs,
+      metaData: {
+        devices: [
+          { id: 'deviceWithLabelId', label: 'Device With Label' },
+          { id: 'deviceWithoutLabelId' },
+          { id: 'deviceNotUsedInCurrentDataId' },
+        ],
+        matchedDevices: {
+          deviceWithLabelId: true,
+          deviceWithoutLabelId: true,
+        },
+      },
     };
 
     let textUtilStub;
@@ -149,7 +160,7 @@ describe('[trends] data utils', () => {
     before(() => {
       textUtilStub = new TextUtilStub();
       sinon.stub(utils.utils, 'TextUtil').returns(textUtilStub);
-      sinon.stub(utils.utils, 'statsText').returns('Stats Text');
+      sinon.stub(utils.utils, 'statsText').returns('Stats Text, ');
       sinon.stub(utils.utils, 'reshapeBgClassesToBgBounds').returns('BG Bounds');
     });
 
@@ -176,7 +187,7 @@ describe('[trends] data utils', () => {
 
     it('should return formatted text for Trends data', () => {
       const result = utils.trendsText(patient, data, stats, chartPrefs);
-      expect(result).to.equal('Trends Header, Trends Dates, Trends Excluded Dates Text, Stats Text');
+      expect(result).to.equal('Trends Header, Trends Dates, Trends Line, Stats Text, Trends Line, Trends Line, Trends Line, ');
     });
 
     it('should build the document header section', () => {
@@ -192,7 +203,6 @@ describe('[trends] data utils', () => {
 
     it('should build the excluded dates when days are excluded', () => {
       utils.trendsText(patient, data, stats, chartPrefs);
-      sinon.assert.callCount(textUtilStub.buildTextLine, 1);
       sinon.assert.calledWith(textUtilStub.buildTextLine, { label: 'Excluded Days', value: 'Monday, Wednesday' });
     });
 
@@ -206,13 +216,21 @@ describe('[trends] data utils', () => {
         saturday: true,
         sunday: true,
       } });
-      sinon.assert.callCount(textUtilStub.buildTextLine, 0);
+      sinon.assert.neverCalledWith(textUtilStub.buildTextLine, sinon.match({ label: 'Excluded Days' }));
     });
 
     it('should build the trends stats section', () => {
       utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.callCount(utils.utils.statsText, 1);
       sinon.assert.calledWith(utils.utils.statsText, stats, textUtilStub, bgPrefs);
+    });
+
+    it('should output devices found in the current data set used for the report', () => {
+      utils.trendsText(patient, data, stats, chartPrefs);
+      sinon.assert.calledWith(textUtilStub.buildTextLine, '\nDevices Uploaded');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
+      sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');
     });
   });
 });

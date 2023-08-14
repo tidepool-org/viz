@@ -471,6 +471,29 @@ describe('DataUtil', () => {
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(newWizard.id);
     });
 
+    it('should create and/or update the `matchedDevices`', () => {
+      delete dataUtil.matchedDevices;
+      expect(dataUtil.matchedDevices).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+        'Dexcom-XXX-XXXX': true,
+        DevId0987654321: true,
+      });
+
+      const newWizard = new Types.Wizard({ deviceTime: '2018-02-01T04:00:00', ...useRawData, deviceId: 'newDeviceID' });
+      dataUtil.addData([newWizard], defaultPatientId);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+        'Dexcom-XXX-XXXX': true,
+        DevId0987654321: true,
+        newDeviceID: true,
+      });
+    });
+
     it('should call `normalizeDatumIn` on each incoming datum', () => {
       sinon.spy(dataUtil, 'normalizeDatumIn');
       sinon.assert.notCalled(dataUtil.normalizeDatumIn);
@@ -1113,6 +1136,19 @@ describe('DataUtil', () => {
       dataUtil.normalizeDatumOut(datum, fields);
 
       sinon.assert.calledWith(dataUtil.normalizeDatumOutTime, datum, fields);
+    });
+
+    it('should add newly-encountered device Ids to the `matchedDevices` property', () => {
+      const datum1 = { type: 'foo', deviceId: 'foo' };
+      const datum2 = { type: 'bar', deviceId: 'bar' };
+
+      dataUtil.matchedDevices = {};
+
+      dataUtil.normalizeDatumOut(datum1);
+      expect(dataUtil.matchedDevices).to.eql({ foo: true });
+
+      dataUtil.normalizeDatumOut(datum2);
+      expect(dataUtil.matchedDevices).to.eql({ foo: true, bar: true });
     });
 
     it('should add the `deviceSerialNumber` from the `uploadMap` when `uploadId` is present and the field is requested', () => {
@@ -1948,6 +1984,12 @@ describe('DataUtil', () => {
         dataUtil.excludedDevices = ['foo', 'bar'];
         dataUtil.removeData();
         expect(dataUtil.excludedDevices).to.be.undefined;
+      });
+
+      it('should clear the `matchedDevices` metadata', () => {
+        dataUtil.matchedDevices = { foo: true, bar: true };
+        dataUtil.removeData();
+        expect(dataUtil.matchedDevices).to.eql({});
       });
     });
   });
@@ -3019,6 +3061,14 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('clearMatchedDevices', () => {
+    it('should set `matchedDevices` to an empty object', () => {
+      dataUtil.matchedDevices = { foo: true, bar: true };
+      dataUtil.clearMatchedDevices();
+      expect(dataUtil.matchedDevices).to.eql({});
+    });
+  });
+
   describe('query', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
@@ -3033,6 +3083,7 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setEndpoints');
       sinon.spy(dataUtil, 'setActiveDays');
       sinon.spy(dataUtil, 'setExcludedDevices');
+      sinon.spy(dataUtil, 'clearMatchedDevices');
 
       dataUtil.query(createQuery({
         bgSource: 'cbg',
@@ -3053,6 +3104,7 @@ describe('DataUtil', () => {
       sinon.assert.calledOnce(dataUtil.setEndpoints);
       sinon.assert.calledOnce(dataUtil.setActiveDays);
       sinon.assert.calledOnce(dataUtil.setExcludedDevices);
+      sinon.assert.calledOnce(dataUtil.clearMatchedDevices);
 
       sinon.assert.callOrder(
         dataUtil.clearFilters,
@@ -3064,6 +3116,7 @@ describe('DataUtil', () => {
         dataUtil.setEndpoints,
         dataUtil.setActiveDays,
         dataUtil.setExcludedDevices,
+        dataUtil.clearMatchedDevices,
       );
     });
 
@@ -3593,6 +3646,7 @@ describe('DataUtil', () => {
         'size',
         'devices',
         'excludedDevices',
+        'matchedDevices',
       ];
 
       const result = dataUtil.getMetaData(metaData);
@@ -3613,6 +3667,12 @@ describe('DataUtil', () => {
       ]);
 
       expect(result.excludedDevices).to.eql([]);
+
+      expect(result.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+        'Dexcom-XXX-XXXX': true,
+        DevId0987654321: true,
+      });
     });
 
     it('should return metaData requested via a string', () => {

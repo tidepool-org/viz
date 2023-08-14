@@ -16,10 +16,13 @@
  */
 
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import TextUtil from '../text/TextUtil';
 import { statsText } from '../stat';
 import { reshapeBgClassesToBgBounds } from '../bloodglucose';
+
+const t = i18next.t.bind(i18next);
 
 // Exporting utils for easy stubbing in tests
 export const utils = {
@@ -82,12 +85,13 @@ export function categorizeSmbgSubtype(data) {
  */
 export function trendsText(patient, data, stats, chartPrefs) {
   const {
+    bgPrefs,
     data: {
       current: {
         endpoints = {},
       },
     },
-    bgPrefs,
+    metaData,
     timePrefs,
   } = data;
 
@@ -104,6 +108,19 @@ export function trendsText(patient, data, stats, chartPrefs) {
   if (excludedDays.length) trendsString += textUtil.buildTextLine({ label: 'Excluded Days', value: excludedDays });
 
   trendsString += utils.statsText(stats, textUtil, bgPrefs);
+
+  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices[id]);
+
+  if (devices.length) {
+    const textLines = [
+      `\n${t('Devices Uploaded')}`,
+      ..._.map(devices, ({ id, label }) => label || id),
+    ];
+
+    _.each(textLines, line => {
+      trendsString += textUtil.buildTextLine(line);
+    });
+  }
 
   return trendsString;
 }
