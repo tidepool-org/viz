@@ -488,7 +488,7 @@ export function basicsText(patient, data, stats, aggregations) {
     );
   }
 
-  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices[id]);
+  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
 
   if (devices.length) {
     const textLines = [

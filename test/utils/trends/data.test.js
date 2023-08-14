@@ -144,15 +144,17 @@ describe('[trends] data utils', () => {
       timePrefs,
       metaData: {
         devices: [
-          { id: 'deviceWithLabelId', label: 'Device With Label' },
-          { id: 'deviceWithoutLabelId' },
-          { id: 'deviceNotUsedInCurrentDataId' },
+          { id: 'deviceWithLabelId', label: 'Device With Label', pump: true, cgm: false, bgm: false },
+          { id: 'deviceWithoutLabelId', pump: false, cgm: true, bgm: false },
+          { id: 'deviceNotUsedInCurrentDataId', pump: false, cgm: true, bgm: false },
+          { id: 'deviceNotMatchingCurrentBgSource', pump: false, cgm: false, bgm: true },
         ],
         matchedDevices: {
           deviceWithLabelId: true,
           deviceWithoutLabelId: true,
         },
       },
+      query: { bgSource: 'cbg' },
     };
 
     let textUtilStub;
@@ -231,6 +233,7 @@ describe('[trends] data utils', () => {
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
       sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');
+      sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotMatchingCurrentBgSource');
     });
   });
 });
