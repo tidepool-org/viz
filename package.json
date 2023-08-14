@@ -1,6 +1,6 @@
 {
   "name": "@tidepool/viz",
-  "version": "1.35.0-web-2479-ssr-pdf.1",
+  "version": "1.35.0-web-2479-ssr-pdf.2",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
