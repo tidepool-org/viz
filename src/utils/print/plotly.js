@@ -12,10 +12,10 @@ import {
 } from '../../modules/print/utils/AGPUtils';
 
 /**
- * generateAGPSVGDataURLS
+ * generateAGPFigureDefinitions
  * @param {Object} data - Data as provided by DataUtil from AGP pdf query
  */
-export async function generateAGPSVGDataURLS(data) {
+export async function generateAGPFigureDefinitions(data) {
   const svgDataURLS = {};
   const endpoints = _.get(data, 'data.current.endpoints', {});
   const manufacturer = _.get(data, 'metaData.latestPumpUpload.manufacturer');

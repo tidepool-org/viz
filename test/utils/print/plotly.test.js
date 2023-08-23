@@ -1,9 +1,9 @@
 import * as plotlyUtils from '../../../src/utils/print/plotly';
 import { agpData as data } from '../../../data/print/fixtures';
 
-describe('generateAGPSVGDataURLS', () => {
+describe('generateAGPFigureDefinitions', () => {
   it('generate agp svg image figures for each section', async () => {
-    const images = await plotlyUtils.generateAGPSVGDataURLS(data);
+    const images = await plotlyUtils.generateAGPFigureDefinitions(data);
     expect(images.timeInRanges).to.be.an('object');
     expect(images.timeInRanges).to.have.property('data');
     expect(images.timeInRanges).to.have.property('layout');

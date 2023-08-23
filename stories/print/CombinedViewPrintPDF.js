@@ -22,7 +22,7 @@ import { storiesOf } from '@storybook/react';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
-import { generateAGPSVGDataURLS } from '../../src/utils/print/plotly';
+import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
 
 import * as profiles from '../../data/patient/profiles';
 import * as settings from '../../data/patient/settings';
@@ -82,7 +82,7 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
       bgLog: 30,
     },
     patient,
-    svgDataURLS: await generateAGPSVGDataURLS(data.agp),
+    svgDataURLS: await generateAGPFigureDefinitions(data.agp),
   };
 
   if (data.basics) createPrintView('basics', data.basics, opts, doc).render();
