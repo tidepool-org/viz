@@ -1,10 +1,13 @@
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import TextUtil from '../text/TextUtil';
 import { statsText } from '../stat';
 import { reshapeBgClassesToBgBounds } from '../bloodglucose';
 import { formatBgValue } from '../format';
 import { formatLocalizedFromUTC } from '../datetime';
+
+const t = i18next.t.bind(i18next);
 
 // Exporting utils for easy stubbing in tests
 export const utils = {
@@ -24,12 +27,13 @@ export const utils = {
  */
 export function bgLogText(patient, data, stats) {
   const {
+    bgPrefs,
     data: {
       current: {
         endpoints = {},
       },
     },
-    bgPrefs,
+    metaData,
     timePrefs,
   } = data;
 
@@ -53,6 +57,20 @@ export function bgLogText(patient, data, stats) {
     formatBgValue(d.value, bgPrefs),
     `(${_.capitalize(d.subType || 'meter')})`,
   ].join('\t'))).join('\n');
+
+
+  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
+
+  if (devices.length) {
+    const textLines = [
+      `\n\n${t('Devices Uploaded')}`,
+      ..._.map(devices, ({ id, label }) => label || id),
+    ];
+
+    _.each(textLines, line => {
+      bgLogString += textUtil.buildTextLine(line);
+    });
+  }
 
   return bgLogString;
 }

@@ -233,8 +233,8 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
   /* eslint-disable no-param-reassign, max-len */
   const aggregationData = _.cloneDeep(data);
 
-  const hasDataInRange = processedData => (
-    processedData && (_.keys(processedData.byDate).length > 0)
+  const hasDataInRange = (processedData = {}) => (
+    _.get(processedData.summary, 'total', _.keys(processedData.byDate).length) > 0
   );
 
   const getEmptyText = (aggregation, aggregationKey) => {
@@ -352,15 +352,16 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
  */
 export function basicsText(patient, data, stats, aggregations) {
   const {
+    bgPrefs,
     data: {
       aggregationsByDate = {},
       current: {
         endpoints = {},
       },
     },
-    bgPrefs,
-    timePrefs,
+    metaData,
     query,
+    timePrefs,
   } = data;
 
   const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
@@ -485,6 +486,19 @@ export function basicsText(patient, data, stats, aggregations) {
       basals.columns,
       { showHeader: false }
     );
+  }
+
+  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
+
+  if (devices.length) {
+    const textLines = [
+      `\n${t('Devices Uploaded')}`,
+      ..._.map(devices, ({ id, label }) => label || id),
+    ];
+
+    _.each(textLines, line => {
+      basicsString += textUtil.buildTextLine(line);
+    });
   }
 
   return basicsString;

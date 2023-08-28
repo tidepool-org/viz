@@ -181,26 +181,31 @@ describe('DataUtil', () => {
 
   const smbgData = _.map([
     new Types.SMBG({
+      deviceId: 'OneTouch-XXX-XXXX',
       value: 60,
       deviceTime: '2018-01-31T00:00:00',
       ...useRawData,
     }),
     new Types.SMBG({
+      deviceId: 'OneTouch-XXX-XXXX',
       value: 70,
       deviceTime: '2018-02-01T00:15:00',
       ...useRawData,
     }),
     new Types.SMBG({
+      deviceId: 'OneTouch-XXX-XXXX',
       value: 80,
       deviceTime: '2018-02-01T00:30:00',
       ...useRawData,
     }),
     new Types.SMBG({
+      deviceId: 'OneTouch-XXX-XXXX',
       value: 200,
       deviceTime: '2018-02-01T00:45:00',
       ...useRawData,
     }),
     new Types.SMBG({
+      deviceId: 'OneTouch-XXX-XXXX',
       value: 270,
       deviceTime: '2018-02-02T00:50:00',
       ...useRawData,
@@ -469,6 +474,24 @@ describe('DataUtil', () => {
       dataUtil.addData([newWizard], defaultPatientId);
 
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(newWizard.id);
+    });
+
+    it('should initialize the `matchedDevices` property if not already set', () => {
+      // Initialize if undefined
+      delete dataUtil.matchedDevices;
+      expect(dataUtil.matchedDevices).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+
+      expect(dataUtil.matchedDevices).to.eql({});
+
+      // Persist if defined
+      dataUtil.matchedDevices = { foo: 'bar' };
+
+      const newWizard = new Types.Wizard({ deviceTime: '2018-02-01T04:00:00', ...useRawData, deviceId: 'newDeviceID' });
+      dataUtil.addData([newWizard], defaultPatientId);
+
+      expect(dataUtil.matchedDevices).to.eql({ foo: 'bar' });
     });
 
     it('should call `normalizeDatumIn` on each incoming datum', () => {
@@ -1949,6 +1972,12 @@ describe('DataUtil', () => {
         dataUtil.removeData();
         expect(dataUtil.excludedDevices).to.be.undefined;
       });
+
+      it('should clear the `matchedDevices` metadata', () => {
+        dataUtil.matchedDevices = { foo: true, bar: true };
+        dataUtil.removeData();
+        expect(dataUtil.matchedDevices).to.eql({});
+      });
     });
   });
 
@@ -3019,6 +3048,14 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('clearMatchedDevices', () => {
+    it('should set `matchedDevices` to an empty object', () => {
+      dataUtil.matchedDevices = { foo: true, bar: true };
+      dataUtil.clearMatchedDevices();
+      expect(dataUtil.matchedDevices).to.eql({});
+    });
+  });
+
   describe('query', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
@@ -3033,6 +3070,7 @@ describe('DataUtil', () => {
       sinon.spy(dataUtil, 'setEndpoints');
       sinon.spy(dataUtil, 'setActiveDays');
       sinon.spy(dataUtil, 'setExcludedDevices');
+      sinon.spy(dataUtil, 'clearMatchedDevices');
 
       dataUtil.query(createQuery({
         bgSource: 'cbg',
@@ -3053,11 +3091,13 @@ describe('DataUtil', () => {
       sinon.assert.calledOnce(dataUtil.setEndpoints);
       sinon.assert.calledOnce(dataUtil.setActiveDays);
       sinon.assert.calledOnce(dataUtil.setExcludedDevices);
+      sinon.assert.calledOnce(dataUtil.clearMatchedDevices);
 
       sinon.assert.callOrder(
         dataUtil.clearFilters,
         dataUtil.setBgSources,
         dataUtil.clearFilters,
+        dataUtil.clearMatchedDevices,
         dataUtil.setTypes,
         dataUtil.setBgPrefs,
         dataUtil.setTimePrefs,
@@ -3436,6 +3476,8 @@ describe('DataUtil', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
       dataUtil.query(defaultQuery);
+      dataUtil.clearFilters();
+      dataUtil.clearMatchedDevices();
     });
 
     it('should generate and return requested stats', () => {
@@ -3444,12 +3486,41 @@ describe('DataUtil', () => {
       expect(result.averageGlucose).to.be.an('object').and.include.keys(['averageGlucose']);
       expect(result.totalInsulin).to.be.an('object').and.include.keys(['basal', 'bolus']);
     });
+
+    it('should update matchedDevices metadata if `matchDevices` is true', () => {
+      expect(dataUtil.matchedDevices).to.eql({});
+      dataUtil.matchDevices = true;
+      dataUtil.getStats(['averageGlucose', 'totalInsulin']);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Dexcom-XXX-XXXX': true,
+        'AbbottFreeStyleLibre-XXX-XXXX': true,
+        'Test Page Data - 123': true,
+      });
+
+      dataUtil.setBgSources('smbg');
+      dataUtil.clearFilters();
+      dataUtil.clearMatchedDevices();
+      dataUtil.getStats(['averageGlucose']);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'OneTouch-XXX-XXXX': true,
+      });
+
+      // Should not update if `matchDevices` is false
+      dataUtil.clearMatchedDevices();
+      dataUtil.matchDevices = false;
+      dataUtil.getStats(['averageGlucose', 'totalInsulin']);
+      expect(dataUtil.matchedDevices).to.eql({});
+    });
   });
 
   describe('getAggregationsByDate', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
       dataUtil.query({ ...defaultQuery, types: { smbg: {} }, stats: 'averageGlucose, timeInRange' });
+      dataUtil.clearFilters();
+      dataUtil.clearMatchedDevices();
     });
 
     it('should generate and return requested aggregations passed in as string', () => {
@@ -3472,6 +3543,36 @@ describe('DataUtil', () => {
       expect(result.siteChanges).to.be.an('object').and.include.keys(['byDate']);
       expect(result.dataByDate['2018-01-31']).to.be.an('object').and.include.keys(['smbg']);
       expect(result.statsByDate['2018-01-31']).to.be.an('object').and.include.keys(['averageGlucose', 'timeInRange']);
+    });
+
+    it('should update matchedDevices metadata if `matchDevices` is true', () => {
+      expect(dataUtil.matchedDevices).to.eql({});
+      dataUtil.matchDevices = true;
+      dataUtil.getAggregationsByDate(['basals']);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+      });
+
+      dataUtil.clearMatchedDevices();
+      dataUtil.getAggregationsByDate(['fingersticks']);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'OneTouch-XXX-XXXX': true,
+      });
+
+      dataUtil.clearMatchedDevices();
+      dataUtil.getAggregationsByDate(['boluses']);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+      });
+
+      // Should not update if `matchDevices` is false
+      dataUtil.clearMatchedDevices();
+      dataUtil.matchDevices = false;
+      dataUtil.getAggregationsByDate(['basals']);
+      expect(dataUtil.matchedDevices).to.eql({});
     });
   });
 
@@ -3593,6 +3694,7 @@ describe('DataUtil', () => {
         'size',
         'devices',
         'excludedDevices',
+        'matchedDevices',
       ];
 
       const result = dataUtil.getMetaData(metaData);
@@ -3609,10 +3711,12 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'DevId0987654321' },
+        { id: 'OneTouch-XXX-XXXX' },
         { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
+      expect(result.matchedDevices).to.eql({});
     });
 
     it('should return metaData requested via a string', () => {
@@ -3642,6 +3746,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'DevId0987654321' },
+        { id: 'OneTouch-XXX-XXXX' },
         { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
       ]);
 
@@ -3804,6 +3909,8 @@ describe('DataUtil', () => {
   describe('getTypeData', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
+      dataUtil.clearFilters();
+      dataUtil.clearMatchedDevices();
     });
 
     it('should return data for types with field selection and sorts specified by strings', () => {
@@ -3927,6 +4034,49 @@ describe('DataUtil', () => {
 
       expect(_.first(result.smbg).normalTime < _.last(result.smbg).normalTime).to.be.true;
       expect(_.first(result.basal).normalTime > _.last(result.basal).normalTime).to.be.true;
+    });
+
+    it('should update matchedDevices metadata if `matchDevices` is true', () => {
+      expect(dataUtil.matchedDevices).to.eql({});
+      dataUtil.matchDevices = true;
+      dataUtil.setTypes({ bolus: {} });
+      dataUtil.getTypeData(dataUtil.types);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+      });
+
+      dataUtil.clearMatchedDevices();
+      dataUtil.setTypes({ smbg: {} });
+      dataUtil.getTypeData(dataUtil.types);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'OneTouch-XXX-XXXX': true,
+      });
+
+      dataUtil.clearMatchedDevices();
+      dataUtil.setTypes({ basal: {} });
+      dataUtil.getTypeData(dataUtil.types);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Test Page Data - 123': true,
+      });
+
+      dataUtil.clearMatchedDevices();
+      dataUtil.setTypes({ cbg: {} });
+      dataUtil.getTypeData(dataUtil.types);
+
+      expect(dataUtil.matchedDevices).to.eql({
+        'Dexcom-XXX-XXXX': true,
+        'AbbottFreeStyleLibre-XXX-XXXX': true,
+      });
+
+      // Should not update if `matchDevices` is false
+      dataUtil.clearMatchedDevices();
+      dataUtil.matchDevices = false;
+      dataUtil.setTypes({ bolus: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      expect(dataUtil.matchedDevices).to.eql({});
     });
   });
 
