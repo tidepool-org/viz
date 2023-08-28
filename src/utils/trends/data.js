@@ -92,6 +92,7 @@ export function trendsText(patient, data, stats, chartPrefs) {
       },
     },
     metaData,
+    query,
     timePrefs,
   } = data;
 
@@ -109,7 +110,17 @@ export function trendsText(patient, data, stats, chartPrefs) {
 
   trendsString += utils.statsText(stats, textUtil, bgPrefs);
 
-  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices[id]);
+  const bgSourceDeviceTypeMap = {
+    cbg: 'cgm',
+    smbg: 'bgm',
+  };
+
+  // Only match pumps or devices that match the currently selected bg source
+  const devices = _.filter(metaData?.devices, device => (
+    metaData?.matchedDevices?.[device.id] && (
+      device.pump || device[bgSourceDeviceTypeMap[query?.bgSource]]
+    )
+  ));
 
   if (devices.length) {
     const textLines = [
