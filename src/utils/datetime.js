@@ -170,10 +170,11 @@ export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat
   const end = moment.utc(endDate, dateParseFormat);
 
   const isSameYear = start.isSame(end, 'year');
+  const isSameDay = start.isSame(end, 'day');
   const startFormat = isSameYear ? start.format(`${monthFormat} D`) : start.format(`${monthFormat} D, YYYY`);
   const endFormat = end.format(`${monthFormat} D, YYYY`);
 
-  const formattedRange = `${startFormat} - ${endFormat}`;
+  const formattedRange = isSameDay ? endFormat : `${startFormat} - ${endFormat}`;
 
   return formattedRange;
 }
