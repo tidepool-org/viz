@@ -52,9 +52,26 @@ export class StatUtil {
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
+    const rawBgData = this.dataUtil.sort.byTime(_.cloneDeep(bgData));
+    const newestDatum = _.cloneDeep(_.last(rawBgData));
+    const oldestDatum = _.cloneDeep(_.first(rawBgData));
+    if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
+    if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
+
+    let bgDaysWorn;
+
+    if (rawBgData.length < 2) {
+      bgDaysWorn = rawBgData.length;
+    } else {
+      bgDaysWorn = moment.utc(newestDatum?.localDate).diff(moment.utc(oldestDatum?.localDate), 'days', true) + 1;
+    }
+
     const data = {
       bgMax: _.get(_.maxBy(bgData, 'value'), 'value', null),
       bgMin: _.get(_.minBy(bgData, 'value'), 'value', null),
+      bgDaysWorn,
+      newestDatum,
+      oldestDatum,
     };
 
     return data;
@@ -217,29 +234,31 @@ export class StatUtil {
     const smbgData = _.cloneDeep(this.dataUtil.filter.byType('smbg').top(Infinity));
     _.each(smbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
-    let readingsInRange = _.reduce(
+    const readingsInRangeData = _.reduce(
       smbgData,
       (result, datum) => {
         const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
-        result[classification]++;
-        result.total++;
+        result.counts[classification]++;
+        result.counts.total++;
         return result;
       },
       {
-        veryLow: 0,
-        low: 0,
-        target: 0,
-        high: 0,
-        veryHigh: 0,
-        total: 0,
-      }
+        counts: {
+          veryLow: 0,
+          low: 0,
+          target: 0,
+          high: 0,
+          veryHigh: 0,
+          total: 0,
+        },
+      },
     );
 
     if (this.activeDays > 1) {
-      readingsInRange = this.getDailyAverageSums(readingsInRange);
+      readingsInRangeData.dailyAverages = this.getDailyAverageSums(readingsInRangeData.counts);
     }
 
-    return readingsInRange;
+    return readingsInRangeData;
   };
 
   getSensorUsage = () => {
@@ -260,20 +279,16 @@ export class StatUtil {
 
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
-    const newestDatum = _.cloneDeep(_.last(rawCbgData));
-    const oldestDatum = _.cloneDeep(_.first(rawCbgData));
+    const { newestDatum, oldestDatum } = this.getBgExtentsData();
     const sampleFrequency = cgmSampleFrequency(newestDatum);
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
-    let cgmDaysWorn;
     let cgmMinutesWorn;
 
     if (rawCbgData.length < 2) {
-      cgmDaysWorn = rawCbgData.length;
       cgmMinutesWorn = rawCbgData.length === 1 ? sampleFrequency : 0;
     } else {
-      cgmDaysWorn = moment.utc(newestDatum?.localDate).diff(moment.utc(oldestDatum?.localDate), 'days', true) + 1;
       cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
     }
 
@@ -285,10 +300,6 @@ export class StatUtil {
     return {
       sensorUsage: duration,
       sensorUsageAGP,
-      cgmDaysWorn,
-      cgmMinutesWorn,
-      newestDatum,
-      oldestDatum,
       total,
       sampleFrequency,
       count,

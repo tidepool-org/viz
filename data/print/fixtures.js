@@ -954,16 +954,17 @@ export const agpData = {
       aggregationsByDate: {
         statsByDate: {
           '2023-03-16': {
-            sensorUsage: {
-              sensorUsage: 37500000,
-              sensorUsageAGP: 100,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 620,
+            bgExtents: {
               newestDatum: {
                 time: 1678976565000,
                 msPer24: 37365000,
                 localDate: '2023-03-16',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 37500000,
+              sensorUsageAGP: 100,
               oldestDatum: {
                 time: 1678939365000,
                 msPer24: 165000,
@@ -975,16 +976,17 @@ export const agpData = {
             },
           },
           '2023-03-15': {
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678939066000,
                 msPer24: 86266000,
                 localDate: '2023-03-15',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86400000,
+              sensorUsageAGP: 99.93060374739764,
               oldestDatum: {
                 time: 1678852964000,
                 msPer24: 164000,
@@ -996,16 +998,17 @@ export const agpData = {
             },
           },
           '2023-03-14': {
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678852664000,
                 msPer24: 86264000,
                 localDate: '2023-03-14',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86400000,
+              sensorUsageAGP: 99.93060374739764,
               oldestDatum: {
                 time: 1678766561000,
                 msPer24: 161000,
@@ -1017,16 +1020,17 @@ export const agpData = {
             },
           },
           '2023-03-13': {
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678766261000,
                 msPer24: 86261000,
                 localDate: '2023-03-13',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86400000,
+              sensorUsageAGP: 99.93060374739764,
               oldestDatum: {
                 time: 1678680159000,
                 msPer24: 159000,
@@ -1038,16 +1042,17 @@ export const agpData = {
             },
           },
           '2023-03-12': {
-            sensorUsage: {
-              sensorUsage: 82800000,
-              sensorUsageAGP: 99.9275887038378,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1376,
+            bgExtents: {
               newestDatum: {
                 time: 1678679859000,
                 msPer24: 86259000,
                 localDate: '2023-03-12',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 82800000,
+              sensorUsageAGP: 99.9275887038378,
               oldestDatum: {
                 time: 1678597358000,
                 msPer24: 158000,
@@ -1059,16 +1064,17 @@ export const agpData = {
             },
           },
           '2023-03-11': {
-            sensorUsage: {
-              sensorUsage: 78600000,
-              sensorUsageAGP: 90.90909090909092,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678597059000,
                 msPer24: 86259000,
                 localDate: '2023-03-11',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 78600000,
+              sensorUsageAGP: 90.90909090909092,
               oldestDatum: {
                 time: 1678510958000,
                 msPer24: 158000,
@@ -1080,16 +1086,17 @@ export const agpData = {
             },
           },
           '2023-03-10': {
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678510657000,
                 msPer24: 86257000,
                 localDate: '2023-03-10',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86400000,
+              sensorUsageAGP: 99.93060374739764,
               oldestDatum: {
                 time: 1678424554000,
                 msPer24: 154000,
@@ -1101,16 +1108,17 @@ export const agpData = {
             },
           },
           '2023-03-09': {
-            sensorUsage: {
-              sensorUsage: 86100000,
-              sensorUsageAGP: 99.65277777777779,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1435,
+            bgExtents: {
               newestDatum: {
                 time: 1678424254000,
                 msPer24: 86254000,
                 localDate: '2023-03-09',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86100000,
+              sensorUsageAGP: 99.65277777777779,
               oldestDatum: {
                 time: 1678338154000,
                 msPer24: 154000,
@@ -1122,16 +1130,17 @@ export const agpData = {
             },
           },
           '2023-03-08': {
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678337854000,
                 msPer24: 86254000,
                 localDate: '2023-03-08',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86400000,
+              sensorUsageAGP: 99.93060374739764,
               oldestDatum: {
                 time: 1678251751000,
                 msPer24: 151000,
@@ -1143,16 +1152,17 @@ export const agpData = {
             },
           },
           '2023-03-07': {
-            sensorUsage: {
-              sensorUsage: 79800000,
-              sensorUsageAGP: 99.92486851990985,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1326,
+            bgExtents: {
               newestDatum: {
                 time: 1678251452000,
                 msPer24: 86252000,
                 localDate: '2023-03-07',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 79800000,
+              sensorUsageAGP: 99.92486851990985,
               oldestDatum: {
                 time: 1678171950000,
                 msPer24: 6750000,
@@ -1164,16 +1174,17 @@ export const agpData = {
             },
           },
           '2023-03-06': {
-            sensorUsage: {
-              sensorUsage: 84600000,
-              sensorUsageAGP: 99.92912827781716,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1406,
+            bgExtents: {
               newestDatum: {
                 time: 1678163250000,
                 msPer24: 84450000,
                 localDate: '2023-03-06',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 84600000,
+              sensorUsageAGP: 99.92912827781716,
               oldestDatum: {
                 time: 1678078948000,
                 msPer24: 148000,
@@ -1185,16 +1196,17 @@ export const agpData = {
             },
           },
           '2023-03-05': {
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1678078648000,
                 msPer24: 86248000,
                 localDate: '2023-03-05',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86400000,
+              sensorUsageAGP: 99.93060374739764,
               oldestDatum: {
                 time: 1677992546000,
                 msPer24: 146000,
@@ -1206,16 +1218,17 @@ export const agpData = {
             },
           },
           '2023-03-04': {
-            sensorUsage: {
-              sensorUsage: 86700000,
-              sensorUsageAGP: 100.34722222222223,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1435,
+            bgExtents: {
               newestDatum: {
                 time: 1677992246000,
                 msPer24: 86246000,
                 localDate: '2023-03-04',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 86700000,
+              sensorUsageAGP: 100.34722222222223,
               oldestDatum: {
                 time: 1677906146000,
                 msPer24: 146000,
@@ -1227,16 +1240,17 @@ export const agpData = {
             },
           },
           '2023-03-03': {
-            sensorUsage: {
-              sensorUsage: 84600000,
-              sensorUsageAGP: 97.84871616932685,
-              cgmDaysWorn: 1,
-              cgmMinutesWorn: 1436,
+            bgExtents: {
               newestDatum: {
                 time: 1677905846000,
                 msPer24: 86246000,
                 localDate: '2023-03-03',
               },
+              bgDaysWorn: 1,
+            },
+            sensorUsage: {
+              sensorUsage: 84600000,
+              sensorUsageAGP: 97.84871616932685,
               oldestDatum: {
                 time: 1677819745000,
                 msPer24: 145000,
@@ -1273,16 +1287,17 @@ export const agpData = {
           averageGlucose: 167.5198838861572,
           total: 3797,
         },
-        sensorUsage: {
-          sensorUsage: 1139100000,
-          sensorUsageAGP: 98.43928238100177,
-          cgmDaysWorn: 14,
-          cgmMinutesWorn: 19281,
+        bgExtents: {
           newestDatum: {
             time: 1678976565000,
             msPer24: 37365000,
             localDate: '2023-03-16',
           },
+          bgDaysWorn: 14,
+        },
+        sensorUsage: {
+          sensorUsage: 1139100000,
+          sensorUsageAGP: 98.43928238100177,
           oldestDatum: {
             time: 1677819745000,
             msPer24: 145000,

@@ -416,6 +416,8 @@ export const getStatData = (data, type, opts = {}) => {
     },
   };
 
+  const readingsInRangeDataPath = opts.days > 1 ? 'dailyAverages' : 'counts';
+
   switch (type) {
     case commonStats.averageGlucose:
       statData.data = [
@@ -528,31 +530,31 @@ export const getStatData = (data, type, opts = {}) => {
       statData.data = [
         {
           id: 'veryLow',
-          value: ensureNumeric(data.veryLow),
+          value: ensureNumeric(data[readingsInRangeDataPath].veryLow),
           title: t('Readings Below Range'),
           legendTitle: bgRanges.veryLow,
         },
         {
           id: 'low',
-          value: ensureNumeric(data.low),
+          value: ensureNumeric(data[readingsInRangeDataPath].low),
           title: t('Readings Below Range'),
           legendTitle: bgRanges.low,
         },
         {
           id: 'target',
-          value: ensureNumeric(data.target),
+          value: ensureNumeric(data[readingsInRangeDataPath].target),
           title: t('Readings In Range'),
           legendTitle: bgRanges.target,
         },
         {
           id: 'high',
-          value: ensureNumeric(data.high),
+          value: ensureNumeric(data[readingsInRangeDataPath].high),
           title: t('Readings Above Range'),
           legendTitle: bgRanges.high,
         },
         {
           id: 'veryHigh',
-          value: ensureNumeric(data.veryHigh),
+          value: ensureNumeric(data[readingsInRangeDataPath].veryHigh),
           title: t('Readings Above Range'),
           legendTitle: bgRanges.veryHigh,
         },
