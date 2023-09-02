@@ -19,8 +19,8 @@ import {
 import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
-import { mungeBGDataBins } from '../../../utils/bloodglucose';
-import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR } from '../../../utils/constants';
+import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
+import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
 import moment from 'moment';
 
 export const boldText = textString => `<b>${String(textString)}</b>`;
@@ -41,13 +41,12 @@ export const createAnnotation = options => {
   return annotation;
 };
 
-export const calculateDataSufficiency = (data = {}) => {
+export const calculateCGMDataSufficiency = (data = {}) => {
   const { statsByDate } = data.data?.current?.aggregationsByDate;
+  const { newestDatum, bgDaysWorn } = data.data?.current?.stats?.bgExtents || {};
 
   const {
-    cgmDaysWorn,
     count,
-    newestDatum,
     sampleFrequency,
     sensorUsageAGP,
   } = data.data?.current?.stats?.sensorUsage || {};
@@ -56,7 +55,7 @@ export const calculateDataSufficiency = (data = {}) => {
     ambulatoryGlucoseProfile: true,
     dailyGlucoseProfiles: true,
     glucoseMetrics: true,
-    timeInRanges: true,
+    percentInRanges: true,
   };
 
   const hoursOfCGMData = (count * sampleFrequency) / MS_IN_HOUR;
@@ -67,7 +66,7 @@ export const calculateDataSufficiency = (data = {}) => {
       ambulatoryGlucoseProfile: false,
       dailyGlucoseProfiles: false,
       glucoseMetrics: false,
-      timeInRanges: false,
+      percentInRanges: false,
     };
   } else if (hoursOfCGMData === 24) {
     // Hide agp if only 24 hours total cgm time, but show other sections conditional on sufficiency
@@ -77,11 +76,11 @@ export const calculateDataSufficiency = (data = {}) => {
       ambulatoryGlucoseProfile: false,
       dailyGlucoseProfiles: sufficencyMet,
       glucoseMetrics: sufficencyMet,
-      timeInRanges: sufficencyMet,
+      percentInRanges: sufficencyMet,
     };
   }
 
-  const cgmCalendarDays = _.map(_.range(_.max([cgmDaysWorn, 7])), (val, index) => (
+  const cgmCalendarDays = _.map(_.range(_.max([bgDaysWorn, 7])), (val, index) => (
     moment.utc(newestDatum.time).tz(getTimezoneFromTimePrefs(data.timePrefs)).subtract(index, 'days').format('YYYY-MM-DD')
   )).reverse();
 
@@ -129,7 +128,18 @@ export const calculateDataSufficiency = (data = {}) => {
   return sufficiencyBySection;
 };
 
-export const generateChartSections = (data) => {
+export const calculateBGMDataSufficiency = (data = {}) => {
+  const sufficiencyBySection = {
+    ambulatoryGlucoseProfile: true,
+    dailyGlucoseProfiles: true,
+    glucoseMetrics: true,
+    percentInRanges: true,
+  };
+
+  return sufficiencyBySection;
+};
+
+export const generateChartSections = (data, bgSource) => {
   const reportInfoAndMetricsWidth = DPI * 3.375;
   const chartRenderAreaTop = DPI * 0.75;
   const rightEdge = MARGINS.left + WIDTH;
@@ -137,19 +147,23 @@ export const generateChartSections = (data) => {
   const chartRenderAreaBottom = bottomEdge - (DPI * 0.75 - MARGINS.bottom);
   const sectionGap = DPI * 0.25;
   const sections = {};
-  const dataSufficiency = calculateDataSufficiency(data);
+  const dataSufficiency = bgSource === CGM_DATA_KEY
+    ? calculateCGMDataSufficiency(data)
+    : calculateBGMDataSufficiency(data);
 
-  sections.timeInRanges = {
+  sections.percentInRanges = {
+    bgSource,
     x: MARGINS.left,
     y: chartRenderAreaTop,
     width: DPI * 3.875,
     height: DPI * 3,
     bordered: true,
-    text: text.timeInRanges,
-    sufficientData: dataSufficiency.timeInRanges,
+    text: text.percentInRanges[bgSource],
+    sufficientData: dataSufficiency.percentInRanges,
   };
 
   sections.reportInfo = {
+    bgSource,
     x: rightEdge - reportInfoAndMetricsWidth,
     y: chartRenderAreaTop,
     width: reportInfoAndMetricsWidth,
@@ -158,6 +172,7 @@ export const generateChartSections = (data) => {
   };
 
   sections.glucoseMetrics = {
+    bgSource,
     x: rightEdge - reportInfoAndMetricsWidth,
     y: sections.reportInfo.y + sections.reportInfo.height + sectionGap,
     width: reportInfoAndMetricsWidth,
@@ -168,6 +183,7 @@ export const generateChartSections = (data) => {
   };
 
   sections.ambulatoryGlucoseProfile = {
+    bgSource,
     x: MARGINS.left,
     y: DPI * 4,
     width: WIDTH,
@@ -179,12 +195,13 @@ export const generateChartSections = (data) => {
 
   const dailyGlucoseProfilesHeight = DPI * 2.25;
   sections.dailyGlucoseProfiles = {
+    bgSource,
     x: MARGINS.left,
     y: chartRenderAreaBottom - dailyGlucoseProfilesHeight - AGP_FOOTER_Y_PADDING,
     width: WIDTH,
     height: dailyGlucoseProfilesHeight,
     bordered: true,
-    text: text.dailyGlucoseProfiles,
+    text: text.dailyGlucoseProfiles[bgSource],
     sufficientData: dataSufficiency.dailyGlucoseProfiles,
   };
 
@@ -198,7 +215,7 @@ export const generateChartSections = (data) => {
  * @param {*} bgPrefs
  * @returns
  */
-export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
+export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
@@ -263,7 +280,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     ], (tick, index) => createAnnotation({
       align: 'right',
       font: {
-        size: fontSizes.timeInRanges.ticks,
+        size: fontSizes.percentInRanges.ticks,
       },
       text: index === 4 // bgUnits label
         ? boldText(tick)
@@ -427,7 +444,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     const rangeLabels = _.map(rangePosYOrderedKeys, range => createAnnotation({
       align: 'left',
       font: {
-        size: fontSizes.timeInRanges.values,
+        size: fontSizes.percentInRanges.values,
       },
       text: boldText(text.bgRanges[range]),
       x: bracketXExtents[0],
@@ -448,7 +465,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
       font: {
-        size: fontSizes.timeInRanges.values,
+        size: fontSizes.percentInRanges.values,
       },
       text: boldText(formatPercentage(chartData.rawById[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
@@ -480,12 +497,12 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
     const rangeSummaryValues = _.map(rangeSummaryOrderedKeys, range => createAnnotation({
       align: 'left',
       font: {
-        size: fontSizes.timeInRanges.summaries,
+        size: fontSizes.percentInRanges.summaries,
       },
       text: boldText(formatPercentage(combinedRangeSummaryValues[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'left',
-      xshift: 3,
+      xshift: section.bgSource === CGM_DATA_KEY ? 3 : 28,
       y: rangeSummaryPosY[range],
       yanchor: 'bottom',
       yref: 'paper',
@@ -542,7 +559,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       align: 'left',
       font: {
         color: colors.text.goals[range],
-        size: fontSizes.timeInRanges.goals,
+        size: fontSizes.percentInRanges.goals,
       },
       text: text.goals[range],
       yanchor: 'bottom',
@@ -577,7 +594,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       align: 'left',
       font: {
         color: colors.text.subLabels[label],
-        size: fontSizes.timeInRanges.subLabels,
+        size: fontSizes.percentInRanges.subLabels,
       },
       text: text.subLabels[label],
       yanchor: 'bottom',
@@ -589,7 +606,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       veryLow: [
         rangeLabels[0],
         rangeValues[0],
-        goals[0],
+        section.bgSource === CGM_DATA_KEY && goals[0],
       ],
       low: [
         rangeLabels[1],
@@ -597,13 +614,13 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       ],
       lowSummary: [
         rangeSummaryValues[0],
-        goals[1],
+        section.bgSource === CGM_DATA_KEY && goals[1],
       ],
       target: [
         rangeLabels[2],
         rangeSummaryValues[1],
-        goals[2],
-        subLabels[0],
+        section.bgSource === CGM_DATA_KEY && goals[2],
+        section.bgSource === CGM_DATA_KEY && subLabels[0],
       ],
       high: [
         rangeLabels[3],
@@ -612,11 +629,11 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
       veryHigh: [
         rangeLabels[4],
         rangeValues[3],
-        goals[4],
+        section.bgSource === CGM_DATA_KEY && goals[4],
       ],
       highSummary: [
         rangeSummaryValues[2],
-        goals[3],
+        section.bgSource === CGM_DATA_KEY && goals[3],
       ],
     };
 
@@ -658,7 +675,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
         ...rangeAnnotations.low,
         ...rangeAnnotations.veryLow,
         ...rangeAnnotations.lowSummary,
-        subLabels[1],
+        section.bgSource === CGM_DATA_KEY && subLabels[1],
       ],
 
       shapes: [
@@ -674,7 +691,7 @@ export const generateTimeInRangesFigure = (section, stat, bgPrefs) => {
   return null;
 };
 
-export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs) => {
+export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs, bgSource) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - (AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT) - AGP_SECTION_BORDER_RADIUS;
@@ -685,7 +702,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
 
   if (section.sufficientData) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
-    const chartData = mungeBGDataBins('cbg', ONE_HR, cbgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
+    const chartData = mungeBGDataBins(bgSource, ONE_HR, bgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
 
     // Smooth all bin quantiles according to AGP spec
     const quantileKeys = [
@@ -1072,7 +1089,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, cbgData, bgPrefs
   return null;
 };
 
-export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, dateLabelFormat) => {
+export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dateLabelFormat) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - (AGP_SECTION_HEADER_HEIGHT + AGP_SECTION_DESCRIPTION_HEIGHT) - AGP_SECTION_BORDER_RADIUS;
@@ -1081,6 +1098,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
   const plotMarginTop = DPI * 0.2;
   const plotMarginBottom = 1;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
+  const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
 
   if (section.sufficientData) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
@@ -1149,7 +1167,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       },
       text: dateLabelFormat === 'ha'
         ? boldText(moment.utc(tick).format(dateLabelFormat))
-        : boldText(moment.utc(String(cbgData[index][0])).format(dateLabelFormat)),
+        : boldText(moment.utc(String(bgData[index][0])).format(dateLabelFormat)),
       y: 1,
       yanchor: 'bottom',
       yref: 'paper',
@@ -1159,7 +1177,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       x: tick,
     }));
 
-    const calendarDays = _.flatten(_.map(cbgData, (d) => d[0]));
+    const calendarDays = _.flatten(_.map(bgData, (d) => d[0]));
 
     const calendarDayAnnotations = _.map(calendarDays, (date, index) => createAnnotation({
       align: 'left',
@@ -1181,57 +1199,206 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
     const data = [];
     const yAxes = [];
 
-    const combinedData = _.flatten(_.map(cbgData, (d, index) => (_.map(d[1], dayData => ({
+    const combinedData = _.flatten(_.map(bgData, (d, index) => (_.map(d[1], dayData => ({
       ...dayData,
       msPer24: dayData.msPer24 + MS_IN_DAY * index,
+      bgRange: dayData.type === BGM_DATA_KEY
+        ? classifyBgValue(bgPrefs.bgBounds, dayData.value)
+        : undefined,
     })))));
 
-    _.each(bgRangeKeys, (bgRange, index) => {
-      const isLow = index === 0;
-      const isTarget = index === 1;
-      const firstDatum = _.first(combinedData);
-      const lastDatum = _.last(combinedData);
-      const range = [bgTicks[index], bgTicks[index + 1]];
-      const fillYExentRangeIndex = isLow ? 1 : 0;
+    let lowReadings = [];
+    let targetReadings = [];
+    let highReadings = [];
+
+    if (section.bgSource === CGM_DATA_KEY) {
+      _.each(bgRangeKeys, (bgRange, index) => {
+        const isLow = index === 0;
+        const isTarget = index === 1;
+        const firstDatum = _.first(combinedData);
+        const lastDatum = _.last(combinedData);
+        const range = [bgTicks[index], bgTicks[index + 1]];
+        const fillYExentRangeIndex = isLow ? 1 : 0;
+
+        data.push({
+          name: 'rangeFill',
+          type: 'scatter',
+          x: isTarget
+            ? [0, MS_IN_DAY * 7, MS_IN_DAY * 7, 0]
+            : [firstDatum?.msPer24, ..._.map(combinedData, 'msPer24'), lastDatum?.msPer24, firstDatum?.msPer24],
+          y: isTarget
+            ? [range[1], range[1], range[0], range[0]]
+            : [range[fillYExentRangeIndex], ..._.map(combinedData, 'value'), range[fillYExentRangeIndex], range[fillYExentRangeIndex]],
+          yaxis: index === 0 ? 'y' : `y${index + 1}`,
+          mode: 'none',
+          fill: 'tonextx',
+          fillcolor: colors.dailyGlucoseProfiles[bgRange].fill,
+          line: {
+            color: colors.dailyGlucoseProfiles[bgRange].line,
+            simplify: false,
+            width: 1,
+          },
+        });
+
+        data.push({
+          name: 'median',
+          type: 'scatter',
+          x: _.map(combinedData, 'msPer24'),
+          y: _.map(combinedData, 'value'),
+          yaxis: index === 0 ? 'y' : `y${index + 1}`,
+          mode: 'lines',
+          fill: 'none',
+          line: {
+            color: colors.dailyGlucoseProfiles[bgRange].line,
+            simplify: false,
+            width: 1,
+          },
+        });
+
+        const yAxis = {
+          domain: [range[0] / yClamp, range[1] / yClamp],
+          range,
+          showgrid: false,
+          showline: true,
+          linecolor: colors.lightGrey,
+          mirror: true,
+          showticklabels: false,
+          zeroline: false,
+        };
+
+        yAxes.push(yAxis);
+      });
+    }
+
+    if (section.bgSource === BGM_DATA_KEY) {
+      const rx = pixelsToChartScale(paperWidth, 2.25);
+      const ry = pixelsToChartScale(paperHeight, 5);
+
+      lowReadings = _.map(_.filter(combinedData, { bgRange: 'low' }), d => ({
+        type: 'circle',
+        x0: d.msPer24 / (MS_IN_DAY * 7) - rx,
+        x1: d.msPer24 / (MS_IN_DAY * 7) + rx,
+        y0: _.min([d.value, yClamp]) / yClamp - ry,
+        y1: _.min([d.value, yClamp]) / yClamp + ry,
+        fillcolor: colors.dailyGlucoseProfiles.low.line,
+        line: {
+          color: colors.black,
+          width: 0.25,
+        },
+        xanchor: 0,
+        xref: 'paper',
+        xsizemode: 'scaled',
+        yanchor: 0,
+        yref: 'paper',
+        ysizemode: 'scaled',
+      }));
+
+      targetReadings = _.map(_.filter(combinedData, { bgRange: 'target' }), d => ({
+        type: 'circle',
+        x0: d.msPer24 / (MS_IN_DAY * 7) - rx,
+        x1: d.msPer24 / (MS_IN_DAY * 7) + rx,
+        y0: _.min([d.value, yClamp]) / yClamp - ry,
+        y1: _.min([d.value, yClamp]) / yClamp + ry,
+        fillcolor: colors.dailyGlucoseProfiles.target.line,
+        line: {
+          color: colors.black,
+          width: 0.25,
+        },
+        xanchor: 0,
+        xref: 'paper',
+        xsizemode: 'scaled',
+        yanchor: 0,
+        yref: 'paper',
+        ysizemode: 'scaled',
+      }));
+
+      highReadings = _.map(_.filter(combinedData, { bgRange: 'high' }), d => ({
+        type: 'circle',
+        x0: d.msPer24 / (MS_IN_DAY * 7) - rx,
+        x1: d.msPer24 / (MS_IN_DAY * 7) + rx,
+        y0: _.min([d.value, yClamp]) / yClamp - ry,
+        y1: _.min([d.value, yClamp]) / yClamp + ry,
+        fillcolor: colors.dailyGlucoseProfiles.high.line,
+        line: {
+          color: colors.black,
+          width: 0.25,
+        },
+        xanchor: 0,
+        xref: 'paper',
+        xsizemode: 'scaled',
+        yanchor: 0,
+        yref: 'paper',
+        ysizemode: 'scaled',
+      }));
 
       data.push({
         name: 'rangeFill',
         type: 'scatter',
-        x: isTarget
-          ? [0, MS_IN_DAY * 7, MS_IN_DAY * 7, 0]
-          : [firstDatum?.msPer24, ..._.map(combinedData, 'msPer24'), lastDatum?.msPer24, firstDatum?.msPer24],
-        y: isTarget
-          ? [range[1], range[1], range[0], range[0]]
-          : [range[fillYExentRangeIndex], ..._.map(combinedData, 'value'), range[fillYExentRangeIndex], range[fillYExentRangeIndex]],
-        yaxis: index === 0 ? 'y' : `y${index + 1}`,
+        x: [0, MS_IN_DAY * 7, MS_IN_DAY * 7, 0],
+        y: [bgTicks[2], bgTicks[2], bgTicks[1], bgTicks[1]],
+        yaxis: 'y',
         mode: 'none',
         fill: 'tonextx',
-        fillcolor: colors.dailyGlucoseProfiles[bgRange].fill,
+        fillcolor: colors.dailyGlucoseProfiles.target.fill,
         line: {
-          color: colors.dailyGlucoseProfiles[bgRange].line,
+          color: colors.dailyGlucoseProfiles.target.line,
           simplify: false,
           width: 1,
         },
       });
 
-      data.push({
-        name: 'median',
-        type: 'scatter',
-        x: _.map(combinedData, 'msPer24'),
-        y: _.map(combinedData, 'value'),
-        yaxis: index === 0 ? 'y' : `y${index + 1}`,
-        mode: 'lines',
-        fill: 'none',
-        line: {
-          color: colors.dailyGlucoseProfiles[bgRange].line,
-          simplify: false,
-          width: 1,
-        },
-      });
+      // data.push({
+      //   name: 'target',
+      //   type: 'scattergl',
+      //   mode: 'markers',
+      //   marker: {
+      //     symbol: 'circle',
+      //     size: 5,
+      //     color: colors.dailyGlucoseProfiles.target.line,
+      //   },
+      //   ids: _.map(_.filter(combinedData, { bgRange: 'target' }), 'id'),
+      //   x: _.map(_.filter(combinedData, { bgRange: 'target' }), 'msPer24'),
+      //   y: _.map(_.filter(combinedData, { bgRange: 'target' }), ({ value }) => _.min([value, yClamp])),
+      //   yaxis: 'y',
+      // });
+
+      // data.push({
+      //   name: 'low',
+      //   type: 'pointcloud',
+      //   mode: 'markers',
+      //   marker: {
+      //     size: 5,
+      //     // border: {
+      //     //   color: colors.black,
+      //     //   arearatio: 0,
+      //     // },
+      //     color: colors.dailyGlucoseProfiles.low.line,
+      //   },
+      //   x: _.map(_.filter(combinedData, { bgRange: 'low' }), 'msPer24'),
+      //   y: _.map(_.filter(combinedData, { bgRange: 'low' }), ({ value }) => _.min([value, yClamp])),
+      //   yaxis: 'y',
+      // });
+
+      // data.push({
+      //   name: 'high',
+      //   type: 'pointcloud',
+      //   mode: 'markers',
+      //   marker: {
+      //     size: 5,
+      //     // border: {
+      //     //   color: colors.black,
+      //     //   arearatio: 0,
+      //     // },
+      //     color: colors.dailyGlucoseProfiles.high.line,
+      //   },
+      //   x: _.map(_.filter(combinedData, { bgRange: 'high' }), 'msPer24'),
+      //   y: _.map(_.filter(combinedData, { bgRange: 'high' }), ({ value }) => _.min([value, yClamp])),
+      //   yaxis: 'y',
+      // });
 
       const yAxis = {
-        domain: [range[0] / yClamp, range[1] / yClamp],
-        range,
+        domain: [0, 1],
+        range: [0, yClamp],
         showgrid: false,
         showline: true,
         linecolor: colors.lightGrey,
@@ -1241,7 +1408,7 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
       };
 
       yAxes.push(yAxis);
-    });
+    }
 
     const layout = {
       width: chartAreaWidth,
@@ -1297,6 +1464,9 @@ export const generateDailyGlucoseProfilesFigure = (section, cbgData, bgPrefs, da
 
       shapes: [
         ...bgGridLines,
+        ...targetReadings,
+        ...lowReadings,
+        ...highReadings,
       ],
     };
 

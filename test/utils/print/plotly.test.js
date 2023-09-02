@@ -4,9 +4,9 @@ import { agpData as data } from '../../../data/print/fixtures';
 describe('generateAGPFigureDefinitions', () => {
   it('generate agp svg image figures for each section', async () => {
     const images = await plotlyUtils.generateAGPFigureDefinitions(data);
-    expect(images.timeInRanges).to.be.an('object');
-    expect(images.timeInRanges).to.have.property('data');
-    expect(images.timeInRanges).to.have.property('layout');
+    expect(images.percentInRanges).to.be.an('object');
+    expect(images.percentInRanges).to.have.property('data');
+    expect(images.percentInRanges).to.have.property('layout');
     expect(images.ambulatoryGlucoseProfile).to.be.an('object');
     expect(images.ambulatoryGlucoseProfile).to.have.property('data');
     expect(images.ambulatoryGlucoseProfile).to.have.property('layout');

@@ -69,7 +69,7 @@ describe('AGPUtils', () => {
     });
   });
 
-  describe('calculateDataSufficiency', () => {
+  describe('calculateCGMDataSufficiency', () => {
     const lessThan24HrsData = _.cloneDeep(data);
     lessThan24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
     lessThan24HrsData.data.current.stats.sensorUsage.count = 23;
@@ -83,7 +83,7 @@ describe('AGPUtils', () => {
     sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
 
     const top7DaysLessThan1HourDataEach = _.cloneDeep(data);
-    top7DaysLessThan1HourDataEach.data.current.stats.sensorUsage.cgmDaysWorn = 7;
+    top7DaysLessThan1HourDataEach.data.current.stats.bgExtents.bgDaysWorn = 7;
     top7DaysLessThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].sensorUsage.count = 0;
 
     const top7DaysLessThan70PercentMeanUsage = _.cloneDeep(data);
@@ -95,70 +95,70 @@ describe('AGPUtils', () => {
 
     context('fully sufficient data', () => {
       it('should return `true` for all sections ', () => {
-        expect(AGPUtils.calculateDataSufficiency(data)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(data)).to.eql({
           ambulatoryGlucoseProfile: true,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
-          timeInRanges: true,
+          percentInRanges: true,
         });
       });
     });
 
     context('less than 24 hrs data', () => {
       it('should return `false` for all sections ', () => {
-        expect(AGPUtils.calculateDataSufficiency(lessThan24HrsData)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(lessThan24HrsData)).to.eql({
           ambulatoryGlucoseProfile: false,
           dailyGlucoseProfiles: false,
           glucoseMetrics: false,
-          timeInRanges: false,
+          percentInRanges: false,
         });
       });
     });
 
     context('24 hrs data', () => {
       it('should return `false` for agp, true for other sections if sensor usage >= 70% ', () => {
-        expect(AGPUtils.calculateDataSufficiency(sensorUSage70Percent24HrsData)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(sensorUSage70Percent24HrsData)).to.eql({
           ambulatoryGlucoseProfile: false,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
-          timeInRanges: true,
+          percentInRanges: true,
         });
 
-        expect(AGPUtils.calculateDataSufficiency(sensorUSage69Percent24HrsData)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(sensorUSage69Percent24HrsData)).to.eql({
           ambulatoryGlucoseProfile: false,
           dailyGlucoseProfiles: false,
           glucoseMetrics: false,
-          timeInRanges: false,
+          percentInRanges: false,
         });
       });
     });
 
     context('less than 7 days with at least 1 hour of cgm data', () => {
       it('should return `false` for agp, true for other sections', () => {
-        expect(AGPUtils.calculateDataSufficiency(top7DaysLessThan1HourDataEach)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(top7DaysLessThan1HourDataEach)).to.eql({
           ambulatoryGlucoseProfile: false,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
-          timeInRanges: true,
+          percentInRanges: true,
         });
       });
     });
 
     context('top 7 days have at least 1 hour of cgm data, but less than 70% mean sensor usage', () => {
       it('should return `false` for agp, true for other sections', () => {
-        expect(AGPUtils.calculateDataSufficiency(top7DaysLessThan70PercentMeanUsage)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(top7DaysLessThan70PercentMeanUsage)).to.eql({
           ambulatoryGlucoseProfile: false,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
-          timeInRanges: true,
+          percentInRanges: true,
         });
       });
     });
   });
 
   describe('generateChartSections', () => {
-    it('should generate the `timeInRanges` section metadata', () => {
-      expect(AGPUtils.generateChartSections(data).timeInRanges).to.be.an('object').and.have.keys([
+    it('should generate the `percentInRanges` section metadata', () => {
+      expect(AGPUtils.generateChartSections(data).percentInRanges).to.be.an('object').and.have.keys([
         'x',
         'y',
         'width',
@@ -216,12 +216,12 @@ describe('AGPUtils', () => {
     });
   });
 
-  describe('generateTimeInRangesFigure', () => {
+  describe('generatePercentInRangesFigure', () => {
     it('should return the time in ranges plotly figure if sufficient data is provided', () => {
-      const section = AGPUtils.generateChartSections(data).timeInRanges;
+      const section = AGPUtils.generateChartSections(data).percentInRanges;
       const stat = data.data.current.stats.timeInRange;
       const bgPrefs = data.bgPrefs;
-      const figure = AGPUtils.generateTimeInRangesFigure(section, stat, bgPrefs);
+      const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
       expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
       expect(figure.data).to.be.an('array');
 
@@ -240,13 +240,13 @@ describe('AGPUtils', () => {
 
     it('should return `null` if data provided is insufficient', () => {
       const section = {
-        ...AGPUtils.generateChartSections(data).timeInRanges,
+        ...AGPUtils.generateChartSections(data).percentInRanges,
         sufficientData: false,
       };
 
       const stat = data.data.current.stats.timeInRange;
       const bgPrefs = data.bgPrefs;
-      const figure = AGPUtils.generateTimeInRangesFigure(section, stat, bgPrefs);
+      const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
       expect(figure).to.be.null;
     });
   });

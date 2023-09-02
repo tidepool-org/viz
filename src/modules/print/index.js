@@ -118,12 +118,12 @@ export function createPrintView(type, data, opts, doc) {
       });
       break;
 
-    case 'agp':
+    case 'agpCGM':
       Renderer = utils.AGPPrintView;
+      break;
 
-      renderOpts = _.assign(renderOpts, {
-        title: t('AGP Charts'),
-      });
+    case 'agpBGM':
+      Renderer = utils.AGPPrintView;
       break;
 
     default:

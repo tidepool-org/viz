@@ -3,6 +3,7 @@ import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
 
 import { DPI } from './constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
@@ -24,12 +25,20 @@ export const AGP_FONT_FAMILY = 'Helvetica, Arial, Sans-Serif';
 
 export const text = {
   reportHeader: t('AGP Report:'),
-  reportSubHeader: t('Continuous glucose monitoring'),
+  reportSubHeader: {
+    [CGM_DATA_KEY]: t('Continuous Glucose Monitoring'),
+    [BGM_DATA_KEY]: t('Blood Glucose Monitoring'),
+  },
   reportFooter: t('Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022'),
   reportInsuffienctData: t('Insufficient data to generate an AGP Report.'),
-  timeInRanges: {
-    title: t('Time in Ranges'),
-    subtitle: t('Goals for Type 1 and Type 2 Diabetes'),
+  percentInRanges: {
+    [CGM_DATA_KEY]: {
+      title: t('Time in Ranges'),
+      subtitle: t('Goals for Type 1 and Type 2 Diabetes'),
+    },
+    [BGM_DATA_KEY]: {
+      title: t('Percent BGM Readings in Ranges'),
+    },
   },
   reportInfo: {
     dob: t('DOB:'),
@@ -61,8 +70,14 @@ export const text = {
     insufficientData: t('Insufficient CGM data to generate AGP graph'),
   },
   dailyGlucoseProfiles: {
-    title: t('Daily Glucose Profiles'),
-    description: t('Each daily profile represents a midnight-to-midnight period.'),
+    [CGM_DATA_KEY]: {
+      title: t('Daily Glucose Profiles'),
+      description: t('Each daily profile represents a midnight-to-midnight period.'),
+    },
+    [BGM_DATA_KEY]: {
+      title: t('Daily Glucose Profiles'),
+      description: t('Each daily profile represents a midnight-to-midnight period. The more readings available throughout the day, the more opportunities for improvement.'),
+    },
   },
   bgRanges: {
     veryHigh: t('Very High'),
@@ -98,7 +113,7 @@ export const fontSizes = {
     description: 7,
     insufficientData: 7,
   },
-  timeInRanges: {
+  percentInRanges: {
     values: 9,
     ticks: 7,
     summaries: 12,

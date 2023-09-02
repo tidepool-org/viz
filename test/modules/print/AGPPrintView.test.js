@@ -47,7 +47,7 @@ describe('AGPPrintView', () => {
     },
     width: 8.5 * DPI - (2 * MARGIN),
     svgDataURLS: {
-      timeInRanges: 'timeInRangesURL',
+      percentInRanges: 'percentInRangesURL',
       ambulatoryGlucoseProfile: 'ambulatoryGlucoseProfileURL',
       dailyGlucoseProfiles: ['dailyProfilesWeek1URL', 'dailyProfilesWeek2URL'],
     },
@@ -107,21 +107,21 @@ describe('AGPPrintView', () => {
         sinon.stub(Renderer, 'renderReportInfo');
         sinon.stub(Renderer, 'renderInsufficientData');
         sinon.stub(Renderer, 'renderGlucoseMetrics');
-        sinon.stub(Renderer, 'renderTimeInRanges').resolves(null);
+        sinon.stub(Renderer, 'renderPercentInRanges').resolves(null);
         sinon.stub(Renderer, 'renderAmbulatoryGlucoseProfile').resolves(null);
         sinon.stub(Renderer, 'renderDailyGlucoseProfiles').resolves(null);
 
         Renderer.sections.ambulatoryGlucoseProfile.sufficientData = false;
         Renderer.sections.dailyGlucoseProfiles.sufficientData = false;
         Renderer.sections.glucoseMetrics.sufficientData = false;
-        Renderer.sections.timeInRanges.sufficientData = false;
+        Renderer.sections.percentInRanges.sufficientData = false;
 
         await Renderer.render();
 
         sinon.assert.calledOnce(Renderer.renderReportInfo);
         sinon.assert.calledOnce(Renderer.renderInsufficientData);
         sinon.assert.notCalled(Renderer.renderGlucoseMetrics);
-        sinon.assert.notCalled(Renderer.renderTimeInRanges);
+        sinon.assert.notCalled(Renderer.renderPercentInRanges);
         sinon.assert.notCalled(Renderer.renderAmbulatoryGlucoseProfile);
         sinon.assert.notCalled(Renderer.renderDailyGlucoseProfiles);
       });
@@ -132,7 +132,7 @@ describe('AGPPrintView', () => {
         sinon.stub(Renderer, 'renderReportInfo');
         sinon.stub(Renderer, 'renderInsufficientData');
         sinon.stub(Renderer, 'renderGlucoseMetrics');
-        sinon.stub(Renderer, 'renderTimeInRanges').resolves(null);
+        sinon.stub(Renderer, 'renderPercentInRanges').resolves(null);
         sinon.stub(Renderer, 'renderAmbulatoryGlucoseProfile').resolves(null);
         sinon.stub(Renderer, 'renderDailyGlucoseProfiles').resolves(null);
 
@@ -141,7 +141,7 @@ describe('AGPPrintView', () => {
         sinon.assert.calledOnce(Renderer.renderReportInfo);
         sinon.assert.notCalled(Renderer.renderInsufficientData);
         sinon.assert.calledOnce(Renderer.renderGlucoseMetrics);
-        sinon.assert.calledOnce(Renderer.renderTimeInRanges);
+        sinon.assert.calledOnce(Renderer.renderPercentInRanges);
         sinon.assert.calledOnce(Renderer.renderAmbulatoryGlucoseProfile);
         sinon.assert.calledOnce(Renderer.renderDailyGlucoseProfiles);
       });
@@ -343,14 +343,14 @@ describe('AGPPrintView', () => {
     });
   });
 
-  describe('renderTimeInRanges', () => {
+  describe('renderPercentInRanges', () => {
     let renderSectionContainerSpy;
     let renderSVGImageSpy;
 
     beforeEach(() => {
       renderSectionContainerSpy = sinon.spy(Renderer, 'renderSectionContainer');
       renderSVGImageSpy = sinon.spy(Renderer, 'renderSVGImage');
-      Renderer.renderTimeInRanges();
+      Renderer.renderPercentInRanges();
     });
 
     afterEach(() => {
@@ -375,7 +375,7 @@ describe('AGPPrintView', () => {
 
     it('should render the provided SVG image', () => {
       sinon.assert.calledWith(renderSVGImageSpy,
-        'timeInRangesURL',
+        'percentInRangesURL',
         sinon.match.number,
         sinon.match.number,
         sinon.match.number,

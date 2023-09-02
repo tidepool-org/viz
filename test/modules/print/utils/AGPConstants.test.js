@@ -48,7 +48,7 @@ describe('AGPConstants', () => {
       reportSubHeader: 'Continuous glucose monitoring',
       reportFooter: 'Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022',
       reportInsuffienctData: 'Insufficient data to generate an AGP Report.',
-      timeInRanges: {
+      percentInRanges: {
         title: 'Time in Ranges',
         subtitle: 'Goals for Type 1 and Type 2 Diabetes',
       },
@@ -121,7 +121,7 @@ describe('AGPConstants', () => {
         'description': 7, // eslint-disable-line quote-props
         insufficientData: 7,
       },
-      timeInRanges: {
+      percentInRanges: {
         values: 9,
         ticks: 7,
         summaries: 12,

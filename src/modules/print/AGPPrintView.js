@@ -20,7 +20,7 @@ import {
   generateChartSections,
 } from './utils/AGPUtils';
 
-import { MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { bankersRound } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
@@ -33,9 +33,11 @@ const t = i18next.t.bind(i18next);
 class AGPPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
-    this.sections = generateChartSections(data);
+    this.sections = generateChartSections(data, this.bgSource);
     this.doc.addPage();
     this.svgDataURLS = opts.svgDataURLS;
+    this.isCGMReport = this.bgSource === CGM_DATA_KEY;
+    this.isBGMReport = this.bgSource === BGM_DATA_KEY;
   }
 
   newPage() {
@@ -50,7 +52,7 @@ class AGPPrintView extends PrintView {
       !this.sections.ambulatoryGlucoseProfile.sufficientData &&
       !this.sections.dailyGlucoseProfiles.sufficientData &&
       !this.sections.glucoseMetrics.sufficientData &&
-      !this.sections.timeInRanges.sufficientData
+      !this.sections.percentInRanges.sufficientData
     ) {
       // If no sections have sufficient data we don't render any of them
       this.renderInsufficientData();
@@ -58,7 +60,7 @@ class AGPPrintView extends PrintView {
       // If at least one section has sufficient data we render all of them, and show any unmet
       // data sufficiency text within the sections themselves
       this.renderGlucoseMetrics();
-      await this.renderTimeInRanges();
+      await this.renderPercentInRanges();
       await this.renderAmbulatoryGlucoseProfile();
       await this.renderDailyGlucoseProfiles();
     }
@@ -68,13 +70,14 @@ class AGPPrintView extends PrintView {
     this.doc.font(this.boldFont).fontSize(fontSizes.reportHeader);
     const xPos = this.leftEdge;
     const yPos = this.topEdge;
+    const subHeader = text.reportSubHeader[this.bgSource];
 
     this.doc
       .fillColor(colors.text.reportHeader)
       .fillOpacity(1)
       .text(`${text.reportHeader} `, xPos, yPos, { continued: true })
       .font(this.font)
-      .text(text.reportSubHeader);
+      .text(subHeader);
 
     return this;
   }
@@ -210,15 +213,16 @@ class AGPPrintView extends PrintView {
 
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
+    const { sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
+    const { bgDaysWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
-    const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
 
-    let cgmDaysWornText = cgmDaysWorn === 1
-      ? t('{{cgmDaysWorn}} Day', { cgmDaysWorn })
-      : t('{{cgmDaysWorn}} Days', { cgmDaysWorn });
+    let reportDaysText = bgDaysWorn === 1
+      ? t('{{bgDaysWorn}} Day', { bgDaysWorn })
+      : t('{{bgDaysWorn}} Days', { bgDaysWorn });
 
-    if (cgmDaysWorn >= 1) {
-      cgmDaysWornText += `: ${cgmDaysWorn === 1
+    if (bgDaysWorn >= 1) {
+      reportDaysText += `: ${bgDaysWorn === 1
         ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
         : this.getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM')
       }`;
@@ -287,11 +291,14 @@ class AGPPrintView extends PrintView {
     this.doc.y = section.y + this.dpi * 0.05;
     renderInfoRow(patientName, text.reportInfo.dob, patientBirthdate);
     this.doc.moveDown(1);
-    renderInfoRow(cgmDaysWornText);
-    this.doc.moveDown(1);
-    renderInfoRow(t('Time CGM Active: {{activeTime}}%', {
-      activeTime: bankersRound(sensorUsageAGP, 1),
-    }));
+    renderInfoRow(reportDaysText);
+
+    if (section.bgSource === CGM_DATA_KEY) {
+      this.doc.moveDown(1);
+      renderInfoRow(t('Time CGM Active: {{activeTime}}%', {
+        activeTime: bankersRound(sensorUsageAGP, 1),
+      }));
+    }
   }
 
   renderGlucoseMetrics() {
@@ -380,8 +387,8 @@ class AGPPrintView extends PrintView {
     this.resetText();
   }
 
-  async renderTimeInRanges() {
-    const section = this.sections.timeInRanges;
+  async renderPercentInRanges() {
+    const section = this.sections.percentInRanges;
     this.renderSectionContainer(section);
 
     // Set chart plot within section borders
@@ -389,7 +396,7 @@ class AGPPrintView extends PrintView {
     const chartAreaY = section.y + 1 + this.dpi * 0.25;
     const chartAreaWidth = section.width - 2;
     const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
-    this.renderSVGImage(this.svgDataURLS?.timeInRanges, chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight);
+    this.renderSVGImage(this.svgDataURLS?.percentInRanges, chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight);
   }
 
   async renderAmbulatoryGlucoseProfile() {
