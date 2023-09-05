@@ -75,7 +75,7 @@ export const text = {
       description: t('Each daily profile represents a midnight-to-midnight period.'),
     },
     [BGM_DATA_KEY]: {
-      title: t('Daily Glucose Profiles'),
+      title: t('Daily Glucose Profiles (Last 2 Weeks)'),
       description: t('Each daily profile represents a midnight-to-midnight period. The more readings available throughout the day, the more opportunities for improvement.'),
     },
   },
