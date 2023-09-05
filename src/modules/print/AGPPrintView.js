@@ -36,8 +36,6 @@ class AGPPrintView extends PrintView {
     this.sections = generateChartSections(data, this.bgSource);
     this.doc.addPage();
     this.svgDataURLS = opts.svgDataURLS;
-    this.isCGMReport = this.bgSource === CGM_DATA_KEY;
-    this.isBGMReport = this.bgSource === BGM_DATA_KEY;
   }
 
   newPage() {
@@ -308,29 +306,36 @@ class AGPPrintView extends PrintView {
     const paddingX = this.dpi * 0.2;
     const xExtents = [section.x + paddingX, section.x + section.width - paddingX];
 
-    const glucoseStats = [
-      this.stats.averageGlucose,
-      this.stats.glucoseManagementIndicator,
-      this.stats.coefficientOfVariation,
+    const glucoseStats = this.bgSource === CGM_DATA_KEY ? [
+      { stat: this.stats.averageGlucose, dataPath: 'summary', dataFormat: 'summary' },
+      { stat: this.stats.glucoseManagementIndicator, dataPath: 'summaryAGP', dataFormat: 'summary' },
+      { stat: this.stats.coefficientOfVariation, dataPath: 'summary', dataFormat: 'summary' },
+    ] : [
+      { stat: this.stats.readingsInRange, dataPath: 'totalReadings', dataFormat: 'count' },
+      { stat: { ...this.stats.readingsInRange, id: 'dailyReadingsInRange' }, dataPath: 'averageDailyReadings', dataFormat: 'count' },
+      { stat: this.stats.averageGlucose, dataPath: 'summary', dataFormat: 'summary' },
+      { stat: this.stats.coefficientOfVariation, dataPath: 'summary', dataFormat: 'summary' },
     ];
 
     this.doc.x = section.x;
-    this.doc.y = section.y + this.dpi * 0.375;
+    this.doc.y = section.y + this.dpi * (this.bgSource === CGM_DATA_KEY ? 0.375 : 0.425);
 
-    _.each(glucoseStats, (stat, index) => {
+    _.each(glucoseStats, ({ stat, dataPath, dataFormat }, index) => {
       const paddingY = 8;
       const statWidth = xExtents[1] - xExtents[0];
       const y = this.doc.y;
       const isAverageGlucose = stat.id === 'averageGlucose';
-      const isShaded = index % 2 !== 0;
+      const isShaded = this.bgSource === CGM_DATA_KEY && index % 2 !== 0;
+      const formattingOpts = { bgPrefs: this.bgPrefs, data: stat.data, useAGPFormat: true };
 
       const { value, suffix } = formatDatum(
-        _.get(stat.data, _.get(stat.data, 'dataPaths.summaryAGP', stat.data?.dataPaths?.summary)),
-        _.get(stat, 'dataFormat.summary'),
-        { bgPrefs: this.bgPrefs, data: stat.data, useAGPFormat: true }
+        _.get(stat.data, stat.data?.dataPaths?.[dataPath]),
+        stat.dataFormat?.[dataFormat],
+        formattingOpts
       );
 
-      const units = suffix || this.bgUnits;
+      let units = suffix;
+      if (isAverageGlucose) units = this.bgUnits;
 
       this.doc
         .font(this.boldFont)
@@ -346,21 +351,36 @@ class AGPPrintView extends PrintView {
       this.setFill();
 
       this.doc
-        .text(text.glucoseMetrics[stat.id].label, xExtents[0], y);
+        .text(text.glucoseMetrics[this.bgSource][stat.id].label, xExtents[0], y);
 
-      const valueYShift = (fontSizes.glucoseMetrics.values - fontSizes.glucoseMetrics.labels) / 2;
-      const unitsFontSize = isAverageGlucose ? fontSizes.glucoseMetrics.bgUnits : fontSizes.glucoseMetrics.values;
-      const unitsYShift = isAverageGlucose ? valueYShift - 2.15 : valueYShift;
+      let valueXShift = 0;
+      let valueYShift = 0;
 
-      this.doc
-        .fontSize(unitsFontSize)
-        .text(`${units}`, xExtents[0], y - unitsYShift, { align: 'right', width: statWidth });
+      if (units) {
+        valueYShift = (fontSizes.glucoseMetrics.values - fontSizes.glucoseMetrics.labels) / 2;
+        const unitsFontSize = isAverageGlucose ? fontSizes.glucoseMetrics.bgUnits : fontSizes.glucoseMetrics.values;
+        const unitsYShift = isAverageGlucose ? valueYShift - 2.15 : valueYShift;
 
-      const valueXShift = this.doc.widthOfString(units) + 1;
+        this.doc
+          .fontSize(unitsFontSize)
+          .text(`${units}`, xExtents[0], y - unitsYShift, { align: 'right', width: statWidth });
+
+        valueXShift = this.doc.widthOfString(units) + 1;
+      }
 
       this.doc
         .fontSize(fontSizes.glucoseMetrics.values)
         .text(`${value}`, xExtents[0], y - valueYShift, { align: 'right', width: statWidth - valueXShift });
+
+      this.setFill(colors.text.goals.glucoseMetrics);
+
+      if (text.glucoseMetrics[this.bgSource][stat.id].subLabel) {
+        this.doc
+          .font(this.font)
+          .fontSize(fontSizes.glucoseMetrics.subLabels)
+          .lineGap(1.3)
+          .text(text.glucoseMetrics[this.bgSource][stat.id].subLabel);
+      }
 
       this.doc
         .font(this.font)
@@ -368,21 +388,47 @@ class AGPPrintView extends PrintView {
 
       const bgUnitsKey = this.bgUnits === MGDL_UNITS ? 'mgdl' : 'mmoll';
       const goal = isAverageGlucose
-        ? text.glucoseMetrics[stat.id].goal[bgUnitsKey]
-        : text.glucoseMetrics[stat.id].goal;
+        ? text.glucoseMetrics[this.bgSource][stat.id].goal?.[bgUnitsKey]
+        : text.glucoseMetrics[this.bgSource][stat.id].goal;
 
-      this.setFill(colors.text.goals.glucoseMetrics);
-
-      if (text.glucoseMetrics[stat.id].subLabel) {
+      if (goal) {
         this.doc
-          .fontSize(fontSizes.glucoseMetrics.subLabels)
           .lineGap(1.3)
-          .text(text.glucoseMetrics[stat.id].subLabel);
+          .text(goal);
       }
 
-      this.doc
-        .lineGap(1.3)
-        .text(goal);
+      if (isAverageGlucose && this.bgSource === BGM_DATA_KEY) {
+        this.setFill(colors.text.subStats.glucoseMetrics);
+
+        if (this.stats.bgExtents?.data?.data?.length === 2) {
+          this.doc.moveDown(0.75);
+          const bgExtents = _.map(this.stats.bgExtents?.data?.data, datum => formatDatum(datum, 'bgValue', formattingOpts).value);
+
+          this.doc
+            .font(this.font)
+            .fontSize(fontSizes.glucoseMetrics.subStats)
+            .lineGap(1.3);
+
+          const labelText = text.glucoseMetrics[this.bgSource].bgExtents.label;
+          const labelTextWidth = this.doc.widthOfString(labelText);
+          const lineOffset = 5.5;
+          const valueText = `${bgExtents.reverse().join('/')} ${this.bgUnits}`;
+          const valueTextWidth = this.doc.widthOfString(valueText);
+
+          this.setStroke();
+
+          this.doc
+            .moveTo(xExtents[0] + paddingX + labelTextWidth + 2, this.doc.y + lineOffset)
+            .lineTo(xExtents[0] + statWidth - valueTextWidth - 2, this.doc.y + lineOffset)
+            .dash(1, { space: 2 })
+            .stroke()
+            .lineWidth(0.5);
+
+          this.doc
+            .text(labelText, xExtents[0] + paddingX, this.doc.y, { align: 'left', width: statWidth - paddingX, continued: true })
+            .text(valueText, this.doc.x, this.doc.y, { align: 'right', width: statWidth - paddingX });
+        }
+      }
 
       this.doc.moveDown(1.25);
     });

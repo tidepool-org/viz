@@ -167,7 +167,7 @@ export const generateChartSections = (data, bgSource) => {
     x: rightEdge - reportInfoAndMetricsWidth,
     y: chartRenderAreaTop,
     width: reportInfoAndMetricsWidth,
-    height: DPI * 0.875,
+    height: DPI * (bgSource === CGM_DATA_KEY ? 0.875 : 0.55),
     text: text.reportInfo,
   };
 
@@ -176,9 +176,9 @@ export const generateChartSections = (data, bgSource) => {
     x: rightEdge - reportInfoAndMetricsWidth,
     y: sections.reportInfo.y + sections.reportInfo.height + sectionGap,
     width: reportInfoAndMetricsWidth,
-    height: DPI * 1.875,
+    height: DPI * (bgSource === CGM_DATA_KEY ? 1.875 : 2.2),
     bordered: true,
-    text: text.glucoseMetrics,
+    text: text.glucoseMetrics[bgSource],
     sufficientData: dataSufficiency.glucoseMetrics,
   };
 

@@ -45,22 +45,44 @@ export const text = {
     mrn: t('MRN:'),
   },
   glucoseMetrics: {
-    title: t('Glucose metrics'),
-    averageGlucose: {
-      label: t('Average Glucose'),
-      goal: {
-        mgdl: t('Goal: <154 mg/dL'),
-        mmoll: t('Goal: <8.6 mmol/L'),
+    [CGM_DATA_KEY]: {
+      title: t('Glucose metrics'),
+      averageGlucose: {
+        label: t('Average Glucose'),
+        goal: {
+          mgdl: t('Goal: <154 mg/dL'),
+          mmoll: t('Goal: <8.6 mmol/L'),
+        },
+      },
+      coefficientOfVariation: {
+        label: t('Glucose Variability'),
+        subLabel: t('Defined as percent coefficient of variation'),
+        goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+      },
+      glucoseManagementIndicator: {
+        label: t('Glucose Management Indicator (GMI)'),
+        goal: t('Goal: <7%'),
       },
     },
-    glucoseManagementIndicator: {
-      label: t('Glucose Management Indicator (GMI)'),
-      goal: t('Goal: <7%'),
-    },
-    coefficientOfVariation: {
-      label: t('Glucose Variability'),
-      subLabel: t('Defined as percent coefficient of variation'),
-      goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+    [BGM_DATA_KEY]: {
+      title: t('BGM Statistics'),
+      averageGlucose: {
+        label: t('Average Glucose'),
+      },
+      bgExtents: {
+        label: t('Lowest/Highest Glucose'),
+      },
+      coefficientOfVariation: {
+        label: t('Glucose Variability'),
+        subLabel: t('Defined as percent coefficient of variation'),
+        goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+      },
+      dailyReadingsInRange: {
+        label: t('Average Readings/Day'),
+      },
+      readingsInRange: {
+        label: t('Number of Readings'),
+      },
     },
   },
   ambulatoryGlucoseProfile: {
@@ -125,6 +147,7 @@ export const fontSizes = {
     bgUnits: 8,
     labels: 9,
     subLabels: 8,
+    subStats: 8,
     goals: 8,
   },
   ambulatoryGlucoseProfile: {
@@ -174,6 +197,9 @@ export const colors = {
       TIRtarget: darkGrey,
       TIRminutes: black,
       glucoseMetrics: darkGrey,
+    },
+    subStats: {
+      glucoseMetrics: black,
     },
     ticks: {
       bg: darkGrey,

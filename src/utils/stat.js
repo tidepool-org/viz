@@ -107,7 +107,7 @@ export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : p
 
 export const formatDatum = (datum = {}, format, opts = {}) => {
   let id = datum.id;
-  let value = datum.value;
+  let value = _.isFinite(datum) ? datum : datum.value;
   let suffix = datum.suffix || '';
   let deviation;
   let lowerValue;
@@ -477,7 +477,6 @@ export const getStatData = (data, type, opts = {}) => {
           title: t('Min BG'),
         },
       ];
-
       break;
 
     case commonStats.carbs:
@@ -566,6 +565,8 @@ export const getStatData = (data, type, opts = {}) => {
           'data',
           _.findIndex(statData.data, { id: 'target' }),
         ],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
       };
       break;
 
@@ -860,6 +861,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
         summary: statFormats.percentage,
         tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
+        count: statFormats.bgCount,
       };
       stat.legend = true;
       stat.hideSummaryUnits = true;
