@@ -364,7 +364,7 @@ class AGPPrintView extends PrintView {
 
       this.doc
         .font(this.font)
-        .fontSize(fontSizes.glucoseMetrics.subLabels);
+        .fontSize(fontSizes.glucoseMetrics.goals);
 
       const bgUnitsKey = this.bgUnits === MGDL_UNITS ? 'mgdl' : 'mmoll';
       const goal = isAverageGlucose
@@ -373,14 +373,17 @@ class AGPPrintView extends PrintView {
 
       this.setFill(colors.text.goals.glucoseMetrics);
 
+      if (text.glucoseMetrics[stat.id].subLabel) {
+        this.doc
+          .fontSize(fontSizes.glucoseMetrics.subLabels)
+          .lineGap(1.3)
+          .text(text.glucoseMetrics[stat.id].subLabel);
+      }
+
       this.doc
         .lineGap(1.3)
         .text(goal);
 
-      this.doc
-        .fontSize(fontSizes.glucoseMetrics.subLabels);
-
-      if (text.glucoseMetrics[stat.id].subLabel) this.doc.text(text.glucoseMetrics[stat.id].subLabel);
       this.doc.moveDown(1.25);
     });
 
