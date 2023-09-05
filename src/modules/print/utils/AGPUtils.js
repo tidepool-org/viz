@@ -1098,7 +1098,7 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
   const plotMarginTop = DPI * 0.2;
   const plotMarginBottom = 1;
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
-  const paperHeight = chartAreaHeight - (plotMarginTop + plotMarginBottom);
+  const paperHeight = plotHeight - (plotMarginTop + plotMarginBottom);
 
   if (section.sufficientData) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
@@ -1271,8 +1271,9 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
     }
 
     if (section.bgSource === BGM_DATA_KEY) {
-      const rx = pixelsToChartScale(paperWidth, 2.25);
-      const ry = pixelsToChartScale(paperHeight, 5);
+      const bgPlotRadius = 2;
+      const rx = pixelsToChartScale(paperWidth, bgPlotRadius);
+      const ry = pixelsToChartScale(paperHeight, bgPlotRadius);
 
       lowReadings = _.map(_.filter(combinedData, { bgRange: 'low' }), d => ({
         type: 'circle',
@@ -1346,55 +1347,6 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
           width: 1,
         },
       });
-
-      // data.push({
-      //   name: 'target',
-      //   type: 'scattergl',
-      //   mode: 'markers',
-      //   marker: {
-      //     symbol: 'circle',
-      //     size: 5,
-      //     color: colors.dailyGlucoseProfiles.target.line,
-      //   },
-      //   ids: _.map(_.filter(combinedData, { bgRange: 'target' }), 'id'),
-      //   x: _.map(_.filter(combinedData, { bgRange: 'target' }), 'msPer24'),
-      //   y: _.map(_.filter(combinedData, { bgRange: 'target' }), ({ value }) => _.min([value, yClamp])),
-      //   yaxis: 'y',
-      // });
-
-      // data.push({
-      //   name: 'low',
-      //   type: 'pointcloud',
-      //   mode: 'markers',
-      //   marker: {
-      //     size: 5,
-      //     // border: {
-      //     //   color: colors.black,
-      //     //   arearatio: 0,
-      //     // },
-      //     color: colors.dailyGlucoseProfiles.low.line,
-      //   },
-      //   x: _.map(_.filter(combinedData, { bgRange: 'low' }), 'msPer24'),
-      //   y: _.map(_.filter(combinedData, { bgRange: 'low' }), ({ value }) => _.min([value, yClamp])),
-      //   yaxis: 'y',
-      // });
-
-      // data.push({
-      //   name: 'high',
-      //   type: 'pointcloud',
-      //   mode: 'markers',
-      //   marker: {
-      //     size: 5,
-      //     // border: {
-      //     //   color: colors.black,
-      //     //   arearatio: 0,
-      //     // },
-      //     color: colors.dailyGlucoseProfiles.high.line,
-      //   },
-      //   x: _.map(_.filter(combinedData, { bgRange: 'high' }), 'msPer24'),
-      //   y: _.map(_.filter(combinedData, { bgRange: 'high' }), ({ value }) => _.min([value, yClamp])),
-      //   yaxis: 'y',
-      // });
 
       const yAxis = {
         domain: [0, 1],
