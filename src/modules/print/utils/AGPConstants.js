@@ -86,10 +86,19 @@ export const text = {
     },
   },
   ambulatoryGlucoseProfile: {
-    title: t('Ambulatory Glucose Profile (AGP)'),
-    description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
-    targetRange: t('Target<br>Range'),
-    insufficientData: t('Insufficient CGM data to generate AGP graph'),
+    [CGM_DATA_KEY]: {
+      title: t('Ambulatory Glucose Profile (AGP)'),
+      description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
+      targetRange: t('Target<br>Range'),
+      insufficientData: t('Insufficient CGM data to generate AGP graph'),
+    },
+    [BGM_DATA_KEY]: {
+      title: t('Ambulatory Glucose Profile (AGP)'),
+      insufficientDataTitle: t('Modal Day BGM Values Graph'),
+      description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
+      targetRange: t('Target<br>Range'),
+      insufficientData: t('Insufficient glucose data to generate AGP'),
+    },
   },
   dailyGlucoseProfiles: {
     [CGM_DATA_KEY]: {
@@ -97,7 +106,7 @@ export const text = {
       description: t('Each daily profile represents a midnight-to-midnight period.'),
     },
     [BGM_DATA_KEY]: {
-      title: t('Daily Glucose Profiles (Last 2 Weeks)'),
+      title: t('Daily Glucose Profiles'),
       description: t('Each daily profile represents a midnight-to-midnight period. The more readings available throughout the day, the more opportunities for improvement.'),
     },
   },
@@ -235,6 +244,13 @@ export const colors = {
     highShaded: '#FFD180',
     veryHigh: '#FF6900',
     empty: darkGrey,
+  },
+  bgReadings: {
+    veryLow: '#A30014',
+    low: '#F20000',
+    target: '#14B85C',
+    high: '#FFA600',
+    veryHigh: '#FF6900',
   },
   ambulatoryGlucoseProfile: {
     median: {

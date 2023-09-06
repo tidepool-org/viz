@@ -130,6 +130,8 @@ export const calculateCGMDataSufficiency = (data = {}) => {
 
 export const calculateBGMDataSufficiency = (data = {}) => {
   const sufficiencyBySection = {
+    // >30 = modal day bgm values graph - only readings
+    // min 3 for median bin, min 5 for quartile bin
     ambulatoryGlucoseProfile: true,
     dailyGlucoseProfiles: true,
     glucoseMetrics: true,
@@ -189,7 +191,7 @@ export const generateChartSections = (data, bgSource) => {
     width: WIDTH,
     height: DPI * 3.5,
     bordered: true,
-    text: text.ambulatoryGlucoseProfile,
+    text: text.ambulatoryGlucoseProfile[bgSource],
     sufficientData: dataSufficiency.ambulatoryGlucoseProfile,
   };
 
@@ -763,6 +765,22 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       },
     });
 
+    const quantileSegment = (upperKey, lowerKey, key, bgRange, index, segmentData) => ({
+      name: key,
+      type: 'scatter',
+      x: [..._.map(segmentData, 'msX'), ..._.map(_.reverse([...segmentData]), 'msX')],
+      y: [..._.map(segmentData, upperKey), ..._.map(_.reverse([...segmentData]), lowerKey)],
+      yaxis: index === 0 ? 'y' : `y${index + 1}`,
+      fill: 'toself',
+      fillcolor: colors.ambulatoryGlucoseProfile[key][bgRange],
+      mode: 'none',
+      line: {
+        simplify: false,
+        shape: 'line',
+        smoothing: 0,
+      },
+    });
+
     const bgRangeKeys = [
       'veryLow',
       'low',
@@ -853,7 +871,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       const isZero = index === 0;
 
       return {
-        layer: isTarget || isClamp ? 'above' : 'below',
+        layer: (bgSource === CGM_DATA_KEY && (isTarget || isClamp)) ? 'above' : 'below',
         line: {
           color: isTarget ? colors.line.range.target : colors.line.range.default,
           width: isTarget ? 2 : 1,
@@ -950,29 +968,113 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
     const data = [];
     const yAxes = [];
+    const bgmMedian = [];
 
     _.each(bgRangeKeys, (bgRange, index) => {
-      data.push(quantileBand('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
-      data.push(quantileBand('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
-
-      data.push({
-        name: 'median',
-        type: 'scatter',
-        x: _.map(smoothedChartData, 'msX'),
-        y: _.map(smoothedChartData, 'median'),
-        yaxis: index === 0 ? 'y' : `y${index + 1}`,
-        mode: 'lines',
-        fill: 'none',
-        line: {
-          color: colors.ambulatoryGlucoseProfile.median[bgRange],
-          simplify: false,
-          shape: 'spline',
-          width: 3,
-          smoothing: 0.5,
-        },
-      });
-
       const range = [bgTicks[index], bgTicks[index + 1]];
+
+      if (bgSource === CGM_DATA_KEY) {
+        data.push(quantileBand('upperQuantile', 'lowerQuantile', 'outerQuantile', bgRange, index));
+        data.push(quantileBand('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index));
+        data.push({
+          name: 'median',
+          type: 'scatter',
+          x: _.map(smoothedChartData, 'msX'),
+          y: _.map(smoothedChartData, 'median'),
+          yaxis: index === 0 ? 'y' : `y${index + 1}`,
+          mode: 'lines',
+          fill: 'none',
+          line: {
+            color: colors.ambulatoryGlucoseProfile.median[bgRange],
+            simplify: false,
+            shape: 'spline',
+            width: 3,
+            smoothing: 0.5,
+          },
+        });
+      } else if (bgSource === BGM_DATA_KEY) {
+        _.each(smoothedChartData, (bin, i) => {
+          const segmentData = [smoothedChartData[i - 1], bin];
+
+          const bandData = _.filter(
+            segmentData,
+            ({ thirdQuartile, firstQuartile } = {}) => _.isFinite(thirdQuartile) && _.isFinite(firstQuartile)
+          );
+
+          if (bandData.length === 2) {
+            data.push(quantileSegment('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index, bandData));
+          }
+
+          const medianData = _.filter(
+            segmentData,
+            ({ median } = {}) => _.isFinite(median)
+          );
+
+          if (medianData.length === 2) {
+            const medianWidth = 3;
+            const isFirstDrawableSegment = i === 1;
+            const isLastDrawableSegment = i === smoothedChartData.length - 1;
+
+            let x0 = medianData[0].msX / MS_IN_DAY;
+            let x1 = medianData[1].msX / MS_IN_DAY;
+            let y0 = medianData[0].median;
+            let y1 = medianData[1].median;
+
+            if (isFirstDrawableSegment) {
+              x0 = 0;
+              y0 = y1 - ((y1 - y0) / 2);
+            }
+
+            if (isLastDrawableSegment) {
+              x1 = 1;
+              y1 = y1 - ((y1 - y0) / 2);
+            }
+
+            bgmMedian.push({
+              type: 'line',
+              x0,
+              x1,
+              y0,
+              y1,
+              line: {
+                color: colors.ambulatoryGlucoseProfile.median[bgRange],
+                width: medianWidth,
+              },
+              xref: 'paper',
+              xsizemode: 'scaled',
+              yref: index === 0 ? 'y' : `y${index + 1}`,
+              ysizemode: 'scaled',
+            });
+
+            const lineEndRadius = medianWidth / 2;
+            const rx = pixelsToChartScale(paperWidth, lineEndRadius);
+            const ry = pixelsToChartScale(paperHeight, lineEndRadius) * yClamp;
+
+            // add circles at line end to smooth out any sharp gaps between interconnected segments
+            const previousSegmentData = [smoothedChartData[i - 2], smoothedChartData[i - 1]];
+
+            if (_.filter(
+              previousSegmentData,
+              ({ median } = {}) => _.isFinite(median)
+            ).length === 2) {
+              const lineEnd = segmentData[0];
+              bgmMedian.push({
+                type: 'circle',
+                x0: lineEnd.msX / MS_IN_DAY - rx,
+                x1: lineEnd.msX / MS_IN_DAY + rx,
+                y0: lineEnd.median - ry,
+                y1: lineEnd.median + ry,
+                line: { width: 0 },
+                fillcolor: colors.ambulatoryGlucoseProfile.median[bgRange],
+                xref: 'paper',
+                xsizemode: 'scaled',
+                yref: index === 0 ? 'y' : `y${index + 1}`,
+                ysizemode: 'scaled',
+              });
+            }
+          }
+        });
+      }
 
       const yAxis = {
         domain: [range[0] / yClamp, range[1] / yClamp],
@@ -987,6 +1089,41 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
       yAxes.push(yAxis);
     });
+
+    let targetReadings = [];
+    let lowReadings = [];
+    let veryLowReadings = [];
+    let highReadings = [];
+    let veryHighReadings = [];
+
+    if (bgSource === BGM_DATA_KEY) {
+      const bgPlotRadius = 2.25;
+      const rx = pixelsToChartScale(paperWidth, bgPlotRadius);
+      const ry = pixelsToChartScale(paperHeight, bgPlotRadius);
+
+      const renderBgReadings = bgRange => _.map(_.filter(bgData, ({ value }) => classifyBgValue(bgPrefs.bgBounds, value, 'fiveWay') === bgRange), d => ({
+        type: 'circle',
+        x0: d.msPer24 / (MS_IN_DAY) - rx,
+        x1: d.msPer24 / (MS_IN_DAY) + rx,
+        y0: _.min([d.value, yClamp]) / yClamp - ry,
+        y1: _.min([d.value, yClamp]) / yClamp + ry,
+        fillcolor: colors.bgReadings[bgRange],
+        line: {
+          color: colors.black,
+          width: 0.25,
+        },
+        xref: 'paper',
+        xsizemode: 'scaled',
+        yref: 'paper',
+        ysizemode: 'scaled',
+      }));
+
+      veryLowReadings = renderBgReadings('veryLow');
+      lowReadings = renderBgReadings('low');
+      targetReadings = renderBgReadings('target');
+      highReadings = renderBgReadings('high');
+      veryHighReadings = renderBgReadings('veryHigh');
+    }
 
     const layout = {
       width: chartAreaWidth,
@@ -1057,7 +1194,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
             color: colors.black,
             size: fontSizes.ambulatoryGlucoseProfile.bgUnits,
           },
-          text: boldText(text.ambulatoryGlucoseProfile.targetRange),
+          text: boldText(text.ambulatoryGlucoseProfile[bgSource].targetRange),
           x: 0,
           xanchor: 'right',
           xref: 'paper',
@@ -1072,6 +1209,12 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
         ...bgGridLines,
         ...bgTargetMarkers,
         ...percentileTickLines,
+        ...targetReadings,
+        ...lowReadings,
+        ...veryLowReadings,
+        ...highReadings,
+        ...veryHighReadings,
+        ...bgmMedian,
       ],
     };
 
@@ -1275,62 +1418,26 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
       const rx = pixelsToChartScale(paperWidth, bgPlotRadius);
       const ry = pixelsToChartScale(paperHeight, bgPlotRadius);
 
-      lowReadings = _.map(_.filter(combinedData, { bgRange: 'low' }), d => ({
+      const renderBgReadings = bgRange => _.map(_.filter(combinedData, { bgRange }), d => ({
         type: 'circle',
         x0: d.msPer24 / (MS_IN_DAY * 7) - rx,
         x1: d.msPer24 / (MS_IN_DAY * 7) + rx,
         y0: _.min([d.value, yClamp]) / yClamp - ry,
         y1: _.min([d.value, yClamp]) / yClamp + ry,
-        fillcolor: colors.dailyGlucoseProfiles.low.line,
+        fillcolor: colors.bgReadings[bgRange],
         line: {
           color: colors.black,
           width: 0.25,
         },
-        xanchor: 0,
         xref: 'paper',
         xsizemode: 'scaled',
-        yanchor: 0,
         yref: 'paper',
         ysizemode: 'scaled',
       }));
 
-      targetReadings = _.map(_.filter(combinedData, { bgRange: 'target' }), d => ({
-        type: 'circle',
-        x0: d.msPer24 / (MS_IN_DAY * 7) - rx,
-        x1: d.msPer24 / (MS_IN_DAY * 7) + rx,
-        y0: _.min([d.value, yClamp]) / yClamp - ry,
-        y1: _.min([d.value, yClamp]) / yClamp + ry,
-        fillcolor: colors.dailyGlucoseProfiles.target.line,
-        line: {
-          color: colors.black,
-          width: 0.25,
-        },
-        xanchor: 0,
-        xref: 'paper',
-        xsizemode: 'scaled',
-        yanchor: 0,
-        yref: 'paper',
-        ysizemode: 'scaled',
-      }));
-
-      highReadings = _.map(_.filter(combinedData, { bgRange: 'high' }), d => ({
-        type: 'circle',
-        x0: d.msPer24 / (MS_IN_DAY * 7) - rx,
-        x1: d.msPer24 / (MS_IN_DAY * 7) + rx,
-        y0: _.min([d.value, yClamp]) / yClamp - ry,
-        y1: _.min([d.value, yClamp]) / yClamp + ry,
-        fillcolor: colors.dailyGlucoseProfiles.high.line,
-        line: {
-          color: colors.black,
-          width: 0.25,
-        },
-        xanchor: 0,
-        xref: 'paper',
-        xsizemode: 'scaled',
-        yanchor: 0,
-        yref: 'paper',
-        ysizemode: 'scaled',
-      }));
+      lowReadings = renderBgReadings('low');
+      targetReadings = renderBgReadings('target');
+      highReadings = renderBgReadings('high');
 
       data.push({
         name: 'rangeFill',
