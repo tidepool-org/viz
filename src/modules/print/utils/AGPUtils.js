@@ -914,6 +914,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
         color: index === 2 ? colors.black : colors.text.ticks.percentile,
         size: fontSizes.ambulatoryGlucoseProfile.percentileTicks,
       },
+      name: bgRangeKeys[index],
       text: boldText(percentileLabels[index]),
       visible: tick / yClamp <= 1,
       y: tick / yClamp,
@@ -969,6 +970,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
     const data = [];
     const yAxes = [];
     const bgmMedian = [];
+    const legend = [];
+    let showLegend = false;
 
     _.each(bgRangeKeys, (bgRange, index) => {
       const range = [bgTicks[index], bgTicks[index + 1]];
@@ -1010,10 +1013,16 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
             ({ median } = {}) => _.isFinite(median)
           );
 
+          const isLastDrawableSegment = i === smoothedChartData.length - 1;
+
+          // Show legend if the interquartile ranges don't extend to the chart edge
+          if (isLastDrawableSegment && bandData.length < 2) {
+            showLegend = segmentData[0].median > yClamp / 2 ? 'bottom' : 'top';
+          }
+
           if (medianData.length === 2) {
             const medianWidth = 3;
             const isFirstDrawableSegment = i === 1;
-            const isLastDrawableSegment = i === smoothedChartData.length - 1;
 
             let x0 = medianData[0].msX / MS_IN_DAY;
             let x1 = medianData[1].msX / MS_IN_DAY;
@@ -1089,6 +1098,105 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
       yAxes.push(yAxis);
     });
+
+    if (showLegend) {
+      const legendRangeWidth = 5;
+      const legendRangeHeight = 15;
+      const legendXOffset = pixelsToChartScale(paperWidth, 4);
+
+      const legendYOffset = showLegend === 'top'
+        ? 1 - pixelsToChartScale(paperHeight, legendRangeHeight * 5 + 4)
+        : pixelsToChartScale(paperHeight, 4);
+
+      _.each(percentileTickAnnotations, (tick, tickIndex) => {
+        // Create legend range and update tick position to be adjacent to the legend
+        const showTick = _.includes([0, 2, 4], tickIndex);
+        const isTarget = tickIndex === 2;
+        const yPos = tickIndex * legendRangeHeight;
+
+        legend.push({
+          type: 'rect',
+          x0: 0,
+          x1: legendRangeWidth,
+          y0: yPos,
+          y1: yPos + legendRangeHeight,
+          line: { width: 0 },
+          fillcolor: colors.ambulatoryGlucoseProfile.interQuartile[tick.name],
+          xanchor: 1 + legendXOffset,
+          xref: 'paper',
+          xsizemode: 'pixel',
+          yanchor: 0 + legendYOffset,
+          yref: 'paper',
+          ysizemode: 'pixel',
+        });
+
+        if (isTarget) {
+          legend.push({
+            type: 'line',
+            x0: 0,
+            x1: legendRangeWidth,
+            y0: yPos + legendRangeHeight / 2,
+            y1: yPos + legendRangeHeight / 2,
+            line: {
+              color: colors.ambulatoryGlucoseProfile.median.target,
+              width: 3,
+            },
+            xanchor: 1 + legendXOffset,
+            xref: 'paper',
+            xsizemode: 'pixel',
+            yanchor: 0 + legendYOffset,
+            yref: 'paper',
+            ysizemode: 'pixel',
+          });
+        }
+
+        if (showTick) {
+          let tickYPosOffset = 0.5;
+          let tickTextIndex = tickIndex + 1;
+
+          if (tickIndex > 0) {
+            tickYPosOffset = (isTarget ? legendRangeHeight / 2 : legendRangeHeight - 0.5);
+            tickTextIndex = isTarget ? tickIndex : tickIndex - 1;
+          }
+
+          percentileTickLines.push({
+            type: 'line',
+            x0: 0,
+            x1: 5,
+            y0: yPos + tickYPosOffset,
+            y1: yPos + tickYPosOffset,
+            line: {
+              color: colors.line.ticks,
+              width: 1,
+            },
+            xanchor: 1 + pixelsToChartScale(paperWidth, legendRangeWidth) + legendXOffset,
+            xref: 'paper',
+            xsizemode: 'pixel',
+            yanchor: 0 + legendYOffset,
+            yref: 'paper',
+            ysizemode: 'pixel',
+          });
+
+          percentileTickAnnotations.push(createAnnotation({
+            align: 'left',
+            font: {
+              color: isTarget ? colors.black : colors.text.ticks.percentile,
+              size: fontSizes.ambulatoryGlucoseProfile.percentileTicks,
+            },
+            name: bgRangeKeys[tickIndex],
+            text: boldText(percentileLabels[tickTextIndex]),
+            xanchor: 'left',
+            xref: 'paper',
+            xshift: 5,
+            x: 1 + pixelsToChartScale(paperWidth, legendRangeWidth) + legendXOffset,
+            y: pixelsToChartScale(paperHeight, yPos + tickYPosOffset),
+            yanchor: 'middle',
+            yref: 'paper',
+            yshift: chartScaleToPixels(paperHeight, legendYOffset),
+          }));
+        }
+      });
+    }
 
     let targetReadings = [];
     let lowReadings = [];
@@ -1208,13 +1316,14 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       shapes: [
         ...bgGridLines,
         ...bgTargetMarkers,
-        ...percentileTickLines,
         ...targetReadings,
         ...lowReadings,
         ...veryLowReadings,
         ...highReadings,
         ...veryHighReadings,
         ...bgmMedian,
+        ...percentileTickLines,
+        ...legend,
       ],
     };
 
