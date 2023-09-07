@@ -155,7 +155,13 @@ class AGPPrintView extends PrintView {
     }
 
     // Add section titles, subtitles, and descriptions
-    if (section.text?.title) {
+    let titleText = section.text?.title;
+
+    if (!section.sufficientData && section.text?.insufficientDataTitle) {
+      titleText = section.text.insufficientDataTitle;
+    }
+
+    if (titleText) {
       const titlePaddingX = 8;
       const titleXPos = section.x + titlePaddingX;
       const titleYPos = section.y + 1 + ((AGP_SECTION_HEADER_HEIGHT - this.doc.currentLineHeight()) / 2);
@@ -164,10 +170,10 @@ class AGPPrintView extends PrintView {
       this.doc.font(this.boldFont)
         .fontSize(fontSizes.section.title);
 
-      this.doc.text(section.text.title, titleXPos, titleYPos);
+      this.doc.text(titleText, titleXPos, titleYPos);
 
       if (section.text?.subtitle) {
-        const subtitleXPos = titleXPos + this.doc.widthOfString(section.text.title) + (this.dpi * 0.4);
+        const subtitleXPos = titleXPos + this.doc.widthOfString(titleText) + (this.dpi * 0.4);
 
         this.setFill(colors.text.section.subtitle);
 
@@ -452,7 +458,7 @@ class AGPPrintView extends PrintView {
     const section = this.sections.ambulatoryGlucoseProfile;
     this.renderSectionContainer(section);
 
-    if (section.sufficientData) {
+    if (section.sufficientData || this.bgSource === BGM_DATA_KEY) {
       // Set chart plot within section borders
       const chartAreaX = section.x + 1;
       const chartAreaY = section.y + 1 + this.dpi * 0.5;

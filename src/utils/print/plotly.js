@@ -3,7 +3,7 @@ import moment from 'moment-timezone';
 
 import { getStatDefinition } from '../stat';
 import { getTimezoneFromTimePrefs } from '../datetime';
-import { CGM_DATA_KEY } from '../constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY } from '../constants';
 
 import {
   generateAmbulatoryGlucoseProfileFigure,
@@ -42,7 +42,7 @@ export async function generateAGPFigureDefinitions(data) {
   }
 
   // Generate ambulatoryGlucoseProfile figure
-  if (sections.ambulatoryGlucoseProfile.sufficientData) {
+  if (sections.ambulatoryGlucoseProfile.sufficientData || bgSource === BGM_DATA_KEY) {
     const bgData = data?.data?.current?.data?.[bgSource] || [];
     svgDataURLS.ambulatoryGlucoseProfile = generateAmbulatoryGlucoseProfileFigure(sections.ambulatoryGlucoseProfile, bgData, data.bgPrefs, bgSource);
   }

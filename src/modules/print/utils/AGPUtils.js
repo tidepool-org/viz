@@ -129,13 +129,13 @@ export const calculateCGMDataSufficiency = (data = {}) => {
 };
 
 export const calculateBGMDataSufficiency = (data = {}) => {
+  const totalReadings = data.data?.current?.data?.smbg?.length || 0;
+
   const sufficiencyBySection = {
-    // >30 = modal day bgm values graph - only readings
-    // min 3 for median bin, min 5 for quartile bin
-    ambulatoryGlucoseProfile: true,
-    dailyGlucoseProfiles: true,
-    glucoseMetrics: true,
-    percentInRanges: true,
+    ambulatoryGlucoseProfile: totalReadings > 30,
+    dailyGlucoseProfiles: totalReadings > 0,
+    glucoseMetrics: totalReadings > 0,
+    percentInRanges: totalReadings > 0,
   };
 
   return sufficiencyBySection;
@@ -702,7 +702,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
-  if (section.sufficientData) {
+  if (section.sufficientData || bgSource === BGM_DATA_KEY) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
     const chartData = mungeBGDataBins(bgSource, ONE_HR, bgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
 
@@ -999,94 +999,98 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
           },
         });
       } else if (bgSource === BGM_DATA_KEY) {
-        _.each(smoothedChartData, (bin, i) => {
-          const segmentData = [smoothedChartData[i - 1], bin];
+        if (section.sufficientData) {
+          _.each(smoothedChartData, (bin, i) => {
+            const segmentData = [smoothedChartData[i - 1], bin];
 
-          const bandData = _.filter(
-            segmentData,
-            ({ thirdQuartile, firstQuartile } = {}) => _.isFinite(thirdQuartile) && _.isFinite(firstQuartile)
-          );
+            const bandData = _.filter(
+              segmentData,
+              ({ thirdQuartile, firstQuartile } = {}) => _.isFinite(thirdQuartile) && _.isFinite(firstQuartile)
+            );
 
-          if (bandData.length === 2) {
-            data.push(quantileSegment('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index, bandData));
-          }
-
-          const medianData = _.filter(
-            segmentData,
-            ({ median } = {}) => _.isFinite(median)
-          );
-
-          const isLastDrawableSegment = i === smoothedChartData.length - 1;
-
-          // Show legend if the interquartile ranges don't extend to the chart edge
-          if (isLastDrawableSegment && bandData.length < 2) {
-            const medianTickYPos = (segmentData[0].median + segmentData[1].median) / 2;
-            showLegend = medianTickYPos > yClamp / 2 ? 'bottom' : 'top';
-          }
-
-          if (medianData.length === 2) {
-            const medianWidth = 3;
-            const isFirstDrawableSegment = i === 1;
-
-            let x0 = medianData[0].msX / MS_IN_DAY;
-            let x1 = medianData[1].msX / MS_IN_DAY;
-            let y0 = medianData[0].median;
-            let y1 = medianData[1].median;
-
-            if (isFirstDrawableSegment) {
-              x0 = 0;
-              y0 = y1 - ((y1 - y0) / 2);
+            if (bandData.length === 2) {
+              data.push(quantileSegment('thirdQuartile', 'firstQuartile', 'interQuartile', bgRange, index, bandData));
             }
 
-            if (isLastDrawableSegment) {
-              x1 = 1;
-              y1 = y1 - ((y1 - y0) / 2);
-            }
-
-            bgmMedian.push({
-              type: 'line',
-              x0,
-              x1,
-              y0,
-              y1,
-              line: {
-                color: colors.ambulatoryGlucoseProfile.median[bgRange],
-                width: medianWidth,
-              },
-              xref: 'paper',
-              xsizemode: 'scaled',
-              yref: index === 0 ? 'y' : `y${index + 1}`,
-              ysizemode: 'scaled',
-            });
-
-            const lineEndRadius = medianWidth / 2;
-            const rx = pixelsToChartScale(paperWidth, lineEndRadius);
-            const ry = pixelsToChartScale(paperHeight, lineEndRadius) * yClamp;
-
-            // add circles at line end to smooth out any sharp gaps between interconnected segments
-            const previousSegmentData = [smoothedChartData[i - 2], smoothedChartData[i - 1]];
-
-            if (_.filter(
-              previousSegmentData,
+            const medianData = _.filter(
+              segmentData,
               ({ median } = {}) => _.isFinite(median)
-            ).length === 2) {
-              const lineEnd = segmentData[0];
+            );
+
+            const isLastDrawableSegment = i === smoothedChartData.length - 1;
+
+            // Show legend if the interquartile ranges don't extend to the chart edge
+            if (isLastDrawableSegment && bandData.length < 2) {
+              const medianTickYPos = (segmentData[0].median + segmentData[1].median) / 2;
+              showLegend = medianTickYPos > yClamp / 2 ? 'bottom' : 'top';
+            }
+
+            if (medianData.length === 2) {
+              const medianWidth = 3;
+              const isFirstDrawableSegment = i === 1;
+
+              let x0 = medianData[0].msX / MS_IN_DAY;
+              let x1 = medianData[1].msX / MS_IN_DAY;
+              let y0 = medianData[0].median;
+              let y1 = medianData[1].median;
+
+              if (isFirstDrawableSegment) {
+                x0 = 0;
+                y0 = y1 - ((y1 - y0) / 2);
+              }
+
+              if (isLastDrawableSegment) {
+                x1 = 1;
+                y1 = y1 - ((y1 - y0) / 2);
+              }
+
               bgmMedian.push({
-                type: 'circle',
-                x0: lineEnd.msX / MS_IN_DAY - rx,
-                x1: lineEnd.msX / MS_IN_DAY + rx,
-                y0: lineEnd.median - ry,
-                y1: lineEnd.median + ry,
-                line: { width: 0 },
-                fillcolor: colors.ambulatoryGlucoseProfile.median[bgRange],
+                type: 'line',
+                x0,
+                x1,
+                y0,
+                y1,
+                line: {
+                  color: colors.ambulatoryGlucoseProfile.median[bgRange],
+                  width: medianWidth,
+                },
                 xref: 'paper',
                 xsizemode: 'scaled',
                 yref: index === 0 ? 'y' : `y${index + 1}`,
                 ysizemode: 'scaled',
               });
+
+              const lineEndRadius = medianWidth / 2;
+              const rx = pixelsToChartScale(paperWidth, lineEndRadius);
+              const ry = pixelsToChartScale(paperHeight, lineEndRadius) * yClamp;
+
+              // add circles at line end to smooth out any sharp gaps between interconnected segments
+              const previousSegmentData = [smoothedChartData[i - 2], smoothedChartData[i - 1]];
+
+              if (_.filter(
+                previousSegmentData,
+                ({ median } = {}) => _.isFinite(median)
+              ).length === 2) {
+                const lineEnd = segmentData[0];
+                bgmMedian.push({
+                  type: 'circle',
+                  x0: lineEnd.msX / MS_IN_DAY - rx,
+                  x1: lineEnd.msX / MS_IN_DAY + rx,
+                  y0: lineEnd.median - ry,
+                  y1: lineEnd.median + ry,
+                  line: { width: 0 },
+                  fillcolor: colors.ambulatoryGlucoseProfile.median[bgRange],
+                  xref: 'paper',
+                  xsizemode: 'scaled',
+                  yref: index === 0 ? 'y' : `y${index + 1}`,
+                  ysizemode: 'scaled',
+                });
+              }
             }
-          }
-        });
+          });
+        } else {
+          // No AGP data to plot, but need to add dummy datums so that the readings will plot
+        }
       }
 
       const yAxis = {
@@ -1334,7 +1338,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
     const figure = {
       data: [
         ...data,
+        // Dummy data to ensure that all axes render (plotly will not render axes lines if empty)
         { visible: false, xaxis: 'x2' },
+        ..._.map(yAxes, (axis, i) => ({ visible: false, yaxis: i === 0 ? 'y' : `y${i + 1}` })),
       ],
       layout,
     };
@@ -1400,8 +1406,8 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
           width: 1,
         },
         type: 'line',
-        x0: isClamp || isZero ? -1 : 0, // fills an empty pixel cap on top grid line
-        x1: isClamp || isZero ? paperWidth + 1 : paperWidth, // fills an empty pixel cap on top grid line
+        x0: isClamp || isZero ? -1 : 0, // fills an empty pixel gap on top grid line
+        x1: isClamp || isZero ? paperWidth + 1 : paperWidth, // fills an empty pixel gap on top grid line
         xref: 'paper',
         xanchor: 0,
         xsizemode: 'pixel',
@@ -1643,7 +1649,11 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
     };
 
     const figure = {
-      data,
+      data: [
+        ...data,
+        // Dummy data to ensure that all axes render (plotly will not render axes lines if empty)
+        ..._.map(yAxes, (axis, i) => ({ visible: false, yaxis: i === 0 ? 'y' : `y${i + 1}` })),
+      ],
       layout,
     };
 
