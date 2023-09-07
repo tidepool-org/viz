@@ -892,7 +892,10 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       if (firstSmoothedDatum[key] && lastSmoothedDatum[key]) {
         return (firstSmoothedDatum[key] + lastSmoothedDatum[key]) / 2;
       }
-      return firstSmoothedDatum[key] || lastSmoothedDatum[key];
+
+      return bgSource === CGM_DATA_KEY
+        ? firstSmoothedDatum[key] || lastSmoothedDatum[key]
+        : undefined;
     });
 
     const percentileLabels = ['5%', '25%', '50%', '75%', '95%'];
@@ -916,7 +919,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       },
       name: bgRangeKeys[index],
       text: boldText(percentileLabels[index]),
-      visible: tick / yClamp <= 1,
+      visible: _.isFinite(tick) && tick / yClamp <= 1,
       y: tick / yClamp,
       yanchor: 'middle',
       yref: 'paper',
@@ -933,7 +936,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
         width: 1,
       },
       type: 'line',
-      visible: tick / yClamp <= 1,
+      visible: _.isFinite(tick) && tick / yClamp <= 1,
       x0: paperWidth,
       x1: paperWidth + 5,
       xref: 'paper',
@@ -1017,7 +1020,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
           // Show legend if the interquartile ranges don't extend to the chart edge
           if (isLastDrawableSegment && bandData.length < 2) {
-            showLegend = segmentData[0].median > yClamp / 2 ? 'bottom' : 'top';
+            showLegend = segmentData[1].median > yClamp / 2 ? 'bottom' : 'top';
           }
 
           if (medianData.length === 2) {
