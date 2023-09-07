@@ -10,6 +10,7 @@ import {
   AGP_SECTION_DESCRIPTION_HEIGHT,
   AGP_SECTION_HEADER_HEIGHT,
   AGP_TIR_MIN_HEIGHT,
+  AGP_TIR_MIN_TARGET_HEIGHT,
   AGP_UPPER_QUANTILE,
   colors,
   fontSizes,
@@ -245,7 +246,8 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
 
     const chartData = _.reduce(statDatums, (res, datum, i) => {
       const value = _.toNumber(datum.value) / statTotal * 1;
-      const renderedValue = _.max([value, AGP_TIR_MIN_HEIGHT / 100]);
+      const minHeight = datum.id === 'target' ? AGP_TIR_MIN_TARGET_HEIGHT : AGP_TIR_MIN_HEIGHT;
+      const renderedValue = _.max([value, minHeight / 100]);
       res.rawById[datum.id] = value;
       res.raw.push(value);
       res.rendered.push(renderedValue);
@@ -319,8 +321,8 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       // Only a single Ypos is passed for the target bracket
       // We need to ensure it's not too close to the range enxtents to avoid potential crowding
       const targetBracketAllowedYRange = [
-        yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5),
-        1 - (yScale(AGP_TIR_MIN_HEIGHT) * 3 + yScale(barSeparatorPixelWidth * 5)),
+        yScale(AGP_TIR_MIN_TARGET_HEIGHT),
+        1 - (yScale(AGP_TIR_MIN_TARGET_HEIGHT)),
       ];
 
       if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
