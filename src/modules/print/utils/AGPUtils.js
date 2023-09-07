@@ -1020,7 +1020,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
           // Show legend if the interquartile ranges don't extend to the chart edge
           if (isLastDrawableSegment && bandData.length < 2) {
-            showLegend = segmentData[1].median > yClamp / 2 ? 'bottom' : 'top';
+            const medianTickYPos = (segmentData[0].median + segmentData[1].median) / 2;
+            showLegend = medianTickYPos > yClamp / 2 ? 'bottom' : 'top';
           }
 
           if (medianData.length === 2) {
