@@ -33,7 +33,7 @@ async function openPDF(dataUtil, { patient }, query, bgSource) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const stream = doc.pipe(blobStream());
   const data = dataUtil.query(query);
-  const agpReport = bgSource === BGM_DATA_KEY ? 'agpBGM' : 'agpCGM';
+  const reportType = bgSource === BGM_DATA_KEY ? 'agpBGM' : 'agpCGM';
 
   const opts = {
     bgPrefs: query.bgPrefs,
@@ -56,9 +56,9 @@ async function openPDF(dataUtil, { patient }, query, bgSource) {
   });
 
   const processedEntries = await Promise.all(promises);
-  opts.svgDataURLS = _.fromPairs(processedEntries);
+  opts.svgDataURLS = { [reportType]: _.fromPairs(processedEntries) };
 
-  await createPrintView(agpReport, data, opts, doc).render();
+  await createPrintView(reportType, data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
   doc.end();

@@ -78,7 +78,7 @@ export function createPrintView(type, data, opts, doc) {
     margins: constants.MARGINS,
     patient,
     smallFontSize: constants.SMALL_FONT_SIZE,
-    svgDataURLS,
+    svgDataURLS: svgDataURLS?.[type],
     width: constants.WIDTH,
   };
 
@@ -118,11 +118,11 @@ export function createPrintView(type, data, opts, doc) {
       });
       break;
 
-    case 'agpCGM':
+    case 'agpBGM':
       Renderer = utils.AGPPrintView;
       break;
 
-    case 'agpBGM':
+    case 'agpCGM':
       Renderer = utils.AGPPrintView;
       break;
 
@@ -148,7 +148,8 @@ export function createPrintPDFPackage(data, opts) {
     daily = {},
     bgLog = {},
     settings = {},
-    agp = {},
+    agpCGM = {},
+    agpBGM = {},
   } = opts;
 
   if (_.get(patient, 'preferences.displayLanguageCode')) {
@@ -172,11 +173,12 @@ export function createPrintPDFPackage(data, opts) {
     if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
     if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
     if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
-    if (!agp.disabled) await createPrintView('agp', data.agp, pdfOpts, doc).render();
+    if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
+    if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
 
     if (
       _.every(
-        [basics, daily, bgLog, settings, agp],
+        [basics, daily, bgLog, settings, agpCGM, agpBGM],
         (section) => section.disabled
       )
     ) {
