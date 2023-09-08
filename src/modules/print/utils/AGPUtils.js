@@ -457,6 +457,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       y: rangePosY[range],
       yanchor: 'bottom',
       yref: 'paper',
+      yshift: -1,
     }));
 
     const rangeValuesOrderedKeys = [
@@ -478,6 +479,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       y: rangePosY[range],
       yanchor: 'bottom',
       yref: 'paper',
+      yshift: -1,
     }));
 
     const rangeSummaryPosY = {
@@ -510,7 +512,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       y: rangeSummaryPosY[range],
       yanchor: 'bottom',
       yref: 'paper',
-      yshift: -1,
+      yshift: -2,
     }));
 
     const goalsPos = {
@@ -519,35 +521,35 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         xanchor: 'left',
         xshift: -1,
         y: bracketPos.low.posY2,
-        yshift: -12,
+        yshift: -11,
       },
       lowCombined: {
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
         y: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
-        yshift: 1,
+        yshift: 0,
       },
       target: {
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
         y: bracketPos.target.posY,
-        yshift: 1,
+        yshift: 0,
       },
       highCombined: {
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
         y: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
-        yshift: 1,
+        yshift: 0,
       },
       veryHigh: {
         x: bracketXExtents[0],
         xanchor: 'left',
         xshift: -1,
         y: bracketPos.high.posY,
-        yshift: 11,
+        yshift: 9,
       },
     };
 
@@ -573,9 +575,10 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
 
     const subLabelsPos = {
       TIRtarget: {
-        x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
-        xanchor: 'left',
-        xshift: -20,
+        x: xScale(paperWidth),
+        xanchor: 'right',
+        xref: 'paper',
+        xshift: plotMarginX - 15,
         y: bracketPos.target.posY,
         yshift: -12,
       },
