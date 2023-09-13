@@ -73,6 +73,7 @@ export class DataUtil {
     this.buildDimensions();
     this.buildFilters();
     this.buildSorts();
+    this.initFilterChangeHandler();
     this.endTimer('init total');
   };
 
@@ -364,8 +365,6 @@ export class DataUtil {
 
     const { timezoneName } = this.timePrefs || {};
     const normalizeAllFields = fields[0] === '*';
-
-    if (d.deviceId && !this.matchedDevices[d.deviceId]) this.matchedDevices[d.deviceId] = true;
 
     // Normal time post-processing
     this.normalizeDatumOutTime(d, fields);
@@ -687,6 +686,25 @@ export class DataUtil {
     };
     this.endTimer('buildSorts');
   };
+
+  initFilterChangeHandler = () => {
+    this.data.onChange(eventType => {
+      if (eventType === 'filtered' && this.matchDevices) {
+        if (_.includes([
+          'basal',
+          'bolus',
+          'smbg',
+          'cbg',
+          'wizard',
+          'food',
+        ], this.dimension.byType.currentFilter())) {
+          _.each(this.dimension.byDeviceId.top(Infinity), ({ deviceId }) => {
+            if (deviceId && !this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = true;
+          });
+        }
+      }
+    });
+  }
 
   clearFilters = () => {
     this.startTimer('clearFilters');
@@ -1117,6 +1135,16 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
+    // Clear matchedDevices metaData if the current endpoints change
+    const activeDaysChanged = activeDays && !_.isEqual(activeDays, this.activeDays);
+    const bgSourceChanged = bgSource !== this.bgSources.current;
+    const endpointsChanged = endpoints && !_.isEqual(endpoints, this.endpoints?.current?.range);
+    const excludedDevicesChanged = excludedDevices && !_.isEqual(excludedDevices, this.excludedDevices);
+
+    if (activeDaysChanged || bgSourceChanged || endpointsChanged || excludedDevicesChanged) {
+      this.clearMatchedDevices();
+    }
+
     this.setReturnRawData(raw);
     this.setBgSources(bgSource);
     this.setTypes(types);
@@ -1127,13 +1155,13 @@ export class DataUtil {
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
     this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
-    this.clearMatchedDevices();
 
     const data = {};
 
     _.each(this.endpoints, (rangeEndpoints, rangeKey) => {
       this.activeRange = rangeKey;
       this.activeEndpoints = rangeEndpoints;
+      this.matchDevices = false;
       data[rangeKey] = {};
 
       // Filter the data set by date range
@@ -1146,6 +1174,8 @@ export class DataUtil {
       this.filter.byDeviceIds(this.excludedDevices);
 
       if (rangeKey === 'current') {
+        this.matchDevices = true;
+
         // Generate the aggregations for current range
         if (aggregationsByDate) {
           data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
@@ -1192,8 +1222,9 @@ export class DataUtil {
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    // Always reset `returnRawData` to `false` after each query
+    // Always reset `returnRawData` and `matchDevices` to `false` after each query
     this.setReturnRawData(false);
+    this.matchDevices = false;
 
     this.log('Result', result);
 
