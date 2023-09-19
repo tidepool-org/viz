@@ -43,6 +43,7 @@ import { DEFAULT_BG_BOUNDS } from './utils/constants';
 import {
   formatDateRange,
   getLocalizedCeiling,
+  getOffset,
   getTimezoneFromTimePrefs,
 } from './utils/datetime';
 
@@ -59,7 +60,7 @@ import {
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
 import TextUtil from './utils/text/TextUtil';
-import { generateAGPSVGDataURLS } from './utils/print/plotly';
+import { generateAGPFigureDefinitions } from './utils/print/plotly';
 
 import {
   basicsText,
@@ -98,7 +99,7 @@ const containers = {
 
 const utils = {
   agp: {
-    generateAGPSVGDataURLS,
+    generateAGPFigureDefinitions,
   },
   basal: {
     getGroupDurations,
@@ -117,6 +118,7 @@ const utils = {
     findBasicsStart,
     formatDateRange,
     getLocalizedCeiling,
+    getOffset,
     getTimezoneFromTimePrefs,
   },
   stat: {

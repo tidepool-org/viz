@@ -1,6 +1,7 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import Plotly from 'plotly.js-basic-dist-min';
 
 import {
   withKnobs,
@@ -14,7 +15,7 @@ import moment from 'moment';
 import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
-import { generateAGPSVGDataURLS } from '../../src/utils/print/plotly';
+import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
 
 import PrintView from '../../src/modules/print/PrintView';
 
@@ -45,8 +46,24 @@ async function openPDF(dataUtil, { patient }, query) {
     bgPrefs: queries.agp.bgPrefs,
     timePrefs: queries.agp.timePrefs,
     patient,
-    svgDataURLS: await generateAGPSVGDataURLS(data),
   };
+
+  const images = await generateAGPFigureDefinitions(data);
+
+  const promises = _.map(images, async (image, key) => {
+    if (_.isArray(image)) {
+      const processedArray = await Promise.all(
+        _.map(image, async (img) => Plotly.toImage(img, { format: 'svg' }))
+      );
+      return [key, processedArray];
+    } else {
+      const processedValue = await Plotly.toImage(image, { format: 'svg' });
+      return [key, processedValue];
+    }
+  });
+
+  const processedEntries = await Promise.all(promises);
+  opts.svgDataURLS = _.fromPairs(processedEntries);
 
   await createPrintView('agp', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
