@@ -112,6 +112,7 @@ const entry = {
   index: [path.join(__dirname, '/src/index')],
   data: [path.join(__dirname, '/src/modules/data/index')],
   print: [path.join(__dirname, '/src/modules/print/index')],
+  getAGPFigures: [path.join(__dirname, '/src/utils/print/plotly')],
 };
 
 const output = {

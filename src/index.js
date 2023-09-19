@@ -60,7 +60,7 @@ import {
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
 import TextUtil from './utils/text/TextUtil';
-import { generateAGPSVGDataURLS } from './utils/print/plotly';
+import { generateAGPFigureDefinitions } from './utils/print/plotly';
 
 import {
   basicsText,
@@ -99,7 +99,7 @@ const containers = {
 
 const utils = {
   agp: {
-    generateAGPSVGDataURLS,
+    generateAGPFigureDefinitions,
   },
   basal: {
     getGroupDurations,

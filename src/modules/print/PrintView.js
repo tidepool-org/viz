@@ -974,9 +974,19 @@ class PrintView {
     }
   }
 
+  static renderNoData(doc) {
+    doc.addPage();
+    doc.text('Insufficient data for patient to generate any report.');
+  }
+
   renderSVGImage(svgDataURL = '', x, y, width, height) {
-    const svgDataURLArr = svgDataURL.split(',');
-    const rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
+    let rawChartSVG;
+    if (svgDataURL.startsWith('<svg')) {
+      rawChartSVG = svgDataURL;
+    } else {
+      const svgDataURLArr = svgDataURL.split(',');
+      rawChartSVG = decodeURIComponent(svgDataURLArr[1]);
+    }
     this.addSVG(rawChartSVG, x, y, { assumePt: true, width, height });
   }
 
