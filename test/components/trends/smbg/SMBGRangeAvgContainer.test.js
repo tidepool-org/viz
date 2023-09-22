@@ -72,6 +72,9 @@ describe('SMBGRangeAvgContainer', () => {
             msX: 10800000,
             msFrom: 0,
             msTo: 21600000,
+            firstQuartile: undefined,
+            median: undefined,
+            thirdQuartile: undefined,
           }, {
             id: '32400000',
             max: undefined,
@@ -80,6 +83,9 @@ describe('SMBGRangeAvgContainer', () => {
             msX: 32400000,
             msFrom: 21600000,
             msTo: 43200000,
+            firstQuartile: undefined,
+            median: undefined,
+            thirdQuartile: undefined,
           }, {
             id: '54000000',
             max: undefined,
@@ -88,6 +94,9 @@ describe('SMBGRangeAvgContainer', () => {
             msX: 54000000,
             msFrom: 43200000,
             msTo: 64800000,
+            firstQuartile: undefined,
+            median: undefined,
+            thirdQuartile: undefined,
           }, {
             id: '75600000',
             max: undefined,
@@ -96,6 +105,9 @@ describe('SMBGRangeAvgContainer', () => {
             msX: 75600000,
             msFrom: 64800000,
             msTo: 86400000,
+            firstQuartile: undefined,
+            median: undefined,
+            thirdQuartile: undefined,
           }],
       });
     });

@@ -819,6 +819,9 @@ describe('blood glucose utilities', () => {
         msX: bin,
         msFrom: 0,
         msTo: bin * 2,
+        firstQuartile: undefined,
+        median: undefined,
+        thirdQuartile: undefined,
       });
     });
 
@@ -887,11 +890,29 @@ describe('blood glucose utilities', () => {
       expect(mungedData).to.be.an('array').and.to.have.lengthOf(24);
 
       expect(_.first(mungedData)).to.eql({
-        id: '1800000', min: 101, mean: 102, max: 103, msX: 1800000, msFrom: 0, msTo: 3600000,
+        id: '1800000',
+        min: 101,
+        mean: 102,
+        max: 103,
+        msX: 1800000,
+        msFrom: 0,
+        msTo: 3600000,
+        firstQuartile: undefined,
+        median: 102,
+        thirdQuartile: undefined,
       });
 
       expect(_.last(mungedData)).to.eql({
-        id: '84600000', min: 100, mean: 140, max: 200, msX: 84600000, msFrom: 82800000, msTo: 86400000,
+        id: '84600000',
+        min: 100,
+        mean: 140,
+        max: 200,
+        msX: 84600000,
+        msFrom: 82800000,
+        msTo: 86400000,
+        firstQuartile: undefined,
+        median: 120,
+        thirdQuartile: undefined,
       });
     });
 

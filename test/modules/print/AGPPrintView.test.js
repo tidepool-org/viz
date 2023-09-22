@@ -155,7 +155,7 @@ describe('AGPPrintView', () => {
 
     it('should render the header and subheader', () => {
       sinon.assert.calledWithMatch(Renderer.doc.text, 'AGP Report:');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Continuous glucose monitoring');
+      sinon.assert.calledWithMatch(Renderer.doc.text, 'Continuous Glucose Monitoring');
     });
   });
 

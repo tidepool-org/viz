@@ -1298,11 +1298,13 @@ describe('stat', () => {
 
     it('should format and return `readingsInRange` data', () => {
       const data = {
-        veryLow: 10,
-        low: 20,
-        target: 30,
-        high: 40,
-        veryHigh: 50,
+        counts: {
+          veryLow: 10,
+          low: 20,
+          target: 30,
+          high: 40,
+          veryHigh: 50,
+        },
       };
 
       const statData = stat.getStatData(data, commonStats.readingsInRange, opts);
@@ -1344,6 +1346,8 @@ describe('stat', () => {
 
       expect(statData.dataPaths).to.eql({
         summary: ['data', 2],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
       });
     });
 
@@ -1779,7 +1783,7 @@ describe('stat', () => {
     });
 
     it('should define the `readingsInRange` stat', () => {
-      const def = stat.getStatDefinition(data, commonStats.readingsInRange, opts);
+      const def = stat.getStatDefinition({ counts: data }, commonStats.readingsInRange, opts);
       expect(def).to.include.all.keys(commonStatProperties);
       expect(def.id).to.equal(commonStats.readingsInRange);
       expect(def.type).to.equal(statTypes.barHorizontal);
@@ -1788,6 +1792,7 @@ describe('stat', () => {
         summary: statFormats.percentage,
         tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
+        count: statFormats.bgCount,
       });
       expect(def.alwaysShowTooltips).to.be.true;
     });

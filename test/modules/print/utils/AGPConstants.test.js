@@ -1,7 +1,7 @@
 import * as AGPConstants from '../../../../src/modules/print/utils/AGPConstants';
 import { DPI } from '../../../../src/modules/print/utils/constants';
 
-describe.only('AGPConstants', () => {
+describe('AGPConstants', () => {
   it('should define `AGP_BG_CLAMP_MGDL`', () => {
     expect(AGPConstants.AGP_BG_CLAMP_MGDL).to.equal(350);
   });

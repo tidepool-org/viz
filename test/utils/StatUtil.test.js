@@ -660,24 +660,36 @@ describe('StatUtil', () => {
     it('should return the readings in range data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
       expect(statUtil.getReadingsInRangeData()).to.eql({
-        veryLow: 0,
-        low: 1,
-        target: 2,
-        high: 1,
-        veryHigh: 1,
-        total: 5,
+        counts: {
+          veryLow: 0,
+          low: 1,
+          target: 2,
+          high: 1,
+          veryHigh: 1,
+          total: 5,
+        },
       });
     });
 
     it('should return the avg daily readings in range data when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       expect(statUtil.getReadingsInRangeData()).to.eql({
-        veryLow: 0,
-        low: 0.5,
-        target: 1,
-        high: 0.5,
-        veryHigh: 0.5,
-        total: 5,
+        counts: {
+          veryLow: 0,
+          low: 1,
+          target: 2,
+          high: 1,
+          veryHigh: 1,
+          total: 5,
+        },
+        dailyAverages: {
+          veryLow: 0,
+          low: 0.5,
+          target: 1,
+          high: 0.5,
+          veryHigh: 0.5,
+          total: 5,
+        },
       });
     });
   });
