@@ -133,7 +133,7 @@ export const calculateBGMDataSufficiency = (data = {}) => {
   const totalReadings = data.data?.current?.data?.smbg?.length || 0;
 
   const sufficiencyBySection = {
-    ambulatoryGlucoseProfile: totalReadings > 30,
+    ambulatoryGlucoseProfile: totalReadings >= 30,
     dailyGlucoseProfiles: totalReadings > 0,
     glucoseMetrics: totalReadings > 0,
     percentInRanges: totalReadings > 0,

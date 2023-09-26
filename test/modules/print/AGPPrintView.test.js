@@ -4,7 +4,7 @@ import * as patients from '../../../data/patient/profiles';
 import * as settings from '../../../data/patient/settings';
 import _ from 'lodash';
 
-import { agpData as data } from '../../../data/print/fixtures';
+import { createAGPData } from '../../../data/print/fixtures';
 
 import {
   DEFAULT_FONT_SIZE,
@@ -16,6 +16,7 @@ import {
 } from '../../../src/modules/print/utils/constants';
 
 import Doc from '../../helpers/pdfDoc';
+import { BGM_DATA_KEY, CGM_DATA_KEY } from '../../../src/utils/constants';
 
 describe('AGPPrintView', () => {
   let Renderer;
@@ -53,13 +54,16 @@ describe('AGPPrintView', () => {
     },
   };
 
-  const createRenderer = (renderData = data, renderOpts = opts) => (
+  const cbgAGPData = createAGPData(CGM_DATA_KEY);
+  const smbgAGPData = createAGPData(BGM_DATA_KEY);
+
+  const createRenderer = (renderData = cbgAGPData, renderOpts = opts) => (
     new AGPPrintView(doc, renderData, renderOpts)
   );
 
   beforeEach(async () => {
     doc = new Doc({ margin: MARGIN });
-    Renderer = await createRenderer(data);
+    Renderer = await createRenderer(cbgAGPData);
   });
 
   describe('class constructor', () => {
@@ -149,13 +153,28 @@ describe('AGPPrintView', () => {
   });
 
   describe('renderHeader', () => {
-    beforeEach(() => {
-      Renderer.renderHeader();
+    context('CGM Report', () => {
+      beforeEach(() => {
+        Renderer = createRenderer(cbgAGPData);
+        Renderer.renderHeader();
+      });
+
+      it('should render the header and subheader', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'AGP Report:');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Continuous Glucose Monitoring');
+      });
     });
 
-    it('should render the header and subheader', () => {
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'AGP Report:');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Continuous Glucose Monitoring');
+    context('BGM Report', () => {
+      beforeEach(() => {
+        Renderer = createRenderer(smbgAGPData);
+        Renderer.renderHeader();
+      });
+
+      it('should render the header and subheader', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'AGP Report:');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Blood Glucose Monitoring');
+      });
     });
   });
 
@@ -195,7 +214,7 @@ describe('AGPPrintView', () => {
     const bordered = { bordered: true };
     const withTitle = { text: { title: 'Title' } };
     const withSubtitle = { text: { title: 'Title', subtitle: 'Subtitle' } };
-    const insufficientData = { sufficientData: false, text: { insufficientData: 'Insufficient Data' } };
+    const insufficientData = { sufficientData: false, text: { insufficientData: 'Insufficient Data', insufficientDataTitle: 'Insufficient Data Title' } };
     const withDescription = { text: { 'description': 'Description' } }; // eslint-disable-line quote-props
 
     it('should render the bordered section container', () => {
@@ -217,6 +236,11 @@ describe('AGPPrintView', () => {
     it('should render the insufficient data text', () => {
       Renderer.renderSectionContainer(insufficientData);
       sinon.assert.calledWithMatch(Renderer.doc.text, 'Insufficient Data');
+    });
+
+    it('should render the insufficient data title text', () => {
+      Renderer.renderSectionContainer(insufficientData);
+      sinon.assert.calledWithMatch(Renderer.doc.text, 'Insufficient Data Title');
     });
 
     it('should render the description text', () => {
@@ -265,7 +289,7 @@ describe('AGPPrintView', () => {
       const patient = _.cloneDeep(opts.patient);
       patient.profile.patient.mrn = '1234567890123456';
 
-      Renderer = new PrintView(doc, data, {
+      Renderer = new PrintView(doc, cbgAGPData, {
         ...opts,
         patient,
       });
@@ -285,61 +309,136 @@ describe('AGPPrintView', () => {
   });
 
   describe('renderGlucoseMetrics', () => {
-    let renderSectionContainerSpy;
+    context('CGM Report', () => {
+      let renderSectionContainerSpy;
+      beforeEach(() => {
+        Renderer = createRenderer(cbgAGPData);
+        renderSectionContainerSpy = sinon.spy(Renderer, 'renderSectionContainer');
+        Renderer.renderGlucoseMetrics();
+      });
 
-    beforeEach(() => {
-      renderSectionContainerSpy = sinon.spy(Renderer, 'renderSectionContainer');
-      Renderer.renderGlucoseMetrics();
-    });
+      afterEach(() => {
+        renderSectionContainerSpy.restore();
+      });
 
-    afterEach(() => {
-      renderSectionContainerSpy.restore();
-    });
-
-    it('should render the section container with appropriate args', () => {
-      sinon.assert.calledWithMatch(renderSectionContainerSpy, {
-        bordered: true,
-        height: sinon.match.number,
-        width: sinon.match.number,
-        x: sinon.match.number,
-        y: sinon.match.number,
-        sufficientData: true,
-        text: {
-          averageGlucose: {
-            goal: { mgdl: 'Goal: <154 mg/dL', mmoll: 'Goal: <8.6 mmol/L' },
-            label: 'Average Glucose',
+      it('should render the section container with appropriate args', () => {
+        sinon.assert.calledWithMatch(renderSectionContainerSpy, {
+          bordered: true,
+          height: sinon.match.number,
+          width: sinon.match.number,
+          x: sinon.match.number,
+          y: sinon.match.number,
+          sufficientData: true,
+          text: {
+            averageGlucose: {
+              goal: { mgdl: 'Goal: <154 mg/dL', mmoll: 'Goal: <8.6 mmol/L' },
+              label: 'Average Glucose',
+            },
+            coefficientOfVariation: {
+              goal: 'Goal: <=36%',
+              label: 'Glucose Variability',
+              subLabel: 'Defined as percent coefficient of variation',
+            },
+            glucoseManagementIndicator: { goal: 'Goal: <7%', label: 'Glucose Management Indicator (GMI)' },
+            title: 'Glucose metrics',
           },
-          coefficientOfVariation: {
-            goal: 'Goal: <=36%',
-            label: 'Glucose Variability',
-            subLabel: 'Defined as percent coefficient of variation',
-          },
-          glucoseManagementIndicator: { goal: 'Goal: <7%', label: 'Glucose Management Indicator (GMI)' },
-          title: 'Glucose metrics',
-        },
+        });
+      });
+
+      it('should render the average glucose', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Average Glucose');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '168');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'mg/dL');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <154 mg/dL');
+      });
+
+      it('should render the gmi', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Glucose Management Indicator (GMI)');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '7.3');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '%');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <7%');
+      });
+
+      it('should render the glucose variability', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Glucose Variability');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '39.8');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '%');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <=36%');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Defined as percent coefficient of variation');
       });
     });
 
-    it('should render the average glucose', () => {
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Average Glucose');
-      sinon.assert.calledWithMatch(Renderer.doc.text, '168');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'mg/dL');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <154 mg/dL');
-    });
+    context('BGM Report', () => {
+      let renderSectionContainerSpy;
+      beforeEach(() => {
+        Renderer = createRenderer(smbgAGPData);
+        renderSectionContainerSpy = sinon.spy(Renderer, 'renderSectionContainer');
+        Renderer.renderGlucoseMetrics();
+      });
 
-    it('should render the gmi', () => {
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Glucose Management Indicator (GMI)');
-      sinon.assert.calledWithMatch(Renderer.doc.text, '7.3');
-      sinon.assert.calledWithMatch(Renderer.doc.text, '%');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <7%');
-    });
+      afterEach(() => {
+        renderSectionContainerSpy.restore();
+      });
 
-    it('should render the glucose variability', () => {
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Glucose Variability');
-      sinon.assert.calledWithMatch(Renderer.doc.text, '39.8');
-      sinon.assert.calledWithMatch(Renderer.doc.text, '%');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <=36%');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Defined as percent coefficient of variation');
+      it('should render the section container with appropriate args', () => {
+        sinon.assert.calledWithMatch(renderSectionContainerSpy, {
+          bordered: true,
+          height: sinon.match.number,
+          width: sinon.match.number,
+          x: sinon.match.number,
+          y: sinon.match.number,
+          sufficientData: true,
+          text: {
+            title: 'BGM Statistics',
+            averageGlucose: {
+              label: 'Average Glucose',
+            },
+            bgExtents: {
+              label: 'Lowest/Highest Glucose',
+            },
+            coefficientOfVariation: {
+              label: 'Glucose Variability',
+              subLabel: 'Defined as percent coefficient of variation',
+              goal: 'Goal: <=36%',
+            },
+            dailyReadingsInRange: {
+              label: 'Average Readings/Day',
+            },
+            readingsInRange: {
+              label: 'Number of Readings',
+            },
+          },
+        });
+      });
+
+      it('should render the total number of readings', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Number of Readings');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '3797');
+      });
+
+      it('should render the average number of readings per day', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Average Readings/Day');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '271.2');
+      });
+
+      it('should render the average glucose', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Average Glucose');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '168');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'mg/dL');
+      });
+
+      it('should render the bg extents', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Lowest/Highest Glucose');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '52/238 mg/dL');
+      });
+
+      it('should render the glucose variability', () => {
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Glucose Variability');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '39.8');
+        sinon.assert.calledWithMatch(Renderer.doc.text, '%');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Goal: <=36%');
+        sinon.assert.calledWithMatch(Renderer.doc.text, 'Defined as percent coefficient of variation');
+      });
     });
   });
 

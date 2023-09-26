@@ -3,8 +3,11 @@ import * as AGPUtils from '../../../../src/modules/print/utils/AGPUtils';
 import { colors, AGP_FONT_FAMILY } from '../../../../src/modules/print/utils/AGPConstants';
 
 
-import { agpData as data } from '../../../../data/print/fixtures';
-import { CGM_DATA_KEY, MS_IN_MIN } from '../../../../src/utils/constants';
+import { createAGPData } from '../../../../data/print/fixtures';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MS_IN_MIN } from '../../../../src/utils/constants';
+
+const cbgAGPData = createAGPData(CGM_DATA_KEY);
+const smbgAGPData = createAGPData(BGM_DATA_KEY);
 
 describe('AGPUtils', () => {
   describe('boldText', () => {
@@ -70,11 +73,11 @@ describe('AGPUtils', () => {
   });
 
   describe('calculateCGMDataSufficiency', () => {
-    const lessThan24HrsData = _.cloneDeep(data);
+    const lessThan24HrsData = _.cloneDeep(cbgAGPData);
     lessThan24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
     lessThan24HrsData.data.current.stats.sensorUsage.count = 23;
 
-    const sensorUSage70Percent24HrsData = _.cloneDeep(data);
+    const sensorUSage70Percent24HrsData = _.cloneDeep(cbgAGPData);
     sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
     sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.count = 24;
     sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 70;
@@ -82,11 +85,11 @@ describe('AGPUtils', () => {
     const sensorUSage69Percent24HrsData = _.cloneDeep(sensorUSage70Percent24HrsData);
     sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
 
-    const top7DaysLessThan1HourDataEach = _.cloneDeep(data);
+    const top7DaysLessThan1HourDataEach = _.cloneDeep(cbgAGPData);
     top7DaysLessThan1HourDataEach.data.current.stats.bgExtents.bgDaysWorn = 7;
     top7DaysLessThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].sensorUsage.count = 0;
 
-    const top7DaysLessThan70PercentMeanUsage = _.cloneDeep(data);
+    const top7DaysLessThan70PercentMeanUsage = _.cloneDeep(cbgAGPData);
     delete top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate['2023-03-16'];
     _.each(top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate, (stats, date) => {
       const maxPossibleReadings = 288;
@@ -95,7 +98,7 @@ describe('AGPUtils', () => {
 
     context('fully sufficient data', () => {
       it('should return `true` for all sections ', () => {
-        expect(AGPUtils.calculateCGMDataSufficiency(data)).to.eql({
+        expect(AGPUtils.calculateCGMDataSufficiency(cbgAGPData)).to.eql({
           ambulatoryGlucoseProfile: true,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
@@ -156,9 +159,65 @@ describe('AGPUtils', () => {
     });
   });
 
+  describe('calculateBGMDataSufficiency', () => {
+    let bgData;
+
+    beforeEach(() => {
+      bgData = _.cloneDeep(smbgAGPData);
+    });
+
+    context('at least 30 readings', () => {
+      it('should return `true` for all sections ', () => {
+        bgData.data.current.data.smbg.length = 30;
+
+        expect(AGPUtils.calculateBGMDataSufficiency(bgData)).to.eql({
+          ambulatoryGlucoseProfile: true,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+    });
+
+    context('between 1 and 30 readings', () => {
+      it('should return `true` for all sections except ambulatoryGlucoseProfile', () => {
+        bgData.data.current.data.smbg.length = 29;
+
+        expect(AGPUtils.calculateBGMDataSufficiency(bgData)).to.eql({
+          ambulatoryGlucoseProfile: false,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+
+        bgData.data.current.data.smbg.length = 1;
+
+        expect(AGPUtils.calculateBGMDataSufficiency(bgData)).to.eql({
+          ambulatoryGlucoseProfile: false,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+    });
+
+    context('no readings', () => {
+      it('should return `false` for all sections ', () => {
+        bgData.data.current.data.smbg.length = 0;
+
+        expect(AGPUtils.calculateBGMDataSufficiency(bgData)).to.eql({
+          ambulatoryGlucoseProfile: false,
+          dailyGlucoseProfiles: false,
+          glucoseMetrics: false,
+          percentInRanges: false,
+        });
+      });
+    });
+  });
+
   describe('generateChartSections', () => {
     it('should generate the `percentInRanges` section metadata', () => {
-      expect(AGPUtils.generateChartSections(data, CGM_DATA_KEY).percentInRanges).to.be.an('object').and.have.keys([
+      expect(AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).percentInRanges).to.be.an('object').and.have.keys([
         'x',
         'y',
         'width',
@@ -171,7 +230,7 @@ describe('AGPUtils', () => {
     });
 
     it('should generate the `reportInfo` section metadata', () => {
-      expect(AGPUtils.generateChartSections(data, CGM_DATA_KEY).reportInfo).to.be.an('object').and.have.keys([
+      expect(AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).reportInfo).to.be.an('object').and.have.keys([
         'x',
         'y',
         'width',
@@ -182,7 +241,7 @@ describe('AGPUtils', () => {
     });
 
     it('should generate the `glucoseMetrics` section metadata', () => {
-      expect(AGPUtils.generateChartSections(data, CGM_DATA_KEY).glucoseMetrics).to.be.an('object').and.have.keys([
+      expect(AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).glucoseMetrics).to.be.an('object').and.have.keys([
         'x',
         'y',
         'width',
@@ -195,7 +254,7 @@ describe('AGPUtils', () => {
     });
 
     it('should generate the `ambulatoryGlucoseProfile` section metadata', () => {
-      expect(AGPUtils.generateChartSections(data, CGM_DATA_KEY).ambulatoryGlucoseProfile).to.be.an('object').and.have.keys([
+      expect(AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).ambulatoryGlucoseProfile).to.be.an('object').and.have.keys([
         'x',
         'y',
         'width',
@@ -208,7 +267,7 @@ describe('AGPUtils', () => {
     });
 
     it('should generate the `dailyGlucoseProfiles` section metadata', () => {
-      expect(AGPUtils.generateChartSections(data, CGM_DATA_KEY).dailyGlucoseProfiles).to.be.an('object').and.have.keys([
+      expect(AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).dailyGlucoseProfiles).to.be.an('object').and.have.keys([
         'x',
         'y',
         'width',
@@ -222,133 +281,235 @@ describe('AGPUtils', () => {
   });
 
   describe('generatePercentInRangesFigure', () => {
-    it('should return the time in ranges plotly figure if sufficient data is provided', () => {
-      const section = AGPUtils.generateChartSections(data, CGM_DATA_KEY).percentInRanges;
-      const stat = data.data.current.stats.timeInRange;
-      const bgPrefs = data.bgPrefs;
-      const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
-      expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
-      expect(figure.data).to.be.an('array');
+    context('CGM report', () => {
+      it('should return the time in ranges plotly figure if sufficient data is provided', () => {
+        const section = AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).percentInRanges;
+        const stat = cbgAGPData.data.current.stats.timeInRange;
+        const bgPrefs = cbgAGPData.bgPrefs;
+        const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
+        expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
+        expect(figure.data).to.be.an('array');
 
-      expect(figure.layout).to.be.an('object').and.have.keys([
-        'barmode',
-        'width',
-        'height',
-        'showlegend',
-        'margin',
-        'xaxis',
-        'yaxis',
-        'annotations',
-        'shapes',
-      ]);
+        expect(figure.layout).to.be.an('object').and.have.keys([
+          'barmode',
+          'width',
+          'height',
+          'showlegend',
+          'margin',
+          'xaxis',
+          'yaxis',
+          'annotations',
+          'shapes',
+        ]);
+      });
+
+      it('should return `null` if data provided is insufficient', () => {
+        const section = {
+          ...AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).percentInRanges,
+          sufficientData: false,
+        };
+
+        const stat = cbgAGPData.data.current.stats.timeInRange;
+        const bgPrefs = cbgAGPData.bgPrefs;
+        const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
+        expect(figure).to.be.null;
+      });
     });
 
-    it('should return `null` if data provided is insufficient', () => {
-      const section = {
-        ...AGPUtils.generateChartSections(data, CGM_DATA_KEY).percentInRanges,
-        sufficientData: false,
-      };
+    context('BGM report', () => {
+      it('should return the time in ranges plotly figure if sufficient data is provided', () => {
+        const section = AGPUtils.generateChartSections(smbgAGPData, BGM_DATA_KEY).percentInRanges;
+        const stat = smbgAGPData.data.current.stats.readingsInRange;
+        const bgPrefs = smbgAGPData.bgPrefs;
+        const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
+        expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
+        expect(figure.data).to.be.an('array');
 
-      const stat = data.data.current.stats.timeInRange;
-      const bgPrefs = data.bgPrefs;
-      const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
-      expect(figure).to.be.null;
+        expect(figure.layout).to.be.an('object').and.have.keys([
+          'barmode',
+          'width',
+          'height',
+          'showlegend',
+          'margin',
+          'xaxis',
+          'yaxis',
+          'annotations',
+          'shapes',
+        ]);
+      });
+
+      it('should return `null` if data provided is insufficient', () => {
+        const section = {
+          ...AGPUtils.generateChartSections(smbgAGPData, BGM_DATA_KEY).percentInRanges,
+          sufficientData: false,
+        };
+
+        const stat = smbgAGPData.data.current.stats.readingsInRange;
+        const bgPrefs = smbgAGPData.bgPrefs;
+        const figure = AGPUtils.generatePercentInRangesFigure(section, stat, bgPrefs);
+        expect(figure).to.be.null;
+      });
     });
   });
 
   describe('generateAmbulatoryGlucoseProfileFigure', () => {
-    it('should return the ambulatory glucose profile plotly figure if sufficient data is provided', () => {
-      const section = AGPUtils.generateChartSections(data, CGM_DATA_KEY).ambulatoryGlucoseProfile;
-      const cbgData = data.data.current.data.cbg;
-      const bgPrefs = data.bgPrefs;
-      const figure = AGPUtils.generateAmbulatoryGlucoseProfileFigure(section, cbgData, bgPrefs, CGM_DATA_KEY);
-      expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
-      expect(figure.data).to.be.an('array');
+    context('CGM report', () => {
+      it('should return the ambulatory glucose profile plotly figure if sufficient data is provided', () => {
+        const section = AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).ambulatoryGlucoseProfile;
+        const bgData = cbgAGPData.data.current.data.cbg;
+        const bgPrefs = cbgAGPData.bgPrefs;
+        const figure = AGPUtils.generateAmbulatoryGlucoseProfileFigure(section, bgData, bgPrefs, CGM_DATA_KEY);
+        expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
+        expect(figure.data).to.be.an('array');
 
-      expect(figure.layout).to.be.an('object').and.have.keys([
-        'width',
-        'height',
-        'showlegend',
-        'margin',
-        'xaxis',
-        'xaxis2',
-        'yaxis',
-        'yaxis2',
-        'yaxis3',
-        'yaxis4',
-        'yaxis5',
-        'annotations',
-        'shapes',
-      ]);
+        expect(figure.layout).to.be.an('object').and.have.keys([
+          'width',
+          'height',
+          'showlegend',
+          'margin',
+          'xaxis',
+          'xaxis2',
+          'yaxis',
+          'yaxis2',
+          'yaxis3',
+          'yaxis4',
+          'yaxis5',
+          'annotations',
+          'shapes',
+        ]);
+      });
     });
 
-    it('should return `null` if data provided is insufficient', () => {
-      const section = {
-        ...AGPUtils.generateChartSections(data, CGM_DATA_KEY).ambulatoryGlucoseProfile,
-        sufficientData: false,
-      };
+    context('BGM report', () => {
+      it('should return the ambulatory glucose profile plotly figure if sufficient data is provided', () => {
+        const section = AGPUtils.generateChartSections(smbgAGPData, BGM_DATA_KEY).ambulatoryGlucoseProfile;
+        const bgData = smbgAGPData.data.current.data.smbg;
+        const bgPrefs = smbgAGPData.bgPrefs;
+        const figure = AGPUtils.generateAmbulatoryGlucoseProfileFigure(section, bgData, bgPrefs, BGM_DATA_KEY);
+        expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
+        expect(figure.data).to.be.an('array');
 
-      const cbgData = data.data.current.data.cbg;
-      const bgPrefs = data.bgPrefs;
-      const figure = AGPUtils.generateAmbulatoryGlucoseProfileFigure(section, cbgData, bgPrefs, CGM_DATA_KEY);
-      expect(figure).to.be.null;
+        expect(figure.layout).to.be.an('object').and.have.keys([
+          'width',
+          'height',
+          'showlegend',
+          'margin',
+          'xaxis',
+          'xaxis2',
+          'yaxis',
+          'yaxis2',
+          'yaxis3',
+          'yaxis4',
+          'yaxis5',
+          'annotations',
+          'shapes',
+        ]);
+      });
     });
   });
 
   describe('generateDailyGlucoseProfilesFigure', () => {
-    it('should return a daily glucose profile plotly figure if sufficient data is provided', () => {
-      const section = AGPUtils.generateChartSections(data, CGM_DATA_KEY).dailyGlucoseProfiles;
+    context('CGM report', () => {
+      it('should return a daily glucose profile plotly figure if sufficient data is provided', () => {
+        const section = AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).dailyGlucoseProfiles;
 
-      const cbgData = [
-        ['2023-01-01', [{ value: 10, msPer24: 100000 }]],
-        ['2023-01-02', [{ value: 20, msPer24: 200000 }]],
-        ['2023-01-03', [{ value: 30, msPer24: 300000 }]],
-        ['2023-01-04', [{ value: 40, msPer24: 400000 }]],
-        ['2023-01-05', [{ value: 50, msPer24: 500000 }]],
-        ['2023-01-06', [{ value: 60, msPer24: 600000 }]],
-        ['2023-01-07', [{ value: 70, msPer24: 700000 }]],
-      ];
+        const bgData = [
+          ['2023-01-01', [{ value: 10, msPer24: 100000 }]],
+          ['2023-01-02', [{ value: 20, msPer24: 200000 }]],
+          ['2023-01-03', [{ value: 30, msPer24: 300000 }]],
+          ['2023-01-04', [{ value: 40, msPer24: 400000 }]],
+          ['2023-01-05', [{ value: 50, msPer24: 500000 }]],
+          ['2023-01-06', [{ value: 60, msPer24: 600000 }]],
+          ['2023-01-07', [{ value: 70, msPer24: 700000 }]],
+        ];
 
-      const bgPrefs = data.bgPrefs;
-      const dateLabelFormat = 'h:a';
-      const figure = AGPUtils.generateDailyGlucoseProfilesFigure(section, cbgData, bgPrefs, dateLabelFormat);
-      expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
-      expect(figure.data).to.be.an('array');
+        const bgPrefs = cbgAGPData.bgPrefs;
+        const dateLabelFormat = 'h:a';
+        const figure = AGPUtils.generateDailyGlucoseProfilesFigure(section, bgData, bgPrefs, dateLabelFormat);
+        expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
+        expect(figure.data).to.be.an('array');
 
-      expect(figure.layout).to.be.an('object').and.have.keys([
-        'width',
-        'height',
-        'showlegend',
-        'margin',
-        'xaxis',
-        'yaxis',
-        'yaxis2',
-        'yaxis3',
-        'annotations',
-        'shapes',
-      ]);
+        expect(figure.layout).to.be.an('object').and.have.keys([
+          'width',
+          'height',
+          'showlegend',
+          'margin',
+          'xaxis',
+          'yaxis',
+          'yaxis2',
+          'yaxis3',
+          'annotations',
+          'shapes',
+        ]);
+      });
+
+      it('should return `null` if data provided is insufficient', () => {
+        const section = {
+          ...AGPUtils.generateChartSections(cbgAGPData, CGM_DATA_KEY).dailyGlucoseProfiles,
+          sufficientData: false,
+        };
+
+        const bgData = [
+          ['2023-01-01', [{ value: 10, msPer24: 100000 }]],
+          ['2023-01-02', [{ value: 20, msPer24: 200000 }]],
+          ['2023-01-03', [{ value: 30, msPer24: 300000 }]],
+          ['2023-01-04', [{ value: 40, msPer24: 400000 }]],
+          ['2023-01-05', [{ value: 50, msPer24: 500000 }]],
+          ['2023-01-06', [{ value: 60, msPer24: 600000 }]],
+          ['2023-01-07', [{ value: 70, msPer24: 700000 }]],
+        ];
+
+        const bgPrefs = cbgAGPData.bgPrefs;
+        const dateLabelFormat = 'h:a';
+        const figure = AGPUtils.generateDailyGlucoseProfilesFigure(section, bgData, bgPrefs, dateLabelFormat);
+        expect(figure).to.be.null;
+      });
     });
 
-    it('should return `null` if data provided is insufficient', () => {
-      const section = {
-        ...AGPUtils.generateChartSections(data, CGM_DATA_KEY).dailyGlucoseProfiles,
-        sufficientData: false,
-      };
+    context('BGM report', () => {
+      it('should return a daily glucose profile plotly figure if sufficient data is provided', () => {
+        const section = AGPUtils.generateChartSections(smbgAGPData, BGM_DATA_KEY).dailyGlucoseProfiles;
 
-      const cbgData = [
-        ['2023-01-01', [{ value: 10, msPer24: 100000 }]],
-        ['2023-01-02', [{ value: 20, msPer24: 200000 }]],
-        ['2023-01-03', [{ value: 30, msPer24: 300000 }]],
-        ['2023-01-04', [{ value: 40, msPer24: 400000 }]],
-        ['2023-01-05', [{ value: 50, msPer24: 500000 }]],
-        ['2023-01-06', [{ value: 60, msPer24: 600000 }]],
-        ['2023-01-07', [{ value: 70, msPer24: 700000 }]],
-      ];
+        const bgData = [
+          ['2023-01-01', [{ value: 10, msPer24: 100000 }]],
+          ['2023-01-02', [{ value: 20, msPer24: 200000 }]],
+          ['2023-01-03', [{ value: 30, msPer24: 300000 }]],
+          ['2023-01-04', [{ value: 40, msPer24: 400000 }]],
+          ['2023-01-05', [{ value: 50, msPer24: 500000 }]],
+          ['2023-01-06', [{ value: 60, msPer24: 600000 }]],
+          ['2023-01-07', [{ value: 70, msPer24: 700000 }]],
+        ];
 
-      const bgPrefs = data.bgPrefs;
-      const dateLabelFormat = 'h:a';
-      const figure = AGPUtils.generateDailyGlucoseProfilesFigure(section, cbgData, bgPrefs, dateLabelFormat);
-      expect(figure).to.be.null;
+        const bgPrefs = smbgAGPData.bgPrefs;
+        const dateLabelFormat = 'h:a';
+        const figure = AGPUtils.generateDailyGlucoseProfilesFigure(section, bgData, bgPrefs, dateLabelFormat);
+        expect(figure).to.be.an('object').and.have.keys(['data', 'layout']);
+        expect(figure.data).to.be.an('array');
+
+        expect(figure.layout).to.be.an('object').and.have.keys([
+          'width',
+          'height',
+          'showlegend',
+          'margin',
+          'xaxis',
+          'yaxis',
+          'annotations',
+          'shapes',
+        ]);
+      });
+
+      it('should return `null` if data provided is insufficient', () => {
+        const section = {
+          ...AGPUtils.generateChartSections(smbgAGPData, BGM_DATA_KEY).dailyGlucoseProfiles,
+          sufficientData: false,
+        };
+
+        const bgData = [];
+        const bgPrefs = smbgAGPData.bgPrefs;
+        const dateLabelFormat = 'h:a';
+        const figure = AGPUtils.generateDailyGlucoseProfilesFigure(section, bgData, bgPrefs, dateLabelFormat);
+        expect(figure).to.be.null;
+      });
     });
   });
 });

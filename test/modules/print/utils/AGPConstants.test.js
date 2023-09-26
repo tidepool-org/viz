@@ -18,6 +18,10 @@ describe('AGPConstants', () => {
     expect(AGPConstants.AGP_TIR_MIN_HEIGHT).to.equal(6);
   });
 
+  it('should define `AGP_TIR_MIN_TARGET_HEIGHT`', () => {
+    expect(AGPConstants.AGP_TIR_MIN_TARGET_HEIGHT).to.equal(12);
+  });
+
   it('should define `AGP_SECTION_BORDER_RADIUS`', () => {
     expect(AGPConstants.AGP_SECTION_BORDER_RADIUS).to.equal(8);
   });
