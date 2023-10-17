@@ -63,7 +63,7 @@ class BasicsPrintView extends PrintView {
       defineBasicsAggregations(
         this.bgPrefs,
         this.manufacturer,
-        this.latestPumpUpload,
+        this.latestPumpUpload
       ),
       this.aggregationsByDate,
       this.patient,
@@ -762,7 +762,7 @@ class BasicsPrintView extends PrintView {
 
     const gridValues = _.map(
       _.fill(Array(gridSpaces), 0),
-      (space, index) => (_.get(countArray, index, 0) + _.get(extrasArray, index, 0)),
+      (space, index) => (_.get(countArray, index, 0) + _.get(extrasArray, index, 0))
     );
 
     if (extrasArray.length) {

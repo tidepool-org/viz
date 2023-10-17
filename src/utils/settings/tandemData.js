@@ -53,7 +53,7 @@ function basalRows(schedule, settings, units) {
   return data.processTimedSettings(
     settings,
     schedule,
-    units,
+    units
   );
 }
 

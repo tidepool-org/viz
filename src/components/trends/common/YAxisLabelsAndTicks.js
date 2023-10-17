@@ -31,8 +31,8 @@ const YAxisLabels = (props) => {
               y2={yScale(bgBounds[boundKey])}
             />
           </g>
-        ))
-      }
+        )
+      )}
     </g>
   );
 };

@@ -101,7 +101,7 @@ export class StatUtil {
       {
         grams: 0,
         exchanges: 0,
-      },
+      }
     );
 
     const foodCarbs = _.reduce(
@@ -328,7 +328,7 @@ export class StatUtil {
           result[key] = value;
           return result;
         },
-        {},
+        {}
       )
       : NaN;
 

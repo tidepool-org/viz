@@ -18,10 +18,11 @@ const styleLoaderConfiguration = {
     'style-loader',
     {
       loader: 'css-loader?sourceMap',
-      query: {
+      options: {
+        modules: {
+          localIdentName,
+        },
         importLoaders: 1,
-        localIdentName,
-        modules: true,
         sourceMap: true,
       },
     },
@@ -68,7 +69,7 @@ const fontLoaderConfiguration = [
     test: /\.eot$/,
     use: {
       loader: 'url-loader',
-      query: {
+      options: {
         limit: 10000,
         mimetype: 'application/vnd.ms-fontobject',
       },
@@ -78,7 +79,7 @@ const fontLoaderConfiguration = [
     test: /\.woff$/,
     use: {
       loader: 'url-loader',
-      query: {
+      options: {
         limit: 10000,
         mimetype: 'application/font-woff',
       },
@@ -88,7 +89,7 @@ const fontLoaderConfiguration = [
     test: /\.ttf$/,
     use: {
       loader: 'url-loader',
-      query: {
+      options: {
         limit: 10000,
         mimetype: 'application/octet-stream',
       },
@@ -102,6 +103,9 @@ const plugins = [
   // wish to include additional optimizations.
   new webpack.DefinePlugin({
     __DEV__: isDev,
+  }),
+  new webpack.ProvidePlugin({
+    process: 'process/browser.js',
   }),
   new webpack.LoaderOptionsPlugin({
     debug: true,
@@ -127,6 +131,9 @@ const resolve = {
   extensions: [
     '.js',
   ],
+  fallback: {
+    stream: require.resolve('stream-browserify'),
+  },
 };
 
 let devtool = process.env.WEBPACK_DEVTOOL_VIZ || 'cheap-source-map';

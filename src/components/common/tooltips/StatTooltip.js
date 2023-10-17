@@ -66,7 +66,7 @@ class StatTooltip extends PureComponent {
         <Markdown
           key={`message-${index}`}
           className={styles.message}
-          source={message}
+          children={message}
           linkTarget="_blank"
         />
       );

@@ -312,7 +312,7 @@ stories.add('Query Generator', (props) => {
       types,
       [],
       { display: 'check' },
-      GROUP_DATA,
+      GROUP_DATA
     );
 
     if (!selectedTypes.length) return undefined;
@@ -341,7 +341,7 @@ stories.add('Query Generator', (props) => {
       metadata,
       [],
       { display: 'check' },
-      GROUP_DATA,
+      GROUP_DATA
     );
 
     if (!selectedMetaData.length) return undefined;
@@ -368,7 +368,7 @@ stories.add('Query Generator', (props) => {
       activeDays,
       _.values(activeDays),
       { display: 'check' },
-      GROUP_DATES,
+      GROUP_DATES
     );
     return (days.length === 7) ? undefined : _.map(days, _.toInteger);
   };
@@ -388,7 +388,7 @@ stories.add('Query Generator', (props) => {
       timezones,
       'US/Eastern',
       { display: 'select' },
-      GROUP_DATES,
+      GROUP_DATES
     );
     const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
@@ -421,7 +421,7 @@ stories.add('Query Generator', (props) => {
       commonStats,
       [],
       { display: 'check' },
-      GROUP_STATS,
+      GROUP_STATS
     );
 
     if (!selectedStats.length) return undefined;
@@ -445,7 +445,7 @@ stories.add('Query Generator', (props) => {
       aggregationsByDate,
       [],
       { display: 'check' },
-      GROUP_STATS,
+      GROUP_STATS
     );
 
     if (!selectedAggregationsByDate.length) return undefined;

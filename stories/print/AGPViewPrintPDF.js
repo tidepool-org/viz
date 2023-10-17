@@ -113,7 +113,7 @@ stories.add('standard account', ({ dataUtil }) => {
       timezones,
       'US/Eastern',
       { display: 'select' },
-      GROUP_CONFIG,
+      GROUP_CONFIG
     );
     const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
