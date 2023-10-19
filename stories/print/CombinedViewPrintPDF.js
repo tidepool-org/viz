@@ -18,10 +18,12 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
 
 import * as profiles from '../../data/patient/profiles';
@@ -29,7 +31,7 @@ import * as settings from '../../data/patient/settings';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 
 const stories = storiesOf('Combined Views PDF', module);
 
@@ -58,7 +60,6 @@ const bgBounds = {
 
 async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
 
   const data = {};
 
@@ -93,11 +94,17 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
 
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.

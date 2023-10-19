@@ -2,6 +2,7 @@ import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
 import Plotly from 'plotly.js-basic-dist-min';
+import PDFDocument from 'pdfkit';
 
 import {
   withKnobs,
@@ -18,10 +19,11 @@ import { MARGIN } from '../../src/modules/print/utils/constants';
 import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
 
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 
 import * as profiles from '../../data/patient/profiles';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 
 const stories = storiesOf('AGP View PDF', module);
 stories.addDecorator(withKnobs);
@@ -39,7 +41,6 @@ try {
 
 async function openPDF(dataUtil, { patient }, query) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
   const data = dataUtil.query(query);
 
   const opts = {
@@ -68,11 +69,17 @@ async function openPDF(dataUtil, { patient }, query) {
   await createPrintView('agp', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.

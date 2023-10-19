@@ -26,8 +26,6 @@ import { bankersRound } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
 import { formatDatum } from '../../utils/stat';
 
-const agpLogo = require('./images/capturAGP-logo.png');
-const tidepoolLogo = require('./images/tidepool-logo-408x46.png');
 const t = i18next.t.bind(i18next);
 
 class AGPPrintView extends PrintView {
@@ -95,10 +93,10 @@ class AGPPrintView extends PrintView {
     const logoY = this.bottomEdge - this.agpLogoWidth * 0.175 - AGP_FOOTER_Y_PADDING;
 
     // Render AGP Logo
-    this.doc.image(agpLogo, logoX, logoY, { width: this.agpLogoWidth });
+    this.doc.image('images/capturAGP-logo.png', logoX, logoY, { width: this.agpLogoWidth });
 
     // Render Tidepool Logo
-    this.doc.image(tidepoolLogo, logoX - (this.agpLogoWidth + 10), logoY + 2, { width: this.tidepoolLogoWidth });
+    this.doc.image('images/tidepool-logo-408x46.png', logoX - (this.agpLogoWidth + 10), logoY + 2, { width: this.tidepoolLogoWidth });
     this.setStroke(colors.mediumGrey);
 
     this.doc

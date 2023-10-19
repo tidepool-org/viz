@@ -55,9 +55,6 @@ packageConfig.plugins = [
   new webpack.DefinePlugin({
     __DEV__,
   }),
-  new webpack.LoaderOptionsPlugin({
-    debug: false,
-  }),
 ];
 
 packageConfig.mode = 'production';

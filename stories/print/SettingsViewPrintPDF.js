@@ -18,14 +18,16 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 
 import * as profiles from '../../data/patient/profiles';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 /* eslint-disable max-len */
 
 const stories = storiesOf('Settings View PDF', module);
@@ -50,7 +52,7 @@ import tandemDataFlatRate from '../../data/pumpSettings/tandem/flatrate.json';
 
 function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
+  // const stream = doc.pipe(blobStream());
   const opts = {
     bgPrefs: queries.settings.bgPrefs,
     timePrefs: queries.settings.timePrefs,
@@ -72,11 +74,17 @@ function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
   createPrintView('settings', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
@@ -126,7 +134,7 @@ stories.add('medtronic automated rate', (opts, { dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('medtronic automated inactive rate', ({ opts, dataUtil }) => {
+stories.add('medtronic automated inactive rate', (opts, { dataUtil }) => {
   const inactiveAutomatedBasaldata = _.assign({}, medtronicDataAutomated, {
     activeSchedule: 'Standard',
   });

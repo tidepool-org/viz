@@ -43,14 +43,10 @@ import {
   SITE_CHANGE,
 } from '../../utils/constants';
 
-const siteChangeCannulaImage = require('./images/sitechange-cannula.png');
-const siteChangeReservoirImage = require('./images/sitechange-reservoir.png');
-const siteChangeTubingImage = require('./images/sitechange-tubing.png');
-
 const siteChangeImages = {
-  [SITE_CHANGE_CANNULA]: siteChangeCannulaImage,
-  [SITE_CHANGE_RESERVOIR]: siteChangeReservoirImage,
-  [SITE_CHANGE_TUBING]: siteChangeTubingImage,
+  [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
+  [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
+  [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
 };
 
 const t = i18next.t.bind(i18next);
