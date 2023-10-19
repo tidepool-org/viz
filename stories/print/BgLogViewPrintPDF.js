@@ -66,7 +66,7 @@ run \`window.downloadPDFDataQueries()\` from the console on a Tidepool Web data 
 Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.json\`,
 and then use this story to iterate on the BG Log Print PDF outside of Tidepool Web!`;
 
-stories.add('standard account', ({ dataUtil }) => (
+stories.add('standard account', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>

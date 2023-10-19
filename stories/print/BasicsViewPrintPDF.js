@@ -70,7 +70,7 @@ and then use this story to iterate on the Basics Print PDF outside of Tidepool W
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('cannula prime', ({ dataUtil }) => (
+stories.add('cannula prime', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -83,7 +83,7 @@ stories.add('cannula prime', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('tubing prime', ({ dataUtil }) => (
+stories.add('tubing prime', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -96,7 +96,7 @@ stories.add('tubing prime', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('reservoir change', ({ dataUtil }) => (
+stories.add('reservoir change', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -109,7 +109,7 @@ stories.add('reservoir change', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('site change source undefined', ({ dataUtil }) => (
+stories.add('site change source undefined', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {

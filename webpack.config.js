@@ -107,9 +107,6 @@ const plugins = [
   new webpack.ProvidePlugin({
     process: 'process/browser.js',
   }),
-  new webpack.LoaderOptionsPlugin({
-    debug: true,
-  }),
 ];
 
 const entry = {

@@ -111,7 +111,7 @@ and then use this story to iterate on the Combined Print PDF outside of Tidepool
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
+stories.add(`standard account (${MGDL_UNITS})`, (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.standard,
@@ -122,7 +122,7 @@ stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
+stories.add(`standard account (${MMOLL_UNITS})`, (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -137,7 +137,7 @@ stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('fake child account', ({ dataUtil }) => (
+stories.add('fake child account', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.fakeChildAcct,
@@ -148,7 +148,7 @@ stories.add('fake child account', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('long patient name', ({ dataUtil }) => (
+stories.add('long patient name', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.longName,

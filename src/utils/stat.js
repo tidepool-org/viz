@@ -105,7 +105,7 @@ export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
 
 export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : parseFloat(value));
 
-export const formatDatum = (datum = {}, format, opts = {}) => {
+export const formatDatum = (datum = {}, format, options = {}) => {
   let id = datum.id;
   let value = datum.value;
   let suffix = datum.suffix || '';
@@ -114,6 +114,8 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
   let lowerColorId;
   let upperValue;
   let upperColorId;
+
+  const opts = _.cloneDeep(options);
 
   _.defaults(opts, {
     emptyDataPlaceholder: '--',

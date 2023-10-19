@@ -89,7 +89,7 @@ const Results = ({ results, showData, showStats }) => {
   );
 };
 
-stories.add('Query Generator', (props) => {
+stories.add('Query Generator', (opts, props) => {
   const { dataUtil } = props;
 
   const datumTypes = ['cbg', 'smbg', 'basal', 'bolus', 'wizard', 'food', 'pumpSettings', 'upload'];
@@ -493,7 +493,7 @@ stories.add('Query Generator', (props) => {
   />;
 }, { notes });
 
-stories.add('Update Message', (props) => {
+stories.add('Update Message', (opts, props) => {
   const { dataUtil, patientId } = props;
 
   const message = {
