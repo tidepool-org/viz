@@ -7,6 +7,7 @@ const config = {
   addons: [
     '@storybook/addon-essentials',
     '@storybook/addon-knobs',
+    '@storybook/addon-viewport',
   ],
 
   features: {

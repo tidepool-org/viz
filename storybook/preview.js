@@ -1,18 +1,7 @@
-import { withKnobs } from '@storybook/addon-knobs';
 import React from 'react';
+import { withKnobs } from '@storybook/addon-knobs';
 
 import DataUtil from '../src/utils/DataUtil';
-
-// addParameters({
-//   viewport: {
-//     viewports: {
-//       ...INITIAL_VIEWPORTS,
-//     },
-//   },
-// });
-
-// addDecorator(withNotes);
-// addDecorator(withKnobs);
 
 let data;
 try {
