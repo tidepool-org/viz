@@ -1,9 +1,9 @@
+// ref https://github.com/foliojs/pdfkit/blob/65670353f9a3f4ceea2ac0f37cd92f476bfd11ae/examples/webpack/src/registerStaticFiles.js
+
 // the fs here is not node fs but the provided virtual one
 import fs from 'fs';
 import forEach from 'lodash/forEach';
 // the content file is returned as is (webpack is configured to load *.afm files as asset/source)
-import Courier from 'pdfkit/js/data/Courier.afm';
-import CourierBold from 'pdfkit/js/data/Courier-Bold.afm';
 
 function registerBinaryFiles(ctx) {
   forEach(ctx.keys(), key => {
@@ -28,7 +28,3 @@ registerBinaryFiles(require.context('./static-assets', true));
 // register AFM fonts distributed with pdfkit
 // is good practice to register only required fonts to avoid the bundle size increase too much
 registerAFMFonts(require.context('pdfkit/js/data', false, /Helvetica.*\.afm$/));
-
-// register files imported directly
-fs.writeFileSync('data/Courier.afm', Courier);
-fs.writeFileSync('data/Courier-Bold.afm', CourierBold);

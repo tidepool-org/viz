@@ -56,6 +56,7 @@ const babelLoaderConfiguration = {
 // This is needed for webpack to import static images in JavaScript files
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
+  exclude: /src\/static-assets/,
   use: {
     loader: 'url-loader',
     options: {
@@ -170,7 +171,7 @@ module.exports = {
         type: 'asset/inline',
         generator: {
           dataUrl: content => content.toString('base64'),
-        }
+        },
       },
       // load binary files inside lazy-assets folder as an URL
       {

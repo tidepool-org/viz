@@ -12,36 +12,32 @@ const config = {
     storyStoreV7: false,
   },
 
-  // staticDirs: ['../static'],
-
   webpackFinal: async (config) => {
-    // console.log('config', config);
-    // delete config.resolve.fallback.fs;
+    delete config.resolve.fallback.fs;
+
     const finalConfig = {
       ...config,
       module: { ...config.module, rules: [
-        ...custom.module.rules,
         ...config.module.rules.filter(rule => {
           return rule.test
             ? rule.test.toString().indexOf('css') === -1 && rule.test.toString().indexOf('svg') === -1
             : true;
         }),
+        ...custom.module.rules,
       ] },
       resolve: { ...config.resolve,
         alias: {
           ...config.resolve.alias,
           ...custom.resolve.alias,
         },
-        // fallback: {
-        //   ...config.resolve.fallback,
-        //   ...custom.resolve.fallback,
-        // },
-        fallback: custom.resolve.fallback,
+        fallback: {
+          ...config.resolve.fallback,
+          ...custom.resolve.fallback,
+        },
       },
       plugins: [...config.plugins, ...custom.plugins],
     };
 
-    console.log('finalConfig', finalConfig);
     return finalConfig;
   },
 };
