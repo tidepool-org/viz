@@ -26,7 +26,7 @@
     "stories": "NODE_OPTIONS=\"--max_old_space_size=4096\" NODE_ENV=development yarn sb dev -c storybook -p 8083 --ci",
     "test": "TZ=UTC NODE_ENV=test yarn karma start",
     "test-watch": "TZ=UTC NODE_ENV=test DEV_TOOL=inline-source-map yarn karma start --no-single-run --reporters=mocha",
-    "typestories": "NODE_ENV=development yarn sb -c storybookDatatypes -p 8082 --ci"
+    "typestories": "NODE_ENV=development yarn sb dev -c storybookDatatypes -p 8082 --ci"
   },
   "repository": {
     "type": "git",
