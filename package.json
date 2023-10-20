@@ -19,7 +19,7 @@
     "build-storybooks": "yarn build-storybook -c storybook -o web/stories && yarn build-storybook -c storybookDatatypes -o web/diabetes-data-stories",
     "clean": "NODE_ENV=production yarn rimraf ./dist/*",
     "lint": "NODE_ENV=test yarn eslint src/ stories/ storiesDatatypes/ test/ *.js",
-    "prepublishOnly": "NODE_ENV=production yarn rimraf ./node_modules && yarn install --frozen-lockfile && npm test && NODE_ENV=production npm run build",
+    "prepublishOnly": "NODE_ENV=production yarn rimraf ./node_modules && yarn install --immutable && npm test && NODE_ENV=production npm run build",
     "pretest": "NODE_ENV=test npm run lint",
     "serve-docs": "yarn gitbook serve",
     "start": "NODE_ENV=development yarn webpack --config package.config.js --watch --progress",

@@ -19,7 +19,7 @@ before_install:
   - yarn set version 3.6.4
 
 install:
-  - yarn install --frozen-lockfile
+  - yarn install --immutable
   - NODE_ENV=production npm run build
 
 addons:
