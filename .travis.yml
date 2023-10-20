@@ -2,7 +2,7 @@ sudo: false
 
 language: node_js
 
-dist: trusty
+dist: jammy
 
 node_js:
   - "20.8.0"
