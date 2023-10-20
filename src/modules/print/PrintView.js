@@ -49,7 +49,7 @@ import {
 } from './utils/constants';
 
 import { BG_COLORS, MS_IN_MIN } from '../../utils/constants';
-import '../../registerStaticFiles';
+import './registerStaticFiles';
 
 const t = i18next.t.bind(i18next);
 
