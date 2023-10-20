@@ -444,20 +444,24 @@ describe('StatUtil', () => {
   });
 
   describe('getBgExtentsData', () => {
-    it('should return the min and max glucose for cbg data', () => {
+    it('should return the min and max glucose, oldest and newest, and days worn for cbg data', () => {
       statUtil.bgSource = 'cbg';
-      expect(statUtil.getBgExtentsData()).to.eql({
-        bgMin: 49.99999999999999,
-        bgMax: 260,
-      });
+      const result = statUtil.getBgExtentsData();
+      expect(result.bgMin).to.equal(49.99999999999999);
+      expect(result.bgMax).to.equal(260);
+      expect(result.bgDaysWorn).to.equal(1);
+      expect(result.newestDatum.id).to.equal(cbgData[4].id);
+      expect(result.oldestDatum.id).to.equal(cbgData[0].id);
     });
 
-    it('should return the min and max glucose for smbg data', () => {
+    it('should return the min and max glucose, oldest and newest, and days worn for smbg data', () => {
       statUtil.bgSource = 'smbg';
-      expect(statUtil.getBgExtentsData()).to.eql({
-        bgMin: 60,
-        bgMax: 270,
-      });
+      const result = statUtil.getBgExtentsData();
+      expect(result.bgMin).to.equal(60);
+      expect(result.bgMax).to.equal(270);
+      expect(result.bgDaysWorn).to.equal(1);
+      expect(result.newestDatum.id).to.equal(smbgData[4].id);
+      expect(result.oldestDatum.id).to.equal(smbgData[0].id);
     });
   });
 
@@ -656,24 +660,36 @@ describe('StatUtil', () => {
     it('should return the readings in range data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
       expect(statUtil.getReadingsInRangeData()).to.eql({
-        veryLow: 0,
-        low: 1,
-        target: 2,
-        high: 1,
-        veryHigh: 1,
-        total: 5,
+        counts: {
+          veryLow: 0,
+          low: 1,
+          target: 2,
+          high: 1,
+          veryHigh: 1,
+          total: 5,
+        },
       });
     });
 
     it('should return the avg daily readings in range data when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       expect(statUtil.getReadingsInRangeData()).to.eql({
-        veryLow: 0,
-        low: 0.5,
-        target: 1,
-        high: 0.5,
-        veryHigh: 0.5,
-        total: 5,
+        counts: {
+          veryLow: 0,
+          low: 1,
+          target: 2,
+          high: 1,
+          veryHigh: 1,
+          total: 5,
+        },
+        dailyAverages: {
+          veryLow: 0,
+          low: 0.5,
+          target: 1,
+          high: 0.5,
+          veryHigh: 0.5,
+          total: 5,
+        },
       });
     });
   });
@@ -688,16 +704,12 @@ describe('StatUtil', () => {
       let result = statUtil.getSensorUsage();
       expect(result.sensorUsage).to.equal(MS_IN_MIN * 55); // 3 * 15m for libre readings, 2 * 5m for dex readings
       expect(result.total).to.equal(MS_IN_DAY);
-      expect(result.cgmDaysWorn).to.equal(1);
-      expect(result.cgmMinutesWorn).to.equal(expectedCGMMinutesWorn);
       expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
       expect(result.sensorUsageAGP).to.equal((
         expectedCount /
         ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
       ) * 100);
-      expect(result.newestDatum.id).to.equal(cbgData[4].id);
-      expect(result.oldestDatum.id).to.equal(cbgData[0].id);
 
       expectedCount = 6;
       expectedCGMMinutesWorn = 1440; // 1 full day between first and last datums
@@ -706,16 +718,12 @@ describe('StatUtil', () => {
       result = statUtil.getSensorUsage();
       expect(result.sensorUsage).to.equal(MS_IN_MIN * 60); // 3 * 15m for libre readings, 3 * 5m for dex readings
       expect(result.total).to.equal(MS_IN_DAY * 14);
-      expect(result.cgmDaysWorn).to.equal(2);
-      expect(result.cgmMinutesWorn).to.equal(expectedCGMMinutesWorn);
       expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
       expect(result.sensorUsageAGP).to.equal((
         expectedCount /
         ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
       ) * 100);
-      expect(result.newestDatum.id).to.equal(cbgData[5].id);
-      expect(result.oldestDatum.id).to.equal(cbgData[0].id);
     });
   });
 

@@ -1296,54 +1296,127 @@ describe('stat', () => {
       });
     });
 
-    it('should format and return `readingsInRange` data', () => {
+    it('should format and return `readingsInRange` data using raw counts if using a single day', () => {
       const data = {
-        veryLow: 10,
-        low: 20,
-        target: 30,
-        high: 40,
-        veryHigh: 50,
+        counts: {
+          veryLow: 1,
+          low: 2,
+          target: 3,
+          high: 4,
+          veryHigh: 5,
+        },
+        dailyAverages: {
+          veryLow: 6,
+          low: 7,
+          target: 8,
+          high: 9,
+          veryHigh: 10,
+        },
       };
 
-      const statData = stat.getStatData(data, commonStats.readingsInRange, opts);
+      const statData = stat.getStatData(data, commonStats.readingsInRange, { ...opts, days: 1 });
 
       expect(statData.data).to.eql([
         {
           id: 'veryLow',
-          value: 10,
+          value: 1,
           title: 'Readings Below Range',
           legendTitle: '<54',
         },
         {
           id: 'low',
-          value: 20,
+          value: 2,
           title: 'Readings Below Range',
           legendTitle: '54-70',
         },
         {
           id: 'target',
-          value: 30,
+          value: 3,
           title: 'Readings In Range',
           legendTitle: '70-180',
         },
         {
           id: 'high',
-          value: 40,
+          value: 4,
           title: 'Readings Above Range',
           legendTitle: '180-250',
         },
         {
           id: 'veryHigh',
-          value: 50,
+          value: 5,
           title: 'Readings Above Range',
           legendTitle: '>250',
         },
       ]);
 
-      expect(statData.total).to.eql({ value: 150 });
+      expect(statData.total).to.eql({ value: 15 });
 
       expect(statData.dataPaths).to.eql({
         summary: ['data', 2],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
+      });
+    });
+
+    it('should format and return `readingsInRange` data using daily average if viewing multiple days', () => {
+      const data = {
+        counts: {
+          veryLow: 1,
+          low: 2,
+          target: 3,
+          high: 4,
+          veryHigh: 5,
+        },
+        dailyAverages: {
+          veryLow: 6,
+          low: 7,
+          target: 8,
+          high: 9,
+          veryHigh: 10,
+        },
+      };
+
+      const statData = stat.getStatData(data, commonStats.readingsInRange, { ...opts, days: 2 });
+
+      expect(statData.data).to.eql([
+        {
+          id: 'veryLow',
+          value: 6,
+          title: 'Readings Below Range',
+          legendTitle: '<54',
+        },
+        {
+          id: 'low',
+          value: 7,
+          title: 'Readings Below Range',
+          legendTitle: '54-70',
+        },
+        {
+          id: 'target',
+          value: 8,
+          title: 'Readings In Range',
+          legendTitle: '70-180',
+        },
+        {
+          id: 'high',
+          value: 9,
+          title: 'Readings Above Range',
+          legendTitle: '180-250',
+        },
+        {
+          id: 'veryHigh',
+          value: 10,
+          title: 'Readings Above Range',
+          legendTitle: '>250',
+        },
+      ]);
+
+      expect(statData.total).to.eql({ value: 40 });
+
+      expect(statData.dataPaths).to.eql({
+        summary: ['data', 2],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
       });
     });
 
@@ -1779,7 +1852,7 @@ describe('stat', () => {
     });
 
     it('should define the `readingsInRange` stat', () => {
-      const def = stat.getStatDefinition(data, commonStats.readingsInRange, opts);
+      const def = stat.getStatDefinition({ counts: data }, commonStats.readingsInRange, opts);
       expect(def).to.include.all.keys(commonStatProperties);
       expect(def.id).to.equal(commonStats.readingsInRange);
       expect(def.type).to.equal(statTypes.barHorizontal);
@@ -1788,6 +1861,7 @@ describe('stat', () => {
         summary: statFormats.percentage,
         tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
+        count: statFormats.bgCount,
       });
       expect(def.alwaysShowTooltips).to.be.true;
     });
