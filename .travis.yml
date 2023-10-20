@@ -15,6 +15,8 @@ cache:
 
 before_install:
   - google-chrome-stable --headless --disable-gpu --remote-debugging-port=9222 http://localhost &
+  - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 3.6.4
+  - export PATH="$HOME/.yarn/bin:$PATH"
 
 install:
   - yarn install --frozen-lockfile
