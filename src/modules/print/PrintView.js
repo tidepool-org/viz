@@ -851,8 +851,12 @@ class PrintView {
 
   renderLogo() {
     this.logoWidth = 100;
+    const lineHeight = this.doc.fontSize(14).currentLineHeight();
     const xOffset = this.doc.page.width - this.logoWidth - this.margins.right;
-    const yOffset = this.margins.top + 5;
+
+    const yOffset = (
+      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2 + 1))
+    );
 
     this.doc.image('images/tidepool-logo-408x46.png', xOffset, yOffset, { width: this.logoWidth });
   }
