@@ -251,7 +251,7 @@ export class StatUtil {
           veryHigh: 0,
           total: 0,
         },
-      },
+      }
     );
 
     if (this.activeDays > 1) {
