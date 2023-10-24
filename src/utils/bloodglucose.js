@@ -350,13 +350,22 @@ export function calculateCbgStatsForBin(binKey, binSize, data, outOfRange, outer
  * @return {Object} calculatedSmbgStats
  */
 export function calculateSmbgStatsForBin(binKey, binSize, data, outOfRange) {
+  const minDatums = {
+    quantile: 5,
+    median: 3,
+  };
+
+  const sorted = _.sortBy(data, d => d);
   const centerOfBinMs = parseInt(binKey, 10);
   const stats = {
     id: binKey,
-    min: min(data),
-    mean: mean(data),
-    max: max(data),
+    min: min(sorted),
+    mean: mean(sorted),
+    max: max(sorted),
     msX: centerOfBinMs,
+    firstQuartile: data.length >= minDatums.quantile ? quantile(sorted, 0.25) : undefined,
+    median: data.length >= minDatums.median ? median(sorted) : undefined,
+    thirdQuartile: data.length >= minDatums.quantile ? quantile(sorted, 0.75) : undefined,
     msFrom: centerOfBinMs - (binSize / 2),
     msTo: centerOfBinMs + (binSize / 2),
   };

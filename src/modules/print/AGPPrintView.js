@@ -20,7 +20,7 @@ import {
   generateChartSections,
 } from './utils/AGPUtils';
 
-import { MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { bankersRound } from '../../utils/format';
 import { formatBirthdate, getOffset } from '../../utils/datetime';
@@ -31,7 +31,7 @@ const t = i18next.t.bind(i18next);
 class AGPPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
-    this.sections = generateChartSections(data);
+    this.sections = generateChartSections(data, this.bgSource);
     this.doc.addPage();
     this.svgDataURLS = opts.svgDataURLS;
   }
@@ -48,7 +48,7 @@ class AGPPrintView extends PrintView {
       !this.sections.ambulatoryGlucoseProfile.sufficientData &&
       !this.sections.dailyGlucoseProfiles.sufficientData &&
       !this.sections.glucoseMetrics.sufficientData &&
-      !this.sections.timeInRanges.sufficientData
+      !this.sections.percentInRanges.sufficientData
     ) {
       // If no sections have sufficient data we don't render any of them
       this.renderInsufficientData();
@@ -56,7 +56,7 @@ class AGPPrintView extends PrintView {
       // If at least one section has sufficient data we render all of them, and show any unmet
       // data sufficiency text within the sections themselves
       this.renderGlucoseMetrics();
-      await this.renderTimeInRanges();
+      await this.renderPercentInRanges();
       await this.renderAmbulatoryGlucoseProfile();
       await this.renderDailyGlucoseProfiles();
     }
@@ -66,13 +66,14 @@ class AGPPrintView extends PrintView {
     this.doc.font(this.boldFont).fontSize(fontSizes.reportHeader);
     const xPos = this.leftEdge;
     const yPos = this.topEdge;
+    const subHeader = text.reportSubHeader[this.bgSource];
 
     this.doc
       .fillColor(colors.text.reportHeader)
       .fillOpacity(1)
       .text(`${text.reportHeader} `, xPos, yPos, { continued: true })
       .font(this.font)
-      .text(text.reportSubHeader);
+      .text(subHeader);
 
     return this;
   }
@@ -152,7 +153,13 @@ class AGPPrintView extends PrintView {
     }
 
     // Add section titles, subtitles, and descriptions
-    if (section.text?.title) {
+    let titleText = section.text?.title;
+
+    if (!section.sufficientData && section.text?.insufficientDataTitle) {
+      titleText = section.text.insufficientDataTitle;
+    }
+
+    if (titleText) {
       const titlePaddingX = 8;
       const titleXPos = section.x + titlePaddingX;
       const titleYPos = section.y + 1 + ((AGP_SECTION_HEADER_HEIGHT - this.doc.currentLineHeight()) / 2);
@@ -161,10 +168,10 @@ class AGPPrintView extends PrintView {
       this.doc.font(this.boldFont)
         .fontSize(fontSizes.section.title);
 
-      this.doc.text(section.text.title, titleXPos, titleYPos);
+      this.doc.text(titleText, titleXPos, titleYPos);
 
       if (section.text?.subtitle) {
-        const subtitleXPos = titleXPos + this.doc.widthOfString(section.text.title) + (this.dpi * 0.4);
+        const subtitleXPos = titleXPos + this.doc.widthOfString(titleText) + (this.dpi * 0.4);
 
         this.setFill(colors.text.section.subtitle);
 
@@ -208,15 +215,16 @@ class AGPPrintView extends PrintView {
 
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
+    const { sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
+    const { bgDaysWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
-    const { cgmDaysWorn = 0, oldestDatum, newestDatum, sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
 
-    let cgmDaysWornText = cgmDaysWorn === 1
-      ? t('{{cgmDaysWorn}} Day', { cgmDaysWorn })
-      : t('{{cgmDaysWorn}} Days', { cgmDaysWorn });
+    let reportDaysText = bgDaysWorn === 1
+      ? t('{{bgDaysWorn}} Day', { bgDaysWorn })
+      : t('{{bgDaysWorn}} Days', { bgDaysWorn });
 
-    if (cgmDaysWorn >= 1) {
-      cgmDaysWornText += `: ${cgmDaysWorn === 1
+    if (bgDaysWorn >= 1) {
+      reportDaysText += `: ${bgDaysWorn === 1
         ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
         : this.getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM')
       }`;
@@ -285,11 +293,14 @@ class AGPPrintView extends PrintView {
     this.doc.y = section.y + this.dpi * 0.05;
     renderInfoRow(patientName, text.reportInfo.dob, patientBirthdate);
     this.doc.moveDown(1);
-    renderInfoRow(cgmDaysWornText);
-    this.doc.moveDown(1);
-    renderInfoRow(t('Time CGM Active: {{activeTime}}%', {
-      activeTime: bankersRound(sensorUsageAGP, 1),
-    }));
+    renderInfoRow(reportDaysText);
+
+    if (section.bgSource === CGM_DATA_KEY) {
+      this.doc.moveDown(1);
+      renderInfoRow(t('Time CGM Active: {{activeTime}}%', {
+        activeTime: bankersRound(sensorUsageAGP, 1),
+      }));
+    }
   }
 
   renderGlucoseMetrics() {
@@ -299,29 +310,36 @@ class AGPPrintView extends PrintView {
     const paddingX = this.dpi * 0.2;
     const xExtents = [section.x + paddingX, section.x + section.width - paddingX];
 
-    const glucoseStats = [
-      this.stats.averageGlucose,
-      this.stats.glucoseManagementIndicator,
-      this.stats.coefficientOfVariation,
+    const glucoseStats = this.bgSource === CGM_DATA_KEY ? [
+      { stat: this.stats.averageGlucose, dataPath: 'summary', dataFormat: 'summary' },
+      { stat: this.stats.glucoseManagementIndicator, dataPath: 'summaryAGP', dataFormat: 'summary' },
+      { stat: this.stats.coefficientOfVariation, dataPath: 'summary', dataFormat: 'summary' },
+    ] : [
+      { stat: this.stats.readingsInRange, dataPath: 'totalReadings', dataFormat: 'count' },
+      { stat: { ...this.stats.readingsInRange, id: 'dailyReadingsInRange' }, dataPath: 'averageDailyReadings', dataFormat: 'count' },
+      { stat: this.stats.averageGlucose, dataPath: 'summary', dataFormat: 'summary' },
+      { stat: this.stats.coefficientOfVariation, dataPath: 'summary', dataFormat: 'summary' },
     ];
 
     this.doc.x = section.x;
-    this.doc.y = section.y + this.dpi * 0.375;
+    this.doc.y = section.y + this.dpi * (this.bgSource === CGM_DATA_KEY ? 0.375 : 0.425);
 
-    _.each(glucoseStats, (stat, index) => {
+    _.each(glucoseStats, ({ stat, dataPath, dataFormat }, index) => {
       const paddingY = 8;
       const statWidth = xExtents[1] - xExtents[0];
       const y = this.doc.y;
       const isAverageGlucose = stat.id === 'averageGlucose';
-      const isShaded = index % 2 !== 0;
+      const isShaded = this.bgSource === CGM_DATA_KEY && index % 2 !== 0;
+      const formattingOpts = { bgPrefs: this.bgPrefs, data: stat.data, useAGPFormat: true };
 
       const { value, suffix } = formatDatum(
-        _.get(stat.data, _.get(stat.data, 'dataPaths.summaryAGP', stat.data?.dataPaths?.summary)),
-        _.get(stat, 'dataFormat.summary'),
-        { bgPrefs: this.bgPrefs, data: stat.data, useAGPFormat: true }
+        _.get(stat.data, stat.data?.dataPaths?.[dataPath]),
+        stat.dataFormat?.[dataFormat],
+        formattingOpts
       );
 
-      const units = suffix || this.bgUnits;
+      let units = suffix;
+      if (isAverageGlucose) units = this.bgUnits;
 
       this.doc
         .font(this.boldFont)
@@ -337,49 +355,93 @@ class AGPPrintView extends PrintView {
       this.setFill();
 
       this.doc
-        .text(text.glucoseMetrics[stat.id].label, xExtents[0], y);
+        .text(text.glucoseMetrics[this.bgSource][stat.id].label, xExtents[0], y);
 
-      const valueYShift = (fontSizes.glucoseMetrics.values - fontSizes.glucoseMetrics.labels) / 2;
-      const unitsFontSize = isAverageGlucose ? fontSizes.glucoseMetrics.bgUnits : fontSizes.glucoseMetrics.values;
-      const unitsYShift = isAverageGlucose ? valueYShift - 2.15 : valueYShift;
+      let valueXShift = 0;
+      let valueYShift = 0;
 
-      this.doc
-        .fontSize(unitsFontSize)
-        .text(`${units}`, xExtents[0], y - unitsYShift, { align: 'right', width: statWidth });
+      if (units) {
+        valueYShift = (fontSizes.glucoseMetrics.values - fontSizes.glucoseMetrics.labels) / 2;
+        const unitsFontSize = isAverageGlucose ? fontSizes.glucoseMetrics.bgUnits : fontSizes.glucoseMetrics.values;
+        const unitsYShift = isAverageGlucose ? valueYShift - 2.15 : valueYShift;
 
-      const valueXShift = this.doc.widthOfString(units) + 1;
+        this.doc
+          .fontSize(unitsFontSize)
+          .text(`${units}`, xExtents[0], y - unitsYShift, { align: 'right', width: statWidth });
+
+        valueXShift = this.doc.widthOfString(units) + 1;
+      }
 
       this.doc
         .fontSize(fontSizes.glucoseMetrics.values)
         .text(`${value}`, xExtents[0], y - valueYShift, { align: 'right', width: statWidth - valueXShift });
 
+      this.setFill(colors.text.goals.glucoseMetrics);
+
+      if (text.glucoseMetrics[this.bgSource][stat.id].subLabel) {
+        this.doc
+          .font(this.font)
+          .fontSize(fontSizes.glucoseMetrics.subLabels)
+          .lineGap(1.3)
+          .text(text.glucoseMetrics[this.bgSource][stat.id].subLabel);
+      }
+
       this.doc
         .font(this.font)
-        .fontSize(fontSizes.glucoseMetrics.subLabels);
+        .fontSize(fontSizes.glucoseMetrics.goals);
 
       const bgUnitsKey = this.bgUnits === MGDL_UNITS ? 'mgdl' : 'mmoll';
       const goal = isAverageGlucose
-        ? text.glucoseMetrics[stat.id].goal[bgUnitsKey]
-        : text.glucoseMetrics[stat.id].goal;
+        ? text.glucoseMetrics[this.bgSource][stat.id].goal?.[bgUnitsKey]
+        : text.glucoseMetrics[this.bgSource][stat.id].goal;
 
-      this.setFill(colors.text.goals.glucoseMetrics);
+      if (goal) {
+        this.doc
+          .lineGap(1.3)
+          .text(goal);
+      }
 
-      this.doc
-        .lineGap(1.3)
-        .text(goal);
+      if (isAverageGlucose && this.bgSource === BGM_DATA_KEY) {
+        this.setFill(colors.text.subStats.glucoseMetrics);
 
-      this.doc
-        .fontSize(fontSizes.glucoseMetrics.subLabels);
+        if (this.stats.bgExtents?.data?.data?.length === 2) {
+          this.doc.moveDown(0.75);
+          const bgExtents = _.map(this.stats.bgExtents?.data?.data, datum => formatDatum(datum, 'bgValue', formattingOpts).value);
 
-      if (text.glucoseMetrics[stat.id].subLabel) this.doc.text(text.glucoseMetrics[stat.id].subLabel);
+          this.doc
+            .font(this.font)
+            .fontSize(fontSizes.glucoseMetrics.subStats)
+            .lineGap(1.3);
+
+          const labelText = text.glucoseMetrics[this.bgSource].bgExtents.label;
+          const labelTextWidth = this.doc.widthOfString(labelText);
+          const lineOffset = 5.5;
+          const valueText = `${bgExtents.reverse().join('/')} ${this.bgUnits}`;
+          const valueTextWidth = this.doc.widthOfString(valueText);
+
+          this.setStroke();
+
+          this.doc
+            .moveTo(xExtents[0] + paddingX + labelTextWidth + 2, this.doc.y + lineOffset)
+            .lineTo(xExtents[0] + statWidth - valueTextWidth - 2, this.doc.y + lineOffset)
+            .dash(1, { space: 2 })
+            .stroke()
+            .lineWidth(0.5);
+
+          this.doc
+            .text(labelText, xExtents[0] + paddingX, this.doc.y, { align: 'left', width: statWidth - paddingX, continued: true })
+            .text(valueText, this.doc.x, this.doc.y, { align: 'right', width: statWidth - paddingX });
+        }
+      }
+
       this.doc.moveDown(1.25);
     });
 
     this.resetText();
   }
 
-  async renderTimeInRanges() {
-    const section = this.sections.timeInRanges;
+  async renderPercentInRanges() {
+    const section = this.sections.percentInRanges;
     this.renderSectionContainer(section);
 
     // Set chart plot within section borders
@@ -387,14 +449,14 @@ class AGPPrintView extends PrintView {
     const chartAreaY = section.y + 1 + this.dpi * 0.25;
     const chartAreaWidth = section.width - 2;
     const chartAreaHeight = section.height - 2 - this.dpi * 0.25 - AGP_SECTION_BORDER_RADIUS;
-    this.renderSVGImage(this.svgDataURLS?.timeInRanges, chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight);
+    this.renderSVGImage(this.svgDataURLS?.percentInRanges, chartAreaX, chartAreaY, chartAreaWidth, chartAreaHeight);
   }
 
   async renderAmbulatoryGlucoseProfile() {
     const section = this.sections.ambulatoryGlucoseProfile;
     this.renderSectionContainer(section);
 
-    if (section.sufficientData) {
+    if (section.sufficientData || this.bgSource === BGM_DATA_KEY) {
       // Set chart plot within section borders
       const chartAreaX = section.x + 1;
       const chartAreaY = section.y + 1 + this.dpi * 0.5;

@@ -13,7 +13,7 @@ import {
 
 import moment from 'moment';
 
-import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS, CGM_DATA_KEY, BGM_DATA_KEY } from '../../src/utils/constants';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
@@ -31,21 +31,14 @@ stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_CONFIG = 'CONFIG';
 
-let queries;
-try {
-  // eslint-disable-next-line global-require, import/no-unresolved
-  queries = require('../../local/PDFDataQueries.json');
-} catch (e) {
-  queries = {};
-}
-
-async function openPDF(dataUtil, { patient }, query) {
+async function openPDF(dataUtil, { patient }, query, bgSource) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
   const data = dataUtil.query(query);
+  const reportType = bgSource === BGM_DATA_KEY ? 'agpBGM' : 'agpCGM';
 
   const opts = {
-    bgPrefs: queries.agp.bgPrefs,
-    timePrefs: queries.agp.timePrefs,
+    bgPrefs: query.bgPrefs,
+    timePrefs: query.timePrefs,
     patient,
   };
 
@@ -64,9 +57,9 @@ async function openPDF(dataUtil, { patient }, query) {
   });
 
   const processedEntries = await Promise.all(promises);
-  opts.svgDataURLS = _.fromPairs(processedEntries);
+  opts.svgDataURLS = { [reportType]: _.fromPairs(processedEntries) };
 
-  await createPrintView('agp', data, opts, doc).render();
+  await createPrintView(reportType, data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
@@ -93,93 +86,131 @@ and then use this story to iterate on the AGP Print PDF outside of Tidepool Web!
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('standard account', (opts, { dataUtil }) => {
-  const latestCBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType.cbg;
-  const daysInRange = 14;
+const daysInRange = 14;
 
-  const daysInRangeOptions = {
-    range: true,
-    min: 1,
-    max: 30,
-    step: 1,
-  };
+const daysInRangeOptions = {
+  range: true,
+  min: 1,
+  max: 30,
+  step: 1,
+};
 
-  const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_CONFIG);
+const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_CONFIG);
 
-  const timezones = {
-    'US/Eastern': 'US/Eastern',
-    'US/Central': 'US/Central',
-    'US/Mountain': 'US/Mountain',
-    'US/Pacific': 'US/Pacific',
-    UTC: 'UTC',
-  };
+const timezones = {
+  'US/Eastern': 'US/Eastern',
+  'US/Central': 'US/Central',
+  'US/Mountain': 'US/Mountain',
+  'US/Pacific': 'US/Pacific',
+  UTC: 'UTC',
+};
 
-  const getTimePrefs = () => {
-    const timeZoneName = options(
-      'Time Zone',
-      timezones,
-      'US/Eastern',
-      { display: 'select' },
-      GROUP_CONFIG
-    );
-    const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
+const getTimePrefs = () => {
+  const timeZoneName = options(
+    'Time Zone',
+    timezones,
+    'US/Eastern',
+    { display: 'select' },
+    GROUP_CONFIG
+  );
 
-    return selectedTimeZone ? {
-      timezoneName: selectedTimeZone,
-      timezoneAware: true,
-    } : undefined;
-  };
+  const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
-  const endMoment = () => moment.utc(latestCBGDatum?.normalTime).tz(getTimePrefs().timezoneName).startOf('day').add(1, 'day');
+  return selectedTimeZone ? {
+    timezoneName: selectedTimeZone,
+    timezoneAware: true,
+  } : undefined;
+};
 
-  const getEndMoment = () => {
-    const endDate = date('End Date', endMoment().toDate(), GROUP_CONFIG);
-    return moment.utc(endDate).tz(getTimePrefs().timezoneName);
-  };
+const endMoment = latestDatum => moment.utc(latestDatum?.normalTime).tz(getTimePrefs().timezoneName).startOf('day').add(1, 'day');
 
-  const getBGPrefs = () => {
-    const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS }, MGDL_UNITS, { display: 'select' }, GROUP_CONFIG);
+const getEndMoment = latestDatum => {
+  const endDate = date('End Date', endMoment(latestDatum).toDate(), GROUP_CONFIG);
+  return moment.utc(endDate).tz(getTimePrefs().timezoneName);
+};
 
-    return bgUnits !== 'None' ? {
-      bgUnits,
-      bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
-    } : undefined;
-  };
+const getBGPrefs = () => {
+  const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS }, MGDL_UNITS, { display: 'select' }, GROUP_CONFIG);
 
-  const getEndpoints = () => {
-    const endDate = getEndMoment();
+  return bgUnits !== 'None' ? {
+    bgUnits,
+    bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
+  } : undefined;
+};
 
-    const endpoints = [
-      endDate.clone().subtract(getDaysInRange(), 'd').startOf('day').valueOf(),
-      endDate.valueOf(),
-    ];
+const getEndpoints = latestDatum => {
+  const endDate = getEndMoment(latestDatum);
 
-    return endpoints;
-  };
+  const endpoints = [
+    endDate.clone().subtract(getDaysInRange(), 'd').startOf('day').valueOf(),
+    endDate.valueOf(),
+  ];
+
+  return endpoints;
+};
+
+stories.add('CGM', ({ dataUtil }) => {
+  const bgSource = CGM_DATA_KEY;
+  const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 
   getTimePrefs();
-  getEndpoints();
+  getEndpoints(latestBGDatum);
   getBGPrefs();
 
   const query = () => ({
-    endpoints: getEndpoints(),
+    endpoints: getEndpoints(latestBGDatum),
     timePrefs: getTimePrefs(),
     bgPrefs: getBGPrefs(),
-    bgSource: 'cbg',
+    bgSource,
     aggregationsByDate: 'dataByDate, statsByDate',
     stats: [
-      'timeInRange',
       'averageGlucose',
-      'sensorUsage',
-      'glucoseManagementIndicator',
+      'bgExtents',
       'coefficientOfVariation',
+      'glucoseManagementIndicator',
+      'sensorUsage',
+      'timeInRange',
     ],
     types: { cbg: {} },
+    metaData: ['bgSources'],
   });
 
   return (
     <button
-      onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query())}>
+      onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query(), bgSource)}>
+      Open PDF in new tab
+    </button>
+  );
+}, { notes });
+
+stories.add('BGM', ({ dataUtil }) => {
+  const bgSource = BGM_DATA_KEY;
+  const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
+
+  getTimePrefs();
+  getEndpoints(latestBGDatum);
+  getBGPrefs();
+
+  const query = () => ({
+    endpoints: getEndpoints(latestBGDatum),
+    timePrefs: getTimePrefs(),
+    bgPrefs: getBGPrefs(),
+    bgSource,
+    aggregationsByDate: 'dataByDate, statsByDate',
+    stats: [
+      'averageGlucose',
+      'bgExtents',
+      'coefficientOfVariation',
+      'glucoseManagementIndicator',
+      'readingsInRange',
+    ],
+    types: { smbg: {} },
+    metaData: ['bgSources'],
+  });
+
+  return (
+    <button
+      onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query(), bgSource)}>
       Open PDF in new tab
     </button>
   );

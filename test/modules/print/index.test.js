@@ -249,13 +249,37 @@ describe('print module', () => {
     });
   });
 
-  it('should only render the agp view when other views are disabled', () => {
+  it('should only render the agp CGM view when other views are disabled', () => {
     const agpOnlyEnabledOpts = {
       basics: { disabled: true },
       daily: { disabled: true },
       bgLog: { disabled: true },
       settings: { disabled: true },
-      agp: { disabled: false },
+      agpCGM: { disabled: false },
+      agpBGM: { disabled: true },
+    };
+
+    const result = Module.createPrintPDFPackage(data, agpOnlyEnabledOpts);
+    doc.stream.end();
+
+    result.then(() => {
+      sinon.assert.calledOnce(Module.utils.AGPPrintView);
+
+      sinon.assert.notCalled(Module.utils.BasicsPrintView);
+      sinon.assert.notCalled(Module.utils.DailyPrintView);
+      sinon.assert.notCalled(Module.utils.BgLogPrintView);
+      sinon.assert.notCalled(Module.utils.SettingsPrintView);
+    });
+  });
+
+  it('should only render the agp BGM view when other views are disabled', () => {
+    const agpOnlyEnabledOpts = {
+      basics: { disabled: true },
+      daily: { disabled: true },
+      bgLog: { disabled: true },
+      settings: { disabled: true },
+      agpCGM: { disabled: true },
+      agpBGM: { disabled: false },
     };
 
     const result = Module.createPrintPDFPackage(data, agpOnlyEnabledOpts);
