@@ -149,7 +149,7 @@ const getEndpoints = latestDatum => {
   return endpoints;
 };
 
-stories.add('CGM', ({ dataUtil }) => {
+stories.add('CGM', (opts, { dataUtil }) => {
   const bgSource = CGM_DATA_KEY;
   const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 
@@ -183,7 +183,7 @@ stories.add('CGM', ({ dataUtil }) => {
   );
 }, { notes });
 
-stories.add('BGM', ({ dataUtil }) => {
+stories.add('BGM', (opts, { dataUtil }) => {
   const bgSource = BGM_DATA_KEY;
   const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 
