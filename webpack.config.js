@@ -170,7 +170,7 @@ module.exports = {
       { test: /\.afm$/, type: 'asset/source' },
       // bundle and load binary files inside static-assets folder as base64
       {
-        test: /src(([/\\]).*)static-assets/,
+        test: /static-assets/,
         type: 'asset/inline',
         generator: {
           dataUrl: content => content.toString('base64'),

@@ -3,7 +3,6 @@ coverage/
 data/
 local/
 src/
-!src/modules/print/static-assets
 stories/
 storiesDatatypes/
 storybook/
