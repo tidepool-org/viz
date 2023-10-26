@@ -375,11 +375,11 @@ describe('BasicsPrintView', () => {
       Renderer.renderAggregatedStats();
       sinon.assert.neverCalledWith(Renderer.renderHorizontalBarStat, null);
 
-      Renderer.stats.readingsInRange = { data: { raw: { total: 11 } } };
+      Renderer.stats.readingsInRange = { data: { raw: { counts: { total: 11 } } } };
       Renderer.bgSource = 'smbg';
       Renderer.renderAggregatedStats();
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
-        { data: { raw: { total: 11 } } },
+        { data: { raw: { counts: { total: 11 } } } },
         {
           heading: {
             text: 'BG Distribution',

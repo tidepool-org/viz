@@ -241,7 +241,7 @@ class BasicsPrintView extends PrintView {
             text: 'BG Distribution',
             note: t('{{source}} data from {{count}} readings', {
               source: statBgSourceLabels[this.bgSource],
-              count: readingsInRange.data?.raw?.total,
+              count: readingsInRange.data?.raw?.counts?.total,
             }),
           },
           secondaryFormatKey: 'tooltip',
