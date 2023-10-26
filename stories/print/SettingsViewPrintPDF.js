@@ -52,7 +52,7 @@ import tandemDataFlatRate from '../../data/pumpSettings/tandem/flatrate.json';
 
 function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  // const stream = doc.pipe(blobStream());
+
   const opts = {
     bgPrefs: queries.settings.bgPrefs,
     timePrefs: queries.settings.timePrefs,
