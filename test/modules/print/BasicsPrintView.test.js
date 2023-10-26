@@ -956,8 +956,8 @@ describe('BasicsPrintView', () => {
 
       sinon.assert.calledOnce(Renderer.defineStatColumns);
       sinon.assert.calledWith(Renderer.defineStatColumns, {
-        labelWidth: 80,
-        valueWidth: 20,
+        labelWidth: 78,
+        valueWidth: 22,
         height: 20,
         labelHeader: 'Total basal events',
         valueHeader: '10',

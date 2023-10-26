@@ -834,8 +834,8 @@ class BasicsPrintView extends PrintView {
       });
 
       const tableColumns = this.defineStatColumns({
-        labelWidth: columnWidth * 0.8,
-        valueWidth: columnWidth * 0.2,
+        labelWidth: columnWidth * 0.78,
+        valueWidth: columnWidth * 0.22,
         height: 20,
         labelHeader: primaryDimension.label,
         valueHeader: (primaryDimension.value || 0).toString(),
