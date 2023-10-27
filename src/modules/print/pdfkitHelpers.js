@@ -1,6 +1,3 @@
-/* global window */
-const self = window || this;
-
 export const waitForData = async doc => new Promise((resolve, reject) => {
   const buffers = [];
   doc.on('data', buffers.push.bind(buffers));
@@ -13,6 +10,7 @@ export const waitForData = async doc => new Promise((resolve, reject) => {
 });
 
 export const base64ToArrayBuffer = base64Str => {
+  console.log('self', self);
   const binaryString = self.atob(base64Str);
   const binaryLen = binaryString.length;
   const bytes = new Uint8Array(binaryLen);
