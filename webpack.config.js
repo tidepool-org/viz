@@ -57,8 +57,8 @@ const babelLoaderConfiguration = {
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
   exclude: [
-    /src(([/\\]).*)static-assets/,
-    /src(([/\\]).*)lazy-assets/,
+    /static-assets/,
+    /lazy-assets/,
   ],
   use: {
     loader: 'url-loader',
@@ -178,7 +178,7 @@ module.exports = {
       },
       // load binary files inside lazy-assets folder as a URL
       {
-        test: /src(([/\\]).*)lazy-assets/,
+        test: /lazy-assets/,
         type: 'asset/resource'
       },
       // convert to base64 and include inline file system binary files used by fontkit and linebreak
