@@ -105,7 +105,7 @@ export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
 
 export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : parseFloat(value));
 
-export const formatDatum = (datum = {}, format, options = {}) => {
+export const formatDatum = (datum = {}, format, opts = {}) => {
   let id = datum.id;
   let value = _.isFinite(datum) ? datum : datum.value;
   let suffix = datum.suffix || '';
@@ -115,18 +115,19 @@ export const formatDatum = (datum = {}, format, options = {}) => {
   let upperValue;
   let upperColorId;
 
-  const opts = _.cloneDeep(options);
+  const {
+    bgPrefs,
+    data,
+    useAGPFormat,
+    emptyDataPlaceholder = '--',
+    forcePlainTextValues = false,
+  } = opts
 
-  _.defaults(opts, {
-    emptyDataPlaceholder: '--',
-    forcePlainTextValues: false,
-  });
-
-  const total = _.get(opts, 'data.total.value');
+  const total = _.get(data, 'total.value');
 
   const disableStat = () => {
     id = 'statDisabled';
-    value = opts.emptyDataPlaceholder;
+    value = emptyDataPlaceholder;
   };
 
   switch (format) {
@@ -142,13 +143,13 @@ export const formatDatum = (datum = {}, format, options = {}) => {
       break;
 
     case statFormats.bgRange:
-      value = generateBgRangeLabels(opts.bgPrefs, { condensed: true })[id];
+      value = generateBgRangeLabels(bgPrefs, { condensed: true })[id];
       break;
 
     case statFormats.bgValue:
       if (value >= 0) {
-        id = classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), value);
-        value = formatBgValue(value, opts.bgPrefs, undefined, opts.useAGPFormat);
+        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), value);
+        value = formatBgValue(value, bgPrefs, undefined, useAGPFormat);
       } else {
         disableStat();
       }
@@ -177,7 +178,7 @@ export const formatDatum = (datum = {}, format, options = {}) => {
     case statFormats.cv:
       if (value >= 0) {
         id = classifyCvValue(value);
-        value = opts.useAGPFormat
+        value = useAGPFormat
           ? bankersRound(value, 1).toString()
           : formatDecimalNumber(value);
         suffix = '%';
@@ -196,7 +197,7 @@ export const formatDatum = (datum = {}, format, options = {}) => {
 
     case statFormats.gmi:
       if (value >= 0) {
-        value = opts.useAGPFormat
+        value = useAGPFormat
           ? bankersRound(value, 1).toString()
           : formatDecimalNumber(value, 1);
         suffix = '%';
@@ -227,16 +228,16 @@ export const formatDatum = (datum = {}, format, options = {}) => {
       if (value >= 0 && deviation >= 0) {
         lowerValue = value - deviation;
         lowerColorId = lowerValue >= 0
-          ? classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), lowerValue)
+          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), lowerValue)
           : 'low';
 
         upperValue = value + deviation;
-        upperColorId = classifyBgValue(_.get(opts.bgPrefs, 'bgBounds'), upperValue);
+        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), upperValue);
 
-        lowerValue = formatBgValue(lowerValue, opts.bgPrefs);
-        upperValue = formatBgValue(upperValue, opts.bgPrefs);
+        lowerValue = formatBgValue(lowerValue, bgPrefs);
+        upperValue = formatBgValue(upperValue, bgPrefs);
 
-        value = !opts.forcePlainTextValues ? (
+        value = !forcePlainTextValues ? (
           <span>
             <span style={{
               color: BG_COLORS[lowerColorId],
@@ -258,7 +259,7 @@ export const formatDatum = (datum = {}, format, options = {}) => {
 
     case statFormats.standardDevValue:
       if (value >= 0) {
-        value = formatBgValue(value, opts.bgPrefs);
+        value = formatBgValue(value, bgPrefs);
       } else {
         disableStat();
       }
