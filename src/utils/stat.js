@@ -121,7 +121,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     useAGPFormat,
     emptyDataPlaceholder = '--',
     forcePlainTextValues = false,
-  } = opts
+  } = opts;
 
   const total = _.get(data, 'total.value');
 
