@@ -69,33 +69,15 @@ const imageLoaderConfiguration = {
 const fontLoaderConfiguration = [
   {
     test: /\.eot$/,
-    use: {
-      loader: 'url-loader',
-      options: {
-        limit: 10000,
-        mimetype: 'application/vnd.ms-fontobject',
-      },
-    },
+    type: 'asset/resource',
   },
   {
     test: /\.woff$/,
-    use: {
-      loader: 'url-loader',
-      options: {
-        limit: 10000,
-        mimetype: 'application/font-woff',
-      },
-    },
+    type: 'asset/resource',
   },
   {
     test: /\.ttf$/,
-    use: {
-      loader: 'url-loader',
-      options: {
-        limit: 10000,
-        mimetype: 'application/octet-stream',
-      },
-    },
+    type: 'asset/resource',
   },
 ];
 
