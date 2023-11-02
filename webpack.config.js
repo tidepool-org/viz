@@ -60,11 +60,9 @@ const imageLoaderConfiguration = {
     /static-assets/,
     /lazy-assets/,
   ],
-  use: {
-    loader: 'url-loader',
-    options: {
-      name: '[name].[ext]',
-    },
+  type: 'asset/resource',
+  generator: {
+    filename: '[name].[ext]'
   },
 };
 
