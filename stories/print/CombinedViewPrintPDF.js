@@ -90,18 +90,16 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   await _.each(['agpBGM', 'agpCGM'], async reportType => {
     let images;
 
-    try{
+    try {
       images = await generateAGPFigureDefinitions(data[reportType]);
-    } catch(e) {
+    } catch (e) {
       return new Error(e);
     }
 
     promises.push(..._.map(images, async (image, key) => {
       if (_.isArray(image)) {
         const processedArray = await Promise.all(
-          _.map(image, async (img) => {
-            return await Plotly.toImage(img, { format: 'svg' });
-          })
+          _.map(image, async img => Plotly.toImage(img, { format: 'svg' }))
         );
         return [reportType, [key, processedArray]];
       } else {
@@ -109,14 +107,16 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
         return [reportType, [key, processedValue]];
       }
     }));
+
+    return promises;
   });
 
   const results = await Promise.all(promises);
 
   if (results.length) {
-    const processedImages = _.reduce(results, (res, entry, i) => {
+    const processedImages = _.reduce(results, (res, entry) => {
       const processedImage = _.fromPairs(entry.slice(1));
-      res[entry[0]] = {...res[entry[0]], ...processedImage };
+      res[entry[0]] = { ...res[entry[0]], ...processedImage };
       return res;
     }, {});
 
