@@ -18,6 +18,7 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import Plotly from 'plotly.js-basic-dist-min';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
@@ -82,14 +83,52 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
       bgLog: 30,
     },
     patient,
-    svgDataURLS: await generateAGPFigureDefinitions(data.agp),
   };
 
+  const promises = [];
+
+  await _.each(['agpBGM', 'agpCGM'], async reportType => {
+    let images;
+
+    try{
+      images = await generateAGPFigureDefinitions(data[reportType]);
+    } catch(e) {
+      return new Error(e);
+    }
+
+    promises.push(..._.map(images, async (image, key) => {
+      if (_.isArray(image)) {
+        const processedArray = await Promise.all(
+          _.map(image, async (img) => {
+            return await Plotly.toImage(img, { format: 'svg' });
+          })
+        );
+        return [reportType, [key, processedArray]];
+      } else {
+        const processedValue = await Plotly.toImage(image, { format: 'svg' });
+        return [reportType, [key, processedValue]];
+      }
+    }));
+  });
+
+  const results = await Promise.all(promises);
+
+  if (results.length) {
+    const processedImages = _.reduce(results, (res, entry, i) => {
+      const processedImage = _.fromPairs(entry.slice(1));
+      res[entry[0]] = {...res[entry[0]], ...processedImage };
+      return res;
+    }, {});
+
+    opts.svgDataURLS = processedImages;
+  }
+
+  if (data.agpCGM) await createPrintView('agpCGM', data.agpCGM, opts, doc).render();
+  if (data.agpBGM) await createPrintView('agpBGM', data.agpBGM, opts, doc).render();
   if (data.basics) createPrintView('basics', data.basics, opts, doc).render();
   if (data.daily) createPrintView('daily', data.daily, opts, doc).render();
   if (data.bgLog) createPrintView('bgLog', data.bgLog, opts, doc).render();
   if (data.settings) createPrintView('settings', data.settings, opts, doc).render();
-  if (data.agp) await createPrintView('agp', data.agp, opts, doc).render();
 
   PrintView.renderPageNumbers(doc);
 
