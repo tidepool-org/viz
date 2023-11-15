@@ -3,6 +3,7 @@ import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
 
 import { DPI } from './constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
@@ -12,7 +13,8 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
 export const AGP_BG_CLAMP_MGDL = 350;
 export const AGP_BG_CLAMP_MMOLL = 19.4;
 export const AGP_FOOTER_Y_PADDING = DPI * 0.25;
-export const AGP_TIR_MIN_HEIGHT = 5;
+export const AGP_TIR_MIN_HEIGHT = 6;
+export const AGP_TIR_MIN_TARGET_HEIGHT = 12;
 export const AGP_SECTION_BORDER_RADIUS = 8;
 export const AGP_SECTION_HEADER_HEIGHT = DPI * 0.25;
 export const AGP_SECTION_DESCRIPTION_HEIGHT = DPI * 0.25;
@@ -24,45 +26,90 @@ export const AGP_FONT_FAMILY = 'Helvetica, Arial, Sans-Serif';
 
 export const text = {
   reportHeader: t('AGP Report:'),
-  reportSubHeader: t('Continuous glucose monitoring'),
+  reportSubHeader: {
+    [CGM_DATA_KEY]: t('Continuous Glucose Monitoring'),
+    [BGM_DATA_KEY]: t('Blood Glucose Monitoring'),
+  },
   reportFooter: t('Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022'),
   reportInsuffienctData: t('Insufficient data to generate an AGP Report.'),
-  timeInRanges: {
-    title: t('Time in Ranges'),
-    subtitle: t('Goals for Type 1 and Type 2 Diabetes'),
+  percentInRanges: {
+    [CGM_DATA_KEY]: {
+      title: t('Time in Ranges'),
+      subtitle: t('Goals for Type 1 and Type 2 Diabetes'),
+    },
+    [BGM_DATA_KEY]: {
+      title: t('Percent BGM Readings in Ranges'),
+    },
   },
   reportInfo: {
     dob: t('DOB:'),
     mrn: t('MRN:'),
   },
   glucoseMetrics: {
-    title: t('Glucose metrics'),
-    averageGlucose: {
-      label: t('Average Glucose'),
-      goal: {
-        mgdl: t('Goal: <154 mg/dL'),
-        mmoll: t('Goal: <8.6 mmol/L'),
+    [CGM_DATA_KEY]: {
+      title: t('Glucose metrics'),
+      averageGlucose: {
+        label: t('Average Glucose'),
+        goal: {
+          mgdl: t('Goal: <154 mg/dL'),
+          mmoll: t('Goal: <8.6 mmol/L'),
+        },
+      },
+      coefficientOfVariation: {
+        label: t('Glucose Variability'),
+        subLabel: t('Defined as percent coefficient of variation'),
+        goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+      },
+      glucoseManagementIndicator: {
+        label: t('Glucose Management Indicator (GMI)'),
+        goal: t('Goal: <7%'),
       },
     },
-    glucoseManagementIndicator: {
-      label: t('Glucose Management Indicator (GMI)'),
-      goal: t('Goal: <7%'),
-    },
-    coefficientOfVariation: {
-      label: t('Glucose Variability'),
-      subLabel: t('Defined as percent coefficient of variation'),
-      goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+    [BGM_DATA_KEY]: {
+      title: t('BGM Statistics'),
+      averageGlucose: {
+        label: t('Average Glucose'),
+      },
+      bgExtents: {
+        label: t('Lowest/Highest Glucose'),
+      },
+      coefficientOfVariation: {
+        label: t('Glucose Variability'),
+        subLabel: t('Defined as percent coefficient of variation'),
+        goal: t('Goal: <=36%'), // \u2264 unicode symbol not available in Helvetica, and we don't own license for Arial
+      },
+      dailyReadingsInRange: {
+        label: t('Average Readings/Day'),
+      },
+      readingsInRange: {
+        label: t('Number of Readings'),
+      },
     },
   },
   ambulatoryGlucoseProfile: {
-    title: t('Ambulatory Glucose Profile (AGP)'),
-    description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
-    targetRange: t('Target<br>Range'),
-    insufficientData: t('Insufficient CGM data to generate AGP graph'),
+    [CGM_DATA_KEY]: {
+      title: t('Ambulatory Glucose Profile (AGP)'),
+      description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
+      targetRange: t('Target<br>Range'),
+      insufficientData: t('Insufficient CGM data to generate AGP graph'),
+    },
+    [BGM_DATA_KEY]: {
+      title: t('Ambulatory Glucose Profile (AGP)'),
+      insufficientDataTitle: t('Modal Day BGM Values Graph'),
+      description: t('AGP is a summary of glucose values from the report period, with median (50%) and other percentiles shown as if they occurred in a single day.'),
+      targetRange: t('Target<br>Range'),
+      insufficientData: t('Insufficient glucose data to generate AGP'),
+    },
   },
   dailyGlucoseProfiles: {
-    title: t('Daily Glucose Profiles'),
-    description: t('Each daily profile represents a midnight-to-midnight period.'),
+    [CGM_DATA_KEY]: {
+      title: t('Daily Glucose Profiles'),
+      description: t('Each daily profile represents a midnight-to-midnight period.'),
+    },
+    [BGM_DATA_KEY]: {
+      title: t('Daily Glucose Profiles'),
+      description: t('Each daily profile represents a midnight-to-midnight period. The more readings available throughout the day, the more opportunities for improvement.'),
+    },
   },
   bgRanges: {
     veryHigh: t('Very High'),
@@ -98,7 +145,7 @@ export const fontSizes = {
     description: 7,
     insufficientData: 7,
   },
-  timeInRanges: {
+  percentInRanges: {
     values: 9,
     ticks: 7,
     summaries: 12,
@@ -110,6 +157,7 @@ export const fontSizes = {
     bgUnits: 8,
     labels: 9,
     subLabels: 8,
+    subStats: 8,
     goals: 8,
   },
   ambulatoryGlucoseProfile: {
@@ -160,6 +208,9 @@ export const colors = {
       TIRminutes: black,
       glucoseMetrics: darkGrey,
     },
+    subStats: {
+      glucoseMetrics: black,
+    },
     ticks: {
       bg: darkGrey,
       dailyProfileBg: black,
@@ -194,6 +245,13 @@ export const colors = {
     highShaded: '#FFD180',
     veryHigh: '#FF6900',
     empty: darkGrey,
+  },
+  bgReadings: {
+    veryLow: '#A30014',
+    low: '#F20000',
+    target: '#14B85C',
+    high: '#FFA600',
+    veryHigh: '#FF6900',
   },
   ambulatoryGlucoseProfile: {
     median: {

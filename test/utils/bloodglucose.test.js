@@ -819,6 +819,9 @@ describe('blood glucose utilities', () => {
         msX: bin,
         msFrom: 0,
         msTo: bin * 2,
+        firstQuartile: undefined,
+        median: undefined,
+        thirdQuartile: undefined,
       });
     });
 
@@ -869,7 +872,7 @@ describe('blood glucose utilities', () => {
   });
 
   describe('mungeBGDataBins', () => {
-    it('should munge SMBG data', () => {
+    it('should munge SMBG data appropriately without quartiles if insufficient data for them', () => {
       const bgType = 'smbg';
       const binSize = MS_IN_HOUR;
 
@@ -882,16 +885,80 @@ describe('blood glucose utilities', () => {
         { msPer24: 84603000, value: 200 },
       ];
 
-      const outerQuantiles = [0.1, 0.9];
-      const mungedData = bgUtils.mungeBGDataBins(bgType, binSize, data, outerQuantiles);
+      const mungedData = bgUtils.mungeBGDataBins(bgType, binSize, data);
       expect(mungedData).to.be.an('array').and.to.have.lengthOf(24);
 
       expect(_.first(mungedData)).to.eql({
-        id: '1800000', min: 101, mean: 102, max: 103, msX: 1800000, msFrom: 0, msTo: 3600000,
+        id: '1800000',
+        min: 101,
+        mean: 102,
+        max: 103,
+        msX: 1800000,
+        msFrom: 0,
+        msTo: 3600000,
+        firstQuartile: undefined,
+        median: 102,
+        thirdQuartile: undefined,
       });
 
       expect(_.last(mungedData)).to.eql({
-        id: '84600000', min: 100, mean: 140, max: 200, msX: 84600000, msFrom: 82800000, msTo: 86400000,
+        id: '84600000',
+        min: 100,
+        mean: 140,
+        max: 200,
+        msX: 84600000,
+        msFrom: 82800000,
+        msTo: 86400000,
+        firstQuartile: undefined,
+        median: 120,
+        thirdQuartile: undefined,
+      });
+    });
+
+    it('should munge SMBG data appropriately including quartiles if sufficient data for them', () => {
+      const bgType = 'smbg';
+      const binSize = MS_IN_HOUR;
+
+      const data = [
+        { msPer24: 181000, value: 101 },
+        { msPer24: 182000, value: 102 },
+        { msPer24: 183000, value: 103 },
+        { msPer24: 183000, value: 104 },
+        { msPer24: 183000, value: 105 },
+        { msPer24: 84601000, value: 100 },
+        { msPer24: 84602000, value: 120 },
+        { msPer24: 84603000, value: 200 },
+        { msPer24: 84604000, value: 180 },
+        { msPer24: 84605000, value: 150 },
+      ];
+
+      const mungedData = bgUtils.mungeBGDataBins(bgType, binSize, data);
+      expect(mungedData).to.be.an('array').and.to.have.lengthOf(24);
+
+      expect(_.first(mungedData)).to.eql({
+        id: '1800000',
+        min: 101,
+        mean: 103,
+        max: 105,
+        msX: 1800000,
+        msFrom: 0,
+        msTo: 3600000,
+        firstQuartile: 102,
+        median: 103,
+        thirdQuartile: 104,
+      });
+
+      expect(_.last(mungedData)).to.eql({
+        id: '84600000',
+        min: 100,
+        mean: 150,
+        max: 200,
+        msX: 84600000,
+        msFrom: 82800000,
+        msTo: 86400000,
+        firstQuartile: 120,
+        median: 150,
+        thirdQuartile: 180,
       });
     });
 

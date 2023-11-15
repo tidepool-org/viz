@@ -107,7 +107,7 @@ export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : p
 
 export const formatDatum = (datum = {}, format, opts = {}) => {
   let id = datum.id;
-  let value = datum.value;
+  let value = _.isFinite(datum) ? datum : datum.value;
   let suffix = datum.suffix || '';
   let deviation;
   let lowerValue;
@@ -398,7 +398,7 @@ export const getStatAnnotations = (data, type, opts = {}) => {
     annotations.push(t('**Why is this stat empty?**\n\nThere is not enough data present in this view to calculate it.'));
   } else if (_.includes(bgStats, type)) {
     if (bgSource === 'smbg') {
-      annotations.push(t('Derived from _**{{total}}**_ {{smbgLabel}} readings.', { total: data.total, smbgLabel: statBgSourceLabels.smbg }));
+      annotations.push(t('Derived from _**{{total}}**_ {{smbgLabel}} readings.', { total: _.get(data, 'counts.total', data.total), smbgLabel: statBgSourceLabels.smbg }));
     }
   }
 
@@ -415,6 +415,8 @@ export const getStatData = (data, type, opts = {}) => {
       ...data,
     },
   };
+
+  const readingsInRangeDataPath = opts.days > 1 ? 'dailyAverages' : 'counts';
 
   switch (type) {
     case commonStats.averageGlucose:
@@ -475,7 +477,6 @@ export const getStatData = (data, type, opts = {}) => {
           title: t('Min BG'),
         },
       ];
-
       break;
 
     case commonStats.carbs:
@@ -528,31 +529,31 @@ export const getStatData = (data, type, opts = {}) => {
       statData.data = [
         {
           id: 'veryLow',
-          value: ensureNumeric(data.veryLow),
+          value: ensureNumeric(data[readingsInRangeDataPath].veryLow),
           title: t('Readings Below Range'),
           legendTitle: bgRanges.veryLow,
         },
         {
           id: 'low',
-          value: ensureNumeric(data.low),
+          value: ensureNumeric(data[readingsInRangeDataPath].low),
           title: t('Readings Below Range'),
           legendTitle: bgRanges.low,
         },
         {
           id: 'target',
-          value: ensureNumeric(data.target),
+          value: ensureNumeric(data[readingsInRangeDataPath].target),
           title: t('Readings In Range'),
           legendTitle: bgRanges.target,
         },
         {
           id: 'high',
-          value: ensureNumeric(data.high),
+          value: ensureNumeric(data[readingsInRangeDataPath].high),
           title: t('Readings Above Range'),
           legendTitle: bgRanges.high,
         },
         {
           id: 'veryHigh',
-          value: ensureNumeric(data.veryHigh),
+          value: ensureNumeric(data[readingsInRangeDataPath].veryHigh),
           title: t('Readings Above Range'),
           legendTitle: bgRanges.veryHigh,
         },
@@ -564,6 +565,8 @@ export const getStatData = (data, type, opts = {}) => {
           'data',
           _.findIndex(statData.data, { id: 'target' }),
         ],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
       };
       break;
 
@@ -858,6 +861,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
         summary: statFormats.percentage,
         tooltip: statFormats.bgCount,
         tooltipTitle: statFormats.bgRange,
+        count: statFormats.bgCount,
       };
       stat.legend = true;
       stat.hideSummaryUnits = true;

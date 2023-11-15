@@ -78,7 +78,7 @@ export function createPrintView(type, data, opts, doc) {
     margins: constants.MARGINS,
     patient,
     smallFontSize: constants.SMALL_FONT_SIZE,
-    svgDataURLS,
+    svgDataURLS: svgDataURLS?.[type],
     width: constants.WIDTH,
   };
 
@@ -118,12 +118,12 @@ export function createPrintView(type, data, opts, doc) {
       });
       break;
 
-    case 'agp':
+    case 'agpBGM':
       Renderer = utils.AGPPrintView;
+      break;
 
-      renderOpts = _.assign(renderOpts, {
-        title: t('AGP Charts'),
-      });
+    case 'agpCGM':
+      Renderer = utils.AGPPrintView;
       break;
 
     default:
@@ -148,7 +148,8 @@ export function createPrintPDFPackage(data, opts) {
     daily = {},
     bgLog = {},
     settings = {},
-    agp = {},
+    agpCGM = {},
+    agpBGM = {},
   } = opts;
 
   if (_.get(patient, 'preferences.displayLanguageCode')) {
@@ -168,15 +169,16 @@ export function createPrintPDFPackage(data, opts) {
     const doc = new DocLib({ autoFirstPage: false, bufferPages: true, margin: constants.MARGIN });
     const stream = doc.pipe(streamLib());
 
+    if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
+    if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
     if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
     if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
     if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
     if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
-    if (!agp.disabled) await createPrintView('agp', data.agp, pdfOpts, doc).render();
 
     if (
       _.every(
-        [basics, daily, bgLog, settings, agp],
+        [agpCGM, agpBGM, basics, daily, bgLog, settings],
         (section) => section.disabled
       )
     ) {
