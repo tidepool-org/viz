@@ -165,6 +165,9 @@ class PrintView {
     // Clear previous and set up pageAdded listeners :/
     this.doc.removeAllListeners('pageAdded');
     this.doc.on('pageAdded', this.newPage);
+
+    // Unset any text styles lingering from previous reports
+    if (this.initialTotalPages > 0) this.resetText();
   }
 
   newPage(dateText) {

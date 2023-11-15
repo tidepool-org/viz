@@ -400,7 +400,7 @@ class DailyPrintView extends PrintView {
     _.forOwn(statsData, (statData, statType) => {
       const stat = getStatDefinition(statData, statType, {
         bgSource: this.bgSource,
-        days: this.endpoints.activeDays || this.endpoints.days,
+        days: 1,
         bgPrefs: this.bgPrefs,
         manufacturer: this.manufacturer,
       });

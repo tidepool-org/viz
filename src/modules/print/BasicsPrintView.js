@@ -237,7 +237,7 @@ class BasicsPrintView extends PrintView {
             text: 'BG Distribution',
             note: t('{{source}} data from {{count}} readings', {
               source: statBgSourceLabels[this.bgSource],
-              count: readingsInRange.data?.raw?.total,
+              count: readingsInRange.data?.raw?.counts?.total,
             }),
           },
           secondaryFormatKey: 'tooltip',
@@ -597,7 +597,7 @@ class BasicsPrintView extends PrintView {
         // Check to see if there's room on the current page, and if not, render on a new page
         const calendarHeight = this.calendar.pos[type].y + (this.calendar.rowHeight * rows.length);
         if (calendarHeight > this.chartArea.bottomEdge) {
-          if (this.currentPageIndex + 1 < this.totalPages) {
+          if (this.initialTotalPages + this.currentPageIndex + 1 < this.totalPages) {
             this.goToPage(this.currentPageIndex + 1);
           } else {
             this.doc.addPage();
@@ -830,8 +830,8 @@ class BasicsPrintView extends PrintView {
       });
 
       const tableColumns = this.defineStatColumns({
-        labelWidth: columnWidth * 0.8,
-        valueWidth: columnWidth * 0.2,
+        labelWidth: columnWidth * 0.78,
+        valueWidth: columnWidth * 0.22,
         height: 20,
         labelHeader: primaryDimension.label,
         valueHeader: (primaryDimension.value || 0).toString(),
