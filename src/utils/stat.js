@@ -398,7 +398,7 @@ export const getStatAnnotations = (data, type, opts = {}) => {
     annotations.push(t('**Why is this stat empty?**\n\nThere is not enough data present in this view to calculate it.'));
   } else if (_.includes(bgStats, type)) {
     if (bgSource === 'smbg') {
-      annotations.push(t('Derived from _**{{total}}**_ {{smbgLabel}} readings.', { total: data.total, smbgLabel: statBgSourceLabels.smbg }));
+      annotations.push(t('Derived from _**{{total}}**_ {{smbgLabel}} readings.', { total: _.get(data, 'counts.total', data.total), smbgLabel: statBgSourceLabels.smbg }));
     }
   }
 
