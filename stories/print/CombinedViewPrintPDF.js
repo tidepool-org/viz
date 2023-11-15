@@ -131,26 +131,6 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   if (data.bgLog) createPrintView('bgLog', data.bgLog, opts, doc).render();
   if (data.settings) createPrintView('settings', data.settings, opts, doc).render();
 
-  if (data.agp) {
-    const images = await generateAGPFigureDefinitions(data.agp);
-
-    const promises = _.map(images, async (image, key) => {
-      if (_.isArray(image)) {
-        const processedArray = await Promise.all(
-          _.map(image, async (img) => Plotly.toImage(img, { format: 'svg' }))
-        );
-        return [key, processedArray];
-      } else {
-        const processedValue = await Plotly.toImage(image, { format: 'svg' });
-        return [key, processedValue];
-      }
-    });
-
-    const processedEntries = await Promise.all(promises);
-    opts.svgDataURLS = _.fromPairs(processedEntries);
-    await createPrintView('agp', data.agp, opts, doc).render();
-  }
-
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
