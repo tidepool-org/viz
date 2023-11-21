@@ -34,7 +34,6 @@ packageConfig.externals = {
   moment: 'moment',
   'moment-timezone': 'moment-timezone',
   'parse-svg-path': 'parse-svg-path',
-  pdfkit: 'pdfkit',
   process: 'process',
   'prop-types': 'prop-types',
   react: 'react',
