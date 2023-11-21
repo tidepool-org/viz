@@ -60,24 +60,24 @@ const imageLoaderConfiguration = {
     /static-assets/,
     /lazy-assets/,
   ],
-  type: 'asset/resource',
+  type: 'asset',
   generator: {
-    filename: '[name].[ext]'
+    filename: '[name].[ext]',
   },
 };
 
 const fontLoaderConfiguration = [
   {
     test: /\.eot$/,
-    type: 'asset/resource',
+    type: 'asset',
   },
   {
     test: /\.woff$/,
-    type: 'asset/resource',
+    type: 'asset',
   },
   {
     test: /\.ttf$/,
-    type: 'asset/resource',
+    type: 'asset',
   },
 ];
 
