@@ -1,5 +1,4 @@
 import React from 'react';
-import { withKnobs } from '@storybook/addon-knobs';
 
 import DataUtil from '../src/utils/DataUtil';
 
@@ -36,7 +35,6 @@ const preview = {
     (Story) => (
       <div>{Story(props)}</div>
     ),
-    withKnobs,
   ],
 };
 
