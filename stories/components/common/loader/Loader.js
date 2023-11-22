@@ -1,36 +1,54 @@
 import React from 'react';
 
-import { storiesOf } from '@storybook/react';
-
 import Loader from '../../../../src/components/common/loader/Loader';
 
 const props = {};
 
 const BackgroundDecorator = (story) => (
-  <div style={{ backgroundColor: '#ddd', width: '100%', height: '96vh' }}>
-    {story()}
-  </div>
+  <div style={{ backgroundColor: '#ddd', width: '100%', height: '96vh' }}>{story()}</div>
 );
 
-storiesOf('Loader', module)
-  .addDecorator(BackgroundDecorator)
-  .add('defaults', () => (
+export default {
+  title: 'Loader',
+  decorators: [BackgroundDecorator],
+};
+
+export const Defaults = {
+  render: () => (
     <div>
       <Loader {...props} />
     </div>
-  ))
-  .add('with overlay', () => (
+  ),
+
+  name: 'defaults',
+};
+
+export const WithOverlay = {
+  render: () => (
     <div>
       <Loader {...props} overlay />
     </div>
-  ))
-  .add('with custom text', () => (
+  ),
+
+  name: 'with overlay',
+};
+
+export const WithCustomText = {
+  render: () => (
     <div>
       <Loader {...props} text="Ah Yeah :)" />
     </div>
-  ))
-  .add('with no text', () => (
+  ),
+
+  name: 'with custom text',
+};
+
+export const WithNoText = {
+  render: () => (
     <div>
       <Loader {...props} text="" />
     </div>
-  ));
+  ),
+
+  name: 'with no text',
+};

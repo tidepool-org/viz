@@ -17,7 +17,6 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { storiesOf } from '@storybook/react';
 import Plotly from 'plotly.js-basic-dist-min';
 import PDFDocument from 'pdfkit';
 
@@ -34,7 +33,7 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
 /* global window */
 
-const stories = storiesOf('Combined Views PDF', module);
+export default { title: 'Combined Views PDF' };
 
 let queries;
 try {
@@ -88,7 +87,7 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
 
   const promises = [];
 
-  await _.each(['agpBGM', 'agpCGM'], async reportType => {
+  await _.each(['agpBGM', 'agpCGM'], async (reportType) => {
     let images;
 
     try {
@@ -97,17 +96,19 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
       return new Error(e);
     }
 
-    promises.push(..._.map(images, async (image, key) => {
-      if (_.isArray(image)) {
-        const processedArray = await Promise.all(
-          _.map(image, async img => Plotly.toImage(img, { format: 'svg' }))
-        );
-        return [reportType, [key, processedArray]];
-      } else {
-        const processedValue = await Plotly.toImage(image, { format: 'svg' });
-        return [reportType, [key, processedValue]];
-      }
-    }));
+    promises.push(
+      ..._.map(images, async (image, key) => {
+        if (_.isArray(image)) {
+          const processedArray = await Promise.all(
+            _.map(image, async (img) => Plotly.toImage(img, { format: 'svg' }))
+          );
+          return [reportType, [key, processedArray]];
+        } else {
+          const processedValue = await Plotly.toImage(image, { format: 'svg' });
+          return [reportType, [key, processedValue]];
+        }
+      })
+    );
 
     return promises;
   });
@@ -115,11 +116,15 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const results = await Promise.all(promises);
 
   if (results.length) {
-    const processedImages = _.reduce(results, (res, entry) => {
-      const processedImage = _.fromPairs(entry.slice(1));
-      res[entry[0]] = { ...res[entry[0]], ...processedImage };
-      return res;
-    }, {});
+    const processedImages = _.reduce(
+      results,
+      (res, entry) => {
+        const processedImage = _.fromPairs(entry.slice(1));
+        res[entry[0]] = { ...res[entry[0]], ...processedImage };
+        return res;
+      },
+      {}
+    );
 
     opts.svgDataURLS = processedImages;
   }
@@ -134,12 +139,12 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
-    .then(dataUrl => {
+    .then((dataUrl) => {
       const byte = base64ToArrayBuffer(dataUrl);
       const blob = new Blob([byte], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
     })
-    .catch(error => {
+    .catch((error) => {
       console.log(error);
     });
 
@@ -157,50 +162,84 @@ and then use this story to iterate on the Combined Print PDF outside of Tidepool
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add(`standard account (${MGDL_UNITS})`, (opts, { dataUtil }) => (
+export const StandardAccountMmoll = (opts, { dataUtil }) => (
   <button
-    onClick={() => openPDF(dataUtil, { patient: {
-      ...profiles.standard,
-      ...settings.cannulaPrimeSelected,
-    } })}
+    onClick={() =>
+      openPDF(dataUtil, {
+        patient: {
+          clinicPatientMRN: '1234567890123456',
+          ...profiles.standard,
+          ...settings.cannulaPrimeSelected,
+        },
+        bgUnits: MMOLL_UNITS,
+      })
+    }
   >
     Open PDF in new tab
   </button>
-), { notes });
+);
 
-stories.add(`standard account (${MMOLL_UNITS})`, (opts, { dataUtil }) => (
-  <button
-    onClick={() => openPDF(dataUtil, {
-      patient: {
-        clinicPatientMRN: '1234567890123456',
-        ...profiles.standard,
-        ...settings.cannulaPrimeSelected,
-      },
-      bgUnits: MMOLL_UNITS,
-    })}
-  >
-    Open PDF in new tab
-  </button>
-), { notes });
+StandardAccountMmoll.story = {
+  name: `standard account (${MMOLL_UNITS})`,
+  parameters: { notes },
+};
 
-stories.add('fake child account', (opts, { dataUtil }) => (
+export const StandardAccountMgdl = (opts, { dataUtil }) => (
   <button
-    onClick={() => openPDF(dataUtil, { patient: {
-      ...profiles.fakeChildAcct,
-      ...settings.tubingPrimeSelected,
-    } })}
+    onClick={() =>
+      openPDF(dataUtil, {
+        patient: {
+          ...profiles.standard,
+          ...settings.cannulaPrimeSelected,
+        },
+      })
+    }
   >
     Open PDF in new tab
   </button>
-), { notes });
+);
 
-stories.add('long patient name', (opts, { dataUtil }) => (
+StandardAccountMgdl.story = {
+  name: `standard account (${MGDL_UNITS})`,
+  parameters: { notes },
+};
+
+export const FakeChildAccount = (opts, { dataUtil }) => (
   <button
-    onClick={() => openPDF(dataUtil, { patient: {
-      ...profiles.longName,
-      ...settings.tubingPrimeSelected,
-    } })}
+    onClick={() =>
+      openPDF(dataUtil, {
+        patient: {
+          ...profiles.fakeChildAcct,
+          ...settings.tubingPrimeSelected,
+        },
+      })
+    }
   >
     Open PDF in new tab
   </button>
-), { notes });
+);
+
+FakeChildAccount.story = {
+  name: 'fake child account',
+  parameters: { notes },
+};
+
+export const LongPatientName = (opts, { dataUtil }) => (
+  <button
+    onClick={() =>
+      openPDF(dataUtil, {
+        patient: {
+          ...profiles.longName,
+          ...settings.tubingPrimeSelected,
+        },
+      })
+    }
+  >
+    Open PDF in new tab
+  </button>
+);
+
+LongPatientName.story = {
+  name: 'long patient name',
+  parameters: { notes },
+};

@@ -1,12 +1,12 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import { storiesOf } from '@storybook/react';
-
 import TwoOptionToggle from '../../../../src/components/common/controls/TwoOptionToggle';
 
 // eslint-disable-next-line no-console
-const toggleFn = () => { console.log('Clicked toggle!'); };
+const toggleFn = () => {
+  console.log('Clicked toggle!');
+};
 
 class InteractiveContainer extends React.Component {
   static propTypes = {
@@ -43,29 +43,48 @@ class InteractiveContainer extends React.Component {
   }
 }
 
-storiesOf('TwoOptionToggle', module)
-  .add('left selected', () => (
+export default {
+  title: 'TwoOptionToggle',
+};
+
+export const LeftSelected = {
+  render: () => (
     <TwoOptionToggle
       left={{ label: 'BGM', state: true }}
       right={{ label: 'CGM', state: false }}
       toggleFn={toggleFn}
     />
-  ))
-  .add('right selected', () => (
+  ),
+
+  name: 'left selected',
+};
+
+export const RightSelected = {
+  render: () => (
     <TwoOptionToggle
       left={{ label: 'BGM', state: false }}
       right={{ label: 'CGM', state: true }}
       toggleFn={toggleFn}
     />
-  ))
-  .add('disabled', () => (
+  ),
+
+  name: 'right selected',
+};
+
+export const Disabled = {
+  render: () => (
     <TwoOptionToggle
       disabled
       left={{ label: 'BGM', state: false }}
       right={{ label: 'CGM', state: true }}
       toggleFn={toggleFn}
     />
-  ))
-  .add('interactive', () => (
-    <InteractiveContainer />
-  ));
+  ),
+
+  name: 'disabled',
+};
+
+export const Interactive = {
+  render: () => <InteractiveContainer />,
+  name: 'interactive',
+};

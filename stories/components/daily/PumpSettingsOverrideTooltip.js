@@ -1,7 +1,5 @@
 import React from 'react';
 
-import { storiesOf } from '@storybook/react';
-
 import PumpSettingsOverrideTooltip from '../../../src/components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import { MS_IN_HOUR } from '../../../src/utils/constants';
 
@@ -28,7 +26,7 @@ const props = {
   timePrefs: { timezoneAware: false },
 };
 
-const BackgroundDecorator = story => (
+const BackgroundDecorator = (story) => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
 
@@ -47,17 +45,21 @@ const refDiv = (
   />
 );
 
-storiesOf('PumpSettingsOverrideTooltip', module)
-  .addDecorator(BackgroundDecorator)
-  .add('Sleep', () => (
-    <div>
-      {refDiv}
-      <PumpSettingsOverrideTooltip {...props} tail={false} side="top" override={sleep} />
-    </div>
-  ))
-  .add('Exercise', () => (
-    <div>
-      {refDiv}
-      <PumpSettingsOverrideTooltip {...props} override={physicalActivity} />
-    </div>
-  ));
+export default {
+  title: 'PumpSettingsOverrideTooltip',
+  decorators: [BackgroundDecorator],
+};
+
+export const Sleep = () => (
+  <div>
+    {refDiv}
+    <PumpSettingsOverrideTooltip {...props} tail={false} side="top" override={sleep} />
+  </div>
+);
+
+export const Exercise = () => (
+  <div>
+    {refDiv}
+    <PumpSettingsOverrideTooltip {...props} override={physicalActivity} />
+  </div>
+);

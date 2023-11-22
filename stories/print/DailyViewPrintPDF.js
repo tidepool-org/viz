@@ -17,7 +17,6 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { storiesOf } from '@storybook/react';
 import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
@@ -29,7 +28,7 @@ import * as profiles from '../../data/patient/profiles';
 
 /* global window */
 
-const stories = storiesOf('Daily View PDF', module);
+export default { title: 'Daily View PDF' };
 
 let queries;
 try {
@@ -53,12 +52,12 @@ function openPDF(dataUtil, { patient }) {
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
-    .then(dataUrl => {
+    .then((dataUrl) => {
       const byte = base64ToArrayBuffer(dataUrl);
       const blob = new Blob([byte], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
     })
-    .catch(error => {
+    .catch((error) => {
       console.log(error);
     });
 
@@ -76,8 +75,13 @@ and then use this story to iterate on the Daily Print PDF outside of Tidepool We
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('standard account', (opts, { dataUtil }) => (
+export const StandardAccount = (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>
-), { notes });
+);
+
+StandardAccount.story = {
+  name: 'standard account',
+  parameters: { notes },
+};

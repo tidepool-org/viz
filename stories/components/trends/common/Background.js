@@ -1,8 +1,6 @@
 import { scaleLinear } from 'd3-scale';
 import React from 'react';
 
-import { storiesOf } from '@storybook/react';
-
 // eslint-disable-next-line max-len
 import Background from '../../../../src/components/trends/common/Background';
 
@@ -22,14 +20,26 @@ const props = {
   xScale: scaleLinear().domain([0, 864e5]).range([0, w]),
 };
 
-storiesOf('Background', module)
-  .add('without lines', () => (
+export default {
+  title: 'Background',
+};
+
+export const WithoutLines = {
+  render: () => (
     <svg width={w} height={h}>
       <Background {...props} />
     </svg>
-  ))
-  .add('with lines at three-hour intervals', () => (
+  ),
+
+  name: 'without lines',
+};
+
+export const WithLinesAtThreeHourIntervals = {
+  render: () => (
     <svg width={w} height={h}>
       <Background {...props} linesAtThreeHrs />
     </svg>
-  ));
+  ),
+
+  name: 'with lines at three-hour intervals',
+};
