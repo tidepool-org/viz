@@ -5,7 +5,6 @@ import Plotly from 'plotly.js-basic-dist-min';
 import PDFDocument from 'pdfkit';
 
 import {
-  withKnobs,
   optionsKnob as options,
   date,
   number,
@@ -26,7 +25,6 @@ import * as profiles from '../../data/patient/profiles';
 /* global window */
 
 const stories = storiesOf('AGP View PDF', module);
-stories.addDecorator(withKnobs);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_CONFIG = 'CONFIG';

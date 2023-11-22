@@ -21,7 +21,6 @@ import { storiesOf } from '@storybook/react';
 
 import {
   object,
-  withKnobs,
   optionsKnob as options,
   date,
   number,
@@ -37,7 +36,6 @@ import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/cons
 import { getOffset } from '../../src/utils/datetime';
 
 const stories = storiesOf('DataUtil', module);
-stories.addDecorator(withKnobs);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_DATES = 'DATES';
