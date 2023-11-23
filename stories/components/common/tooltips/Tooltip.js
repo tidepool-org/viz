@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { storiesOf } from '@storybook/react';
+
 import Tooltip from '../../../../src/components/common/tooltips/Tooltip';
 
 const props = {
@@ -9,7 +11,9 @@ const props = {
 };
 
 const BackgroundDecorator = (story) => (
-  <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
+  <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>
+    {story()}
+  </div>
 );
 
 const refDiv = (
@@ -21,74 +25,45 @@ const refDiv = (
       top: '199px',
       left: '199px',
       backgroundColor: 'FireBrick',
-      opacity: 0.5,
+      opacity: 0.50,
       zIndex: '1',
     }}
   />
 );
 
-export default {
-  title: 'Tooltip',
-  decorators: [BackgroundDecorator],
-};
-
-export const Defaults = {
-  render: () => (
+storiesOf('Tooltip', module)
+  .addDecorator(BackgroundDecorator)
+  .add('defaults', () => (
     <div>
       {refDiv}
       <Tooltip {...props} />
     </div>
-  ),
-
-  name: 'defaults',
-};
-
-export const Offset55 = {
-  render: () => (
+  ))
+  .add('offset -5,-5', () => (
     <div>
       {refDiv}
       <Tooltip {...props} offset={{ top: -5, left: -5 }} />
     </div>
-  ),
-
-  name: 'offset -5,-5',
-};
-
-export const BackgroundColor = {
-  render: () => (
+  ))
+  .add('backgroundColor', () => (
     <div>
       {refDiv}
       <Tooltip {...props} backgroundColor={'papayawhip'} />
     </div>
-  ),
-
-  name: 'backgroundColor',
-};
-
-export const BorderColor = {
-  render: () => (
+  ))
+  .add('borderColor', () => (
     <div>
       {refDiv}
       <Tooltip {...props} borderColor={'blue'} />
     </div>
-  ),
-
-  name: 'borderColor',
-};
-
-export const TransparentBackgroundColorNoTail = {
-  render: () => (
+  ))
+  .add('transparent backgroundColor, no tail', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tail={false} backgroundColor={'transparent'} />
     </div>
-  ),
-
-  name: 'transparent backgroundColor, no tail',
-};
-
-export const TransparentNoTailNoTitle = {
-  render: () => (
+  ))
+  .add('transparent, no tail, no title', () => (
     <div>
       {refDiv}
       <Tooltip
@@ -98,260 +73,142 @@ export const TransparentNoTailNoTitle = {
         borderColor={'transparent'}
       />
     </div>
-  ),
-
-  name: 'transparent, no tail, no title',
-};
-
-export const KnownIssueTransparentBackgroundColorWithTail = {
-  render: () => (
+  ))
+  .add('[KNOWN ISSUE] transparent backgroundColor with tail', () => (
     <div>
       {refDiv}
       <Tooltip {...props} backgroundColor={'transparent'} />
     </div>
-  ),
-
-  name: '[KNOWN ISSUE] transparent backgroundColor with tail',
-};
-
-export const BorderWidth = {
-  render: () => (
+  ))
+  .add('borderWidth', () => (
     <div>
       {refDiv}
       <Tooltip {...props} borderWidth={3} />
     </div>
-  ),
-
-  name: 'borderWidth',
-};
-
-export const TailWidth = {
-  render: () => (
+  ))
+  .add('tailWidth', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tailWidth={20} />
     </div>
-  ),
-
-  name: 'tailWidth',
-};
-
-export const TailHeight = {
-  render: () => (
+  ))
+  .add('tailHeight', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tailHeight={4} />
     </div>
-  ),
-
-  name: 'tailHeight',
-};
-
-export const TailNoContent = {
-  render: () => (
+  ))
+  .add('tail, no content', () => (
     <div>
       {refDiv}
       <Tooltip {...props} content={null} />
     </div>
-  ),
-
-  name: 'tail, no content',
-};
-
-export const NoTailNoContent = {
-  render: () => (
+  ))
+  .add('no tail, no content', () => (
     <div>
       {refDiv}
       <Tooltip {...props} content={null} tail={false} />
     </div>
-  ),
-
-  name: 'no tail, no content',
-};
-
-export const NoTitle = {
-  render: () => (
+  ))
+  .add('no title', () => (
     <div>
       {refDiv}
       <Tooltip {...props} title={null} />
     </div>
-  ),
-
-  name: 'no title',
-};
-
-export const NoTail = {
-  render: () => (
+  ))
+  .add('no tail', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tail={false} />
     </div>
-  ),
-
-  name: 'no tail',
-};
-
-export const NoTailNoTitle = {
-  render: () => (
+  ))
+  .add('no tail, no title', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tail={false} title={null} />
     </div>
-  ),
-
-  name: 'no tail, no title',
-};
-
-export const NoTailNoTitleOffset100 = {
-  render: () => (
+  ))
+  .add('no tail, no title, offset -10,0', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tail={false} title={null} offset={{ left: -10, top: 0 }} />
     </div>
-  ),
-
-  name: 'no tail, no title, offset -10,0',
-};
-
-export const NoTailOnRight = {
-  render: () => (
+  ))
+  .add('no tail, on right', () => (
     <div>
       {refDiv}
       <Tooltip {...props} tail={false} side={'right'} />
     </div>
-  ),
-
-  name: 'no tail, on right',
-};
-
-export const TailOnRight = {
-  render: () => (
+  ))
+  .add('tail, on right', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'right'} />
     </div>
-  ),
-
-  name: 'tail, on right',
-};
-
-export const TailOnRightTailWidth = {
-  render: () => (
+  ))
+  .add('tail, on right, tailWidth', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'right'} tailWidth={20} />
     </div>
-  ),
-
-  name: 'tail, on right, tailWidth',
-};
-
-export const TailOnRightOffset55 = {
-  render: () => (
+  ))
+  .add('tail, on right, offset 5,5', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'right'} offset={{ top: 5, left: 5 }} />
     </div>
-  ),
-
-  name: 'tail, on right, offset 5,5',
-};
-
-export const TailOnRightNoContent = {
-  render: () => (
+  ))
+  .add('tail, on right, no content', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'right'} content={null} />
     </div>
-  ),
-
-  name: 'tail, on right, no content',
-};
-
-export const TailOnRightNoTitle = {
-  render: () => (
+  ))
+  .add('tail, on right, no title', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'right'} title={null} />
     </div>
-  ),
-
-  name: 'tail, on right, no title',
-};
-
-export const TopNoTail = {
-  render: () => (
+  ))
+  .add('top, no tail', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'top'} tail={false} />
     </div>
-  ),
-
-  name: 'top, no tail',
-};
-
-export const TopNoTailNoTitle = {
-  render: () => (
+  ))
+  .add('top, no tail, no title', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'top'} tail={false} title={null} />
     </div>
-  ),
-
-  name: 'top, no tail, no title',
-};
-
-export const TopNoTailNoTitleOffset010 = {
-  render: () => (
+  ))
+  .add('top, no tail, no title, offset 0,-10', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'top'} tail={false} title={null} offset={{ left: 0, top: -10 }} />
     </div>
-  ),
-
-  name: 'top, no tail, no title, offset 0,-10',
-};
-
-export const TopNoTailNoContent = {
-  render: () => (
+  ))
+  .add('top, no tail, no content', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'top'} tail={false} content={null} />
     </div>
-  ),
-
-  name: 'top, no tail, no content',
-};
-
-export const BottomNoTail = {
-  render: () => (
+  ))
+  .add('bottom, no tail', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'bottom'} tail={false} />
     </div>
-  ),
-
-  name: 'bottom, no tail',
-};
-
-export const BottomNoTailNoTitle = {
-  render: () => (
+  ))
+  .add('bottom, no tail, no title', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'bottom'} tail={false} title={null} />
     </div>
-  ),
-
-  name: 'bottom, no tail, no title',
-};
-
-export const BottomNoTailNoContent = {
-  render: () => (
+  ))
+  .add('bottom, no tail, no content', () => (
     <div>
       {refDiv}
       <Tooltip {...props} side={'bottom'} tail={false} content={null} />
     </div>
-  ),
-
-  name: 'bottom, no tail, no content',
-};
+  ));

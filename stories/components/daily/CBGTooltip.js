@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { storiesOf } from '@storybook/react';
+
 import CBGTooltip from '../../../src/components/daily/cbgtooltip/CBGTooltip';
 
 const bgPrefs = {
@@ -63,7 +65,7 @@ const props = {
   bgPrefs,
 };
 
-const BackgroundDecorator = (story) => (
+const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
 
@@ -82,62 +84,35 @@ const refDiv = (
   />
 );
 
-export default {
-  title: 'CBGTooltip',
-  decorators: [BackgroundDecorator],
-};
-
-export const Target = {
-  render: () => (
+storiesOf('CBGTooltip', module)
+  .addDecorator(BackgroundDecorator)
+  .add('target', () => (
     <div>
       {refDiv}
       <CBGTooltip {...props} cbg={target} />
     </div>
-  ),
-
-  name: 'target',
-};
-
-export const Low = {
-  render: () => (
+  ))
+  .add('low', () => (
     <div>
       {refDiv}
       <CBGTooltip {...props} cbg={low} />
     </div>
-  ),
-
-  name: 'low',
-};
-
-export const High = {
-  render: () => (
+  ))
+  .add('high', () => (
     <div>
       {refDiv}
       <CBGTooltip {...props} cbg={high} />
     </div>
-  ),
-
-  name: 'high',
-};
-
-export const VeryHigh = {
-  render: () => (
+  ))
+  .add('veryHigh', () => (
     <div>
       {refDiv}
       <CBGTooltip {...props} cbg={veryHigh} />
     </div>
-  ),
-
-  name: 'veryHigh',
-};
-
-export const VeryLow = {
-  render: () => (
+  ))
+  .add('veryLow', () => (
     <div>
       {refDiv}
       <CBGTooltip {...props} cbg={veryLow} />
     </div>
-  ),
-
-  name: 'veryLow',
-};
+  ));

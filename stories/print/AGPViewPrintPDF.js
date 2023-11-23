@@ -1,19 +1,18 @@
 import React from 'react';
 import _ from 'lodash';
+import { storiesOf } from '@storybook/react';
 import Plotly from 'plotly.js-basic-dist-min';
 import PDFDocument from 'pdfkit';
 
-import { optionsKnob as options, date, number } from '@storybook/addon-knobs';
+import {
+  optionsKnob as options,
+  date,
+  number,
+} from '@storybook/addon-knobs';
 
 import moment from 'moment';
 
-import {
-  MGDL_UNITS,
-  MMOLL_UNITS,
-  DEFAULT_BG_BOUNDS,
-  CGM_DATA_KEY,
-  BGM_DATA_KEY,
-} from '../../src/utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS, CGM_DATA_KEY, BGM_DATA_KEY } from '../../src/utils/constants';
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
@@ -25,7 +24,8 @@ import * as profiles from '../../data/patient/profiles';
 
 /* global window */
 
-export default { title: 'AGP View PDF', options: { panelPosition: 'right' } };
+const stories = storiesOf('AGP View PDF', module);
+stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_CONFIG = 'CONFIG';
 
@@ -61,12 +61,12 @@ async function openPDF(dataUtil, { patient }, query, bgSource) {
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
-    .then((dataUrl) => {
+    .then(dataUrl => {
       const byte = base64ToArrayBuffer(dataUrl);
       const blob = new Blob([byte], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
     })
-    .catch((error) => {
+    .catch(error => {
       console.log(error);
     });
 
@@ -93,8 +93,7 @@ const daysInRangeOptions = {
   step: 1,
 };
 
-const getDaysInRange = () =>
-  number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_CONFIG);
+const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_CONFIG);
 
 const timezones = {
   'US/Eastern': 'US/Eastern',
@@ -115,40 +114,29 @@ const getTimePrefs = () => {
 
   const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
-  return selectedTimeZone
-    ? {
-        timezoneName: selectedTimeZone,
-        timezoneAware: true,
-      }
-    : undefined;
+  return selectedTimeZone ? {
+    timezoneName: selectedTimeZone,
+    timezoneAware: true,
+  } : undefined;
 };
 
-const endMoment = (latestDatum) =>
-  moment.utc(latestDatum?.normalTime).tz(getTimePrefs().timezoneName).startOf('day').add(1, 'day');
+const endMoment = latestDatum => moment.utc(latestDatum?.normalTime).tz(getTimePrefs().timezoneName).startOf('day').add(1, 'day');
 
-const getEndMoment = (latestDatum) => {
+const getEndMoment = latestDatum => {
   const endDate = date('End Date', endMoment(latestDatum).toDate(), GROUP_CONFIG);
   return moment.utc(endDate).tz(getTimePrefs().timezoneName);
 };
 
 const getBGPrefs = () => {
-  const bgUnits = options(
-    'BG Units',
-    { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS },
-    MGDL_UNITS,
-    { display: 'select' },
-    GROUP_CONFIG
-  );
+  const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS }, MGDL_UNITS, { display: 'select' }, GROUP_CONFIG);
 
-  return bgUnits !== 'None'
-    ? {
-        bgUnits,
-        bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
-      }
-    : undefined;
+  return bgUnits !== 'None' ? {
+    bgUnits,
+    bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
+  } : undefined;
 };
 
-const getEndpoints = (latestDatum) => {
+const getEndpoints = latestDatum => {
   const endDate = getEndMoment(latestDatum);
 
   const endpoints = [
@@ -159,7 +147,7 @@ const getEndpoints = (latestDatum) => {
   return endpoints;
 };
 
-export const Cgm = (opts, { dataUtil }) => {
+stories.add('CGM', (opts, { dataUtil }) => {
   const bgSource = CGM_DATA_KEY;
   const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 
@@ -186,18 +174,14 @@ export const Cgm = (opts, { dataUtil }) => {
   });
 
   return (
-    <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query(), bgSource)}>
+    <button
+      onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query(), bgSource)}>
       Open PDF in new tab
     </button>
   );
-};
+}, { notes });
 
-Cgm.story = {
-  name: 'CGM',
-  parameters: { notes },
-};
-
-export const Bgm = (opts, { dataUtil }) => {
+stories.add('BGM', (opts, { dataUtil }) => {
   const bgSource = BGM_DATA_KEY;
   const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 
@@ -223,13 +207,9 @@ export const Bgm = (opts, { dataUtil }) => {
   });
 
   return (
-    <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query(), bgSource)}>
+    <button
+      onClick={() => openPDF(dataUtil, { patient: profiles.longName }, query(), bgSource)}>
       Open PDF in new tab
     </button>
   );
-};
-
-Bgm.story = {
-  name: 'BGM',
-  parameters: { notes },
-};
+}, { notes });

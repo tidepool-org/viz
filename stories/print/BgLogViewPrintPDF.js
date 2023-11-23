@@ -16,6 +16,7 @@
  */
 
 import React from 'react';
+import { storiesOf } from '@storybook/react';
 import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
@@ -27,7 +28,7 @@ import * as profiles from '../../data/patient/profiles';
 
 /* global window */
 
-export default { title: 'BG Log View PDF' };
+const stories = storiesOf('BG Log View PDF', module);
 
 let queries;
 try {
@@ -51,12 +52,12 @@ function openPDF(dataUtil, { patient }) {
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
-    .then((dataUrl) => {
+    .then(dataUrl => {
       const byte = base64ToArrayBuffer(dataUrl);
       const blob = new Blob([byte], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
     })
-    .catch((error) => {
+    .catch(error => {
       console.log(error);
     });
 
@@ -71,13 +72,8 @@ run \`window.downloadPDFDataQueries()\` from the console on a Tidepool Web data 
 Save the resulting file to the \`local/\` directory of viz as \`PDFDataQueries.json\`,
 and then use this story to iterate on the BG Log Print PDF outside of Tidepool Web!`;
 
-export const StandardAccount = (opts, { dataUtil }) => (
+stories.add('standard account', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>
-);
-
-StandardAccount.story = {
-  name: 'standard account',
-  parameters: { notes },
-};
+), { notes });

@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { storiesOf } from '@storybook/react';
+
 import BolusTooltip from '../../../src/components/daily/bolustooltip/BolusTooltip';
 
 // bolus' lifted from bolus utils tests
@@ -193,7 +195,9 @@ const extendedAnimas = {
   extended: 1.2,
   duration: 18000000,
   normalTime: '2017-11-11T05:45:52.000Z',
-  annotations: [{ code: 'animas/bolus/extended-equal-split' }],
+  annotations: [
+    { code: 'animas/bolus/extended-equal-split' },
+  ],
 };
 
 const extendedAnimasUnderride = {
@@ -202,7 +206,9 @@ const extendedAnimasUnderride = {
     extended: 1.2,
     duration: 18000000,
     normalTime: '2017-11-11T05:45:52.000Z',
-    annotations: [{ code: 'animas/bolus/extended-equal-split' }],
+    annotations: [
+      { code: 'animas/bolus/extended-equal-split' },
+    ],
   },
   recommended: {
     correction: 3.5,
@@ -341,7 +347,9 @@ const withMedtronicTarget = {
 
 const withAutoTarget = {
   type: 'wizard',
-  annotations: [{ code: 'wizard/target-automated' }],
+  annotations: [
+    { code: 'wizard/target-automated' },
+  ],
   bgInput: 180,
   bgTarget: {
     low: 60,
@@ -424,7 +432,7 @@ const props = {
   timePrefs: { timezoneAware: false },
 };
 
-const BackgroundDecorator = (story) => (
+const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
 
@@ -443,370 +451,203 @@ const refDiv = (
   />
 );
 
-export default {
-  title: 'BolusTooltip',
-  decorators: [BackgroundDecorator],
-};
-
-export const Normal = {
-  render: () => (
+storiesOf('BolusTooltip', module)
+  .addDecorator(BackgroundDecorator)
+  .add('normal', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={normal} />
     </div>
-  ),
-
-  name: 'normal',
-};
-
-export const NormalPrecise = {
-  render: () => (
+  ))
+  .add('normalPrecise', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={normalPrecise} />
     </div>
-  ),
-
-  name: 'normalPrecise',
-};
-
-export const NormalVeryPrecise = {
-  render: () => (
+  ))
+  .add('normalVeryPrecise', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={normalVeryPrecise} />
     </div>
-  ),
-
-  name: 'normalVeryPrecise',
-};
-
-export const Cancelled = {
-  render: () => (
+  ))
+  .add('cancelled', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={cancelled} />
     </div>
-  ),
-
-  name: 'cancelled',
-};
-
-export const ImmediatelyCancelled = {
-  render: () => (
+  ))
+  .add('immediatelyCancelled', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={immediatelyCancelled} />
     </div>
-  ),
-
-  name: 'immediatelyCancelled',
-};
-
-export const Automated = {
-  render: () => (
+  ))
+  .add('automated', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={automated} />
     </div>
-  ),
-
-  name: 'automated',
-};
-
-export const Override = {
-  render: () => (
+  ))
+  .add('override', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={override} />
     </div>
-  ),
-
-  name: 'override',
-};
-
-export const Underride = {
-  render: () => (
+  ))
+  .add('underride', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={underride} />
     </div>
-  ),
-
-  name: 'underride',
-};
-
-export const Combo = {
-  render: () => (
+  ))
+  .add('combo', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={combo} />
     </div>
-  ),
-
-  name: 'combo',
-};
-
-export const CancelledInNormalCombo = {
-  render: () => (
+  ))
+  .add('cancelledInNormalCombo', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={cancelledInNormalCombo} />
     </div>
-  ),
-
-  name: 'cancelledInNormalCombo',
-};
-
-export const CancelledInExtendedCombo = {
-  render: () => (
+  ))
+  .add('cancelledInExtendedCombo', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={cancelledInExtendedCombo} />
     </div>
-  ),
-
-  name: 'cancelledInExtendedCombo',
-};
-
-export const ComboOverride = {
-  render: () => (
+  ))
+  .add('comboOverride', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={comboOverride} />
     </div>
-  ),
-
-  name: 'comboOverride',
-};
-
-export const ComboUnderrideCancelled = {
-  render: () => (
+  ))
+  .add('comboUnderrideCancelled', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={comboUnderrideCancelled} />
     </div>
-  ),
-
-  name: 'comboUnderrideCancelled',
-};
-
-export const ComboUnderrideCancelledWithBg = {
-  render: () => (
+  ))
+  .add('comboUnderrideCancelledWithBG', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={comboUnderrideCancelledWithBG} />
     </div>
-  ),
-
-  name: 'comboUnderrideCancelledWithBG',
-};
-
-export const Extended = {
-  render: () => (
+  ))
+  .add('extended', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={extended} />
     </div>
-  ),
-
-  name: 'extended',
-};
-
-export const CancelledExtended = {
-  render: () => (
+  ))
+  .add('cancelledExtended', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={cancelledExtended} />
     </div>
-  ),
-
-  name: 'cancelledExtended',
-};
-
-export const ImmediatelyCancelledExtended = {
-  render: () => (
+  ))
+  .add('immediatelyCancelledExtended', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={immediatelyCancelledExtended} />
     </div>
-  ),
-
-  name: 'immediatelyCancelledExtended',
-};
-
-export const ImmediatelyCancelledExtendedWizard = {
-  render: () => (
+  ))
+  .add('immediatelyCancelledExtendedWizard', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={immediatelyCancelledExtendedWizard} />
     </div>
-  ),
-
-  name: 'immediatelyCancelledExtendedWizard',
-};
-
-export const ExtendedAnimas = {
-  render: () => (
+  ))
+  .add('extendedAnimas', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={extendedAnimas} />
     </div>
-  ),
-
-  name: 'extendedAnimas',
-};
-
-export const ExtendedAnimasUnderride = {
-  render: () => (
+  ))
+  .add('extendedAnimasUnderride', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={extendedAnimasUnderride} />
     </div>
-  ),
-
-  name: 'extendedAnimasUnderride',
-};
-
-export const ExtendedUnderride = {
-  render: () => (
+  ))
+  .add('extendedUnderride', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={extendedUnderride} />
     </div>
-  ),
-
-  name: 'extendedUnderride',
-};
-
-export const WithNetRec = {
-  render: () => (
+  ))
+  .add('withNetRec', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withNetRec} />
     </div>
-  ),
-
-  name: 'withNetRec',
-};
-
-export const WithCarbInput = {
-  render: () => (
+  ))
+  .add('withCarbInput', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withCarbInput} />
     </div>
-  ),
-
-  name: 'withCarbInput',
-};
-
-export const WithCarbExchangeInput = {
-  render: () => (
+  ))
+  .add('withCarbExchangeInput', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withCarbExchangeInput} />
     </div>
-  ),
-
-  name: 'withCarbExchangeInput',
-};
-
-export const WithCarbExchangeInputZero = {
-  render: () => (
+  ))
+  .add('withCarbExchangeInputZero', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={{ ...withCarbExchangeInput, carbInput: 0 }} />
     </div>
-  ),
-
-  name: 'withCarbExchangeInputZero',
-};
-
-export const WithBgInput = {
-  render: () => (
+  ))
+  .add('withBGInput', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withBGInput} />
     </div>
-  ),
-
-  name: 'withBGInput',
-};
-
-export const WithBgInputAndIob = {
-  render: () => (
+  ))
+  .add('withBGInputAndIOB', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withBGInputAndIOB} />
     </div>
-  ),
-
-  name: 'withBGInputAndIOB',
-};
-
-export const WithBgAndCarbInput = {
-  render: () => (
+  ))
+  .add('withBGAndCarbInput', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withBGAndCarbInput} />
     </div>
-  ),
-
-  name: 'withBGAndCarbInput',
-};
-
-export const WithMedtronicTarget = {
-  render: () => (
+  ))
+  .add('withMedtronicTarget', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withMedtronicTarget} />
     </div>
-  ),
-
-  name: 'withMedtronicTarget',
-};
-
-export const WithAutoTarget = {
-  render: () => (
+  ))
+  .add('withAutoTarget', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withAutoTarget} />
     </div>
-  ),
-
-  name: 'withAutoTarget',
-};
-
-export const WithAnimasTarget = {
-  render: () => (
+  ))
+  .add('withAnimasTarget', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withAnimasTarget} />
     </div>
-  ),
-
-  name: 'withAnimasTarget',
-};
-
-export const WithInsuletTarget = {
-  render: () => (
+  ))
+  .add('withInsuletTarget', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withInsuletTarget} />
     </div>
-  ),
-
-  name: 'withInsuletTarget',
-};
-
-export const WithTandemTarget = {
-  render: () => (
+  ))
+  .add('withTandemTarget', () => (
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withTandemTarget} />
     </div>
-  ),
-
-  name: 'withTandemTarget',
-};
+  ));

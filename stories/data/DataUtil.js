@@ -17,6 +17,7 @@
 
 import React from 'react';
 import _ from 'lodash';
+import { storiesOf } from '@storybook/react';
 
 import {
   object,
@@ -34,7 +35,8 @@ import { commonStats, getStatDefinition } from '../../src/utils/stat';
 import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
 import { getOffset } from '../../src/utils/datetime';
 
-export default { title: 'DataUtil', options: { panelPosition: 'right' } };
+const stories = storiesOf('DataUtil', module);
+stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_DATES = 'DATES';
 const GROUP_DATA = 'DATA';
@@ -63,21 +65,18 @@ const Results = ({ results, showData, showStats }) => {
     margin: '0 0 10px',
   };
 
-  const renderStats = (stats, bgPrefs) =>
-    _.map(stats, (stat) => (
-      <div style={statStyles} id={`Stat--${stat.id}`} key={stat.id}>
-        <Stat bgPrefs={bgPrefs} {...stat} />
-      </div>
-    ));
+  const renderStats = (stats, bgPrefs) => (_.map(stats, stat => (
+    <div style={statStyles} id={`Stat--${stat.id}`} key={stat.id}>
+      <Stat bgPrefs={bgPrefs} {...stat} />
+    </div>
+  )));
 
-  _.each(_.keys(statData), (stat) => {
-    allStats.push(
-      getStatDefinition(statData[stat], stat, {
-        days,
-        bgPrefs: results.bgPrefs,
-        bgSource: _.get(results, 'metaData.bgSources.current'),
-      })
-    );
+  _.each(_.keys(statData), stat => {
+    allStats.push(getStatDefinition(statData[stat], stat, {
+      days,
+      bgPrefs: results.bgPrefs,
+      bgSource: _.get(results, 'metaData.bgSources.current'),
+    }));
   });
 
   return (
@@ -88,19 +87,17 @@ const Results = ({ results, showData, showStats }) => {
   );
 };
 
-export const QueryGenerator = (opts, props) => {
+stories.add('Query Generator', (opts, props) => {
   const { dataUtil } = props;
 
   const datumTypes = ['cbg', 'smbg', 'basal', 'bolus', 'wizard', 'food', 'pumpSettings', 'upload'];
 
   const latestDatumsByType = dataUtil.getMetaData('latestDatumByType').latestDatumByType;
 
-  const latestDatumTime = _.max(
-    _.map(
-      _.pickBy(latestDatumsByType, (d) => _.includes(datumTypes, d.type)),
-      (d) => d.normalTime
-    )
-  );
+  const latestDatumTime = _.max(_.map(
+    _.pickBy(latestDatumsByType, d => _.includes(datumTypes, d.type)),
+    d => (d.normalTime)
+  ));
 
   const endMoment = moment.utc(latestDatumTime).startOf('day').add(1, 'd');
 
@@ -129,12 +126,9 @@ export const QueryGenerator = (opts, props) => {
     None: 'None',
   };
 
-  const getDaysInRange = () =>
-    number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_DATES);
-  const getNextDays = () =>
-    number('Days in Next Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
-  const getPrevDays = () =>
-    number('Days in Prev Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
+  const getDaysInRange = () => number('Days in Current Range', daysInRange, daysInRangeOptions, GROUP_DATES);
+  const getNextDays = () => number('Days in Next Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
+  const getPrevDays = () => number('Days in Prev Range', 0, daysInSurroundingRangeOptions, GROUP_DATES);
 
   const commonFields = {
     annotations: 'annotations',
@@ -270,15 +264,8 @@ export const QueryGenerator = (opts, props) => {
   const arrayQueryFormat = { array: 'array' };
   const objectQueryFormat = { object: 'object' };
 
-  const getFieldsQueryFormat = () =>
-    options(
-      'Fields Query Format',
-      { ...stringQueryFormat, ...arrayQueryFormat },
-      'string',
-      { display: 'radio' },
-      GROUP_FIELDS
-    );
-  const getFields = (type) => {
+  const getFieldsQueryFormat = () => options('Fields Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_FIELDS);
+  const getFields = type => {
     const queryFormat = getFieldsQueryFormat();
     const fields = options(
       type,
@@ -295,64 +282,44 @@ export const QueryGenerator = (opts, props) => {
     desc: 'desc',
   };
 
-  const getSortQueryFormat = () =>
-    options(
-      'Sort Query Format',
-      { ...stringQueryFormat, ...objectQueryFormat },
-      'string',
-      { display: 'radio' },
-      GROUP_SORTS
-    );
-  const getTypeSort = (type) => {
+  const getSortQueryFormat = () => options('Sort Query Format', { ...stringQueryFormat, ...objectQueryFormat }, 'string', { display: 'radio' }, GROUP_SORTS);
+  const getTypeSort = type => {
     const sortFormat = getSortQueryFormat();
 
-    const getSortField = (t) =>
-      options(
-        `${t} sort field`,
-        { ...fieldsByType[t], ...noneOption },
-        'normalTime',
-        { display: 'select' },
-        GROUP_SORTS
-      );
-    const getSortOrder = (t) =>
-      options(`${t} sort order`, sorts, 'asc', { display: 'select' }, GROUP_SORTS);
+    const getSortField = t => options(`${t} sort field`, { ...fieldsByType[t], ...noneOption }, 'normalTime', { display: 'select' }, GROUP_SORTS);
+    const getSortOrder = t => options(`${t} sort order`, sorts, 'asc', { display: 'select' }, GROUP_SORTS);
 
     const selectedSortField = getSortField(type);
     const selectedSortOrder = getSortOrder(type);
 
-    return selectedSortField !== 'None'
-      ? {
-          sort:
-            sortFormat === 'string'
-              ? [selectedSortField, selectedSortOrder].join(',')
-              : {
-                  field: selectedSortField,
-                  order: selectedSortOrder,
-                },
-        }
-      : undefined;
+    return selectedSortField !== 'None' ? {
+      sort: sortFormat === 'string'
+        ? [selectedSortField, selectedSortOrder].join(',')
+        : {
+          field: selectedSortField,
+          order: selectedSortOrder,
+        },
+    } : undefined;
   };
 
-  const getTypesQueryFormat = () =>
-    options(
-      'Types Query Format',
-      { ...objectQueryFormat, ...arrayQueryFormat },
-      'object',
-      { display: 'radio' },
-      GROUP_DATA
-    );
+  const getTypesQueryFormat = () => options('Types Query Format', { ...objectQueryFormat, ...arrayQueryFormat }, 'object', { display: 'radio' }, GROUP_DATA);
   const getTypes = () => {
     const queryFormat = getTypesQueryFormat();
-    const selectedTypes = options('Types', types, [], { display: 'check' }, GROUP_DATA);
+    const selectedTypes = options(
+      'Types',
+      types,
+      [],
+      { display: 'check' },
+      GROUP_DATA
+    );
 
     if (!selectedTypes.length) return undefined;
 
     return queryFormat === 'object'
       ? _.zipObject(
-          selectedTypes,
-          _.map(selectedTypes, (type) => ({ ...getFields(type), ...getTypeSort(type) }))
-        )
-      : _.map(selectedTypes, (type) => ({ type, ...getFields(type), ...getTypeSort(type) }));
+        selectedTypes,
+        _.map(selectedTypes, type => ({ ...getFields(type), ...getTypeSort(type) })))
+      : _.map(selectedTypes, type => ({ type, ...getFields(type), ...getTypeSort(type) }));
   };
 
   const metadata = {
@@ -364,17 +331,16 @@ export const QueryGenerator = (opts, props) => {
     size: 'size',
   };
 
-  const getMetaDataQueryFormat = () =>
-    options(
-      'Metadata Query Format',
-      { ...stringQueryFormat, ...arrayQueryFormat },
-      'string',
-      { display: 'radio' },
-      GROUP_DATA
-    );
+  const getMetaDataQueryFormat = () => options('Metadata Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_DATA);
   const getMetaData = () => {
     const queryFormat = getMetaDataQueryFormat();
-    const selectedMetaData = options('Metadata', metadata, [], { display: 'check' }, GROUP_DATA);
+    const selectedMetaData = options(
+      'Metadata',
+      metadata,
+      [],
+      { display: 'check' },
+      GROUP_DATA
+    );
 
     if (!selectedMetaData.length) return undefined;
 
@@ -402,7 +368,7 @@ export const QueryGenerator = (opts, props) => {
       { display: 'check' },
       GROUP_DATES
     );
-    return days.length === 7 ? undefined : _.map(days, _.toInteger);
+    return (days.length === 7) ? undefined : _.map(days, _.toInteger);
   };
 
   const timezones = {
@@ -424,54 +390,37 @@ export const QueryGenerator = (opts, props) => {
     );
     const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
-    return selectedTimeZone
-      ? {
-          timezoneName: selectedTimeZone,
-          timezoneAware: true,
-        }
-      : undefined;
+    return selectedTimeZone ? {
+      timezoneName: selectedTimeZone,
+      timezoneAware: true,
+    } : undefined;
   };
 
   const getBGPrefs = () => {
-    const bgUnits = options(
-      'BG Units',
-      { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS, ...noneOption },
-      MGDL_UNITS,
-      { display: 'select' },
-      GROUP_UNITS
-    );
+    const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS, ...noneOption }, MGDL_UNITS, { display: 'select' }, GROUP_UNITS);
 
-    return bgUnits !== 'None'
-      ? {
-          bgUnits,
-          bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
-        }
-      : undefined;
+    return bgUnits !== 'None' ? {
+      bgUnits,
+      bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
+    } : undefined;
   };
 
   const getBGSource = () => {
-    const bgSource = options(
-      'Stats BG Source',
-      { ..._.pick(types, ['cbg', 'smbg']), ...noneOption },
-      'None',
-      { display: 'select' },
-      GROUP_STATS
-    );
+    const bgSource = options('Stats BG Source', { ..._.pick(types, ['cbg', 'smbg']), ...noneOption }, 'None', { display: 'select' }, GROUP_STATS);
 
     return bgSource !== 'None' ? bgSource : undefined;
   };
 
-  const getStatsQueryFormat = () =>
-    options(
-      'Stats Query Format',
-      { ...stringQueryFormat, ...arrayQueryFormat },
-      'string',
-      { display: 'radio' },
-      GROUP_STATS
-    );
+  const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
   const getStats = () => {
     const queryFormat = getStatsQueryFormat();
-    const selectedStats = options('Stats', commonStats, [], { display: 'check' }, GROUP_STATS);
+    const selectedStats = options(
+      'Stats',
+      commonStats,
+      [],
+      { display: 'check' },
+      GROUP_STATS
+    );
 
     if (!selectedStats.length) return undefined;
     return queryFormat === 'string' ? selectedStats.join(',') : selectedStats;
@@ -486,14 +435,7 @@ export const QueryGenerator = (opts, props) => {
     statsByDate: 'statsByDate',
   };
 
-  const getAggregationsByDateQueryFormat = () =>
-    options(
-      'Aggregations By Date Query Format',
-      { ...stringQueryFormat, ...arrayQueryFormat },
-      'string',
-      { display: 'radio' },
-      GROUP_STATS
-    );
+  const getAggregationsByDateQueryFormat = () => options('Aggregations By Date Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' }, GROUP_STATS);
   const getAggregationsByDate = () => {
     const queryFormat = getAggregationsByDateQueryFormat();
     const selectedAggregationsByDate = options(
@@ -505,9 +447,7 @@ export const QueryGenerator = (opts, props) => {
     );
 
     if (!selectedAggregationsByDate.length) return undefined;
-    return queryFormat === 'string'
-      ? selectedAggregationsByDate.join(',')
-      : selectedAggregationsByDate;
+    return queryFormat === 'string' ? selectedAggregationsByDate.join(',') : selectedAggregationsByDate;
   };
 
   const timePrefs = getTimePrefs();
@@ -518,9 +458,7 @@ export const QueryGenerator = (opts, props) => {
   ];
 
   _.each(endpoints, (endpoint, i) => {
-    const offset = _.get(timePrefs, 'timezoneAware')
-      ? getOffset(endpoint, timePrefs.timezoneName)
-      : 0;
+    const offset = _.get(timePrefs, 'timezoneAware') ? getOffset(endpoint, timePrefs.timezoneName) : 0;
     endpoints[i] = moment.utc(endpoints[i]).add(offset, 'minutes').toISOString();
   });
 
@@ -546,16 +484,14 @@ export const QueryGenerator = (opts, props) => {
   const showStats = () => boolean('Render Stats', true, GROUP_RESULTS);
   const query = () => object('Query', defaultQuery, GROUP_RESULTS);
 
-  return (
-    <Results showStats={showStats()} showData={showData()} results={dataUtil.query(query())} />
-  );
-};
+  return <Results
+    showStats={showStats()}
+    showData={showData()}
+    results={dataUtil.query(query())}
+  />;
+}, { notes });
 
-QueryGenerator.story = {
-  parameters: { notes },
-};
-
-export const UpdateMessage = (opts, props) => {
+stories.add('Update Message', (opts, props) => {
   const { dataUtil, patientId } = props;
 
   const message = {
@@ -575,7 +511,10 @@ export const UpdateMessage = (opts, props) => {
   dataUtil.addData([message], patientId);
 
   const defaultQuery = {
-    endpoints: ['2018-03-27T05:00:00.000Z', '2018-03-28T05:00:00.000Z'],
+    endpoints: [
+      '2018-03-27T05:00:00.000Z',
+      '2018-03-28T05:00:00.000Z',
+    ],
     types: {
       message: {
         select: 'messageText, id, normalTime',
@@ -585,9 +524,11 @@ export const UpdateMessage = (opts, props) => {
 
   const query = () => object('Query', defaultQuery, GROUP_RESULTS);
   const datum = () => object('Message', _.cloneDeep(message), GROUP_RESULTS);
-  const updateButton = () =>
-    button('Update Message', () => dataUtil.updateDatum(datum()), GROUP_RESULTS);
-  return (
-    <Results showData results={dataUtil.query(query())} datum={datum()} button={updateButton()} />
-  );
-};
+  const updateButton = () => button('Update Message', () => dataUtil.updateDatum(datum()), GROUP_RESULTS);
+  return <Results
+    showData
+    results={dataUtil.query(query())}
+    datum={datum()}
+    button={updateButton()}
+  />;
+});

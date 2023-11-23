@@ -1,9 +1,10 @@
 import React from 'react';
 import _ from 'lodash';
+import { storiesOf } from '@storybook/react';
 
 import InputGroup from '../../../../src/components/common/controls/InputGroup';
 
-export default { title: 'InputGroup' }
+const stories = storiesOf('InputGroup', module);
 
 const suffixOptions = [
   {
@@ -44,14 +45,14 @@ class InteractiveContainer extends React.PureComponent {
     };
   }
 
-  handleInputChange = (event) => {
+  handleInputChange = event => {
     event.persist();
     this.setState(() => ({
       value: event.target.value,
     }));
   };
 
-  handleSuffixChange = (value) => {
+  handleSuffixChange = value => {
     this.setState((state) => ({
       suffix: _.assign({}, state.suffix, {
         value,
@@ -70,22 +71,26 @@ class InteractiveContainer extends React.PureComponent {
   );
 }
 
-export const NumberSuffixOptions = () => (
+stories.add('Number, Suffix options', () => (
   <Wrapper>
-    <InteractiveContainer id="weight" label="Weight" step={1} suffix={suffix} type="number" />
+    <InteractiveContainer
+      id="weight"
+      label="Weight"
+      step={1}
+      suffix={suffix}
+      type="number"
+    />
   </Wrapper>
-);
+));
 
-NumberSuffixOptions.story = {
-  name: 'Number, Suffix options',
-};
-
-export const NumberSuffixString = () => (
+stories.add('Number, Suffix string', () => (
   <Wrapper>
-    <InputGroup id="weight" label="Weight" step={1} suffix="kg" type="number" />
+    <InputGroup
+      id="weight"
+      label="Weight"
+      step={1}
+      suffix="kg"
+      type="number"
+    />
   </Wrapper>
-);
-
-NumberSuffixString.story = {
-  name: 'Number, Suffix string',
-};
+));

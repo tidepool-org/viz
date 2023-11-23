@@ -17,6 +17,7 @@
 
 import React from 'react';
 import _ from 'lodash';
+import { storiesOf } from '@storybook/react';
 import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
@@ -29,7 +30,7 @@ import * as settings from '../../data/patient/settings';
 
 /* global window */
 
-export default { title: 'Basics View PDF' };
+const stories = storiesOf('Basics View PDF', module);
 
 let queries;
 try {
@@ -53,12 +54,12 @@ function openPDF(dataUtil, { patient }) {
   PrintView.renderPageNumbers(doc);
 
   waitForData(doc)
-    .then((dataUrl) => {
+    .then(dataUrl => {
       const byte = base64ToArrayBuffer(dataUrl);
       const blob = new Blob([byte], { type: 'application/pdf' });
       window.open(URL.createObjectURL(blob), '_blank');
     })
-    .catch((error) => {
+    .catch(error => {
       console.log(error);
     });
 
@@ -76,82 +77,54 @@ and then use this story to iterate on the Basics Print PDF outside of Tidepool W
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-export const CannulaPrime = (opts, { dataUtil }) => (
+stories.add('cannula prime', (opts, { dataUtil }) => (
   <button
-    onClick={() =>
-      openPDF(dataUtil, {
-        patient: {
-          ...profiles.standard,
-          ...settings.cannulaPrimeSelected,
-        },
-      })
-    }
+    onClick={() => openPDF(dataUtil, {
+      patient: {
+        ...profiles.standard,
+        ...settings.cannulaPrimeSelected,
+      },
+    })}
   >
     Open PDF in new tab
   </button>
-);
+), { notes });
 
-CannulaPrime.story = {
-  name: 'cannula prime',
-  parameters: { notes },
-};
-
-export const TubingPrime = (opts, { dataUtil }) => (
+stories.add('tubing prime', (opts, { dataUtil }) => (
   <button
-    onClick={() =>
-      openPDF(dataUtil, {
-        patient: {
-          ...profiles.standard,
-          ...settings.tubingPrimeSelected,
-        },
-      })
-    }
+    onClick={() => openPDF(dataUtil, {
+      patient: {
+        ...profiles.standard,
+        ...settings.tubingPrimeSelected,
+      },
+    })}
   >
     Open PDF in new tab
   </button>
-);
+), { notes });
 
-TubingPrime.story = {
-  name: 'tubing prime',
-  parameters: { notes },
-};
-
-export const ReservoirChange = (opts, { dataUtil }) => (
+stories.add('reservoir change', (opts, { dataUtil }) => (
   <button
-    onClick={() =>
-      openPDF(dataUtil, {
-        patient: {
-          ...profiles.standard,
-          ...settings.reservoirChangeSelected,
-        },
-      })
-    }
+    onClick={() => openPDF(dataUtil, {
+      patient: {
+        ...profiles.standard,
+        ...settings.reservoirChangeSelected,
+      },
+    })}
   >
     Open PDF in new tab
   </button>
-);
+), { notes });
 
-ReservoirChange.story = {
-  name: 'reservoir change',
-  parameters: { notes },
-};
-
-export const SiteChangeSourceUndefined = (opts, { dataUtil }) => (
+stories.add('site change source undefined', (opts, { dataUtil }) => (
   <button
-    onClick={() =>
-      openPDF(dataUtil, {
-        patient: {
-          ...profiles.standard,
-          ...settings.siteChangeSourceUndefined,
-        },
-      })
-    }
+    onClick={() => openPDF(dataUtil, {
+      patient: {
+        ...profiles.standard,
+        ...settings.siteChangeSourceUndefined,
+      },
+    })}
   >
     Open PDF in new tab
   </button>
-);
-
-SiteChangeSourceUndefined.story = {
-  name: 'site change source undefined',
-  parameters: { notes },
-};
+), { notes });

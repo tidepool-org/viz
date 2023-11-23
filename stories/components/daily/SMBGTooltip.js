@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { storiesOf } from '@storybook/react';
+
 import SMBGTooltip from '../../../src/components/daily/smbgtooltip/SMBGTooltip';
 
 const bgPrefs = {
@@ -49,21 +51,27 @@ const medT600accepted = {
   type: 'smbg',
   units: 'mg/dL',
   value: 100,
-  annotations: [{ code: 'medtronic600/smbg/user-accepted-remote-bg' }],
+  annotations: [
+    { code: 'medtronic600/smbg/user-accepted-remote-bg' },
+  ],
 };
 
 const medT600rejected = {
   type: 'smbg',
   units: 'mg/dL',
   value: 100,
-  annotations: [{ code: 'medtronic600/smbg/user-rejected-remote-bg' }],
+  annotations: [
+    { code: 'medtronic600/smbg/user-rejected-remote-bg' },
+  ],
 };
 
 const medT600timeout = {
   type: 'smbg',
   units: 'mg/dL',
   value: 100,
-  annotations: [{ code: 'medtronic600/smbg/remote-bg-acceptance-screen-timeout' }],
+  annotations: [
+    { code: 'medtronic600/smbg/remote-bg-acceptance-screen-timeout' },
+  ],
 };
 
 const medT600acceptedManual = {
@@ -71,7 +79,9 @@ const medT600acceptedManual = {
   units: 'mg/dL',
   value: 100,
   subType: 'manual',
-  annotations: [{ code: 'medtronic600/smbg/user-accepted-remote-bg' }],
+  annotations: [
+    { code: 'medtronic600/smbg/user-accepted-remote-bg' },
+  ],
 };
 
 const medT600rejectedLinked = {
@@ -79,7 +89,9 @@ const medT600rejectedLinked = {
   units: 'mg/dL',
   value: 100,
   subType: 'linked',
-  annotations: [{ code: 'medtronic600/smbg/user-rejected-remote-bg' }],
+  annotations: [
+    { code: 'medtronic600/smbg/user-rejected-remote-bg' },
+  ],
 };
 
 const medT600timeoutManual = {
@@ -87,7 +99,9 @@ const medT600timeoutManual = {
   units: 'mg/dL',
   value: 100,
   subType: 'manual',
-  annotations: [{ code: 'medtronic600/smbg/remote-bg-acceptance-screen-timeout' }],
+  annotations: [
+    { code: 'medtronic600/smbg/remote-bg-acceptance-screen-timeout' },
+  ],
 };
 
 const medT600calibManual = {
@@ -95,7 +109,9 @@ const medT600calibManual = {
   units: 'mg/dL',
   value: 100,
   subType: 'manual',
-  annotations: [{ code: 'medtronic600/smbg/bg-sent-for-calib' }],
+  annotations: [
+    { code: 'medtronic600/smbg/bg-sent-for-calib' },
+  ],
 };
 
 const medT600noncalibManual = {
@@ -103,7 +119,9 @@ const medT600noncalibManual = {
   units: 'mg/dL',
   value: 100,
   subType: 'manual',
-  annotations: [{ code: 'medtronic600/smbg/user-rejected-sensor-calib' }],
+  annotations: [
+    { code: 'medtronic600/smbg/user-rejected-sensor-calib' },
+  ],
 };
 
 const medT600acceptedNoncalibManual = {
@@ -149,7 +167,7 @@ const props = {
   bgPrefs,
 };
 
-const BackgroundDecorator = (story) => (
+const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
 
@@ -168,183 +186,101 @@ const refDiv = (
   />
 );
 
-export default {
-  title: 'SMBGTooltip',
-  decorators: [BackgroundDecorator],
-};
-
-export const Target = {
-  render: () => (
+storiesOf('SMBGTooltip', module)
+  .addDecorator(BackgroundDecorator)
+  .add('target', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={target} />
     </div>
-  ),
-
-  name: 'target',
-};
-
-export const Low = {
-  render: () => (
+  ))
+  .add('low', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={low} />
     </div>
-  ),
-
-  name: 'low',
-};
-
-export const High = {
-  render: () => (
+  ))
+  .add('high', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={high} />
     </div>
-  ),
-
-  name: 'high',
-};
-
-export const VeryHigh = {
-  render: () => (
+  ))
+  .add('veryHigh', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={veryHigh} />
     </div>
-  ),
-
-  name: 'veryHigh',
-};
-
-export const VeryLow = {
-  render: () => (
+  ))
+  .add('veryLow', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={veryLow} />
     </div>
-  ),
-
-  name: 'veryLow',
-};
-
-export const Manual = {
-  render: () => (
+  ))
+  .add('manual', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={manual} />
     </div>
-  ),
-
-  name: 'manual',
-};
-
-export const Linked = {
-  render: () => (
+  ))
+  .add('linked', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={linked} />
     </div>
-  ),
-
-  name: 'linked',
-};
-
-export const MedT600Accepted = {
-  render: () => (
+  ))
+  .add('medT600accepted', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600accepted} />
     </div>
-  ),
-
-  name: 'medT600accepted',
-};
-
-export const MedT600Rejected = {
-  render: () => (
+  ))
+  .add('medT600rejected', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600rejected} />
     </div>
-  ),
-
-  name: 'medT600rejected',
-};
-
-export const MedT600Timedout = {
-  render: () => (
+  ))
+  .add('medT600timedout', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600timeout} />
     </div>
-  ),
-
-  name: 'medT600timedout',
-};
-
-export const MedT600AcceptedManual = {
-  render: () => (
+  ))
+  .add('medT600acceptedManual', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600acceptedManual} />
     </div>
-  ),
-
-  name: 'medT600acceptedManual',
-};
-
-export const MedT600RejectedLinked = {
-  render: () => (
+  ))
+  .add('medT600rejectedLinked', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600rejectedLinked} />
     </div>
-  ),
-
-  name: 'medT600rejectedLinked',
-};
-
-export const MedT600TimeoutManual = {
-  render: () => (
+  ))
+  .add('medT600timeoutManual', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600timeoutManual} />
     </div>
-  ),
-
-  name: 'medT600timeoutManual',
-};
-
-export const MedT600CalibManual = {
-  render: () => (
+  ))
+  .add('medT600calibManual', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600calibManual} />
     </div>
-  ),
-
-  name: 'medT600calibManual',
-};
-
-export const MedT600NoncalibManual = {
-  render: () => (
+  ))
+  .add('medT600noncalibManual', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600noncalibManual} />
     </div>
-  ),
-
-  name: 'medT600noncalibManual',
-};
-
-export const MedT600AcceptedNoncalibManual = {
-  render: () => (
+  ))
+  .add('medT600acceptedNoncalibManual', () => (
     <div>
       {refDiv}
       <SMBGTooltip {...props} smbg={medT600acceptedNoncalibManual} />
     </div>
-  ),
-
-  name: 'medT600acceptedNoncalibManual',
-};
+  ));

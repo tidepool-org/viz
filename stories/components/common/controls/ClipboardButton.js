@@ -1,5 +1,6 @@
 import React from 'react';
 import _ from 'lodash';
+import { storiesOf } from '@storybook/react';
 
 import ClipboardButton from '../../../../src/components/common/controls/ClipboardButton';
 import * as profiles from '../../../../data/patient/profiles';
@@ -10,9 +11,7 @@ import { basicsText } from '../../../../src/utils/basics/data';
 import { bgLogText } from '../../../../src/utils/bgLog/data';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
-export default {
-  title: 'Clipboard Button',
-}
+const stories = storiesOf('ClipboardButton', module);
 
 const animasFlatRateData = require('../../../../data/pumpSettings/animas/flatrate.json');
 const animasMultiRateData = require('../../../../data/pumpSettings/animas/multirate.json');
@@ -92,25 +91,21 @@ const Wrapper = ({ children }) => (
   </div>
 );
 
-export const Default = () => (
+stories.add('Default', () => (
   <Wrapper>
     <ClipboardButton />
   </Wrapper>
-);
+));
 
-export const OnSuccessCallback = () => (
+stories.add('OnSuccess callback', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={() => window.alert('onSuccess Called')} // eslint-disable-line no-undef,no-alert
     />
   </Wrapper>
-);
+));
 
-OnSuccessCallback.story = {
-  name: 'OnSuccess callback',
-};
-
-export const CustomText = () => (
+stories.add('Custom Text', () => (
   <Wrapper>
     <ClipboardButton
       buttonText="Click Me!"
@@ -119,217 +114,132 @@ export const CustomText = () => (
       clipboardText="You copied me!"
     />
   </Wrapper>
-);
+));
 
-export const AnimasFlatRate = () => (
+stories.add('Animas Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.animas.flatrate,
-        MGDL_UNITS,
-        'animas'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.animas.flatrate, MGDL_UNITS, 'animas')}
     />
   </Wrapper>
-);
+));
 
-export const AnimasMultiRate = () => (
+stories.add('Animas Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.animas.multirate,
-        MGDL_UNITS,
-        'animas'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.animas.multirate, MGDL_UNITS, 'animas')}
     />
   </Wrapper>
-);
+));
 
-export const MedtronicFlatRate = () => (
+stories.add('Medtronic Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.medtronic.flatrate,
-        MGDL_UNITS,
-        'medtronic'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.medtronic.flatrate, MGDL_UNITS, 'medtronic')}
     />
   </Wrapper>
-);
+));
 
-export const MedtronicMultiRate = () => (
+stories.add('Medtronic Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.medtronic.multirate,
-        MGDL_UNITS,
-        'medtronic'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.medtronic.multirate, MGDL_UNITS, 'medtronic')}
     />
   </Wrapper>
-);
+));
 
-export const MedtronicAutomatedRate = () => (
+stories.add('Medtronic Automated Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.medtronic.automated,
-        MGDL_UNITS,
-        'medtronic'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.medtronic.automated, MGDL_UNITS, 'medtronic')}
     />
   </Wrapper>
-);
+));
 
-export const OmniPodFlatRate = () => (
+stories.add('OmniPod Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.omnipod.flatrate,
-        MGDL_UNITS,
-        'insulet'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.flatrate, MGDL_UNITS, 'insulet')}
     />
   </Wrapper>
-);
+));
 
-OmniPodFlatRate.story = {
-  name: 'OmniPod Flat Rate',
-};
-
-export const OmniPodMultiRate = () => (
+stories.add('OmniPod Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.omnipod.multirate,
-        MGDL_UNITS,
-        'insulet'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.omnipod.multirate, MGDL_UNITS, 'insulet')}
     />
   </Wrapper>
-);
+));
 
-OmniPodMultiRate.story = {
-  name: 'OmniPod Multi Rate',
-};
-
-export const EquilFlatRate = () => (
+stories.add('Equil Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.equil.flatrate,
-        MGDL_UNITS,
-        'microtech'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.equil.flatrate, MGDL_UNITS, 'microtech')}
     />
   </Wrapper>
-);
+));
 
-export const EquilMultiRate = () => (
+stories.add('Equil Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(
-        this,
-        profiles.standard,
-        data.settings.equil.multirate,
-        MGDL_UNITS,
-        'microtech'
-      )}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.equil.multirate, MGDL_UNITS, 'microtech')}
     />
   </Wrapper>
-);
+));
 
-export const TandemFlatRate = () => (
+stories.add('Tandem Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
       getText={tandemText.bind(this, profiles.standard, data.settings.tandem.flatrate, MGDL_UNITS)}
     />
   </Wrapper>
-);
+));
 
-export const TandemMultiRate = () => (
+stories.add('Tandem Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
       getText={tandemText.bind(this, profiles.standard, data.settings.tandem.multirate, MGDL_UNITS)}
     />
   </Wrapper>
-);
+));
 
-export const TrendsData = () => (
+stories.add('Trends Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={trendsText.bind(
-        this,
-        profiles.standard,
-        data.trends.data,
-        data.trends.stats,
-        data.trends.chartPrefs
-      )}
+      getText={trendsText.bind(this, profiles.standard, data.trends.data, data.trends.stats, data.trends.chartPrefs)}
     />
   </Wrapper>
-);
+), { notes });
 
-TrendsData.story = {
-  parameters: { notes },
-};
-
-export const BasicsData = () => (
+stories.add('Basics Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={basicsText.bind(
-        this,
-        profiles.standard,
-        data.basics.data,
-        data.basics.stats,
-        data.basics.aggregations
-      )}
+      getText={basicsText.bind(this, profiles.standard, data.basics.data, data.basics.stats, data.basics.aggregations)}
     />
   </Wrapper>
-);
+), { notes });
 
-BasicsData.story = {
-  parameters: { notes },
-};
-
-export const BgLogData = () => (
+stories.add('BG Log Data', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
       getText={bgLogText.bind(this, profiles.standard, data.bgLog.data, data.bgLog.stats)}
     />
   </Wrapper>
-);
+), { notes });
 
-BgLogData.story = {
-  name: 'BG Log Data',
-  parameters: { notes },
-};
+/* eslint-enable max-len */

@@ -1,12 +1,14 @@
 import React from 'react';
 
+import { storiesOf } from '@storybook/react';
+
 import StatTooltip from '../../../../src/components/common/tooltips/StatTooltip';
 
 const props = {
   position: { top: 105, left: 105 },
 };
 
-const BackgroundDecorator = (story) => (
+const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
 
@@ -25,50 +27,31 @@ const refDiv = (
   />
 );
 
-export default{ title: 'StatTooltip', decorators: [BackgroundDecorator] };
+const stories = storiesOf('StatTooltip', module);
+stories.addDecorator(BackgroundDecorator);
 
-export const ShortAnnotation = () => (
+stories.add('short annotation', () => (
   <div>
     {refDiv}
     <StatTooltip {...props} annotations={['A nice, concise annotation.']} />
   </div>
-);
+));
 
-ShortAnnotation.story = {
-  name: 'short annotation',
-};
-
-export const LongAnnotation = () => (
+stories.add('long annotation', () => (
   <div>
     {refDiv}
-    <StatTooltip
-      {...props}
-      annotations={['A longer annotation that should wrap due to a max-width of 190px set.']}
-    />
+    <StatTooltip {...props} annotations={['A longer annotation that should wrap due to a max-width of 190px set.']} />
   </div>
-);
+));
 
-LongAnnotation.story = {
-  name: 'long annotation',
-};
-
-export const MarkdownAnnotation = () => (
+stories.add('markdown annotation', () => (
   <div>
     {refDiv}
-    <StatTooltip
-      {...props}
-      annotations={[
-        '**A markdown annotation** that should [link](http://www.example.com) to example.com in a new tab',
-      ]}
-    />
+    <StatTooltip {...props} annotations={['**A markdown annotation** that should [link](http://www.example.com) to example.com in a new tab']} />
   </div>
-);
+));
 
-MarkdownAnnotation.story = {
-  name: 'markdown annotation',
-};
-
-export const MultipleAnnotations = () => (
+stories.add('multiple annotations', () => (
   <div>
     {refDiv}
     <StatTooltip
@@ -79,8 +62,4 @@ export const MultipleAnnotations = () => (
       ]}
     />
   </div>
-);
-
-MultipleAnnotations.story = {
-  name: 'multiple annotations',
-};
+));
