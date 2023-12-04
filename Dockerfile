@@ -1,7 +1,7 @@
 ### Stage 0 - Base image
 FROM node:20.8.0-alpine3.17 as base
 WORKDIR /app
-RUN mkdir -p dist node_modules && chown -R node:node .
+RUN mkdir -p /lib/node_modules dist node_modules .yarn && chown -R node:node .
 
 
 ### Stage 1 - Base image for development image to install and configure Chromium for unit tests
@@ -26,13 +26,13 @@ FROM base as dependencies
 RUN apk --no-cache update \
   && apk --no-cache upgrade \
   && apk add --no-cache git
+COPY package.json .
+COPY yarn.lock .
+COPY .yarnrc.yml .
 RUN corepack enable \
   && yarn set version 3.6.4 \
-  && yarn plugin import workspace-tools
-USER node
-COPY package.json .
-# Ignore scripts during install to prevent `prepare` and `prepublishOnly` from running
-RUN yarn workspaces focus --production
+  && yarn plugin import workspace-tools \
+  && yarn workspaces focus --production
 
 
 ### Stage 3 - Development root with Chromium installed for unit tests
