@@ -271,7 +271,7 @@ stories.add('Query Generator', (opts, props) => {
       type,
       fieldsByType[type],
       ['id', 'normalTime'],
-      { display: 'check' },
+      { display: 'check' }
     );
     return { select: queryFormat === 'string' ? fields.join(',') : fields };
   };
@@ -308,7 +308,7 @@ stories.add('Query Generator', (opts, props) => {
       'Types',
       types,
       [],
-      { display: 'check' },
+      { display: 'check' }
     );
 
     if (!selectedTypes.length) return undefined;
@@ -336,7 +336,7 @@ stories.add('Query Generator', (opts, props) => {
       'Metadata',
       metadata,
       [],
-      { display: 'check' },
+      { display: 'check' }
     );
 
     if (!selectedMetaData.length) return undefined;
@@ -362,7 +362,7 @@ stories.add('Query Generator', (opts, props) => {
       'Active Days',
       activeDays,
       _.values(activeDays),
-      { display: 'check' },
+      { display: 'check' }
     );
     return (days.length === 7) ? undefined : _.map(days, _.toInteger);
   };
@@ -381,7 +381,7 @@ stories.add('Query Generator', (opts, props) => {
       'Time Zone',
       timezones,
       'US/Eastern',
-      { display: 'select' },
+      { display: 'select' }
     );
     const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
@@ -413,7 +413,7 @@ stories.add('Query Generator', (opts, props) => {
       'Stats',
       commonStats,
       [],
-      { display: 'check' },
+      { display: 'check' }
     );
 
     if (!selectedStats.length) return undefined;
@@ -436,7 +436,7 @@ stories.add('Query Generator', (opts, props) => {
       'Aggregations By Date',
       aggregationsByDate,
       [],
-      { display: 'check' },
+      { display: 'check' }
     );
 
     if (!selectedAggregationsByDate.length) return undefined;
