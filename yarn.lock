@@ -4265,6 +4265,7 @@ __metadata:
     url-loader: 4.1.1
     util: 0.12.5
     victory: 31.3.0
+    victory-core: 31.2.0
     voilab-pdf-table: 0.5.1
     webpack: 5.89.0
     webpack-cli: 5.1.4
@@ -16584,7 +16585,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"victory-core@npm:^31.2.0":
+"victory-core@npm:31.2.0, victory-core@npm:^31.2.0":
   version: 31.2.0
   resolution: "victory-core@npm:31.2.0"
   dependencies:
