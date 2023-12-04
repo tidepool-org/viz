@@ -29,7 +29,9 @@ RUN apk --no-cache update \
 USER node
 COPY package.json .
 # Ignore scripts during install to prevent `prepare` and `prepublishOnly` from running
-RUN yarn plugin import workspace-tools
+RUN corepack enable \
+  && yarn set version 3.6.4 \
+  && yarn plugin import workspace-tools
 RUN yarn workspaces focus --production
 
 
