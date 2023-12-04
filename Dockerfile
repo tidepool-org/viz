@@ -29,7 +29,8 @@ RUN apk --no-cache update \
 USER node
 COPY package.json .
 # Ignore scripts during install to prevent `prepare` and `prepublishOnly` from running
-RUN yarn install --immutable
+RUN yarn plugin import workspace-tools
+RUN yarn workspaces focus --production
 
 
 ### Stage 3 - Development root with Chromium installed for unit tests
