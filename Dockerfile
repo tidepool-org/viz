@@ -28,10 +28,8 @@ RUN apk --no-cache update \
   && apk add --no-cache git
 USER node
 COPY package.json .
-# Upgrade to npm6.9.0 to allow installing modules that use alias feature
-RUN npm install npm@6.9.0
 # Ignore scripts during install to prevent `prepare` and `prepublishOnly` from running
-RUN node_modules/.bin/npm install --ignore-scripts
+RUN yarn install --immutable
 
 
 ### Stage 3 - Development root with Chromium installed for unit tests
