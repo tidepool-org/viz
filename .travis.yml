@@ -9,7 +9,7 @@ node_js:
   - "stable"
 
 cache:
-  yarn: true
+  # yarn: true
   directories:
     - node_modules
 
@@ -19,7 +19,7 @@ before_install:
   - yarn set version 3.6.4
 
 install:
-  - yarn install --immutable
+  - yarn --immutable
   - NODE_ENV=production npm run build
 
 addons:
