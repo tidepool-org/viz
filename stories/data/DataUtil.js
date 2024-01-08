@@ -38,14 +38,6 @@ import { getOffset } from '../../src/utils/datetime';
 const stories = storiesOf('DataUtil', module);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
-// const  = 'GROUP_DATES';
-// const  = 'GROUP_DATA';
-// const  = 'GROUP_FIELDS';
-// const  = 'GROUP_SORTS';
-// const  = 'GROUP_UNITS';
-// const  = 'GROUP_STATS';
-// const  = 'GROUP_RESULTS';
-
 const notes = `**RUN** the \`accountTool.py export\` command from the \`tidepool-org/tools-private\` repo
 \n\r**OR** Run \`downloadPatientData({raw: true})\` from the console in a Tidepool Web data view
 \n\r**OR** Fetch data directly from the Tidepool API, and
