@@ -72,7 +72,7 @@ describe('AGPUtils', () => {
     });
   });
 
-  describe('calculateCGMDataSufficiency', () => {
+  describe.only('calculateCGMDataSufficiency', () => {
     const lessThan24HrsData = _.cloneDeep(cbgAGPData);
     lessThan24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
     lessThan24HrsData.data.current.stats.sensorUsage.count = 23;
@@ -88,6 +88,10 @@ describe('AGPUtils', () => {
     const top7DaysLessThan1HourDataEach = _.cloneDeep(cbgAGPData);
     top7DaysLessThan1HourDataEach.data.current.stats.bgExtents.bgDaysWorn = 7;
     top7DaysLessThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].sensorUsage.count = 0;
+    sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
+
+    const exactly7DaysGreaterThan1HourDataEach = _.cloneDeep(cbgAGPData);
+    exactly7DaysGreaterThan1HourDataEach.data.current.stats.bgExtents.bgDaysWorn = 7;
 
     const top7DaysLessThan70PercentMeanUsage = _.cloneDeep(cbgAGPData);
     delete top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate['2023-03-16'];
@@ -140,6 +144,17 @@ describe('AGPUtils', () => {
       it('should return `false` for agp, true for other sections', () => {
         expect(AGPUtils.calculateCGMDataSufficiency(top7DaysLessThan1HourDataEach)).to.eql({
           ambulatoryGlucoseProfile: false,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+    });
+
+    context.only('exactly 7 days with greater 1 hour of cgm data', () => {
+      it('should return `true` for agp, true for other sections', () => {
+        expect(AGPUtils.calculateCGMDataSufficiency(exactly7DaysGreaterThan1HourDataEach)).to.eql({
+          ambulatoryGlucoseProfile: true,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
           percentInRanges: true,
