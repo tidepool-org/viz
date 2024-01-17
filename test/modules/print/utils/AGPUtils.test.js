@@ -72,7 +72,7 @@ describe('AGPUtils', () => {
     });
   });
 
-  describe.only('calculateCGMDataSufficiency', () => {
+  describe('calculateCGMDataSufficiency', () => {
     const lessThan24HrsData = _.cloneDeep(cbgAGPData);
     lessThan24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
     lessThan24HrsData.data.current.stats.sensorUsage.count = 23;
@@ -151,7 +151,7 @@ describe('AGPUtils', () => {
       });
     });
 
-    context.only('exactly 7 days with greater 1 hour of cgm data', () => {
+    context('exactly 7 days with greater 1 hour of cgm data', () => {
       it('should return `true` for agp, true for other sections', () => {
         expect(AGPUtils.calculateCGMDataSufficiency(exactly7DaysGreaterThan1HourDataEach)).to.eql({
           ambulatoryGlucoseProfile: true,
