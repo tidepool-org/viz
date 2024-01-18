@@ -89,9 +89,12 @@ export const calculateCGMDataSufficiency = (data = {}) => {
     const {
       count: countForDate,
       sampleFrequency: sampleFrequencyForDate,
+    } = statsByDate[date]?.sensorUsage || {};
+
+    const {
       newestDatum: newestDatumForDate = {},
       oldestDatum: oldestDatumForDate = {},
-    } = statsByDate[date]?.sensorUsage || {};
+    } = statsByDate[date]?.bgExtents || {};
 
     if (!sampleFrequencyForDate || !countForDate) {
       return { sufficiencyMet: false, sensorUsage: 0 };
