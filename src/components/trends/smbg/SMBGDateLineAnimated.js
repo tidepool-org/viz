@@ -91,7 +91,7 @@ export class SMBGDateLineAnimated extends PureComponent {
           opacity: 0,
           x: xScale(this.getXPosition(d.msPer24, grouped)),
           y: yScale(d.value),
-        } },
+        } }
       );
     });
     return points;
@@ -109,7 +109,7 @@ export class SMBGDateLineAnimated extends PureComponent {
           // basically a no-op animation but the data reshaping below for the d3 line() fn
           // seems to require us to animate all properties we want to reshape there
           y: spring(yScale(d.value), springConfig),
-        } },
+        } }
       );
     });
     return points;

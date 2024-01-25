@@ -188,24 +188,24 @@ timeInRangeData.dataPaths = {
 };
 
 stories.add('Time In Range', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)'], 'UI');
-  const bgUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS], 'DATA');
+  const responsive = boolean('responsive', false);
+  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)']);
+  const bgUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS]);
   const bgPrefs = bgPrefsValues[bgUnits];
-  const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  const legend = boolean('legend', true, 'UI');
-  const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
-  const reverseLegendOrder = boolean('reverseLegendOrder', true, 'UI');
+  const alwaysShowTooltips = boolean('alwaysShowTooltips', true);
+  const collapsible = boolean('collapsible', false);
+  const isOpened = boolean('isOpened', true);
+  const legend = boolean('legend', true);
+  const muteOthersOnHover = boolean('muteOthersOnHover', true);
+  const reverseLegendOrder = boolean('reverseLegendOrder', true);
 
   button('Random Data', () => {
     timeInRangeData = generateRandomData(timeInRangeData, 'duration');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     timeInRangeData = generateEmptyData(timeInRangeData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -280,24 +280,24 @@ readingsInRangeData.dataPaths = {
 };
 
 stories.add('Readings In Range', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)'], 'UI');
-  const bgUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS], 'DATA');
+  const responsive = boolean('responsive', false);
+  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)']);
+  const bgUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS]);
   const bgPrefs = bgPrefsValues[bgUnits];
-  const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
-  const collapsible = boolean('collapsible', true, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  const legend = boolean('legend', true, 'UI');
-  const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
-  const reverseLegendOrder = boolean('reverseLegendOrder', true, 'UI');
+  const alwaysShowTooltips = boolean('alwaysShowTooltips', true);
+  const collapsible = boolean('collapsible', true);
+  const isOpened = boolean('isOpened', true);
+  const legend = boolean('legend', true);
+  const muteOthersOnHover = boolean('muteOthersOnHover', true);
+  const reverseLegendOrder = boolean('reverseLegendOrder', true);
 
   button('Random Data', () => {
     readingsInRangeData = generateRandomData(readingsInRangeData, 'count');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     readingsInRangeData = generateEmptyData(readingsInRangeData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -354,21 +354,21 @@ timeInAutoData.dataPaths = {
 };
 
 stories.add('Time In Auto', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)'], 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  const legend = boolean('legend', true, 'UI');
-  const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
+  const responsive = boolean('responsive', false);
+  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)']);
+  const collapsible = boolean('collapsible', false);
+  const alwaysShowTooltips = boolean('alwaysShowTooltips', true);
+  const isOpened = boolean('isOpened', true);
+  const legend = boolean('legend', true);
+  const muteOthersOnHover = boolean('muteOthersOnHover', true);
 
   button('Random Data', () => {
     timeInAutoData = generateRandomData(timeInAutoData, 'duration');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     timeInAutoData = generateEmptyData(timeInAutoData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -418,21 +418,21 @@ timeInOverrideData.dataPaths = {
 };
 
 stories.add('Time In Override', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)'], 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  const legend = boolean('legend', true, 'UI');
-  const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
+  const responsive = boolean('responsive', false);
+  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)']);
+  const collapsible = boolean('collapsible', false);
+  const alwaysShowTooltips = boolean('alwaysShowTooltips', true);
+  const isOpened = boolean('isOpened', true);
+  const legend = boolean('legend', true);
+  const muteOthersOnHover = boolean('muteOthersOnHover', true);
 
   button('Random Data', () => {
     timeInOverrideData = generateRandomData(timeInOverrideData, 'duration');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     timeInOverrideData = generateEmptyData(timeInOverrideData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -482,21 +482,21 @@ totalInsulinData.dataPaths = {
 };
 
 stories.add('Total Insulin', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)'], 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const alwaysShowTooltips = boolean('alwaysShowTooltips', true, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  const legend = boolean('legend', true, 'UI');
-  const muteOthersOnHover = boolean('muteOthersOnHover', true, 'UI');
+  const responsive = boolean('responsive', false);
+  const chartHeight = select('chartHeight', chartHeightOptions, chartHeightOptions['0 (default fluid)']);
+  const collapsible = boolean('collapsible', false);
+  const alwaysShowTooltips = boolean('alwaysShowTooltips', true);
+  const isOpened = boolean('isOpened', true);
+  const legend = boolean('legend', true);
+  const muteOthersOnHover = boolean('muteOthersOnHover', true);
 
   button('Random Data', () => {
     totalInsulinData = generateRandomData(totalInsulinData, 'units');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     totalInsulinData = generateEmptyData(totalInsulinData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -549,10 +549,10 @@ let averageGlucoseDataMmol = _.assign({}, averageGlucoseData, {
 let averageGlucoseDataUnits = bgPrefsOptions[MGDL_UNITS];
 
 stories.add('Average Glucose', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  averageGlucoseDataUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS], 'DATA');
+  const responsive = boolean('responsive', false);
+  const collapsible = boolean('collapsible', false);
+  const isOpened = boolean('isOpened', true);
+  averageGlucoseDataUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS]);
   const bgPrefs = bgPrefsValues[averageGlucoseDataUnits];
 
   button('Random Data', () => {
@@ -561,7 +561,7 @@ stories.add('Average Glucose', () => {
     } else {
       averageGlucoseDataMmol = generateRandomData(averageGlucoseDataMmol, 'bg', averageGlucoseDataUnits);
     }
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     if (averageGlucoseDataUnits === MGDL_UNITS) {
@@ -569,7 +569,7 @@ stories.add('Average Glucose', () => {
     } else {
       averageGlucoseDataMmol = generateEmptyData(averageGlucoseDataMmol);
     }
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -619,10 +619,10 @@ let standardDevDataMmol = _.assign({}, standardDevData, {
 let standardDevDataUnits = bgPrefsOptions[MGDL_UNITS];
 
 stories.add('Standard Deviation', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
-  standardDevDataUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS], 'DATA');
+  const responsive = boolean('responsive', false);
+  const collapsible = boolean('collapsible', false);
+  const isOpened = boolean('isOpened', true);
+  standardDevDataUnits = select('BG Units', bgPrefsOptions, bgPrefsOptions[MGDL_UNITS]);
   const bgPrefs = bgPrefsValues[standardDevDataUnits];
 
   button('Random Data', () => {
@@ -631,7 +631,7 @@ stories.add('Standard Deviation', () => {
     } else {
       standardDevDataMmol = generateRandomData(standardDevDataMmol, 'bg', standardDevDataUnits);
     }
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     if (standardDevDataUnits === MGDL_UNITS) {
@@ -639,7 +639,7 @@ stories.add('Standard Deviation', () => {
     } else {
       standardDevDataMmol = generateEmptyData(standardDevDataMmol);
     }
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -678,14 +678,14 @@ glucoseManagementIndicatorData.dataPaths = {
 };
 
 stories.add('Glucose Management Indicator', () => {
-  const responsive = boolean('responsive', false, 'UI');
+  const responsive = boolean('responsive', false);
   button('Random Data', () => {
     glucoseManagementIndicatorData = generateRandomData(glucoseManagementIndicatorData, 'gmi');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     glucoseManagementIndicatorData = generateEmptyData(glucoseManagementIndicatorData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -718,14 +718,14 @@ coefficientOfVariationData.dataPaths = {
 };
 
 stories.add('Coefficient of Variation', () => {
-  const responsive = boolean('responsive', false, 'UI');
+  const responsive = boolean('responsive', false);
   button('Random Data', () => {
     coefficientOfVariationData = generateRandomData(coefficientOfVariationData, 'cv');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     coefficientOfVariationData = generateEmptyData(coefficientOfVariationData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -758,15 +758,15 @@ sensorUsageData.dataPaths = {
 };
 
 stories.add('Sensor Usage', () => {
-  const responsive = boolean('responsive', false, 'UI');
+  const responsive = boolean('responsive', false);
   button('Random Data', () => {
     sensorUsageData = generateRandomData(sensorUsageData, 'sensorUsage');
     sensorUsageData.total = { value: 100 };
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     sensorUsageData = generateEmptyData(sensorUsageData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -800,14 +800,14 @@ carbData.dataPaths = {
 };
 
 stories.add('Avg. Daily Carbs', () => {
-  const responsive = boolean('responsive', false, 'UI');
+  const responsive = boolean('responsive', false);
   button('Random Data', () => {
     carbData = generateRandomData(carbData, 'carb');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     carbData = generateEmptyData(carbData);
-  }, 'DATA');
+  });
 
   return (
     <Container responsive={responsive}>
@@ -882,17 +882,17 @@ dailyDoseData.dataPaths = {
 };
 
 stories.add('Avg. Daily Insulin', () => {
-  const responsive = boolean('responsive', false, 'UI');
-  const collapsible = boolean('collapsible', false, 'UI');
-  const isOpened = boolean('isOpened', true, 'UI');
+  const responsive = boolean('responsive', false);
+  const collapsible = boolean('collapsible', false);
+  const isOpened = boolean('isOpened', true);
 
   button('Random Data', () => {
     dailyDoseData = generateRandomData(dailyDoseData, 'units');
-  }, 'DATA');
+  });
 
   button('Empty Data', () => {
     dailyDoseData = generateEmptyData(dailyDoseData);
-  }, 'DATA');
+  });
 
   const handleInputChange = (value, suffixValue) => {
     console.log('onInputChange called with:', value, suffixValue); // eslint-disable-line no-console

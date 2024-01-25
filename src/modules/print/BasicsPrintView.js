@@ -43,14 +43,10 @@ import {
   SITE_CHANGE,
 } from '../../utils/constants';
 
-const siteChangeCannulaImage = require('./images/sitechange-cannula.png');
-const siteChangeReservoirImage = require('./images/sitechange-reservoir.png');
-const siteChangeTubingImage = require('./images/sitechange-tubing.png');
-
 const siteChangeImages = {
-  [SITE_CHANGE_CANNULA]: siteChangeCannulaImage,
-  [SITE_CHANGE_RESERVOIR]: siteChangeReservoirImage,
-  [SITE_CHANGE_TUBING]: siteChangeTubingImage,
+  [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
+  [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
+  [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
 };
 
 const t = i18next.t.bind(i18next);
@@ -63,7 +59,7 @@ class BasicsPrintView extends PrintView {
       defineBasicsAggregations(
         this.bgPrefs,
         this.manufacturer,
-        this.latestPumpUpload,
+        this.latestPumpUpload
       ),
       this.aggregationsByDate,
       this.patient,
@@ -762,7 +758,7 @@ class BasicsPrintView extends PrintView {
 
     const gridValues = _.map(
       _.fill(Array(gridSpaces), 0),
-      (space, index) => (_.get(countArray, index, 0) + _.get(extrasArray, index, 0)),
+      (space, index) => (_.get(countArray, index, 0) + _.get(extrasArray, index, 0))
     );
 
     if (extrasArray.length) {

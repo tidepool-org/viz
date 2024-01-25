@@ -54,7 +54,7 @@ export function findDatesIntersectingWithCbgSliceSegment(cbgData, focusedSlice, 
           return false;
         }
       ),
-      'localDate',
+      'localDate'
     )
   ).sort();
 }

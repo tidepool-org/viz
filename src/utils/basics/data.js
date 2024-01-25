@@ -219,7 +219,7 @@ export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
   return _.get(
     pumpVocabulary,
     [_.upperFirst(manufacturer), siteChangeSource],
-    fallbackSubtitle,
+    fallbackSubtitle
   );
 }
 
@@ -462,7 +462,7 @@ export function basicsText(patient, data, stats, aggregations) {
   if (!aggregations.siteChanges.disabled) {
     const siteChanges = getSiteChangesTableData(
       _.get(aggregationsByDate, 'siteChanges.byDate', {}),
-      aggregations.siteChanges.source,
+      aggregations.siteChanges.source
     );
 
     basicsString += textUtil.buildTextTable(

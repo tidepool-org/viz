@@ -127,7 +127,7 @@ class BgLogPrintView extends PrintView {
       i => ({
         id: i * THREE_HRS,
         text: formatClocktimeFromMsPer24(i * THREE_HRS, 'h a'),
-      }),
+      })
     );
 
     this.bgChart.headers.unshift({
@@ -312,11 +312,12 @@ class BgLogPrintView extends PrintView {
             .text(
               smbgLabel,
               labelStartX,
-              yPos + labelOffsetY, {
+              yPos + labelOffsetY,
+              {
                 lineBreak: false,
                 width: labelWidth,
                 align: 'center',
-              },
+              }
             );
 
           this.bgChart.datumsRendered++;

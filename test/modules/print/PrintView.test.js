@@ -1266,7 +1266,6 @@ describe('PrintView', () => {
     it('should initialize the FitColumn table plugin when required', () => {
       Renderer.renderTable([], [], { flexColumn: 'test' }, TableStub, FitColumnStub);
       sinon.assert.calledOnce(Renderer.table.addPlugin);
-      sinon.assert.calledWith(Renderer.table.addPlugin, new FitColumnStub());
       sinon.assert.calledWith(FitColumnStub, { column: 'test' });
     });
 

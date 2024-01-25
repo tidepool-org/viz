@@ -7,7 +7,6 @@ module.exports = function babelConfig(api) {
 
   const plugins = [
     'react-hot-loader/babel',
-    '@babel/plugin-proposal-class-properties',
     '@babel/plugin-transform-modules-commonjs',
   ];
 
@@ -17,7 +16,7 @@ module.exports = function babelConfig(api) {
     plugins.unshift(
       ['babel-plugin-istanbul', {
         useInlineSourceMaps: false,
-      }],
+      }]
     );
   }
 

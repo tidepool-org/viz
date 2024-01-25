@@ -60,7 +60,7 @@ describe('print module', () => {
     render: sinon.stub().resolves(null),
   });
 
-  const sandbox = sinon.sandbox.create();
+  const sandbox = sinon.createSandbox();
 
   let doc;
 

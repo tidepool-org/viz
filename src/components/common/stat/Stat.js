@@ -331,7 +331,7 @@ class Stat extends PureComponent {
         </div>
       </div>
     );
-  }
+  };
 
   renderTooltip = () => (
     <div className={styles.StatTooltipWrapper}>
@@ -507,7 +507,7 @@ class Stat extends PureComponent {
                 const { value } = formatDatum(
                   _.get(datumRef, 'deviation', datumRef),
                   props.dataFormat.label,
-                  props,
+                  props
                 );
                 return `${value}`;
               }}
@@ -515,7 +515,7 @@ class Stat extends PureComponent {
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
-                  props,
+                  props
                 );
                 return `${value}${suffix}`;
               }}
@@ -532,7 +532,7 @@ class Stat extends PureComponent {
               fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
-                props,
+                props
               ))),
               fontSize: labelFontSize,
               fontWeight: 500,
@@ -629,7 +629,7 @@ class Stat extends PureComponent {
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.label,
-                  props,
+                  props
                 );
                 return [value, suffix];
               }}
@@ -637,7 +637,7 @@ class Stat extends PureComponent {
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
-                  props,
+                  props
                 );
                 return `${value}${suffix}`;
               }}
@@ -654,7 +654,7 @@ class Stat extends PureComponent {
               fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
-                props,
+                props
               ))),
               fontSize: labelFontSize,
               fontWeight: 500,

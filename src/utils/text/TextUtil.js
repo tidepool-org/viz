@@ -46,7 +46,7 @@ export class TextUtil {
     end = end - getOffset(end, timezone) * MS_IN_MIN;
 
     return `\nReporting Period: ${formatDateRange(start, end)}\n`;
-  }
+  };
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
 
@@ -54,7 +54,7 @@ export class TextUtil {
     const tableText = this.getTable(rows, columns, opts);
     if (name && tableText) return `\n${name}\n${tableText}\n`;
     return name ? `\n${name}\n` : `\n${tableText}\n`;
-  }
+  };
 
   getTable = (rows, columns, opts = {}) => {
     _.defaults(opts, {

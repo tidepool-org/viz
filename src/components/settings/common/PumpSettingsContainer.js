@@ -24,7 +24,7 @@ export class PumpSettingsContainer extends PureComponent {
     }).isRequired,
     settingsState: PropTypes.object.isRequired,
     toggleSettingsSection: PropTypes.func.isRequired,
-  }
+  };
 
   UNSAFE_componentWillMount() {
     const {
@@ -93,7 +93,7 @@ export function mapStateToProps(state, ownProps) {
   const user = _.get(
     state.blip.allUsersMap,
     userId,
-    {},
+    {}
   );
   return {
     user,
@@ -101,5 +101,5 @@ export function mapStateToProps(state, ownProps) {
 }
 
 export default connect(
-  mapStateToProps,
+  mapStateToProps
 )(PumpSettingsContainer);

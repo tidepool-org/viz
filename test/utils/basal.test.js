@@ -388,25 +388,25 @@ describe('basal utilties', () => {
   describe('getTotalBasalFromEndpoints', () => {
     it('should return total basal delivered for a given time range, even when endpoints overlap a basal segment', () => {
       const data = [
-        {
+        { // 0.75
           duration: MS_IN_HOUR * 3,
           rate: 0.25,
           normalTime: '2018-01-01T00:00:00.000Z',
           normalEnd: '2018-01-01T03:00:00.000Z',
         },
-        {
+        { // 1.5
           duration: MS_IN_HOUR * 2,
           rate: 0.75,
           normalTime: '2018-01-01T03:00:00.000Z',
           normalEnd: '2018-01-01T05:00:00.000Z',
         },
-        {
-          duration: MS_IN_HOUR * 7,
+        { // 9.5
+          duration: MS_IN_HOUR * 19,
           rate: 0.5,
           normalTime: '2018-01-01T05:00:00.000Z',
           normalEnd: '2018-01-02T00:00:00.000Z',
         },
-        {
+        { // 0.75
           duration: MS_IN_HOUR * 3,
           rate: 0.25,
           normalTime: '2018-01-02T00:00:00.000Z',
@@ -414,19 +414,21 @@ describe('basal utilties', () => {
         },
       ];
 
+      let endpoints;
+
       // endpoints coincide with start and end times of basal segments
-      let endpoints = [
+      endpoints = [
         '2018-01-01T00:00:00.000Z',
         '2018-01-02T00:00:00.000Z',
       ];
-      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('5.75');
+      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('11.75');
 
       // endpoints shifted to an hour after basal delivery begins
       endpoints = [
         '2018-01-01T01:00:00.000Z',
         '2018-01-02T01:00:00.000Z',
       ];
-      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('5.75');
+      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('11.75');
 
 
       // endpoints shifted to an hour before basal delivery begins
@@ -434,14 +436,14 @@ describe('basal utilties', () => {
         '2017-12-31T23:00:00.000Z',
         '2018-01-01T23:00:00.000Z',
       ];
-      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('5.5');
+      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('11.25');
 
       // endpoints shifted to two hours after basal delivery ends
       endpoints = [
         '2018-01-01T05:00:00.000Z',
         '2018-01-02T05:00:00.000Z',
       ];
-      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('5.25');
+      expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('10.25');
     });
   });
 

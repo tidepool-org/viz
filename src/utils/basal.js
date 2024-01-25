@@ -17,7 +17,7 @@
 
 import _ from 'lodash';
 
-import { formatInsulin, formatDecimalNumber } from './format';
+import { formatInsulin, precisionRound } from './format';
 import { ONE_HR } from './datetime';
 
 /**
@@ -172,7 +172,7 @@ export function getGroupDurations(data, s, e) {
  */
 export function getSegmentDose(duration, rate) {
   const hours = duration / ONE_HR;
-  return parseFloat(formatDecimalNumber(hours * rate, 3));
+  return parseFloat(precisionRound(hours * rate, 3));
 }
 
 /**
@@ -186,17 +186,26 @@ export function getTotalBasalFromEndpoints(data, endpoints) {
   const end = new Date(endpoints[1]);
   let dose = 0;
 
-  _.each(data, (datum, index) => {
-    let duration = datum.duration;
-    if (index === 0) {
-      // handle first segment, which may have started before the start endpoint
-      duration = _.min([new Date(datum.normalEnd) - start, datum.duration]);
-    } else if (index === data.length - 1) {
-      // handle last segment, which may go past the end endpoint
-      duration = _.min([end - new Date(datum.normalTime), datum.duration]);
-    }
+  _.each(data, datum => {
+    const datumStart = new Date(datum.normalTime);
+    const datumEnd = new Date(datum.normalEnd);
 
-    dose += getSegmentDose(duration, datum.rate);
+    const datumStartIsWithinRange = start.valueOf() <= datumStart.valueOf() && datumStart.valueOf() < end.valueOf();
+    const datumEndIsWithinRange = start.valueOf() < datumEnd.valueOf() && datumEnd.valueOf() <= end.valueOf();
+
+    if (datumStartIsWithinRange || datumEndIsWithinRange) {
+      let duration = 0;
+
+      if (datumStartIsWithinRange && datumEndIsWithinRange) {
+        duration = datum.duration;
+      } else if (datumEndIsWithinRange) {
+        duration = _.min([datumEnd - start, datum.duration]);
+      } else if (datumStartIsWithinRange) {
+        duration = _.min([end - datumStart, datum.duration]);
+      }
+
+      dose += getSegmentDose(duration, datum.rate);
+    }
   });
 
   return formatInsulin(dose);

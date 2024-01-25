@@ -329,35 +329,35 @@ export function processSensitivityData(sensitivityData, bgUnits) {
 export function processTimedSettings(pumpSettings, schedule, bgUnits) {
   const data = _.map(getStarts(pumpSettings.bgTargets[schedule.name]), (startTime) => ({
     start: datetime.formatClocktimeFromMsPer24(
-      startTime,
+      startTime
     ),
     rate: getBasalRate(
       pumpSettings.basalSchedules[schedule.position].value,
-      startTime,
+      startTime
     ),
     bgTarget: getBloodGlucoseValue(
       pumpSettings.bgTargets[schedule.name],
       'target',
       startTime,
-      bgUnits,
+      bgUnits
     ),
     carbRatio: getValue(
       pumpSettings.carbRatios[schedule.name],
       'amount',
-      startTime,
+      startTime
     ),
     insulinSensitivity: getBloodGlucoseValue(
       pumpSettings.insulinSensitivities[schedule.name],
       'amount',
       startTime,
-      bgUnits,
+      bgUnits
     ),
   }));
 
   data.push({
     start: 'Total',
     rate: getTotalBasalRates(
-      pumpSettings.basalSchedules[schedule.position].value,
+      pumpSettings.basalSchedules[schedule.position].value
     ),
     bgTarget: '',
     carbRatio: '',

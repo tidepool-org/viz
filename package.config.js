@@ -10,9 +10,10 @@ const __DEV__ = process.env.NODE_ENV === 'development';
 packageConfig.output.libraryTarget = 'commonjs';
 
 packageConfig.externals = {
-  'babel-core': 'babel-core',
   bluebird: 'bluebird',
   bows: 'bows',
+  'browserify-zlib': 'browserify-zlib',
+  buffer: 'buffer',
   classnames: 'classnames',
   crossfilter2: 'crossfilter2',
   'd3-array': 'd3-array',
@@ -22,14 +23,18 @@ packageConfig.externals = {
   'd3-time': 'd3-time',
   'd3-time-format': 'd3-time-format',
   emotion: 'emotion',
+  events: 'events',
+  'fastest-validator': 'fastest-validator',
   gsap: 'gsap',
   i18next: 'i18next',
   intl: 'intl',
+  'intl-pluralrules': 'intl-pluralrules',
   lodash: 'lodash',
   memorystream: 'memorystream',
   moment: 'moment',
   'moment-timezone': 'moment-timezone',
   'parse-svg-path': 'parse-svg-path',
+  process: 'process',
   'prop-types': 'prop-types',
   react: 'react',
   'react-clipboard.js': 'react-clipboard.js',
@@ -42,11 +47,15 @@ packageConfig.externals = {
   'react-select': 'react-select',
   'react-sizeme': 'react-sizeme',
   'react-transition-group-plus': 'react-transition-group-plus',
+  'readable-stream': 'readable-stream',
+  reductio: 'reductio',
   redux: 'redux',
   'serialize-svg-path': 'serialize-svg-path',
   sundial: 'sundial',
+  'svg-to-pdfkit': 'svg-to-pdfkit',
   'text-table': 'text-table',
   'translate-svg-path': 'translate-svg-path',
+  util: 'util',
   victory: 'victory',
   'voilab-pdf-table': 'voilab-pdf-table',
 };
@@ -54,9 +63,6 @@ packageConfig.externals = {
 packageConfig.plugins = [
   new webpack.DefinePlugin({
     __DEV__,
-  }),
-  new webpack.LoaderOptionsPlugin({
-    debug: false,
   }),
 ];
 

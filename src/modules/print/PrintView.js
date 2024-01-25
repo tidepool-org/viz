@@ -49,10 +49,9 @@ import {
 } from './utils/constants';
 
 import { BG_COLORS, MS_IN_MIN } from '../../utils/constants';
+import './registerStaticFiles';
 
 const t = i18next.t.bind(i18next);
-
-const logo = require('./images/tidepool-logo-408x46.png');
 
 class PrintView {
   constructor(doc, data = {}, opts) {
@@ -855,10 +854,14 @@ class PrintView {
 
   renderLogo() {
     this.logoWidth = 100;
+    const lineHeight = this.doc.fontSize(14).currentLineHeight();
     const xOffset = this.doc.page.width - this.logoWidth - this.margins.right;
-    const yOffset = this.margins.top + 5;
 
-    this.doc.image(logo, xOffset, yOffset, { width: this.logoWidth });
+    const yOffset = (
+      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2 + 1))
+    );
+
+    this.doc.image('images/tidepool-logo-408x46.png', xOffset, yOffset, { width: this.logoWidth });
   }
 
   renderDebugGrid() {

@@ -71,6 +71,7 @@ export default class Doc {
     this.lineTo = sinon.stub().returns(this);
     this.lineGap = sinon.stub().returns(this);
     this.lineCap = sinon.stub().returns(this);
+    this.opacity = sinon.stub().returns(this);
     this.save = sinon.stub().returns(this);
     this.restore = sinon.stub().returns(this);
     this.widthOfString = sinon.stub().returns(20);

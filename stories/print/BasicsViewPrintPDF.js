@@ -18,15 +18,17 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 
 import * as profiles from '../../data/patient/profiles';
 import * as settings from '../../data/patient/settings';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 
 const stories = storiesOf('Basics View PDF', module);
 
@@ -40,7 +42,6 @@ try {
 
 function openPDF(dataUtil, { patient }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
   const opts = {
     bgPrefs: queries.basics.bgPrefs,
     timePrefs: queries.basics.timePrefs,
@@ -52,11 +53,17 @@ function openPDF(dataUtil, { patient }) {
   createPrintView('basics', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
@@ -70,7 +77,7 @@ and then use this story to iterate on the Basics Print PDF outside of Tidepool W
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('cannula prime', ({ dataUtil }) => (
+stories.add('cannula prime', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -83,7 +90,7 @@ stories.add('cannula prime', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('tubing prime', ({ dataUtil }) => (
+stories.add('tubing prime', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -96,7 +103,7 @@ stories.add('tubing prime', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('reservoir change', ({ dataUtil }) => (
+stories.add('reservoir change', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -109,7 +116,7 @@ stories.add('reservoir change', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('site change source undefined', ({ dataUtil }) => (
+stories.add('site change source undefined', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {

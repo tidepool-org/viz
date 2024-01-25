@@ -18,10 +18,11 @@ const styleLoaderConfiguration = {
     'style-loader',
     {
       loader: 'css-loader?sourceMap',
-      query: {
+      options: {
+        modules: {
+          localIdentName,
+        },
         importLoaders: 1,
-        localIdentName,
-        modules: true,
         sourceMap: true,
       },
     },
@@ -55,44 +56,28 @@ const babelLoaderConfiguration = {
 // This is needed for webpack to import static images in JavaScript files
 const imageLoaderConfiguration = {
   test: /\.(gif|jpe?g|png|svg)$/,
-  use: {
-    loader: 'url-loader',
-    options: {
-      name: '[name].[ext]',
-    },
+  exclude: [
+    /static-assets/,
+    /lazy-assets/,
+  ],
+  type: 'asset',
+  generator: {
+    filename: '[name].[ext]',
   },
 };
 
 const fontLoaderConfiguration = [
   {
     test: /\.eot$/,
-    use: {
-      loader: 'url-loader',
-      query: {
-        limit: 10000,
-        mimetype: 'application/vnd.ms-fontobject',
-      },
-    },
+    type: 'asset',
   },
   {
     test: /\.woff$/,
-    use: {
-      loader: 'url-loader',
-      query: {
-        limit: 10000,
-        mimetype: 'application/font-woff',
-      },
-    },
+    type: 'asset',
   },
   {
     test: /\.ttf$/,
-    use: {
-      loader: 'url-loader',
-      query: {
-        limit: 10000,
-        mimetype: 'application/octet-stream',
-      },
-    },
+    type: 'asset',
   },
 ];
 
@@ -103,8 +88,9 @@ const plugins = [
   new webpack.DefinePlugin({
     __DEV__: isDev,
   }),
-  new webpack.LoaderOptionsPlugin({
-    debug: true,
+  new webpack.ProvidePlugin({
+    Buffer: ['buffer', 'Buffer'],
+    process: 'process/browser.js',
   }),
 ];
 
@@ -117,16 +103,31 @@ const entry = {
 
 const output = {
   filename: '[name].js',
+  assetModuleFilename: '[name][ext]',
   path: path.join(__dirname, '/dist/'),
 };
 
 const resolve = {
   alias: {
     crossfilter: 'crossfilter2',
+    // maps fs to a virtual one allowing to register file content dynamically
+    fs: 'pdfkit/js/virtual-fs.js',
+    // iconv-lite is used to load cid less fonts (not spec compliant)
+    'iconv-lite': false,
   },
   extensions: [
     '.js',
   ],
+  fallback: {
+    // crypto module is not necessary at browser
+    crypto: false,
+    // fallbacks for native node libraries (required for PDFKit)
+    buffer: require.resolve('buffer/'),
+    stream: require.resolve('readable-stream'),
+    zlib: require.resolve('browserify-zlib'),
+    util: require.resolve('util/'),
+    assert: require.resolve('assert/')
+  },
 };
 
 let devtool = process.env.WEBPACK_DEVTOOL_VIZ || 'cheap-source-map';
@@ -143,6 +144,40 @@ module.exports = {
       imageLoaderConfiguration,
       styleLoaderConfiguration,
       ...fontLoaderConfiguration,
+
+      // PDFKit extra rules
+      // bundle and load afm files verbatim
+      { test: /\.afm$/, type: 'asset/source' },
+      // bundle and load binary files inside static-assets folder as base64
+      {
+        test: /static-assets/,
+        type: 'asset/inline',
+        generator: {
+          dataUrl: content => content.toString('base64'),
+        },
+      },
+      // load binary files inside lazy-assets folder as a URL
+      {
+        test: /lazy-assets/,
+        type: 'asset/resource'
+      },
+      // convert to base64 and include inline file system binary files used by fontkit and linebreak
+      {
+        enforce: 'post',
+        test: /fontkit[/\\]index.js$/,
+        loader: 'transform-loader',
+        options: {
+          brfs: {}
+        }
+      },
+      {
+        enforce: 'post',
+        test: /linebreak[/\\]src[/\\]linebreaker.js/,
+        loader: 'transform-loader',
+        options: {
+          brfs: {}
+        }
+      },
     ],
   },
   output,
