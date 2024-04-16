@@ -118,7 +118,7 @@ export class StatUtil {
       {
         grams: 0,
         exchanges: 0,
-      },
+      }
     );
 
     const foodCarbs = _.reduce(
@@ -251,7 +251,7 @@ export class StatUtil {
           veryHigh: 0,
           total: 0,
         },
-      },
+      }
     );
 
     if (this.activeDays > 1) {
@@ -339,7 +339,7 @@ export class StatUtil {
           result[key] = value;
           return result;
         },
-        {},
+        {}
       )
       : NaN;
 

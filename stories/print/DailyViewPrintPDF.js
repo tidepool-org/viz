@@ -18,14 +18,16 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 
 import * as profiles from '../../data/patient/profiles';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 
 const stories = storiesOf('Daily View PDF', module);
 
@@ -39,7 +41,6 @@ try {
 
 function openPDF(dataUtil, { patient }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
   const opts = {
     bgPrefs: queries.daily.bgPrefs,
     timePrefs: queries.daily.timePrefs,
@@ -51,11 +52,17 @@ function openPDF(dataUtil, { patient }) {
   createPrintView('daily', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
@@ -69,7 +76,7 @@ and then use this story to iterate on the Daily Print PDF outside of Tidepool We
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('standard account', ({ dataUtil }) => (
+stories.add('standard account', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>

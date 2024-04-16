@@ -15,9 +15,10 @@
  * == BSD2 LICENSE ==
  */
 
-/* global PDFDocument, blobStream */
+/* global */
 import Promise from 'bluebird';
 import _ from 'lodash';
+import PDFDocument from 'pdfkit';
 
 import i18next from 'i18next';
 import PrintView from './PrintView';
@@ -26,6 +27,7 @@ import DailyPrintView from './DailyPrintView';
 import BgLogPrintView from './BgLogPrintView';
 import SettingsPrintView from './SettingsPrintView';
 import AGPPrintView from './AGPPrintView';
+import { base64ToArrayBuffer, waitForData } from '../print/pdfkitHelpers';
 
 import * as constants from './utils/constants';
 
@@ -160,14 +162,12 @@ export function createPrintPDFPackage(data, opts) {
 
   return new Promise(async (resolve, reject) => {
     const DocLib = typeof PDFDocument !== 'undefined' ? PDFDocument : utils.PDFDocument;
-    const streamLib = typeof blobStream !== 'undefined' ? blobStream : utils.blobStream;
 
     /* NB: if you don't set the `margin` (or `margins` if not all are the same)
     then when you are using the .text() command a new page will be added if you specify
     coordinates outside of the default margin (or outside of the margins you've specified)
     */
     const doc = new DocLib({ autoFirstPage: false, bufferPages: true, margin: constants.MARGIN });
-    const stream = doc.pipe(streamLib());
 
     if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
     if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
@@ -187,20 +187,19 @@ export function createPrintPDFPackage(data, opts) {
 
     PrintView.renderPageNumbers(doc);
 
+    waitForData(doc)
+      .then(dataUrl => {
+        const byte = base64ToArrayBuffer(dataUrl);
+        const blob = new Blob([byte], { type: 'application/pdf' });
+        const pdf = {
+          blob,
+          url: URL.createObjectURL(blob),
+        };
+        return resolve(pdf);
+      })
+      .catch(error => reject(error));
+
     doc.end();
-
-    stream.on('finish', () => {
-      const pdf = {
-        blob: stream.toBlob(),
-        url: stream.toBlobURL('application/pdf'),
-      };
-      return resolve(pdf);
-    });
-
-    stream.on('error', (error) => {
-      stream.end();
-      return reject(error);
-    });
   });
 }
 

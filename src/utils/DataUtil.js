@@ -704,7 +704,7 @@ export class DataUtil {
         }
       }
     });
-  }
+  };
 
   clearFilters = () => {
     this.startTimer('clearFilters');
@@ -882,7 +882,7 @@ export class DataUtil {
     this.setExcludedDevices(_.uniq(excludedDevices));
 
     this.endTimer('setDevices');
-  }
+  };
   /* eslint-enable no-param-reassign */
 
   setMetaData = () => {
@@ -1097,15 +1097,15 @@ export class DataUtil {
     this.startTimer('setExcludedDevices');
     this.excludedDevices = deviceIds;
     this.endTimer('setExcludedDevices');
-  }
+  };
 
   clearMatchedDevices = () => {
     this.matchedDevices = {};
-  }
+  };
 
   setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
     this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
-  }
+  };
 
   query = (query = {}) => {
     this.log('Query', query);
@@ -1332,7 +1332,7 @@ export class DataUtil {
 
     this.endTimer('generate fillData');
     return fillData;
-  }
+  };
 
   getMetaData = metaData => {
     this.startTimer('generate metaData');
@@ -1352,7 +1352,7 @@ export class DataUtil {
 
     const selectedMetaData = _.cloneDeep(_.pick(
       this,
-      _.intersection(allowedMetaData, requestedMetaData),
+      _.intersection(allowedMetaData, requestedMetaData)
     ));
 
     _.each(selectedMetaData.latestDatumByType, d => this.normalizeDatumOut(d, ['*']));

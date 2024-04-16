@@ -243,7 +243,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
   if (isNonTrivialUnderride) {
     const programmedY = yScale(bolusUtils.getProgrammed(insulinEvent));
     const edges = getBolusEdges(
-      bolusWidth, bolusCenter, bolusBottom, programmedY,
+      bolusWidth, bolusCenter, bolusBottom, programmedY
     );
     const { left, right } = edges;
 
@@ -263,7 +263,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
   if (isNonTrivialOverride) {
     const recommendedY = yScale(bolusUtils.getRecommended(insulinEvent));
     const edges = getBolusEdges(
-      bolusWidth, bolusCenter, bolusBottom, recommendedY,
+      bolusWidth, bolusCenter, bolusBottom, recommendedY
     );
     const { left, right } = edges;
 
@@ -287,7 +287,7 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
         bolusWidth,
         bolusCenter,
         bottomOfInterruptedLine,
-        bottomOfInterruptedLine + interruptedLineThickness,
+        bottomOfInterruptedLine + interruptedLineThickness
       )
     );
 

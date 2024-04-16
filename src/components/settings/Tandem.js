@@ -126,9 +126,9 @@ Tandem.propTypes = {
           PropTypes.shape({
             start: PropTypes.number.isRequired,
             rate: PropTypes.number.isRequired,
-          }),
+          })
         ),
-      }).isRequired,
+      }).isRequired
     ).isRequired,
     bgTargets: PropTypes.objectOf(
       PropTypes.arrayOf(
@@ -136,7 +136,7 @@ Tandem.propTypes = {
           start: PropTypes.number.isRequired,
           target: PropTypes.number.isRequired,
         })
-      ).isRequired,
+      ).isRequired
     ).isRequired,
     carbRatios: PropTypes.objectOf(
       PropTypes.arrayOf(
@@ -144,7 +144,7 @@ Tandem.propTypes = {
           start: PropTypes.number.isRequired,
           amount: PropTypes.number.isRequired,
         })
-      ).isRequired,
+      ).isRequired
     ).isRequired,
     insulinSensitivities: PropTypes.objectOf(
       PropTypes.arrayOf(
@@ -152,7 +152,7 @@ Tandem.propTypes = {
           start: PropTypes.number.isRequired,
           amount: PropTypes.number.isRequired,
         })
-      ).isRequired,
+      ).isRequired
     ).isRequired,
   }).isRequired,
   timePrefs: PropTypes.shape({

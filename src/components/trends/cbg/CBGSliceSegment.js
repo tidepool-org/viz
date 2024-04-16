@@ -51,7 +51,7 @@ export class CBGSliceSegment extends PureComponent {
     unfocusSlice: PropTypes.func.isRequired,
     width: PropTypes.number.isRequired,
     x: PropTypes.number.isRequired,
-  }
+  };
 
   constructor(props) {
     super(props);

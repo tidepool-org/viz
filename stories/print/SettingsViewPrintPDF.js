@@ -18,14 +18,16 @@
 import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
+import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 
 import * as profiles from '../../data/patient/profiles';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 /* eslint-disable max-len */
 
 const stories = storiesOf('Settings View PDF', module);
@@ -50,7 +52,7 @@ import tandemDataFlatRate from '../../data/pumpSettings/tandem/flatrate.json';
 
 function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
+
   const opts = {
     bgPrefs: queries.settings.bgPrefs,
     timePrefs: queries.settings.timePrefs,
@@ -72,11 +74,17 @@ function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
   createPrintView('settings', data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
@@ -90,43 +98,43 @@ and then use this story to iterate on the Settings Print PDF outside of Tidepool
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add('standard account', ({ dataUtil }) => (
+stories.add('standard account', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.standard })}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('animas flat rate', ({ dataUtil }) => (
+stories.add('animas flat rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, animasDataFlatRate, 'animas')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('animas multi rate', ({ dataUtil }) => (
+stories.add('animas multi rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, animasDataMultiRate, 'animas')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic flat rate', ({ dataUtil }) => (
+stories.add('medtronic flat rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, medtronicDataFlatRate, 'medtronic')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic multi rate', ({ dataUtil }) => (
+stories.add('medtronic multi rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, medtronicDataMultiRate, 'medtronic')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic automated rate', ({ dataUtil }) => (
+stories.add('medtronic automated rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, medtronicDataAutomated, 'medtronic')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('medtronic automated inactive rate', ({ dataUtil }) => {
+stories.add('medtronic automated inactive rate', (opts, { dataUtil }) => {
   const inactiveAutomatedBasaldata = _.assign({}, medtronicDataAutomated, {
     activeSchedule: 'Standard',
   });
@@ -138,25 +146,25 @@ stories.add('medtronic automated inactive rate', ({ dataUtil }) => {
   );
 }, { notes });
 
-stories.add('omnipod flat rate', ({ dataUtil }) => (
+stories.add('omnipod flat rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, omnipodDataFlatRate, 'insulet')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('omnipod multi rate', ({ dataUtil }) => (
+stories.add('omnipod multi rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, omnipodDataMultiRate, 'insulet')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('tandem flat rate', ({ dataUtil }) => (
+stories.add('tandem flat rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, tandemDataFlatRate, 'tandem')}>
     Open PDF in new tab
   </button>
 ), { notes });
 
-stories.add('tandem multi rate', ({ dataUtil }) => (
+stories.add('tandem multi rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, tandemDataMultiRate, 'tandem')}>
     Open PDF in new tab
   </button>

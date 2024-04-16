@@ -130,7 +130,7 @@ export function getBasalSequencePaths(basalSequence, xScale, yScale) {
           endAtZero: last.discontinuousEnd,
           isFilled: true,
           startAtZero: first.discontinuousStart,
-        },
+        }
       ),
       basalType: type,
       key: `basalFill-${first.id}`,
@@ -160,7 +160,7 @@ export function getBasalSequencePaths(basalSequence, xScale, yScale) {
           endAtZero: false,
           isFilled: false,
           startAtZero: false,
-        },
+        }
       ),
       basalType: type,
       key: `basalPathUndelivered-${first.id}`,

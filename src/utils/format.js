@@ -66,6 +66,22 @@ export function bankersRound(value, precision = 0) {
 }
 
 /**
+ * precisionRound
+ *
+ * Rounding numbers to desired precison.
+ *
+ * @param {Number} value - numeric value to format
+ * @param {Number} [precision] - optional number of decimal places to display;
+ *                               if not provided, will display as integer (0 decimal places)
+ *
+ * @return {Number} numeric value rounded to the desired number of decimal places
+ */
+export function precisionRound(value, precision = 0) {
+  const shift = precision > 0 ? 10 ** precision : 1;
+  return Math.round(value * shift) / shift;
+}
+
+/**
  * formatBgValue
  * @param {Number} val - integer or float blood glucose value in either mg/dL or mmol/L
  * @param {Object} bgPrefs - object containing bgUnits String and bgBounds Object
@@ -110,6 +126,10 @@ export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) 
 
 /**
  * formatDecimalNumber
+ *
+ * This (and all d3-format methods) is to format numbers for localized human display.
+ * To use rounded results in calculations, use the `precisionRound` utility
+ *
  * @param {Number} val - numeric value to format
  * @param {Number} [places] - optional number of decimal places to display;
  *                            if not provided, will display as integer (0 decimal places)

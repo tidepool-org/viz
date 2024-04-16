@@ -78,7 +78,7 @@ const NonTandem = (props) => {
             label: { main: 'Insulin Settings' },
             className: styles.insulinSettingsHeader,
           },
-          styles.settingsTableInverted,
+          styles.settingsTableInverted
         )}
       </div>
     );
@@ -112,7 +112,7 @@ const NonTandem = (props) => {
               basal.rows,
               basal.columns,
               title,
-              [labelClass, styles.settingsTable].join(' '),
+              [labelClass, styles.settingsTable].join(' ')
             )}
           </div>
         );
@@ -135,7 +135,7 @@ const NonTandem = (props) => {
               basal.rows,
               basal.columns,
               null,
-              styles.basalTable,
+              styles.basalTable
             )}
           </CollapsibleContainer>
         </div>
@@ -158,7 +158,7 @@ const NonTandem = (props) => {
           sensitivity.rows,
           sensitivity.columns,
           title,
-          styles.settingsTable,
+          styles.settingsTable
         )}
       </div>
     );
@@ -180,7 +180,7 @@ const NonTandem = (props) => {
           ratio.rows,
           ratio.columns,
           title,
-          styles.settingsTable,
+          styles.settingsTable
         )}
       </div>
     );
@@ -202,7 +202,7 @@ const NonTandem = (props) => {
           target.rows,
           target.columns,
           title,
-          styles.settingsTable,
+          styles.settingsTable
         )}
       </div>
     );
@@ -263,9 +263,9 @@ NonTandem.propTypes = {
           PropTypes.shape({
             start: PropTypes.number.isRequired,
             rate: PropTypes.number.isRequired,
-          }),
+          })
         ),
-      }),
+      })
     ).isRequired,
     bgTarget: PropTypes.arrayOf(
       PropTypes.shape({
