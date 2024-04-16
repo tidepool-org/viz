@@ -137,7 +137,7 @@ function sensitivityColumns() {
 function sensitivityRows(settings, units) {
   return data.processSensitivityData(
     settings.insulinSensitivity,
-    units,
+    units
   );
 }
 
@@ -260,7 +260,7 @@ function targetRows(settings, units, manufacturer) {
   return data.processBgTargetData(
     settings.bgTarget,
     units,
-    BG_TARGET_ACCESSORS_BY_MANUFACTURER[manufacturer],
+    BG_TARGET_ACCESSORS_BY_MANUFACTURER[manufacturer]
   );
 }
 

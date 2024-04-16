@@ -258,7 +258,7 @@ class DailyPrintView extends PrintView {
           return lines + 1;
         }, 0);
         return totalLines;
-      },
+      }
     ));
 
     const { notesEtc, bgEtcChart, basalChart, belowBasal, total } = this.chartMinimums;
@@ -456,7 +456,7 @@ class DailyPrintView extends PrintView {
       this.doc.font(this.font)
         .text(
           `${lowerTarget} - ${upperTarget}`,
-          { indent: statsIndent, continued: true, width: widthWithoutIndent },
+          { indent: statsIndent, continued: true, width: widthWithoutIndent }
         )
         .text(`${formatPercentage(target / totalCbgDuration)}`, { align: 'right' });
 
@@ -467,7 +467,7 @@ class DailyPrintView extends PrintView {
           t('Below {{threshold}}', {
             threshold: formatDecimalNumber(veryLowThreshold, bgPrecision),
           }),
-          { indent: statsIndent, continued: true, width: widthWithoutIndent },
+          { indent: statsIndent, continued: true, width: widthWithoutIndent }
         )
         .text(`${formatPercentage(veryLow / totalCbgDuration)}`, { align: 'right' });
 
@@ -531,7 +531,7 @@ class DailyPrintView extends PrintView {
       this.doc.font(this.font)
         .text(
           labels[ratio[0]],
-          { indent: statsIndent, continued: true, width: widthWithoutIndent },
+          { indent: statsIndent, continued: true, width: widthWithoutIndent }
         )
         .text(
           `${primary[ratio[0]]}${secondary[ratio[0]]}`,
@@ -543,7 +543,7 @@ class DailyPrintView extends PrintView {
       this.doc.font(this.font)
         .text(
           labels[ratio[1]],
-          { indent: statsIndent, continued: true, width: widthWithoutIndent },
+          { indent: statsIndent, continued: true, width: widthWithoutIndent }
         )
         .text(
           `${primary[ratio[1]]}${secondary[ratio[1]]}`,
@@ -700,7 +700,7 @@ class DailyPrintView extends PrintView {
             formatLocalizedFromUTC(loc, this.timePrefs, 'ha').slice(0, -1),
             xPos,
             topEdge,
-            { indent: 3 },
+            { indent: 3 }
           );
       }
 
@@ -742,7 +742,7 @@ class DailyPrintView extends PrintView {
           `${bgTick}`,
           this.summaryArea.rightEdge,
           yPos - this.doc.currentLineHeight() / 2,
-          opts,
+          opts
         );
     });
 
@@ -785,9 +785,10 @@ class DailyPrintView extends PrintView {
         .text(
           smbgLabel,
           labelStartX,
-          yPos - 12.5, {
+          yPos - 12.5,
+          {
             lineBreak: false,
-          },
+          }
         );
     });
 
@@ -871,7 +872,7 @@ class DailyPrintView extends PrintView {
 
     const grouped = _.groupBy(
       _.map(insulinEvents, (d) => (getBolusFromInsulinEvent(d))),
-      (d) => (d.threeHrBin / 3),
+      (d) => (d.threeHrBin / 3)
     );
 
     _.each(grouped, (binOfBoluses, i) => {
@@ -894,7 +895,7 @@ class DailyPrintView extends PrintView {
           displayTime,
           groupXPos,
           yPos.current(),
-          { continued: true, indent: 2, width: groupWidth },
+          { continued: true, indent: 2, width: groupWidth }
         ).text(
           removeTrailingZeroes(formatDecimalNumber(getDelivered(bolus), 2)),
           { align: 'right' }
@@ -911,7 +912,7 @@ class DailyPrintView extends PrintView {
             percentagesText,
             groupXPos,
             yPos.update(),
-            { indent: 2, width: groupWidth },
+            { indent: 2, width: groupWidth }
           );
         }
         yPos.update();

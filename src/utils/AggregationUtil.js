@@ -222,12 +222,12 @@ export class AggregationUtil {
 
       _.assign(
         processedData[dataForDay.key],
-        countAutomatedBasalEvents(processedData[dataForDay.key]),
+        countAutomatedBasalEvents(processedData[dataForDay.key])
       );
 
       _.assign(
         processedData[dataForDay.key],
-        countDistinctSuspends(processedData[dataForDay.key]),
+        countDistinctSuspends(processedData[dataForDay.key])
       );
 
       if (processedData[dataForDay.key].total === 0) {
@@ -379,7 +379,7 @@ export class AggregationUtil {
       ({ value: { dataList } }) => _.some(
         dataList,
         d => _.includes(['prime', 'reservoirChange'], d.subType)
-      ),
+      )
     );
 
     const siteChangeTypes = [

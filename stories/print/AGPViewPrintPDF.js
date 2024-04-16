@@ -2,9 +2,9 @@ import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
 import Plotly from 'plotly.js-basic-dist-min';
+import PDFDocument from 'pdfkit';
 
 import {
-  withKnobs,
   optionsKnob as options,
   date,
   number,
@@ -18,20 +18,19 @@ import { MARGIN } from '../../src/modules/print/utils/constants';
 import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
 
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 
 import * as profiles from '../../data/patient/profiles';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 
 const stories = storiesOf('AGP View PDF', module);
-stories.addDecorator(withKnobs);
 stories.addParameters({ options: { panelPosition: 'right' } });
 
 const GROUP_CONFIG = 'CONFIG';
 
 async function openPDF(dataUtil, { patient }, query, bgSource) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
   const data = dataUtil.query(query);
   const reportType = bgSource === BGM_DATA_KEY ? 'agpBGM' : 'agpCGM';
 
@@ -61,11 +60,17 @@ async function openPDF(dataUtil, { patient }, query, bgSource) {
   await createPrintView(reportType, data, opts, doc).render();
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
@@ -104,8 +109,9 @@ const getTimePrefs = () => {
     timezones,
     'US/Eastern',
     { display: 'select' },
-    GROUP_CONFIG,
+    GROUP_CONFIG
   );
+
   const selectedTimeZone = timeZoneName !== 'None' ? timeZoneName : undefined;
 
   return selectedTimeZone ? {
@@ -141,7 +147,7 @@ const getEndpoints = latestDatum => {
   return endpoints;
 };
 
-stories.add('CGM', ({ dataUtil }) => {
+stories.add('CGM', (opts, { dataUtil }) => {
   const bgSource = CGM_DATA_KEY;
   const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 
@@ -175,7 +181,7 @@ stories.add('CGM', ({ dataUtil }) => {
   );
 }, { notes });
 
-stories.add('BGM', ({ dataUtil }) => {
+stories.add('BGM', (opts, { dataUtil }) => {
   const bgSource = BGM_DATA_KEY;
   const latestBGDatum = dataUtil.getMetaData('latestDatumByType').latestDatumByType[bgSource];
 

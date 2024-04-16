@@ -53,7 +53,7 @@ export function nonTandemText(patient, settings, units, manufacturer) {
     settingsString += textUtil.buildTextTable(
       basal.scheduleName,
       basal.rows,
-      basal.columns,
+      basal.columns
     );
   });
 
@@ -61,14 +61,14 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   settingsString += textUtil.buildTextTable(
     `${sensitivity.title} ${units}/U`,
     sensitivity.rows,
-    sensitivity.columns,
+    sensitivity.columns
   );
 
   const target = nonTandemData.target(settings, manufacturer, units);
   settingsString += textUtil.buildTextTable(
     `${target.title} ${units}`,
     target.rows,
-    target.columns,
+    target.columns
   );
 
   const ratio = nonTandemData.ratio(settings, manufacturer);
@@ -76,7 +76,7 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   settingsString += textUtil.buildTextTable(
     `${ratio.title} ${ratioUnits}`,
     ratio.rows,
-    ratio.columns,
+    ratio.columns
   );
 
   return settingsString;
@@ -106,7 +106,7 @@ export function tandemText(patient, settings, units) {
     settingsString += textUtil.buildTextTable(
       basal.scheduleName,
       basal.rows,
-      basal.columns,
+      basal.columns
     );
 
     settingsString += textUtil.buildTextTable(

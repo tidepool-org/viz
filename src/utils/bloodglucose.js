@@ -296,7 +296,7 @@ export function findOutOfRangeAnnotations(data) {
   );
   const annotations = _.map(eventsAnnotatedAsOutOfRange, (d) => (_.pick(
     _.find(d.annotations || [], isOutOfRangeAnnotation),
-    ['threshold', 'value'],
+    ['threshold', 'value']
   )));
   // the numerical `threshold` is our determiner of uniqueness
   return _.uniqBy(annotations, (d) => (d.threshold));

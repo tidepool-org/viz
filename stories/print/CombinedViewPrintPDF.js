@@ -19,10 +19,12 @@ import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
 import Plotly from 'plotly.js-basic-dist-min';
+import PDFDocument from 'pdfkit';
 
 import { createPrintView } from '../../src/modules/print/index';
 import { MARGIN } from '../../src/modules/print/utils/constants';
 import PrintView from '../../src/modules/print/PrintView';
+import { base64ToArrayBuffer, waitForData } from '../../src/modules/print/pdfkitHelpers';
 import { generateAGPFigureDefinitions } from '../../src/utils/print/plotly';
 
 import * as profiles from '../../data/patient/profiles';
@@ -30,7 +32,7 @@ import * as settings from '../../data/patient/settings';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../src/utils/constants';
 
-/* global PDFDocument, blobStream, window */
+/* global window */
 
 const stories = storiesOf('Combined Views PDF', module);
 
@@ -59,7 +61,6 @@ const bgBounds = {
 
 async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
-  const stream = doc.pipe(blobStream());
 
   const data = {};
 
@@ -132,11 +133,17 @@ async function openPDF(dataUtil, { patient, bgUnits = MGDL_UNITS }) {
 
   PrintView.renderPageNumbers(doc);
 
-  doc.end();
+  waitForData(doc)
+    .then(dataUrl => {
+      const byte = base64ToArrayBuffer(dataUrl);
+      const blob = new Blob([byte], { type: 'application/pdf' });
+      window.open(URL.createObjectURL(blob), '_blank');
+    })
+    .catch(error => {
+      console.log(error);
+    });
 
-  stream.on('finish', () => {
-    window.open(stream.toBlobURL('application/pdf'));
-  });
+  doc.end();
 }
 
 const notes = `Run the \`accountTool.py export\` from the \`tidepool-org/tools-private\` repo.
@@ -150,7 +157,7 @@ and then use this story to iterate on the Combined Print PDF outside of Tidepool
 profiles.longName = _.cloneDeep(profiles.standard);
 profiles.longName.profile.fullName = 'Super Duper Extra Long Patient Name';
 
-stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
+stories.add(`standard account (${MGDL_UNITS})`, (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.standard,
@@ -161,7 +168,7 @@ stories.add(`standard account (${MGDL_UNITS})`, ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
+stories.add(`standard account (${MMOLL_UNITS})`, (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, {
       patient: {
@@ -176,7 +183,7 @@ stories.add(`standard account (${MMOLL_UNITS})`, ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('fake child account', ({ dataUtil }) => (
+stories.add('fake child account', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.fakeChildAcct,
@@ -187,7 +194,7 @@ stories.add('fake child account', ({ dataUtil }) => (
   </button>
 ), { notes });
 
-stories.add('long patient name', ({ dataUtil }) => (
+stories.add('long patient name', (opts, { dataUtil }) => (
   <button
     onClick={() => openPDF(dataUtil, { patient: {
       ...profiles.longName,
