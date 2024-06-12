@@ -45,6 +45,9 @@ import _ from 'lodash';
 import { utcFormat, timeFormat } from 'd3-time-format';
 import moment from 'moment-timezone';
 import sundial from 'sundial';
+import i18next from 'i18next';
+
+const t = i18next.t.bind(i18next);
 
 export const THIRTY_MINS = 1800000;
 export const ONE_HR = 3600000;
@@ -296,3 +299,21 @@ export function getLocalizedCeiling(utc, timePrefs) {
   }
   return startOfDay.add(1, 'day').toDate();
 }
+
+export const formatTimeAgo = (date, timePrefs, dateFormat='YYYY-MM-DD') => {
+  const lastUploadDateMoment = moment.utc(date);
+  const endOfToday = moment.utc(getLocalizedCeiling(new Date().toISOString(), timePrefs));
+  const daysAgo = endOfToday.diff(lastUploadDateMoment, 'days', true);
+  let text = lastUploadDateMoment.format(dateFormat);
+
+  if (daysAgo < 2) {
+    text = (daysAgo > 1) ? t('Yesterday') : t('Today');
+  } else if (daysAgo <=30) {
+    text = t('{{days}} days ago', { days: Math.ceil(daysAgo) });
+  }
+
+  return {
+    daysAgo,
+    text,
+  }
+};
