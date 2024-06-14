@@ -311,8 +311,8 @@ export function getLocalizedCeiling(utc, timePrefs) {
  */
 export const formatTimeAgo = (utc, timePrefs, format = 'YYYY-MM-DD') => {
   const timezone = getTimezoneFromTimePrefs(timePrefs);
-  const endOfToday = moment(getLocalizedCeiling(new Date().toISOString(), timePrefs)).tz(timezone);
-  const endOfLastUploadDay = moment(getLocalizedCeiling(utc, timePrefs)).tz(timezone);
+  const endOfToday = moment.utc(getLocalizedCeiling(new Date().toISOString(), timePrefs)).tz(timezone);
+  const endOfLastUploadDay = moment.utc(getLocalizedCeiling(utc, timePrefs)).tz(timezone);
   const daysAgo = endOfToday.diff(endOfLastUploadDay, 'days', true);
   const lastUploadDateMoment = moment.utc(utc).tz(timezone);
   let text = lastUploadDateMoment.format(format);

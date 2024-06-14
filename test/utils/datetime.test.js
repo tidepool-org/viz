@@ -572,7 +572,7 @@ describe('datetime', () => {
     });
 
     it('should return appropriately formatted text strings beyond 30 days when a custom format is supplied', () => {
-      const customFormat = 'YYYY-MM'
+      const customFormat = 'YYYY-MM';
       const today = moment().toISOString();
       const yesterday = moment(today).subtract(1, 'day').toISOString();
       const twoDaysAgo = moment(today).subtract(2, 'days').toISOString();
