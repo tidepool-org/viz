@@ -17,6 +17,7 @@
 
 /* eslint-disable max-len */
 import { timeParse } from 'd3-time-format';
+import moment from 'moment-timezone';
 
 import * as patients from '../../data/patient/profiles';
 import * as datetime from '../../src/utils/datetime';
@@ -520,6 +521,88 @@ describe('datetime', () => {
       const dt = '2016-03-15T07:00:00.000Z';
       expect(datetime.getLocalizedCeiling(dt, timePrefs).toISOString())
         .to.equal(dt);
+    });
+  });
+
+  describe('formatTimeAgo', () => {
+    const timePrefs = { timezoneAware: true, timezoneName: 'US/Pacific' };
+    let DateTimeFormatStub;
+
+    beforeEach(() => {
+      DateTimeFormatStub = sinon.stub(Intl, 'DateTimeFormat').returns({
+        resolvedOptions: () => ({ timeZone: timePrefs.timezoneName }),
+      });
+    });
+
+    afterEach(() => {
+      DateTimeFormatStub.restore();
+    });
+
+    it('should return appropriately formatted text strings when no custom format is supplied', () => {
+      const today = moment().toISOString();
+      const yesterday = moment(today).subtract(1, 'day').toISOString();
+      const twoDaysAgo = moment(today).subtract(2, 'days').toISOString();
+      const thirtyDaysAgo = moment(today).subtract(30, 'days').toISOString();
+      const thirtyOneDaysAgo = moment(today).subtract(31, 'days').toISOString();
+
+      sinon.assert.match(datetime.formatTimeAgo(today, timePrefs), sinon.match({
+        text: 'Today',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 0),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(yesterday, timePrefs), sinon.match({
+        text: 'Yesterday',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 1),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(twoDaysAgo, timePrefs), sinon.match({
+        text: '2 days ago',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 2),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(thirtyDaysAgo, timePrefs), sinon.match({
+        text: '30 days ago',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 30),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(thirtyOneDaysAgo, timePrefs), sinon.match({
+        text: sinon.match(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])$/), // match YYYY-MM-DD format
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 31),
+      }));
+    });
+
+    it('should return appropriately formatted text strings beyond 30 days when a custom format is supplied', () => {
+      const customFormat = 'YYYY-MM'
+      const today = moment().toISOString();
+      const yesterday = moment(today).subtract(1, 'day').toISOString();
+      const twoDaysAgo = moment(today).subtract(2, 'days').toISOString();
+      const thirtyDaysAgo = moment(today).subtract(30, 'days').toISOString();
+      const thirtyOneDaysAgo = moment(today).subtract(31, 'days').toISOString();
+
+      sinon.assert.match(datetime.formatTimeAgo(today, timePrefs, customFormat), sinon.match({
+        text: 'Today',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 0),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(yesterday, timePrefs, customFormat), sinon.match({
+        text: 'Yesterday',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 1),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(twoDaysAgo, timePrefs, customFormat), sinon.match({
+        text: '2 days ago',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 2),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(thirtyDaysAgo, timePrefs, customFormat), sinon.match({
+        text: '30 days ago',
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 30),
+      }));
+
+      sinon.assert.match(datetime.formatTimeAgo(thirtyOneDaysAgo, timePrefs, customFormat), sinon.match({
+        text: sinon.match(/^\d{4}-(0[1-9]|1[0-2])$/), // match YYYY-MM format
+        daysAgo: sinon.match(daysAgo => Math.floor(daysAgo) === 31),
+      }));
     });
   });
 });

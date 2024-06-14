@@ -300,20 +300,31 @@ export function getLocalizedCeiling(utc, timePrefs) {
   return startOfDay.add(1, 'day').toDate();
 }
 
-export const formatTimeAgo = (date, timePrefs, dateFormat='YYYY-MM-DD') => {
-  const lastUploadDateMoment = moment.utc(date);
-  const endOfToday = moment.utc(getLocalizedCeiling(new Date().toISOString(), timePrefs));
-  const daysAgo = endOfToday.diff(lastUploadDateMoment, 'days', true);
-  let text = lastUploadDateMoment.format(dateFormat);
+/**
+ * formatTimeAgo
+ *
+ * @param {String|Date} utc - A moment-compatible date object or string
+ * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
+ * @param {String} format - Optional. The moment format string to use for dates beyond 30 days ago
+ *
+ * @return {Object} Object containing the formatted time ago string, and the calculated days ago as an integer
+ */
+export const formatTimeAgo = (utc, timePrefs, format = 'YYYY-MM-DD') => {
+  const timezone = getTimezoneFromTimePrefs(timePrefs);
+  const endOfToday = moment(getLocalizedCeiling(new Date().toISOString(), timePrefs)).tz(timezone);
+  const endOfLastUploadDay = moment(getLocalizedCeiling(utc, timePrefs)).tz(timezone);
+  const daysAgo = endOfToday.diff(endOfLastUploadDay, 'days', true);
+  const lastUploadDateMoment = moment.utc(utc).tz(timezone);
+  let text = lastUploadDateMoment.format(format);
 
   if (daysAgo < 2) {
-    text = (daysAgo > 1) ? t('Yesterday') : t('Today');
-  } else if (daysAgo <=30) {
+    text = (daysAgo >= 1) ? t('Yesterday') : t('Today');
+  } else if (daysAgo <= 30) {
     text = t('{{days}} days ago', { days: Math.ceil(daysAgo) });
   }
 
   return {
     daysAgo,
     text,
-  }
+  };
 };
