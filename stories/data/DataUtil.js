@@ -467,12 +467,12 @@ stories.add('Query Generator', (opts, props) => {
 
   const showData = () => boolean('Render Data', true);
   const showStats = () => boolean('Render Stats', true);
-  const query = () => object('Query', defaultQuery);
+  const query = () => object('Query', defaultQuery); // need to have this unused knob defined or the results won't update
 
   return <Results
     showStats={showStats()}
     showData={showData()}
-    results={dataUtil.query(query())}
+    results={dataUtil.query(defaultQuery)}
   />;
 }, { notes });
 
