@@ -356,6 +356,7 @@ describe('StatUtil', () => {
 
     it('should set `bgBounds` from bgPrefs option', () => {
       expect(statUtil.bgBounds).to.eql({
+        extremeHighThreshold: 350,
         veryHighThreshold: 250,
         targetUpperBound: 180,
         targetLowerBound: 70,

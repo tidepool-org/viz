@@ -110,6 +110,7 @@ export function reshapeBgClassesToBgBounds(bgPrefs) {
     targetUpperBound: _.get(bgClasses, 'target.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound),
     targetLowerBound: _.get(bgClasses, 'low.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetLowerBound),
     veryLowThreshold: _.get(bgClasses, 'very-low.boundary', DEFAULT_BG_BOUNDS[bgUnits].veryLowThreshold),
+    extremeHighThreshold: DEFAULT_BG_BOUNDS[bgUnits].extremeHighThreshold,
     clampThreshold: DEFAULT_BG_BOUNDS[bgUnits].clampThreshold,
   };
 
@@ -134,6 +135,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       target: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
       high: `${thresholds.targetUpperBound}-${thresholds.veryHighThreshold}`,
       veryHigh: `>${thresholds.veryHighThreshold}`,
+      extremeHigh: `>${thresholds.extremeHighThreshold}`,
     };
   }
 
@@ -164,6 +166,11 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
         suffix: bgUnits,
         value: `${thresholds.veryHighThreshold}`,
       },
+      extremeHigh: {
+        prefix: 'above',
+        suffix: bgUnits,
+        value: `${thresholds.extremeHighThreshold}`,
+      },
     };
   }
 
@@ -173,6 +180,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
     target: `between ${thresholds.targetLowerBound} - ${thresholds.targetUpperBound} ${bgUnits}`,
     high: `between ${thresholds.targetUpperBound} - ${thresholds.veryHighThreshold} ${bgUnits}`,
     veryHigh: `above ${thresholds.veryHighThreshold} ${bgUnits}`,
+    extremeHigh: `above ${thresholds.extremeHighThreshold} ${bgUnits}`,
   };
 }
 

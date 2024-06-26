@@ -77,6 +77,10 @@ describe('constants', () => {
       expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].veryHighThreshold).to.equal(250);
     });
 
+    it('should define the MGDL_UNITS extremeHighThreshold as 350', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].extremeHighThreshold).to.equal(350);
+    });
+
     it('should define the MGDL_UNITS clampThreshold as 600', () => {
       expect(constants.DEFAULT_BG_BOUNDS[constants.MGDL_UNITS].clampThreshold).to.equal(600);
     });
@@ -95,6 +99,10 @@ describe('constants', () => {
 
     it('should define the MMOLL_UNITS veryHighThreshold as 13.9', () => {
       expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].veryHighThreshold).to.equal(13.9);
+    });
+
+    it('should define the MMOLL_UNITS extremeHighThreshold as 19.4', () => {
+      expect(constants.DEFAULT_BG_BOUNDS[constants.MMOLL_UNITS].extremeHighThreshold).to.equal(19.4);
     });
 
     it('should define the MMOLL_UNITS clampThreshold as 33.3', () => {
