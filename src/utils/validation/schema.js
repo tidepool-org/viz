@@ -70,16 +70,21 @@ const ISODateSince2008 = {
 };
 
 const validTypes = [
+  'alert',
   'basal',
   'bolus',
   'cbg',
   'cgmSettings',
+  'controllerSettings',
+  'controllerStatus',
   'deviceEvent',
+  'dosingDecision',
   'food',
   'insulin',
   'message',
   'physicalActivity',
   'pumpSettings',
+  'pumpStatus',
   'reportedState',
   'smbg',
   'upload',
@@ -335,6 +340,35 @@ const pumpSettingsEquil = {
   basalSchedules,
 };
 
+const pumpSettingsLoop = {
+  ...common,
+  bgTargets: {
+    type: 'objectWithUnknownKeys',
+    schema: {
+      type: 'array',
+      items: {
+        type: 'object',
+        props: {
+          ...settingsScheduleStart,
+          target: forbidden,
+          range: forbidden,
+          low: minZero,
+          high: minZero,
+        },
+      },
+    },
+  },
+  carbRatios: {
+    type: 'objectWithUnknownKeys',
+    schema: carbRatio,
+  },
+  insulinSensitivities: {
+    type: 'objectWithUnknownKeys',
+    schema: insulinSensitivity,
+  },
+  basalSchedules,
+};
+
 const wizard = {
   ...common,
   bgInput: { ...minZero, ...optional },
@@ -371,6 +405,7 @@ export default {
     omnipod: v.compile(pumpSettingsOmnipod),
     tandem: v.compile(pumpSettingsTandem),
     equil: v.compile(pumpSettingsEquil),
+    loop: v.compile(pumpSettingsLoop),
   },
   smbg: v.compile(bg),
   wizard: v.compile(wizard),

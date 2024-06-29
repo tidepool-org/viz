@@ -87,6 +87,7 @@ export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 export const SETTINGS_OVERRIDE = 'settingsOverride';
 export const SLEEP = 'sleep';
 export const PHYSICAL_ACTIVITY = 'physicalActivity';
+export const PREPRANDIAL = 'preprandial';
 export const MAX_BOLUS = 'maxBolus';
 export const MAX_BASAL = 'maxBasal';
 export const INSULIN_DURATION = 'insulinDuration';
@@ -96,6 +97,7 @@ export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
+export const LOOP = 'Loop';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
 
@@ -140,6 +142,18 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Max Bolus'),
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
+  [LOOP]: {
+    [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
+    [SITE_CHANGE_TUBING]: t('Fill Tubing'),
+    [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Preset'),
+    [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('E') },
+    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
+    [MAX_BOLUS]: t('Max Bolus'),
+    [INSULIN_DURATION]: t('Insulin Duration'),
+  },
   default: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
     [SITE_CHANGE_TUBING]: t('Fill Tubing'),
@@ -150,10 +164,27 @@ export const pumpVocabulary = {
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
+    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
+};
+
+export const settingsOverrides = {
+  [TANDEM]: [
+    SLEEP,
+    PHYSICAL_ACTIVITY,
+  ],
+  [LOOP]: [
+    PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
+  default: [
+    SLEEP,
+    PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
 };
 
 export const AUTOMATED_BASAL_DEVICE_MODELS = {

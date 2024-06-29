@@ -164,6 +164,10 @@ export class DataUtil {
       }
     }
 
+    if (d.type === 'upload' && d.dataSetType === 'continuous') {
+      if (!d.time) d.time = moment().toISOString();
+    }
+
     if (d.messagetext) {
       d.type = 'message';
       d.messageText = d.messagetext;
@@ -801,6 +805,8 @@ export class DataUtil {
         } else {
           source = upload.deviceManufacturers[0];
         }
+      } else if (upload.client?.name === 'com.loopkit.Loop') {
+        source = 'loop';
       }
 
       this.uploadMap[upload.uploadId] = {

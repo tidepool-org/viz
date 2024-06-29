@@ -44,7 +44,7 @@ const notes = `**RUN** the \`accountTool.py export\` command from the \`tidepool
 \n\r**THEN** Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`,
 and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
-const Results = ({ results, showData, showStats }) => {
+const Results = ({ manufacturer, results, showData, showStats }) => {
   const statData = _.get(results, 'data.current.stats');
   const days = _.get(results, 'data.current.endpoints.days', 1);
   const allStats = [];
@@ -68,6 +68,7 @@ const Results = ({ results, showData, showStats }) => {
       days,
       bgPrefs: results.bgPrefs,
       bgSource: _.get(results, 'metaData.bgSources.current'),
+      manufacturer,
     }));
   });
 
@@ -216,6 +217,35 @@ stories.add('Query Generator', (opts, props) => {
       insulinSensitivity: 'insulinSensitivity',
       insulinSensitivities: 'insulinSensitivities',
       units: 'units',
+      automatedDelivery: 'automatedDelivery',
+      bloodGlucoseSafetyLimit: 'bloodGlucoseSafetyLimit',
+      bloodGlucoseTargetPhysicalActivity: 'bloodGlucoseTargetPhysicalActivity',
+      bloodGlucoseTargetPreprandial: 'bloodGlucoseTargetPreprandial',
+      bolus: 'bolus',
+      name: 'name',
+      overridePresets: 'overridePresets',
+      model: 'model',
+      serialNumber: 'serialNumber',
+    },
+    pumpStatus: {
+      ...commonFields,
+      ...computedFields,
+      basalDelivery: 'basalDelivery',
+      battery: 'battery',
+      bolusDelivery: 'bolusDelivery',
+      deliveryIndeterminant: 'deliveryIndeterminant',
+      reservoir: 'reservoir',
+    },
+    controllerSettings: {
+      ...commonFields,
+      ...computedFields,
+      device: 'device',
+      notifications: 'notifications',
+    },
+    controllerStatus: {
+      ...commonFields,
+      ...computedFields,
+      battery: 'battery',
     },
     cgmSettings: {
       ...commonFields,
@@ -230,6 +260,22 @@ stories.add('Query Generator', (opts, props) => {
       reason: 'reason',
       status: 'status',
       subType: 'subType',
+    },
+    dosingDecision: {
+      ...commonFields,
+      ...computedFields,
+      bgForecast: 'bgForecast',
+      bgTargetSchedule: 'bgTargetSchedule',
+      food: 'food',
+      insulinOnBoard: 'insulinOnBoard',
+      originalFood: 'originalFood',
+      reason: 'reason',
+      recommendedBolus: 'recommendedBolus',
+      requestedBolus: 'requestedBolus',
+    },
+    alert: {
+      ...commonFields,
+      ...computedFields,
     },
     message: {
       time: 'time',
@@ -247,8 +293,13 @@ stories.add('Query Generator', (opts, props) => {
     wizard: 'wizard',
     upload: 'upload',
     pumpSettings: 'pumpSettings',
+    pumpStatus: 'pumpStatus',
+    controllerSettings: 'controllerSettings',
+    controllerStatus: 'controllerStatus',
     cgmSettings: 'cgmSettings',
     deviceEvent: 'deviceEvent',
+    dosingDecision: 'dosingDecision',
+    alert: 'alert',
     message: 'message',
   };
 
@@ -472,6 +523,7 @@ stories.add('Query Generator', (opts, props) => {
   return <Results
     showStats={showStats()}
     showData={showData()}
+    manufacturer={dataUtil.latestPumpUpload?.manufacturer}
     results={dataUtil.query(defaultQuery)}
   />;
 }, { notes });

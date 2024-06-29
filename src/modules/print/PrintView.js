@@ -114,6 +114,7 @@ class PrintView {
       basalAutomated: '#00B2C3',
       sleep: '#4457D9',
       physicalActivity: '#758CFF',
+      preprandial: '#758CFF',
       bolus: '#7CD0F0',
       bolusAutomated: '#00B2C3',
       smbg: '#6480FB',

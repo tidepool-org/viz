@@ -3,6 +3,7 @@ import _ from 'lodash';
 import {
   AUTOMATED_BASAL_DEVICE_MODELS,
   pumpVocabulary,
+  settingsOverrides,
 } from './constants';
 
 import { deviceName } from './settings/data';
@@ -34,10 +35,9 @@ export function getLastManualBasalSchedule(basalData = []) {
  * @returns {Boolean}
  */
 export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceModel) {
-  return _.includes(
-    _.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),
-    deviceModel
-  ) || (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0);
+  return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),deviceModel)
+    || (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
+    || _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
 }
 
 /**
@@ -47,7 +47,8 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceMo
  * @returns {Boolean}
  */
 export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
-  return manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0;
+  return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
+    || _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
 }
 
 /**
@@ -57,7 +58,19 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
  * @returns {Boolean}
  */
 export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
-  return manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0;
+  return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
+    || _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+}
+
+/**
+ * Get a list of standard settings overrides for a settings-overrideable device,
+ * with default fallbacks for missing keys
+ * @param {String} manufacturer Manufacturer name
+ * @returns {Array} settings overrides
+ */
+export function getSettingsOverrides(manufacturer) {
+  const overrides = _.cloneDeep(settingsOverrides);
+  return _.get(overrides, _.upperFirst(manufacturer), overrides.default);
 }
 
 /**
