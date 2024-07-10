@@ -163,12 +163,14 @@ describe('blood glucose utilities', () => {
   describe('generateBgRangeLabels', () => {
     const bounds = {
       mgdl: {
+        extremeHighThreshold: 350,
         veryHighThreshold: 300.12345,
         targetUpperBound: 180,
         targetLowerBound: 70,
         veryLowThreshold: 55,
       },
       mmoll: {
+        extremeHighThreshold: 19.4,
         veryHighThreshold: 16.666667,
         targetUpperBound: 10,
         targetLowerBound: 3.9,
@@ -190,6 +192,7 @@ describe('blood glucose utilities', () => {
         target: 'between 70 - 180 mg/dL',
         high: 'between 180 - 300 mg/dL',
         veryHigh: 'above 300 mg/dL',
+        extremeHigh: 'above 350 mg/dL',
       });
     });
 
@@ -207,6 +210,7 @@ describe('blood glucose utilities', () => {
         target: '70-180',
         high: '180-300',
         veryHigh: '>300',
+        extremeHigh: '>350',
       });
     });
 
@@ -244,6 +248,11 @@ describe('blood glucose utilities', () => {
           suffix: bgPrefs.bgUnits,
           value: '300',
         },
+        extremeHigh: {
+          prefix: 'above',
+          suffix: bgPrefs.bgUnits,
+          value: '350',
+        },
       });
     });
 
@@ -261,6 +270,7 @@ describe('blood glucose utilities', () => {
         target: 'between 3.9 - 10.0 mmol/L',
         high: 'between 10.0 - 16.7 mmol/L',
         veryHigh: 'above 16.7 mmol/L',
+        extremeHigh: 'above 19.4 mmol/L',
       });
     });
 
@@ -278,6 +288,7 @@ describe('blood glucose utilities', () => {
         target: '3.9-10.0',
         high: '10.0-16.7',
         veryHigh: '>16.7',
+        extremeHigh: '>19.4',
       });
     });
 
@@ -314,6 +325,11 @@ describe('blood glucose utilities', () => {
           prefix: 'above',
           suffix: bgPrefs.bgUnits,
           value: '16.7',
+        },
+        extremeHigh: {
+          prefix: 'above',
+          suffix: bgPrefs.bgUnits,
+          value: '19.4',
         },
       });
     });
@@ -365,6 +381,7 @@ describe('blood glucose utilities', () => {
 
     it('should extract and reshape `bgClasses` to `bgBounds`', () => {
       expect(bgUtils.reshapeBgClassesToBgBounds(bgPrefs)).to.deep.equal({
+        extremeHighThreshold: 350,
         veryHighThreshold: 300,
         targetUpperBound: 180,
         targetLowerBound: 75,
@@ -376,6 +393,7 @@ describe('blood glucose utilities', () => {
     it('should fall back to a default bg bound if a bg class is missing', () => {
       const missingLowClass = { ...bgPrefs, bgClasses: { ...bgPrefs.bgClasses, low: undefined } };
       expect(bgUtils.reshapeBgClassesToBgBounds(missingLowClass)).to.deep.equal({
+        extremeHighThreshold: 350,
         veryHighThreshold: 300,
         targetUpperBound: 180,
         targetLowerBound: 70,
