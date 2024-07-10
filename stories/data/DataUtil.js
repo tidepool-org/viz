@@ -183,6 +183,7 @@ stories.add('Query Generator', (opts, props) => {
       duration: 'duration',
       wizard: 'wizard',
       expectedDuration: 'expectedDuration',
+      units: 'units',
     },
     wizard: {
       ...commonFields,
@@ -260,6 +261,7 @@ stories.add('Query Generator', (opts, props) => {
       reason: 'reason',
       status: 'status',
       subType: 'subType',
+      primeTarget: 'primeTarget',
     },
     dosingDecision: {
       ...commonFields,

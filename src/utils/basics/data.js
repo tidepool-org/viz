@@ -31,10 +31,12 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE_TYPE_UNDECLARED,
   AUTOMATED_DELIVERY,
+  AUTOMATED_MODE_EXITED,
   AUTOMATED_SUSPEND,
   INSULET,
   TANDEM,
   ANIMAS,
+  LOOP,
   MEDTRONIC,
   MICROTECH,
   pumpVocabulary,
@@ -89,13 +91,14 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         summaryTitle = t('Total basal events');
         dimensions = [
           { path: 'basal.summary', key: 'total', label: t('Basal Events'), primary: true },
-          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals') },
+          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals'), hideEmpty: manufacturer === _.lowerCase([LOOP]) },
           { path: 'basal.summary.subtotals', key: 'suspend', label: t('Suspends') },
           {
             path: 'basal.summary.subtotals',
             key: 'automatedStop',
-            label: t('{{automatedLabel}} Exited', {
+            label: t('{{automatedLabel}} {{automatedModeExited}}', {
               automatedLabel: deviceLabels[AUTOMATED_DELIVERY],
+              automatedModeExited: deviceLabels[AUTOMATED_MODE_EXITED],
             }),
             hideEmpty: true,
           },
@@ -201,6 +204,8 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     }
   } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
+  } else if (_.includes(_.map([LOOP], _.lowerCase), manufacturer)) {
+    siteChangeSource = SITE_CHANGE_TUBING;
   }
 
   return siteChangeSource;
