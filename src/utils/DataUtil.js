@@ -805,7 +805,7 @@ export class DataUtil {
         } else {
           source = upload.deviceManufacturers[0];
         }
-      } else if (upload.client?.name === 'com.loopkit.Loop') {
+      } else if (_.includes(['com.loopkit.Loop', 'org.tidepool.Loop'], upload.client?.name)) {
         source = 'loop';
       }
 

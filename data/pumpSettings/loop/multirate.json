@@ -1,0 +1,243 @@
+{
+  "activeSchedule": "Default",
+  "associations": [
+    {
+      "id": "33ef5a51205d50ab9b8b118e177f117d",
+      "reason": "controllerSettings",
+      "type": "datum"
+    },
+    {
+      "id": "9441c3698430a0c4ab435552ef03253d",
+      "reason": "cgmSettings",
+      "type": "datum"
+    }
+  ],
+  "automatedDelivery": true,
+  "basal": {
+    "rateMaximum": {
+      "units": "Units/hour",
+      "value": 3.5
+    }
+  },
+  "basalSchedules": [
+    {
+      "name": "Default",
+      "value": [
+        {
+          "rate": 1,
+          "start": 0
+        },
+        {
+          "rate": 1.125,
+          "start": 28800000
+        },
+        {
+          "rate": 1.25,
+          "start": 36000000
+        },
+        {
+          "rate": 1.5,
+          "start": 43200000
+        },
+        {
+          "rate": 1.25,
+          "start": 50400000
+        },
+        {
+          "rate": 1.5,
+          "start": 57600000
+        },
+        {
+          "rate": 1.25,
+          "start": 64800000
+        },
+        {
+          "rate": 1,
+          "start": 75600000
+        }
+      ]
+    }
+  ],
+  "bgSafetyLimit": 4.16306,
+  "bgTargetPhysicalActivity": {
+    "high": 8.8812,
+    "low": 8.32612
+  },
+  "bgTargetPreprandial": {
+    "high": 4.99567,
+    "low": 4.4406
+  },
+  "bgTargets": {
+    "Default": [
+      {
+        "high": 6.10582,
+        "low": 5.55075,
+        "start": 0
+      },
+      {
+        "high": 5.82829,
+        "low": 5.27321,
+        "start": 28800000
+      },
+      {
+        "high": 5.55075,
+        "low": 4.99567,
+        "start": 36000000
+      },
+      {
+        "high": 5.82829,
+        "low": 5.27321,
+        "start": 43200000
+      },
+      {
+        "high": 5.82829,
+        "low": 5.27321,
+        "start": 50400000
+      },
+      {
+        "high": 6.10582,
+        "low": 5.55075,
+        "start": 57600000
+      },
+      {
+        "high": 5.55075,
+        "low": 4.99567,
+        "start": 64800000
+      },
+      {
+        "high": 6.6609,
+        "low": 6.10582,
+        "start": 75600000
+      }
+    ]
+  },
+  "bolus": {
+    "amountMaximum": {
+      "units": "Units",
+      "value": 10
+    }
+  },
+  "carbRatios": {
+    "Default": [
+      {
+        "amount": 10,
+        "start": 0
+      },
+      {
+        "amount": 12,
+        "start": 28800000
+      },
+      {
+        "amount": 9,
+        "start": 36000000
+      },
+      {
+        "amount": 10,
+        "start": 43200000
+      },
+      {
+        "amount": 11,
+        "start": 50400000
+      },
+      {
+        "amount": 12,
+        "start": 57600000
+      },
+      {
+        "amount": 8,
+        "start": 64800000
+      },
+      {
+        "amount": 10,
+        "start": 75600000
+      }
+    ]
+  },
+  "display": {
+    "bloodGlucose": {
+      "units": "mg/dL"
+    }
+  },
+  "id": "f77272f1239de0ef49f9cd76faa563be",
+  "insulinFormulation": {
+    "simple": {
+      "actingType": "rapid",
+      "brand": "NovoLog"
+    }
+  },
+  "insulinModel": {
+    "actionDelay": 600,
+    "actionDuration": 21600,
+    "actionPeakOffset": 4500,
+    "modelType": "rapidAdult"
+  },
+  "insulinSensitivities": {
+    "Default": [
+      {
+        "amount": 2.49784,
+        "start": 0
+      },
+      {
+        "amount": 2.2203,
+        "start": 28800000
+      },
+      {
+        "amount": 1.94276,
+        "start": 36000000
+      },
+      {
+        "amount": 1.66522,
+        "start": 43200000
+      },
+      {
+        "amount": 1.94276,
+        "start": 50400000
+      },
+      {
+        "amount": 2.2203,
+        "start": 57600000
+      },
+      {
+        "amount": 2.49784,
+        "start": 64800000
+      },
+      {
+        "amount": 2.77537,
+        "start": 75600000
+      }
+    ]
+  },
+  "name": "MockPumpManager",
+  "origin": {
+    "id": "827A9EFD-DAEE-47DE-B819-8819E15DDCA1:pumpSettings",
+    "name": "com.loopkit.Loop",
+    "type": "application",
+    "version": "1.2.0+6622"
+  },
+  "payload": {
+    "syncIdentifier": "827A9EFD-DAEE-47DE-B819-8819E15DDCA1"
+  },
+  "provenance": {
+    "byUserID": "f99fa42e-8b90-4455-b864-75fd38fbd77f",
+    "clientID": "tidepool-loop",
+    "sourceIP": "108.211.109.119"
+  },
+  "softwareVersion": "1.0",
+  "time": 1714164586837,
+  "timezone": "America/Los_Angeles",
+  "timezoneOffset": -420,
+  "type": "pumpSettings",
+  "units": {
+    "bg": "mmol/L",
+    "carb": "grams",
+    "insulin": "Units"
+  },
+  "uploadId": "d97ae01bd45f03d6372d471a0413dd7a",
+  "_time": "2024-04-26T20:49:46.837Z",
+  "_deviceTime": "2024-04-26T20:49:46.837Z",
+  "deviceTime": 1714164586837,
+  "normalTime": 1714164586837,
+  "displayOffset": -240,
+  "deviceSerialNumber": "Unknown",
+  "source": "loop"
+}
