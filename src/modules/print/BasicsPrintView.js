@@ -517,7 +517,7 @@ class BasicsPrintView extends PrintView {
       const siteChangeSource = this.sections.siteChanges.source;
 
       if (isSiteChange) {
-        priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince));
+        priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince[siteChangeSource]));
       }
 
       const chunkedDayMap = _.chunk(_.map(this.calendar.days, (day, index) => {
