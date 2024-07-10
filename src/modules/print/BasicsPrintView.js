@@ -41,12 +41,15 @@ import {
   NO_SITE_CHANGE,
   SETTINGS_OVERRIDE,
   SITE_CHANGE,
+  LOOP,
 } from '../../utils/constants';
 
 const siteChangeImages = {
   [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
   [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
+  [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
+  [`${LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
 };
 
 const t = i18next.t.bind(i18next);
@@ -679,7 +682,9 @@ class BasicsPrintView extends PrintView {
         if (isSiteChange) {
           const daysSinceLabel = daysSince === 1 ? 'day' : 'days';
 
+          const manufacturer = this.sections.siteChanges.manufacturer;
           const siteChangeSource = this.sections.siteChanges.source;
+          const siteChangeImage = siteChangeImages[`${manufacturer}_${siteChangeSource}`] || siteChangeImages[siteChangeSource];
           const imageWidth = width / 2.5;
           const imagePadding = (width - imageWidth) / 2;
 
@@ -701,7 +706,7 @@ class BasicsPrintView extends PrintView {
 
           this.setFill();
 
-          this.doc.image(siteChangeImages[siteChangeSource], xPos + imagePadding, this.doc.y, {
+          this.doc.image(siteChangeImage, xPos + imagePadding, this.doc.y, {
             width: imageWidth,
           });
 
