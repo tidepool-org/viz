@@ -583,7 +583,7 @@ class BasicsPrintView extends PrintView {
         this.doc.strokeOpacity(0);
         this.lockFillandStroke();
 
-        this.renderTable(this.calendar.columns, [rows[0]], {
+        this.renderTable(this.calendar.columns.map(column => ({ ...column, border: '' })), [rows[0]], {
           bottomMargin: 0,
         });
 
