@@ -28,6 +28,27 @@ export function getLastManualBasalSchedule(basalData = []) {
 }
 
 /**
+ * Check to see if pumpSettings are from DIY Loop
+ */
+export function isDIYLoop(pumpSettings = {}) {
+  return _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+}
+
+/**
+ * Check to see if pumpSettings are from Tidepool Loop
+ */
+export function isTidepoolLoop(pumpSettings = {}) {
+  return _.get(pumpSettings, 'origin.name', '').indexOf('org.tidepool.Loop') === 0;
+}
+
+/**
+ * Check to see if pumpSettings are from a known Loop device
+ */
+export function isLoop(pumpSettings = {}) {
+  return isDIYLoop(pumpSettings) || isTidepoolLoop(pumpSettings);
+}
+
+/**
  * Check if the provided upload datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettings Tidepool pumpSettings datum
@@ -37,7 +58,7 @@ export function getLastManualBasalSchedule(basalData = []) {
 export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceModel) {
   return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),deviceModel)
     || (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-    || _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+    || isLoop(pumpSettings);
 }
 
 /**
@@ -48,7 +69,7 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceMo
  */
 export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
   return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-    || _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+    || isDIYLoop(pumpSettings);
 }
 
 /**
@@ -59,7 +80,7 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
  */
 export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
   return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-    || _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+  || isDIYLoop(pumpSettings);
 }
 
 /**

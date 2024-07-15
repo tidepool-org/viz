@@ -7,6 +7,7 @@ import i18next from 'i18next';
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
+  isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
@@ -784,10 +785,10 @@ export class DataUtil {
     this.clearFilters();
     const uploadData = this.filter.byType('upload').top(Infinity);
     const pumpSettingsData = this.filter.byType('pumpSettings').top(Infinity);
-
     this.uploadMap = {};
 
     _.each(uploadData, upload => {
+      const pumpSettings = _.find(pumpSettingsData, { uploadId: upload.uploadId });
       let source = 'Unknown';
 
       if (_.get(upload, 'source')) {
@@ -805,7 +806,7 @@ export class DataUtil {
         } else {
           source = upload.deviceManufacturers[0];
         }
-      } else if (_.includes(['com.loopkit.Loop', 'org.tidepool.Loop'], upload.client?.name)) {
+      } else if (isLoop(pumpSettings)) {
         source = 'loop';
       }
 
