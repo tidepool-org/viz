@@ -87,6 +87,7 @@ export class DataUtil {
     this.latestDatumByType = this.latestDatumByType || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
+    this.dosingDecisionDatumsByTimeMap = this.dosingDecisionDatumsByTimeMap || {};
     this.matchedDevices = this.matchedDevices || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
@@ -108,9 +109,14 @@ export class DataUtil {
     this.endTimer('normalizeDataIn');
 
     // Join wizard and bolus datums
-    this.startTimer('processNormalizedData');
+    this.startTimer('joinWizardAndBolus');
     _.each(data, this.joinWizardAndBolus);
-    this.endTimer('processNormalizedData');
+    this.endTimer('joinWizardAndBolus');
+
+    // Join dosingDecision and bolus datums
+    this.startTimer('joinDosingDecisionAndBolus');
+    _.each(data, this.joinDosingDecisionAndBolus);
+    this.endTimer('joinDosingDecisionAndBolus');
 
     // Filter out any data that failed validation, and and duplicates by `id`
     this.startTimer('filterValidData');
@@ -201,6 +207,12 @@ export class DataUtil {
       this.bolusToWizardIdMap[d.bolus] = d.id;
       this.wizardToBolusIdMap[d.id] = d.bolus;
     }
+
+    // Populate mappings to be used for 2-way join of boluses and dosing decisions
+    if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus'], d.reason)) {
+      this.dosingDecisionDatumsByTimeMap[d.time] = d;
+    }
+
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
     }
@@ -234,7 +246,7 @@ export class DataUtil {
         const datumToPopulate = _.omit(datumMap[idMap[d.id]], d.type);
 
         if (isWizard && d.uploadId !== datumToPopulate.uploadId) {
-          // Due to an issue stemming from a fix for wizard datums in Upoader >= v2.35.0, we have a
+          // Due to an issue stemming from a fix for wizard datums in Ulpoader >= v2.35.0, we have a
           // possibility of duplicates of older wizard datums from previous uploads. The boluses and
           // corrected wizards should both reference the same uploadId, so we can safely reject
           // wizards that don't reference the same upload as the bolus it's referencing.
@@ -244,6 +256,24 @@ export class DataUtil {
           d[fieldToPopulate] = datumToPopulate;
         }
       }
+    }
+  };
+
+  joinDosingDecisionAndBolus = d => {
+    if (d.type === 'bolus') {
+      const timeThreshold = MS_IN_MIN * 5;
+
+      const proximateDosingDecisions = _.filter(
+        _.mapValues(this.dosingDecisionDatumsByTimeMap),
+        ({ time }) =>  {
+          const timeOffset = Math.abs(time - d.time);
+          return timeOffset <= timeThreshold
+        }
+      );
+
+      const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
+      const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.amount === d.normal);
+      d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
     }
   };
 
@@ -450,7 +480,14 @@ export class DataUtil {
     }
 
     if (d.type === 'deviceEvent') {
-      if (_.isFinite(d.duration)) d.normalEnd = d.normalTime + d.duration;
+      if (_.isFinite(d.duration)) {
+        // Loop is reporting these durations in seconds instead of the expected milliseconds.
+        // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
+        // convert for Loop versions prior to the fix.
+        if (d.subType === 'pumpSettingsOverride' && isLoop(d)) d.duration = d.duration * 1000;
+
+        d.normalEnd = d.normalTime + d.duration;
+      }
     }
 
     if (d.type === 'fill') {

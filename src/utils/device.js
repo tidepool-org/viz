@@ -28,24 +28,24 @@ export function getLastManualBasalSchedule(basalData = []) {
 }
 
 /**
- * Check to see if pumpSettings are from DIY Loop
+ * Check to see if datum is from DIY Loop
  */
-export function isDIYLoop(pumpSettings = {}) {
-  return _.get(pumpSettings, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+export function isDIYLoop(datum = {}) {
+  return _.get(datum, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
 }
 
 /**
- * Check to see if pumpSettings are from Tidepool Loop
+ * Check to see if datum is from Tidepool Loop
  */
-export function isTidepoolLoop(pumpSettings = {}) {
-  return _.get(pumpSettings, 'origin.name', '').indexOf('org.tidepool.Loop') === 0;
+export function isTidepoolLoop(datum = {}) {
+  return _.get(datum, 'origin.name', '').indexOf('org.tidepool.Loop') === 0;
 }
 
 /**
- * Check to see if pumpSettings are from a known Loop device
+ * Check to see if datum is from a known Loop device
  */
-export function isLoop(pumpSettings = {}) {
-  return isDIYLoop(pumpSettings) || isTidepoolLoop(pumpSettings);
+export function isLoop(datum = {}) {
+  return isDIYLoop(datum) || isTidepoolLoop(datum);
 }
 
 /**
