@@ -149,6 +149,7 @@ describe('AggregationUtil', () => {
 
     it('should set `bgBounds` from bgPrefs option', () => {
       expect(aggregationUtil.bgBounds).to.eql({
+        extremeHighThreshold: 350,
         veryHighThreshold: 250,
         targetUpperBound: 180,
         targetLowerBound: 70,

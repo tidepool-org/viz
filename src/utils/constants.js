@@ -46,6 +46,7 @@ export const DEFAULT_BG_BOUNDS = {
     targetLowerBound: 70,
     targetUpperBound: 180,
     veryHighThreshold: 250,
+    extremeHighThreshold: 350,
     clampThreshold: 600,
   },
   [MMOLL_UNITS]: {
@@ -53,6 +54,7 @@ export const DEFAULT_BG_BOUNDS = {
     targetLowerBound: 3.9,
     targetUpperBound: 10.0,
     veryHighThreshold: 13.9,
+    extremeHighThreshold: 19.4,
     clampThreshold: 33.3,
   },
 };
