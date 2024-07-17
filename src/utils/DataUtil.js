@@ -87,7 +87,7 @@ export class DataUtil {
     this.latestDatumByType = this.latestDatumByType || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
-    this.dosingDecisionDatumsByTimeMap = this.dosingDecisionDatumsByTimeMap || {};
+    this.dosingDecisionDatumsByIdMap = this.dosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
@@ -210,7 +210,7 @@ export class DataUtil {
 
     // Populate mappings to be used for 2-way join of boluses and dosing decisions
     if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus'], d.reason)) {
-      this.dosingDecisionDatumsByTimeMap[d.time] = d;
+      this.dosingDecisionDatumsByIdMap[d.id] = d;
     }
 
     if (d.type === 'bolus') {
@@ -261,10 +261,10 @@ export class DataUtil {
 
   joinDosingDecisionAndBolus = d => {
     if (d.type === 'bolus') {
-      const timeThreshold = MS_IN_MIN * 5;
+      const timeThreshold = MS_IN_MIN;
 
       const proximateDosingDecisions = _.filter(
-        _.mapValues(this.dosingDecisionDatumsByTimeMap),
+        _.mapValues(this.dosingDecisionDatumsByIdMap),
         ({ time }) =>  {
           const timeOffset = Math.abs(time - d.time);
           return timeOffset <= timeThreshold
@@ -319,7 +319,7 @@ export class DataUtil {
         manual: !d.wizard && !isAutomated(d),
         override: isOverride(d),
         underride: isUnderride(d),
-        wizard: !!d.wizard,
+        wizard: !!(d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net) ,
       };
     }
 

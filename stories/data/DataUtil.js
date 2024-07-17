@@ -99,7 +99,7 @@ stories.add('Query Generator', (opts, props) => {
     return moment.utc(endDate);
   };
 
-  const daysInRange = 1;
+  const daysInRange = 2;
 
   const daysInRangeOptions = {
     range: true,
@@ -364,7 +364,7 @@ stories.add('Query Generator', (opts, props) => {
     const selectedTypes = options(
       'Types',
       types,
-      ['deviceEvent'],
+      [],
       { display: 'check' }
     );
 

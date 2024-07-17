@@ -118,21 +118,24 @@ export function getProgrammed(insulinEvent) {
  * @return {Number} total recommended insulin dose
  */
 export function getRecommended(insulinEvent) {
-  let wizard = insulinEvent;
+  let event = insulinEvent;
   if (_.get(insulinEvent, 'type') === 'bolus') {
-    wizard = getWizardFromInsulinEvent(insulinEvent);
+    event = event.dosingDecision || getWizardFromInsulinEvent(insulinEvent);
   }
   // a simple manual/"quick" bolus won't have a `recommended` field
-  if (!wizard.recommended) {
+  if (!event.recommendedBolus && !event.recommended) {
     return NaN;
   }
-  const netRecommendation = _.get(wizard, ['recommended', 'net'], null);
+  const netRecommendation = event.recommendedBolus
+    ? _.get(event, ['recommendedBolus', 'amount'], null)
+    : _.get(event, ['recommended', 'net'], null);
+
   if (netRecommendation !== null) {
     return netRecommendation;
   }
   let rec = 0;
-  rec += _.get(wizard, ['recommended', 'carb'], 0);
-  rec += _.get(wizard, ['recommended', 'correction'], 0);
+  rec += _.get(event, ['recommended', 'carb'], 0);
+  rec += _.get(event, ['recommended', 'correction'], 0);
 
   return fixFloatingPoint(rec);
 }
@@ -307,17 +310,18 @@ export function hasExtended(insulinEvent) {
  */
 export function isInterruptedBolus(insulinEvent) {
   const bolus = getBolusFromInsulinEvent(insulinEvent);
+  const expectedNormal = bolus.expectedNormal || bolus.dosingDecision?.requestedBolus?.amount;
 
-  const cancelledDuringNormal = Boolean(
-    bolus.normal != null &&
-    bolus.expectedNormal &&
-    bolus.normal !== bolus.expectedNormal
+  const cancelledDuringNormal = (
+    _.isFinite(bolus.normal) &&
+    _.isFinite(expectedNormal) &&
+    bolus.normal < expectedNormal
   );
 
-  const cancelledDuringExtended = Boolean(
-    bolus.extended != null &&
-    bolus.expectedExtended &&
-    bolus.extended !== bolus.expectedExtended
+  const cancelledDuringExtended = (
+    _.isFinite(bolus.extended) &&
+    _.isFinite(bolus.expectedExtended) &&
+    bolus.extended < bolus.expectedExtended
   );
 
   if (_.inRange(bolus.normal, Infinity)) {
@@ -336,7 +340,7 @@ export function isInterruptedBolus(insulinEvent) {
  * @return {Boolean} whether the bolus programmed was larger than the calculated recommendation
  */
 export function isOverride(insulinEvent) {
-  return getRecommended(insulinEvent.wizard || insulinEvent) < getProgrammed(insulinEvent);
+  return getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent) < getProgrammed(insulinEvent);
 }
 
 /**
@@ -346,7 +350,7 @@ export function isOverride(insulinEvent) {
  * @return {Boolean} whether the bolus programmed was smaller than the calculated recommendation
  */
 export function isUnderride(insulinEvent) {
-  return getRecommended(insulinEvent.wizard || insulinEvent) > getProgrammed(insulinEvent);
+  return getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent) > getProgrammed(insulinEvent);
 }
 
 /**
@@ -356,7 +360,12 @@ export function isUnderride(insulinEvent) {
  * @return {Boolean} whether the bolus programmed a recommended bg correction without carb entry
  */
 export function isCorrection(insulinEvent) {
-  const recommended = _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
+  const recommended = insulinEvent.dosingDecision
+    ? {
+      correction: _.get(insulinEvent, 'dosingDecision.recommendedBolus.amount'),
+      carb: _.get(insulinEvent, 'dosingDecision.food.nutrition.carbohydrate.net', 0),
+    }
+    : _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
   return !!(recommended && recommended.correction > 0 && recommended.carb === 0);
 }
 
