@@ -220,6 +220,8 @@ class BolusTooltip extends PureComponent {
     const isAnimasExtended = this.isAnimasExtended();
     const isMedronicDeconvertedExchange = this.isMedronicDeconvertedExchange();
 
+    console.log('programmed, delivered', programmed, delivered);
+
     let overrideLine = null;
     if (bolusUtils.isOverride(wizard)) {
       overrideLine = (
@@ -306,12 +308,12 @@ class BolusTooltip extends PureComponent {
         {iobLine}
         {suggestedLine}
         {this.getExtended()}
-        {(isInterrupted || overrideLine || hasExtended) && <div className={styles.dividerSmall} />}
+        {(isInterrupted || overrideLine || hasExtended) && <div className={styles.divider} />}
         {overrideLine}
         {interruptedLine}
         {deliveredLine}
         {(icRatioLine || isfLine || bg || isAnimasExtended || isMedronicDeconvertedExchange) && (
-          <div className={styles.dividerLarge} />
+          <div className={styles.divider} />
         )}
         {icRatioLine}
         {isfLine}
@@ -328,6 +330,10 @@ class BolusTooltip extends PureComponent {
     const isInterrupted = bolusUtils.isInterruptedBolus(bolus);
     const programmed = bolusUtils.getProgrammed(bolus);
     const isAnimasExtended = this.isAnimasExtended();
+
+    if (isInterrupted) {
+      console.log('programmed, delivered', programmed, delivered);
+    }
 
     const deliveredLine = _.isFinite(delivered) && (
       <div className={styles.delivered}>
@@ -358,7 +364,7 @@ class BolusTooltip extends PureComponent {
         {interruptedLine}
         {deliveredLine}
         {this.getExtended()}
-        {isAnimasExtended && <div className={styles.dividerLarge} />}
+        {isAnimasExtended && <div className={styles.divider} />}
         {this.animasExtendedAnnotationMessage()}
       </div>
     );

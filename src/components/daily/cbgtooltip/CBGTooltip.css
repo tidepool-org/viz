@@ -65,7 +65,7 @@
   composes: subType;
 }
 
-.dividerLarge {
-  height: 4px;
+.divider {
+  height: 3px;
   margin: 5px -10px;
 }

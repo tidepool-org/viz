@@ -120,14 +120,8 @@
   composes: row;
 }
 
-.dividerSmall {
+.divider {
   background-color: var(--bolus);
-  height: 2px;
-  margin: 5px -10px;
-}
-
-.dividerLarge {
-  background-color: var(--bolus);
-  height: 4px;
+  height: 3px;
   margin: 5px -10px;
 }
