@@ -371,6 +371,7 @@ class DailyPrintView extends PrintView {
 
   render() {
     _.each(this.chartsByDate, (dateChart) => {
+      console.log('dateChart', dateChart);
       this.goToPage(dateChart.page);
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
@@ -831,8 +832,8 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderFoodCarbs({ bolusScale, data: { food }, xScale }) {
-    const circleOffset = 1;
+  renderFoodCarbs({ data: { food }, xScale, topEdge }) {
+    const circleOffset = 10;
     const textOffset = 1.75;
 
     _.each(food, foodEvent => {
@@ -840,7 +841,7 @@ class DailyPrintView extends PrintView {
 
       if (carbs) {
         const carbsX = xScale(foodEvent.normalTime);
-        const carbsY = bolusScale(0) - this.carbRadius - circleOffset;
+        const carbsY = topEdge + (this.carbRadius + circleOffset);
         this.doc.circle(carbsX, carbsY, this.carbRadius)
           .fill(this.colors.carbs);
         this.doc.font(this.font)
