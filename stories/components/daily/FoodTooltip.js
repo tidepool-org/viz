@@ -61,7 +61,7 @@ const loopEdited = {
   payload: {
     userUpdatedDate: moment().toISOString(),
   },
-  normalTime: moment().toISOString(),
+  normalTime: moment().subtract(30, 'minutes').toISOString(),
 };
 
 storiesOf('FoodTooltip', module)
