@@ -186,6 +186,13 @@ stories.add('Query Generator', (opts, props) => {
       units: 'units',
       wizard: 'wizard',
     },
+    food: {
+      ...commonFields,
+      ...computedFields,
+      nutrition: 'nutrition',
+      name: 'name',
+      payload: 'payload',
+    },
     wizard: {
       ...commonFields,
       ...computedFields,
@@ -304,6 +311,7 @@ stories.add('Query Generator', (opts, props) => {
     cbg: 'cbg',
     basal: 'basal',
     bolus: 'bolus',
+    food: 'food',
     wizard: 'wizard',
     upload: 'upload',
     pumpSettings: 'pumpSettings',

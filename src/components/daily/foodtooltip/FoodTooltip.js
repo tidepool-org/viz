@@ -25,16 +25,29 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './FoodTooltip.css';
 import i18next from 'i18next';
+import { MS_IN_HOUR } from '../../../utils/constants';
+import { isLoop } from '../../../utils/device';
+import { is } from 'bluebird';
 
 const t = i18next.t.bind(i18next);
 
 class FoodTooltip extends PureComponent {
+  getAbsorptionTime(food) {
+    return _.round(_.get(food, 'nutrition.estimatedAbsorptionDuration', 0) * 1000 / MS_IN_HOUR, 1);
+  }
+
   getCarbs(food) {
     return _.round(_.get(food, 'nutrition.carbohydrate.net', 0), 1);
   }
 
+  getName(food) {
+    return _.get(food, 'name');
+  }
+
+
   renderFood() {
     const food = this.props.food;
+    console.log('food', food);
     const rows = [
       <div key={'carb'} className={styles.carb}>
         <div className={styles.label}>{t('Carbs')}</div>
@@ -44,6 +57,63 @@ class FoodTooltip extends PureComponent {
         <div className={styles.units}>g</div>
       </div>,
     ];
+
+    if (isLoop(food)) {
+      const absorptionTime = this.getAbsorptionTime(food);
+      const name = this.getName(food);
+      const latestUpdatedTime = food.payload?.userUpdatedDate;
+      const timeOfEntry = food.payload?.userCreatedDate !== food.normalTime ? food.payload?.userCreatedDate : undefined;
+
+      rows.unshift(...[
+        (
+          <div key={'name'} className={styles.row}>
+            <div className={styles.label}>{t('Type')}</div>
+            <div className={styles.value}>
+              {`${name}`}
+            </div>
+          </div>
+        ),
+        (
+          <div key={'absorption'} className={styles.row}>
+            <div className={styles.label}>{t('Absorption time (hrs)')}</div>
+            <div className={styles.value}>
+              {`${absorptionTime}`}
+            </div>
+            <div className={styles.units}>hr</div>
+          </div>
+        )
+      ]);
+
+      if (latestUpdatedTime || timeOfEntry) {
+        rows.push(<div className={styles.divider} />)
+
+        if (latestUpdatedTime) {
+          rows.push((
+            <div key={'latestUpdatedTime'} className={styles.row}>
+              <div className={styles.label}>{t('Last edited')}</div>
+              <div className={styles.value}>
+                {formatLocalizedFromUTC(latestUpdatedTime, this.props.timePrefs, 'h:mm')}
+              </div>
+              <div className={styles.units}>
+                {formatLocalizedFromUTC(latestUpdatedTime, this.props.timePrefs, 'a')}
+              </div>
+            </div>
+          ))
+        } else {
+          rows.push((
+            <div key={'timeOfEntry'} className={styles.row}>
+              <div className={styles.label}>{t('Time of entry')}</div>
+              <div className={styles.value}>
+                {formatLocalizedFromUTC(timeOfEntry, this.props.timePrefs, 'h:mm')}
+              </div>
+              <div className={styles.units}>
+                {formatLocalizedFromUTC(timeOfEntry, this.props.timePrefs, 'a')}
+              </div>
+            </div>
+          ))
+        }
+      }
+    }
 
     return <div className={styles.container}>{rows}</div>;
   }
@@ -89,13 +159,10 @@ FoodTooltip.propTypes = {
         net: PropTypes.number.isRequired,
         units: PropTypes.string.isRequired,
       }).isRequired,
+      estimatedAbsorptionDuration: PropTypes.number,
     }).isRequired,
   }).isRequired,
   timePrefs: PropTypes.object.isRequired,
-  bgPrefs: PropTypes.shape({
-    bgClasses: PropTypes.object.isRequired,
-    bgUnits: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 FoodTooltip.defaultProps = {

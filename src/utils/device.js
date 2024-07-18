@@ -31,14 +31,14 @@ export function getLastManualBasalSchedule(basalData = []) {
  * Check to see if datum is from DIY Loop
  */
 export function isDIYLoop(datum = {}) {
-  return _.get(datum, 'origin.name', '').indexOf('com.loopkit.Loop') === 0;
+  return (/^com\.[a-zA-Z0-9]*\.?loopkit\.Loop/).test(_.get(datum, 'origin.name', ''));
 }
 
 /**
  * Check to see if datum is from Tidepool Loop
- */
+*/
 export function isTidepoolLoop(datum = {}) {
-  return _.get(datum, 'origin.name', '').indexOf('org.tidepool.Loop') === 0;
+  return (/^org\.[a-zA-Z0-9]*\.?tidepool\.Loop/).test(_.get(datum, 'origin.name', ''));
 }
 
 /**
