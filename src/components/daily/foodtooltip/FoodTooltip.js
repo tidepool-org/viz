@@ -47,7 +47,7 @@ class FoodTooltip extends PureComponent {
 
   renderFood() {
     const food = this.props.food;
-    console.log('food', food);
+
     const rows = [
       <div key={'carb'} className={styles.carb}>
         <div className={styles.label}>{t('Carbs')}</div>

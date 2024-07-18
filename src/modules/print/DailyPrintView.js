@@ -371,7 +371,6 @@ class DailyPrintView extends PrintView {
 
   render() {
     _.each(this.chartsByDate, (dateChart) => {
-      console.log('dateChart', dateChart);
       this.goToPage(dateChart.page);
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
