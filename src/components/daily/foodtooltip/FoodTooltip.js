@@ -75,7 +75,7 @@ class FoodTooltip extends PureComponent {
         ),
         (
           <div key={'absorption'} className={styles.row}>
-            <div className={styles.label}>{t('Absorption time (hrs)')}</div>
+            <div className={styles.label}>{t('Absorption Time (hrs)')}</div>
             <div className={styles.value}>
               {`${absorptionTime}`}
             </div>
@@ -90,7 +90,7 @@ class FoodTooltip extends PureComponent {
         if (latestUpdatedTime) {
           rows.push((
             <div key={'latestUpdatedTime'} className={styles.row}>
-              <div className={styles.label}>{t('Last edited')}</div>
+              <div className={styles.label}>{t('Last Edited')}</div>
               <div className={styles.value}>
                 {formatLocalizedFromUTC(latestUpdatedTime, this.props.timePrefs, 'h:mm')}
               </div>
@@ -102,7 +102,7 @@ class FoodTooltip extends PureComponent {
         } else {
           rows.push((
             <div key={'timeOfEntry'} className={styles.row}>
-              <div className={styles.label}>{t('Time of entry')}</div>
+              <div className={styles.label}>{t('Time of Entry')}</div>
               <div className={styles.value}>
                 {formatLocalizedFromUTC(timeOfEntry, this.props.timePrefs, 'h:mm')}
               </div>
