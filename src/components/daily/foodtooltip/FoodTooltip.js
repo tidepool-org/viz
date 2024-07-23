@@ -17,6 +17,7 @@
 
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import moment from 'moment';
 import _ from 'lodash';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
@@ -62,7 +63,7 @@ class FoodTooltip extends PureComponent {
       const absorptionTime = this.getAbsorptionTime(food);
       const name = this.getName(food);
       const latestUpdatedTime = food.payload?.userUpdatedDate;
-      const timeOfEntry = food.payload?.userCreatedDate !== food.normalTime ? food.payload?.userCreatedDate : undefined;
+      const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
       rows.unshift(...[
         (
@@ -85,7 +86,7 @@ class FoodTooltip extends PureComponent {
       ]);
 
       if (latestUpdatedTime || timeOfEntry) {
-        rows.push(<div className={styles.divider} />)
+        rows.push(<div key={'divider'} className={styles.divider} />)
 
         if (latestUpdatedTime) {
           rows.push((
