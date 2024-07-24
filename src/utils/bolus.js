@@ -68,7 +68,7 @@ export function getWizardFromInsulinEvent(insulinEvent) {
  *                  NaN if bolus calculator not used; null if no carbInput
  */
 export function getCarbs(insulinEvent) {
-  if (insulinEvent.type !== 'wizard' && !insulinEvent.wizard) {
+  if (insulinEvent.type !== 'wizard' && !insulinEvent.wizard && !insulinEvent.dosingDecision) {
     return NaN;
   }
   return _.get(getWizardFromInsulinEvent(insulinEvent), 'carbInput', null);
