@@ -85,9 +85,10 @@ export class DataUtil {
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
+    this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
-    this.dosingDecisionDatumsByIdMap = this.dosingDecisionDatumsByIdMap || {};
+    this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
@@ -113,10 +114,10 @@ export class DataUtil {
     _.each(data, this.joinWizardAndBolus);
     this.endTimer('joinWizardAndBolus');
 
-    // Join dosingDecision and bolus datums
-    this.startTimer('joinDosingDecisionAndBolus');
-    _.each(data, this.joinDosingDecisionAndBolus);
-    this.endTimer('joinDosingDecisionAndBolus');
+    // Join bolus and dosingDecision datums
+    this.startTimer('joinBolusAndDosingDecision');
+    _.each(data, this.joinBolusAndDosingDecision);
+    this.endTimer('joinBolusAndDosingDecision');
 
     // Filter out any data that failed validation, and and duplicates by `id`
     this.startTimer('filterValidData');
@@ -210,11 +211,15 @@ export class DataUtil {
 
     // Populate mappings to be used for 2-way join of boluses and dosing decisions
     if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus'], d.reason)) {
-      this.dosingDecisionDatumsByIdMap[d.id] = d;
+      this.bolusDosingDecisionDatumsByIdMap[d.id] = d;
     }
 
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
+    }
+
+    if (d.type === 'pumpSettings') {
+      this.pumpSettingsDatumsByIdMap[d.id] = d;
     }
 
     // Generate a map of devices by deviceId
@@ -259,12 +264,12 @@ export class DataUtil {
     }
   };
 
-  joinDosingDecisionAndBolus = d => {
-    if (d.type === 'bolus') {
+  joinBolusAndDosingDecision = d => {
+    if (d.type === 'bolus' && isLoop(d)) {
       const timeThreshold = MS_IN_MIN;
 
       const proximateDosingDecisions = _.filter(
-        _.mapValues(this.dosingDecisionDatumsByIdMap),
+        _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
         ({ time }) =>  {
           const timeOffset = Math.abs(time - d.time);
           return timeOffset <= timeThreshold
@@ -274,6 +279,18 @@ export class DataUtil {
       const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
       const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.amount === d.normal);
       d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+
+      if (d.dosingDecision) {
+        // attach associated pump settings to dosingDecisions
+        const associatedPumpSettingsId = _.find(d.dosingDecision.associations, { reason: 'pumpSettings' })?.id;
+        d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
+
+        // Translate relevant dosing decision data onto expected bolus fields
+        d.expectedNormal = d.dosingDecision.requestedBolus?.amount;
+        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+        d.bgInput = _.last(d.dosingDecision.bgHistorical || [])?.value;
+        d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
+      }
     }
   };
 
@@ -319,7 +336,7 @@ export class DataUtil {
         manual: !d.wizard && !isAutomated(d),
         override: isOverride(d),
         underride: isUnderride(d),
-        wizard: !!(d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net) ,
+        wizard: !!(d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net),
       };
     }
 
@@ -475,8 +492,15 @@ export class DataUtil {
       }
     }
 
+    if (d.type === 'dosingDecision') {
+      this.normalizeDatumBgUnits(d, ['bgTargetSchedule'], ['low', 'high']);
+      if (_.isObject(d.pumpSettings)) this.normalizeDatumOut(d.pumpSettings, fields);
+    }
+
     if (d.type === 'bolus') {
+      this.normalizeDatumBgUnits(d, [], ['bgInput']);
       if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard, fields);
+      if (_.isObject(d.dosingDecision)) this.normalizeDatumOut(d.dosingDecision, fields);
     }
 
     if (d.type === 'deviceEvent') {
@@ -550,7 +574,16 @@ export class DataUtil {
           _.each(keys, (key) => {
             if (_.isNumber(pathValue[key])) {
               const setPath = _.reject([path, key], _.isEmpty);
+              // in some cases, a path could be converted more than once, especially if a dosing decision
+              // was shared with multple boluses due to proximity. We need to track which paths have
+              // already been converted so we don't do it multiple times.
+              if (d.bgNormalized?.[setPath.join('|')]) return;
               _.set(d, setPath, convertToMGDL(pathValue[key]));
+
+              d.bgNormalized = {
+                ...(d.bgNormalized || {}),
+                [setPath.join('|')]: true,
+              };
             } else if (_.isPlainObject(pathValue)) {
               this.normalizeDatumBgUnits(pathValue, _.keys(pathValue), [key]);
             }
