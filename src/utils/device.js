@@ -31,14 +31,14 @@ export function getLastManualBasalSchedule(basalData = []) {
  * Check to see if datum is from DIY Loop
  */
 export function isDIYLoop(datum = {}) {
-  return (/^com\.[a-zA-Z0-9]*\.?loopkit\.Loop/).test(_.get(datum, 'origin.name', ''));
+  return (/^com\.[a-zA-Z0-9]*\.?loopkit\.Loop/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**
  * Check to see if datum is from Tidepool Loop
 */
 export function isTidepoolLoop(datum = {}) {
-  return (/^org\.[a-zA-Z0-9]*\.?tidepool\.Loop/).test(_.get(datum, 'origin.name', ''));
+  return (/^org\.[a-zA-Z0-9]*\.?tidepool\.Loop/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**
@@ -91,7 +91,7 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
  */
 export function getSettingsOverrides(manufacturer) {
   const overrides = _.cloneDeep(settingsOverrides);
-  return _.get(overrides, _.upperFirst(manufacturer), overrides.default);
+  return _.get(overrides, getUppercasedManufacturer(manufacturer), overrides.default);
 }
 
 /**
@@ -102,7 +102,15 @@ export function getSettingsOverrides(manufacturer) {
 export function getPumpVocabulary(manufacturer) {
   const vocabulary = _.cloneDeep(pumpVocabulary);
   return _.defaults(
-    _.get(vocabulary, _.upperFirst(manufacturer), {}),
+    _.get(vocabulary, getUppercasedManufacturer(manufacturer), {}),
     vocabulary.default
   );
+}
+
+/**
+ * Get the uppercased manufacturer name
+ * @param {String} manufacturer Manufacturer name
+ */
+export function getUppercasedManufacturer(manufacturer) {
+  return manufacturer.split(' ').map(part => (part === 'diy' ? _.upperCase(part) : _.upperFirst(part))).join(' ');
 }

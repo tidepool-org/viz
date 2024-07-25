@@ -98,7 +98,8 @@ export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
-export const LOOP = 'Loop';
+export const TIDEPOOL_LOOP = 'Tidepool Loop';
+export const DIY_LOOP = 'DIY Loop';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
 
@@ -143,7 +144,20 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Max Bolus'),
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
-  [LOOP]: {
+  [TIDEPOOL_LOOP]: {
+    [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
+    [SITE_CHANGE_TUBING]: t('Fill Tubing'),
+    [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [AUTOMATED_DELIVERY]: t('Closed Loop'),
+    [AUTOMATED_MODE_EXITED]: t('Off'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Preset'),
+    [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('E') },
+    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
+    [MAX_BOLUS]: t('Max Bolus'),
+    [INSULIN_DURATION]: t('Insulin Duration'),
+  },
+  [DIY_LOOP]: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
     [SITE_CHANGE_TUBING]: t('Fill Tubing'),
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
@@ -179,8 +193,11 @@ export const settingsOverrides = {
     SLEEP,
     PHYSICAL_ACTIVITY,
   ],
-  [LOOP]: [
+  [TIDEPOOL_LOOP]: [
     PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
+  [DIY_LOOP]: [
     PREPRANDIAL,
   ],
   default: [

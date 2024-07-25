@@ -207,7 +207,7 @@ stories.add('Loop Flat Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(this, profiles.standard, data.settings.loop.flatrate, MGDL_UNITS, 'loop')}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.loop.flatrate, MGDL_UNITS, 'tidepool loop')}
     />
   </Wrapper>
 ));
@@ -216,7 +216,7 @@ stories.add('Loop Multi Rate', () => (
   <Wrapper>
     <ClipboardButton
       onSuccess={_.noop}
-      getText={nonTandemText.bind(this, profiles.standard, data.settings.loop.multirate, MGDL_UNITS, 'loop')}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.loop.multirate, MGDL_UNITS, 'tidepool loop')}
     />
   </Wrapper>
 ));

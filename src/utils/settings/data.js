@@ -52,7 +52,8 @@ export function deviceName(manufacturer) {
     medtronic: 'Medtronic',
     tandem: 'Tandem',
     microtech: 'Equil',
-    loop: 'Loop',
+    ['diy loop']: 'DIY Loop',
+    ['tidepool loop']: 'Tidepool Loop',
   };
   return DEVICE_DISPLAY_NAME_BY_MANUFACTURER[manufacturer] || manufacturer;
 }
@@ -153,7 +154,7 @@ export function getTotalBasalRates(scheduleData) {
  * getScheduleLabel
  * @param  {String} scheduleName  basal schedule name
  * @param  {String} activeName    name of active basal schedule at time of upload
- * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, loop
+ * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
  * @param  {Boolean} noUnits      whether units should be included in label object
  *
  * @return {Object}              object representing basal schedule label
@@ -394,7 +395,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
 
-  if (manufacturer === 'loop') {
+  if (_.includes(['diy loop', 'tidepool loop'], manufacturer)) {
     insulinDuration = _.get(settings, 'insulinModel.actionDuration');
     insulinDurationUnits = 'milliseconds';
   }

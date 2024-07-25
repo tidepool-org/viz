@@ -41,7 +41,8 @@ import {
   NO_SITE_CHANGE,
   SETTINGS_OVERRIDE,
   SITE_CHANGE,
-  LOOP,
+  TIDEPOOL_LOOP,
+  DIY_LOOP,
 } from '../../utils/constants';
 
 const siteChangeImages = {
@@ -49,7 +50,8 @@ const siteChangeImages = {
   [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
-  [`${LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${TIDEPOOL_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${DIY_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
 };
 
 const t = i18next.t.bind(i18next);

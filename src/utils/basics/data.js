@@ -19,7 +19,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import i18next from 'i18next';
 
-import { getPumpVocabulary, isLoop } from '../device';
+import { getPumpVocabulary, getUppercasedManufacturer, isLoop } from '../device';
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -36,10 +36,11 @@ import {
   INSULET,
   TANDEM,
   ANIMAS,
-  LOOP,
+  DIY_LOOP,
   MEDTRONIC,
   MICROTECH,
   pumpVocabulary,
+  TIDEPOOL_LOOP,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';
@@ -91,7 +92,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         summaryTitle = t('Total basal events');
         dimensions = [
           { path: 'basal.summary', key: 'total', label: t('Basal Events'), primary: true },
-          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals'), hideEmpty: manufacturer === _.lowerCase([LOOP]) },
+          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals'), hideEmpty: _.includes([DIY_LOOP, TIDEPOOL_LOOP].map(_.lowerCase), manufacturer) },
           { path: 'basal.summary.subtotals', key: 'suspend', label: t('Suspends') },
           {
             path: 'basal.summary.subtotals',
@@ -211,7 +212,7 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     }
   } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
-  } else if (_.includes(_.map([LOOP], _.lowerCase), manufacturer)) {
+  } else if (_.includes(_.map([DIY_LOOP, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_TUBING;
   }
 
@@ -230,7 +231,7 @@ export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
 
   return _.get(
     pumpVocabulary,
-    [_.upperFirst(manufacturer), siteChangeSource],
+    [getUppercasedManufacturer(manufacturer), siteChangeSource],
     fallbackSubtitle
   );
 }

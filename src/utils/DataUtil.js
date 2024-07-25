@@ -11,6 +11,8 @@ import {
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
+  isDIYLoop,
+  isTidepoolLoop,
 } from './device';
 
 import {
@@ -32,6 +34,8 @@ import {
   MS_IN_HOUR,
   MS_IN_MIN,
   MGDL_UNITS,
+  DIY_LOOP,
+  TIDEPOOL_LOOP,
 } from './constants';
 
 import {
@@ -876,8 +880,10 @@ export class DataUtil {
         } else {
           source = upload.deviceManufacturers[0];
         }
-      } else if (isLoop(pumpSettings)) {
-        source = 'loop';
+      } else if (isTidepoolLoop(pumpSettings)) {
+        source = TIDEPOOL_LOOP.toLowerCase();
+      } else if (isDIYLoop(pumpSettings)) {
+        source = DIY_LOOP.toLowerCase();
       }
 
       this.uploadMap[upload.uploadId] = {

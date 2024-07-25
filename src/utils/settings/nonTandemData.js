@@ -44,7 +44,7 @@ export function deviceMeta(settings, timePrefs) {
 
 /**
  * bolusTitle
- * @param  {String} manufacturer one of: animas, carelink, insulet, medtronic, microtech, loop
+ * @param  {String} manufacturer one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop
  *
  * @return {String}              bolus title for given manufacturer
  */
@@ -54,7 +54,8 @@ export function bolusTitle(manufacturer) {
     insulet: t('Bolus Calculator'),
     medtronic: t('Bolus Wizard'),
     microtech: t('Bolus Calculator'),
-    loop: t('Bolus Calculator'),
+    ['tidepool loop']: t('Bolus Calculator'),
+    ['diy loop']: t('Bolus Calculator'),
   };
   return BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[manufacturer];
 }
@@ -87,7 +88,7 @@ function basalColumns() {
  * basal
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop
  * @return {Object}                object with basal title, columns and rows
  */
 export function basal(schedule, settings, manufacturer) {
@@ -119,7 +120,8 @@ function sensitivityTitle(manufacturer) {
     insulet: t('Correction factor'),
     medtronic: t('Sensitivity'),
     microtech: t('Insulin Sensitivity'),
-    loop: t('Insulin Sensitivity'),
+    ['diy loop']: t('Insulin Sensitivity'),
+    ['tidepool loop']: t('Insulin Sensitivity'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -169,7 +171,8 @@ function ratioTitle(manufacturer) {
     insulet: t('IC ratio'),
     medtronic: t('Carb Ratios'),
     microtech: t('Carbohydrate Ratio'),
-    loop: t('Carbohydrate Ratio'),
+    ['diy loop']: t('Carbohydrate Ratio'),
+    ['tidepool loop']: t('Carbohydrate Ratio'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -194,7 +197,7 @@ function ratioRows(settings) {
  * ratio
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop
  * @return {Object}                object with ratio title, columns and rows
  */
 export function ratio(settings, manufacturer) {
@@ -215,7 +218,8 @@ function targetTitle(manufacturer) {
     insulet: t('Target BG'),
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
-    loop: t('Target BG'),
+    ['diy loop']: t('Target BG'),
+    ['tidepool loop']: t('Target BG'),
   };
   return BG_TARGET_BY_MANUFACTURER[manufacturer];
 }
@@ -246,7 +250,12 @@ function targetColumns(manufacturer) {
       { key: 'columnTwo', label: t('Lower') },
       { key: 'columnThree', label: t('Upper') },
     ],
-    loop: [
+    ['diy loop']: [
+      { key: 'start', label: t('Start time') },
+      { key: 'columnTwo', label: t('Low') },
+      { key: 'columnThree', label: t('High') },
+    ],
+    ['tidepool loop']: [
       { key: 'start', label: t('Start time') },
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
@@ -265,9 +274,10 @@ function targetRows(settings, units, manufacturer) {
     insulet: { columnTwo: 'target', columnThree: 'high' },
     medtronic: { columnTwo: 'low', columnThree: 'high' },
     microtech: { columnTwo: 'low', columnThree: 'high' },
-    loop: { columnTwo: 'low', columnThree: 'high' },
+    ['diy loop']: { columnTwo: 'low', columnThree: 'high' },
+    ['tidepool loop']: { columnTwo: 'low', columnThree: 'high' },
   };
-  const targetData = manufacturer === 'loop'
+  const targetData = _.includes(['diy loop', 'tidepool loop'], manufacturer)
     ? settings.bgTargets[settings.activeSchedule]
     : settings.bgTarget;
 
@@ -282,7 +292,7 @@ function targetRows(settings, units, manufacturer) {
  * target
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop
  * @param  {String} units          MGDL_UNITS or MMOLL_UNITS
  * @return {Object}                object with target title, columns and rows
  */
