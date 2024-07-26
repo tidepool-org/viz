@@ -509,7 +509,8 @@ export class DataUtil {
 
     if (d.type === 'deviceEvent') {
       if (_.isFinite(d.duration)) {
-        // Loop is reporting these durations in seconds instead of the expected milliseconds.
+        // Loop is reporting these durations in seconds instead of the milliseconds historically
+        // used by Tandem.
         // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
         // convert for Loop versions prior to the fix.
         if (d.subType === 'pumpSettingsOverride' && isLoop(d)) d.duration = d.duration * 1000;
