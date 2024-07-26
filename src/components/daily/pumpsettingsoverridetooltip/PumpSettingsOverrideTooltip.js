@@ -1,26 +1,50 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import get from 'lodash/get';
+import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
+import { formatBgValue } from '../../../utils/format';
 import { SETTINGS_OVERRIDE } from '../../../utils/constants';
-import { getPumpVocabulary } from '../../../utils/device';
+import { getPumpVocabulary, isLoop } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './PumpSettingsOverrideTooltip.css';
+
+const t = i18next.t.bind(i18next);
 
 class PumpSettingsOverrideTooltip extends PureComponent {
   renderPumpSettingsOverride() {
     const vocabulary = getPumpVocabulary(get(this.props.override, 'source'));
     const overrideLabel = vocabulary[SETTINGS_OVERRIDE];
     const overrideType = get(vocabulary[get(this.props.override, 'overrideType')], 'label');
+    const { low: targetLow, high: targetHigh } = get(this.props.override, 'bgTarget', {});
+    const showTarget = targetLow && targetHigh;
+    const bgUnits = get(this.props.bgPrefs, 'bgUnits');
 
     const rows = [
       <div key={'override type'} className={styles.overrideType}>
-        <div className={styles.label}>{overrideLabel}</div>
+        <div className={showTarget ? styles.boldLabel : styles.label}>{overrideLabel}</div>
         <div className={styles.value}>{overrideType}</div>
       </div>,
     ];
+
+    if (showTarget) {
+      let value;
+      if (targetLow === targetHigh) {
+        value = `${formatBgValue(targetLow, this.props.bgPrefs)}`;
+      } else {
+        value = `${formatBgValue(targetLow, this.props.bgPrefs)}-${formatBgValue(targetHigh, this.props.bgPrefs)}`;
+      }
+
+      rows.push(
+        <div className={styles.target}>
+          <div className={styles.label}>{t('Correction Range')}{bgUnits ? ` (${bgUnits})` : ''}</div>
+          <div className={styles.value}>{value}</div>
+          <div className={this.unitStyles} />
+        </div>
+      );
+    }
 
     return <div className={styles.container}>{rows}</div>;
   }
@@ -74,6 +98,7 @@ PumpSettingsOverrideTooltip.propTypes = {
     source: PropTypes.string.isRequired,
   }).isRequired,
   timePrefs: PropTypes.object.isRequired,
+  bgPrefs: PropTypes.object.isRequired,
 };
 
 PumpSettingsOverrideTooltip.defaultProps = {
