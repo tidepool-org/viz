@@ -508,6 +508,7 @@ export class DataUtil {
     }
 
     if (d.type === 'deviceEvent') {
+      this.normalizeDatumBgUnits(d, ['bgTarget'], ['low', 'high']);
       if (_.isFinite(d.duration)) {
         // Loop is reporting these durations in seconds instead of the milliseconds historically
         // used by Tandem.
