@@ -61,6 +61,7 @@ import {
   MMOLL_UNITS,
   MS_IN_MIN,
   PHYSICAL_ACTIVITY,
+  PREPRANDIAL,
   SCHEDULED_DELIVERY,
   SLEEP,
 } from '../../utils/constants';
@@ -96,6 +97,7 @@ class DailyPrintView extends PrintView {
     this.pumpSettingsOverrideLabels = {
       [SLEEP]: deviceLabels[SLEEP],
       [PHYSICAL_ACTIVITY]: deviceLabels[PHYSICAL_ACTIVITY],
+      [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
     this.bgAxisFontSize = 5;
