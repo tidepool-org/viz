@@ -21,7 +21,6 @@
     "lint": "NODE_ENV=test yarn eslint src/ stories/ storiesDatatypes/ test/ *.js",
     "prepublishOnly": "NODE_ENV=production yarn rimraf ./node_modules && yarn install --immutable && npm test && NODE_ENV=production npm run build",
     "pretest": "NODE_ENV=test npm run lint",
-    "serve-docs": "yarn gitbook serve",
     "start": "NODE_ENV=development yarn webpack --config package.config.js --watch --progress",
     "stories": "NODE_OPTIONS=\"--max_old_space_size=4096\" NODE_ENV=development yarn sb dev -c storybook -p 8083 --ci",
     "test": "TZ=UTC NODE_ENV=test yarn karma start",
