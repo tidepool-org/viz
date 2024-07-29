@@ -257,7 +257,11 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     switch (aggregationKey) {
       case 'basals':
       case 'boluses':
-        emptyText = t("This section requires data from an insulin pump, so there's nothing to display.");
+        emptyText = data.boluses.disabled && data.basals.disabled
+          ? t("This section requires data from an insulin pump, so there's nothing to display.")
+          : t('There are no {{ type }} events to display for this date range.', {
+            type: aggregationKey === 'basals' ? t('basal') : t('bolus'),
+          });
         break;
 
       case 'siteChanges':
