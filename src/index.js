@@ -42,6 +42,7 @@ import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
 import {
   formatDateRange,
+  formatTimeAgo,
   getLocalizedCeiling,
   getOffset,
   getTimezoneFromTimePrefs,
@@ -117,6 +118,7 @@ const utils = {
   datetime: {
     findBasicsStart,
     formatDateRange,
+    formatTimeAgo,
     getLocalizedCeiling,
     getOffset,
     getTimezoneFromTimePrefs,
