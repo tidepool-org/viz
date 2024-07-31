@@ -177,7 +177,7 @@ export class DataUtil {
     }
 
     if (d.type === 'upload' && d.dataSetType === 'continuous') {
-      if (!d.time) d.time = moment().toISOString();
+      if (!d.time) d.time = moment.utc().toISOString();
     }
 
     if (d.messagetext) {
@@ -274,9 +274,9 @@ export class DataUtil {
 
       const proximateDosingDecisions = _.filter(
         _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
-        ({ time }) =>  {
+        ({ time }) => {
           const timeOffset = Math.abs(time - d.time);
-          return timeOffset <= timeThreshold
+          return timeOffset <= timeThreshold;
         }
       );
 
@@ -332,15 +332,17 @@ export class DataUtil {
     }
 
     if (d.type === 'bolus') {
+      const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net;
+
       d.tags = {
         automated: isAutomated(d),
         correction: isCorrection(d),
         extended: hasExtended(d),
         interrupted: isInterruptedBolus(d),
-        manual: !d.wizard && !isAutomated(d),
+        manual: !isWizardOrDosingDecision && !isAutomated(d),
         override: isOverride(d),
         underride: isUnderride(d),
-        wizard: !!(d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net),
+        wizard: !!isWizardOrDosingDecision,
       };
     }
 

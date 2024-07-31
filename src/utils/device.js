@@ -56,7 +56,7 @@ export function isLoop(datum = {}) {
  * @returns {Boolean}
  */
 export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceModel) {
-  return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []),deviceModel)
+  return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []), deviceModel)
     || (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
     || isLoop(pumpSettings);
 }
@@ -80,7 +80,15 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
  */
 export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
   return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-  || isDIYLoop(pumpSettings);
+  || isLoop(pumpSettings);
+}
+
+/**
+ * Get the uppercased manufacturer name
+ * @param {String} manufacturer Manufacturer name
+ */
+export function getUppercasedManufacturer(manufacturer = '') {
+  return _.map(manufacturer.split(' '), part => (part === 'diy' ? _.upperCase(part) : _.upperFirst(part))).join(' ');
 }
 
 /**
@@ -105,12 +113,4 @@ export function getPumpVocabulary(manufacturer) {
     _.get(vocabulary, getUppercasedManufacturer(manufacturer), {}),
     vocabulary.default
   );
-}
-
-/**
- * Get the uppercased manufacturer name
- * @param {String} manufacturer Manufacturer name
- */
-export function getUppercasedManufacturer(manufacturer) {
-  return manufacturer.split(' ').map(part => (part === 'diy' ? _.upperCase(part) : _.upperFirst(part))).join(' ');
 }

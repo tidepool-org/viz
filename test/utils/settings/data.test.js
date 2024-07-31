@@ -21,6 +21,7 @@ const medtronicMultirateData = require('../../../data/pumpSettings/medtronic/mul
 const omnipodMultirateData = require('../../../data/pumpSettings/omnipod/multirate.json');
 const tandemFlatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultirateData = require('../../../data/pumpSettings/tandem/multirate.json');
+const loopMultirateData = require('../../../data/pumpSettings/loop/multirate.json');
 
 describe('[settings] data utils', () => {
   describe('noData', () => {
@@ -48,6 +49,8 @@ describe('[settings] data utils', () => {
       expect(data.deviceName('medtronic')).to.equal('Medtronic');
       expect(data.deviceName('tandem')).to.equal('Tandem');
       expect(data.deviceName('microtech')).to.equal('Equil');
+      expect(data.deviceName('diy loop')).to.equal('DIY Loop');
+      expect(data.deviceName('tidepool loop')).to.equal('Tidepool Loop');
     });
 
     it('should return the manufacturer key if a device name mapping does not exist', () => {
@@ -384,6 +387,34 @@ describe('[settings] data utils', () => {
           { setting: 'Max Basal', value: '2 U/hr' },
           { setting: 'Max Bolus', value: '9.5 U' },
           { setting: 'Active Insulin Time', value: '4 hrs' },
+        ],
+      });
+    });
+
+    it('should return columns and rows for insulin settings from DIY Loop pump settings', () => {
+      expect(data.insulinSettings(loopMultirateData, 'diy loop')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
+          { setting: 'Maximum Bolus', value: '10 U' },
+          { setting: 'Insulin Duration', value: '6 hrs' },
+        ],
+      });
+    });
+
+    it('should return columns and rows for insulin settings from Tidepool Loop pump settings', () => {
+      expect(data.insulinSettings(loopMultirateData, 'tidepool loop')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
+          { setting: 'Maximum Bolus', value: '10 U' },
+          { setting: 'Insulin Duration', value: '6 hrs' },
         ],
       });
     });

@@ -89,5 +89,4 @@ storiesOf('FoodTooltip', module)
       {refDiv}
       <FoodTooltip {...props} food={loopEdited} />
     </div>
-  ))
-  ;
+  ));

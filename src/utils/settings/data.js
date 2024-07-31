@@ -52,8 +52,8 @@ export function deviceName(manufacturer) {
     medtronic: 'Medtronic',
     tandem: 'Tandem',
     microtech: 'Equil',
-    ['diy loop']: 'DIY Loop',
-    ['tidepool loop']: 'Tidepool Loop',
+    'diy loop': 'DIY Loop',
+    'tidepool loop': 'Tidepool Loop',
   };
   return DEVICE_DISPLAY_NAME_BY_MANUFACTURER[manufacturer] || manufacturer;
 }

@@ -9,6 +9,7 @@ describe('colors', () => {
     expect(_.toLower(colors.basalAutomated)).to.equal('#00b2c3');
     expect(_.toLower(colors.sleep)).to.equal('#4457d9');
     expect(_.toLower(colors.physicalActivity)).to.equal('#758cff');
+    expect(_.toLower(colors.preprandial)).to.equal('#4457d9');
     expect(_.toLower(colors.statDark)).to.equal('#27385b');
     expect(_.toLower(colors.statDefault)).to.equal('#727375');
     expect(_.toLower(colors.statDisabled)).to.equal('#e7e9ee');

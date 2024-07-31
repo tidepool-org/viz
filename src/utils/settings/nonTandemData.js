@@ -54,8 +54,8 @@ export function bolusTitle(manufacturer) {
     insulet: t('Bolus Calculator'),
     medtronic: t('Bolus Wizard'),
     microtech: t('Bolus Calculator'),
-    ['tidepool loop']: t('Bolus Calculator'),
-    ['diy loop']: t('Bolus Calculator'),
+    'tidepool loop': t('Bolus Calculator'),
+    'diy loop': t('Bolus Calculator'),
   };
   return BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[manufacturer];
 }
@@ -120,8 +120,8 @@ function sensitivityTitle(manufacturer) {
     insulet: t('Correction factor'),
     medtronic: t('Sensitivity'),
     microtech: t('Insulin Sensitivity'),
-    ['diy loop']: t('Insulin Sensitivity'),
-    ['tidepool loop']: t('Insulin Sensitivity'),
+    'diy loop': t('Insulin Sensitivity'),
+    'tidepool loop': t('Insulin Sensitivity'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -171,8 +171,8 @@ function ratioTitle(manufacturer) {
     insulet: t('IC ratio'),
     medtronic: t('Carb Ratios'),
     microtech: t('Carbohydrate Ratio'),
-    ['diy loop']: t('Carbohydrate Ratio'),
-    ['tidepool loop']: t('Carbohydrate Ratio'),
+    'diy loop': t('Carbohydrate Ratio'),
+    'tidepool loop': t('Carbohydrate Ratio'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -218,8 +218,8 @@ function targetTitle(manufacturer) {
     insulet: t('Target BG'),
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
-    ['diy loop']: t('Target BG'),
-    ['tidepool loop']: t('Target BG'),
+    'diy loop': t('Target BG'),
+    'tidepool loop': t('Target BG'),
   };
   return BG_TARGET_BY_MANUFACTURER[manufacturer];
 }
@@ -250,12 +250,12 @@ function targetColumns(manufacturer) {
       { key: 'columnTwo', label: t('Lower') },
       { key: 'columnThree', label: t('Upper') },
     ],
-    ['diy loop']: [
+    'diy loop': [
       { key: 'start', label: t('Start time') },
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
     ],
-    ['tidepool loop']: [
+    'tidepool loop': [
       { key: 'start', label: t('Start time') },
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
@@ -274,8 +274,8 @@ function targetRows(settings, units, manufacturer) {
     insulet: { columnTwo: 'target', columnThree: 'high' },
     medtronic: { columnTwo: 'low', columnThree: 'high' },
     microtech: { columnTwo: 'low', columnThree: 'high' },
-    ['diy loop']: { columnTwo: 'low', columnThree: 'high' },
-    ['tidepool loop']: { columnTwo: 'low', columnThree: 'high' },
+    'diy loop': { columnTwo: 'low', columnThree: 'high' },
+    'tidepool loop': { columnTwo: 'low', columnThree: 'high' },
   };
   const targetData = _.includes(['diy loop', 'tidepool loop'], manufacturer)
     ? settings.bgTargets[settings.activeSchedule]

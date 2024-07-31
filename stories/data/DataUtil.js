@@ -99,7 +99,7 @@ stories.add('Query Generator', (opts, props) => {
     return moment.utc(endDate);
   };
 
-  const daysInRange = 2;
+  const daysInRange = 1;
 
   const daysInRangeOptions = {
     range: true,
@@ -542,6 +542,8 @@ stories.add('Query Generator', (opts, props) => {
 
   const showData = () => boolean('Render Data', true);
   const showStats = () => boolean('Render Stats', true);
+
+  // eslint-disable-next-line no-unused-vars
   const query = () => object('Query', defaultQuery); // need to have this unused knob defined or the results won't update
 
   return <Results

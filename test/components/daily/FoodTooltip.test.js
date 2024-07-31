@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-
+import moment from 'moment';
 import { mount } from 'enzyme';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
@@ -74,6 +74,32 @@ const nonCarb = {
   },
 };
 
+const loop = {
+  ...normal,
+  origin: { name: 'com.loopkit.Loop' },
+  name: 'myfood',
+  nutrition: {
+    ...normal.nutrition,
+    estimatedAbsorptionDuration: 10800,
+  },
+};
+
+const loopTimeOfEntry = {
+  ...loop,
+  payload: {
+    userCreatedDate: '2024-02-02T14:00:00.000Z',
+  },
+  normalTime: '2024-02-02T01:00:00.000Z',
+};
+
+const loopEdited = {
+  ...loop,
+  payload: {
+    userUpdatedDate: '2024-02-02T03:00:00.000Z',
+  },
+  normalTime: '2024-02-02T02:00:00.000Z',
+};
+
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
@@ -112,6 +138,53 @@ describe('FoodTooltip', () => {
       const wrapper = mount(<FoodTooltip {...props} food={nonCarb} />);
       expect(wrapper.instance().getCarbs(nonCarb)).to.equal(0);
       expect(wrapper.find(carbValue).text()).to.equal('0');
+    });
+  });
+
+  describe('getName', () => {
+    // eslint-disable-next-line max-len
+    const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
+    it('should include the food name for a Loop food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loop} />);
+      expect(wrapper.instance().getName(loop)).to.equal('myfood');
+      expect(wrapper.find(rowValue).at(0).text()).to.contain('myfood');
+    });
+  });
+
+  describe('getAbsorptionTime', () => {
+    // eslint-disable-next-line max-len
+    const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
+    it('should include the food name for a Loop food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loop} />);
+      expect(wrapper.instance().getAbsorptionTime(loop)).to.equal(3);
+      expect(wrapper.find(rowValue).at(1).text()).to.contain('3');
+    });
+  });
+
+  describe('edited', () => {
+    const row = formatClassesAsSelector(styles.row);
+    const rowLabel = formatClassesAsSelector(styles.label);
+    const rowValue = formatClassesAsSelector(styles.value);
+    const rowUnits = formatClassesAsSelector(styles.units);
+    it('should include the edited time for an edited Loop food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopEdited} />);
+      expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Last Edited');
+      expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('3:00');
+      expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('am');
+    });
+  });
+
+  describe('different time of entry', () => {
+    const row = formatClassesAsSelector(styles.row);
+    const rowLabel = formatClassesAsSelector(styles.label);
+    const rowValue = formatClassesAsSelector(styles.value);
+    const rowUnits = formatClassesAsSelector(styles.units);
+    // eslint-disable-next-line max-len
+    it('should include the time of entry for a Loop food value that was given a different time of entry', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopTimeOfEntry} />);
+      expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Time of Entry');
+      expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('2:00');
+      expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('pm');
     });
   });
 });

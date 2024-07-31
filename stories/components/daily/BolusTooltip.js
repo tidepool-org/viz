@@ -443,19 +443,19 @@ const withLoopDosingDecision = {
     },
     bgTargetSchedule: [
       {
-          high: 160,
-          low: 150,
-          start: MS_IN_HOUR * 4,
+        high: 160,
+        low: 150,
+        start: MS_IN_HOUR * 4,
       },
       {
-          high: 165,
-          low: 155,
-          start: MS_IN_HOUR * 5,
+        high: 165,
+        low: 155,
+        start: MS_IN_HOUR * 5,
       },
       {
-          high: 170,
-          low: 160,
-          start: MS_IN_HOUR * 6,
+        high: 170,
+        low: 160,
+        start: MS_IN_HOUR * 6,
       },
     ],
     pumpSettings: {
@@ -494,7 +494,7 @@ const withLoopDosingDecision = {
       },
     }
   },
-}
+};
 
 const props = {
   bgPrefs: { bgUnits: MGDL_UNITS },

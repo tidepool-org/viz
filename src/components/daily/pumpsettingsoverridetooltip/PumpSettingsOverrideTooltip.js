@@ -6,7 +6,7 @@ import i18next from 'i18next';
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { formatBgValue } from '../../../utils/format';
 import { SETTINGS_OVERRIDE } from '../../../utils/constants';
-import { getPumpVocabulary, isLoop } from '../../../utils/device';
+import { getPumpVocabulary } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './PumpSettingsOverrideTooltip.css';

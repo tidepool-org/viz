@@ -185,6 +185,20 @@ describe('basics data utils', () => {
       const automatedStopFilter = _.find(result.basals.dimensions, { key: 'automatedStop' });
       expect(automatedStopFilter.label).to.equal('Automated Exited');
     });
+
+    context('is Loop device', () => {
+      it('should hide the `temp` basals when empty for DIY Loop devices', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'diy loop', { settings: { origin: { name: 'com.loopkit.Loop' } } });
+        const tempFilter = _.find(result.basals.dimensions, { key: 'temp' });
+        expect(tempFilter.hideEmpty).to.be.true;
+      });
+
+      it('should hide the `temp` basals when empty for Tidepool Loop devices', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'tidepool loop', { settings: { origin: { name: 'org.tidepool.Loop' } } });
+        const tempFilter = _.find(result.basals.dimensions, { key: 'temp' });
+        expect(tempFilter.hideEmpty).to.be.true;
+      });
+    });
   });
 
   describe('generateCalendarDayLabels', () => {
@@ -208,6 +222,18 @@ describe('basics data utils', () => {
     context('manufacturer: insulet', () => {
       it('should return `reservoirChange` as the site change source', () => {
         expect(dataUtils.getSiteChangeSource(patient, 'insulet')).to.equal('reservoirChange');
+      });
+    });
+
+    context('manufacturer: DIY Loop', () => {
+      it('should return `tubingPrime` as the site change source', () => {
+        expect(dataUtils.getSiteChangeSource(patient, 'diy loop')).to.equal('tubingPrime');
+      });
+    });
+
+    context('manufacturer: Tidepool Loop', () => {
+      it('should return `tubingPrime` as the site change source', () => {
+        expect(dataUtils.getSiteChangeSource(patient, 'tidepool loop')).to.equal('tubingPrime');
       });
     });
 
@@ -258,6 +284,14 @@ describe('basics data utils', () => {
 
     it('should return the appropriate labels for insulet pumps', () => {
       expect(dataUtils.getSiteChangeSourceLabel('reservoirChange', 'insulet')).to.equal('Change Pod');
+    });
+
+    it('should return the appropriate labels for DIY Loop pumps', () => {
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'diy loop')).to.equal('Fill Tubing');
+    });
+
+    it('should return the appropriate labels for Tidepool Loop pumps', () => {
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tidepool loop')).to.equal('Fill Tubing');
     });
 
     it('should fall back to a default label when a manufacturer-specific label cannot be found', () => {
@@ -332,11 +366,19 @@ describe('basics data utils', () => {
     it('should set empty text for sections for which there is no data available', () => {
       const resultWithMissingData = dataUtils.processBasicsAggregations({ ...aggregations }, data, patient, manufacturer);
 
+      const resultWithBasalsAndBolusesDisabled = dataUtils.processBasicsAggregations({ ...{
+        ...aggregations,
+        basals: { ...aggregations.basals, disabled: true },
+        boluses: { ...aggregations.boluses, disabled: true },
+      } }, data, patient, manufacturer);
+
       // basals gets emptyText set when no data
-      expect(resultWithMissingData.basals.emptyText).to.equal("This section requires data from an insulin pump, so there's nothing to display.");
+      expect(resultWithMissingData.basals.emptyText).to.equal('There are no basal events to display for this date range.');
+      expect(resultWithBasalsAndBolusesDisabled.basals.emptyText).to.equal("This section requires data from an insulin pump, so there's nothing to display.");
 
       // boluses gets emptyText set when no data
-      expect(resultWithMissingData.boluses.emptyText).to.equal("This section requires data from an insulin pump, so there's nothing to display.");
+      expect(resultWithMissingData.boluses.emptyText).to.equal('There are no bolus events to display for this date range.');
+      expect(resultWithBasalsAndBolusesDisabled.boluses.emptyText).to.equal("This section requires data from an insulin pump, so there's nothing to display.");
 
       // fingersticks gets emptyText set when no data
       expect(resultWithMissingData.fingersticks.emptyText).to.equal("This section requires data from a blood-glucose meter, so there's nothing to display.");

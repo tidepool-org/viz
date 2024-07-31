@@ -310,12 +310,11 @@ export function hasExtended(insulinEvent) {
  */
 export function isInterruptedBolus(insulinEvent) {
   const bolus = getBolusFromInsulinEvent(insulinEvent);
-  const expectedNormal = bolus.expectedNormal || bolus.dosingDecision?.requestedBolus?.amount;
 
   const cancelledDuringNormal = (
     _.isFinite(bolus.normal) &&
-    _.isFinite(expectedNormal) &&
-    bolus.normal < expectedNormal
+    _.isFinite(bolus.expectedNormal) &&
+    bolus.normal < bolus.expectedNormal
   );
 
   const cancelledDuringExtended = (

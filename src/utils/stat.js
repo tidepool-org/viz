@@ -408,7 +408,7 @@ export const getStatAnnotations = (data, type, opts = {}) => {
 
 export const getStatData = (data, type, opts = {}) => {
   const vocabulary = getPumpVocabulary(opts.manufacturer);
-  const settingsOverrides =  getSettingsOverrides(opts.manufacturer);
+  const settingsOverrides = getSettingsOverrides(opts.manufacturer);
   const bgRanges = generateBgRangeLabels(opts.bgPrefs, { condensed: true });
 
   let statData = {

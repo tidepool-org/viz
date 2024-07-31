@@ -28,7 +28,6 @@ import styles from './FoodTooltip.css';
 import i18next from 'i18next';
 import { MS_IN_HOUR } from '../../../utils/constants';
 import { isLoop } from '../../../utils/device';
-import { is } from 'bluebird';
 
 const t = i18next.t.bind(i18next);
 
@@ -86,7 +85,7 @@ class FoodTooltip extends PureComponent {
       ]);
 
       if (latestUpdatedTime || timeOfEntry) {
-        rows.push(<div key={'divider'} className={styles.divider} />)
+        rows.push(<div key={'divider'} className={styles.divider} />);
 
         if (latestUpdatedTime) {
           rows.push((
@@ -99,7 +98,7 @@ class FoodTooltip extends PureComponent {
                 {formatLocalizedFromUTC(latestUpdatedTime, this.props.timePrefs, 'a')}
               </div>
             </div>
-          ))
+          ));
         } else {
           rows.push((
             <div key={'timeOfEntry'} className={styles.row}>
@@ -111,7 +110,7 @@ class FoodTooltip extends PureComponent {
                 {formatLocalizedFromUTC(timeOfEntry, this.props.timePrefs, 'a')}
               </div>
             </div>
-          ))
+          ));
         }
       }
     }
