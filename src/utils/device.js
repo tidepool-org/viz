@@ -98,7 +98,7 @@ export function getUppercasedManufacturer(manufacturer = '') {
  * @returns {Array} settings overrides
  */
 export function getSettingsOverrides(manufacturer) {
-  return _.get(settingsOverrides, getUppercasedManufacturer(manufacturer), overrides.default);
+  return _.get(settingsOverrides, getUppercasedManufacturer(manufacturer), settingsOverrides.default);
 }
 
 /**
