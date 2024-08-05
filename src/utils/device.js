@@ -98,8 +98,7 @@ export function getUppercasedManufacturer(manufacturer = '') {
  * @returns {Array} settings overrides
  */
 export function getSettingsOverrides(manufacturer) {
-  const overrides = _.cloneDeep(settingsOverrides);
-  return _.get(overrides, getUppercasedManufacturer(manufacturer), overrides.default);
+  return _.get(settingsOverrides, getUppercasedManufacturer(manufacturer), overrides.default);
 }
 
 /**

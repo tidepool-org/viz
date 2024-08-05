@@ -41,7 +41,6 @@ class PumpSettingsOverrideTooltip extends PureComponent {
         <div className={styles.target}>
           <div className={styles.label}>{t('Correction Range')}{bgUnits ? ` (${bgUnits})` : ''}</div>
           <div className={styles.value}>{value}</div>
-          <div className={this.unitStyles} />
         </div>
       );
     }
