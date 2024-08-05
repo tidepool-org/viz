@@ -445,6 +445,8 @@ export class AggregationUtil {
           if (previousSiteChangeDates[type]) {
             const dateDiff = Date.parse(dataForDay.key) - Date.parse(previousSiteChangeDates[type]);
             processedData[dataForDay.key].summary.daysSince[type] = dateDiff / MS_IN_DAY;
+          } else {
+            processedData[dataForDay.key].summary.daysSince[type] = NaN;
           }
 
           previousSiteChangeDates[type] = dataForDay.key;

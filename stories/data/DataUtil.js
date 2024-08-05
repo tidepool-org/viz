@@ -44,7 +44,7 @@ const notes = `**RUN** the \`accountTool.py export\` command from the \`tidepool
 \n\r**THEN** Save the resulting file to the \`local/\` directory of viz as \`rawData.json\`,
 and then use this story to generate DataUtil queries outside of Tidepool Web!`;
 
-const Results = ({ results, showData, showStats }) => {
+const Results = ({ manufacturer, results, showData, showStats }) => {
   const statData = _.get(results, 'data.current.stats');
   const days = _.get(results, 'data.current.endpoints.days', 1);
   const allStats = [];
@@ -68,6 +68,7 @@ const Results = ({ results, showData, showStats }) => {
       days,
       bgPrefs: results.bgPrefs,
       bgSource: _.get(results, 'metaData.bgSources.current'),
+      manufacturer,
     }));
   });
 
@@ -174,14 +175,23 @@ stories.add('Query Generator', (opts, props) => {
     bolus: {
       ...commonFields,
       ...computedFields,
-      subType: 'subType',
-      normal: 'normal',
+      dosingDecision: 'dosingDecision',
+      duration: 'duration',
+      expectedDuration: 'expectedDuration',
+      expectedExtended: 'expectedExtended',
       expectedNormal: 'expectedNormal',
       extended: 'extended',
-      expectedExtended: 'expectedExtended',
-      duration: 'duration',
+      normal: 'normal',
+      subType: 'subType',
+      units: 'units',
       wizard: 'wizard',
-      expectedDuration: 'expectedDuration',
+    },
+    food: {
+      ...commonFields,
+      ...computedFields,
+      nutrition: 'nutrition',
+      name: 'name',
+      payload: 'payload',
     },
     wizard: {
       ...commonFields,
@@ -216,6 +226,35 @@ stories.add('Query Generator', (opts, props) => {
       insulinSensitivity: 'insulinSensitivity',
       insulinSensitivities: 'insulinSensitivities',
       units: 'units',
+      automatedDelivery: 'automatedDelivery',
+      bloodGlucoseSafetyLimit: 'bloodGlucoseSafetyLimit',
+      bloodGlucoseTargetPhysicalActivity: 'bloodGlucoseTargetPhysicalActivity',
+      bloodGlucoseTargetPreprandial: 'bloodGlucoseTargetPreprandial',
+      bolus: 'bolus',
+      name: 'name',
+      overridePresets: 'overridePresets',
+      model: 'model',
+      serialNumber: 'serialNumber',
+    },
+    pumpStatus: {
+      ...commonFields,
+      ...computedFields,
+      basalDelivery: 'basalDelivery',
+      battery: 'battery',
+      bolusDelivery: 'bolusDelivery',
+      deliveryIndeterminant: 'deliveryIndeterminant',
+      reservoir: 'reservoir',
+    },
+    controllerSettings: {
+      ...commonFields,
+      ...computedFields,
+      device: 'device',
+      notifications: 'notifications',
+    },
+    controllerStatus: {
+      ...commonFields,
+      ...computedFields,
+      battery: 'battery',
     },
     cgmSettings: {
       ...commonFields,
@@ -230,6 +269,36 @@ stories.add('Query Generator', (opts, props) => {
       reason: 'reason',
       status: 'status',
       subType: 'subType',
+      primeTarget: 'primeTarget',
+      overrideType: 'overrideType',
+      overridePreset: 'overridePreset',
+      method: 'method',
+      duration: 'duration',
+      expectedDuration: 'expectedDuration',
+      bloodGlucoseTarget: 'bloodGlucoseTarget',
+      basalRateScaleFactor: 'basalRateScaleFactor',
+      carbohydrateRatioScaleFactor: 'carbohydrateRatioScaleFactor',
+      insulinSensitivityScaleFactor: 'insulinSensitivityScaleFactor',
+      units: 'units',
+    },
+    dosingDecision: {
+      ...commonFields,
+      ...computedFields,
+      associations: 'associations',
+      bgForecast: 'bgForecast',
+      bgTargetSchedule: 'bgTargetSchedule',
+      bolus: 'bolus',
+      food: 'food',
+      insulinOnBoard: 'insulinOnBoard',
+      originalFood: 'originalFood',
+      pumpSettings: 'pumpSettings',
+      reason: 'reason',
+      recommendedBolus: 'recommendedBolus',
+      requestedBolus: 'requestedBolus',
+    },
+    alert: {
+      ...commonFields,
+      ...computedFields,
     },
     message: {
       time: 'time',
@@ -244,11 +313,17 @@ stories.add('Query Generator', (opts, props) => {
     cbg: 'cbg',
     basal: 'basal',
     bolus: 'bolus',
+    food: 'food',
     wizard: 'wizard',
     upload: 'upload',
     pumpSettings: 'pumpSettings',
+    pumpStatus: 'pumpStatus',
+    controllerSettings: 'controllerSettings',
+    controllerStatus: 'controllerStatus',
     cgmSettings: 'cgmSettings',
     deviceEvent: 'deviceEvent',
+    dosingDecision: 'dosingDecision',
+    alert: 'alert',
     message: 'message',
   };
 
@@ -467,12 +542,15 @@ stories.add('Query Generator', (opts, props) => {
 
   const showData = () => boolean('Render Data', true);
   const showStats = () => boolean('Render Stats', true);
-  const query = () => object('Query', defaultQuery);
+
+  // eslint-disable-next-line no-unused-vars
+  const query = () => object('Query', defaultQuery); // need to have this unused knob defined or the results won't update
 
   return <Results
     showStats={showStats()}
     showData={showData()}
-    results={dataUtil.query(query())}
+    manufacturer={dataUtil.latestPumpUpload?.manufacturer}
+    results={dataUtil.query(defaultQuery)}
   />;
 }, { notes });
 

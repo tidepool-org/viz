@@ -1509,16 +1509,22 @@ describe('stat', () => {
 
       expect(statData.data).to.eql([
         {
+          id: 'sleep',
+          value: 100000,
+          title: 'Time In Sleep',
+          legendTitle: 'Sleep',
+        },
+        {
           id: 'physicalActivity',
           value: 20000,
           title: 'Time In Exercise',
           legendTitle: 'Exercise',
         },
         {
-          id: 'sleep',
-          value: 100000,
-          title: 'Time In Sleep',
-          legendTitle: 'Sleep',
+          id: 'preprandial',
+          value: 0,
+          title: 'Time In Premeal',
+          legendTitle: 'Premeal',
         },
       ]);
 
@@ -1864,6 +1870,9 @@ describe('stat', () => {
         count: statFormats.bgCount,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
+      expect(def.hideSummaryUnits).to.be.true;
+      expect(def.reverseLegendOrder).to.be.true;
     });
 
     it('should define the `sensorUsage` stat', () => {
@@ -1899,6 +1908,7 @@ describe('stat', () => {
         tooltip: statFormats.duration,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
     });
 
     it('should define the `timeInOverride` stat', () => {
@@ -1912,6 +1922,8 @@ describe('stat', () => {
         tooltip: statFormats.duration,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
+      expect(def.reverseLegendOrder).to.be.true;
     });
 
     it('should define the `timeInRange` stat', () => {
@@ -1926,6 +1938,9 @@ describe('stat', () => {
         tooltipTitle: statFormats.bgRange,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
+      expect(def.hideSummaryUnits).to.be.true;
+      expect(def.reverseLegendOrder).to.be.true;
     });
 
     it('should define the `totalInsulin` stat', () => {
@@ -1940,6 +1955,7 @@ describe('stat', () => {
         tooltip: statFormats.units,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
     });
   });
 

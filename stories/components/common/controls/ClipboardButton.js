@@ -22,6 +22,8 @@ const omnipodFlatRateData = require('../../../../data/pumpSettings/omnipod/flatr
 const omnipodMultiRateData = require('../../../../data/pumpSettings/omnipod/multirate.json');
 const equilFlatRateData = require('../../../../data/pumpSettings/equil/flatrate.json');
 const equilMultiRateData = require('../../../../data/pumpSettings/equil/multirate.json');
+const loopFlatRateData = require('../../../../data/pumpSettings/loop/flatrate.json');
+const loopMultiRateData = require('../../../../data/pumpSettings/loop/multirate.json');
 const tandemFlatRateData = require('../../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultiRateData = require('../../../../data/pumpSettings/tandem/multirate.json');
 
@@ -45,6 +47,10 @@ const data = {
     equil: {
       flatrate: equilFlatRateData,
       multirate: equilMultiRateData,
+    },
+    loop: {
+      flatrate: loopFlatRateData,
+      multirate: loopMultiRateData,
     },
     tandem: {
       flatrate: tandemFlatRateData,
@@ -193,6 +199,24 @@ stories.add('Equil Multi Rate', () => (
     <ClipboardButton
       onSuccess={_.noop}
       getText={nonTandemText.bind(this, profiles.standard, data.settings.equil.multirate, MGDL_UNITS, 'microtech')}
+    />
+  </Wrapper>
+));
+
+stories.add('Loop Flat Rate', () => (
+  <Wrapper>
+    <ClipboardButton
+      onSuccess={_.noop}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.loop.flatrate, MGDL_UNITS, 'tidepool loop')}
+    />
+  </Wrapper>
+));
+
+stories.add('Loop Multi Rate', () => (
+  <Wrapper>
+    <ClipboardButton
+      onSuccess={_.noop}
+      getText={nonTandemText.bind(this, profiles.standard, data.settings.loop.multirate, MGDL_UNITS, 'tidepool loop')}
     />
   </Wrapper>
 ));

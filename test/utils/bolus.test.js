@@ -17,6 +17,7 @@
 import _ from 'lodash';
 
 import * as bolusUtils from '../../src/utils/bolus';
+import { MS_IN_HOUR } from '../../src/utils/constants';
 
 /* eslint-disable no-unused-vars */
 
@@ -228,6 +229,56 @@ const withCarbInput = {
   carbInput: 75,
 };
 
+const withDosingDecision = {
+  type: 'bolus',
+  normal: 5,
+  bgInput: 192,
+  carbInput: 24,
+  insulinOnBoard: 2.654,
+  dosingDecision: {
+    recommendedBolus: {
+      amount: 2.8,
+    },
+    insulinOnBoard: {
+      amount: 2.2354,
+    },
+  },
+};
+
+const withDosingDecisionInterrupted = {
+  ...withDosingDecision,
+  expectedNormal: withDosingDecision.normal + 0.5,
+};
+
+const withDosingDecisionOverride = {
+  ...withDosingDecision,
+  dosingDecision: {
+    ...withDosingDecision.dosingDecision,
+    recommendedBolus: {
+      amount: withDosingDecision.normal - 0.5,
+    },
+  },
+};
+
+const withDosingDecisionUnderride = {
+  ...withDosingDecision,
+  dosingDecision: {
+    ...withDosingDecision.dosingDecision,
+    recommendedBolus: {
+      amount: withDosingDecision.normal + 0.5,
+    },
+  },
+};
+
+const withDosingDecisionCorrection = {
+  ...withDosingDecision,
+  dosingDecision: {
+    ...withDosingDecision.dosingDecision,
+    recommendedBolus: { amount: 0.5 },
+    food: { nutrition: { carbohydrate: { net: 0 } } },
+  },
+};
+
 describe('bolus utilities', () => {
   describe('getBolusFromInsulinEvent', () => {
     it('should be a function', () => {
@@ -301,6 +352,10 @@ describe('bolus utilities', () => {
 
     it('should return the `carbInput` from a wizard', () => {
       expect(bolusUtils.getCarbs(withCarbInput)).to.equal(withCarbInput.carbInput);
+    });
+
+    it('should return the `carbInput` from a bolus with dosing decision', () => {
+      expect(bolusUtils.getCarbs(withDosingDecision)).to.equal(withDosingDecision.carbInput);
     });
   });
 
@@ -429,6 +484,11 @@ describe('bolus utilities', () => {
     it('should return `net` rec when `net` rec exists', () => {
       const { recommended: { net } } = withNetRec;
       expect(bolusUtils.getRecommended(withNetRec)).to.equal(net);
+    });
+
+    it('should return `amount` rec when `amount` rec exists on dosing decision', () => {
+      const { recommendedBolus: { amount } } = withDosingDecision.dosingDecision;
+      expect(bolusUtils.getRecommended(withDosingDecision)).to.equal(amount);
     });
 
     it('should return 0 when no bolus recommended, even if overridden', () => {
@@ -831,6 +891,10 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isInterruptedBolus(cancelled)).to.be.true;
     });
 
+    it('should return `true` on a cancelled `normal` loop bolus', () => {
+      expect(bolusUtils.isInterruptedBolus(withDosingDecisionInterrupted)).to.be.true;
+    });
+
     it('should return `true` on all types of cancelled `extended` bolus', () => {
       expect(bolusUtils.isInterruptedBolus(immediatelyCancelledExtended)).to.be.true;
       expect(bolusUtils.isInterruptedBolus(cancelledExtended)).to.be.true;
@@ -876,6 +940,7 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isOverride(correctionOverride)).to.be.true;
       expect(bolusUtils.isOverride(override)).to.be.true;
       expect(bolusUtils.isOverride(comboOverride)).to.be.true;
+      expect(bolusUtils.isOverride(withDosingDecisionOverride)).to.be.true;
     });
 
     it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
@@ -913,6 +978,7 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isUnderride(correctionUnderride)).to.be.true;
       expect(bolusUtils.isUnderride(withNetRec)).to.be.true;
       expect(bolusUtils.isUnderride(comboUnderrideCancelled)).to.be.true;
+      expect(bolusUtils.isUnderride(withDosingDecisionUnderride)).to.be.true;
     });
 
     it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
@@ -946,6 +1012,7 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isCorrection(correction)).to.be.true;
       expect(bolusUtils.isCorrection(correctionOverride)).to.be.true;
       expect(bolusUtils.isCorrection(correctionUnderride)).to.be.true;
+      expect(bolusUtils.isCorrection(withDosingDecisionCorrection)).to.be.true;
     });
 
     it('should also work for boluses with wizard datum nested under the `wizard` property', () => {

@@ -22,7 +22,7 @@
   flex-direction: column;
   min-width: 160px;
   margin: 2px 0;
-  max-width: 180px;
+  max-width: 250px;
 }
 
 .row {
@@ -120,14 +120,8 @@
   composes: row;
 }
 
-.dividerSmall {
+.divider {
   background-color: var(--bolus);
-  height: 2px;
-  margin: 5px -10px;
-}
-
-.dividerLarge {
-  background-color: var(--bolus);
-  height: 4px;
+  height: 3px;
   margin: 5px -10px;
 }

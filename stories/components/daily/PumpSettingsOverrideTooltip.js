@@ -1,16 +1,20 @@
 import React from 'react';
+import moment from 'moment';
 
 import { storiesOf } from '@storybook/react';
 
 import PumpSettingsOverrideTooltip from '../../../src/components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
-import { MS_IN_HOUR } from '../../../src/utils/constants';
+import { MGDL_UNITS, MS_IN_HOUR } from '../../../src/utils/constants';
+
+const now = moment().valueOf();
 
 const sleep = {
   duration: MS_IN_HOUR * 8,
   overrideType: 'sleep',
   source: 'tandem',
   subType: 'pumpSettingsOverride',
-  normalTime: 1612150251000,
+  normalTime: moment(now).subtract(1, 'h').valueOf(),
+  normalEnd: now,
   type: 'deviceEvent',
 };
 
@@ -19,13 +23,29 @@ const physicalActivity = {
   overrideType: 'physicalActivity',
   source: 'tandem',
   subType: 'pumpSettingsOverride',
-  normalTime: 1612150251000 - MS_IN_HOUR * 5,
+  normalTime: moment(now).subtract(1, 'h').valueOf(),
+  normalEnd: now,
   type: 'deviceEvent',
+};
+
+const preprandial = {
+  duration: MS_IN_HOUR * 1,
+  overrideType: 'preprandial',
+  source: 'diy loop',
+  subType: 'pumpSettingsOverride',
+  normalTime: moment(now).subtract(1, 'h').valueOf(),
+  normalEnd: now,
+  type: 'deviceEvent',
+  bgTarget: {
+    low: 110.554,
+    high: 120.004,
+  },
 };
 
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
+  bgPrefs: { bgUnits: MGDL_UNITS },
 };
 
 const BackgroundDecorator = story => (
@@ -59,5 +79,11 @@ storiesOf('PumpSettingsOverrideTooltip', module)
     <div>
       {refDiv}
       <PumpSettingsOverrideTooltip {...props} override={physicalActivity} />
+    </div>
+  ))
+  .add('Premeal', () => (
+    <div>
+      {refDiv}
+      <PumpSettingsOverrideTooltip {...props} tail={false} side="top" override={preprandial} />
     </div>
   ));
