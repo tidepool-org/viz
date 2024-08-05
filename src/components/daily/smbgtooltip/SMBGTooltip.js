@@ -75,7 +75,7 @@ class SMBGTooltip extends PureComponent {
       rows.push(
         <div
           key={'divider'}
-          className={styles.dividerLarge}
+          className={styles.divider}
           style={{ backgroundColor: colors[bgClass] }}
         />
       );

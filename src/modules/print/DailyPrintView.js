@@ -61,6 +61,7 @@ import {
   MMOLL_UNITS,
   MS_IN_MIN,
   PHYSICAL_ACTIVITY,
+  PREPRANDIAL,
   SCHEDULED_DELIVERY,
   SLEEP,
 } from '../../utils/constants';
@@ -96,6 +97,7 @@ class DailyPrintView extends PrintView {
     this.pumpSettingsOverrideLabels = {
       [SLEEP]: deviceLabels[SLEEP],
       [PHYSICAL_ACTIVITY]: deviceLabels[PHYSICAL_ACTIVITY],
+      [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
     this.bgAxisFontSize = 5;
@@ -831,8 +833,8 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderFoodCarbs({ bolusScale, data: { food }, xScale }) {
-    const circleOffset = 1;
+  renderFoodCarbs({ data: { food }, xScale, topEdge }) {
+    const circleOffset = 10;
     const textOffset = 1.75;
 
     _.each(food, foodEvent => {
@@ -840,7 +842,7 @@ class DailyPrintView extends PrintView {
 
       if (carbs) {
         const carbsX = xScale(foodEvent.normalTime);
-        const carbsY = bolusScale(0) - this.carbRadius - circleOffset;
+        const carbsY = topEdge + (this.carbRadius + circleOffset);
         this.doc.circle(carbsX, carbsY, this.carbRadius)
           .fill(this.colors.carbs);
         this.doc.font(this.font)

@@ -55,3 +55,9 @@
   composes: row;
   font-weight: bold;
 }
+
+.divider {
+  background-color: var(--bolus);
+  height: 3px;
+  margin: 5px -10px;
+}

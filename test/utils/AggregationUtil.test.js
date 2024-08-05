@@ -375,7 +375,7 @@ describe('AggregationUtil', () => {
     });
 
     it('should summarize days since previous siteChange for all siteChange events for each date in the date range', () => {
-      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-02'].summary.daysSince).to.eql({ cannulaPrime: 1 });
+      expect(aggregationUtil.aggregateSiteChanges(groupByDate).byDate['2018-02-02'].summary.daysSince).to.eql({ cannulaPrime: 1, tubingPrime: NaN });
     });
 
     it('should count total `cannulaPrime`, `reservoirChange`, and `tubingPrime` siteChange events for each date in the date range', () => {

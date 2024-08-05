@@ -41,7 +41,7 @@ export function noData(val) {
 
 /**
  * deviceName
- * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech
+ * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech, loop
  *
  * @return {String}              name for given manufacturer
  */
@@ -52,6 +52,8 @@ export function deviceName(manufacturer) {
     medtronic: 'Medtronic',
     tandem: 'Tandem',
     microtech: 'Equil',
+    'diy loop': 'DIY Loop',
+    'tidepool loop': 'Tidepool Loop',
   };
   return DEVICE_DISPLAY_NAME_BY_MANUFACTURER[manufacturer] || manufacturer;
 }
@@ -152,7 +154,7 @@ export function getTotalBasalRates(scheduleData) {
  * getScheduleLabel
  * @param  {String} scheduleName  basal schedule name
  * @param  {String} activeName    name of active basal schedule at time of upload
- * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech
+ * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
  * @param  {Boolean} noUnits      whether units should be included in label object
  *
  * @return {Object}              object representing basal schedule label
@@ -390,8 +392,13 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   const deviceLabels = getPumpVocabulary(manufacturer);
   const maxBasal = _.get(settings, scheduleName ? `basal[${scheduleName}].rateMaximum.value` : 'basal.rateMaximum.value');
   const maxBolus = _.get(settings, scheduleName ? `bolus[${scheduleName}].amountMaximum.value` : 'bolus.amountMaximum.value');
-  const insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
+  let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
+
+  if (_.includes(['diy loop', 'tidepool loop'], manufacturer)) {
+    insulinDuration = _.get(settings, 'insulinModel.actionDuration');
+    insulinDurationUnits = 'milliseconds';
+  }
 
   const columns = [
     { key: 'setting' },
@@ -400,6 +407,15 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
 
   if (insulinDurationUnits === 'minutes') {
     const durationInHours = Math.floor(insulinDuration / 60);
+    const minutesRemainder = insulinDuration % 60;
+
+    insulinDuration = (minutesRemainder > 0)
+      ? `${durationInHours}:${_.padStart(minutesRemainder, 2, '0')}`
+      : durationInHours;
+  }
+
+  if (insulinDurationUnits === 'milliseconds') {
+    const durationInHours = Math.floor(insulinDuration / 60 / 60);
     const minutesRemainder = insulinDuration % 60;
 
     insulinDuration = (minutesRemainder > 0)

@@ -20,6 +20,7 @@ import React from 'react';
 import { mount } from 'enzyme';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
+import { MS_IN_HOUR } from '../../../src/utils/constants';
 
 import PumpSettingsOverrideTooltip from '../../../src/components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import styles from '../../../src/components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip.css';
@@ -38,6 +39,20 @@ const physicalActivity = {
   normalTime: Date.parse('2021-03-10T00:00:00.000Z'),
   normalEnd: Date.parse('2021-03-10T08:00:00.000Z'),
   source: 'Tandem',
+};
+
+const preprandialWithBgTarget = {
+  duration: MS_IN_HOUR * 1,
+  overrideType: 'preprandial',
+  source: 'diy loop',
+  subType: 'pumpSettingsOverride',
+  normalTime: Date.parse('2021-03-10T00:00:00.000Z'),
+  normalEnd: Date.parse('2021-03-10T08:00:00.000Z'),
+  type: 'deviceEvent',
+  bgTarget: {
+    low: 110.554,
+    high: 120.004,
+  },
 };
 
 const props = {
@@ -87,5 +102,21 @@ describe('PumpSettingsOverrideTooltip', () => {
     const tooltipWrapper = wrapper.find(Tooltip);
     expect(tooltipWrapper.props().borderColor).to.be.a('string').and.equal(colors.physicalActivity);
     expect(tooltipWrapper.props().tailColor).to.be.a('string').and.equal(colors.physicalActivity);
+  });
+
+  it('should render the override type for a preprandial override and use the appropriate color', () => {
+    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0)).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0).text()).to.equal('Premeal');
+
+    const tooltipWrapper = wrapper.find(Tooltip);
+    expect(tooltipWrapper.props().borderColor).to.be.a('string').and.equal(colors.preprandial);
+    expect(tooltipWrapper.props().tailColor).to.be.a('string').and.equal(colors.preprandial);
+  });
+
+  it('should render the bgTarget for an override', () => {
+    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.label)).at(1).text()).to.equal('Correction Range');
+    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(1).text()).to.equal('111-120');
   });
 });
