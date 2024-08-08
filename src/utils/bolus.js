@@ -333,23 +333,41 @@ export function isInterruptedBolus(insulinEvent) {
 }
 
 /**
+ * isDifferentBeyondPrecision
+ * @param {number} a - The first number to compare.
+ * @param {number} b - The second number to compare.
+ * @param {number} precision - The number of decimal places to consider.
+ *
+ * @returns {boolean} Whether the numbers are different when rounded to the specified precision.
+ */
+export function isDifferentBeyondPrecision(a, b, precision) {
+  return _.round(a, precision) !== _.round(b, precision);
+}
+
+/**
  * isOverride
  * @param {Object} insulinEvent - a Tidepool bolus or wizard object
  *
- * @return {Boolean} whether the bolus programmed was larger than the calculated recommendation
+ * @return {Boolean} Whether the programmed amount is both significantly different (beyond 2 decimal places) from and larger than the recommended amount.
  */
 export function isOverride(insulinEvent) {
-  return getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent) < getProgrammed(insulinEvent);
+  const amountRecommended= getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
+  const amountProgrammed = getProgrammed(insulinEvent);
+
+  return isDifferentBeyondPrecision(amountRecommended, amountProgrammed, 2) && amountProgrammed > amountRecommended;
 }
 
 /**
  * isUnderride
  * @param {Object} insulinEvent - a Tidepool bolus or wizard object
  *
- * @return {Boolean} whether the bolus programmed was smaller than the calculated recommendation
+ * @return {Boolean} Whether the programmed amount is both significantly different (beyond 2 decimal places) from and smaller than the recommended amount.
  */
 export function isUnderride(insulinEvent) {
-  return getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent) > getProgrammed(insulinEvent);
+  const amountRecommended= getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
+  const amountProgrammed = getProgrammed(insulinEvent);
+
+  return isDifferentBeyondPrecision(amountRecommended, amountProgrammed, 2) && amountProgrammed < amountRecommended;
 }
 
 /**
