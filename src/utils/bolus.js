@@ -351,7 +351,7 @@ export function isDifferentBeyondPrecision(a, b, precision) {
  * @return {Boolean} Whether the programmed amount is both significantly different (beyond 2 decimal places) from and larger than the recommended amount.
  */
 export function isOverride(insulinEvent) {
-  const amountRecommended= getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
+  const amountRecommended = getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
   const amountProgrammed = getProgrammed(insulinEvent);
 
   return isDifferentBeyondPrecision(amountRecommended, amountProgrammed, 2) && amountProgrammed > amountRecommended;
@@ -364,7 +364,7 @@ export function isOverride(insulinEvent) {
  * @return {Boolean} Whether the programmed amount is both significantly different (beyond 2 decimal places) from and smaller than the recommended amount.
  */
 export function isUnderride(insulinEvent) {
-  const amountRecommended= getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
+  const amountRecommended = getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
   const amountProgrammed = getProgrammed(insulinEvent);
 
   return isDifferentBeyondPrecision(amountRecommended, amountProgrammed, 2) && amountProgrammed < amountRecommended;
