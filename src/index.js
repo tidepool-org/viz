@@ -48,6 +48,8 @@ import {
   getTimezoneFromTimePrefs,
 } from './utils/datetime';
 
+import { deviceName } from './utils/settings/data';
+
 import {
   commonStats,
   getStatAnnotations,
@@ -131,6 +133,9 @@ const utils = {
     getStatTitle,
     statBgSourceLabels,
     statFetchMethods,
+  },
+  settings: {
+    deviceName,
   },
   aggregation: {
     defineBasicsAggregations,
