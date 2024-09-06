@@ -999,16 +999,17 @@ describe('stat', () => {
 
     describe('timeInOverride', () => {
       it('should return annotations for `timeInOverride` stat when viewing a single day of data', () => {
+        _.each(stat.getStatAnnotations(data, commonStats.timeInOverride, singleDayOpts), m => console.log(m))
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, singleDayOpts)).to.have.ordered.members([
           '**Time In Settings Override:** Time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided by the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in Settings Override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in a settings override divided by the total duration for this time period.\n\n**(time)** is total duration of time in a settings override.',
         ]);
       });
 
       it('should return annotations for `timeInOverride` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, multiDayOpts)).to.have.ordered.members([
           '**Time In Settings Override:** Daily average of the time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided by the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in Settings Override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in a settings override divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a settings override.',
         ]);
       });
     });
