@@ -120,8 +120,8 @@ function sensitivityTitle(manufacturer) {
     insulet: t('Correction factor'),
     medtronic: t('Sensitivity'),
     microtech: t('Insulin Sensitivity'),
-    'diy loop': t('Insulin Sensitivity'),
-    'tidepool loop': t('Insulin Sensitivity'),
+    'diy loop': t('Insulin Sensitivities'),
+    'tidepool loop': t('Insulin Sensitivities'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -171,8 +171,8 @@ function ratioTitle(manufacturer) {
     insulet: t('IC ratio'),
     medtronic: t('Carb Ratios'),
     microtech: t('Carbohydrate Ratio'),
-    'diy loop': t('Carbohydrate Ratio'),
-    'tidepool loop': t('Carbohydrate Ratio'),
+    'diy loop': t('Carb Ratios'),
+    'tidepool loop': t('Carb Ratios'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -218,8 +218,8 @@ function targetTitle(manufacturer) {
     insulet: t('Target BG'),
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
-    'diy loop': t('Target BG'),
-    'tidepool loop': t('Target BG'),
+    'diy loop': t('Correction Range'),
+    'tidepool loop': t('Correction Range'),
   };
   return BG_TARGET_BY_MANUFACTURER[manufacturer];
 }

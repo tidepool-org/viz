@@ -27,6 +27,7 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
 import { deviceName, insulinSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
+import { isLoop } from '../../utils/device';
 
 import styles from './NonTandem.css';
 
@@ -50,6 +51,8 @@ const NonTandem = (props) => {
   if (deviceKey === 'carelink') {
     lookupKey = 'medtronic';
   }
+
+  const showCategoryTitle = !isLoop(pumpSettings);
 
   function buildTable(rows, columns, title, tableStyle) {
     return (
@@ -113,6 +116,27 @@ const NonTandem = (props) => {
               basal.columns,
               title,
               [labelClass, styles.settingsTable].join(' ')
+            )}
+          </div>
+        );
+      }
+
+      if (isLoop(pumpSettings)) {
+        labelClass = styles.basalScheduleHeader;
+        basal.title.secondary = basal.title.secondary.toLowerCase();
+
+        const title = {
+          label: { main: t('Basal Rates'), secondary: 'U/hr' },
+          className: styles.singleLineBasalScheduleHeader,
+        };
+
+        return (
+          <div className={styles.categoryContainer} key={schedule}>
+            {buildTable(
+              basal.rows,
+              basal.columns,
+              title,
+              styles.basalTable
             )}
           </div>
         );
@@ -221,21 +245,13 @@ const NonTandem = (props) => {
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
-      {!_.includes(['animas', 'microtech'], lookupKey) && (
-        <div className={styles.settingsContainer}>
-          <div className={styles.insulinSettingsContainer}>
-            <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
-            {renderInsulinSettings()}
-          </div>
-        </div>
-      )}
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>
-          <div className={styles.categoryTitle}>{t('Basal Rates')}</div>
+          {showCategoryTitle && <div className={styles.categoryTitle}>{t('Basal Rates')}</div>}
           {renderBasalsData()}
         </div>
         <div className={styles.bolusSettingsContainer}>
-          <div className={styles.categoryTitle}>{nonTandemData.bolusTitle(lookupKey)}</div>
+          {showCategoryTitle && <div className={styles.categoryTitle}>{nonTandemData.bolusTitle(lookupKey)}</div>}
           <div className={styles.bolusSettingsInnerContainer}>
             {renderSensitivityData()}
             {renderTargetData()}
@@ -243,6 +259,14 @@ const NonTandem = (props) => {
           </div>
         </div>
       </div>
+      {!_.includes(['animas', 'microtech'], lookupKey) && (
+        <div className={styles.settingsContainer}>
+          <div className={styles.insulinSettingsContainer}>
+            {showCategoryTitle && <div className={styles.categoryTitle}>{t('Pump Settings')}</div>}
+            {renderInsulinSettings()}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

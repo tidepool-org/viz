@@ -33,17 +33,18 @@
 .insulinSettingsContainer {
   width: 25%;
   min-width: 240px;
-  margin-bottom: 15px;
 }
 
 .basalSettingsContainer {
   flex-basis: 25%;
+  margin-bottom: 15px;
 }
 
 .bolusSettingsContainer {
   display: flex;
   flex-wrap: wrap;
   flex-basis: 75%;
+  margin-bottom: 15px;
 }
 
 .bolusSettingsInnerContainer {
