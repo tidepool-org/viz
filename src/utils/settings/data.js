@@ -20,7 +20,7 @@ import i18next from 'i18next';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
-import { getPumpVocabulary, isDIYLoop } from '../device';
+import { getPumpVocabulary, isDIYLoop, isLoop } from '../device';
 
 import {
   MAX_BOLUS,
@@ -393,11 +393,14 @@ export function startTimeAndValue(valueKey) {
  * @param  {String} [scheduleName] name of schedule for tandem settings
  */
 export function insulinSettings(settings, manufacturer, scheduleName) {
+  const bgUnits = settings?.units?.bg;
   const deviceLabels = getPumpVocabulary(manufacturer);
   const maxBasal = _.get(settings, scheduleName ? `basal[${scheduleName}].rateMaximum.value` : 'basal.rateMaximum.value');
   const maxBolus = _.get(settings, scheduleName ? `bolus[${scheduleName}].amountMaximum.value` : 'bolus.amountMaximum.value');
   let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
+
+  console.log('settings', settings);
 
   if (_.includes(['diy loop', 'tidepool loop'], manufacturer)) {
     insulinDuration = _.get(settings, 'insulinModel.actionDuration');
@@ -432,6 +435,18 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
     { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
+
+  if (isLoop(settings)) {
+    rows.unshift({
+      setting: t('Glucose Safety Limit'),
+      value: format.formatBgValue(settings?.bgSafetyLimit, { bgUnits }) + ` ${bgUnits}`,
+    });
+
+    rows.splice(3, 1, {
+      setting: t('Insulin Model'),
+      value: settings?.insulinModel === 'rapidAdult' ? t('Rapid Acting - Adults') : t('Rapid Acting - Children'),
+    });
+  }
 
   // Tandem insulin settings do not have max basal
   if (manufacturer === 'tandem') rows.shift();
