@@ -18,6 +18,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 import * as data from './data';
 import { pumpVocabulary, AUTOMATED_DELIVERY } from '../constants';
+import { isLoop } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -297,7 +298,12 @@ function targetRows(settings, units, manufacturer) {
  * @return {Object}                object with target title, columns and rows
  */
 export function target(settings, manufacturer, units) {
+  const annotations = isLoop(settings)
+    ? [t('Correction Range is the glucose value (or range of values) that you want Tidepool Loop to aim for in adjusting your basal insulin and helping you calculate your boluses.')]
+    : null;
+
   return {
+    annotations,
     title: targetTitle(manufacturer),
     columns: targetColumns(manufacturer),
     rows: targetRows(settings, units, manufacturer),

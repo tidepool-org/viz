@@ -54,9 +54,10 @@ const NonTandem = (props) => {
 
   const showCategoryTitle = !isLoop(pumpSettings);
 
-  function buildTable(rows, columns, title, tableStyle) {
+  function buildTable(rows, columns, title, tableStyle, annotations) {
     return (
       <Table
+        annotations={annotations}
         title={title}
         rows={rows}
         columns={columns}
@@ -244,7 +245,8 @@ const NonTandem = (props) => {
           target.rows,
           target.columns,
           title,
-          styles.settingsTable
+          styles.settingsTable,
+          target.annotations
         )}
       </div>
     );
@@ -271,9 +273,9 @@ const NonTandem = (props) => {
         <div className={styles.bolusSettingsContainer}>
           {showCategoryTitle && <div className={styles.categoryTitle}>{nonTandemData.bolusTitle(lookupKey)}</div>}
           <div className={styles.bolusSettingsInnerContainer}>
-            {renderSensitivityData()}
             {renderTargetData()}
             {renderRatioData()}
+            {renderSensitivityData()}
           </div>
         </div>
       </div>

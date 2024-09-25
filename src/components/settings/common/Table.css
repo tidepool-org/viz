@@ -25,6 +25,22 @@
   composes: secondaryLeftPadding from '../settings.css';
 }
 
+.tooltipIcon {
+  position: relative;
+  top: 2px;
+  margin-right: .75em;
+  float: right;
+}
+
+.tooltipIcon > img {
+  width: 0.9em;
+}
+
+.TableTooltipWrapper {
+  z-index: 1;
+  position: relative;
+}
+
 @media print {
 
   .secondaryLabelWithMain {

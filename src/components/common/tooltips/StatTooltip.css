@@ -1,6 +1,6 @@
 .row {
   composes: smallSize from '../../../styles/typography.css';
-  line-height: 20px;
+  line-height: 18px;
   max-width: 180px;
   min-width: 160px;
 }
