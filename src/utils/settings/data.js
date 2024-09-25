@@ -16,17 +16,21 @@
  */
 
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
-import { getPumpVocabulary } from '../device';
+import { getPumpVocabulary, isDIYLoop } from '../device';
 
 import {
   MAX_BOLUS,
   MAX_BASAL,
   INSULIN_DURATION,
+  PHYSICAL_ACTIVITY,
+  PREPRANDIAL,
 } from '../../utils/constants';
 
+const t = i18next.t.bind(i18next);
 const DISPLAY_PRECISION_PLACES = 3;
 
 /**
@@ -385,7 +389,7 @@ export function startTimeAndValue(valueKey) {
  * insulinSettings
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
  * @param  {String} [scheduleName] name of schedule for tandem settings
  */
 export function insulinSettings(settings, manufacturer, scheduleName) {
@@ -431,6 +435,36 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
 
   // Tandem insulin settings do not have max basal
   if (manufacturer === 'tandem') rows.shift();
+
+  return {
+    columns,
+    rows,
+  };
+}
+
+/**
+ * presetSettings
+ *
+ * @param  {Object} settings       object with pump settings data
+ * @param  {String} manufacturer   one of: tidepool loop, diy loop
+ */
+export function presetSettings(settings, manufacturer) {
+  const deviceLabels = getPumpVocabulary(manufacturer);
+  const bgUnits = settings?.units?.bg;
+  const correctionRange = range => `${format.formatBgValue(range?.low, { bgUnits })}-${format.formatBgValue(range?.high, { bgUnits })}`;
+
+  const columns = [
+    { key: 'name', label: 'Name' },
+    { key: 'value', label: t('Correction Range') + ` (${bgUnits})` },
+  ];
+
+  const rows = [
+    { name: deviceLabels[PREPRANDIAL]?.label, value: correctionRange(settings?.bgTargetPreprandial) },
+    { name: deviceLabels[PHYSICAL_ACTIVITY]?.label, value: correctionRange(settings.bgTargetPhysicalActivity) },
+  ];
+
+  // DIY Loop does not have workout preset
+  if (isDIYLoop(settings)) rows.shift();
 
   return {
     columns,

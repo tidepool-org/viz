@@ -25,7 +25,7 @@ import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
-import { deviceName, insulinSettings } from '../../utils/settings/data';
+import { deviceName, insulinSettings, presetSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
 import { isLoop } from '../../utils/device';
 
@@ -78,8 +78,26 @@ const NonTandem = (props) => {
           rows,
           columns,
           {
-            label: { main: 'Insulin Settings' },
+            label: { main: t('Insulin Settings') },
             className: styles.insulinSettingsHeader,
+          },
+          styles.settingsTableInverted
+        )}
+      </div>
+    );
+  }
+
+  function renderPresetSettings() {
+    const { rows, columns } = presetSettings(pumpSettings, lookupKey);
+
+    return (
+      <div className={styles.categoryContainer}>
+        {buildTable(
+          rows,
+          columns,
+          {
+            label: { main: t('Presets') },
+            className: styles.presetSettingsHeader,
           },
           styles.settingsTableInverted
         )}
@@ -260,10 +278,11 @@ const NonTandem = (props) => {
         </div>
       </div>
       {!_.includes(['animas', 'microtech'], lookupKey) && (
-        <div className={styles.settingsContainer}>
-          <div className={styles.insulinSettingsContainer}>
-            {showCategoryTitle && <div className={styles.categoryTitle}>{t('Pump Settings')}</div>}
+        <div className={styles.settingsContainerLeftAligned}>
+          {showCategoryTitle && <div className={styles.categoryTitle}>{t('Pump Settings')}</div>}
+          <div className={styles.insulinSettingsInnerContainer}>
             {renderInsulinSettings()}
+            {isLoop(pumpSettings) && renderPresetSettings()}
           </div>
         </div>
       )}

@@ -73,6 +73,10 @@
   background-image: linear-gradient(to right, var(--bolus) 0, var(--bolus) 14px, #d7f1fb 14px, #d7f1fb 100%);
 }
 
+.presetsHeaderBackground {
+  background-image: linear-gradient(to right, var(--preset) 0, var(--preset) 14px, #F4F5FF 14px, #F4F5FF 100%);
+}
+
 .settingsHeaderDecoration {
   border-bottom: 1px solid var(--table-stripe--dark);
 }
