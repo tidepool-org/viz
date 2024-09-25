@@ -19,8 +19,9 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
 import * as bolusUtils from '../../../utils/bolus';
-import { formatLocalizedFromUTC, formatDuration } from '../../../utils/datetime';
+import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
+import { isLoop } from '../../../utils/device';
 import { getAnnotationMessages } from '../../../utils/annotations';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -34,8 +35,11 @@ class BolusTooltip extends PureComponent {
     super(props);
     const carbs = bolusUtils.getCarbs(props.bolus);
     const carbsInput = _.isFinite(carbs) && carbs > 0;
+    this.bgUnits = this.props.bgPrefs?.bgUnits || '';
     this.carbUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'exch' : 'g';
     this.carbRatioUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'U/exch' : 'g/U';
+    this.isLoop = isLoop(props.bolus);
+    this.msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
     this.unitStyles = (carbsInput && this.carbUnits === 'exch') ? styles.unitsWide : styles.units;
   }
 
@@ -149,6 +153,19 @@ class BolusTooltip extends PureComponent {
         </div>,
       ];
     }
+    if (this.isLoop) {
+      // loop
+      const schedules = _.get(this.props.bolus, 'dosingDecision.bgTargetSchedule', []);
+      const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < this.msPer24);
+      const label = t('Correction Range');
+      return (
+        <div className={styles.target}>
+          <div className={styles.label}>{label} ({this.bgUnits})</div>
+          <div className={styles.value}>{`${this.formatBgValue(range?.low)}-${this.formatBgValue(range?.high)}`}</div>
+          <div className={this.unitStyles} />
+        </div>
+      );
+    }
     // tandem
     return (
       <div className={styles.target}>
@@ -211,8 +228,15 @@ class BolusTooltip extends PureComponent {
     const iob = _.get(wizard, 'insulinOnBoard', null);
     const carbs = bolusUtils.getCarbs(wizard);
     const carbsInput = _.isFinite(carbs) && carbs > 0;
-    const carbRatio = _.get(wizard, 'insulinCarbRatio', null);
-    const isf = _.get(wizard, 'insulinSensitivity', null);
+    let carbRatio = _.get(wizard, 'insulinCarbRatio', null);
+    let isf = _.get(wizard, 'insulinSensitivity', null);
+
+    if (this.isLoop) {
+      const { activeSchedule, carbRatios, insulinSensitivities } = _.get(wizard, 'dosingDecision.pumpSettings', {});
+      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || null;
+      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || null;
+    }
+
     const delivered = bolusUtils.getDelivered(wizard);
     const isInterrupted = bolusUtils.isInterruptedBolus(wizard);
     const programmed = bolusUtils.getProgrammed(wizard);
@@ -249,14 +273,14 @@ class BolusTooltip extends PureComponent {
     const suggestedLine = (isInterrupted || overrideLine) &&
       !!suggested && (
       <div className={styles.suggested}>
-        <div className={styles.label}>{t('Suggested')}</div>
+        <div className={styles.label}>{t('Recommended')}</div>
         <div className={styles.value}>{formatInsulin(suggested)}</div>
         <div className={this.unitStyles}>U</div>
       </div>
     );
     const bgLine = !!bg && (
       <div className={styles.bg}>
-        <div className={styles.label}>{t('BG')}</div>
+        <div className={styles.label}>{t('BG')} ({this.bgUnits})</div>
         <div className={styles.value}>{this.formatBgValue(bg)}</div>
         <div className={this.unitStyles} />
       </div>
@@ -268,7 +292,7 @@ class BolusTooltip extends PureComponent {
         <div className={this.unitStyles}>{this.carbUnits}</div>
       </div>
     );
-    const iobLine = !!iob && (
+    const iobLine = _.isFinite(iob) && (
       <div className={styles.iob}>
         <div className={styles.label}>{t('IOB')}</div>
         <div className={styles.value}>{`${formatInsulin(iob)}`}</div>
@@ -293,7 +317,7 @@ class BolusTooltip extends PureComponent {
     const isfLine = !!isf &&
       !!bg && (
       <div className={styles.isf}>
-        <div className={styles.label}>{t('ISF')}</div>
+        <div className={styles.label}>{t('ISF')} ({this.bgUnits}/U)</div>
         <div className={styles.value}>{`${this.formatBgValue(isf)}`}</div>
         <div className={this.unitStyles} />
       </div>
@@ -306,12 +330,12 @@ class BolusTooltip extends PureComponent {
         {iobLine}
         {suggestedLine}
         {this.getExtended()}
-        {(isInterrupted || overrideLine || hasExtended) && <div className={styles.dividerSmall} />}
+        {(isInterrupted || overrideLine || hasExtended) && <div className={styles.divider} />}
         {overrideLine}
         {interruptedLine}
         {deliveredLine}
         {(icRatioLine || isfLine || bg || isAnimasExtended || isMedronicDeconvertedExchange) && (
-          <div className={styles.dividerLarge} />
+          <div className={styles.divider} />
         )}
         {icRatioLine}
         {isfLine}
@@ -358,7 +382,7 @@ class BolusTooltip extends PureComponent {
         {interruptedLine}
         {deliveredLine}
         {this.getExtended()}
-        {isAnimasExtended && <div className={styles.dividerLarge} />}
+        {isAnimasExtended && <div className={styles.divider} />}
         {this.animasExtendedAnnotationMessage()}
       </div>
     );
@@ -366,7 +390,7 @@ class BolusTooltip extends PureComponent {
 
   renderBolus() {
     let content;
-    if (this.props.bolus.type === 'wizard') {
+    if (this.props.bolus.type === 'wizard' || this.props.bolus?.dosingDecision) {
       content = this.renderWizard();
     } else {
       content = this.renderNormal();

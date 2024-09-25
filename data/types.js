@@ -337,6 +337,7 @@ export class Upload extends Common {
     this.deviceModel = opts.deviceModel;
     this.deviceManufacturers = opts.deviceManufacturers;
     this.deviceSerialNumber = opts.deviceSerialNumber;
+    this.dataSetType = opts.dataSetType;
 
     this.time = this.makeTime();
     this.timezone = opts.timezone;
@@ -401,6 +402,48 @@ export class Wizard extends Common {
   }
 }
 
+export class DosingDecision extends Common {
+  constructor(opts = {}) {
+    super(opts);
+
+    _.defaults(opts, {
+      bgTargetSchedule: [{
+        start: 0,
+        low: 80,
+        high: 100,
+      }],
+      deviceTime: this.makeDeviceTime(),
+      reason: 'normalBolus',
+      recommendedBolus: { amount: '2' },
+      requestedBolus: { amount: '1.5' },
+      units: MGDL_UNITS,
+    });
+
+    this.type = 'dosingDecision';
+
+    this.bgTargetSchedule = opts.bgTargetSchedule;
+    this.pumpSettings = opts.pumpSettings;
+    this.deviceTime = opts.deviceTime;
+    this.reason = opts.reason;
+    this.recommendedBolus = opts.recommendedBolus;
+    this.requestedBolus = opts.requestedBolus;
+
+    this.time = this.makeTime();
+    this.timezoneOffset = this.makeTimezoneOffset();
+    if (opts.raw) {
+      this.units = MMOLL_UNITS;
+
+      this.bgTargetSchedule = _.map(this.bgTargetSchedule, schedule => ({
+        ...schedule,
+        low: schedule.low / MGDL_PER_MMOLL,
+        high: schedule.high / MGDL_PER_MMOLL,
+      }));
+    } else {
+      this.normalTime = this.makeNormalTime();
+    }
+  }
+}
+
 export class Food extends Common {
   constructor(opts = {}) {
     super(opts);
@@ -425,6 +468,7 @@ export const types = {
   Bolus,
   CBG,
   DeviceEvent,
+  DosingDecision,
   Food,
   Message,
   Settings,

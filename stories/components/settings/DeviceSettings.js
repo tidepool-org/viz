@@ -125,6 +125,37 @@ storiesOf('Device Settings [OmniPod]', module)
     />
   ));
 
+const loopFlatRateData = require('../../../data/pumpSettings/loop/flatrate.json');
+const loopMultiRateData = require('../../../data/pumpSettings/loop/multirate.json');
+
+storiesOf('Device Settings [Loop]', module)
+  .add('flat rate', () => (
+    <NonTandem
+      bgUnits={MMOLL_UNITS}
+      copySettingsClicked={() => {}}
+      deviceKey={'tidepool loop'}
+      openedSections={{ [loopFlatRateData.activeSchedule]: true }}
+      view={'display'}
+      pumpSettings={loopFlatRateData}
+      timePrefs={timePrefs}
+      toggleBasalScheduleExpansion={() => {}}
+      user={user}
+    />
+  ))
+  .add('multi rate', () => (
+    <NonTandem
+      bgUnits={MMOLL_UNITS}
+      copySettingsClicked={() => {}}
+      deviceKey={'tidepool loop'}
+      openedSections={{ [loopMultiRateData.activeSchedule]: true }}
+      view={'display'}
+      pumpSettings={loopMultiRateData}
+      timePrefs={timePrefs}
+      toggleBasalScheduleExpansion={() => {}}
+      user={user}
+    />
+  ));
+
 const tandemFlatRateData = require('../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultiRateData = require('../../../data/pumpSettings/tandem/multirate.json');
 
