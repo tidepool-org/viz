@@ -435,19 +435,37 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   ];
 
   if (isLoop(settings)) {
+    const insulinModelLabels = {
+      rapidAdult: t('Rapid-Acting - Adults'),
+      rapidChild: t('Rapid Acting - Children'),
+      fiasp: t('Fiasp'),
+      lyumjev: t('Lyumjev'),
+      afrezza: t('Afrezza'),
+    };
+
+    const insulinModel = {
+      label: insulinModelLabels[settings?.insulinModel?.modelType] || settings?.insulinModel?.modelType || t('Unknown'),
+      peakMinutes: _.isFinite(settings?.insulinModel?.actionPeakOffset) ? settings.insulinModel.actionPeakOffset / 60 : null,
+    }
+
+    const device = deviceName(manufacturer);
+
+    const insulinModelAnnotations = [
+      t('{{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.', { device }),
+    ];
+
+    if (insulinModel.peakMinutes) insulinModelAnnotations.push(t('The {{label}} model assumes peak activity at {{peakMinutes}} minutes.', insulinModel));
+
     rows.unshift({
-      annotations: [t('Tidepool Loop will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.')],
+      annotations: [t('{{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device })],
       setting: t('Glucose Safety Limit'),
       value: format.formatBgValue(settings?.bgSafetyLimit, { bgUnits }) + ` ${bgUnits}`,
     });
 
     rows.splice(3, 1, {
-      annotations: [
-        t('Tidepool Loop assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.'),
-        t('The Rapid-Acting - Adults model assumes peak activity at 75 minutes.')
-      ],
+      annotations: insulinModelAnnotations,
       setting: t('Insulin Model'),
-      value: settings?.insulinModel === 'rapidAdult' ? t('Rapid Acting - Adults') : t('Rapid Acting - Children'),
+      value: insulinModel.label,
     });
   }
 
