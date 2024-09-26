@@ -100,7 +100,7 @@ const NonTandem = (props) => {
             label: { main: t('Presets') },
             className: styles.presetSettingsHeader,
           },
-          styles.settingsTableInverted
+          styles.settingsTable
         )}
       </div>
     );
