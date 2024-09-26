@@ -36,6 +36,17 @@ class Table extends PureComponent {
     this.setTooltipIconRef = ref => {
       this.tooltipIcon = ref;
     };
+
+    this.setRowTooltipIconRefs = {};
+    this.rowTooltipIcons = {};
+
+    _.each(props.rows, (row, index) => {
+      if (row.annotations?.length) {
+        this.setRowTooltipIconRefs[index] = ref => {
+          this.rowTooltipIcons[index] = ref;
+        };
+      }
+    });
   }
 
   getItemField(item, field) {
@@ -81,7 +92,22 @@ class Table extends PureComponent {
 
   renderRow(normalizedColumns, rowKey, rowData) {
     const cells = _.map(normalizedColumns,
-      (column) => <td key={column.key}>{column.cell(rowData, column.key)}</td>
+      (column, columnIndex) => <td key={column.key}>
+        {column.cell(rowData, column.key)}
+        {columnIndex === 0 && rowData.annotations?.length && (
+            <span
+              className={styles.rowTooltipIcon}
+            >
+              <img
+                src={InfoIcon}
+                alt="Hover for more info"
+                ref={this.setRowTooltipIconRefs[rowKey]}
+                onMouseOver={this.handleTooltipIconMouseOver.bind(this, 'rowTooltipIcons', rowKey)}
+                onMouseOut={this.handleTooltipIconMouseOut}
+              />
+            </span>
+          )}
+      </td>
     );
     return (<tr key={rowKey}>{cells}</tr>);
   }
@@ -99,13 +125,29 @@ class Table extends PureComponent {
         annotations={this.props.annotations}
         offset={this.state.messageTooltipOffset}
         position={this.state.messageTooltipPosition}
+        showDividers={this.props.showTooltipDividers}
         side={this.state.messageTooltipSide}
       />
     </div>
   );
 
-  handleTooltipIconMouseOver = () => {
-    const { top, left, width, height } = this.tooltipIcon.getBoundingClientRect();
+  renderRowTooltip = () => {
+    return (
+    <div className={styles.TableTooltipWrapper}>
+      <StatTooltip
+        annotations={this.props.rows[this.state.activeRow]?.annotations}
+        offset={this.state.messageTooltipOffset}
+        position={this.state.messageTooltipPosition}
+        showDividers={this.props.showTooltipDividers}
+        side={this.state.messageTooltipSide}
+      />
+    </div>
+  )};
+
+  handleTooltipIconMouseOver = (refName, activeRow) => {
+    const isRowTooltip = _.isFinite(activeRow);
+    const ref = isRowTooltip ? this[refName][activeRow] : this[refName];
+    const { top, left, width, height } = ref.getBoundingClientRect();
     const {
       top: parentTop,
       left: parentLeft,
@@ -125,18 +167,20 @@ class Table extends PureComponent {
     const side = (_.get(document, 'body.clientWidth', 0) - left < 225) ? 'left' : 'right';
 
     this.setState({
-      showMessage: true,
+      activeRow,
+      showTableTooltip: !isRowTooltip,
+      showRowTooltip: isRowTooltip,
       messageTooltipPosition: position,
       messageTooltipOffset: offset,
       messageTooltipSide: side,
     });
-
-    console.log('this.state', this.state);
   };
 
   handleTooltipIconMouseOut = () => {
     this.setState({
-      showMessage: false,
+      showTableTooltip: false,
+      showRowTooltip: false,
+      activeRow: null,
     });
   };
 
@@ -166,7 +210,7 @@ class Table extends PureComponent {
                 src={InfoIcon}
                 alt="Hover for more info"
                 ref={this.setTooltipIconRef}
-                onMouseOver={this.handleTooltipIconMouseOver}
+                onMouseOver={this.handleTooltipIconMouseOver.bind(this, 'tooltipIcon')}
                 onMouseOut={this.handleTooltipIconMouseOut}
               />
             </span>
@@ -181,7 +225,8 @@ class Table extends PureComponent {
         <table ref={this.setTableRef} className={this.props.tableStyle}>
           {tableContents}
         </table>
-        {this.state.showMessage && this.renderTooltip()}
+        {this.state.showTableTooltip && this.renderTooltip()}
+        {this.state.showRowTooltip && this.renderRowTooltip()}
       </>
     );
   }
@@ -196,6 +241,11 @@ Table.propTypes = {
   columns: PropTypes.array.isRequired,
   tableStyle: PropTypes.string.isRequired,
   annotations: PropTypes.arrayOf(PropTypes.string),
+  showTooltipDividers: PropTypes.bool,
+};
+
+Table.defaultProps = {
+  showTooltipDividers: false,
 };
 
 export default Table;

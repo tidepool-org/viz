@@ -33,7 +33,18 @@
 }
 
 .tooltipIcon > img {
-  width: 0.9em;
+  width: 14px;
+}
+
+.rowTooltipIcon {
+  composes: tooltipIcon;
+  margin-right: 0;
+  margin-left: .75em;
+  float: none;
+}
+
+.rowTooltipIcon > img {
+  width: 14px;
 }
 
 .TableTooltipWrapper {

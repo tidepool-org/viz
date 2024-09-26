@@ -1,6 +1,6 @@
 .row {
   composes: smallSize from '../../../styles/typography.css';
-  line-height: 18px;
+  line-height: 16px;
   max-width: 180px;
   min-width: 160px;
 }
@@ -20,6 +20,11 @@
 
 .divider {
   height: 2px;
-  margin: 5px -10px;
+  margin: 10px -12px;
   background-color: var(--stat--default);
+}
+
+.hiddenDivider {
+  height: 10px;
+  background-color: transparent;
 }

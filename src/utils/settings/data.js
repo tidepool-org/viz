@@ -400,8 +400,6 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
 
-  console.log('settings', settings);
-
   if (_.includes(['diy loop', 'tidepool loop'], manufacturer)) {
     insulinDuration = _.get(settings, 'insulinModel.actionDuration');
     insulinDurationUnits = 'milliseconds';
@@ -438,11 +436,16 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
 
   if (isLoop(settings)) {
     rows.unshift({
+      annotations: [t('Tidepool Loop will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.')],
       setting: t('Glucose Safety Limit'),
       value: format.formatBgValue(settings?.bgSafetyLimit, { bgUnits }) + ` ${bgUnits}`,
     });
 
     rows.splice(3, 1, {
+      annotations: [
+        t('Tidepool Loop assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.'),
+        t('The Rapid-Acting - Adults model assumes peak activity at 75 minutes.')
+      ],
       setting: t('Insulin Model'),
       value: settings?.insulinModel === 'rapidAdult' ? t('Rapid Acting - Adults') : t('Rapid Acting - Children'),
     });
