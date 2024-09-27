@@ -133,7 +133,7 @@ storiesOf('Device Settings [Loop]', module)
     <NonTandem
       bgUnits={MMOLL_UNITS}
       copySettingsClicked={() => {}}
-      deviceKey={'tidepool loop'}
+      deviceKey={'diy loop'}
       openedSections={{ [loopFlatRateData.activeSchedule]: true }}
       view={'display'}
       pumpSettings={loopFlatRateData}
@@ -146,7 +146,7 @@ storiesOf('Device Settings [Loop]', module)
     <NonTandem
       bgUnits={MMOLL_UNITS}
       copySettingsClicked={() => {}}
-      deviceKey={'tidepool loop'}
+      deviceKey={'diy loop'}
       openedSections={{ [loopMultiRateData.activeSchedule]: true }}
       view={'display'}
       pumpSettings={loopMultiRateData}

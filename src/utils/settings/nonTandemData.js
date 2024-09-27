@@ -298,8 +298,10 @@ function targetRows(settings, units, manufacturer) {
  * @return {Object}                object with target title, columns and rows
  */
 export function target(settings, manufacturer, units) {
+  const device = data.deviceName(manufacturer);
+
   const annotations = isLoop(settings)
-    ? [t('Correction Range is the glucose value (or range of values) that you want Tidepool Loop to aim for in adjusting your basal insulin and helping you calculate your boluses.')]
+    ? [t('Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device })]
     : null;
 
   return {
