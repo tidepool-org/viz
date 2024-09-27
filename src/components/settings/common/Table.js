@@ -123,29 +123,23 @@ class Table extends PureComponent {
     return (<tbody key={`tbody_${rowData.length}`}>{rowData}</tbody>);
   }
 
-  renderTooltip = () => (
-    <div className={styles.TableTooltipWrapper}>
-      <StatTooltip
-        annotations={this.props.annotations}
-        offset={this.state.messageTooltipOffset}
-        position={this.state.messageTooltipPosition}
-        showDividers={this.props.showTooltipDividers}
-        side={this.state.messageTooltipSide}
-      />
-    </div>
-  );
+  renderTooltip = () => {
+    const annotations = _.isFinite(this.state.activeRow)
+      ? this.props.rows[this.state.activeRow]?.annotations
+      : this.props.annotations;
 
-  renderRowTooltip = () => (
-    <div className={styles.TableTooltipWrapper}>
-      <StatTooltip
-        annotations={this.props.rows[this.state.activeRow]?.annotations}
-        offset={this.state.messageTooltipOffset}
-        position={this.state.messageTooltipPosition}
-        showDividers={this.props.showTooltipDividers}
-        side={this.state.messageTooltipSide}
-      />
-    </div>
-  );
+    return (
+      <div className={styles.TableTooltipWrapper}>
+        <StatTooltip
+          annotations={annotations}
+          offset={this.state.messageTooltipOffset}
+          position={this.state.messageTooltipPosition}
+          showDividers={this.props.showTooltipDividers}
+          side={this.state.messageTooltipSide}
+        />
+      </div>
+    )
+  };
 
   handleTooltipIconMouseOver = (refName, activeRow) => {
     const isRowTooltip = _.isFinite(activeRow);
@@ -171,8 +165,7 @@ class Table extends PureComponent {
 
     this.setState({
       activeRow,
-      showTableTooltip: !isRowTooltip,
-      showRowTooltip: isRowTooltip,
+      showTooltip: true,
       messageTooltipPosition: position,
       messageTooltipOffset: offset,
       messageTooltipSide: side,
@@ -181,8 +174,7 @@ class Table extends PureComponent {
 
   handleTooltipIconMouseOut = () => {
     this.setState({
-      showTableTooltip: false,
-      showRowTooltip: false,
+      showTooltip: false,
       activeRow: null,
     });
   };
@@ -228,8 +220,7 @@ class Table extends PureComponent {
         <table ref={this.setTableRef} className={this.props.tableStyle}>
           {tableContents}
         </table>
-        {this.state.showTableTooltip && this.renderTooltip()}
-        {this.state.showRowTooltip && this.renderRowTooltip()}
+        {this.state.showTooltip && this.renderTooltip()}
       </>
     );
   }
