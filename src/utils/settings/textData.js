@@ -21,7 +21,8 @@ import i18next from 'i18next';
 import TextUtil from '../text/TextUtil';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
-import { insulinSettings } from './data';
+import { insulinSettings, presetSettings } from './data';
+import { isLoop } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -37,17 +38,6 @@ export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
-  if (!_.includes(['animas', 'microtech'], manufacturer)) {
-    const { rows, columns } = insulinSettings(settings, manufacturer);
-
-    settingsString += textUtil.buildTextTable(
-      t('Insulin Settings'),
-      rows,
-      columns,
-      { showHeader: false }
-    );
-  }
-
   _.map(nonTandemData.basalSchedules(settings), (schedule) => {
     const basal = nonTandemData.basal(schedule, settings, manufacturer);
     settingsString += textUtil.buildTextTable(
@@ -56,13 +46,6 @@ export function nonTandemText(patient, settings, units, manufacturer) {
       basal.columns
     );
   });
-
-  const sensitivity = nonTandemData.sensitivity(settings, manufacturer, units);
-  settingsString += textUtil.buildTextTable(
-    `${sensitivity.title} ${units}/U`,
-    sensitivity.rows,
-    sensitivity.columns
-  );
 
   const target = nonTandemData.target(settings, manufacturer, units);
   settingsString += textUtil.buildTextTable(
@@ -78,6 +61,34 @@ export function nonTandemText(patient, settings, units, manufacturer) {
     ratio.rows,
     ratio.columns
   );
+
+  const sensitivity = nonTandemData.sensitivity(settings, manufacturer, units);
+  settingsString += textUtil.buildTextTable(
+    `${sensitivity.title} ${units}/U`,
+    sensitivity.rows,
+    sensitivity.columns
+  );
+
+  if (!_.includes(['animas', 'microtech'], manufacturer)) {
+    const { rows, columns } = insulinSettings(settings, manufacturer);
+
+    settingsString += textUtil.buildTextTable(
+      t('Insulin Settings'),
+      rows,
+      columns,
+      { showHeader: false }
+    );
+  }
+
+  if (isLoop(settings)) {
+    const { rows, columns } = presetSettings(settings, manufacturer);
+
+    settingsString += textUtil.buildTextTable(
+      t('Presets'),
+      rows,
+      columns
+    );
+  }
 
   return settingsString;
 }
