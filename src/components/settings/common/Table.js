@@ -138,7 +138,7 @@ class Table extends PureComponent {
           side={this.state.messageTooltipSide}
         />
       </div>
-    )
+    );
   };
 
   handleTooltipIconMouseOver = (refName, activeRow) => {
