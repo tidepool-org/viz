@@ -146,7 +146,7 @@ storiesOf('Device Settings [Loop]', module)
     <NonTandem
       bgUnits={MMOLL_UNITS}
       copySettingsClicked={() => {}}
-      deviceKey={'diy loop'}
+      deviceKey={'tidepool loop'}
       openedSections={{ [loopMultiRateData.activeSchedule]: true }}
       view={'display'}
       pumpSettings={loopMultiRateData}
