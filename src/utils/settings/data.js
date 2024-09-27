@@ -446,7 +446,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
     const insulinModel = {
       label: insulinModelLabels[settings?.insulinModel?.modelType] || settings?.insulinModel?.modelType || t('Unknown'),
       peakMinutes: _.isFinite(settings?.insulinModel?.actionPeakOffset) ? settings.insulinModel.actionPeakOffset / 60 : null,
-    }
+    };
 
     const device = deviceName(manufacturer);
 
@@ -459,7 +459,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
     rows.unshift({
       annotations: [t('{{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device })],
       setting: t('Glucose Safety Limit'),
-      value: format.formatBgValue(settings?.bgSafetyLimit, { bgUnits }) + ` ${bgUnits}`,
+      value: `${format.formatBgValue(settings?.bgSafetyLimit, { bgUnits })} ${bgUnits}`,
     });
 
     rows.splice(3, 1, {
@@ -491,7 +491,7 @@ export function presetSettings(settings, manufacturer) {
 
   const columns = [
     { key: 'name', label: 'Name' },
-    { key: 'value', label: t('Correction Range') + ` (${bgUnits})` },
+    { key: 'value', label: `${t('Correction Range')} (${bgUnits})` },
   ];
 
   const rows = [

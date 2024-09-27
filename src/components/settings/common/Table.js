@@ -15,6 +15,8 @@
  * == BSD2 LICENSE ==
  */
 
+/* global document */
+
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
@@ -87,14 +89,15 @@ class Table extends PureComponent {
   }
 
   renderAnnotation(annotation) {
-    return <StatTooltip annotations={[annotation]}/>;
+    return <StatTooltip annotations={[annotation]} />;
   }
 
   renderRow(normalizedColumns, rowKey, rowData) {
     const cells = _.map(normalizedColumns,
-      (column, columnIndex) => <td key={column.key}>
-        {column.cell(rowData, column.key)}
-        {columnIndex === 0 && rowData.annotations?.length && (
+      (column, columnIndex) => (
+        <td key={column.key}>
+          {column.cell(rowData, column.key)}
+          {columnIndex === 0 && rowData.annotations?.length && (
             <span
               className={styles.rowTooltipIcon}
             >
@@ -107,7 +110,8 @@ class Table extends PureComponent {
               />
             </span>
           )}
-      </td>
+        </td>
+      )
     );
     return (<tr key={rowKey}>{cells}</tr>);
   }
@@ -131,8 +135,7 @@ class Table extends PureComponent {
     </div>
   );
 
-  renderRowTooltip = () => {
-    return (
+  renderRowTooltip = () => (
     <div className={styles.TableTooltipWrapper}>
       <StatTooltip
         annotations={this.props.rows[this.state.activeRow]?.annotations}
@@ -142,7 +145,7 @@ class Table extends PureComponent {
         side={this.state.messageTooltipSide}
       />
     </div>
-  )};
+  );
 
   handleTooltipIconMouseOver = (refName, activeRow) => {
     const isRowTooltip = _.isFinite(activeRow);
