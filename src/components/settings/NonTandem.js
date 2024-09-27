@@ -91,7 +91,7 @@ const NonTandem = (props) => {
   function renderPresetSettings() {
     const { rows, columns } = presetSettings(pumpSettings, lookupKey);
 
-    return (
+    return rows.length ? (
       <div className={styles.categoryContainer}>
         {buildTable(
           rows,
@@ -103,7 +103,7 @@ const NonTandem = (props) => {
           styles.settingsTable
         )}
       </div>
-    );
+    ) : null;
   }
 
   function renderBasalsData() {
@@ -284,7 +284,7 @@ const NonTandem = (props) => {
           {showCategoryTitle && <div className={styles.categoryTitle}>{t('Pump Settings')}</div>}
           <div className={styles.insulinSettingsInnerContainer}>
             {renderInsulinSettings()}
-            {isLoop(pumpSettings) && renderPresetSettings()}
+            {renderPresetSettings()}
           </div>
         </div>
       )}

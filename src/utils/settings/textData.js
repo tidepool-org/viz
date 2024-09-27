@@ -22,7 +22,6 @@ import TextUtil from '../text/TextUtil';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
 import { insulinSettings, presetSettings } from './data';
-import { isLoop } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -80,13 +79,13 @@ export function nonTandemText(patient, settings, units, manufacturer) {
     );
   }
 
-  if (isLoop(settings)) {
-    const { rows, columns } = presetSettings(settings, manufacturer);
+  const presets = presetSettings(settings, manufacturer);
 
+  if (presets.rows.length) {
     settingsString += textUtil.buildTextTable(
       t('Presets'),
-      rows,
-      columns
+      presets.rows,
+      presets.columns
     );
   }
 

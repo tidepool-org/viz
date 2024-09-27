@@ -20,7 +20,7 @@ import i18next from 'i18next';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
-import { getPumpVocabulary, isDIYLoop, isLoop } from '../device';
+import { getPumpVocabulary, isLoop } from '../device';
 
 import {
   MAX_BOLUS,
@@ -494,13 +494,9 @@ export function presetSettings(settings, manufacturer) {
     { key: 'value', label: `${t('Correction Range')} (${bgUnits})` },
   ];
 
-  const rows = [
-    { name: deviceLabels[PREPRANDIAL]?.label, value: correctionRange(settings?.bgTargetPreprandial) },
-    { name: deviceLabels[PHYSICAL_ACTIVITY]?.label, value: correctionRange(settings.bgTargetPhysicalActivity) },
-  ];
-
-  // DIY Loop does not have workout preset
-  if (isDIYLoop(settings)) rows.pop();
+  const rows = [];
+  if (settings?.bgTargetPreprandial) rows.push({ name: deviceLabels[PREPRANDIAL]?.label, value: correctionRange(settings?.bgTargetPreprandial) });
+  if (settings?.bgTargetPhysicalActivity) rows.push({ name: deviceLabels[PHYSICAL_ACTIVITY]?.label, value: correctionRange(settings?.bgTargetPhysicalActivity) });
 
   return {
     columns,
