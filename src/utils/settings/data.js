@@ -500,7 +500,7 @@ export function presetSettings(settings, manufacturer) {
   ];
 
   // DIY Loop does not have workout preset
-  if (isDIYLoop(settings)) rows.shift();
+  if (isDIYLoop(settings)) rows.pop();
 
   return {
     columns,
