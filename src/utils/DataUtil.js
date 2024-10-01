@@ -500,6 +500,7 @@ export class DataUtil {
 
     if (d.type === 'dosingDecision') {
       this.normalizeDatumBgUnits(d, ['bgTargetSchedule'], ['low', 'high']);
+      this.normalizeDatumBgUnits(d, ['bgForecast'], ['value']);
       if (_.isObject(d.pumpSettings)) this.normalizeDatumOut(d.pumpSettings, fields);
     }
 
