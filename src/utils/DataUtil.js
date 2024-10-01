@@ -1224,7 +1224,7 @@ export class DataUtil {
 
     // Clear matchedDevices metaData if the current endpoints change
     const activeDaysChanged = activeDays && !_.isEqual(activeDays, this.activeDays);
-    const bgSourceChanged = bgSource !== this.bgSources.current;
+    const bgSourceChanged = bgSource !== this.bgSources?.current;
     const endpointsChanged = endpoints && !_.isEqual(endpoints, this.endpoints?.current?.range);
     const excludedDevicesChanged = excludedDevices && !_.isEqual(excludedDevices, this.excludedDevices);
 
