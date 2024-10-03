@@ -267,7 +267,7 @@ class BasicsPrintView extends PrintView {
       this.renderHorizontalBarStat(
         timeInAuto,
         {
-          heading: t('Time In {{automatedLabel}} Ratio', { automatedLabel }),
+          heading: t('Avg. Daily Time In {{automatedLabel}}', { automatedLabel }),
           fillOpacity: 0.5,
           secondaryFormatKey: 'tooltip',
         }
@@ -279,7 +279,7 @@ class BasicsPrintView extends PrintView {
       this.renderHorizontalBarStat(
         timeInOverride,
         {
-          heading: t('Time In {{overrideLabel}}', { overrideLabel }),
+          heading: t('Avg. Daily Time In {{overrideLabel}}', { overrideLabel }),
           fillOpacity: 0.5,
           secondaryFormatKey: 'tooltip',
         }
@@ -408,12 +408,18 @@ class BasicsPrintView extends PrintView {
       opts.heading.note = opts.emptyText; // eslint-disable-line no-param-reassign
     }
 
+    this.doc.fontSize(this.defaultFontSize);
+    let headingHeight = 16;
+    const headingText = _.get(opts, 'heading', opts.heading.text || '');
+    const headingWidth = this.doc.widthOfString(headingText);
+    if (headingWidth >= columnWidth - 10) headingHeight = 32;
+
     this.renderTableHeading(opts.heading, {
       columnDefaults: {
         width: columnWidth,
         noteFontSize: this.smallFontSize,
       },
-      height: opts.heading.note ? 30 : 16,
+      height: opts.heading.note ? headingHeight + 14 : headingHeight,
       font: this.font,
       fontSize: this.defaultFontSize,
     });
