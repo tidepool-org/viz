@@ -1650,40 +1650,37 @@ export class DataUtil {
       if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
     });
 
-    if (pumpSettingsOverrideData.length
-      && pumpSettingsOverrideData[0].normalTime > this.activeEndpoints.range[0]
-    ) {
-      // We need to ensure all the days of the week are active to ensure we get all basals
-      this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
+    // We need to ensure all the days of the week are active to ensure we get all override datums
+    this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
-      // Set the endpoints filter to the previous day
-      this.filter.byEndpoints([
-        this.activeEndpoints.range[0] - MS_IN_DAY,
-        this.activeEndpoints.range[0],
-      ]);
+    // Set the endpoints filter get all previous override datums
+    this.filter.byEndpoints([
+      0,
+      this.activeEndpoints.range[0],
+    ]);
 
-      // Fetch last basal from previous day
-      const previousPumpSettingsOverrideDatum = _.cloneDeep(_.filter(
-        this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity)),
-        { subType: 'pumpSettingsOverride' }
-      ).reverse()[0]);
+    // Fetch previous override
+    const previousPumpSettingsOverrideDatum = _.cloneDeep(_.filter(
+      this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity)),
+      { subType: 'pumpSettingsOverride' }
+    ).reverse()[0]);
 
-      if (previousPumpSettingsOverrideDatum) {
-        this.normalizeDatumOut(previousPumpSettingsOverrideDatum, normalizeFields);
+    if (previousPumpSettingsOverrideDatum) {
+      this.normalizeDatumOut(previousPumpSettingsOverrideDatum, normalizeFields);
 
-        // Add to top of pumpSettingsOverride data array if it overlaps the start endpoint
-        const datumOverlapsStart = previousPumpSettingsOverrideDatum.normalTime < this.activeEndpoints.range[0]
-          && previousPumpSettingsOverrideDatum.normalEnd > this.activeEndpoints.range[0];
 
-        if (datumOverlapsStart) {
-          pumpSettingsOverrideData.unshift(previousPumpSettingsOverrideDatum);
-        }
+      // Add to top of pumpSettingsOverride data array if it overlaps the start endpoint
+      const datumOverlapsStart = previousPumpSettingsOverrideDatum.normalTime < this.activeEndpoints.range[0]
+      && previousPumpSettingsOverrideDatum.normalEnd > this.activeEndpoints.range[0];
+
+      if (datumOverlapsStart) {
+        pumpSettingsOverrideData.unshift(previousPumpSettingsOverrideDatum);
       }
-
-      // Reset the endpoints and activeDays filters to the back to what they were
-      this.filter.byEndpoints(this.activeEndpoints.range);
-      this.filter.byActiveDays(this.activeDays);
     }
+
+    // Reset the endpoints and activeDays filters to the back to what they were
+    this.filter.byEndpoints(this.activeEndpoints.range);
+    this.filter.byActiveDays(this.activeDays);
 
     return pumpSettingsOverrideData;
   };
