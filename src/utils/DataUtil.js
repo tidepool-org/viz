@@ -30,6 +30,7 @@ import {
   BGM_DATA_KEY,
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
+  DIABETES_DATA_TYPES,
   MS_IN_DAY,
   MS_IN_HOUR,
   MS_IN_MIN,
@@ -472,7 +473,9 @@ export class DataUtil {
     }
 
     if (d.type === 'pumpSettings') {
+      this.normalizeDatumBgUnits(d, [], ['bgSafetyLimit']);
       this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
+      this.normalizeDatumBgUnits(d, ['bgTargetPreprandial', 'bgTargetPhysicalActivity'], ['low', 'high']);
       this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
       // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
       if (normalizeAllFields || _.includes(fields, 'basalSchedules')) {
@@ -512,14 +515,21 @@ export class DataUtil {
 
     if (d.type === 'deviceEvent') {
       this.normalizeDatumBgUnits(d, ['bgTarget'], ['low', 'high']);
+      const isOverride = d.subType === 'pumpSettingsOverride';
+
       if (_.isFinite(d.duration)) {
         // Loop is reporting these durations in seconds instead of the milliseconds historically
         // used by Tandem.
         // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
         // convert for Loop versions prior to the fix.
-        if (d.subType === 'pumpSettingsOverride' && isLoop(d)) d.duration = d.duration * 1000;
+        if (isOverride && isLoop(d)) d.duration = d.duration * 1000;
 
         d.normalEnd = d.normalTime + d.duration;
+      } else if (isOverride) {
+        // Ongoing pump settings overrides will not have a duration with which to determine
+        // normalEnd, so we will set it to the latest diabetes datum end.
+        d.normalEnd = this.latestDiabetesDatumEnd;
+        d.duration = d.normalEnd - d.normalTime;
       }
     }
 
@@ -916,6 +926,18 @@ export class DataUtil {
     this.endTimer('setSize');
   };
 
+  setLatestDiabetesDatumEnd = () => {
+    const latestDiabetesDatum = _.maxBy(
+      _.filter(
+        _.values(this.latestDatumByType),
+        ({ type }) => _.includes(DIABETES_DATA_TYPES, type)
+      ),
+      d => d.duration ? d.time + d.duration : d.time
+    );
+
+    this.latestDiabetesDatumEnd = latestDiabetesDatum.time + (latestDiabetesDatum.duration || 0);
+  };
+
   /* eslint-disable no-param-reassign */
   setDevices = () => {
     this.startTimer('setDevices');
@@ -986,6 +1008,7 @@ export class DataUtil {
     this.setDevices();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
+    this.setLatestDiabetesDatumEnd();
     this.endTimer('setMetaData');
   };
 

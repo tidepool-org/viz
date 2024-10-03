@@ -363,7 +363,7 @@ export class StatUtil {
         (result, data, key) => {
           const trimmedDurationData = _.map(data, datum => {
             const normalTime = _.max([this.endpoints[0], datum.normalTime]);
-            const normalEnd = _.min([this.endpoints[1], datum.normalEnd]);
+            const normalEnd = _.min([this.endpoints[1], (datum.normalEnd || this.dataUtil.latestDiabetesDatumEnd)]);
             const duration = normalEnd - normalTime;
 
             return {
