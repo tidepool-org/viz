@@ -30,20 +30,43 @@
   gap: 10px;
 }
 
-.insulinSettingsContainer {
-  width: 25%;
-  min-width: 240px;
-  margin-bottom: 15px;
+.settingsContainerLeftAligned {
+  composes: settingsContainer;
+  justify-content: flex-start;
+  display: block;
+}
+
+.insulinSettingsInnerContainer {
+  display: block;
+  width: 100%;
+}
+
+.insulinSettingsInnerContainer > div {
+  display: block;
+  float: left;
+  width: auto;
+  padding-right: 10px;
+}
+
+.insulinSettingsInnerContainer > div:first-child {
+  min-width: 25% !important;
+}
+
+.insulinSettingsInnerContainer > div:last-child {
+  padding-right: 0;
+  clear: right;
 }
 
 .basalSettingsContainer {
   flex-basis: 25%;
+  margin-bottom: 15px;
 }
 
 .bolusSettingsContainer {
   display: flex;
   flex-wrap: wrap;
   flex-basis: 75%;
+  margin-bottom: 15px;
 }
 
 .bolusSettingsInnerContainer {
@@ -112,6 +135,10 @@
 
 .insulinSettingsHeader {
   composes: bolusHeaderBackground settingsHeader from './settings.css';
+}
+
+.presetSettingsHeader {
+  composes: presetsHeaderBackground settingsHeader from './settings.css';
 }
 
 .bolusSettingsHeader {
