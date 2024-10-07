@@ -154,7 +154,7 @@ describe('FoodTooltip', () => {
   describe('getAbsorptionTime', () => {
     // eslint-disable-next-line max-len
     const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
-    it('should include the food name for a Loop food value', () => {
+    it('should include the absorption time for a Loop food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loop} />);
       expect(wrapper.instance().getAbsorptionTime(loop)).to.equal(3);
       expect(wrapper.find(rowValue).at(1).text()).to.contain('3');

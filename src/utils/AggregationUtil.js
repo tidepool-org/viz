@@ -558,6 +558,7 @@ export class AggregationUtil {
         if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
 
         if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
+          if (!_.isArray(groupedData.deviceEvent)) groupedData.deviceEvent = [];
           groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
         }
 
