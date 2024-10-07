@@ -515,17 +515,17 @@ export class DataUtil {
 
     if (d.type === 'deviceEvent') {
       this.normalizeDatumBgUnits(d, ['bgTarget'], ['low', 'high']);
-      const isOverride = d.subType === 'pumpSettingsOverride';
+      const isOverrideEvent = d.subType === 'pumpSettingsOverride';
 
       if (_.isFinite(d.duration)) {
         // Loop is reporting these durations in seconds instead of the milliseconds historically
         // used by Tandem.
         // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
         // convert for Loop versions prior to the fix.
-        if (isOverride && isLoop(d)) d.duration = d.duration * 1000;
+        if (isOverrideEvent && isLoop(d)) d.duration = d.duration * 1000;
 
         d.normalEnd = d.normalTime + d.duration;
-      } else if (isOverride) {
+      } else if (isOverrideEvent && _.isFinite(this.latestDiabetesDatumEnd)) {
         // Ongoing pump settings overrides will not have a duration with which to determine
         // normalEnd, so we will set it to the latest diabetes datum end.
         d.normalEnd = this.latestDiabetesDatumEnd;
@@ -932,10 +932,10 @@ export class DataUtil {
         _.values(this.latestDatumByType),
         ({ type }) => _.includes(DIABETES_DATA_TYPES, type)
       ),
-      d => d.duration ? d.time + d.duration : d.time
+      d => (d.duration ? d.time + d.duration : d.time)
     );
 
-    this.latestDiabetesDatumEnd = latestDiabetesDatum.time + (latestDiabetesDatum.duration || 0);
+    this.latestDiabetesDatumEnd = latestDiabetesDatum ? latestDiabetesDatum.time + (latestDiabetesDatum.duration || 0) : null;
   };
 
   /* eslint-disable no-param-reassign */
