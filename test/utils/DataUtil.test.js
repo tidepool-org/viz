@@ -768,6 +768,33 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(withSuppressed);
         sinon.assert.calledWith(dataUtil.normalizeSuppressedBasal, withSuppressed);
       });
+
+      it('should Prevent ongoing basals with unknown durations from extending into the future', () => {
+        sinon.spy(dataUtil, 'normalizeSuppressedBasal');
+        const now = () => moment().valueOf();
+        const datumStart = moment.utc(now() - MS_IN_MIN * 15).toISOString();
+        const duration = MS_IN_MIN * 30;
+
+        const unknownDurationIntoFuture = new Types.Basal({
+          annotations: [{ code: 'basal/unknown-duration' }],
+          time: datumStart,
+          duration,
+          type: 'automated',
+          suppressed: { type: 'scheduled', duration, time: datumStart },
+          ...useRawData
+        });
+
+        // Assert that the datum extends into the future
+        expect(Date.parse(unknownDurationIntoFuture.time) + unknownDurationIntoFuture.duration > now()).to.be.true;
+        expect(unknownDurationIntoFuture.duration === MS_IN_MIN * 30).to.be.true;
+        expect(unknownDurationIntoFuture.suppressed.duration === MS_IN_MIN * 30).to.be.true;
+
+        // Assert that the basal durations were truncated so that they no longer extend into the future
+        dataUtil.normalizeDatumIn(unknownDurationIntoFuture);
+        expect(Date.parse(unknownDurationIntoFuture.time) + unknownDurationIntoFuture.duration <= now()).to.be.true;
+        expect(unknownDurationIntoFuture.duration < MS_IN_MIN * 16).to.be.true;
+        expect(unknownDurationIntoFuture.suppressed.duration < MS_IN_MIN * 16).to.be.true;
+      });
     });
 
     context('upload', () => {
