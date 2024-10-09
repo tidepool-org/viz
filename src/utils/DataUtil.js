@@ -175,6 +175,14 @@ export class DataUtil {
       if (d.suppressed) {
         this.normalizeSuppressedBasal(d);
       }
+
+      // Prevent ongoing basals with unknown durations from extending into the future
+      if (_.isFinite(d.duration) && _.includes(_.map(d.annotations, 'code'), 'basal/unknown-duration')) {
+        const currentTime = Date.parse(moment.utc().toISOString());
+        const maxDuration = currentTime - Date.parse(d.time);
+        d.duration = _.min([d.duration, maxDuration]);
+        if (_.isFinite(d.suppressed?.duration)) d.suppressed.duration = d.duration;
+      }
     }
 
     if (d.type === 'upload' && d.dataSetType === 'continuous') {
