@@ -388,13 +388,11 @@ const withLoopDosingDecision = {
   origin: { name: 'com.loopkit.Loop' },
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
+  bgInput: 192,
   carbInput: 24,
   expectedNormal: 6,
   insulinOnBoard: 2.654,
   dosingDecision: {
-    smbg: {
-      value: 192,
-    },
     insulinOnBoard: {
       amount: 2.2354,
     },

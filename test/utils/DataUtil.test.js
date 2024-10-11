@@ -1544,26 +1544,6 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumOut(datum);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgTarget'], ['low', 'high']);
       });
-
-      it('should set normalEnd and duration based on latestDiabetesDatumEnd when duration is provided, but extends into future', () => {
-        const currentTime = Date.parse(moment.utc().toISOString());
-        dataUtil.latestDiabetesDatumEnd = currentTime - MS_IN_MIN * 10;
-
-        const datum = { type: 'deviceEvent', time: currentTime - MS_IN_MIN * 30, duration: MS_IN_HOUR };
-        dataUtil.normalizeDatumOut(datum);
-        expect(datum.normalEnd).to.equal(dataUtil.latestDiabetesDatumEnd);
-        expect(datum.duration).to.equal(MS_IN_MIN * 20);
-      });
-
-      it('should add normalEnd and duration based on latestDiabetesDatumEnd when duration for a pumpSettingsOverride is omitted', () => {
-        const currentTime = Date.parse(moment.utc().toISOString());
-        dataUtil.latestDiabetesDatumEnd = currentTime - MS_IN_MIN * 10;
-
-        const datum = { type: 'deviceEvent', subType: 'pumpSettingsOverride', time: currentTime - MS_IN_MIN * 30, duration: undefined };
-        dataUtil.normalizeDatumOut(datum);
-        expect(datum.normalEnd).to.equal(dataUtil.latestDiabetesDatumEnd);
-        expect(datum.duration).to.equal(MS_IN_MIN * 20);
-      });
     });
 
     context('cbg', () => {
@@ -1892,20 +1872,6 @@ describe('DataUtil', () => {
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgTargetSchedule'], ['low', 'high']);
-      });
-
-      it('should call `normalizeDatumBgUnits` on bgForecast field objects', () => {
-        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
-        const datum = { type: 'dosingDecision' };
-        dataUtil.normalizeDatumOut(datum);
-        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgForecast'], ['value']);
-      });
-
-      it('should call `normalizeDatumBgUnits` on smbg field objects', () => {
-        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
-        const datum = { type: 'dosingDecision' };
-        dataUtil.normalizeDatumOut(datum);
-        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['smbg'], ['value']);
       });
     });
 

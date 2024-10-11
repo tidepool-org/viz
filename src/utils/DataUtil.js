@@ -512,7 +512,6 @@ export class DataUtil {
     if (d.type === 'dosingDecision') {
       this.normalizeDatumBgUnits(d, ['bgTargetSchedule'], ['low', 'high']);
       this.normalizeDatumBgUnits(d, ['bgForecast'], ['value']);
-      this.normalizeDatumBgUnits(d, ['smbg'], ['value']);
       if (_.isObject(d.pumpSettings)) this.normalizeDatumOut(d.pumpSettings, fields);
     }
 
@@ -532,15 +531,8 @@ export class DataUtil {
         // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
         // convert for Loop versions prior to the fix.
         if (isOverrideEvent && isLoop(d)) d.duration = d.duration * 1000;
-        d.normalEnd = d.normalTime + d.duration;
 
-        // If the provided duration extends into the future, we truncate the normalEnd to the
-        // latest diabetes datum end and recalculate the duration
-        const currentTime = Date.parse(moment.utc().toISOString());
-        if (d.normalEnd > currentTime) {
-          d.normalEnd = this.latestDiabetesDatumEnd;
-          d.duration = d.normalEnd - d.normalTime;
-        }
+        d.normalEnd = d.normalTime + d.duration;
       } else if (isOverrideEvent && _.isFinite(this.latestDiabetesDatumEnd)) {
         // Ongoing pump settings overrides will not have a duration with which to determine
         // normalEnd, so we will set it to the latest diabetes datum end.
