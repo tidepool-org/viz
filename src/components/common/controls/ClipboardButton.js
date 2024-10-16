@@ -21,6 +21,7 @@ class ClipboardButton extends PureComponent {
     clipboardText: PropTypes.string,
     getText: PropTypes.func,
     onClick: PropTypes.func,
+    onComplete: PropTypes.func,
     onSuccess: PropTypes.func,
     successText: PropTypes.node.isRequired,
   };
@@ -70,6 +71,7 @@ class ClipboardButton extends PureComponent {
 
     const debouncedButtonTextUpdate = _.debounce(() => {
       this.setState({ successTextShowing: false });
+      if (_.isFunction(this.props.onComplete)) this.props.onComplete();
     }, 1000);
     debouncedButtonTextUpdate();
 
