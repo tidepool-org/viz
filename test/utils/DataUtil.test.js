@@ -768,6 +768,33 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(withSuppressed);
         sinon.assert.calledWith(dataUtil.normalizeSuppressedBasal, withSuppressed);
       });
+
+      it('should Prevent ongoing basals with unknown durations from extending into the future', () => {
+        sinon.spy(dataUtil, 'normalizeSuppressedBasal');
+        const now = () => moment().valueOf();
+        const datumStart = moment.utc(now() - MS_IN_MIN * 15).toISOString();
+        const duration = MS_IN_MIN * 30;
+
+        const unknownDurationIntoFuture = new Types.Basal({
+          annotations: [{ code: 'basal/unknown-duration' }],
+          time: datumStart,
+          duration,
+          type: 'automated',
+          suppressed: { type: 'scheduled', duration, time: datumStart },
+          ...useRawData
+        });
+
+        // Assert that the datum extends into the future
+        expect(Date.parse(unknownDurationIntoFuture.time) + unknownDurationIntoFuture.duration > now()).to.be.true;
+        expect(unknownDurationIntoFuture.duration === MS_IN_MIN * 30).to.be.true;
+        expect(unknownDurationIntoFuture.suppressed.duration === MS_IN_MIN * 30).to.be.true;
+
+        // Assert that the basal durations were truncated so that they no longer extend into the future
+        dataUtil.normalizeDatumIn(unknownDurationIntoFuture);
+        expect(Date.parse(unknownDurationIntoFuture.time) + unknownDurationIntoFuture.duration <= now()).to.be.true;
+        expect(unknownDurationIntoFuture.duration < MS_IN_MIN * 16).to.be.true;
+        expect(unknownDurationIntoFuture.suppressed.duration < MS_IN_MIN * 16).to.be.true;
+      });
     });
 
     context('upload', () => {
@@ -1517,6 +1544,26 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumOut(datum);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgTarget'], ['low', 'high']);
       });
+
+      it('should set normalEnd and duration based on latestDiabetesDatumEnd when duration is provided, but extends into future', () => {
+        const currentTime = Date.parse(moment.utc().toISOString());
+        dataUtil.latestDiabetesDatumEnd = currentTime - MS_IN_MIN * 10;
+
+        const datum = { type: 'deviceEvent', time: currentTime - MS_IN_MIN * 30, duration: MS_IN_HOUR };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(dataUtil.latestDiabetesDatumEnd);
+        expect(datum.duration).to.equal(MS_IN_MIN * 20);
+      });
+
+      it('should add normalEnd and duration based on latestDiabetesDatumEnd when duration for a pumpSettingsOverride is omitted', () => {
+        const currentTime = Date.parse(moment.utc().toISOString());
+        dataUtil.latestDiabetesDatumEnd = currentTime - MS_IN_MIN * 10;
+
+        const datum = { type: 'deviceEvent', subType: 'pumpSettingsOverride', time: currentTime - MS_IN_MIN * 30, duration: undefined };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(dataUtil.latestDiabetesDatumEnd);
+        expect(datum.duration).to.equal(MS_IN_MIN * 20);
+      });
     });
 
     context('cbg', () => {
@@ -1845,6 +1892,20 @@ describe('DataUtil', () => {
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgTargetSchedule'], ['low', 'high']);
+      });
+
+      it('should call `normalizeDatumBgUnits` on bgForecast field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'dosingDecision' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgForecast'], ['value']);
+      });
+
+      it('should call `normalizeDatumBgUnits` on smbg field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'dosingDecision' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['smbg'], ['value']);
       });
     });
 

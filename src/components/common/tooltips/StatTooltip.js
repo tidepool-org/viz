@@ -44,6 +44,7 @@ class StatTooltip extends PureComponent {
     backgroundColor: PropTypes.string,
     borderColor: PropTypes.string.isRequired,
     borderWidth: PropTypes.number.isRequired,
+    showDividers: PropTypes.bool,
   };
 
   static defaultProps = {
@@ -55,6 +56,7 @@ class StatTooltip extends PureComponent {
     tailColor: colors.statDefault,
     borderColor: colors.statDefault,
     borderWidth: 2,
+    showDividers: true,
   };
 
   renderMessages() {
@@ -74,7 +76,7 @@ class StatTooltip extends PureComponent {
         rows.push(
           <div
             key={`divider-${index}`}
-            className={styles.divider}
+            className={this.props.showDividers ? styles.divider : styles.hiddenDivider}
           />
         );
       }

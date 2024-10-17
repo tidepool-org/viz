@@ -120,7 +120,7 @@ describe('device utility functions', () => {
 
   describe('isTidepoolLoop', () => {
     it('should return `true` for a matching pattern within `origin.name`', () => {
-      const datum = { origin: { name: 'org.12345.tidepool.Loop.xyz' } };
+      const datum = { origin: { name: 'org.tidepool.palmtree.Loop' } };
       const datum2 = { origin: { name: 'org.tidepool.Loop' } };
       expect(device.isTidepoolLoop(datum)).to.be.true;
       expect(device.isTidepoolLoop(datum2)).to.be.true;
@@ -132,7 +132,7 @@ describe('device utility functions', () => {
     });
 
     it('should return `true` for a matching pattern within `client.name`', () => {
-      const datum = { client: { name: 'org.12345.tidepool.Loop.xyz' } };
+      const datum = { client: { name: 'org.tidepool.palmtree.Loop' } };
       const datum2 = { client: { name: 'org.tidepool.Loop' } };
       expect(device.isTidepoolLoop(datum)).to.be.true;
       expect(device.isTidepoolLoop(datum2)).to.be.true;

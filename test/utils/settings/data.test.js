@@ -398,9 +398,21 @@ describe('[settings] data utils', () => {
           { key: 'value' },
         ],
         rows: [
+          {
+            annotations: ['DIY Loop will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.'],
+            setting: 'Glucose Safety Limit',
+            value: '4.2 mmol/L',
+          },
           { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
           { setting: 'Maximum Bolus', value: '10 U' },
-          { setting: 'Insulin Duration', value: '6 hrs' },
+          {
+            annotations: [
+              'DIY Loop assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.',
+              'The Rapid-Acting - Adults model assumes peak activity at 75 minutes.',
+            ],
+            setting: 'Insulin Model',
+            value: 'Rapid-Acting - Adults',
+          },
         ],
       });
     });
@@ -412,9 +424,21 @@ describe('[settings] data utils', () => {
           { key: 'value' },
         ],
         rows: [
+          {
+            annotations: ['Tidepool Loop will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.'],
+            setting: 'Glucose Safety Limit',
+            value: '4.2 mmol/L',
+          },
           { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
           { setting: 'Maximum Bolus', value: '10 U' },
-          { setting: 'Insulin Duration', value: '6 hrs' },
+          {
+            annotations: [
+              'Tidepool Loop assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.',
+              'The Rapid-Acting - Adults model assumes peak activity at 75 minutes.',
+            ],
+            setting: 'Insulin Model',
+            value: 'Rapid-Acting - Adults',
+          },
         ],
       });
     });

@@ -64,16 +64,8 @@ class FoodTooltip extends PureComponent {
       const latestUpdatedTime = food.payload?.userUpdatedDate;
       const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
-      rows.unshift(...[
-        (
-          <div key={'name'} className={styles.row}>
-            <div className={styles.label}>{t('Type')}</div>
-            <div className={styles.value}>
-              {`${name}`}
-            </div>
-          </div>
-        ),
-        (
+      if (absorptionTime > 0) {
+        rows.unshift(
           <div key={'absorption'} className={styles.row}>
             <div className={styles.label}>{t('Absorption Time (hrs)')}</div>
             <div className={styles.value}>
@@ -81,8 +73,19 @@ class FoodTooltip extends PureComponent {
             </div>
             <div className={styles.units}>hr</div>
           </div>
-        )
-      ]);
+        );
+      }
+
+      if (!_.isEmpty(name)) {
+        rows.unshift(
+          <div key={'name'} className={styles.row}>
+            <div className={styles.label}>{t('Type')}</div>
+            <div className={styles.value}>
+              {`${name}`}
+            </div>
+          </div>
+        );
+      }
 
       if (latestUpdatedTime || timeOfEntry) {
         rows.push(<div key={'divider'} className={styles.divider} />);

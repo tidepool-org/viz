@@ -15,13 +15,42 @@
  * == BSD2 LICENSE ==
  */
 
+/* global document */
+
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
 
+import StatTooltip from '../../common/tooltips/StatTooltip';
+import InfoIcon from '../../common/stat/assets/info-outline-24-px.svg';
 import styles from './Table.css';
 
 class Table extends PureComponent {
+  constructor(props) {
+    super(props);
+
+    this.state = {};
+
+    this.setTableRef = ref => {
+      this.table = ref;
+    };
+
+    this.setTooltipIconRef = ref => {
+      this.tooltipIcon = ref;
+    };
+
+    this.setRowTooltipIconRefs = {};
+    this.rowTooltipIcons = {};
+
+    _.each(props.rows, (row, index) => {
+      if (row.annotations?.length) {
+        this.setRowTooltipIconRefs[index] = ref => {
+          this.rowTooltipIcons[index] = ref;
+        };
+      }
+    });
+  }
+
   getItemField(item, field) {
     return item[field];
   }
@@ -59,9 +88,30 @@ class Table extends PureComponent {
     return (<thead key={`thead_${cells.length}`}><tr>{cells}</tr></thead>);
   }
 
+  renderAnnotation(annotation) {
+    return <StatTooltip annotations={[annotation]} />;
+  }
+
   renderRow(normalizedColumns, rowKey, rowData) {
     const cells = _.map(normalizedColumns,
-      (column) => <td key={column.key}>{column.cell(rowData, column.key)}</td>
+      (column, columnIndex) => (
+        <td key={column.key}>
+          {column.cell(rowData, column.key)}
+          {columnIndex === 0 && rowData.annotations?.length && (
+            <span
+              className={styles.rowTooltipIcon}
+            >
+              <img
+                src={InfoIcon}
+                alt="Hover for more info"
+                ref={this.setRowTooltipIconRefs[rowKey]}
+                onMouseOver={this.handleTooltipIconMouseOver.bind(this, 'rowTooltipIcons', rowKey)}
+                onMouseOut={this.handleTooltipIconMouseOut}
+              />
+            </span>
+          )}
+        </td>
+      )
     );
     return (<tr key={rowKey}>{cells}</tr>);
   }
@@ -72,6 +122,62 @@ class Table extends PureComponent {
     ));
     return (<tbody key={`tbody_${rowData.length}`}>{rowData}</tbody>);
   }
+
+  renderTooltip = () => {
+    const annotations = _.isFinite(this.state.activeRow)
+      ? this.props.rows[this.state.activeRow]?.annotations
+      : this.props.annotations;
+
+    return (
+      <div className={styles.TableTooltipWrapper}>
+        <StatTooltip
+          annotations={annotations}
+          offset={this.state.messageTooltipOffset}
+          position={this.state.messageTooltipPosition}
+          showDividers={this.props.showTooltipDividers}
+          side={this.state.messageTooltipSide}
+        />
+      </div>
+    );
+  };
+
+  handleTooltipIconMouseOver = (refName, activeRow) => {
+    const isRowTooltip = _.isFinite(activeRow);
+    const ref = isRowTooltip ? this[refName][activeRow] : this[refName];
+    const { top, left, width, height } = ref.getBoundingClientRect();
+    const {
+      top: parentTop,
+      left: parentLeft,
+      height: parentHeight,
+    } = this.table.getBoundingClientRect();
+
+    const position = {
+      top: (top - parentTop) + height / 2,
+      left: (left - parentLeft) + width / 2,
+    };
+
+    const offset = {
+      horizontal: width / 2,
+      top: -parentHeight,
+    };
+
+    const side = (_.get(document, 'body.clientWidth', 0) - left < 225) ? 'left' : 'right';
+
+    this.setState({
+      activeRow,
+      showTooltip: true,
+      messageTooltipPosition: position,
+      messageTooltipOffset: offset,
+      messageTooltipSide: side,
+    });
+  };
+
+  handleTooltipIconMouseOut = () => {
+    this.setState({
+      showTooltip: false,
+      activeRow: null,
+    });
+  };
 
   render() {
     const normalizedColumns = this.normalizeColumns();
@@ -91,15 +197,31 @@ class Table extends PureComponent {
           className={className}
         >
           {main}<span className={styles.secondaryLabelWithMain}>{secondary}</span>
+          {this.props.annotations && (
+            <span
+              className={styles.tooltipIcon}
+            >
+              <img
+                src={InfoIcon}
+                alt="Hover for more info"
+                ref={this.setTooltipIconRef}
+                onMouseOver={this.handleTooltipIconMouseOver.bind(this, 'tooltipIcon')}
+                onMouseOut={this.handleTooltipIconMouseOut}
+              />
+            </span>
+          )}
         </caption>
       );
       tableContents.unshift(title);
     }
 
     return (
-      <table className={this.props.tableStyle}>
-        {tableContents}
-      </table>
+      <>
+        <table ref={this.setTableRef} className={this.props.tableStyle}>
+          {tableContents}
+        </table>
+        {this.state.showTooltip && this.renderTooltip()}
+      </>
     );
   }
 }
@@ -112,6 +234,12 @@ Table.propTypes = {
   rows: PropTypes.array.isRequired,
   columns: PropTypes.array.isRequired,
   tableStyle: PropTypes.string.isRequired,
+  annotations: PropTypes.arrayOf(PropTypes.string),
+  showTooltipDividers: PropTypes.bool,
+};
+
+Table.defaultProps = {
+  showTooltipDividers: false,
 };
 
 export default Table;
