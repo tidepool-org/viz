@@ -21,6 +21,7 @@ const medtronicMultirateData = require('../../../data/pumpSettings/medtronic/mul
 const omnipodMultirateData = require('../../../data/pumpSettings/omnipod/multirate.json');
 const tandemFlatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultirateData = require('../../../data/pumpSettings/tandem/multirate.json');
+const loopMultirateData = require('../../../data/pumpSettings/loop/multirate.json');
 
 describe('[settings] data utils', () => {
   describe('noData', () => {
@@ -48,6 +49,8 @@ describe('[settings] data utils', () => {
       expect(data.deviceName('medtronic')).to.equal('Medtronic');
       expect(data.deviceName('tandem')).to.equal('Tandem');
       expect(data.deviceName('microtech')).to.equal('Equil');
+      expect(data.deviceName('diy loop')).to.equal('DIY Loop');
+      expect(data.deviceName('tidepool loop')).to.equal('Tidepool Loop');
     });
 
     it('should return the manufacturer key if a device name mapping does not exist', () => {
@@ -384,6 +387,58 @@ describe('[settings] data utils', () => {
           { setting: 'Max Basal', value: '2 U/hr' },
           { setting: 'Max Bolus', value: '9.5 U' },
           { setting: 'Active Insulin Time', value: '4 hrs' },
+        ],
+      });
+    });
+
+    it('should return columns and rows for insulin settings from DIY Loop pump settings', () => {
+      expect(data.insulinSettings(loopMultirateData, 'diy loop')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          {
+            annotations: ['DIY Loop will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.'],
+            setting: 'Glucose Safety Limit',
+            value: '4.2 mmol/L',
+          },
+          { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
+          { setting: 'Maximum Bolus', value: '10 U' },
+          {
+            annotations: [
+              'DIY Loop assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.',
+              'The Rapid-Acting - Adults model assumes peak activity at 75 minutes.',
+            ],
+            setting: 'Insulin Model',
+            value: 'Rapid-Acting - Adults',
+          },
+        ],
+      });
+    });
+
+    it('should return columns and rows for insulin settings from Tidepool Loop pump settings', () => {
+      expect(data.insulinSettings(loopMultirateData, 'tidepool loop')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          {
+            annotations: ['Tidepool Loop will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.'],
+            setting: 'Glucose Safety Limit',
+            value: '4.2 mmol/L',
+          },
+          { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
+          { setting: 'Maximum Bolus', value: '10 U' },
+          {
+            annotations: [
+              'Tidepool Loop assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.',
+              'The Rapid-Acting - Adults model assumes peak activity at 75 minutes.',
+            ],
+            setting: 'Insulin Model',
+            value: 'Rapid-Acting - Adults',
+          },
         ],
       });
     });

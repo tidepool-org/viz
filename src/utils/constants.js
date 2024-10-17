@@ -83,10 +83,12 @@ export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';
+export const AUTOMATED_MODE_EXITED = 'automatedModeExited';
 export const SCHEDULED_DELIVERY = 'scheduledDelivery';
 export const SETTINGS_OVERRIDE = 'settingsOverride';
 export const SLEEP = 'sleep';
 export const PHYSICAL_ACTIVITY = 'physicalActivity';
+export const PREPRANDIAL = 'preprandial';
 export const MAX_BOLUS = 'maxBolus';
 export const MAX_BASAL = 'maxBasal';
 export const INSULIN_DURATION = 'insulinDuration';
@@ -96,6 +98,8 @@ export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 export const INSULET = 'Insulet';
 export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
+export const TIDEPOOL_LOOP = 'Tidepool Loop';
+export const DIY_LOOP = 'DIY Loop';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
 
@@ -140,25 +144,76 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Max Bolus'),
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
+  [TIDEPOOL_LOOP]: {
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [AUTOMATED_MODE_EXITED]: t('Off'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Preset'),
+    [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
+    [MAX_BOLUS]: t('Maximum Bolus'),
+    [MAX_BASAL]: t('Maximum Basal Rate'),
+  },
+  [DIY_LOOP]: {
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [AUTOMATED_MODE_EXITED]: t('Off'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Preset'),
+    [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
+    [MAX_BOLUS]: t('Maximum Bolus'),
+    [MAX_BASAL]: t('Maximum Basal Rate'),
+  },
   default: {
     [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
     [SITE_CHANGE_TUBING]: t('Fill Tubing'),
     [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
     [AUTOMATED_DELIVERY]: t('Automated'),
     [AUTOMATED_SUSPEND]: t('Automated Suspend'),
+    [AUTOMATED_MODE_EXITED]: t('Exited'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
+    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
 };
 
+export const settingsOverrides = {
+  [TANDEM]: [
+    SLEEP,
+    PHYSICAL_ACTIVITY,
+  ],
+  [TIDEPOOL_LOOP]: [
+    PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
+  [DIY_LOOP]: [
+    PREPRANDIAL,
+  ],
+  default: [
+    SLEEP,
+    PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
+};
+
 export const AUTOMATED_BASAL_DEVICE_MODELS = {
   [MEDTRONIC]: ['1580', '1581', '1582', '1780', '1781', '1782'],
 };
+export const BG_DATA_TYPES = [
+  'cbg',
+  'smbg',
+];
+
+export const DIABETES_DATA_TYPES = [
+  ...BG_DATA_TYPES,
+  'basal',
+  'bolus',
+  'wizard',
+  'food',
+];
 
 export const BG_COLORS = {
   veryLow: '#FB5951',

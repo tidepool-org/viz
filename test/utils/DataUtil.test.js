@@ -7,6 +7,7 @@ import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS } fro
 
 import medtronicMultirate from '../../data/pumpSettings/medtronic/multirate.raw.json';
 import omnipodMultirate from '../../data/pumpSettings/omnipod/multirate.raw.json';
+import loopMultirate from '../../data/pumpSettings/loop/multirate.raw.json';
 /* eslint-disable max-len, no-underscore-dangle */
 
 describe('DataUtil', () => {
@@ -174,10 +175,20 @@ describe('DataUtil', () => {
     }),
   ], _.toPlainObject);
 
-  const pumpSettingsData = [
-    { ...omnipodMultirate, deviceTime: '2018-01-02T00:00:00', time: '2018-01-02T00:00:00.000Z' },
-    { ...medtronicMultirate, deviceTime: '2018-02-02T00:00:00', time: '2018-02-02T00:00:00.000Z' },
-  ];
+  const dosingDecisionData = _.map([
+    new Types.DosingDecision({
+      deviceTime: '2018-02-01T01:00:00',
+      ...useRawData,
+    }),
+    new Types.DosingDecision({
+      deviceTime: '2018-02-01T02:00:00',
+      ...useRawData,
+    }),
+    new Types.DosingDecision({
+      deviceTime: '2018-02-01T03:00:00',
+      ...useRawData,
+    }),
+  ], _.toPlainObject);
 
   const smbgData = _.map([
     new Types.SMBG({
@@ -244,7 +255,26 @@ describe('DataUtil', () => {
       uploadId: 'upload-2',
       ...useRawData,
     }),
+    new Types.Upload({
+      dataSetType: 'continuous',
+      deviceTime: '2018-02-03T00:00:00',
+      uploadId: 'upload-3',
+      ...useRawData,
+    }),
+    new Types.Upload({
+      dataSetType: 'continuous',
+      deviceTime: '2018-02-04T00:00:00',
+      uploadId: 'upload-4',
+      ...useRawData,
+    }),
   ], _.toPlainObject);
+
+  const pumpSettingsData = [
+    { ...omnipodMultirate, deviceTime: '2018-01-02T00:00:00', time: '2018-01-02T00:00:00.000Z' },
+    { ...medtronicMultirate, deviceTime: '2018-02-02T00:00:00', time: '2018-02-02T00:00:00.000Z' },
+    { ...loopMultirate, id: 'loop1', deviceTime: '2018-02-03T00:00:00', time: '2018-02-03T00:00:00.000Z', uploadId: 'upload-3', origin: { name: 'org.tidepool.Loop' } },
+    { ...loopMultirate, id: 'loop2', deviceTime: '2018-02-04T00:00:00', time: '2018-02-04T00:00:00.000Z', uploadId: 'upload-4', origin: { name: 'com.loopkit.Loop' } },
+  ];
 
   const wizardData = _.map([
     new Types.Wizard({
@@ -271,10 +301,11 @@ describe('DataUtil', () => {
     ...bolusData,
     ...cbgData,
     ...deviceEventData,
+    ...dosingDecisionData,
     ...foodData,
-    ...pumpSettingsData,
     ...smbgData,
     ...uploadData,
+    ...pumpSettingsData,
     ...wizardData,
   ];
 
@@ -461,6 +492,7 @@ describe('DataUtil', () => {
         'bolus',
         'cbg',
         'deviceEvent',
+        'dosingDecision',
         'food',
         'pumpSettings',
         'smbg',
@@ -474,6 +506,57 @@ describe('DataUtil', () => {
       dataUtil.addData([newWizard], defaultPatientId);
 
       expect(dataUtil.latestDatumByType.wizard.id).to.eql(newWizard.id);
+    });
+
+    it('should create and/or update the `pumpSettingsDatumsByIdMap`', () => {
+      delete dataUtil.pumpSettingsDatumsByIdMap;
+      expect(dataUtil.pumpSettingsDatumsByIdMap).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+      expect(dataUtil.pumpSettingsDatumsByIdMap).to.be.an('object').and.have.keys([
+        pumpSettingsData[0].id,
+        pumpSettingsData[1].id,
+        pumpSettingsData[2].id,
+        pumpSettingsData[3].id,
+      ]);
+
+      const newPumpSettings = { ...omnipodMultirate, deviceTime: '2018-01-02T00:00:00', time: '2018-01-02T00:00:00.000Z', id: 'newPumpID' };
+      dataUtil.addData([newPumpSettings], defaultPatientId);
+
+      expect(dataUtil.pumpSettingsDatumsByIdMap).to.be.an('object').and.have.keys([
+        pumpSettingsData[0].id,
+        pumpSettingsData[1].id,
+        pumpSettingsData[2].id,
+        pumpSettingsData[3].id,
+        newPumpSettings.id,
+      ]);
+
+      expect(dataUtil.pumpSettingsDatumsByIdMap[newPumpSettings.id].id).to.equal(newPumpSettings.id);
+    });
+
+    it('should create and/or update the `bolusDosingDecisionDatumsByIdMap`', () => {
+      delete dataUtil.bolusDosingDecisionDatumsByIdMap;
+      expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+
+      expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.be.an('object').and.have.keys([
+        dosingDecisionData[0].id,
+        dosingDecisionData[1].id,
+        dosingDecisionData[2].id,
+      ]);
+
+      const newDosingDecision = new Types.DosingDecision({ deviceTime: '2018-02-01T04:00:00', ...useRawData });
+      dataUtil.addData([newDosingDecision], defaultPatientId);
+
+      expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.be.an('object').and.have.keys([
+        dosingDecisionData[0].id,
+        dosingDecisionData[1].id,
+        dosingDecisionData[2].id,
+        newDosingDecision.id,
+      ]);
+
+      expect(dataUtil.bolusDosingDecisionDatumsByIdMap[newDosingDecision.id].id).to.equal(newDosingDecision.id);
     });
 
     it('should initialize the `matchedDevices` property if not already set', () => {
@@ -510,6 +593,15 @@ describe('DataUtil', () => {
 
       sinon.assert.called(dataUtil.joinWizardAndBolus);
       sinon.assert.callCount(dataUtil.joinWizardAndBolus, defaultData.length);
+    });
+
+    it('should call `joinBolusAndDosingDecision` on each incoming datum', () => {
+      sinon.spy(dataUtil, 'joinBolusAndDosingDecision');
+      sinon.assert.notCalled(dataUtil.joinBolusAndDosingDecision);
+      dataUtil.addData(defaultData, defaultPatientId);
+
+      sinon.assert.called(dataUtil.joinBolusAndDosingDecision);
+      sinon.assert.callCount(dataUtil.joinBolusAndDosingDecision, defaultData.length);
     });
 
     it('should call `tagDatum` on each incoming datum', () => {
@@ -676,6 +768,42 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(withSuppressed);
         sinon.assert.calledWith(dataUtil.normalizeSuppressedBasal, withSuppressed);
       });
+
+      it('should Prevent ongoing basals with unknown durations from extending into the future', () => {
+        sinon.spy(dataUtil, 'normalizeSuppressedBasal');
+        const now = () => moment().valueOf();
+        const datumStart = moment.utc(now() - MS_IN_MIN * 15).toISOString();
+        const duration = MS_IN_MIN * 30;
+
+        const unknownDurationIntoFuture = new Types.Basal({
+          annotations: [{ code: 'basal/unknown-duration' }],
+          time: datumStart,
+          duration,
+          type: 'automated',
+          suppressed: { type: 'scheduled', duration, time: datumStart },
+          ...useRawData
+        });
+
+        // Assert that the datum extends into the future
+        expect(Date.parse(unknownDurationIntoFuture.time) + unknownDurationIntoFuture.duration > now()).to.be.true;
+        expect(unknownDurationIntoFuture.duration === MS_IN_MIN * 30).to.be.true;
+        expect(unknownDurationIntoFuture.suppressed.duration === MS_IN_MIN * 30).to.be.true;
+
+        // Assert that the basal durations were truncated so that they no longer extend into the future
+        dataUtil.normalizeDatumIn(unknownDurationIntoFuture);
+        expect(Date.parse(unknownDurationIntoFuture.time) + unknownDurationIntoFuture.duration <= now()).to.be.true;
+        expect(unknownDurationIntoFuture.duration < MS_IN_MIN * 16).to.be.true;
+        expect(unknownDurationIntoFuture.suppressed.duration < MS_IN_MIN * 16).to.be.true;
+      });
+    });
+
+    context('upload', () => {
+      it('should add a missing time of continuous uploads', () => {
+        const uploadWithoutTime = { ...new Types.Upload({ dataSetType: 'continuous', ...useRawData }), time: undefined };
+        expect(uploadWithoutTime.time).to.be.undefined;
+        dataUtil.normalizeDatumIn(uploadWithoutTime);
+        expect(uploadWithoutTime.time).to.be.a('number');
+      });
     });
 
     context('message', () => {
@@ -751,6 +879,34 @@ describe('DataUtil', () => {
         expect(dataUtil.bolusDatumsByIdMap[bolus.id]).to.eql(bolus);
       });
     });
+
+    context('dosingDecision', () => {
+      it('should add the datum to the `bolusDosingDecisionDatumsByIdMap`', () => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+
+        const acceptableReasons = ['normalBolus', 'simpleBolus', 'watchBolus'];
+        const dosingDecisionReasons = ['loop', 'normalBolus', 'simpleBolus', 'watchBolus'];
+        _.each(dosingDecisionReasons, (reason, index) => {
+          dataUtil.normalizeDatumIn({ type: 'dosingDecision', id: `ID${index}`, reason });
+        });
+
+        // the 'loop' reason datum should not be added
+        expect(_.keys(dataUtil.bolusDosingDecisionDatumsByIdMap)).to.have.lengthOf(3);
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID1.reason).to.eql(acceptableReasons[0]);
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID2.reason).to.eql(acceptableReasons[1]);
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID3.reason).to.eql(acceptableReasons[2]);
+      });
+    });
+
+    context('pumpSettings', () => {
+      it('should add the datum to the `pumpSettingsDatumsByIdMap`', () => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+
+        const pumpSettings = { type: 'pumpSettings', id: '1' };
+        dataUtil.normalizeDatumIn(pumpSettings);
+        expect(dataUtil.pumpSettingsDatumsByIdMap[pumpSettings.id]).to.eql(pumpSettings);
+      });
+    });
   });
 
   describe('joinWizardAndBolus', () => {
@@ -790,6 +946,52 @@ describe('DataUtil', () => {
         dataUtil.joinWizardAndBolus(bolus);
         expect(bolus.wizard).to.eql({ type: 'wizard', id: 'wizard1' });
       });
+    });
+  });
+
+  describe('joinBolusAndDosingDecision', () => {
+    it('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other', () => {
+      const bolus = { type: 'bolus', id: 'bolus1', time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
+      const pumpSettings = { ...loopMultirate, id: 'pumpSettings1' };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+        associations: [{ reason: 'pumpSettings', id: 'pumpSettings1' }],
+        requestedBolus: { amount: 12 },
+        insulinOnBoard: { amount: 4 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        bgHistorical: [
+          { value: 100 },
+          { value: 110 },
+        ],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
+
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      // should attach associated pump settings to dosingDecisions
+      expect(bolus.dosingDecision).to.eql(dosingDecision);
+      expect(bolus.dosingDecision.pumpSettings).to.eql(pumpSettings);
+
+      // should translate relevant dosing decision data onto expected bolus fields
+      expect(bolus.expectedNormal).to.equal(12);
+      expect(bolus.carbInput).to.equal(30);
+      expect(bolus.bgInput).to.equal(110);
+      expect(bolus.insulinOnBoard).to.equal(4);
+    });
+
+    it('should not join loop dosing decisions to boluses that are outside of a minute of each other', () => {
+      const dosingDecision = { type: 'dosingDecision', id: 'dosingDecision1', time: Date.parse('2024-02-02T10:05:00.000Z'), origin: { name: 'org.tidepool.Loop' } };
+      const bolus = { type: 'bolus', id: 'bolus1', time: Date.parse('2024-02-02T10:06:01.000Z'), origin: { name: 'org.tidepool.Loop' } };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.bolusDatumsByIdMap = { bolus1: bolus };
+
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.dosingDecision).to.be.undefined;
     });
   });
 
@@ -886,6 +1088,7 @@ describe('DataUtil', () => {
       const overrideBolus = { ...bolus, normal: 2, recommended: { net: 1 } };
       const underrideBolus = { ...bolus, normal: 1, recommended: { net: 2 } };
       const wizardBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', wizard: '12345' };
+      const dosingDecisionBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', dosingDecision: { food: { nutrition: { carbohydrate: { net: 20 } } } } };
 
       it('should tag a manual correction bolus with `correction` and `manual`', () => {
         expect(correctionBolus.tags).to.be.undefined;
@@ -988,6 +1191,19 @@ describe('DataUtil', () => {
         expect(wizardBolus.tags.override).to.be.false;
         expect(wizardBolus.tags.underride).to.be.false;
         expect(wizardBolus.tags.wizard).to.be.true;
+      });
+
+      it('should tag a dosingDecision bolus with `wizard`', () => {
+        expect(dosingDecisionBolus.tags).to.be.undefined;
+        dataUtil.tagDatum(dosingDecisionBolus);
+        expect(dosingDecisionBolus.tags.correction).to.be.false;
+        expect(dosingDecisionBolus.tags.extended).to.be.false;
+        expect(dosingDecisionBolus.tags.interrupted).to.be.false;
+        expect(dosingDecisionBolus.tags.manual).to.be.false;
+        expect(dosingDecisionBolus.tags.automated).to.be.false;
+        expect(dosingDecisionBolus.tags.override).to.be.false;
+        expect(dosingDecisionBolus.tags.underride).to.be.false;
+        expect(dosingDecisionBolus.tags.wizard).to.be.true;
       });
     });
 
@@ -1321,6 +1537,33 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumOut(datum);
         expect(datum.normalEnd).to.equal(1500);
       });
+
+      it('should call `normalizeDatumBgUnits` on bgTarget field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'deviceEvent' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgTarget'], ['low', 'high']);
+      });
+
+      it('should set normalEnd and duration based on latestDiabetesDatumEnd when duration is provided, but extends into future', () => {
+        const currentTime = Date.parse(moment.utc().toISOString());
+        dataUtil.latestDiabetesDatumEnd = currentTime - MS_IN_MIN * 10;
+
+        const datum = { type: 'deviceEvent', time: currentTime - MS_IN_MIN * 30, duration: MS_IN_HOUR };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(dataUtil.latestDiabetesDatumEnd);
+        expect(datum.duration).to.equal(MS_IN_MIN * 20);
+      });
+
+      it('should add normalEnd and duration based on latestDiabetesDatumEnd when duration for a pumpSettingsOverride is omitted', () => {
+        const currentTime = Date.parse(moment.utc().toISOString());
+        dataUtil.latestDiabetesDatumEnd = currentTime - MS_IN_MIN * 10;
+
+        const datum = { type: 'deviceEvent', subType: 'pumpSettingsOverride', time: currentTime - MS_IN_MIN * 30, duration: undefined };
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.normalEnd).to.equal(dataUtil.latestDiabetesDatumEnd);
+        expect(datum.duration).to.equal(MS_IN_MIN * 20);
+      });
     });
 
     context('cbg', () => {
@@ -1629,6 +1872,43 @@ describe('DataUtil', () => {
       });
     });
 
+    context('dosingDecision', () => {
+      it('should call `normalizeDatumOut` on pumpSettings field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumOut');
+
+        const datumWithPumpSettingsString = { type: 'dosingDecision', pumpSettings: 'some-string-id' };
+        const datumWithPumpSettingsObject = { type: 'dosingDecision', pumpSettings: { id: 'some-string-id' } };
+        const fields = '*';
+
+        dataUtil.normalizeDatumOut(datumWithPumpSettingsString, fields);
+        sinon.assert.neverCalledWithMatch(dataUtil.normalizeDatumOut, datumWithPumpSettingsString.pumpSettings, fields);
+
+        dataUtil.normalizeDatumOut(datumWithPumpSettingsObject, fields);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithPumpSettingsObject.pumpSettings, fields);
+      });
+
+      it('should call `normalizeDatumBgUnits` on bgTargetSchedule field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'dosingDecision' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgTargetSchedule'], ['low', 'high']);
+      });
+
+      it('should call `normalizeDatumBgUnits` on bgForecast field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'dosingDecision' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgForecast'], ['value']);
+      });
+
+      it('should call `normalizeDatumBgUnits` on smbg field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'dosingDecision' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['smbg'], ['value']);
+      });
+    });
+
     context('bolus', () => {
       it('should call `normalizeDatumOut` on wizard field objects', () => {
         sinon.spy(dataUtil, 'normalizeDatumOut');
@@ -1642,6 +1922,27 @@ describe('DataUtil', () => {
 
         dataUtil.normalizeDatumOut(datumWithWizardObject, fields);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithWizardObject.wizard, fields);
+      });
+
+      it('should call `normalizeDatumOut` on dosingDecision field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumOut');
+
+        const datumWithDosingDecisionString = { type: 'bolus', dosingDecision: 'some-string-id' };
+        const datumWithDosingDecisionObject = { type: 'bolus', dosingDecision: { id: 'some-string-id' } };
+        const fields = '*';
+
+        dataUtil.normalizeDatumOut(datumWithDosingDecisionString, fields);
+        sinon.assert.neverCalledWithMatch(dataUtil.normalizeDatumOut, datumWithDosingDecisionString.dosingDecision, fields);
+
+        dataUtil.normalizeDatumOut(datumWithDosingDecisionObject, fields);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datumWithDosingDecisionObject.dosingDecision, fields);
+      });
+
+      it('should call `normalizeDatumBgUnits` on bgInput field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'bolus' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, [], ['bgInput']);
       });
     });
 
@@ -1904,23 +2205,23 @@ describe('DataUtil', () => {
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(30);
+        expect(dataUtil.data.size()).to.equal(37);
         dataUtil.removeData(d => (d.type === 'basal'));
-        expect(dataUtil.data.size()).to.equal(27);
+        expect(dataUtil.data.size()).to.equal(34);
       });
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(30);
+        expect(dataUtil.data.size()).to.equal(37);
         dataUtil.removeData({ type: 'basal' });
-        expect(dataUtil.data.size()).to.equal(27);
+        expect(dataUtil.data.size()).to.equal(34);
       });
     });
 
     context('predicate not provided', () => {
       it('should remove all data from the crossfilter', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(30);
+        expect(dataUtil.data.size()).to.equal(37);
         dataUtil.removeData();
         expect(dataUtil.data.size()).to.equal(0);
       });
@@ -2378,6 +2679,8 @@ describe('DataUtil', () => {
         uploadData[0].uploadId,
         uploadData[1].uploadId,
         uploadData[2].uploadId,
+        uploadData[3].uploadId,
+        uploadData[4].uploadId,
       ]);
 
       expect(dataUtil.uploadMap[uploadData[0].uploadId]).to.eql({
@@ -2393,6 +2696,16 @@ describe('DataUtil', () => {
       expect(dataUtil.uploadMap[uploadData[2].uploadId]).to.eql({
         source: 'Medtronic',
         deviceSerialNumber: 'sn-2',
+      });
+
+      expect(dataUtil.uploadMap[uploadData[3].uploadId]).to.eql({
+        source: 'tidepool loop',
+        deviceSerialNumber: 'Unknown',
+      });
+
+      expect(dataUtil.uploadMap[uploadData[4].uploadId]).to.eql({
+        source: 'diy loop',
+        deviceSerialNumber: 'Unknown',
       });
     });
 
@@ -3704,15 +4017,15 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(30);
+      expect(result.size).to.equal(37);
 
       expect(result.devices).to.eql([
         { id: 'Test Page Data - 123' },
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
-        { id: 'DevId0987654321' },
         { id: 'OneTouch-XXX-XXXX' },
         { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { id: 'DevId0987654321' },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -3739,15 +4052,15 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(30);
+      expect(result.size).to.equal(37);
 
       expect(result.devices).to.eql([
         { id: 'Test Page Data - 123' },
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
-        { id: 'DevId0987654321' },
         { id: 'OneTouch-XXX-XXXX' },
         { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { id: 'DevId0987654321' },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -3768,6 +4081,7 @@ describe('DataUtil', () => {
         'bolus',
         'cbg',
         'deviceEvent',
+        'dosingDecision',
         'food',
         'pumpSettings',
         'smbg',

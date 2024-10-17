@@ -12,15 +12,13 @@ import {
 import {
   AUTOMATED_DELIVERY,
   BG_COLORS,
-  PHYSICAL_ACTIVITY,
   LBS_PER_KG,
   MS_IN_DAY,
   SCHEDULED_DELIVERY,
   SETTINGS_OVERRIDE,
-  SLEEP,
 } from './constants';
 
-import { getPumpVocabulary } from './device';
+import { getPumpVocabulary, getSettingsOverrides } from './device';
 import { bankersRound, formatDecimalNumber, formatBgValue } from './format';
 import { formatDuration } from './datetime';
 
@@ -300,6 +298,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 export const getStatAnnotations = (data, type, opts = {}) => {
   const { bgSource, days, manufacturer } = opts;
   const vocabulary = getPumpVocabulary(manufacturer);
+  const labels = { overrideLabel: vocabulary[SETTINGS_OVERRIDE], overrideLabelLowerCase: _.lowerCase(vocabulary[SETTINGS_OVERRIDE]) };
 
   const annotations = [];
 
@@ -366,11 +365,11 @@ export const getStatAnnotations = (data, type, opts = {}) => {
 
     case commonStats.timeInOverride:
       if (days > 1) {
-        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided by the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a {{overrideLabelLowerCase}}.', labels));
       } else {
-        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided by the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is total duration of time in a {{overrideLabelLowerCase}}.', labels));
       }
       break;
 
@@ -410,6 +409,7 @@ export const getStatAnnotations = (data, type, opts = {}) => {
 
 export const getStatData = (data, type, opts = {}) => {
   const vocabulary = getPumpVocabulary(opts.manufacturer);
+  const settingsOverrides = getSettingsOverrides(opts.manufacturer);
   const bgRanges = generateBgRangeLabels(opts.bgPrefs, { condensed: true });
 
   let statData = {
@@ -631,20 +631,12 @@ export const getStatData = (data, type, opts = {}) => {
       break;
 
     case commonStats.timeInOverride:
-      statData.data = [
-        {
-          id: 'physicalActivity',
-          value: ensureNumeric(_.get(data, 'physicalActivity', 0)),
-          title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [PHYSICAL_ACTIVITY, 'label']) }),
-          legendTitle: _.get(vocabulary, [PHYSICAL_ACTIVITY, 'label']),
-        },
-        {
-          id: 'sleep',
-          value: ensureNumeric(_.get(data, 'sleep', 0)),
-          title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [SLEEP, 'label']) }),
-          legendTitle: _.get(vocabulary, [SLEEP, 'label']),
-        },
-      ];
+      statData.data = _.map(settingsOverrides, override => ({
+        id: override,
+        value: ensureNumeric(_.get(data, override, 0)),
+        title: t('Time In {{overrideLabel}}', { overrideLabel: _.get(vocabulary, [override, 'label']) }),
+        legendTitle: _.get(vocabulary, [override, 'label']),
+      }));
 
       statData.sum = { value: getSum(statData.data) };
       statData.total = { value: MS_IN_DAY };
@@ -907,6 +899,7 @@ export const getStatDefinition = (data = {}, type, opts = {}) => {
         tooltip: statFormats.duration,
       };
       stat.legend = true;
+      stat.reverseLegendOrder = true;
       break;
 
     case commonStats.timeInRange:

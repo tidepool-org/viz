@@ -21,7 +21,7 @@ import i18next from 'i18next';
 import TextUtil from '../text/TextUtil';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
-import { insulinSettings } from './data';
+import { insulinSettings, presetSettings } from './data';
 
 const t = i18next.t.bind(i18next);
 
@@ -29,24 +29,13 @@ const t = i18next.t.bind(i18next);
  * nonTandemText
  * @param  {Object} patient     the patient object that contains the profile
  * @param  {String} units         MGDL_UNITS or MMOLL_UNITS
- * @param  {String} manufacturer  one of: animas, carelink, insulet, medtronic, microtech
+ * @param  {String} manufacturer  one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop
  *
  * @return {String}               non tandem settings as a string table
  */
 export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
-
-  if (!_.includes(['animas', 'microtech'], manufacturer)) {
-    const { rows, columns } = insulinSettings(settings, manufacturer);
-
-    settingsString += textUtil.buildTextTable(
-      t('Insulin Settings'),
-      rows,
-      columns,
-      { showHeader: false }
-    );
-  }
 
   _.map(nonTandemData.basalSchedules(settings), (schedule) => {
     const basal = nonTandemData.basal(schedule, settings, manufacturer);
@@ -56,13 +45,6 @@ export function nonTandemText(patient, settings, units, manufacturer) {
       basal.columns
     );
   });
-
-  const sensitivity = nonTandemData.sensitivity(settings, manufacturer, units);
-  settingsString += textUtil.buildTextTable(
-    `${sensitivity.title} ${units}/U`,
-    sensitivity.rows,
-    sensitivity.columns
-  );
 
   const target = nonTandemData.target(settings, manufacturer, units);
   settingsString += textUtil.buildTextTable(
@@ -78,6 +60,34 @@ export function nonTandemText(patient, settings, units, manufacturer) {
     ratio.rows,
     ratio.columns
   );
+
+  const sensitivity = nonTandemData.sensitivity(settings, manufacturer, units);
+  settingsString += textUtil.buildTextTable(
+    `${sensitivity.title} ${units}/U`,
+    sensitivity.rows,
+    sensitivity.columns
+  );
+
+  if (!_.includes(['animas', 'microtech'], manufacturer)) {
+    const { rows, columns } = insulinSettings(settings, manufacturer);
+
+    settingsString += textUtil.buildTextTable(
+      t('Insulin Settings'),
+      rows,
+      columns,
+      { showHeader: false }
+    );
+  }
+
+  const presets = presetSettings(settings, manufacturer);
+
+  if (presets.rows.length) {
+    settingsString += textUtil.buildTextTable(
+      t('Presets'),
+      presets.rows,
+      presets.columns
+    );
+  }
 
   return settingsString;
 }

@@ -8,6 +8,7 @@ import medtronicMultirate from '../../../data/pumpSettings/medtronic/multirate.r
 import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.raw.json';
 import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.raw.json';
 import equilMultirate from '../../../data/pumpSettings/equil/multirate.raw.json';
+import loopMultirate from '../../../data/pumpSettings/loop/multirate.raw.json';
 
 /* eslint-disable max-len */
 
@@ -25,16 +26,21 @@ describe('schema validation', () => {
     const typeResult = validator({ ...datum, type: 'foo' });
     expect(_.find(typeResult, { field: 'type' }).message).to.equal('The \'type\' field does not match any of the allowed values!');
     expect(_.find(typeResult, { field: 'type' }).expected).to.have.members([
+      'alert',
       'basal',
       'bolus',
       'cbg',
       'cgmSettings',
+      'controllerSettings',
+      'controllerStatus',
       'deviceEvent',
+      'dosingDecision',
       'food',
       'insulin',
       'message',
       'physicalActivity',
       'pumpSettings',
+      'pumpStatus',
       'reportedState',
       'smbg',
       'upload',
@@ -1058,6 +1064,290 @@ describe('schema validation', () => {
 
       it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
         expect(_.find(Validator.pumpSettings.equil(basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
+      });
+    });
+
+    context('diy loop', () => {
+      const bgTargetsZeroStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: 0 }] } };
+      const bgTargetsNegativeStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: -1 }] } };
+      const bgTargetsMsInDayStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: MS_IN_DAY }] } };
+      const bgTargetsAboveMsInDayStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: MS_IN_DAY + 1 }] } };
+      const bgTargetsZeroLow = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], low: 0 }] } };
+      const bgTargetsNegativeLow = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], low: -1 }] } };
+      const bgTargetsZeroHigh = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], high: 0 }] } };
+      const bgTargetsNegativeHigh = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], high: -1 }] } };
+      const bgTargetsForbiddenTarget = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], target: 1 }] } };
+      const bgTargetsForbiddenRange = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], range: 1 }] } };
+
+      const carbRatiosZeroStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: 0 }] } };
+      const carbRatiosNegativeStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: -1 }] } };
+      const carbRatiosMsInDayStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: MS_IN_DAY }] } };
+      const carbRatiosAboveMsInDayStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: MS_IN_DAY + 1 }] } };
+      const carbRatiosZeroAmount = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], amount: 0 }] } };
+      const carbRatiosNegativeAmount = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], amount: -1 }] } };
+
+      const insulinSensitivitiesZeroStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: 0 }] } };
+      const insulinSensitivitiesNegativeStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: -1 }] } };
+      const insulinSensitivitiesMsInDayStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: MS_IN_DAY }] } };
+      const insulinSensitivitiesAboveMsInDayStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: MS_IN_DAY + 1 }] } };
+      const insulinSensitivitiesZeroAmount = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], amount: 0 }] } };
+      const insulinSensitivitiesNegativeAmount = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], amount: -1 }] } };
+
+      const basalSchedulesZeroStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: 0, rate: 1 }] } };
+      const basalSchedulesNegativeStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: -1, rate: 1 }] } };
+      const basalSchedulesMsInDayStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY, rate: 1 }] } };
+      const basalSchedulesAboveMsInDayStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY + 1, rate: 1 }] } };
+      const basalSchedulesZeroRate = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: 0 }] } };
+      const basalSchedulesNegativeRate = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: -1 }] } };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings['diy loop'](loopMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(loopMultirate, 'diy loop');
+      });
+
+      it('should pass for zero `bgTargets[0].start`', () => {
+        expect(Validator.pumpSettings['diy loop'](bgTargetsZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTargets[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](bgTargetsNegativeStart)[0], { field: 'bgTargets[0].start' }).message).to.equal('The \'bgTargets[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `bgTargets[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['diy loop'](bgTargetsMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['diy loop'](bgTargetsAboveMsInDayStart)[0], { field: 'bgTargets[0].start' }).message).to.equal('The \'bgTargets[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `bgTargets[0].low`', () => {
+        expect(Validator.pumpSettings['diy loop'](bgTargetsZeroLow)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTargets[0].low`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](bgTargetsNegativeLow)[0], { field: 'bgTargets[0].low' }).message).to.equal('The \'bgTargets[0].low\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `bgTargets[0].high`', () => {
+        expect(Validator.pumpSettings['diy loop'](bgTargetsZeroHigh)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTargets[0].high`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](bgTargetsNegativeHigh)[0], { field: 'bgTargets[0].high' }).message).to.equal('The \'bgTargets[0].high\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a forbidden `bgTargets[0].target`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](bgTargetsForbiddenTarget)[0], { field: 'bgTargets[0].target' }).message).to.equal('The \'bgTargets[0].target\' field is forbidden!');
+      });
+
+      it('should return an error for a forbidden `bgTargets[0].range`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](bgTargetsForbiddenRange)[0], { field: 'bgTargets[0].range' }).message).to.equal('The \'bgTargets[0].range\' field is forbidden!');
+      });
+
+      it('should pass for zero `carbRatios[0].start`', () => {
+        expect(Validator.pumpSettings['diy loop'](carbRatiosZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatios[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](carbRatiosNegativeStart)[0], { field: 'carbRatios[0].start' }).message).to.equal('The \'carbRatios[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `carbRatios[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['diy loop'](carbRatiosMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['diy loop'](carbRatiosAboveMsInDayStart)[0], { field: 'carbRatios[0].start' }).message).to.equal('The \'carbRatios[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `carbRatios[0].amount`', () => {
+        expect(Validator.pumpSettings['diy loop'](carbRatiosZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatios[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](carbRatiosNegativeAmount)[0], { field: 'carbRatios[0].amount' }).message).to.equal('The \'carbRatios[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `insulinSensitivities[0].start`', () => {
+        expect(Validator.pumpSettings['diy loop'](insulinSensitivitiesZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivities[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](insulinSensitivitiesNegativeStart)[0], { field: 'insulinSensitivities[0].start' }).message).to.equal('The \'insulinSensitivities[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `insulinSensitivities[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['diy loop'](insulinSensitivitiesMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['diy loop'](insulinSensitivitiesAboveMsInDayStart)[0], { field: 'insulinSensitivities[0].start' }).message).to.equal('The \'insulinSensitivities[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `insulinSensitivities[0].amount`', () => {
+        expect(Validator.pumpSettings['diy loop'](insulinSensitivitiesZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivities[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](insulinSensitivitiesNegativeAmount)[0], { field: 'insulinSensitivities[0].amount' }).message).to.equal('The \'insulinSensitivities[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
+        expect(Validator.pumpSettings['diy loop'](basalSchedulesZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['diy loop'](basalSchedulesMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['diy loop'](basalSchedulesAboveMsInDayStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(Validator.pumpSettings['diy loop'](basalSchedulesZeroRate)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(_.find(Validator.pumpSettings['diy loop'](basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
+      });
+    });
+
+    context('tidepool loop', () => {
+      const bgTargetsZeroStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: 0 }] } };
+      const bgTargetsNegativeStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: -1 }] } };
+      const bgTargetsMsInDayStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: MS_IN_DAY }] } };
+      const bgTargetsAboveMsInDayStart = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], start: MS_IN_DAY + 1 }] } };
+      const bgTargetsZeroLow = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], low: 0 }] } };
+      const bgTargetsNegativeLow = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], low: -1 }] } };
+      const bgTargetsZeroHigh = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], high: 0 }] } };
+      const bgTargetsNegativeHigh = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], high: -1 }] } };
+      const bgTargetsForbiddenTarget = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], target: 1 }] } };
+      const bgTargetsForbiddenRange = { ...loopMultirate, bgTargets: { Default: [{ ...loopMultirate.bgTargets.Default[0], range: 1 }] } };
+
+      const carbRatiosZeroStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: 0 }] } };
+      const carbRatiosNegativeStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: -1 }] } };
+      const carbRatiosMsInDayStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: MS_IN_DAY }] } };
+      const carbRatiosAboveMsInDayStart = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], start: MS_IN_DAY + 1 }] } };
+      const carbRatiosZeroAmount = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], amount: 0 }] } };
+      const carbRatiosNegativeAmount = { ...loopMultirate, carbRatios: { Default: [{ ...loopMultirate.carbRatios.Default[0], amount: -1 }] } };
+
+      const insulinSensitivitiesZeroStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: 0 }] } };
+      const insulinSensitivitiesNegativeStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: -1 }] } };
+      const insulinSensitivitiesMsInDayStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: MS_IN_DAY }] } };
+      const insulinSensitivitiesAboveMsInDayStart = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], start: MS_IN_DAY + 1 }] } };
+      const insulinSensitivitiesZeroAmount = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], amount: 0 }] } };
+      const insulinSensitivitiesNegativeAmount = { ...loopMultirate, insulinSensitivities: { Default: [{ ...loopMultirate.insulinSensitivities.Default[0], amount: -1 }] } };
+
+      const basalSchedulesZeroStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: 0, rate: 1 }] } };
+      const basalSchedulesNegativeStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: -1, rate: 1 }] } };
+      const basalSchedulesMsInDayStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY, rate: 1 }] } };
+      const basalSchedulesAboveMsInDayStart = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: MS_IN_DAY + 1, rate: 1 }] } };
+      const basalSchedulesZeroRate = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: 0 }] } };
+      const basalSchedulesNegativeRate = { ...loopMultirate, basalSchedules: { ...animasMultirate.basalSchedules, NewSchedule: [{ start: 1, rate: -1 }] } };
+
+      it('should validate a valid `pumpSettings` datum', () => {
+        expect(Validator.pumpSettings['tidepool loop'](loopMultirate)).to.be.true;
+      });
+
+      it('should validate common fields', () => {
+        validateCommon(loopMultirate, 'tidepool loop');
+      });
+
+      it('should pass for zero `bgTargets[0].start`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](bgTargetsZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTargets[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](bgTargetsNegativeStart)[0], { field: 'bgTargets[0].start' }).message).to.equal('The \'bgTargets[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `bgTargets[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['tidepool loop'](bgTargetsMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['tidepool loop'](bgTargetsAboveMsInDayStart)[0], { field: 'bgTargets[0].start' }).message).to.equal('The \'bgTargets[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `bgTargets[0].low`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](bgTargetsZeroLow)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTargets[0].low`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](bgTargetsNegativeLow)[0], { field: 'bgTargets[0].low' }).message).to.equal('The \'bgTargets[0].low\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `bgTargets[0].high`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](bgTargetsZeroHigh)).to.be.true;
+      });
+
+      it('should return an error for a negative `bgTargets[0].high`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](bgTargetsNegativeHigh)[0], { field: 'bgTargets[0].high' }).message).to.equal('The \'bgTargets[0].high\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a forbidden `bgTargets[0].target`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](bgTargetsForbiddenTarget)[0], { field: 'bgTargets[0].target' }).message).to.equal('The \'bgTargets[0].target\' field is forbidden!');
+      });
+
+      it('should return an error for a forbidden `bgTargets[0].range`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](bgTargetsForbiddenRange)[0], { field: 'bgTargets[0].range' }).message).to.equal('The \'bgTargets[0].range\' field is forbidden!');
+      });
+
+      it('should pass for zero `carbRatios[0].start`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](carbRatiosZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatios[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](carbRatiosNegativeStart)[0], { field: 'carbRatios[0].start' }).message).to.equal('The \'carbRatios[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `carbRatios[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['tidepool loop'](carbRatiosMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['tidepool loop'](carbRatiosAboveMsInDayStart)[0], { field: 'carbRatios[0].start' }).message).to.equal('The \'carbRatios[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `carbRatios[0].amount`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](carbRatiosZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `carbRatios[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](carbRatiosNegativeAmount)[0], { field: 'carbRatios[0].amount' }).message).to.equal('The \'carbRatios[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `insulinSensitivities[0].start`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](insulinSensitivitiesZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivities[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](insulinSensitivitiesNegativeStart)[0], { field: 'insulinSensitivities[0].start' }).message).to.equal('The \'insulinSensitivities[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `insulinSensitivities[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['tidepool loop'](insulinSensitivitiesMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['tidepool loop'](insulinSensitivitiesAboveMsInDayStart)[0], { field: 'insulinSensitivities[0].start' }).message).to.equal('The \'insulinSensitivities[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `insulinSensitivities[0].amount`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](insulinSensitivitiesZeroAmount)).to.be.true;
+      });
+
+      it('should return an error for a negative `insulinSensitivities[0].amount`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](insulinSensitivitiesNegativeAmount)[0], { field: 'insulinSensitivities[0].amount' }).message).to.equal('The \'insulinSensitivities[0].amount\' field must be larger than or equal to 0!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].start`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](basalSchedulesZeroStart)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].start`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](basalSchedulesNegativeStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be larger than or equal to 0!');
+      });
+
+      it('should return an error for a `basalSchedules.NewSchedule[0].start` greater than MS_IN_DAY', () => {
+        expect(Validator.pumpSettings['tidepool loop'](basalSchedulesMsInDayStart)).to.be.true;
+        expect(_.find(Validator.pumpSettings['tidepool loop'](basalSchedulesAboveMsInDayStart), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].start\' field must be less than or equal to 86400000!');
+      });
+
+      it('should pass for zero `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(Validator.pumpSettings['tidepool loop'](basalSchedulesZeroRate)).to.be.true;
+      });
+
+      it('should return an error for a negative `basalSchedules.NewSchedule[0].rate`', () => {
+        expect(_.find(Validator.pumpSettings['tidepool loop'](basalSchedulesNegativeRate), { field: 'basalSchedules' })[0].message).to.equal('The \'basalSchedules[0].rate\' field must be larger than or equal to 0!');
       });
     });
 

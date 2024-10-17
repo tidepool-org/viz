@@ -7,9 +7,12 @@ import i18next from 'i18next';
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
+  isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
+  isDIYLoop,
+  isTidepoolLoop,
 } from './device';
 
 import {
@@ -27,10 +30,13 @@ import {
   BGM_DATA_KEY,
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
+  DIABETES_DATA_TYPES,
   MS_IN_DAY,
   MS_IN_HOUR,
   MS_IN_MIN,
   MGDL_UNITS,
+  DIY_LOOP,
+  TIDEPOOL_LOOP,
 } from './constants';
 
 import {
@@ -84,8 +90,10 @@ export class DataUtil {
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
+    this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
+    this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
@@ -107,9 +115,14 @@ export class DataUtil {
     this.endTimer('normalizeDataIn');
 
     // Join wizard and bolus datums
-    this.startTimer('processNormalizedData');
+    this.startTimer('joinWizardAndBolus');
     _.each(data, this.joinWizardAndBolus);
-    this.endTimer('processNormalizedData');
+    this.endTimer('joinWizardAndBolus');
+
+    // Join bolus and dosingDecision datums
+    this.startTimer('joinBolusAndDosingDecision');
+    _.each(data, this.joinBolusAndDosingDecision);
+    this.endTimer('joinBolusAndDosingDecision');
 
     // Filter out any data that failed validation, and and duplicates by `id`
     this.startTimer('filterValidData');
@@ -162,6 +175,18 @@ export class DataUtil {
       if (d.suppressed) {
         this.normalizeSuppressedBasal(d);
       }
+
+      // Prevent ongoing basals with unknown durations from extending into the future
+      if (_.isFinite(d.duration) && _.includes(_.map(d.annotations, 'code'), 'basal/unknown-duration')) {
+        const currentTime = Date.parse(moment.utc().toISOString());
+        const maxDuration = currentTime - Date.parse(d.time);
+        d.duration = _.min([d.duration, maxDuration]);
+        if (_.isFinite(d.suppressed?.duration)) d.suppressed.duration = d.duration;
+      }
+    }
+
+    if (d.type === 'upload' && d.dataSetType === 'continuous') {
+      if (!d.time) d.time = moment.utc().toISOString();
     }
 
     if (d.messagetext) {
@@ -196,8 +221,18 @@ export class DataUtil {
       this.bolusToWizardIdMap[d.bolus] = d.id;
       this.wizardToBolusIdMap[d.id] = d.bolus;
     }
+
+    // Populate mappings to be used for 2-way join of boluses and dosing decisions
+    if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus'], d.reason)) {
+      this.bolusDosingDecisionDatumsByIdMap[d.id] = d;
+    }
+
     if (d.type === 'bolus') {
       this.bolusDatumsByIdMap[d.id] = d;
+    }
+
+    if (d.type === 'pumpSettings') {
+      this.pumpSettingsDatumsByIdMap[d.id] = d;
     }
 
     // Generate a map of devices by deviceId
@@ -229,7 +264,7 @@ export class DataUtil {
         const datumToPopulate = _.omit(datumMap[idMap[d.id]], d.type);
 
         if (isWizard && d.uploadId !== datumToPopulate.uploadId) {
-          // Due to an issue stemming from a fix for wizard datums in Upoader >= v2.35.0, we have a
+          // Due to an issue stemming from a fix for wizard datums in Ulpoader >= v2.35.0, we have a
           // possibility of duplicates of older wizard datums from previous uploads. The boluses and
           // corrected wizards should both reference the same uploadId, so we can safely reject
           // wizards that don't reference the same upload as the bolus it's referencing.
@@ -238,6 +273,36 @@ export class DataUtil {
         } else {
           d[fieldToPopulate] = datumToPopulate;
         }
+      }
+    }
+  };
+
+  joinBolusAndDosingDecision = d => {
+    if (d.type === 'bolus' && isLoop(d)) {
+      const timeThreshold = MS_IN_MIN;
+
+      const proximateDosingDecisions = _.filter(
+        _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
+        ({ time }) => {
+          const timeOffset = Math.abs(time - d.time);
+          return timeOffset <= timeThreshold;
+        }
+      );
+
+      const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
+      const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.amount === d.normal);
+      d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+
+      if (d.dosingDecision) {
+        // attach associated pump settings to dosingDecisions
+        const associatedPumpSettingsId = _.find(d.dosingDecision.associations, { reason: 'pumpSettings' })?.id;
+        d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
+
+        // Translate relevant dosing decision data onto expected bolus fields
+        d.expectedNormal = d.dosingDecision.requestedBolus?.amount;
+        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+        d.bgInput = _.last(d.dosingDecision.bgHistorical || [])?.value;
+        d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
       }
     }
   };
@@ -276,15 +341,17 @@ export class DataUtil {
     }
 
     if (d.type === 'bolus') {
+      const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net;
+
       d.tags = {
         automated: isAutomated(d),
         correction: isCorrection(d),
         extended: hasExtended(d),
         interrupted: isInterruptedBolus(d),
-        manual: !d.wizard && !isAutomated(d),
+        manual: !isWizardOrDosingDecision && !isAutomated(d),
         override: isOverride(d),
         underride: isUnderride(d),
-        wizard: !!d.wizard,
+        wizard: !!isWizardOrDosingDecision,
       };
     }
 
@@ -414,7 +481,9 @@ export class DataUtil {
     }
 
     if (d.type === 'pumpSettings') {
+      this.normalizeDatumBgUnits(d, [], ['bgSafetyLimit']);
       this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
+      this.normalizeDatumBgUnits(d, ['bgTargetPreprandial', 'bgTargetPhysicalActivity'], ['low', 'high']);
       this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
       // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
       if (normalizeAllFields || _.includes(fields, 'basalSchedules')) {
@@ -440,12 +509,44 @@ export class DataUtil {
       }
     }
 
+    if (d.type === 'dosingDecision') {
+      this.normalizeDatumBgUnits(d, ['bgTargetSchedule'], ['low', 'high']);
+      this.normalizeDatumBgUnits(d, ['bgForecast'], ['value']);
+      this.normalizeDatumBgUnits(d, ['smbg'], ['value']);
+      if (_.isObject(d.pumpSettings)) this.normalizeDatumOut(d.pumpSettings, fields);
+    }
+
     if (d.type === 'bolus') {
+      this.normalizeDatumBgUnits(d, [], ['bgInput']);
       if (_.isObject(d.wizard)) this.normalizeDatumOut(d.wizard, fields);
+      if (_.isObject(d.dosingDecision)) this.normalizeDatumOut(d.dosingDecision, fields);
     }
 
     if (d.type === 'deviceEvent') {
-      if (_.isFinite(d.duration)) d.normalEnd = d.normalTime + d.duration;
+      this.normalizeDatumBgUnits(d, ['bgTarget'], ['low', 'high']);
+      const isOverrideEvent = d.subType === 'pumpSettingsOverride';
+
+      if (_.isFinite(d.duration)) {
+        // Loop is reporting these durations in seconds instead of the milliseconds historically
+        // used by Tandem.
+        // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
+        // convert for Loop versions prior to the fix.
+        if (isOverrideEvent && isLoop(d)) d.duration = d.duration * 1000;
+        d.normalEnd = d.normalTime + d.duration;
+
+        // If the provided duration extends into the future, we truncate the normalEnd to the
+        // latest diabetes datum end and recalculate the duration
+        const currentTime = Date.parse(moment.utc().toISOString());
+        if (d.normalEnd > currentTime) {
+          d.normalEnd = this.latestDiabetesDatumEnd;
+          d.duration = d.normalEnd - d.normalTime;
+        }
+      } else if (isOverrideEvent && _.isFinite(this.latestDiabetesDatumEnd)) {
+        // Ongoing pump settings overrides will not have a duration with which to determine
+        // normalEnd, so we will set it to the latest diabetes datum end.
+        d.normalEnd = this.latestDiabetesDatumEnd;
+        d.duration = d.normalEnd - d.normalTime;
+      }
     }
 
     if (d.type === 'fill') {
@@ -508,7 +609,16 @@ export class DataUtil {
           _.each(keys, (key) => {
             if (_.isNumber(pathValue[key])) {
               const setPath = _.reject([path, key], _.isEmpty);
+              // in some cases, a path could be converted more than once, especially if a dosing decision
+              // was shared with multple boluses due to proximity. We need to track which paths have
+              // already been converted so we don't do it multiple times.
+              if (d.bgNormalized?.[setPath.join('|')]) return;
               _.set(d, setPath, convertToMGDL(pathValue[key]));
+
+              d.bgNormalized = {
+                ...(d.bgNormalized || {}),
+                [setPath.join('|')]: true,
+              };
             } else if (_.isPlainObject(pathValue)) {
               this.normalizeDatumBgUnits(pathValue, _.keys(pathValue), [key]);
             }
@@ -780,10 +890,10 @@ export class DataUtil {
     this.clearFilters();
     const uploadData = this.filter.byType('upload').top(Infinity);
     const pumpSettingsData = this.filter.byType('pumpSettings').top(Infinity);
-
     this.uploadMap = {};
 
     _.each(uploadData, upload => {
+      const pumpSettings = _.find(pumpSettingsData, { uploadId: upload.uploadId });
       let source = 'Unknown';
 
       if (_.get(upload, 'source')) {
@@ -801,6 +911,10 @@ export class DataUtil {
         } else {
           source = upload.deviceManufacturers[0];
         }
+      } else if (isTidepoolLoop(pumpSettings)) {
+        source = TIDEPOOL_LOOP.toLowerCase();
+      } else if (isDIYLoop(pumpSettings)) {
+        source = DIY_LOOP.toLowerCase();
       }
 
       this.uploadMap[upload.uploadId] = {
@@ -826,6 +940,18 @@ export class DataUtil {
     this.startTimer('setSize');
     this.size = this.data.size();
     this.endTimer('setSize');
+  };
+
+  setLatestDiabetesDatumEnd = () => {
+    const latestDiabetesDatum = _.maxBy(
+      _.filter(
+        _.values(this.latestDatumByType),
+        ({ type }) => _.includes(DIABETES_DATA_TYPES, type)
+      ),
+      d => (d.duration ? d.time + d.duration : d.time)
+    );
+
+    this.latestDiabetesDatumEnd = latestDiabetesDatum ? latestDiabetesDatum.time + (latestDiabetesDatum.duration || 0) : null;
   };
 
   /* eslint-disable no-param-reassign */
@@ -898,6 +1024,7 @@ export class DataUtil {
     this.setDevices();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
+    this.setLatestDiabetesDatumEnd();
     this.endTimer('setMetaData');
   };
 
@@ -1137,7 +1264,7 @@ export class DataUtil {
 
     // Clear matchedDevices metaData if the current endpoints change
     const activeDaysChanged = activeDays && !_.isEqual(activeDays, this.activeDays);
-    const bgSourceChanged = bgSource !== this.bgSources.current;
+    const bgSourceChanged = bgSource !== this.bgSources?.current;
     const endpointsChanged = endpoints && !_.isEqual(endpoints, this.endpoints?.current?.range);
     const excludedDevicesChanged = excludedDevices && !_.isEqual(excludedDevices, this.excludedDevices);
 
@@ -1494,85 +1621,80 @@ export class DataUtil {
     return generatedData;
   };
 
-  addBasalOverlappingStart = (basalData, normalizeFields) => {
+  addBasalOverlappingStart = (basalData = [], normalizeFields) => {
     _.each(basalData, d => {
       if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
     });
 
-    if (basalData.length && basalData[0].normalTime > this.activeEndpoints.range[0]) {
-      // We need to ensure all the days of the week are active to ensure we get all basals
-      this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
+    // We need to ensure all the days of the week are active to ensure we get all basals
+    this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
-      // Set the endpoints filter to the previous day
-      this.filter.byEndpoints([
-        this.activeEndpoints.range[0] - MS_IN_DAY,
-        this.activeEndpoints.range[0],
-      ]);
+    // Set the endpoints filter get all previous basal datums
+    this.filter.byEndpoints([
+      0,
+      this.activeEndpoints.range[0],
+    ]);
 
-      // Fetch last basal from previous day
-      const previousBasalDatum = this.sort
-        .byTime(this.filter.byType('basal').top(Infinity))
-        .reverse()[0];
+    // Fetch previous basal datum
+    const previousBasalDatum = this.sort
+      .byTime(this.filter.byType('basal').top(Infinity))
+      .reverse()[0];
 
-      if (previousBasalDatum) {
-        this.normalizeDatumOut(previousBasalDatum, normalizeFields);
+    if (previousBasalDatum) {
+      this.normalizeDatumOut(previousBasalDatum, normalizeFields);
 
-        // Add to top of basal data array if it overlaps the start endpoint
-        const datumOverlapsStart = previousBasalDatum.normalTime < this.activeEndpoints.range[0]
-          && previousBasalDatum.normalEnd > this.activeEndpoints.range[0];
+      // Add to top of basal data array if it overlaps the start endpoint
+      const datumOverlapsStart = previousBasalDatum.normalTime < this.activeEndpoints.range[0]
+        && previousBasalDatum.normalEnd > this.activeEndpoints.range[0];
 
-        if (datumOverlapsStart) {
-          basalData.unshift(previousBasalDatum);
-        }
+      if (datumOverlapsStart) {
+        basalData.unshift(previousBasalDatum);
       }
-
-      // Reset the endpoints and activeDays filters to the back to what they were
-      this.filter.byEndpoints(this.activeEndpoints.range);
-      this.filter.byActiveDays(this.activeDays);
     }
+
+    // Reset the endpoints and activeDays filters to the back to what they were
+    this.filter.byEndpoints(this.activeEndpoints.range);
+    this.filter.byActiveDays(this.activeDays);
 
     return basalData;
   };
 
-  addPumpSettingsOverrideOverlappingStart = (pumpSettingsOverrideData, normalizeFields) => {
+  addPumpSettingsOverrideOverlappingStart = (pumpSettingsOverrideData = [], normalizeFields) => {
     _.each(pumpSettingsOverrideData, d => {
       if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
     });
 
-    if (pumpSettingsOverrideData.length
-      && pumpSettingsOverrideData[0].normalTime > this.activeEndpoints.range[0]
-    ) {
-      // We need to ensure all the days of the week are active to ensure we get all basals
-      this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
+    // We need to ensure all the days of the week are active to ensure we get all override datums
+    this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
-      // Set the endpoints filter to the previous day
-      this.filter.byEndpoints([
-        this.activeEndpoints.range[0] - MS_IN_DAY,
-        this.activeEndpoints.range[0],
-      ]);
+    // Set the endpoints filter get all previous override datums
+    this.filter.byEndpoints([
+      0,
+      this.activeEndpoints.range[0],
+    ]);
 
-      // Fetch last basal from previous day
-      const previousPumpSettingsOverrideDatum = _.cloneDeep(_.filter(
-        this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity)),
-        { subType: 'pumpSettingsOverride' }
-      ).reverse()[0]);
+    // Fetch previous override datum
+    const previousPumpSettingsOverrideDatum = _.cloneDeep(_.filter(
+      this.sort.byTime(this.filter.byType('deviceEvent').top(Infinity)),
+      { subType: 'pumpSettingsOverride' }
+    ).reverse()[0]);
 
-      if (previousPumpSettingsOverrideDatum) {
-        this.normalizeDatumOut(previousPumpSettingsOverrideDatum, normalizeFields);
+    if (previousPumpSettingsOverrideDatum) {
+      this.normalizeDatumOut(previousPumpSettingsOverrideDatum, normalizeFields);
 
-        // Add to top of pumpSettingsOverride data array if it overlaps the start endpoint
-        const datumOverlapsStart = previousPumpSettingsOverrideDatum.normalTime < this.activeEndpoints.range[0]
-          && previousPumpSettingsOverrideDatum.normalEnd > this.activeEndpoints.range[0];
 
-        if (datumOverlapsStart) {
-          pumpSettingsOverrideData.unshift(previousPumpSettingsOverrideDatum);
-        }
+      // Add to top of pumpSettingsOverride data array if it overlaps the start endpoint
+      const datumOverlapsStart = previousPumpSettingsOverrideDatum.normalTime < this.activeEndpoints.range[0]
+      && previousPumpSettingsOverrideDatum.normalEnd > this.activeEndpoints.range[0];
+
+      if (datumOverlapsStart) {
+        pumpSettingsOverrideData.unshift(previousPumpSettingsOverrideDatum);
       }
-
-      // Reset the endpoints and activeDays filters to the back to what they were
-      this.filter.byEndpoints(this.activeEndpoints.range);
-      this.filter.byActiveDays(this.activeDays);
     }
+
+    // Reset the endpoints and activeDays filters to the back to what they were
+    this.filter.byEndpoints(this.activeEndpoints.range);
+    this.filter.byActiveDays(this.activeDays);
 
     return pumpSettingsOverrideData;
   };

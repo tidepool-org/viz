@@ -1001,14 +1001,14 @@ describe('stat', () => {
       it('should return annotations for `timeInOverride` stat when viewing a single day of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, singleDayOpts)).to.have.ordered.members([
           '**Time In Settings Override:** Time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided by the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in Settings Override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in a settings override divided by the total duration for this time period.\n\n**(time)** is total duration of time in a settings override.',
         ]);
       });
 
       it('should return annotations for `timeInOverride` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, multiDayOpts)).to.have.ordered.members([
           '**Time In Settings Override:** Daily average of the time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in Settings Override divided by the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in Settings Override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in a settings override divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a settings override.',
         ]);
       });
     });
@@ -1509,16 +1509,22 @@ describe('stat', () => {
 
       expect(statData.data).to.eql([
         {
+          id: 'sleep',
+          value: 100000,
+          title: 'Time In Sleep',
+          legendTitle: 'Sleep',
+        },
+        {
           id: 'physicalActivity',
           value: 20000,
           title: 'Time In Exercise',
           legendTitle: 'Exercise',
         },
         {
-          id: 'sleep',
-          value: 100000,
-          title: 'Time In Sleep',
-          legendTitle: 'Sleep',
+          id: 'preprandial',
+          value: 0,
+          title: 'Time In Premeal',
+          legendTitle: 'Premeal',
         },
       ]);
 
@@ -1864,6 +1870,9 @@ describe('stat', () => {
         count: statFormats.bgCount,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
+      expect(def.hideSummaryUnits).to.be.true;
+      expect(def.reverseLegendOrder).to.be.true;
     });
 
     it('should define the `sensorUsage` stat', () => {
@@ -1899,6 +1908,7 @@ describe('stat', () => {
         tooltip: statFormats.duration,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
     });
 
     it('should define the `timeInOverride` stat', () => {
@@ -1912,6 +1922,8 @@ describe('stat', () => {
         tooltip: statFormats.duration,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
+      expect(def.reverseLegendOrder).to.be.true;
     });
 
     it('should define the `timeInRange` stat', () => {
@@ -1926,6 +1938,9 @@ describe('stat', () => {
         tooltipTitle: statFormats.bgRange,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
+      expect(def.hideSummaryUnits).to.be.true;
+      expect(def.reverseLegendOrder).to.be.true;
     });
 
     it('should define the `totalInsulin` stat', () => {
@@ -1940,6 +1955,7 @@ describe('stat', () => {
         tooltip: statFormats.units,
       });
       expect(def.alwaysShowTooltips).to.be.true;
+      expect(def.legend).to.be.true;
     });
   });
 

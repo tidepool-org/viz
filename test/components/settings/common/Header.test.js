@@ -21,7 +21,7 @@ import { shallow } from 'enzyme';
 import Header from '../../../../src/components/settings/common/Header';
 
 describe('Header', () => {
-  it('should expand to show serial number on click of device name', () => {
+  it('should render the device upload date', () => {
     const wrapper = shallow(
       <Header
         deviceDisplayName="Testing"
@@ -29,10 +29,6 @@ describe('Header', () => {
         printView={false}
       />
     );
-    expect(wrapper.state().serialNumberExpanded).to.be.false;
-    wrapper.find('ul').at(0).simulate('click');
-    expect(wrapper.state().serialNumberExpanded).to.be.true;
-    wrapper.find('ul').at(0).simulate('click');
-    expect(wrapper.state().serialNumberExpanded).to.be.false;
+    expect(wrapper.find('span').text()).to.equal('Therapy Settings - Active at Upload on Jul 12th 2016');
   });
 });

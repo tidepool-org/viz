@@ -41,12 +41,17 @@ import {
   NO_SITE_CHANGE,
   SETTINGS_OVERRIDE,
   SITE_CHANGE,
+  TIDEPOOL_LOOP,
+  DIY_LOOP,
 } from '../../utils/constants';
 
 const siteChangeImages = {
   [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
   [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
+  [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
+  [`${TIDEPOOL_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${DIY_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
 };
 
 const t = i18next.t.bind(i18next);
@@ -262,7 +267,7 @@ class BasicsPrintView extends PrintView {
       this.renderHorizontalBarStat(
         timeInAuto,
         {
-          heading: t('Time In {{automatedLabel}} Ratio', { automatedLabel }),
+          heading: t('Avg. Daily Time In {{automatedLabel}}', { automatedLabel }),
           fillOpacity: 0.5,
           secondaryFormatKey: 'tooltip',
         }
@@ -274,7 +279,7 @@ class BasicsPrintView extends PrintView {
       this.renderHorizontalBarStat(
         timeInOverride,
         {
-          heading: t('Time In {{overrideLabel}}', { overrideLabel }),
+          heading: t('Avg. Daily Time In {{overrideLabel}}', { overrideLabel }),
           fillOpacity: 0.5,
           secondaryFormatKey: 'tooltip',
         }
@@ -403,12 +408,18 @@ class BasicsPrintView extends PrintView {
       opts.heading.note = opts.emptyText; // eslint-disable-line no-param-reassign
     }
 
+    this.doc.fontSize(this.defaultFontSize);
+    let headingHeight = 16;
+    const headingText = _.get(opts, 'heading', opts.heading.text || '');
+    const headingWidth = this.doc.widthOfString(headingText);
+    if (headingWidth >= columnWidth - 10) headingHeight = 32;
+
     this.renderTableHeading(opts.heading, {
       columnDefaults: {
         width: columnWidth,
         noteFontSize: this.smallFontSize,
       },
-      height: opts.heading.note ? 30 : 16,
+      height: opts.heading.note ? headingHeight + 14 : headingHeight,
       font: this.font,
       fontSize: this.defaultFontSize,
     });
@@ -517,7 +528,7 @@ class BasicsPrintView extends PrintView {
       const siteChangeSource = this.sections.siteChanges.source;
 
       if (isSiteChange) {
-        priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince));
+        priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince[siteChangeSource]));
       }
 
       const chunkedDayMap = _.chunk(_.map(this.calendar.days, (day, index) => {
@@ -583,7 +594,7 @@ class BasicsPrintView extends PrintView {
         this.doc.strokeOpacity(0);
         this.lockFillandStroke();
 
-        this.renderTable(this.calendar.columns, [rows[0]], {
+        this.renderTable(this.calendar.columns.map(column => ({ ...column, border: '' })), [rows[0]], {
           bottomMargin: 0,
         });
 
@@ -679,7 +690,9 @@ class BasicsPrintView extends PrintView {
         if (isSiteChange) {
           const daysSinceLabel = daysSince === 1 ? 'day' : 'days';
 
+          const manufacturer = this.sections.siteChanges.manufacturer;
           const siteChangeSource = this.sections.siteChanges.source;
+          const siteChangeImage = siteChangeImages[`${manufacturer}_${siteChangeSource}`] || siteChangeImages[siteChangeSource];
           const imageWidth = width / 2.5;
           const imagePadding = (width - imageWidth) / 2;
 
@@ -701,7 +714,7 @@ class BasicsPrintView extends PrintView {
 
           this.setFill();
 
-          this.doc.image(siteChangeImages[siteChangeSource], xPos + imagePadding, this.doc.y, {
+          this.doc.image(siteChangeImage, xPos + imagePadding, this.doc.y, {
             width: imageWidth,
           });
 

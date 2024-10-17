@@ -445,6 +445,8 @@ export class AggregationUtil {
           if (previousSiteChangeDates[type]) {
             const dateDiff = Date.parse(dataForDay.key) - Date.parse(previousSiteChangeDates[type]);
             processedData[dataForDay.key].summary.daysSince[type] = dateDiff / MS_IN_DAY;
+          } else {
+            processedData[dataForDay.key].summary.daysSince[type] = NaN;
           }
 
           previousSiteChangeDates[type] = dataForDay.key;
@@ -553,9 +555,13 @@ export class AggregationUtil {
 
         _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
 
-        if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+        if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) {
+          if (!_.isArray(groupedData.basal)) groupedData.basal = [];
+          groupedData.basal.unshift(groupedBasals[0]);
+        }
 
         if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
+          if (!_.isArray(groupedData.deviceEvent)) groupedData.deviceEvent = [];
           groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
         }
 

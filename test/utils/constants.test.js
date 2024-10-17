@@ -194,6 +194,12 @@ describe('constants', () => {
     });
   });
 
+  describe('AUTOMATED_MODE_EXITED', () => {
+    it('should be `automatedModeExited`', () => {
+      expect(constants.AUTOMATED_MODE_EXITED).to.equal('automatedModeExited');
+    });
+  });
+
   describe('SCHEDULED_DELIVERY', () => {
     it('should be `scheduledDelivery`', () => {
       expect(constants.SCHEDULED_DELIVERY).to.equal('scheduledDelivery');
@@ -209,6 +215,12 @@ describe('constants', () => {
   describe('PHYSICAL_ACTIVITY', () => {
     it('should be `physicalActivity`', () => {
       expect(constants.PHYSICAL_ACTIVITY).to.equal('physicalActivity');
+    });
+  });
+
+  describe('PREPRANDIAL', () => {
+    it('should be `preprandial`', () => {
+      expect(constants.PREPRANDIAL).to.equal('preprandial');
     });
   });
 
@@ -251,6 +263,18 @@ describe('constants', () => {
   describe('ANIMAS', () => {
     it('should be `Animas`', () => {
       expect(constants.ANIMAS).to.equal('Animas');
+    });
+  });
+
+  describe('TIDEPOOL_LOOP', () => {
+    it('should be `Tidepool Loop`', () => {
+      expect(constants.TIDEPOOL_LOOP).to.equal('Tidepool Loop');
+    });
+  });
+
+  describe('DIY_LOOP', () => {
+    it('should be `DIY Loop`', () => {
+      expect(constants.DIY_LOOP).to.equal('DIY Loop');
     });
   });
 
@@ -304,6 +328,24 @@ describe('constants', () => {
           [constants.MAX_BOLUS]: 'Max Bolus',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
+        [constants.TIDEPOOL_LOOP]: {
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
+          [constants.AUTOMATED_MODE_EXITED]: 'Off',
+          [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.SETTINGS_OVERRIDE]: 'Preset',
+          [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
+          [constants.MAX_BOLUS]: 'Maximum Bolus',
+          [constants.MAX_BASAL]: 'Maximum Basal Rate',
+        },
+        [constants.DIY_LOOP]: {
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
+          [constants.AUTOMATED_MODE_EXITED]: 'Off',
+          [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.SETTINGS_OVERRIDE]: 'Preset',
+          [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
+          [constants.MAX_BOLUS]: 'Maximum Bolus',
+          [constants.MAX_BASAL]: 'Maximum Basal Rate',
+        },
         [constants.MICROTECH]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
           [constants.SITE_CHANGE_TUBING]: 'Prime Reservoir',
@@ -315,10 +357,12 @@ describe('constants', () => {
           [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
           [constants.AUTOMATED_DELIVERY]: 'Automated',
           [constants.AUTOMATED_SUSPEND]: 'Automated Suspend',
+          [constants.AUTOMATED_MODE_EXITED]: 'Exited',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
           [constants.SETTINGS_OVERRIDE]: 'Settings Override',
           [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },
           [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
+          [constants.PREPRANDIAL]: { label: 'Premeal', marker: 'P' },
           [constants.MAX_BOLUS]: 'Max Bolus',
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',

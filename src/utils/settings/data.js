@@ -16,17 +16,21 @@
  */
 
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
-import { getPumpVocabulary } from '../device';
+import { getPumpVocabulary, isLoop } from '../device';
 
 import {
   MAX_BOLUS,
   MAX_BASAL,
   INSULIN_DURATION,
+  PHYSICAL_ACTIVITY,
+  PREPRANDIAL,
 } from '../../utils/constants';
 
+const t = i18next.t.bind(i18next);
 const DISPLAY_PRECISION_PLACES = 3;
 
 /**
@@ -41,7 +45,7 @@ export function noData(val) {
 
 /**
  * deviceName
- * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech
+ * @param  {String} manufacturer one of: animas, insulet, medtronic, tandem, microtech, loop
  *
  * @return {String}              name for given manufacturer
  */
@@ -52,6 +56,8 @@ export function deviceName(manufacturer) {
     medtronic: 'Medtronic',
     tandem: 'Tandem',
     microtech: 'Equil',
+    'diy loop': 'DIY Loop',
+    'tidepool loop': 'Tidepool Loop',
   };
   return DEVICE_DISPLAY_NAME_BY_MANUFACTURER[manufacturer] || manufacturer;
 }
@@ -152,7 +158,7 @@ export function getTotalBasalRates(scheduleData) {
  * getScheduleLabel
  * @param  {String} scheduleName  basal schedule name
  * @param  {String} activeName    name of active basal schedule at time of upload
- * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech
+ * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
  * @param  {Boolean} noUnits      whether units should be included in label object
  *
  * @return {Object}              object representing basal schedule label
@@ -383,15 +389,21 @@ export function startTimeAndValue(valueKey) {
  * insulinSettings
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
  * @param  {String} [scheduleName] name of schedule for tandem settings
  */
 export function insulinSettings(settings, manufacturer, scheduleName) {
+  const bgUnits = settings?.units?.bg;
   const deviceLabels = getPumpVocabulary(manufacturer);
   const maxBasal = _.get(settings, scheduleName ? `basal[${scheduleName}].rateMaximum.value` : 'basal.rateMaximum.value');
   const maxBolus = _.get(settings, scheduleName ? `bolus[${scheduleName}].amountMaximum.value` : 'bolus.amountMaximum.value');
-  const insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
+  let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
+
+  if (_.includes(['diy loop', 'tidepool loop'], manufacturer)) {
+    insulinDuration = _.get(settings, 'insulinModel.actionDuration');
+    insulinDurationUnits = 'milliseconds';
+  }
 
   const columns = [
     { key: 'setting' },
@@ -407,14 +419,84 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
       : durationInHours;
   }
 
+  if (insulinDurationUnits === 'milliseconds') {
+    const durationInHours = Math.floor(insulinDuration / 60 / 60);
+    const minutesRemainder = insulinDuration % 60;
+
+    insulinDuration = (minutesRemainder > 0)
+      ? `${durationInHours}:${_.padStart(minutesRemainder, 2, '0')}`
+      : durationInHours;
+  }
+
   const rows = [
     { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
     { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
 
+  if (isLoop(settings)) {
+    const insulinModelLabels = {
+      rapidAdult: t('Rapid-Acting - Adults'),
+      rapidChild: t('Rapid Acting - Children'),
+      fiasp: t('Fiasp'),
+      lyumjev: t('Lyumjev'),
+      afrezza: t('Afrezza'),
+    };
+
+    const insulinModel = {
+      label: insulinModelLabels[settings?.insulinModel?.modelType] || settings?.insulinModel?.modelType || t('Unknown'),
+      peakMinutes: _.isFinite(settings?.insulinModel?.actionPeakOffset) ? settings.insulinModel.actionPeakOffset / 60 : null,
+    };
+
+    const device = deviceName(manufacturer);
+
+    const insulinModelAnnotations = [
+      t('{{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.', { device }),
+    ];
+
+    if (insulinModel.peakMinutes) insulinModelAnnotations.push(t('The {{label}} model assumes peak activity at {{peakMinutes}} minutes.', insulinModel));
+
+    rows.unshift({
+      annotations: [t('{{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device })],
+      setting: t('Glucose Safety Limit'),
+      value: `${format.formatBgValue(settings?.bgSafetyLimit, { bgUnits })} ${bgUnits}`,
+    });
+
+    rows.splice(3, 1, {
+      annotations: insulinModelAnnotations,
+      setting: t('Insulin Model'),
+      value: insulinModel.label,
+    });
+  }
+
   // Tandem insulin settings do not have max basal
   if (manufacturer === 'tandem') rows.shift();
+
+  return {
+    columns,
+    rows,
+  };
+}
+
+/**
+ * presetSettings
+ *
+ * @param  {Object} settings       object with pump settings data
+ * @param  {String} manufacturer   one of: tidepool loop, diy loop
+ */
+export function presetSettings(settings, manufacturer) {
+  const deviceLabels = getPumpVocabulary(manufacturer);
+  const bgUnits = settings?.units?.bg;
+  const correctionRange = range => `${format.formatBgValue(range?.low, { bgUnits })}-${format.formatBgValue(range?.high, { bgUnits })}`;
+
+  const columns = [
+    { key: 'name', label: 'Name' },
+    { key: 'value', label: `${t('Correction Range')} (${bgUnits})` },
+  ];
+
+  const rows = [];
+  if (settings?.bgTargetPreprandial) rows.push({ name: deviceLabels[PREPRANDIAL]?.label, value: correctionRange(settings?.bgTargetPreprandial) });
+  if (settings?.bgTargetPhysicalActivity) rows.push({ name: deviceLabels[PHYSICAL_ACTIVITY]?.label, value: correctionRange(settings?.bgTargetPhysicalActivity) });
 
   return {
     columns,

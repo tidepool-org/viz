@@ -19,7 +19,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import i18next from 'i18next';
 
-import { getPumpVocabulary } from '../device';
+import { getPumpVocabulary, getUppercasedManufacturer, isLoop } from '../device';
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -31,13 +31,16 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE_TYPE_UNDECLARED,
   AUTOMATED_DELIVERY,
+  AUTOMATED_MODE_EXITED,
   AUTOMATED_SUSPEND,
   INSULET,
   TANDEM,
   ANIMAS,
+  DIY_LOOP,
   MEDTRONIC,
   MICROTECH,
   pumpVocabulary,
+  TIDEPOOL_LOOP,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';
@@ -89,13 +92,14 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         summaryTitle = t('Total basal events');
         dimensions = [
           { path: 'basal.summary', key: 'total', label: t('Basal Events'), primary: true },
-          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals') },
+          { path: 'basal.summary.subtotals', key: 'temp', label: t('Temp Basals'), hideEmpty: isLoop(pumpUpload.settings) },
           { path: 'basal.summary.subtotals', key: 'suspend', label: t('Suspends') },
           {
             path: 'basal.summary.subtotals',
             key: 'automatedStop',
-            label: t('{{automatedLabel}} Exited', {
+            label: t('{{automatedLabel}} {{automatedModeExited}}', {
               automatedLabel: deviceLabels[AUTOMATED_DELIVERY],
+              automatedModeExited: deviceLabels[AUTOMATED_MODE_EXITED],
             }),
             hideEmpty: true,
           },
@@ -121,6 +125,13 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
           { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
         ];
+
+        if (isLoop(pumpUpload.settings)) {
+          dimensions[1].label = t('Meal');
+          dimensions.splice(3, 1);
+          dimensions[2].selectorIndex = 6;
+          dimensions[5].selectorIndex = 7;
+        }
 
         if (pumpUpload.isAutomatedBolusDevice) {
           dimensions.push(...[
@@ -201,6 +212,8 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     }
   } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
+  } else if (_.includes(_.map([DIY_LOOP, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
+    siteChangeSource = SITE_CHANGE_TUBING;
   }
 
   return siteChangeSource;
@@ -218,8 +231,8 @@ export function getSiteChangeSourceLabel(siteChangeSource, manufacturer) {
 
   return _.get(
     pumpVocabulary,
-    [_.upperFirst(manufacturer), siteChangeSource],
-    fallbackSubtitle
+    [getUppercasedManufacturer(manufacturer), siteChangeSource],
+    pumpVocabulary?.default?.[siteChangeSource] || fallbackSubtitle
   );
 }
 
@@ -244,7 +257,11 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     switch (aggregationKey) {
       case 'basals':
       case 'boluses':
-        emptyText = t("This section requires data from an insulin pump, so there's nothing to display.");
+        emptyText = aggregations.boluses.disabled && aggregations.basals.disabled
+          ? t("This section requires data from an insulin pump, so there's nothing to display.")
+          : t('There are no {{ type }} events to display for this date range.', {
+            type: aggregationKey === 'basals' ? t('basal') : t('bolus'),
+          });
         break;
 
       case 'siteChanges':

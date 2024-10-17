@@ -24,6 +24,7 @@ import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
 import BolusTooltip from '../../../src/components/daily/bolustooltip/BolusTooltip';
 import styles from '../../../src/components/daily/bolustooltip/BolusTooltip.css';
+import { MGDL_UNITS, MS_IN_HOUR } from '../../../src/utils/constants';
 
 const normal = {
   normal: 5,
@@ -382,9 +383,80 @@ const withTandemTarget = {
   insulinCarbRatio: 15,
 };
 
+const withLoopDosingDecision = {
+  type: 'bolus',
+  origin: { name: 'com.loopkit.Loop' },
+  normal: 5,
+  normalTime: '2017-11-11T05:45:52.000Z',
+  carbInput: 24,
+  expectedNormal: 6,
+  insulinOnBoard: 2.654,
+  dosingDecision: {
+    smbg: {
+      value: 192,
+    },
+    insulinOnBoard: {
+      amount: 2.2354,
+    },
+    bgTargetSchedule: [
+      {
+          high: 160,
+          low: 150,
+          start: MS_IN_HOUR * 4,
+      },
+      {
+          high: 165,
+          low: 155,
+          start: MS_IN_HOUR * 5,
+      },
+      {
+          high: 170,
+          low: 160,
+          start: MS_IN_HOUR * 6,
+      },
+    ],
+    pumpSettings: {
+      activeSchedule: 'Default',
+      carbRatios: {
+        Default: [
+          {
+            amount: 15,
+            start: MS_IN_HOUR * 4,
+          },
+          {
+            amount: 17,
+            start: MS_IN_HOUR * 5,
+          },
+          {
+            amount: 19,
+            start: MS_IN_HOUR * 6,
+          },
+        ],
+      },
+      insulinSensitivities: {
+        Default: [
+          {
+            amount: 360,
+            start: MS_IN_HOUR * 4,
+          },
+          {
+            amount: 396,
+            start: MS_IN_HOUR * 5,
+          },
+          {
+            amount: 342,
+            start: MS_IN_HOUR * 6,
+          },
+        ],
+      },
+    }
+  },
+};
+
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
+  bgPrefs: { bgUnits: MGDL_UNITS }
 };
 
 describe('BolusTooltip', () => {
@@ -561,6 +633,17 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.include('Automated');
   });
 
+  // eslint-disable-next-line max-len
+  it('should render appropriate fields for a bolus with a Loop dosing decision', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
   describe('getTarget', () => {
     // eslint-disable-next-line max-len
     const targetValue = `${formatClassesAsSelector(styles.target)} ${formatClassesAsSelector(styles.value)}`;
@@ -592,6 +675,11 @@ describe('BolusTooltip', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withTandemTarget} />);
       expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('100');
+    });
+    it('should return a single div for Loop style target', () => {
+      const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
+      expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
+      expect(wrapper.find(targetValue).text()).to.equal('155-165');
     });
     it('should return "Auto" for a bolus with an automated wizard annotation', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withAutoTarget} />);

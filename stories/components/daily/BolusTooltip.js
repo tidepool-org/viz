@@ -3,6 +3,9 @@ import React from 'react';
 import { storiesOf } from '@storybook/react';
 
 import BolusTooltip from '../../../src/components/daily/bolustooltip/BolusTooltip';
+import { MGDL_UNITS, MS_IN_HOUR } from '../../../src/utils/constants';
+
+const loop = { origin: { name: 'com.X48HMZH853.loopkit.Loop' } };
 
 // bolus' lifted from bolus utils tests
 const normal = {
@@ -427,7 +430,74 @@ const withTandemTarget = {
   insulinCarbRatio: 15,
 };
 
+const withLoopDosingDecision = {
+  ...normal,
+  ...loop,
+  bgInput: 192,
+  carbInput: 24,
+  expectedNormal: 6,
+  insulinOnBoard: 2.654,
+  dosingDecision: {
+    insulinOnBoard: {
+      amount: 2.2354,
+    },
+    bgTargetSchedule: [
+      {
+        high: 160,
+        low: 150,
+        start: MS_IN_HOUR * 4,
+      },
+      {
+        high: 165,
+        low: 155,
+        start: MS_IN_HOUR * 5,
+      },
+      {
+        high: 170,
+        low: 160,
+        start: MS_IN_HOUR * 6,
+      },
+    ],
+    pumpSettings: {
+      activeSchedule: 'Default',
+      carbRatios: {
+        Default: [
+          {
+            amount: 15,
+            start: MS_IN_HOUR * 4,
+          },
+          {
+            amount: 17,
+            start: MS_IN_HOUR * 5,
+          },
+          {
+            amount: 19,
+            start: MS_IN_HOUR * 6,
+          },
+        ],
+      },
+      insulinSensitivities: {
+        Default: [
+          {
+            amount: 360,
+            start: MS_IN_HOUR * 4,
+          },
+          {
+            amount: 396,
+            start: MS_IN_HOUR * 5,
+          },
+          {
+            amount: 342,
+            start: MS_IN_HOUR * 6,
+          },
+        ],
+      },
+    }
+  },
+};
+
 const props = {
+  bgPrefs: { bgUnits: MGDL_UNITS },
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
 };
@@ -649,5 +719,11 @@ storiesOf('BolusTooltip', module)
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withTandemTarget} />
+    </div>
+  ))
+  .add('withLoopDosingDecision', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={withLoopDosingDecision} />
     </div>
   ));
