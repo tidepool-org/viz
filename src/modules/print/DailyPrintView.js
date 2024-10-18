@@ -414,7 +414,7 @@ class DailyPrintView extends PrintView {
     const { averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
     const { carbs } = _.get(stats, 'carbs.data.raw', {});
     const { basal: totalBasal, bolus: totalBolus } = _.get(stats, 'totalInsulin.data.raw', {});
-    const totalInsulin = totalBasal + totalBolus;
+    const totalInsulin = (totalBasal || 0) + (totalBolus || 0);
 
     this.doc.fillColor('black')
       .fillOpacity(1)

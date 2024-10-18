@@ -329,7 +329,7 @@ describe('constants', () => {
           [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
         [constants.TIDEPOOL_LOOP]: {
-          [constants.AUTOMATED_DELIVERY]: 'Closed Loop',
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
           [constants.AUTOMATED_MODE_EXITED]: 'Off',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
           [constants.SETTINGS_OVERRIDE]: 'Preset',
@@ -338,7 +338,7 @@ describe('constants', () => {
           [constants.MAX_BASAL]: 'Maximum Basal Rate',
         },
         [constants.DIY_LOOP]: {
-          [constants.AUTOMATED_DELIVERY]: 'Closed Loop',
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
           [constants.AUTOMATED_MODE_EXITED]: 'Off',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
           [constants.SETTINGS_OVERRIDE]: 'Preset',

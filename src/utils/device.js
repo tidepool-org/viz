@@ -38,7 +38,7 @@ export function isDIYLoop(datum = {}) {
  * Check to see if datum is from Tidepool Loop
 */
 export function isTidepoolLoop(datum = {}) {
-  return (/^org\.[a-zA-Z0-9]*\.?tidepool\.Loop/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
+  return (/^org\.tidepool\.[a-zA-Z0-9]*\.?Loop/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**

@@ -97,10 +97,12 @@ export class Basal extends Common {
     this.duration = opts.duration;
     this.rate = opts.rate;
     this.scheduleName = opts.scheduleName;
+    this.annotations = opts.annotations;
+    this.suppressed = opts.suppressed;
 
     if (opts.id) this.id = opts.id;
 
-    this.time = this.makeTime();
+    this.time = opts.time || this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
     if (!opts.raw) this.normalTime = this.makeNormalTime();
     if (!opts.raw) this.normalEnd = this.normalTime + this.duration;

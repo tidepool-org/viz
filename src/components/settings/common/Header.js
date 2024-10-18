@@ -23,36 +23,14 @@ import styles from './Header.css';
 import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
 
-
 class Header extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.handleClick = this.handleClick.bind(this);
-    this.state = { serialNumberExpanded: false };
-  }
-
-  handleClick() {
-    this.setState({ serialNumberExpanded: !this.state.serialNumberExpanded });
-  }
-
   render() {
-    const headerClass = this.state.serialNumberExpanded ?
-      styles.headerExpanded : styles.headerClosed;
-
     return (
       <div>
-        <ul className={`${styles.header} ${headerClass}`} onClick={this.handleClick}>
-          <li className={styles.headerOuter}>
-            <span className={styles.headerInner}>{this.props.deviceDisplayName}</span>
-          </li>
+        <ul className={`${styles.header} ${styles.headerExpanded}`}>
           <li className={styles.headerOuter}>
             <span className={styles.headerInner}>
-              {t('Uploaded on')} {this.props.deviceMeta.uploaded}
-            </span>
-          </li>
-          <li className={styles.headerOuter}>
-            <span className={styles.headerInner}>
-              {t('Serial Number')}: {this.props.deviceMeta.serial}
+              {t('Therapy Settings - Active at Upload on')} {this.props.deviceMeta.uploaded}
             </span>
           </li>
         </ul>
@@ -62,7 +40,6 @@ class Header extends PureComponent {
 }
 
 Header.propTypes = {
-  deviceDisplayName: PropTypes.string.isRequired,
   deviceMeta: PropTypes.object.isRequired,
 };
 

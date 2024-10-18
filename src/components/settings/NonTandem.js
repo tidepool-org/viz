@@ -25,8 +25,9 @@ import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
-import { deviceName, insulinSettings } from '../../utils/settings/data';
+import { deviceName, insulinSettings, presetSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
+import { isLoop } from '../../utils/device';
 
 import styles from './NonTandem.css';
 
@@ -51,9 +52,12 @@ const NonTandem = (props) => {
     lookupKey = 'medtronic';
   }
 
-  function buildTable(rows, columns, title, tableStyle) {
+  const showCategoryTitle = !isLoop(pumpSettings);
+
+  function buildTable(rows, columns, title, tableStyle, annotations) {
     return (
       <Table
+        annotations={annotations}
         title={title}
         rows={rows}
         columns={columns}
@@ -75,13 +79,31 @@ const NonTandem = (props) => {
           rows,
           columns,
           {
-            label: { main: 'Insulin Settings' },
+            label: { main: t('Insulin Settings') },
             className: styles.insulinSettingsHeader,
           },
           styles.settingsTableInverted
         )}
       </div>
     );
+  }
+
+  function renderPresetSettings() {
+    const { rows, columns } = presetSettings(pumpSettings, lookupKey);
+
+    return rows.length ? (
+      <div className={styles.categoryContainer}>
+        {buildTable(
+          rows,
+          columns,
+          {
+            label: { main: t('Presets') },
+            className: styles.presetSettingsHeader,
+          },
+          styles.settingsTable
+        )}
+      </div>
+    ) : null;
   }
 
   function renderBasalsData() {
@@ -113,6 +135,27 @@ const NonTandem = (props) => {
               basal.columns,
               title,
               [labelClass, styles.settingsTable].join(' ')
+            )}
+          </div>
+        );
+      }
+
+      if (isLoop(pumpSettings)) {
+        labelClass = styles.basalScheduleHeader;
+        basal.title.secondary = basal.title.secondary.toLowerCase();
+
+        const title = {
+          label: { main: t('Basal Rates'), secondary: 'U/hr' },
+          className: styles.singleLineBasalScheduleHeader,
+        };
+
+        return (
+          <div className={styles.categoryContainer} key={schedule}>
+            {buildTable(
+              basal.rows,
+              basal.columns,
+              title,
+              styles.basalTable
             )}
           </div>
         );
@@ -202,7 +245,8 @@ const NonTandem = (props) => {
           target.rows,
           target.columns,
           title,
-          styles.settingsTable
+          styles.settingsTable,
+          target.annotations
         )}
       </div>
     );
@@ -221,28 +265,29 @@ const NonTandem = (props) => {
           getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
-      {!_.includes(['animas', 'microtech'], lookupKey) && (
-        <div className={styles.settingsContainer}>
-          <div className={styles.insulinSettingsContainer}>
-            <div className={styles.categoryTitle}>{t('Pump Settings')}</div>
-            {renderInsulinSettings()}
-          </div>
-        </div>
-      )}
       <div className={styles.settingsContainer}>
         <div className={styles.basalSettingsContainer}>
-          <div className={styles.categoryTitle}>{t('Basal Rates')}</div>
+          {showCategoryTitle && <div className={styles.categoryTitle}>{t('Basal Rates')}</div>}
           {renderBasalsData()}
         </div>
         <div className={styles.bolusSettingsContainer}>
-          <div className={styles.categoryTitle}>{nonTandemData.bolusTitle(lookupKey)}</div>
+          {showCategoryTitle && <div className={styles.categoryTitle}>{nonTandemData.bolusTitle(lookupKey)}</div>}
           <div className={styles.bolusSettingsInnerContainer}>
-            {renderSensitivityData()}
             {renderTargetData()}
             {renderRatioData()}
+            {renderSensitivityData()}
           </div>
         </div>
       </div>
+      {!_.includes(['animas', 'microtech'], lookupKey) && (
+        <div className={styles.settingsContainerLeftAligned}>
+          {showCategoryTitle && <div className={styles.categoryTitle}>{t('Pump Settings')}</div>}
+          <div className={styles.insulinSettingsInnerContainer}>
+            {renderInsulinSettings()}
+            {renderPresetSettings()}
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -555,9 +555,13 @@ export class AggregationUtil {
 
         _.each(groupedData, typeData => _.each(typeData, d => this.dataUtil.normalizeDatumOut(d, ['*'])));
 
-        if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) groupedData.basal.unshift(groupedBasals[0]);
+        if (groupedBasals.length > _.get(groupedData, 'basal.length', 0)) {
+          if (!_.isArray(groupedData.basal)) groupedData.basal = [];
+          groupedData.basal.unshift(groupedBasals[0]);
+        }
 
         if (groupedPumpSettingsOverrides.length > initialGroupedPumpSettingsOverridesLength) {
+          if (!_.isArray(groupedData.deviceEvent)) groupedData.deviceEvent = [];
           groupedData.deviceEvent.unshift(groupedPumpSettingsOverrides[0]);
         }
 

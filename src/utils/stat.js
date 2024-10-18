@@ -298,6 +298,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 export const getStatAnnotations = (data, type, opts = {}) => {
   const { bgSource, days, manufacturer } = opts;
   const vocabulary = getPumpVocabulary(manufacturer);
+  const labels = { overrideLabel: vocabulary[SETTINGS_OVERRIDE], overrideLabelLowerCase: _.lowerCase(vocabulary[SETTINGS_OVERRIDE]) };
 
   const annotations = [];
 
@@ -364,11 +365,11 @@ export const getStatAnnotations = (data, type, opts = {}) => {
 
     case commonStats.timeInOverride:
       if (days > 1) {
-        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided by the total duration of settings overrides for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a {{overrideLabelLowerCase}}.', labels));
       } else {
-        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a settings override.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabel}} divided by the total duration of settings overrides for this time period.\n\n**(time)** is total duration of time in {{overrideLabel}}.', { overrideLabel: vocabulary[SETTINGS_OVERRIDE] }));
+        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is total duration of time in a {{overrideLabelLowerCase}}.', labels));
       }
       break;
 
