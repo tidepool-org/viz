@@ -765,6 +765,78 @@ export const bgLogData = {
   },
 };
 
+export const prescriptionData = {
+  id: '66db3f3cd83ea4136b2351e2',
+  accessCode: '5TX5LT',
+  state: 'submitted',
+  accountType: 'caregiver',
+  firstName: 'Clint',
+  caregiverFirstName: 'Clint',
+  caregiverLastName: 'Beacock',
+  lastName: 'Test',
+  birthday: '1999-11-11',
+  email: 'clint.beacock+test@gmail.com',
+  emailConfirm: 'clint.beacock+test@gmail.com',
+  phoneNumber: {
+      countryCode: 1,
+  },
+  sex: 'male',
+  calculator: {
+      weightUnits: 'kg',
+      totalDailyDoseScaleFactor: 1,
+  },
+  initialSettings: {
+      bloodGlucoseUnits: 'mg/dL',
+      pumpId: 'c524b5b0-632e-4125-8f6a-df9532d8f6fe',
+      cgmId: 'd25c3f1b-a2e8-44e2-b3a3-fd07806fc245',
+      insulinModel: 'rapidChild',
+      glucoseSafetyLimit: 80,
+      basalRateMaximum: {
+          value: 0.2,
+          units: 'Units/hour',
+      },
+      bolusAmountMaximum: {
+          value: 6,
+          units: 'Units',
+      },
+      bloodGlucoseTargetSchedule: [
+          {
+              high: 125,
+              low: 115,
+              start: 0
+          },
+      ],
+      bloodGlucoseTargetPhysicalActivity: {
+          high: 170,
+          low: 150,
+      },
+      bloodGlucoseTargetPreprandial: {
+          high: 100,
+          low: 80,
+      },
+      basalRateSchedule: [
+          {
+              rate: 0.05,
+              start: 0
+          },
+      ],
+      carbohydrateRatioSchedule: [
+          {
+              amount: 20,
+              start: 0
+          },
+      ],
+      insulinSensitivitySchedule: [
+          {
+              amount: 20,
+              start: 0
+          },
+      ],
+  },
+  therapySettings: 'initial',
+  therapySettingsReviewed: false,
+};
+
 const agpDataByDate = bgSource => ({
   '2023-03-16': { [bgSource]: [
     {
