@@ -2107,33 +2107,69 @@ describe('DataUtil', () => {
       expect(datum.myField2).to.equal(18.01559);
     });
 
-    it('should convert any specified fields in nested object properties', () => {
+    it('should convert any matching numeric fields in unknown nested object properties within specified path', () => {
       const datum = {
-        deeply: {
-          nested: { myField1: 10, myField2: 1 },
+        specified: {
+          nested1: { myField1: 10, myField2: 1, myField3: 1 },
+        },
+        unspecified: {
+          nested1: { myField1: 10, myField2: 1, myField3: 1 },
         },
       };
 
-      dataUtil.normalizeDatumBgUnits(datum, ['deeply', 'nested'], ['myField1', 'myField2']);
-      expect(datum.deeply.nested.myField1).to.equal(180.1559);
-      expect(datum.deeply.nested.myField2).to.equal(18.01559);
+      dataUtil.normalizeDatumBgUnits(datum, ['specified'], ['myField1', 'myField2']);
+      expect(datum.specified.nested1.myField1).to.equal(180.1559);
+      expect(datum.specified.nested1.myField2).to.equal(18.01559);
+      expect(datum.specified.nested1.myField3).to.equal(1); // wasn't a matched field, so unchanged
+      expect(datum.unspecified.nested1.myField1).to.equal(10);// wasn't a specified path, so unchanged
     });
 
-    it('should convert any specified fields in nested arrays', () => {
+    it('should not convert units for nested objects with no matching fields when there are no specified paths', () => {
       const datum = {
-        deeply: {
-          nested: [
-            { myField1: 10, myField2: 1 },
-            { myField1: 1, myField2: 10 },
+        unspecified: { units: 'minutes', value: 10 },
+      };
+
+      dataUtil.normalizeDatumBgUnits(datum, [], ['otherField']);
+      expect(datum.unspecified.units).to.equal('minutes');
+      expect(datum.unspecified.value).to.equal(10);
+    });
+
+    it('should not convert units for nested objects with matching fields when there are no specified paths', () => {
+      const datum = {
+        unspecified: { units: 'minutes', value: 10 },
+      };
+
+      dataUtil.normalizeDatumBgUnits(datum, [], ['value']);
+      expect(datum.unspecified.units).to.equal('minutes');
+      expect(datum.unspecified.value).to.equal(10);
+    });
+
+    it('should convert any matching numeric fields in unknown nested object properties containing object arrays within specified path', () => {
+      const datum = {
+        specified: {
+          nested1: [
+            { myField1: 10, myField2: 1, myField3: 100 },
+            { myField1: 1, myField2: 10, myField3: 200 },
+          ],
+        },
+        unspecified: {
+          nested1: [
+            { myField1: 10, myField2: 1, myField3: 100 },
+            { myField1: 1, myField2: 10, myField3: 200 },
           ],
         },
       };
 
-      dataUtil.normalizeDatumBgUnits(datum, ['deeply', 'nested'], ['myField1', 'myField2']);
-      expect(datum.deeply.nested[0].myField1).to.equal(180.1559);
-      expect(datum.deeply.nested[0].myField2).to.equal(18.01559);
-      expect(datum.deeply.nested[1].myField1).to.equal(18.01559);
-      expect(datum.deeply.nested[1].myField2).to.equal(180.1559);
+      dataUtil.normalizeDatumBgUnits(datum, ['specified'], ['myField1', 'myField2']);
+      expect(datum.specified.nested1[0].myField1).to.equal(180.1559);
+      expect(datum.specified.nested1[0].myField2).to.equal(18.01559);
+      expect(datum.specified.nested1[0].myField3).to.equal(100); // wasn't a matched field, so unchanged
+      expect(datum.unspecified.nested1[0].myField1).to.equal(10); // wasn't a specified path, so unchanged
+
+      expect(datum.specified.nested1[1].myField1).to.equal(18.01559);
+      expect(datum.specified.nested1[1].myField2).to.equal(180.1559);
+      expect(datum.specified.nested1[1].myField3).to.equal(200); // wasn't a matched field, so unchanged
+      expect(datum.unspecified.nested1[1].myField1).to.equal(1); // wasn't a specified path, so unchanged
     });
   });
 

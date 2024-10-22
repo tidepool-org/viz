@@ -619,8 +619,28 @@ export class DataUtil {
                 ...(d.bgNormalized || {}),
                 [setPath.join('|')]: true,
               };
-            } else if (_.isPlainObject(pathValue)) {
-              this.normalizeDatumBgUnits(pathValue, _.keys(pathValue), [key]);
+            } else if (path && _.isPlainObject(pathValue)) {
+              // We sometimes need match the specified field keys within unknown object paths,
+              // such as within Tandem pumpSettings datums, where the keys we want to target for
+              // conversion are nested under object keys that match the user-provided schedule names
+              // In these cases, we expect that a keyPath will be provided (via the `path` argumement),
+              // which prevents accidentally changing the units of unintended paths.
+              _.each(_.keys(pathValue), nestedKey => {
+                let nestedValue = _.get(pathValue, [nestedKey]);
+
+                if (_.isArray(nestedValue) || _.isPlainObject(nestedValue)) {
+                  // Wrap plain objects in array to be able to handle them the same as collections
+                  if (_.isPlainObject(nestedValue)) nestedValue = [nestedValue];
+
+                  // Check each collection item for matches that need conversion
+                  _.each(nestedValue, value => {
+                    if (_.get(value, [key])) {
+                      // we only recurse when a nested path object contains a matching key
+                      this.normalizeDatumBgUnits(value, [], [key]);
+                    }
+                  });
+                }
+              });
             }
           });
         } else if (_.isArray(pathValue)) {
