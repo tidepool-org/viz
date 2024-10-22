@@ -1703,7 +1703,7 @@ describe('DataUtil', () => {
           dataUtil.normalizeDatumBgUnits,
           datum,
           ['bgTarget', 'bgTargets'],
-          ['target', 'low', 'high']
+          ['target', 'range', 'low', 'high']
         );
       });
 

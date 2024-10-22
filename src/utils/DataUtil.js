@@ -482,7 +482,7 @@ export class DataUtil {
 
     if (d.type === 'pumpSettings') {
       this.normalizeDatumBgUnits(d, [], ['bgSafetyLimit']);
-      this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'low', 'high']);
+      this.normalizeDatumBgUnits(d, ['bgTarget', 'bgTargets'], ['target', 'range', 'low', 'high']);
       this.normalizeDatumBgUnits(d, ['bgTargetPreprandial', 'bgTargetPhysicalActivity'], ['low', 'high']);
       this.normalizeDatumBgUnits(d, ['insulinSensitivity', 'insulinSensitivities'], ['amount']);
       // Set basalSchedules object to an array sorted by name: 'standard' first, then alphabetical
