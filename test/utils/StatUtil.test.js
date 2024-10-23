@@ -425,17 +425,17 @@ describe('StatUtil', () => {
 
     context('basal delivery overlaps endpoints', () => {
       it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getBasalBolusData()).to.eql({
           basal: 2,
           bolus: 15,
         });
       });
 
-      it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
-        filterEndpoints(dayEndpoints);
+      it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getBasalBolusData()).to.eql({
           basal: 2.5,
           bolus: 15,
@@ -777,8 +777,8 @@ describe('StatUtil', () => {
 
     context('basal delivery overlaps endpoints', () => {
       it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getTimeInAutoData()).to.eql({
           automated: MS_IN_HOUR * 2,
           manual: MS_IN_HOUR * 2,
@@ -786,8 +786,8 @@ describe('StatUtil', () => {
       });
 
       it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getTimeInAutoData()).to.eql({
           automated: MS_IN_HOUR * 3,
           manual: MS_IN_HOUR * 2,
@@ -815,8 +815,8 @@ describe('StatUtil', () => {
 
     context('settings override overlaps endpoints', () => {
       it('should include the portion of delivery of a settings override datum that overlaps the start endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([settingsOverrideDatumOverlappingStart], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getTimeInOverrideData()).to.eql({
           physicalActivity: MS_IN_HOUR,
           sleep: MS_IN_HOUR * 3,
@@ -824,8 +824,8 @@ describe('StatUtil', () => {
       });
 
       it('should include the portion of delivery of a settings override datum that overlaps the end endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([settingsOverrideDatumOverlappingEnd], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getTimeInOverrideData()).to.eql({
           physicalActivity: MS_IN_HOUR,
           sleep: MS_IN_HOUR * 4,
@@ -899,16 +899,16 @@ describe('StatUtil', () => {
 
     context('basal delivery overlaps endpoints', () => {
       it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getTotalInsulinData()).to.eql({
           totalInsulin: 17,
         });
       });
 
       it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
-        filterEndpoints(dayEndpoints);
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
+        filterEndpoints(dayEndpoints);
         expect(statUtil.getTotalInsulinData()).to.eql({
           totalInsulin: 17.5,
         });

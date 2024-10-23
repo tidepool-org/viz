@@ -432,7 +432,7 @@ describe('BasicsPrintView', () => {
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
         'timeInAutoStub',
         {
-          heading: 'Time In Automated Ratio',
+          heading: 'Avg. Daily Time In Automated',
           fillOpacity: 0.5,
           secondaryFormatKey: 'tooltip',
         }
@@ -449,7 +449,7 @@ describe('BasicsPrintView', () => {
       sinon.assert.calledWith(Renderer.renderHorizontalBarStat,
         'timeInOverrideStub',
         {
-          heading: 'Time In Settings Override',
+          heading: 'Avg. Daily Time In Settings Override',
           fillOpacity: 0.5,
           secondaryFormatKey: 'tooltip',
         }

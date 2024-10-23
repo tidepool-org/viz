@@ -455,8 +455,8 @@ describe('AggregationUtil', () => {
     it('should reset endpoint filters to initial values after processing', () => {
       const byEndpointsSpy = sinon.spy(aggregationUtil.dataUtil.filter, 'byEndpoints');
       aggregationUtil.aggregateDataByDate(groupByDate);
-      sinon.assert.callCount(byEndpointsSpy, 3);
-      expect(byEndpointsSpy.getCall(2).args[0]).to.eql(aggregationUtil.initialActiveEndpoints.range);
+      sinon.assert.callCount(byEndpointsSpy, 11);
+      expect(byEndpointsSpy.getCall(10).args[0]).to.eql(aggregationUtil.initialActiveEndpoints.range);
     });
 
     it('should reset `dataUtil.activeEndpoints` to initial values after processing', () => {

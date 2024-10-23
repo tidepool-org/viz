@@ -145,7 +145,7 @@ export const pumpVocabulary = {
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
   [TIDEPOOL_LOOP]: {
-    [AUTOMATED_DELIVERY]: t('Closed Loop'),
+    [AUTOMATED_DELIVERY]: t('Automation'),
     [AUTOMATED_MODE_EXITED]: t('Off'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Preset'),
@@ -154,7 +154,7 @@ export const pumpVocabulary = {
     [MAX_BASAL]: t('Maximum Basal Rate'),
   },
   [DIY_LOOP]: {
-    [AUTOMATED_DELIVERY]: t('Closed Loop'),
+    [AUTOMATED_DELIVERY]: t('Automation'),
     [AUTOMATED_MODE_EXITED]: t('Off'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Preset'),
@@ -202,6 +202,18 @@ export const settingsOverrides = {
 export const AUTOMATED_BASAL_DEVICE_MODELS = {
   [MEDTRONIC]: ['1580', '1581', '1582', '1780', '1781', '1782'],
 };
+export const BG_DATA_TYPES = [
+  'cbg',
+  'smbg',
+];
+
+export const DIABETES_DATA_TYPES = [
+  ...BG_DATA_TYPES,
+  'basal',
+  'bolus',
+  'wizard',
+  'food',
+];
 
 export const BG_COLORS = {
   veryLow: '#FB5951',

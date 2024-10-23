@@ -18,6 +18,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 import * as data from './data';
 import { pumpVocabulary, AUTOMATED_DELIVERY } from '../constants';
+import { isLoop } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -120,8 +121,8 @@ function sensitivityTitle(manufacturer) {
     insulet: t('Correction factor'),
     medtronic: t('Sensitivity'),
     microtech: t('Insulin Sensitivity'),
-    'diy loop': t('Insulin Sensitivity'),
-    'tidepool loop': t('Insulin Sensitivity'),
+    'diy loop': t('Insulin Sensitivities'),
+    'tidepool loop': t('Insulin Sensitivities'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -171,8 +172,8 @@ function ratioTitle(manufacturer) {
     insulet: t('IC ratio'),
     medtronic: t('Carb Ratios'),
     microtech: t('Carbohydrate Ratio'),
-    'diy loop': t('Carbohydrate Ratio'),
-    'tidepool loop': t('Carbohydrate Ratio'),
+    'diy loop': t('Carb Ratios'),
+    'tidepool loop': t('Carb Ratios'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -218,8 +219,8 @@ function targetTitle(manufacturer) {
     insulet: t('Target BG'),
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
-    'diy loop': t('Target BG'),
-    'tidepool loop': t('Target BG'),
+    'diy loop': t('Correction Range'),
+    'tidepool loop': t('Correction Range'),
   };
   return BG_TARGET_BY_MANUFACTURER[manufacturer];
 }
@@ -297,7 +298,14 @@ function targetRows(settings, units, manufacturer) {
  * @return {Object}                object with target title, columns and rows
  */
 export function target(settings, manufacturer, units) {
+  const device = data.deviceName(manufacturer);
+
+  const annotations = isLoop(settings)
+    ? [t('Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device })]
+    : null;
+
   return {
+    annotations,
     title: targetTitle(manufacturer),
     columns: targetColumns(manufacturer),
     rows: targetRows(settings, units, manufacturer),

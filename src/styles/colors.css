@@ -19,6 +19,7 @@
   --basal: #19A0D7;
   --basal-automated: #00B2C3;
   --bolus: #7CD0F0;
+  --preset: #758CFF;
   --bolus-automated: #00B2C3;
   --bolus--interrupted: #FF8B7C;
   --bolus--ride: #107EA8;
@@ -66,6 +67,7 @@
   basal: #19A0D7;
   basalAutomated: #00B2C3;
   sleep: #4457D9;
+  preset: #758CFF;
   physicalActivity: #758CFF;
   preprandial: #4457D9;
   statDark: #27385b;
