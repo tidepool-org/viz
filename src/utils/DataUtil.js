@@ -150,6 +150,7 @@ export class DataUtil {
         'bgSources',
         'latestDatumByType',
         'latestPumpUpload',
+        'latestTimeZone',
         'patientId',
         'size',
         'queryDataCount',
@@ -214,6 +215,11 @@ export class DataUtil {
 
     // Generate a map of latest datums by type
     if (d.time > _.get(this.latestDatumByType, [d.type, 'time'], 0)) this.latestDatumByType[d.type] = d;
+
+    // Also add timeChange deviceEvents to latest datums map to help determine a recommended timezone
+    if (d.type === 'deviceEvent' && d.subType === 'timeChange') {
+      if (d.time > _.get(this.latestDatumByType, ['timeChange', 'time'], 0)) this.latestDatumByType.timeChange = d;
+    }
 
     // Populate mappings to be used for 2-way join of boluses and wizards
     if (d.type === 'wizard' && _.isString(d.bolus)) {
@@ -974,6 +980,62 @@ export class DataUtil {
     this.latestDiabetesDatumEnd = latestDiabetesDatum ? latestDiabetesDatum.time + (latestDiabetesDatum.duration || 0) : null;
   };
 
+  setLatestTimeZone = () => {
+    let latestTimeZone;
+    const latestUpload = this.latestDatumByType.upload;
+    const latestTimeChangeEvent = this.latestDatumByType.timeChange;
+
+    const latestTimeZoneOffsetDatum = _.maxBy(
+      _.filter(
+        _.values(this.latestDatumByType || {}),
+        ({ timezoneOffset, type }) => _.includes([...DIABETES_DATA_TYPES, 'dosingDecision'], type) && _.isFinite(timezoneOffset)
+      ),
+      'time'
+    );
+
+    const createLatestTimeZone = (name, d, type) => {
+      d.localizedTime = moment.utc(d.time).tz(name).format();
+      latestTimeZone = { name, type: d.type };
+      latestTimeZone.message = t('Defaulting to display in the timezone of most recent {{type}} at {{localizedTime}}', { ...d, type: type || d.type });
+    };
+
+    if (latestTimeZoneOffsetDatum) {
+      let { timezone } = latestTimeZoneOffsetDatum;
+
+      if (!timezone) {
+        // We calculate the nearest 'Etc/GMT' timezone from the timezone offset of the latest diabetes datum.
+        // GMT offsets signs in Etc/GMT timezone names are reversed from the actual offset
+        const offsetSign = Math.sign(latestTimeZoneOffsetDatum.timezoneOffset) === -1 ? '+' : '-';
+        const offsetDuration = moment.duration(Math.abs(latestTimeZoneOffsetDatum.timezoneOffset), 'minutes');
+        let offsetHours = offsetDuration.hours();
+        const offsetMinutes = offsetDuration.minutes();
+        if (offsetMinutes >= 30) offsetHours += 1;
+        timezone = `Etc/GMT${offsetSign}${offsetHours}`;
+      }
+
+      createLatestTimeZone(timezone, latestTimeZoneOffsetDatum);
+
+      // If the timeone on the latest upload record at the time of the latest diabetes datum has the
+      // same UTC offset, we use that, since it will also have DST changeover info available.
+      if (!_.isEmpty(latestUpload?.timezone)) {
+        const uploadTimezoneOffsetAtLatestDiabetesTime = moment.utc(latestTimeZoneOffsetDatum.time).tz(latestUpload.timezone).utcOffset();
+
+        if (uploadTimezoneOffsetAtLatestDiabetesTime === latestTimeZoneOffsetDatum.timezoneOffset) {
+          createLatestTimeZone(latestUpload.timezone, latestUpload);
+        }
+      }
+    } else if (latestTimeChangeEvent?.to?.timeZoneName) {
+      // Tidepool Mobile data only sends timezone info on `timeChange` device events, so for
+      // accounts with only TM data, this is our best bet
+      createLatestTimeZone(latestTimeChangeEvent.to.timeZoneName, latestTimeChangeEvent, 'time change');
+    } else if (!_.isEmpty(latestUpload?.timezone)) {
+      // Fallback to latest upload timezone if there is no diabetes data with timezone offsets
+      createLatestTimeZone(latestUpload.timezone, latestUpload);
+    }
+
+    this.latestTimeZone = latestTimeZone;
+  };
+
   /* eslint-disable no-param-reassign */
   setDevices = () => {
     this.startTimer('setDevices');
@@ -1045,6 +1107,7 @@ export class DataUtil {
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.setLatestDiabetesDatumEnd();
+    this.setLatestTimeZone();
     this.endTimer('setMetaData');
   };
 
@@ -1487,6 +1550,7 @@ export class DataUtil {
       'bgSources',
       'latestDatumByType',
       'latestPumpUpload',
+      'latestTimeZone',
       'patientId',
       'size',
       'devices',
