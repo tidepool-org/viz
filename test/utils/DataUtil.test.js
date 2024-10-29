@@ -627,6 +627,7 @@ describe('DataUtil', () => {
         'bgSources',
         'latestDatumByType',
         'latestPumpUpload',
+        'latestTimeZone',
         'patientId',
         'size',
         'queryDataCount',

@@ -994,9 +994,9 @@ export class DataUtil {
     );
 
     const createLatestTimeZone = (name, d, type) => {
-      d.localizedTime = moment.utc(d.time).tz(name).format();
+      const localizedTime = moment.utc(d.time).tz(name).format();
       latestTimeZone = { name, type: d.type };
-      latestTimeZone.message = t('Defaulting to display in the timezone of most recent {{type}} at {{localizedTime}}', { ...d, type: type || d.type });
+      latestTimeZone.message = t('Defaulting to display in the timezone of most recent {{type}} at {{localizedTime}}', { localizedTime, type: type || d.type });
     };
 
     if (latestTimeZoneOffsetDatum) {
