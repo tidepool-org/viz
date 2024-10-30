@@ -3,6 +3,7 @@ import crossfilter from 'crossfilter'; // eslint-disable-line import/no-unresolv
 import moment from 'moment-timezone';
 import _ from 'lodash';
 import i18next from 'i18next';
+import sundial from 'sundial';
 
 import {
   getLatestPumpUpload,
@@ -994,9 +995,14 @@ export class DataUtil {
     );
 
     const createLatestTimeZone = (name, d, type) => {
-      const localizedTime = moment.utc(d.time).tz(name).format();
-      latestTimeZone = { name, type: d.type };
-      latestTimeZone.message = t('Defaulting to display in the timezone of most recent {{type}} at {{localizedTime}}', { localizedTime, type: type || d.type });
+      try {
+        sundial.checkTimezoneName(name);
+        const localizedTime = moment.utc(d.time).tz(name).format();
+        latestTimeZone = { name, type: d.type, time: d.time };
+        latestTimeZone.message = t('Defaulting to display in the timezone of most recent {{type}} at {{localizedTime}}', { localizedTime, type: type || d.type });
+      } catch (e) {
+        this.log('Invalid latest time zone:', name);
+      }
     };
 
     if (latestTimeZoneOffsetDatum) {
@@ -1017,10 +1023,14 @@ export class DataUtil {
 
       // If the timeone on the latest upload record at the time of the latest diabetes datum has the
       // same UTC offset, we use that, since it will also have DST changeover info available.
+      // We will also use the latest upload timezone if it's more recent than the diabetes datum.
       if (!_.isEmpty(latestUpload?.timezone)) {
         const uploadTimezoneOffsetAtLatestDiabetesTime = moment.utc(latestTimeZoneOffsetDatum.time).tz(latestUpload.timezone).utcOffset();
 
-        if (uploadTimezoneOffsetAtLatestDiabetesTime === latestTimeZoneOffsetDatum.timezoneOffset) {
+        if (
+          uploadTimezoneOffsetAtLatestDiabetesTime === latestTimeZoneOffsetDatum.timezoneOffset ||
+          latestUpload.time >= latestTimeZoneOffsetDatum.time
+        ) {
           createLatestTimeZone(latestUpload.timezone, latestUpload);
         }
       }
