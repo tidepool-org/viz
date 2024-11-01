@@ -920,16 +920,16 @@ class PrintView {
     if (opts.showProfile) {
       this.renderPatientInfo();
     } else {
-      this.patientInfoBox.width = 0
-      this.patientInfoBox.height = 70
-      _.defaults(opts, { titleOffset: 0 })
+      this.patientInfoBox.width = 0;
+      this.patientInfoBox.height = 70;
+      _.defaults(opts, { titleOffset: 0 });
     }
 
     this.renderTitle(opts);
 
     this.renderLogo();
 
-    dateText && this.renderDateText(dateText);
+    if (dateText) this.renderDateText(dateText);
 
     this.doc.moveDown();
 
