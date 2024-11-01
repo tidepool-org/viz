@@ -8,16 +8,12 @@ const t = i18next.t.bind(i18next);
 class PrescriptionPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
-
-    console.log('this', this);
-
     this.doc.addPage();
     this.initLayout();
   }
 
   newPage() {
-    // super.newPage(t('Uploaded on: {{uploadDate}}', { uploadDate: this.deviceMeta.uploaded }));
-    super.newPage();
+    super.newPage(null, { showProfile: false, helpText: null });
   }
 
   initLayout() {
@@ -29,19 +25,120 @@ class PrescriptionPrintView extends PrintView {
     });
   }
 
+  updateYPos() {
+    this.yPos = this.doc.y;
+  }
+
+  nextPage() {
+    this.doc.addPage();
+    this.yPos = this.chartArea.topEdge;
+  }
+
   render() {
     this.renderPatientProfile();
+    this.renderTherapySettings();
+  }
+
+  renderSectionHeading(text) {
+    this.doc.x = this.leftEdge;
+
+    this.doc
+      .moveDown(2.5)
+      .font(this.boldFont)
+      .fontSize(this.largeFontSize)
+      .text(text)
+
+    this.resetText();
+    this.renderSectionDivider();
+    this.updateYPos();
+  }
+
+  renderSectionDivider() {
+    this.doc.x = this.leftEdge;
+    this.doc
+      .moveDown(0.7)
+      .moveTo(this.margins.left, this.doc.y)
+      .lineTo(this.margins.left + this.width, this.doc.y)
+      .stroke(this.colors.faintGrey)
+      .moveDown(1);
+
+    this.setStroke();
+    this.updateYPos();
   }
 
   renderPatientProfile() {
-    this.doc
-      .font(this.boldFont)
-      .fontSize(this.largeFontSize)
-      .text(t('Patient Profile'))
-      .moveDown();
+    const { patientRows } = this.data;
 
-    this.resetText();
-    this.doc.moveDown();
+    this.renderSectionHeading(t('Patient Profile'));
+
+    const renderPatientProfileRow = ({ label, value }) => {
+      this.setFill(this.colors.primaryText);
+      this.doc
+        .fontSize(this.defaultFontSize)
+        .text(`${label}: ${value}`)
+        .moveDown(0.5);
+
+      this.resetText();
+    };
+
+    const rowsMidpointIndex = Math.ceil(patientRows.length / 2);
+    const column1Rows = patientRows.slice(0, rowsMidpointIndex);
+    const column2Rows = patientRows.slice(rowsMidpointIndex, patientRows.length);
+
+    _.each(column1Rows, renderPatientProfileRow);
+    const bottomYpos = this.doc.y;
+
+    this.goToLayoutColumnPosition(1);
+    this.doc.y = this.yPos;
+
+    _.each(column2Rows, renderPatientProfileRow);
+
+    this.doc.y = bottomYpos;
+    this.renderSectionDivider();
+    this.updateYPos();
+  }
+
+  renderTherapySettings() {
+    const { therapySettingsRows } = this.data;
+
+    this.renderSectionHeading(t('Therapy Settings'));
+
+    this.updateYPos();
+
+    const renderTherapySettingRow = ({ label, value }, i) => {
+      const minRowHeight = this.doc.heightOfString(' ') * 2;
+
+      if (this.yPos + minRowHeight > this.chartArea.bottomEdge) this.nextPage();
+
+      this.goToLayoutColumnPosition(0);
+      this.doc.y = this.yPos;
+
+      this.setFill(this.colors.primaryText);
+
+      this.doc
+        .fontSize(this.defaultFontSize)
+        .text(label);
+
+      this.goToLayoutColumnPosition(1);
+      this.doc.y = this.yPos;
+
+      let rowValues = _.isArray(value) ? value : [value];
+      if (_.isEmpty(rowValues)) rowValues = [emptyValueText];
+
+      _.each(rowValues, (valueText, i) => {
+
+        if (this.doc.y + minRowHeight > this.chartArea.bottomEdge) this.nextPage();
+
+        this.doc
+          .text(valueText)
+          .moveDown( i === rowValues.length - 1 ? 0 : 0.25);
+      });
+
+      this.resetText();
+      if (i !== therapySettingsRows.length - 1) this.renderSectionDivider();
+    };
+
+    _.each(therapySettingsRows, renderTherapySettingRow);
   }
 }
 
