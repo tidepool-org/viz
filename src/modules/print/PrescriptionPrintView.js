@@ -8,6 +8,7 @@ const t = i18next.t.bind(i18next);
 class PrescriptionPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
+    this.emptyValueText = t('Not specified');
     this.doc.addPage();
     this.initLayout();
   }
@@ -46,7 +47,7 @@ class PrescriptionPrintView extends PrintView {
       .moveDown(2.5)
       .font(this.boldFont)
       .fontSize(this.largeFontSize)
-      .text(text)
+      .text(text);
 
     this.resetText();
     this.renderSectionDivider();
@@ -123,15 +124,14 @@ class PrescriptionPrintView extends PrintView {
       this.doc.y = this.yPos;
 
       let rowValues = _.isArray(value) ? value : [value];
-      if (_.isEmpty(rowValues)) rowValues = [emptyValueText];
+      if (_.isEmpty(rowValues)) rowValues = [this.emptyValueText];
 
-      _.each(rowValues, (valueText, i) => {
-
+      _.each(rowValues, (valueText, j) => {
         if (this.doc.y + minRowHeight > this.chartArea.bottomEdge) this.nextPage();
 
         this.doc
           .text(valueText)
-          .moveDown( i === rowValues.length - 1 ? 0 : 0.25);
+          .moveDown(j === rowValues.length - 1 ? 0 : 0.25);
       });
 
       this.resetText();

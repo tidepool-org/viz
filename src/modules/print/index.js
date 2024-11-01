@@ -197,7 +197,7 @@ export function createPrintPDFPackage(data, opts) {
         PrintView.renderNoData(doc);
       }
     } else {
-      createPrintView(pdfType, data[pdfType], pdfOpts, doc).render()
+      createPrintView(pdfType, data[pdfType], pdfOpts, doc).render();
     }
 
     PrintView.renderPageNumbers(doc);
