@@ -823,8 +823,6 @@ export const prescriptionData = {
         '01:30: 115 - 125 mg/dL',
         '02:00: 110 - 120 mg/dL',
         '02:30: 115 - 125 mg/dL',
-        '03:00: 115 - 125 mg/dL',
-        '03:30: 125 - 135 mg/dL',
       ],
       warning: [
         null,
