@@ -1720,6 +1720,20 @@ describe('PrintView', () => {
 
       Renderer.renderHeader();
 
+      sinon.assert.notCalled(Renderer.renderPatientInfo);
+      sinon.assert.calledOnce(Renderer.renderTitle);
+      sinon.assert.calledOnce(Renderer.renderLogo);
+      sinon.assert.notCalled(Renderer.renderDateText);
+    });
+
+    it('should render the patient info section if provided by args', () => {
+      sinon.spy(Renderer, 'renderPatientInfo');
+      sinon.spy(Renderer, 'renderTitle');
+      sinon.spy(Renderer, 'renderLogo');
+      sinon.spy(Renderer, 'renderDateText');
+
+      Renderer.renderHeader('my date', { showProfile: true });
+
       sinon.assert.calledOnce(Renderer.renderPatientInfo);
       sinon.assert.calledOnce(Renderer.renderTitle);
       sinon.assert.calledOnce(Renderer.renderLogo);
