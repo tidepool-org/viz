@@ -123,8 +123,10 @@ class PrintView {
       smbgHeader: '#E8ECFE',
       bolusHeader: '#EBF7FC',
       grey: '#6D6D6D',
+      faintGrey: '#D9D9D9',
       lightGrey: '#979797',
       darkGrey: '#4E4E4F',
+      primaryText: '#4F6A92'
     };
 
     this.tableSettings = {
@@ -171,7 +173,9 @@ class PrintView {
     if (this.initialTotalPages > 0) this.resetText();
   }
 
-  newPage(dateText) {
+  newPage(dateText, opts = {}) {
+    _.defaults(opts, { showProfile: true });
+
     if (this.debug) {
       this.renderDebugGrid();
     }
@@ -179,12 +183,13 @@ class PrintView {
     const currentFont = {
       name: _.get(this.doc, '_font.name', this.font),
       size: _.get(this.doc, '_fontSize', this.defaultFontSize),
+      color: _.get(this.doc, '_fillColor', []),
     };
 
     this.currentPageIndex++;
     this.totalPages++;
 
-    this.renderHeader(dateText).renderFooter();
+    this.renderHeader(dateText, opts).renderFooter(opts);
     this.doc.x = this.chartArea.leftEdge;
     this.doc.y = this.chartArea.topEdge;
 
@@ -194,6 +199,8 @@ class PrintView {
     this.doc
       .font(currentFont.name)
       .fontSize(currentFont.size);
+
+    this.setFill(...currentFont.color);
 
     if (this.table) {
       this.setNewPageTablePosition();
@@ -809,9 +816,11 @@ class PrintView {
     this.dividerWidth = padding * 2 + 1;
   }
 
-  renderTitle() {
+  renderTitle(opts = {}) {
+    _.defaults(opts, { titleOffset: 21 });
     const lineHeight = this.doc.fontSize(14).currentLineHeight();
-    const xOffset = this.margins.left + this.patientInfoBox.width + 21;
+    const xOffset = this.margins.left + this.patientInfoBox.width + opts.titleOffset;
+
     const yOffset = (
       this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2))
     );
@@ -907,14 +916,20 @@ class PrintView {
     return this;
   }
 
-  renderHeader(dateText) {
-    this.renderPatientInfo();
+  renderHeader(dateText, opts = {}) {
+    if (opts.showProfile) {
+      this.renderPatientInfo();
+    } else {
+      this.patientInfoBox.width = 0
+      this.patientInfoBox.height = 70
+      _.defaults(opts, { titleOffset: 0 })
+    }
 
-    this.renderTitle();
+    this.renderTitle(opts);
 
     this.renderLogo();
 
-    this.renderDateText(dateText);
+    dateText && this.renderDateText(dateText);
 
     this.doc.moveDown();
 
@@ -936,11 +951,12 @@ class PrintView {
     return this;
   }
 
-  renderFooter() {
+  renderFooter(opts = {}) {
     this.doc.fontSize(this.footerFontSize);
 
-    const helpText = t('Questions or feedback? Please email support@tidepool.org' +
-    ' or visit support.tidepool.org.');
+    _.defaults(opts, {
+      helpText: t('Questions or feedback? Please email support@tidepool.org or visit support.tidepool.org.'),
+    });
 
     const printDateText = `Printed on: ${formatCurrentDate()}`;
     const printDateWidth = this.doc.widthOfString(printDateText);
@@ -955,7 +971,7 @@ class PrintView {
       .fillColor(this.colors.lightGrey)
       .fillOpacity(1)
       .text(printDateText, xPos, yPos)
-      .text(helpText, xPos + printDateWidth, yPos, {
+      .text(opts.helpText, xPos + printDateWidth, yPos, {
         width: innerWidth,
         align: 'center',
       });
