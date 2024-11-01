@@ -766,75 +766,157 @@ export const bgLogData = {
 };
 
 export const prescriptionData = {
-  id: '66db3f3cd83ea4136b2351e2',
-  accessCode: '5TX5LT',
-  state: 'submitted',
-  accountType: 'caregiver',
-  firstName: 'Clint',
-  caregiverFirstName: 'Clint',
-  caregiverLastName: 'Beacock',
-  lastName: 'Test',
-  birthday: '1999-11-11',
-  email: 'clint.beacock+test@gmail.com',
-  emailConfirm: 'clint.beacock+test@gmail.com',
-  phoneNumber: {
-      countryCode: 1,
-  },
-  sex: 'male',
-  calculator: {
-      weightUnits: 'kg',
-      totalDailyDoseScaleFactor: 1,
-  },
-  initialSettings: {
-      bloodGlucoseUnits: 'mg/dL',
-      pumpId: 'c524b5b0-632e-4125-8f6a-df9532d8f6fe',
-      cgmId: 'd25c3f1b-a2e8-44e2-b3a3-fd07806fc245',
-      insulinModel: 'rapidChild',
-      glucoseSafetyLimit: 80,
-      basalRateMaximum: {
-          value: 0.2,
-          units: 'Units/hour',
+  patientRows: [
+      {
+        label: 'Name',
+        value: 'Clint Test',
       },
-      bolusAmountMaximum: {
-          value: 6,
-          units: 'Units',
+      {
+        label: 'Email',
+        value: 'clint.beacock+test@gmail.com',
+        error: null,
+        initialFocusedInput: 'email',
       },
-      bloodGlucoseTargetSchedule: [
-          {
-              high: 125,
-              low: 115,
-              start: 0
-          },
-      ],
-      bloodGlucoseTargetPhysicalActivity: {
-          high: 170,
-          low: 150,
+      {
+        label: 'Type of Account',
+        value: 'Caregiver',
+        error: null,
       },
-      bloodGlucoseTargetPreprandial: {
-          high: 100,
-          low: 80,
+      {
+        label: 'Caregiver Name',
+        value: 'Clint Beacock',
+        error: false,
+        initialFocusedInput: 'caregiverFirstName',
       },
-      basalRateSchedule: [
-          {
-              rate: 0.05,
-              start: 0
-          },
+      {
+        label: 'Birthdate',
+        value: '11/11/1999',
+        error: null,
+        initialFocusedInput: 'birthday',
+      },
+      {
+        label: 'Gender',
+        value: 'Male',
+        error: null,
+      },
+      {
+        label: 'Activation Code',
+        value: '5TX5LT',
+        skipped: false,
+      },
+  ],
+  therapySettingsRows: [
+    {
+      id: 'glucose-safety-limit',
+      label: 'Glucose Safety Limit',
+      value: '80 mg/dL',
+      warning: null,
+      error: null,
+    },
+    {
+      id: 'correction-range',
+      label: 'Correction Range',
+      value: [
+        '00:00: 115 - 125 mg/dL',
+        '00:30: 115 - 125 mg/dL',
+        '01:00: 115 - 125 mg/dL',
+        '01:30: 115 - 125 mg/dL',
+        '02:00: 110 - 120 mg/dL',
+        '02:30: 115 - 125 mg/dL',
+        '03:00: 115 - 125 mg/dL',
+        '03:30: 125 - 135 mg/dL',
       ],
-      carbohydrateRatioSchedule: [
-          {
-              amount: 20,
-              start: 0
-          },
+      warning: [
+        null,
       ],
-      insulinSensitivitySchedule: [
-          {
-              amount: 20,
-              start: 0
-          },
+      error: [
+        null,
       ],
-  },
-  therapySettings: 'initial',
-  therapySettingsReviewed: false,
+    },
+    {
+      id: 'premeal-range',
+      label: 'Pre-meal Correction Range',
+      value: '80 - 100 mg/dL',
+      warning: null,
+      error: null,
+    },
+    {
+      id: 'workout-range',
+      label: 'Workout Correction Range',
+      value: '150 - 170 mg/dL',
+      warning: null,
+      error: null,
+    },
+    {
+      id: 'carb-ratio-schedule',
+      label: 'Insulin to Carbohydrate Ratios',
+      value: [
+        '00:00: 18 g/U',
+        '05:00: 20 g/U',
+        '09:30: 24 g/U',
+        '18:00: 20 g/U',
+      ],
+      warning: [
+        null,
+      ],
+      error: [
+        null,
+      ],
+    },
+    {
+      id: 'basal-schedule',
+      label: 'Basal Rates',
+      value: [
+        '00:00: 0.05 U/hr',
+        '12:00: 0.1 U/hr',
+        '16:00: 0.05 U/hr',
+      ],
+      warning: [
+        null,
+      ],
+      error: [
+        null,
+      ],
+    },
+    {
+      id: 'delivery-limits',
+      label: 'Delivery Limits',
+      value: [
+        'Max Basal: 0.2 U/hr',
+        'Max Bolus: 6 U',
+      ],
+      warning: [
+        null,
+        null,
+      ],
+      error: [
+        null,
+        null,
+      ],
+    },
+    {
+      id: 'insulin-model',
+      label: 'Insulin Model',
+      value: 'Rapid Acting - Child',
+      error: null,
+    },
+    {
+      id: 'isf-schedule',
+      label: 'Insulin Sensitivity Factor',
+      value: [
+        '00:00: 20 mg/dL',
+        '05:00: 24 mg/dL',
+        '09:30: 28 mg/dL',
+        '18:00: 24 mg/dL',
+      ],
+      warning: [
+        null,
+      ],
+      error: [
+        null,
+      ],
+    }
+  ],
 };
 
 const agpDataByDate = bgSource => ({

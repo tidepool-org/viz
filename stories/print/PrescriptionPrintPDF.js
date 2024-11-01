@@ -42,7 +42,7 @@ function openPDF({ patient }) {
   };
 
   const data = {
-    prescription: prescriptionData,
+    ...prescriptionData,
     bgPrefs: { bgUnits: MGDL_UNITS },
   };
 
