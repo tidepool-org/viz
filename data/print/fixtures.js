@@ -769,11 +769,11 @@ export const prescriptionData = {
   patientRows: [
       {
         label: 'Name',
-        value: 'Clint Test',
+        value: 'Test Patient',
       },
       {
         label: 'Email',
-        value: 'clint.beacock+test@gmail.com',
+        value: 'test+patient@gmail.com',
         error: null,
         initialFocusedInput: 'email',
       },
@@ -784,7 +784,7 @@ export const prescriptionData = {
       },
       {
         label: 'Caregiver Name',
-        value: 'Clint Beacock',
+        value: 'Test Caregiver',
         error: false,
         initialFocusedInput: 'caregiverFirstName',
       },
