@@ -87,6 +87,8 @@ class PrescriptionPrintView extends PrintView {
     const column2Rows = patientRows.slice(rowsMidpointIndex, patientRows.length);
 
     this.goToLayoutColumnPosition(0);
+    this.doc.y = this.yPos;
+
     _.each(column1Rows, renderPatientProfileRow);
     const bottomYpos = this.doc.y;
 
