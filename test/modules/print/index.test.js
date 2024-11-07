@@ -301,7 +301,8 @@ describe('print module', () => {
       daily: { disabled: true },
       bgLog: { disabled: true },
       settings: { disabled: true },
-      agp: { disabled: true },
+      agpCGM: { disabled: true },
+      agpBGM: { disabled: true },
     };
 
     const result = Module.createPrintPDFPackage(data, allDisabledOpts);
@@ -315,6 +316,25 @@ describe('print module', () => {
       sinon.assert.notCalled(Module.utils.SettingsPrintView);
 
       sinon.assert.calledOnce(Module.utils.PrintView.renderNoData);
+    });
+  });
+
+  it('should only render the prescription view if provided via pdfType option', () => {
+    const allDisabledOpts = {
+      pdfType: 'prescription',
+    };
+
+    const result = Module.createPrintPDFPackage(data, allDisabledOpts);
+    doc.stream.end();
+
+    result.then(() => {
+      sinon.assert.notCalled(Module.utils.AGPPrintView);
+      sinon.assert.notCalled(Module.utils.BasicsPrintView);
+      sinon.assert.notCalled(Module.utils.DailyPrintView);
+      sinon.assert.notCalled(Module.utils.BgLogPrintView);
+      sinon.assert.notCalled(Module.utils.SettingsPrintView);
+
+      sinon.assert.calledOnce(Module.utils.PrescriptionPrintView);
     });
   });
 

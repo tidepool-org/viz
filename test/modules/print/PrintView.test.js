@@ -84,7 +84,6 @@ describe('PrintView', () => {
   let doc;
 
   const opts = {
-
     debug: false,
     dpi: DPI,
     defaultFontSize: DEFAULT_FONT_SIZE,
@@ -230,13 +229,21 @@ describe('PrintView', () => {
   });
 
   describe('newPage', () => {
-    it('should render a header and footer', () => {
+    it('should default the `showProfile` option to true', () => {
+      const options = {};
+      Renderer.newPage(null, options);
+      expect(options.showProfile).to.be.true;
+    });
+
+    it('should render a header and footer with provided dateText and options', () => {
       sinon.stub(Renderer, 'renderHeader').returns(Renderer);
       sinon.stub(Renderer, 'renderFooter');
+      const dateText = 'my date';
+      const options = { showProfile: false };
 
-      Renderer.newPage();
-      sinon.assert.called(Renderer.renderHeader);
-      sinon.assert.called(Renderer.renderFooter);
+      Renderer.newPage(dateText, options);
+      sinon.assert.calledWith(Renderer.renderHeader, dateText, options);
+      sinon.assert.calledWith(Renderer.renderFooter, options);
     });
 
     it('should increment `currentPageIndex` each time it\'s called', () => {
@@ -1657,6 +1664,12 @@ describe('PrintView', () => {
       expect(Renderer.renderTitle).to.be.a('function');
     });
 
+    it('should default the `titleOffset` option to 21', () => {
+      const options = {};
+      Renderer.renderTitle(options);
+      expect(options.titleOffset).to.equal(21);
+    });
+
     it('should render the page title as is for the first rendered page', () => {
       Renderer.doc.text.reset();
       Renderer.currentPageIndex = 0;
@@ -1720,10 +1733,26 @@ describe('PrintView', () => {
 
       Renderer.renderHeader();
 
-      sinon.assert.calledOnce(Renderer.renderPatientInfo);
+      sinon.assert.notCalled(Renderer.renderPatientInfo);
       sinon.assert.calledOnce(Renderer.renderTitle);
       sinon.assert.calledOnce(Renderer.renderLogo);
-      sinon.assert.calledOnce(Renderer.renderDateText);
+      sinon.assert.notCalled(Renderer.renderDateText);
+    });
+
+    context('`showProfile` option is true', () => {
+      it('should should call `renderPatientInfo`', () => {
+        sinon.spy(Renderer, 'renderPatientInfo');
+        Renderer.renderHeader(null, { showProfile: true });
+        sinon.assert.calledOnce(Renderer.renderPatientInfo);
+      });
+    });
+
+    context('`dateText` arg is provided', () => {
+      it('should should call `renderDateText` with `dateText`', () => {
+        sinon.spy(Renderer, 'renderDateText');
+        Renderer.renderHeader('my date');
+        sinon.assert.calledWith(Renderer.renderDateText, 'my date');
+      });
     });
   });
 
@@ -1732,12 +1761,24 @@ describe('PrintView', () => {
       expect(Renderer.renderFooter).to.be.a('function');
     });
 
-    it('should render the footer help text', () => {
-      Renderer.renderFooter();
+
+    it('should set and render a default `helpText` option', () => {
+      const options = {};
+      Renderer.renderFooter(options);
+      expect(options.helpText).to.equal('Questions or feedback? Please email support@tidepool.org or visit support.tidepool.org.');
 
       sinon.assert.calledWith(
         Renderer.doc.text,
         'Questions or feedback? Please email support@tidepool.org or visit support.tidepool.org.'
+      );
+    });
+
+    it('should render the provided footer help text', () => {
+      Renderer.renderFooter({ helpText: 'get help' });
+
+      sinon.assert.calledWith(
+        Renderer.doc.text,
+        'get help'
       );
     });
 
