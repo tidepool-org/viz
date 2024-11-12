@@ -27,6 +27,7 @@ import DailyPrintView from './DailyPrintView';
 import BgLogPrintView from './BgLogPrintView';
 import SettingsPrintView from './SettingsPrintView';
 import AGPPrintView from './AGPPrintView';
+import PrescriptionPrintView from './PrescriptionPrintView';
 import { base64ToArrayBuffer, waitForData } from '../print/pdfkitHelpers';
 
 import * as constants from './utils/constants';
@@ -47,6 +48,7 @@ export const utils = {
   DailyPrintView,
   BgLogPrintView,
   SettingsPrintView,
+  PrescriptionPrintView,
   AGPPrintView,
 };
 
@@ -128,6 +130,14 @@ export function createPrintView(type, data, opts, doc) {
       Renderer = utils.AGPPrintView;
       break;
 
+    case 'prescription':
+      Renderer = utils.PrescriptionPrintView;
+
+      renderOpts = _.assign(renderOpts, {
+        title: t('Tidepool Loop Therapy Settings Order'),
+      });
+      break;
+
     default:
       return null;
   }
@@ -146,6 +156,7 @@ export function createPrintView(type, data, opts, doc) {
 export function createPrintPDFPackage(data, opts) {
   const {
     patient,
+    pdfType = 'combined',
     basics = {},
     daily = {},
     bgLog = {},
@@ -169,20 +180,24 @@ export function createPrintPDFPackage(data, opts) {
     */
     const doc = new DocLib({ autoFirstPage: false, bufferPages: true, margin: constants.MARGIN });
 
-    if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
-    if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
-    if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
-    if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
-    if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
-    if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
+    if (pdfType === 'combined') {
+      if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
+      if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
+      if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
+      if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
+      if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();
+      if (!settings.disabled) createPrintView('settings', data.settings, pdfOpts, doc).render();
 
-    if (
-      _.every(
-        [agpCGM, agpBGM, basics, daily, bgLog, settings],
-        (section) => section.disabled
-      )
-    ) {
-      PrintView.renderNoData(doc);
+      if (
+        _.every(
+          [agpCGM, agpBGM, basics, daily, bgLog, settings],
+          (section) => section.disabled
+        )
+      ) {
+        PrintView.renderNoData(doc);
+      }
+    } else {
+      createPrintView(pdfType, data[pdfType], pdfOpts, doc).render();
     }
 
     PrintView.renderPageNumbers(doc);
