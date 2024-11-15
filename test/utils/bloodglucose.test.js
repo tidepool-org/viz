@@ -505,6 +505,25 @@ describe('blood glucose utilities', () => {
         deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
       };
       expect(bgUtils.cgmSampleFrequency(libre3Datum)).to.equal(5 * MS_IN_MIN);
+
+      const libre2CIQDatum = {
+        deviceId: 'tandemCIQ_XXXXX',
+        payload: { fsl2: true },
+      };
+
+      const g7CIQDatum = {
+        deviceId: 'tandemCIQ_XXXXX',
+        payload: { g7: true },
+      };
+
+      const g6CIQDatum = {
+        deviceId: 'tandemCIQ_XXXXX',
+        payload: { g6: true },
+      };
+
+      expect(bgUtils.cgmSampleFrequency(libre2CIQDatum)).to.equal(MS_IN_MIN);
+      expect(bgUtils.cgmSampleFrequency(g7CIQDatum)).to.equal(5 * MS_IN_MIN);
+      expect(bgUtils.cgmSampleFrequency(g6CIQDatum)).to.equal(5 * MS_IN_MIN);
     });
   });
 
