@@ -223,7 +223,8 @@ export function weightedCGMCount(data) {
 
 /**
  * Get the CGM sample frequency in milliseconds from a CGM data point. Most devices default at a
- * 5 minute interval, but others, such as the Abbot FreeStyle Libre, sample every 15 mins
+ * 5 minute interval, but others, such as the Abbot FreeStyle Libre, sample every 15 mins, while
+ * Abbot FreeStyle Libre 2, coming from a Tandem CIQ pump, samples every minute.
  *
  * @param {Array} datum - a cgm data point
  */
@@ -235,6 +236,10 @@ export function cgmSampleFrequency(datum) {
 
   if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
     return 15 * MS_IN_MIN;
+  }
+
+  if (deviceId.indexOf('tandemCIQ') === 0 && _.get(datum, 'payload.fsl2')) {
+    return MS_IN_MIN;
   }
 
   return 5 * MS_IN_MIN;
