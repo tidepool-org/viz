@@ -328,7 +328,7 @@ export const formatTimeAgo = (utc, timePrefs, format = 'YYYY-MM-DD') => {
   const hoursText = t('{{hoursAgo}} {{unit}} ago', { hoursAgo, unit: hoursAgo === 1 ? 'hour' : 'hours' });
 
   let minutesText = t('{{minutesAgo}} {{unit}} ago', { minutesAgo, unit: minutesAgo === 1 ? 'minute' : 'minutes' });
-  if (minutesAgo < 1) minutesText = t('just now');
+  if (minutesAgo < 1) minutesText = t('a few seconds ago');
 
   return {
     daysAgo,
