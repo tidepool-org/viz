@@ -42,11 +42,21 @@ $ npm install
 
 ### Running locally with blip
 
-To work on code in this repository within [blip](https://github.com/tidepool-org/blip 'Tidepool on GitHub: blip'), first do the following from your local blip repository (assuming blip/ and viz/ are sister directories):
+To work on code in this repository within [blip](https://github.com/tidepool-org/blip 'Tidepool on GitHub: blip'), first run this command in your viz/ directory:
+
+```bash
+$ npm link 
+```
+
+This creates a "symlink" in the global folder {prefix}/lib/node_modules/\<package\>/ that links \<package\> to the viz/ directory.
+
+Then, go to your local blip repository (assuming blip/ and viz/ are sister directories) and run:
 
 ```bash
 $ npm link ../viz/
 ```
+
+This creates a symbolic link from the global folder to the node_modules/ of the blip/ directory.
 
 In this repository, start the build in watch mode:
 
@@ -54,7 +64,7 @@ In this repository, start the build in watch mode:
 $ npm start
 ```
 
-Finally, back in your local blip repository, follow [the instructions for starting blip locally](http://developer.tidepool.io/blip/#running-locally 'Blip README: running locally').
+Finally, back in your local blip repository, follow [the instructions for starting blip locally](https://github.com/tidepool-org/blip?tab=readme-ov-file#running-locally).
 
 ### Running locally in React Storybook
 
