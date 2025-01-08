@@ -40,6 +40,7 @@ export const HoverBar = props => {
             stroke: 'transparent',
             fill: 'transparent',
           }}
+          {...props.events}
         />
       </g>
       <g className="barBg" pointerEvents="none">

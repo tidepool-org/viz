@@ -82,14 +82,15 @@ export const HoverBarLabel = props => {
           cornerRadius={tooltipRadius}
           datum={tooltipDatum}
           x={scale.y(domain.y[1]) - style.paddingLeft - tooltipTextSize.width - (tooltipRadius * 2)}
+          dx={0}
           flyoutStyle={{
             display: disabled ? 'none' : 'inherit',
             stroke: colors.axis,
             strokeWidth: 2,
             fill: colors.white,
           }}
-          width={tooltipTextSize.width + (tooltipRadius * 2)}
-          height={tooltipHeight}
+          flyoutWidth={tooltipTextSize.width + (tooltipRadius * 2)}
+          flyoutHeight={tooltipHeight}
           pointerLength={0}
           pointerWidth={0}
           renderInPortal={false}

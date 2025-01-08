@@ -502,7 +502,7 @@ class Stat extends PureComponent {
               barWidth={barWidth}
               bgPrefs={props.bgPrefs}
               domain={domain}
-              text={(datum = {}) => {
+              text={({datum={}}) => {
                 const datumRef = _.get(chartData, datum.index, datum);
                 const { value } = formatDatum(
                   _.get(datumRef, 'deviation', datumRef),
@@ -511,7 +511,7 @@ class Stat extends PureComponent {
                 );
                 return `${value}`;
               }}
-              tooltipText={(datum = {}) => {
+              tooltipText={({datum = {}}) => {
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
@@ -525,11 +525,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: datum => this.getDatumColor(datum),
+              fill: ({datum}) => this.getDatumColor(datum),
               width: () => barWidth,
             },
             labels: {
-              fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({datum}) => this.getDatumColor(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
@@ -647,11 +647,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: datum => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
+              fill: ({datum}) => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
               width: () => barWidth,
             },
             labels: {
-              fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({datum}) => this.getDatumColor(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
