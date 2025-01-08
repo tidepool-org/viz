@@ -1544,8 +1544,8 @@ describe('Stat', () => {
         const result = instance.getChartPropsByType(instance.props);
 
         expect(result.domain).to.eql({
-          x: [0, MGDL_CLAMP_TOP],
-          y: [0, 1],
+          x: [0, 1],
+          y: [0, MGDL_CLAMP_TOP],
         });
       });
 
@@ -1557,8 +1557,8 @@ describe('Stat', () => {
         const result = instance.getChartPropsByType(instance.props);
 
         expect(result.domain).to.eql({
-          x: [0, MMOLL_CLAMP_TOP],
-          y: [0, 1],
+          x: [0, 1],
+          y: [0, MMOLL_CLAMP_TOP],
         });
       });
 
@@ -1718,8 +1718,8 @@ describe('Stat', () => {
         const result = instance.getChartPropsByType(instance.props);
 
         expect(result.domain).to.eql({
-          x: [0, 1],
-          y: [0, 2],
+          x: [0, 2],
+          y: [0, 1],
         });
 
         // Remove a datum

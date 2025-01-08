@@ -32,7 +32,7 @@ export const BgBar = props => {
   const widths = {
     low: scale.y(bgBounds.targetLowerBound) * widthCorrection,
     target: scale.y(bgBounds.targetUpperBound - bgBounds.targetLowerBound) * widthCorrection,
-    high: scale.y(domain.x[1] - bgBounds.targetUpperBound) * widthCorrection,
+    high: scale.y(domain.y[1] - bgBounds.targetUpperBound) * widthCorrection,
   };
 
   const barRadius = barWidth / 2;

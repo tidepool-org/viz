@@ -465,8 +465,8 @@ class Stat extends PureComponent {
         height = chartProps.height || barWidth * 6;
 
         domain = {
-          x: [0, bgUnits === MGDL_UNITS ? MGDL_CLAMP_TOP : MMOLL_CLAMP_TOP],
-          y: [0, 1],
+          x: [0, 1],
+          y: [0, bgUnits === MGDL_UNITS ? MGDL_CLAMP_TOP : MMOLL_CLAMP_TOP],
         };
 
         padding = {
@@ -557,8 +557,8 @@ class Stat extends PureComponent {
         }
 
         domain = {
-          x: [0, 1],
-          y: [0, chartData.length],
+          x: [0, chartData.length],
+          y: [0, 1],
         };
 
         padding = {

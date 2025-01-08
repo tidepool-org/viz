@@ -4,7 +4,7 @@
     "node": "20.8.0"
   },
   "packageManager": "yarn@3.6.4",
-  "version": "1.44.0",
+  "version": "1.44.0-web-3179-dep-updates.1",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
@@ -88,8 +88,8 @@
     "text-table": "0.2.0",
     "translate-svg-path": "0.0.1",
     "util": "0.12.5",
-    "victory": "31.3.0",
-    "victory-core": "31.2.0",
+    "victory": "32.0.0",
+    "victory-core": "32.0.0",
     "voilab-pdf-table": "0.5.1"
   },
   "devDependencies": {
@@ -166,7 +166,7 @@
     "babel-core": "6.x || ^7.0.0-bridge.0",
     "classnames": "2.x",
     "react": "16.x",
-    "react-addons-update": "16.x",
+    "react-addons-update": "15.6.x",
     "react-dom": "16.x",
     "react-redux": "8.x",
     "redux": "4.x"

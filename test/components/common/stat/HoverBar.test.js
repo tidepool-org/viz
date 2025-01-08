@@ -24,7 +24,7 @@ describe('HoverBar', () => {
       y: () => width,
     },
     width,
-    y: 80,
+    x: 80,
   };
 
   beforeEach(() => {
@@ -51,13 +51,13 @@ describe('HoverBar', () => {
     expect(wrapper.find('.barBg').childAt(0).props().width).to.equal(220); // width - chartLabelWidth
   });
 
-  it('should render a bar with a width corresponding to the y prop value, corrected for the rendering area width', () => {
+  it('should render a bar with a width corresponding to the x prop value, corrected for the rendering area width', () => {
     // actual chart rendering width is corrected due to the chart labels taking some space
     const widthCorrection = (width - defaultProps.chartLabelWidth) / width;
     expect(widthCorrection).to.equal(0.7333333333333333); // (220 / 300), as per default props
 
     expect(wrapper.find('Bar')).to.have.length(1);
     expect(wrapper.find('Bar').props().width).to.equal(220);
-    expect(wrapper.find('Bar').props().y).to.equal(58.666666666666664); // (defaultProps.y * widthCorrection)
+    expect(wrapper.find('Bar').props().x).to.equal(58.666666666666664); // (defaultProps.x * widthCorrection)
   });
 });

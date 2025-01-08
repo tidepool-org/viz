@@ -45,8 +45,8 @@ describe('BgBar', () => {
     chartLabelWidth: 80,
     datum: avgGlucoseDatum,
     domain: {
-      x: [0, MGDL_CLAMP_TOP],
-      y: [0, 1],
+      x: [0, 1],
+      y: [0, MGDL_CLAMP_TOP],
     },
     scale: {
       x: val => val,

@@ -63,7 +63,7 @@ export const HoverBarLabel = props => {
         style={labelStyle}
         textAnchor="end"
         verticalAnchor="middle"
-        x={scale.y(domain.x[1])}
+        x={scale.y(domain.y[1])}
         dx={-(labelUnitsTextSize.width * 1.9)}
       />
       <VictoryLabel
@@ -73,7 +73,7 @@ export const HoverBarLabel = props => {
         style={labelUnitsStyle}
         textAnchor="end"
         verticalAnchor="middle"
-        x={scale.y(domain.x[1])}
+        x={scale.y(domain.y[1])}
         dx={0}
       />
       {tooltipTextSize.width > 0 && (
@@ -81,7 +81,7 @@ export const HoverBarLabel = props => {
           {...props}
           cornerRadius={tooltipRadius}
           datum={tooltipDatum}
-          x={scale.y(domain.x[1]) - style.paddingLeft - tooltipTextSize.width - (tooltipRadius * 2)}
+          x={scale.y(domain.y[1]) - style.paddingLeft - tooltipTextSize.width - (tooltipRadius * 2)}
           flyoutStyle={{
             display: disabled ? 'none' : 'inherit',
             stroke: colors.axis,
