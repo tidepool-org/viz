@@ -1482,10 +1482,10 @@ describe('Stat', () => {
 
       it('should set `containerComponent` to a non-responsive `VictoryContainer` component', () => {
         const result = instance.getChartPropsByType(instance.props);
-        const containerComponentInstance = shallow(result.containerComponent).instance();
+        const containerComponent = mount(result.containerComponent);
 
-        expect(containerComponentInstance).to.be.instanceOf(VictoryContainer);
-        expect(containerComponentInstance.props.responsive).to.be.false;
+        expect(containerComponent.is(VictoryContainer)).to.be.true;
+        expect(containerComponent.prop('responsive')).to.be.false;
       });
 
       it('should set `dataComponent` to a `BgBar` component with necessary props', () => {
@@ -1657,10 +1657,10 @@ describe('Stat', () => {
 
       it('should set `containerComponent` to a non-responsive `VictoryContainer` component', () => {
         const result = instance.getChartPropsByType(instance.props);
-        const containerComponentInstance = shallow(result.containerComponent).instance();
+        const containerComponent = mount(result.containerComponent);
 
-        expect(containerComponentInstance).to.be.instanceOf(VictoryContainer);
-        expect(containerComponentInstance.props.responsive).to.be.false;
+        expect(containerComponent.is(VictoryContainer)).to.be.true;
+        expect(containerComponent.prop('responsive')).to.be.false;
       });
 
       it('should set `dataComponent` to a `HoverBar` component with necessary props', () => {

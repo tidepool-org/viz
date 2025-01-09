@@ -20,6 +20,12 @@ export const HoverBarLabel = props => {
     style = {},
     text,
     tooltipText,
+    // Victory animate sometimes passes undefined to the y prop which errors out the label rendering
+    // but eventually settles on the correct value for the final render, but we default to 15 (the lowest
+    // common observed value) to avoid the error
+    // There's a lot of strange behavior with animate and it's being completely rewritten
+    // see: https://github.com/FormidableLabs/victory/issues/2104
+    y = 15,
   } = props;
 
   const tooltipFontSize = _.min([barWidth / 2, 12]);
@@ -64,6 +70,7 @@ export const HoverBarLabel = props => {
         textAnchor="end"
         verticalAnchor="middle"
         x={scale.y(domain.y[1])}
+        y={y}
         dx={-(labelUnitsTextSize.width * 1.9)}
       />
       <VictoryLabel
@@ -74,6 +81,7 @@ export const HoverBarLabel = props => {
         textAnchor="end"
         verticalAnchor="middle"
         x={scale.y(domain.y[1])}
+        y={y}
         dx={0}
       />
       {tooltipTextSize.width > 0 && (
@@ -82,6 +90,7 @@ export const HoverBarLabel = props => {
           cornerRadius={tooltipRadius}
           datum={tooltipDatum}
           x={scale.y(domain.y[1]) - style.paddingLeft - tooltipTextSize.width - (tooltipRadius * 2)}
+          y={y}
           dx={0}
           flyoutStyle={{
             display: disabled ? 'none' : 'inherit',
