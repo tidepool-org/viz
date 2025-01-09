@@ -52,6 +52,8 @@ import { deviceName } from './utils/settings/data';
 
 import {
   commonStats,
+  statFormats,
+  formatDatum,
   getStatAnnotations,
   getStatData,
   getStatDefinition,
@@ -127,6 +129,8 @@ const utils = {
   },
   stat: {
     commonStats,
+    statFormats,
+    formatDatum,
     getStatAnnotations,
     getStatData,
     getStatDefinition,
