@@ -88,8 +88,8 @@
     "text-table": "0.2.0",
     "translate-svg-path": "0.0.1",
     "util": "0.12.5",
-    "victory": "33.0.0",
-    "victory-core": "33.0.0",
+    "victory": "37.3.5",
+    "victory-core": "37.3.5",
     "voilab-pdf-table": "0.5.1"
   },
   "devDependencies": {
