@@ -1,5 +1,6 @@
 import React from 'react';
 import { mount } from 'enzyme';
+import { Bar, Rect } from 'victory';
 
 import HoverBar from '../../../../src/components/common/stat/HoverBar';
 import colors from '../../../../src/styles/colors.css';
@@ -37,7 +38,7 @@ describe('HoverBar', () => {
 
   it('should render a full-width transparent hover target area', () => {
     expect(wrapper.find('.HoverBarTarget')).to.have.length(1);
-    expect(wrapper.find('.HoverBarTarget').childAt(0).is('Rect')).to.be.true;
+    expect(wrapper.find('.HoverBarTarget').childAt(0).is(Rect)).to.be.true;
     expect(wrapper.find('.HoverBarTarget').childAt(0).props().style.stroke).to.equal('transparent');
     expect(wrapper.find('.HoverBarTarget').childAt(0).props().style.fill).to.equal('transparent');
     expect(wrapper.find('.HoverBarTarget').childAt(0).props().width).to.equal(width);
@@ -45,7 +46,7 @@ describe('HoverBar', () => {
 
   it('should render a properly colored bar backround the full width of the rendering area', () => {
     expect(wrapper.find('.barBg')).to.have.length(1);
-    expect(wrapper.find('.barBg').childAt(0).is('Rect')).to.be.true;
+    expect(wrapper.find('.barBg').childAt(0).is(Rect)).to.be.true;
     expect(wrapper.find('.barBg').childAt(0).props().style.stroke).to.equal('transparent');
     expect(wrapper.find('.barBg').childAt(0).props().style.fill).to.equal(colors.axis);
     expect(wrapper.find('.barBg').childAt(0).props().width).to.equal(220); // width - chartLabelWidth
@@ -56,8 +57,8 @@ describe('HoverBar', () => {
     const widthCorrection = (width - defaultProps.chartLabelWidth) / width;
     expect(widthCorrection).to.equal(0.7333333333333333); // (220 / 300), as per default props
 
-    expect(wrapper.find('Bar')).to.have.length(1);
-    expect(wrapper.find('Bar').props().width).to.equal(220);
-    expect(wrapper.find('Bar').props().x).to.equal(58.666666666666664); // (defaultProps.x * widthCorrection)
+    expect(wrapper.find(Bar)).to.have.length(1);
+    expect(wrapper.find(Bar).props().width).to.equal(220);
+    expect(wrapper.find(Bar).props().x).to.equal(58.666666666666664); // (defaultProps.x * widthCorrection)
   });
 });
