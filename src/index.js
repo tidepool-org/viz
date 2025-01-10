@@ -35,7 +35,7 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
-import { formatBgValue } from './utils/format';
+import { formatBgValue, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
@@ -128,8 +128,8 @@ const utils = {
     getTimezoneFromTimePrefs,
   },
   stat: {
+    bankersRound,
     commonStats,
-    statFormats,
     formatDatum,
     getStatAnnotations,
     getStatData,
@@ -137,6 +137,7 @@ const utils = {
     getStatTitle,
     statBgSourceLabels,
     statFetchMethods,
+    statFormats,
   },
   settings: {
     deviceName,
