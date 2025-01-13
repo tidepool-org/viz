@@ -95,7 +95,7 @@ export function agpCGMText(patient, pdf) {
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
   clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}', { targetRange, percentInTarget }));
   clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}', { lowRange, percentInLow }));
-  clipboardText += textUtil.buildTextLine(t('{{veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
 
