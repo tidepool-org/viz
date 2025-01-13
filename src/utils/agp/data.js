@@ -22,7 +22,7 @@ import moment from 'moment';
 import TextUtil from '../text/TextUtil';
 import { formatPercentage } from '../format';
 import { formatDatum } from '../../utils/stat';
-import { getTimezoneFromTimePrefs } from '../datetime';
+import { getTimezoneFromTimePrefs, formatDuration } from '../datetime';
 
 const t = i18next.t.bind(i18next);
 
@@ -48,7 +48,7 @@ export function agpCGMText(patient, pdf) {
         stats: {
           bgExtents: { newestDatum, oldestDatum },
           averageGlucose: { averageGlucose },
-          timeInRange: { counts },
+          timeInRange: { counts, durations },
         },
       },
     },
@@ -81,6 +81,12 @@ export function agpCGMText(patient, pdf) {
   const percentInLow     = formatPercentage(counts.low / counts.total, 0, true);
   const percentInVeryLow = formatPercentage(counts.veryLow / counts.total, 0, true);
 
+  const durationInTarget = formatDuration(durations.target, { condensed: true });
+  const durationInLow = formatDuration(durations.low, { condensed: true });
+  const durationInVeryLow = formatDuration(durations.veryLow, { condensed: true });
+
+  console.log(durationInTarget, durationInLow, durationInVeryLow);
+
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
 
   const textUtil = new TextUtil();
@@ -93,9 +99,9 @@ export function agpCGMText(patient, pdf) {
   clipboardText += textUtil.buildTextLine(t('Reporting Period: {{dateRange}}', { dateRange }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
-  clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}', { targetRange, percentInTarget }));
-  clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}', { lowRange, percentInLow }));
-  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
+  clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}   ({{ durationInTarget }})', { targetRange, percentInTarget, durationInTarget }));
+  clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}   ({{ durationInLow }})', { lowRange, percentInLow, durationInLow }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}   ({{ durationInVeryLow }})', { veryLowRange, percentInVeryLow, durationInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
 
