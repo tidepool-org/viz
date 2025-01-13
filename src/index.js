@@ -64,6 +64,7 @@ import {
 
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
+import { agpCGMText } from './utils/agp/data';
 import TextUtil from './utils/text/TextUtil';
 import { generateAGPFigureDefinitions } from './utils/print/plotly';
 
@@ -152,6 +153,7 @@ const utils = {
     trendsText,
     basicsText,
     bgLogText,
+    agpCGMText,
   },
 };
 
