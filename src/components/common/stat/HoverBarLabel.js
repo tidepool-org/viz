@@ -60,11 +60,7 @@ export const HoverBarLabel = props => {
     _y: _.max([datum._y, 0]),
   };
 
-  // Victory animate sometimes passes undefined to the y prop which errors out the label rendering
-  // but eventually settles on the correct value for the final render
-  // There's a lot of strange behavior with animate and it's being completely rewritten
-  // see: https://github.com/FormidableLabs/victory/issues/2104
-  return props.y ? (
+  return (
     <g className="HoverBarLabel">
       <VictoryLabel
         {...props}
@@ -112,7 +108,7 @@ export const HoverBarLabel = props => {
         />
       )}
     </g>
-  ) : null;
+  );
 };
 
 HoverBarLabel.propTypes = {
