@@ -29,6 +29,6 @@ describe('Header', () => {
         printView={false}
       />
     );
-    expect(wrapper.find('span').text()).to.equal('Therapy Settings - Active at Upload on Jul 12th 2016');
+    expect(wrapper.find('span').text()).to.equal('Active at Upload on Jul 12th 2016');
   });
 });
