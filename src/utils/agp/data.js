@@ -38,14 +38,12 @@ const t = i18next.t.bind(i18next);
 /**
  * agpCGMText
  * @param  {Object} patient - the patient object that contains the profile
- * @param  {Object} pdf - pdf object outputted from generatePDF
+ * @param  {Object} data - agpCGM object outputted from generatePDF
  *
  * @return {String}  agpCGM data as a formatted string
  */
-export function agpCGMText(patient, pdf) {
-  const agpCGM = pdf?.data?.agpCGM;
-
-  if (!agpCGM || !patient) return '';
+export function agpCGMText(patient, data) {
+  if (!data || !patient) return '';
 
   const getDateRange = (startDate, endDate, dateParseFormat, _prefix, monthFormat, timezone) => {
     let start = startDate;
@@ -73,7 +71,7 @@ export function agpCGMText(patient, pdf) {
         },
       },
     },
-  } = agpCGM;
+  } = data;
 
   const { bgUnits, bgBounds } = bgPrefs || {};
   const { targetUpperBound, targetLowerBound, veryLowThreshold } = bgBounds || {};
