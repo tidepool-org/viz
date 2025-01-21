@@ -88,8 +88,8 @@
     "text-table": "0.2.0",
     "translate-svg-path": "0.0.1",
     "util": "0.12.5",
-    "victory": "31.3.0",
-    "victory-core": "31.2.0",
+    "victory": "37.3.5",
+    "victory-core": "37.3.5",
     "voilab-pdf-table": "0.5.1"
   },
   "devDependencies": {
@@ -166,7 +166,7 @@
     "babel-core": "6.x || ^7.0.0-bridge.0",
     "classnames": "2.x",
     "react": "16.x",
-    "react-addons-update": "16.x",
+    "react-addons-update": "15.6.x",
     "react-dom": "16.x",
     "react-redux": "8.x",
     "redux": "4.x"
