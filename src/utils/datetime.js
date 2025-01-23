@@ -312,19 +312,30 @@ export function getLocalizedCeiling(utc, timePrefs) {
 export const formatTimeAgo = (utc, timePrefs, format = 'YYYY-MM-DD') => {
   const timezone = getTimezoneFromTimePrefs(timePrefs);
   const endOfToday = moment.utc(getLocalizedCeiling(new Date().toISOString(), timePrefs)).tz(timezone);
-  const endOfLastUploadDay = moment.utc(getLocalizedCeiling(utc, timePrefs)).tz(timezone);
-  const daysAgo = endOfToday.diff(endOfLastUploadDay, 'days', true);
+  const endOfProvidedDay = moment.utc(getLocalizedCeiling(utc, timePrefs)).tz(timezone);
+  const daysAgo = endOfToday.diff(endOfProvidedDay, 'days', true);
+  const minutesAgo = moment.utc().tz(timezone).diff(utc, 'minutes');
+  const hoursAgo = moment.utc().tz(timezone).diff(utc, 'hours');
   const lastUploadDateMoment = moment.utc(utc).tz(timezone);
-  let text = lastUploadDateMoment.format(format);
+  let daysText = lastUploadDateMoment.format(format);
 
   if (daysAgo < 2) {
-    text = (daysAgo >= 1) ? t('Yesterday') : t('Today');
+    daysText = (daysAgo >= 1) ? t('yesterday') : t('today');
   } else if (daysAgo <= 30) {
-    text = t('{{days}} days ago', { days: Math.ceil(daysAgo) });
+    daysText = t('{{days}} days ago', { days: Math.ceil(daysAgo) });
   }
+
+  const hoursText = t('{{hoursAgo}} {{unit}} ago', { hoursAgo, unit: hoursAgo === 1 ? 'hour' : 'hours' });
+
+  let minutesText = t('{{minutesAgo}} {{unit}} ago', { minutesAgo, unit: minutesAgo === 1 ? 'minute' : 'minutes' });
+  if (minutesAgo < 1) minutesText = t('a few seconds ago');
 
   return {
     daysAgo,
-    text,
+    daysText,
+    hoursAgo,
+    hoursText,
+    minutesAgo,
+    minutesText,
   };
 };
