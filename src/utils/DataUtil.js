@@ -14,6 +14,7 @@ import {
   isSettingsOverrideDevice,
   isDIYLoop,
   isTidepoolLoop,
+  isTwiistLoop,
 } from './device';
 
 import {
@@ -38,6 +39,7 @@ import {
   MGDL_UNITS,
   DIY_LOOP,
   TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from './constants';
 
 import {
@@ -891,9 +893,10 @@ export class DataUtil {
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettings, deviceModel);
-      const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettings);
-      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettings);
+      const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
+      const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);
+      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettingsOrUpload);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
@@ -919,9 +922,13 @@ export class DataUtil {
     const pumpSettingsData = this.filter.byType('pumpSettings').top(Infinity);
     this.uploadMap = {};
 
+    console.log('uploadData', uploadData);
+
     _.each(uploadData, upload => {
       const pumpSettings = _.find(pumpSettingsData, { uploadId: upload.uploadId });
       let source = 'Unknown';
+
+      console.log('upload, pumpSettings', upload, pumpSettings);
 
       if (_.get(upload, 'source')) {
         source = upload.source;
@@ -937,11 +944,13 @@ export class DataUtil {
           source = 'carelink';
         } else {
           source = upload.deviceManufacturers[0];
-        }
+        }s
       } else if (isTidepoolLoop(pumpSettings)) {
         source = TIDEPOOL_LOOP.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
+      } else if (isTwiistLoop(upload)) {
+        source = TWIIST_LOOP.toLowerCase();
       }
 
       this.uploadMap[upload.uploadId] = {
