@@ -45,7 +45,9 @@ export function isTidepoolLoop(datum = {}) {
  * Check to see if datum is from Twiist Loop
 */
 export function isTwiistLoop(datum = {}) {
-  return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', datum?.client?.name || '')) || (/^twiist_[a-zA-Z0-9]*/).test(datum?.deviceId || '');
+  return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', ''))
+  || (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', ''))
+  || (/^twiist_[a-zA-Z0-9]*/).test(datum?.deviceId || '');
 }
 
 /**
