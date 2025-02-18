@@ -100,6 +100,7 @@ export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
 export const TIDEPOOL_LOOP = 'Tidepool Loop';
 export const DIY_LOOP = 'DIY Loop';
+export const TWIIST_LOOP = 'Twiist';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
 
