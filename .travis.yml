@@ -1,12 +1,9 @@
-sudo: false
-
-language: node_js
-
+os: linux
 dist: jammy
+language: node_js
 
 node_js:
   - "20.8.0"
-  - "stable"
 
 cache:
   yarn: true
@@ -31,7 +28,3 @@ services:
 script:
   - npm test
   - ./artifact.sh
-
-matrix:
-  allow_failures:
-    - node_js: "stable"
