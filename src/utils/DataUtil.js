@@ -96,6 +96,7 @@ export class DataUtil {
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
+    this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
 
@@ -190,6 +191,7 @@ export class DataUtil {
     }
 
     if (d.type === 'upload' && d.dataSetType === 'continuous') {
+      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
       if (!d.time) d.time = moment.utc().toISOString();
     }
 
@@ -287,7 +289,7 @@ export class DataUtil {
   };
 
   joinBolusAndDosingDecision = d => {
-    if (d.type === 'bolus' && isLoop(d)) {
+    if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
       const proximateDosingDecisions = _.filter(
@@ -361,6 +363,7 @@ export class DataUtil {
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
+        loop: !!this.loopDataSetsByIdMap[d.uploadId],
       };
     }
 
@@ -368,6 +371,12 @@ export class DataUtil {
       d.tags = {
         manual: d.subType === 'manual',
         meter: d.subType !== 'manual',
+      };
+    }
+
+    if (d.type === 'food') {
+      d.tags = {
+        loop: !!this.loopDataSetsByIdMap[d.uploadId],
       };
     }
 

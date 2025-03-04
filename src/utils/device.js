@@ -42,19 +42,18 @@ export function isTidepoolLoop(datum = {}) {
 }
 
 /**
- * Check to see if datum is from Twiist Loop
+ * Check to see if and upload datum is from Twiist Loop
 */
-export function isTwiistLoop(datum = {}) {
-  return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', ''))
-  || (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', ''))
-  || (/^twiist_[a-zA-Z0-9]*/).test(datum?.deviceId || '');
+export function isTwiistLoop(upload = {}) {
+  const majorVersion = parseInt(_.get(upload, 'client.version', '0').split('.')[0]);
+  return (/^com.sequelmedtech.tidepool-service/).test(_.get(upload, 'client.name', '')) && majorVersion >= 2;
 }
 
 /**
  * Check to see if datum is from a known Loop device
  */
 export function isLoop(datum = {}) {
-  return isDIYLoop(datum) || isTidepoolLoop(datum) || isTwiistLoop(datum);
+  return datum.tags?.loop || isDIYLoop(datum) || isTidepoolLoop(datum) || (datum.type === 'upload' && isTwiistLoop(datum));
 }
 
 /**
