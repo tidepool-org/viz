@@ -268,34 +268,34 @@ describe('basics data utils', () => {
 
   describe('getSiteChangeSourceLabel', () => {
     it('should return the appropriate labels for animas pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'animas')).to.equal('Fill Cannula');
+      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'animas')).to.equal('Cannula Fill');
       expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'animas')).to.equal('Go Prime');
     });
 
     it('should return the appropriate labels for medtronic pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'medtronic')).to.equal('Prime Cannula');
+      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'medtronic')).to.equal('Cannula Prime');
       expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'medtronic')).to.equal('Prime');
     });
 
     it('should return the appropriate labels for tandem pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'tandem')).to.equal('Fill Cannula');
-      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tandem')).to.equal('Fill Tubing');
+      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'tandem')).to.equal('Cannula Fill');
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tandem')).to.equal('Tubing Fill');
     });
 
     it('should return the appropriate labels for insulet pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('reservoirChange', 'insulet')).to.equal('Change Pod');
+      expect(dataUtils.getSiteChangeSourceLabel('reservoirChange', 'insulet')).to.equal('Pod Change');
     });
 
     it('should return the appropriate labels for DIY Loop pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'diy loop')).to.equal('Fill Tubing');
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'diy loop')).to.equal('Tubing Fill');
     });
 
     it('should return the appropriate labels for Tidepool Loop pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tidepool loop')).to.equal('Fill Tubing');
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tidepool loop')).to.equal('Tubing Fill');
     });
 
     it('should fall back to a default label when a manufacturer-specific label cannot be found', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('myEvent', 'pumpCo')).to.equal('Change Cartridge');
+      expect(dataUtils.getSiteChangeSourceLabel('myEvent', 'pumpCo')).to.equal('Cartridge Change');
     });
 
     it('should return `null` when siteChangeSource is `undeclared`', () => {
@@ -646,7 +646,7 @@ describe('basics data utils', () => {
       siteChanges: {
         type: 'siteChanges',
         title: 'Infusion site changes',
-        subTitle: 'Fill Cannula',
+        subTitle: 'Cannula Fill',
         source: 'cannulaPrime',
       },
     };
@@ -724,7 +724,7 @@ describe('basics data utils', () => {
       dataUtils.basicsText(patient, data, stats, aggregations);
       sinon.assert.calledWith(
         textUtilStub.buildTextTable,
-        'Infusion site changes from \'Fill Cannula\'',
+        'Infusion site changes from \'Cannula Fill\'',
         [{ label: 'Mean Duration', value: '2 days' }, { label: 'Longest Duration', value: '3 days' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );
@@ -745,7 +745,7 @@ describe('basics data utils', () => {
       dataUtils.basicsText(patient, updatedData, stats, aggregations);
       sinon.assert.calledWith(
         textUtilStub.buildTextTable,
-        'Infusion site changes from \'Fill Cannula\'',
+        'Infusion site changes from \'Cannula Fill\'',
         [{ label: 'Mean Duration', value: '4.3 days' }, { label: 'Longest Duration', value: '5 days' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );
