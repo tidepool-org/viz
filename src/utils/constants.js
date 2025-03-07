@@ -154,6 +154,16 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Maximum Basal Rate'),
   },
+  [TWIIST_LOOP]: {
+    [SITE_CHANGE_RESERVOIR]: t('Change Cassette'),
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [AUTOMATED_MODE_EXITED]: t('Off'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Preset'),
+    [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
+    [MAX_BOLUS]: t('Maximum Bolus'),
+    [MAX_BASAL]: t('Maximum Basal Rate'),
+  },
   [DIY_LOOP]: {
     [AUTOMATED_DELIVERY]: t('Automation'),
     [AUTOMATED_MODE_EXITED]: t('Off'),
@@ -187,6 +197,10 @@ export const settingsOverrides = {
     PHYSICAL_ACTIVITY,
   ],
   [TIDEPOOL_LOOP]: [
+    PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
+  [TWIIST_LOOP]: [
     PHYSICAL_ACTIVITY,
     PREPRANDIAL,
   ],
