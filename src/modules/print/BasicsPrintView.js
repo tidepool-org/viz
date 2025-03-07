@@ -43,6 +43,7 @@ import {
   SITE_CHANGE,
   TIDEPOOL_LOOP,
   DIY_LOOP,
+  TWIIST_LOOP,
 } from '../../utils/constants';
 
 const siteChangeImages = {
@@ -52,6 +53,7 @@ const siteChangeImages = {
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
   [`${TIDEPOOL_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
   [`${DIY_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${TWIIST_LOOP.toLowerCase()}_${SITE_CHANGE_RESERVOIR}`]: 'images/sitechange-twiist-cassette.png',
 };
 
 const t = i18next.t.bind(i18next);

@@ -41,6 +41,7 @@ import {
   MICROTECH,
   pumpVocabulary,
   TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';
@@ -212,6 +213,13 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     }
   } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
+  } else if (_.includes(_.map([TWIIST_LOOP], _.lowerCase), manufacturer)) {
+    siteChangeSource = _.get(settings, 'siteChangeSource');
+    const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_RESERVOIR];
+
+    if (!_.includes(allowedSources, siteChangeSource)) {
+      siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
+    }
   } else if (_.includes(_.map([DIY_LOOP, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_TUBING;
   }
