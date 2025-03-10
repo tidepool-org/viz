@@ -340,6 +340,8 @@ export class Upload extends Common {
     this.deviceManufacturers = opts.deviceManufacturers;
     this.deviceSerialNumber = opts.deviceSerialNumber;
     this.dataSetType = opts.dataSetType;
+    this.origin = opts.origin;
+    this.client = opts.client;
 
     this.time = this.makeTime();
     this.timezone = opts.timezone;

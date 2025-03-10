@@ -144,6 +144,25 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isTwiistLoop', () => {
+    it('should return `true` for a matching pattern within `client.name` and a major version above 2', () => {
+      const datum = { client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } };
+      const datum2 = { client: { name: 'com.sequelmedtech.tidepool-service', version: '4.10.30' } };
+      expect(device.isTwiistLoop(datum)).to.be.true;
+      expect(device.isTwiistLoop(datum2)).to.be.true;
+    });
+
+    it('should return `false` for a non-matching pattern within `client.name`', () => {
+      const datum = { client: { name: 'com.tidepool.Loop', version: '2.0.0' } };
+      expect(device.isTwiistLoop(datum)).to.be.false;
+    });
+
+    it('should return `false` for a client major version below 2', () => {
+      const datum = { client: { name: 'com.tidepool.Loop', version: '1.9.9' } };
+      expect(device.isTwiistLoop(datum)).to.be.false;
+    });
+  });
+
   describe('isLoop', () => {
     it('should return `true` for a matching pattern within `origin.name` for DIY Loop or Tidepool Loop', () => {
       const diyLoop = { origin: { name: 'com.loopkit.Loop' } };
@@ -166,11 +185,26 @@ describe('device utility functions', () => {
       expect(device.isLoop(tidepoolLoop)).to.be.true;
     });
 
+    it('should return `true` for a datum tagged as "loop"', () => {
+      const loopTaggedDatum = { tags: { loop: true } };
+      expect(device.isLoop(loopTaggedDatum)).to.be.true;
+    });
+
     it('should return `false` for a non-matching pattern within `client.name`', () => {
       const diyLoopBad = { client: { name: 'org.loopkit.Loop' } };
       const tidepoolLoopBad = { client: { name: 'com.tidepool.Loop' } };
       expect(device.isLoop(diyLoopBad)).to.be.false;
       expect(device.isLoop(tidepoolLoopBad)).to.be.false;
+    });
+
+    it('should return `true` for an upload datum matching pattern within `client.name` for Twiist Loop and version above 2', () => {
+      const twiistLoop = { client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' }, type: 'upload' };
+      expect(device.isLoop(twiistLoop)).to.be.true;
+    });
+
+    it('should return `false` for a non-upload datum matching pattern within `client.name` for Twiist Loop and version above 2', () => {
+      const twiistLoopPumpSettings = { client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' }, type: 'pumpSettings' };
+      expect(device.isLoop(twiistLoopPumpSettings)).to.be.false;
     });
   });
 

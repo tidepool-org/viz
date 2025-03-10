@@ -337,6 +337,16 @@ describe('constants', () => {
           [constants.MAX_BOLUS]: 'Maximum Bolus',
           [constants.MAX_BASAL]: 'Maximum Basal Rate',
         },
+        [constants.TWIIST_LOOP]: {
+          [constants.SITE_CHANGE_RESERVOIR]: 'Cassette Change',
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
+          [constants.AUTOMATED_MODE_EXITED]: 'Off',
+          [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.SETTINGS_OVERRIDE]: 'Preset',
+          [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
+          [constants.MAX_BOLUS]: 'Maximum Bolus',
+          [constants.MAX_BASAL]: 'Maximum Basal Rate',
+        },
         [constants.DIY_LOOP]: {
           [constants.AUTOMATED_DELIVERY]: 'Automation',
           [constants.AUTOMATED_MODE_EXITED]: 'Off',
@@ -367,6 +377,33 @@ describe('constants', () => {
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
+      });
+    });
+  });
+
+  describe('settingsOverrides', () => {
+    it('should define settings overrides per device manufacturer', () => {
+      expect(constants.settingsOverrides).to.eql({
+        [constants.TANDEM]: [
+          constants.SLEEP,
+          constants.PHYSICAL_ACTIVITY,
+        ],
+        [constants.TIDEPOOL_LOOP]: [
+          constants.PHYSICAL_ACTIVITY,
+          constants.PREPRANDIAL,
+        ],
+        [constants.TWIIST_LOOP]: [
+          constants.PHYSICAL_ACTIVITY,
+          constants.PREPRANDIAL,
+        ],
+        [constants.DIY_LOOP]: [
+          constants.PREPRANDIAL,
+        ],
+        default: [
+          constants.SLEEP,
+          constants.PHYSICAL_ACTIVITY,
+          constants.PREPRANDIAL,
+        ],
       });
     });
   });

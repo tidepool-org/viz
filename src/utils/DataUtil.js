@@ -931,13 +931,9 @@ export class DataUtil {
     const pumpSettingsData = this.filter.byType('pumpSettings').top(Infinity);
     this.uploadMap = {};
 
-    console.log('uploadData', uploadData);
-
     _.each(uploadData, upload => {
       const pumpSettings = _.find(pumpSettingsData, { uploadId: upload.uploadId });
       let source = 'Unknown';
-
-      console.log('upload, pumpSettings', upload, pumpSettings);
 
       if (_.get(upload, 'source')) {
         source = upload.source;
@@ -953,7 +949,7 @@ export class DataUtil {
           source = 'carelink';
         } else {
           source = upload.deviceManufacturers[0];
-        }s
+        }
       } else if (isTidepoolLoop(pumpSettings)) {
         source = TIDEPOOL_LOOP.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
