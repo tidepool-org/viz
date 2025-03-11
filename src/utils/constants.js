@@ -100,6 +100,7 @@ export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
 export const TIDEPOOL_LOOP = 'Tidepool Loop';
 export const DIY_LOOP = 'DIY Loop';
+export const TWIIST_LOOP = 'Twiist';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
 
@@ -107,11 +108,11 @@ export const pumpVocabulary = {
   [ANIMAS]: {
     [SITE_CHANGE_RESERVOIR]: t('Go Rewind'),
     [SITE_CHANGE_TUBING]: t('Go Prime'),
-    [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [SITE_CHANGE_CANNULA]: t('Cannula Fill'),
   },
   [INSULET]: {
-    [SITE_CHANGE_RESERVOIR]: t('Change Pod'),
-    [SITE_CHANGE_TUBING]: t('Activate Pod'),
+    [SITE_CHANGE_RESERVOIR]: t('Pod Change'),
+    [SITE_CHANGE_TUBING]: t('Pod Activate'),
     [SITE_CHANGE_CANNULA]: t('Prime'),
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Max Basal Rate'),
@@ -120,7 +121,7 @@ export const pumpVocabulary = {
   [MEDTRONIC]: {
     [SITE_CHANGE_RESERVOIR]: t('Rewind'),
     [SITE_CHANGE_TUBING]: t('Prime'),
-    [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
+    [SITE_CHANGE_CANNULA]: t('Cannula Prime'),
     [AUTOMATED_DELIVERY]: t('Auto Mode'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [MAX_BOLUS]: t('Max Bolus'),
@@ -129,13 +130,13 @@ export const pumpVocabulary = {
   },
   [MICROTECH]: {
     [SITE_CHANGE_RESERVOIR]: t('Rewind'),
-    [SITE_CHANGE_TUBING]: t('Prime Reservoir'),
-    [SITE_CHANGE_CANNULA]: t('Prime Cannula'),
+    [SITE_CHANGE_TUBING]: t('Reservoir Prime'),
+    [SITE_CHANGE_CANNULA]: t('Cannula Prime'),
   },
   [TANDEM]: {
-    [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
-    [SITE_CHANGE_TUBING]: t('Fill Tubing'),
-    [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [SITE_CHANGE_RESERVOIR]: t('Cartridge Change'),
+    [SITE_CHANGE_TUBING]: t('Tubing Fill'),
+    [SITE_CHANGE_CANNULA]: t('Cannula Fill'),
     [AUTOMATED_DELIVERY]: t('Automation'),
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Activity'),
@@ -145,6 +146,16 @@ export const pumpVocabulary = {
     [INSULIN_DURATION]: t('Insulin Duration'),
   },
   [TIDEPOOL_LOOP]: {
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [AUTOMATED_MODE_EXITED]: t('Off'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
+    [SETTINGS_OVERRIDE]: t('Preset'),
+    [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
+    [MAX_BOLUS]: t('Maximum Bolus'),
+    [MAX_BASAL]: t('Maximum Basal Rate'),
+  },
+  [TWIIST_LOOP]: {
+    [SITE_CHANGE_RESERVOIR]: t('Cassette Change'),
     [AUTOMATED_DELIVERY]: t('Automation'),
     [AUTOMATED_MODE_EXITED]: t('Off'),
     [SCHEDULED_DELIVERY]: t('Manual'),
@@ -163,9 +174,9 @@ export const pumpVocabulary = {
     [MAX_BASAL]: t('Maximum Basal Rate'),
   },
   default: {
-    [SITE_CHANGE_RESERVOIR]: t('Change Cartridge'),
-    [SITE_CHANGE_TUBING]: t('Fill Tubing'),
-    [SITE_CHANGE_CANNULA]: t('Fill Cannula'),
+    [SITE_CHANGE_RESERVOIR]: t('Cartridge Change'),
+    [SITE_CHANGE_TUBING]: t('Tubing Fill'),
+    [SITE_CHANGE_CANNULA]: t('Cannula Fill'),
     [AUTOMATED_DELIVERY]: t('Automated'),
     [AUTOMATED_SUSPEND]: t('Automated Suspend'),
     [AUTOMATED_MODE_EXITED]: t('Exited'),
@@ -186,6 +197,10 @@ export const settingsOverrides = {
     PHYSICAL_ACTIVITY,
   ],
   [TIDEPOOL_LOOP]: [
+    PHYSICAL_ACTIVITY,
+    PREPRANDIAL,
+  ],
+  [TWIIST_LOOP]: [
     PHYSICAL_ACTIVITY,
     PREPRANDIAL,
   ],

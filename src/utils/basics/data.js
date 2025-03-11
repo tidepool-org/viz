@@ -41,6 +41,7 @@ import {
   MICROTECH,
   pumpVocabulary,
   TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';
@@ -156,7 +157,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         break;
 
       case 'siteChanges':
-        title = t('Infusion site changes');
+        title = t('Site Changes');
         break;
 
       default:
@@ -208,10 +209,17 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
 
     if (!_.includes(allowedSources, siteChangeSource)) {
-      siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
+      siteChangeSource = SITE_CHANGE_CANNULA;
     }
   } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
+  } else if (_.includes(_.map([TWIIST_LOOP], _.lowerCase), manufacturer)) {
+    siteChangeSource = _.get(settings, 'siteChangeSource');
+    const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_RESERVOIR];
+
+    if (!_.includes(allowedSources, siteChangeSource)) {
+      siteChangeSource = SITE_CHANGE_RESERVOIR;
+    }
   } else if (_.includes(_.map([DIY_LOOP, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_TUBING;
   }
@@ -265,9 +273,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
         break;
 
       case 'siteChanges':
-        emptyText = hasDataInRange(aggregationData[aggregationKey])
-          ? t("Please choose a preferred site change source from the 'Basics' web view to view this data.")
-          : t("This section requires data from an insulin pump, so there's nothing to display.");
+        emptyText = t("This section requires data from an insulin pump, so there's nothing to display.");
         break;
 
       case 'fingersticks':
@@ -300,7 +306,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     } else if (type === 'siteChanges') {
       aggregations[key].source = getSiteChangeSource(patient, manufacturer);
       aggregations[key].manufacturer = manufacturer;
-      disabled = aggregations[key].source === SITE_CHANGE_TYPE_UNDECLARED;
+      disabled = !hasDataInRange(aggregationData[type]);
       if (!disabled) {
         aggregations[key].subTitle = getSiteChangeSourceLabel(
           aggregations[key].source,

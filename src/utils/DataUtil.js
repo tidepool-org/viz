@@ -14,6 +14,7 @@ import {
   isSettingsOverrideDevice,
   isDIYLoop,
   isTidepoolLoop,
+  isTwiistLoop,
 } from './device';
 
 import {
@@ -38,6 +39,7 @@ import {
   MGDL_UNITS,
   DIY_LOOP,
   TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from './constants';
 
 import {
@@ -94,6 +96,7 @@ export class DataUtil {
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
+    this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
 
@@ -188,6 +191,7 @@ export class DataUtil {
     }
 
     if (d.type === 'upload' && d.dataSetType === 'continuous') {
+      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
       if (!d.time) d.time = moment.utc().toISOString();
     }
 
@@ -285,7 +289,7 @@ export class DataUtil {
   };
 
   joinBolusAndDosingDecision = d => {
-    if (d.type === 'bolus' && isLoop(d)) {
+    if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
       const proximateDosingDecisions = _.filter(
@@ -359,6 +363,7 @@ export class DataUtil {
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
+        loop: !!this.loopDataSetsByIdMap[d.uploadId],
       };
     }
 
@@ -366,6 +371,12 @@ export class DataUtil {
       d.tags = {
         manual: d.subType === 'manual',
         meter: d.subType !== 'manual',
+      };
+    }
+
+    if (d.type === 'food') {
+      d.tags = {
+        loop: !!this.loopDataSetsByIdMap[d.uploadId],
       };
     }
 
@@ -891,9 +902,10 @@ export class DataUtil {
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
       const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
-      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettings, deviceModel);
-      const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettings);
-      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettings);
+      const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
+      const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
+      const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);
+      const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettingsOrUpload);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
         const basalData = this.sort.byTime(this.filter.byType('basal').top(Infinity));
@@ -942,6 +954,8 @@ export class DataUtil {
         source = TIDEPOOL_LOOP.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
+      } else if (isTwiistLoop(upload)) {
+        source = TWIIST_LOOP.toLowerCase();
       }
 
       this.uploadMap[upload.uploadId] = {

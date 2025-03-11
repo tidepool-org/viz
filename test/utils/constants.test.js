@@ -296,11 +296,11 @@ describe('constants', () => {
         [constants.ANIMAS]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Go Rewind',
           [constants.SITE_CHANGE_TUBING]: 'Go Prime',
-          [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
+          [constants.SITE_CHANGE_CANNULA]: 'Cannula Fill',
         },
         [constants.INSULET]: {
-          [constants.SITE_CHANGE_RESERVOIR]: 'Change Pod',
-          [constants.SITE_CHANGE_TUBING]: 'Activate Pod',
+          [constants.SITE_CHANGE_RESERVOIR]: 'Pod Change',
+          [constants.SITE_CHANGE_TUBING]: 'Pod Activate',
           [constants.SITE_CHANGE_CANNULA]: 'Prime',
           [constants.MAX_BOLUS]: 'Maximum Bolus',
           [constants.MAX_BASAL]: 'Max Basal Rate',
@@ -309,7 +309,7 @@ describe('constants', () => {
         [constants.MEDTRONIC]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
           [constants.SITE_CHANGE_TUBING]: 'Prime',
-          [constants.SITE_CHANGE_CANNULA]: 'Prime Cannula',
+          [constants.SITE_CHANGE_CANNULA]: 'Cannula Prime',
           [constants.AUTOMATED_DELIVERY]: 'Auto Mode',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
           [constants.MAX_BOLUS]: 'Max Bolus',
@@ -317,9 +317,9 @@ describe('constants', () => {
           [constants.INSULIN_DURATION]: 'Active Insulin Time',
         },
         [constants.TANDEM]: {
-          [constants.SITE_CHANGE_RESERVOIR]: 'Change Cartridge',
-          [constants.SITE_CHANGE_TUBING]: 'Fill Tubing',
-          [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
+          [constants.SITE_CHANGE_RESERVOIR]: 'Cartridge Change',
+          [constants.SITE_CHANGE_TUBING]: 'Tubing Fill',
+          [constants.SITE_CHANGE_CANNULA]: 'Cannula Fill',
           [constants.AUTOMATED_DELIVERY]: 'Automation',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
           [constants.SETTINGS_OVERRIDE]: 'Activity',
@@ -329,6 +329,16 @@ describe('constants', () => {
           [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
         [constants.TIDEPOOL_LOOP]: {
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
+          [constants.AUTOMATED_MODE_EXITED]: 'Off',
+          [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.SETTINGS_OVERRIDE]: 'Preset',
+          [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
+          [constants.MAX_BOLUS]: 'Maximum Bolus',
+          [constants.MAX_BASAL]: 'Maximum Basal Rate',
+        },
+        [constants.TWIIST_LOOP]: {
+          [constants.SITE_CHANGE_RESERVOIR]: 'Cassette Change',
           [constants.AUTOMATED_DELIVERY]: 'Automation',
           [constants.AUTOMATED_MODE_EXITED]: 'Off',
           [constants.SCHEDULED_DELIVERY]: 'Manual',
@@ -348,13 +358,13 @@ describe('constants', () => {
         },
         [constants.MICROTECH]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
-          [constants.SITE_CHANGE_TUBING]: 'Prime Reservoir',
-          [constants.SITE_CHANGE_CANNULA]: 'Prime Cannula',
+          [constants.SITE_CHANGE_TUBING]: 'Reservoir Prime',
+          [constants.SITE_CHANGE_CANNULA]: 'Cannula Prime',
         },
         default: {
-          [constants.SITE_CHANGE_RESERVOIR]: 'Change Cartridge',
-          [constants.SITE_CHANGE_TUBING]: 'Fill Tubing',
-          [constants.SITE_CHANGE_CANNULA]: 'Fill Cannula',
+          [constants.SITE_CHANGE_RESERVOIR]: 'Cartridge Change',
+          [constants.SITE_CHANGE_TUBING]: 'Tubing Fill',
+          [constants.SITE_CHANGE_CANNULA]: 'Cannula Fill',
           [constants.AUTOMATED_DELIVERY]: 'Automated',
           [constants.AUTOMATED_SUSPEND]: 'Automated Suspend',
           [constants.AUTOMATED_MODE_EXITED]: 'Exited',
@@ -367,6 +377,33 @@ describe('constants', () => {
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
         },
+      });
+    });
+  });
+
+  describe('settingsOverrides', () => {
+    it('should define settings overrides per device manufacturer', () => {
+      expect(constants.settingsOverrides).to.eql({
+        [constants.TANDEM]: [
+          constants.SLEEP,
+          constants.PHYSICAL_ACTIVITY,
+        ],
+        [constants.TIDEPOOL_LOOP]: [
+          constants.PHYSICAL_ACTIVITY,
+          constants.PREPRANDIAL,
+        ],
+        [constants.TWIIST_LOOP]: [
+          constants.PHYSICAL_ACTIVITY,
+          constants.PREPRANDIAL,
+        ],
+        [constants.DIY_LOOP]: [
+          constants.PREPRANDIAL,
+        ],
+        default: [
+          constants.SLEEP,
+          constants.PHYSICAL_ACTIVITY,
+          constants.PREPRANDIAL,
+        ],
       });
     });
   });
