@@ -158,7 +158,7 @@ describe('device utility functions', () => {
     });
 
     it('should return `false` for a client major version below 2', () => {
-      const datum = { client: { name: 'com.tidepool.Loop', version: '1.9.9' } };
+      const datum = { client: { name: 'com.sequelmedtech.tidepool-service', version: '1.9.9' } };
       expect(device.isTwiistLoop(datum)).to.be.false;
     });
   });
