@@ -27,6 +27,7 @@ export class StatUtil {
     this.bolusDays = dataUtil.activeEndpoints.bolusDays || this.activeDays;
     this.endpoints = dataUtil.activeEndpoints.range;
 
+    this.log('activeDays', this.activeDays);
     this.log('bgSource', this.bgSource);
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
   };
