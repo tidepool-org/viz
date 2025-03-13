@@ -27,7 +27,6 @@ export class StatUtil {
     this.bolusDays = dataUtil.activeEndpoints.bolusDays || this.activeDays;
     this.endpoints = dataUtil.activeEndpoints.range;
 
-    this.log('activeDays', this.activeDays);
     this.log('bgSource', this.bgSource);
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
   };
@@ -101,6 +100,12 @@ export class StatUtil {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
+    const uniqueDatumDates = new Set();
+    wizardData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
+    foodData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
+
+    const activeDaysWithCarbData = uniqueDatumDates.size;
+
     const wizardCarbs = _.reduce(
       wizardData,
       (result, datum) => {
@@ -134,8 +139,8 @@ export class StatUtil {
 
     if (this.activeDays > 1) {
       carbs = {
-        grams: carbs.grams / this.activeDays,
-        exchanges: carbs.exchanges / this.activeDays,
+        grams: carbs.grams / activeDaysWithCarbData,
+        exchanges: carbs.exchanges / activeDaysWithCarbData,
       };
     }
 
