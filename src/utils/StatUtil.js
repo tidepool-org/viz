@@ -81,6 +81,12 @@ export class StatUtil {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
 
+    const uniqueDatumDates = new Set();
+    bolusData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
+    basalData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
+
+    const activeDaysWithInsulinData = uniqueDatumDates.size;
+
     const basalBolusData = {
       basal: basalData.length
         ? parseFloat(getTotalBasalFromEndpoints(basalData, this.endpoints))
@@ -89,8 +95,8 @@ export class StatUtil {
     };
 
     if (this.bolusDays > 1) {
-      basalBolusData.basal = basalBolusData.basal / this.bolusDays;
-      basalBolusData.bolus = basalBolusData.bolus / this.bolusDays;
+      basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
+      basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
     }
 
     return basalBolusData;
