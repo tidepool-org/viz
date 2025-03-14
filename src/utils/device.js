@@ -45,7 +45,7 @@ export function isTidepoolLoop(datum = {}) {
  * Check to see datum is from Twiist Loop
 */
 export function isTwiistLoop(datum = {}) {
-  if (datum.type == 'upload') {
+  if (datum.type === 'upload') {
     const majorVersion = parseInt(_.get(datum, 'client.version', '0').split('.')[0], 10);
     return (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', '')) && majorVersion >= 2;
   }
