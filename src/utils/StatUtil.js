@@ -6,6 +6,7 @@ import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from 
 import { getTotalBolus } from './bolus';
 import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -26,6 +27,7 @@ export class StatUtil {
     this.activeDays = dataUtil.activeEndpoints.activeDays;
     this.bolusDays = dataUtil.activeEndpoints.bolusDays || this.activeDays;
     this.endpoints = dataUtil.activeEndpoints.range;
+    this.timePrefs = _.get(dataUtil, 'timePrefs');
 
     this.log('activeDays', this.activeDays);
     this.log('bgSource', this.bgSource);
@@ -83,8 +85,16 @@ export class StatUtil {
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
 
     const uniqueDatumDates = new Set();
-    bolusData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
-    basalData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
+
+    bolusData.forEach(datum => {
+      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
+      uniqueDatumDates.add(date);
+    });
+
+    basalData.forEach(datum => {
+      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
+      uniqueDatumDates.add(date);
+    });
 
     const activeDaysWithInsulinData = uniqueDatumDates.size;
 
@@ -108,8 +118,16 @@ export class StatUtil {
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
     const uniqueDatumDates = new Set();
-    wizardData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
-    foodData.forEach(datum => uniqueDatumDates.add(moment(datum.time).format('YYYY-MM-DD')));
+
+    wizardData.forEach(datum => {
+      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
+      uniqueDatumDates.add(date);
+    });
+
+    foodData.forEach(datum => {
+      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
+      uniqueDatumDates.add(date);
+    });
 
     const activeDaysWithCarbData = uniqueDatumDates.size;
 
