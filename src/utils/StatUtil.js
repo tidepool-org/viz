@@ -91,7 +91,7 @@ export class StatUtil {
       uniqueDatumDates.add(date);
     });
 
-    basalData.forEach(datum => {
+    rawBasalData.forEach(datum => {
       const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
       uniqueDatumDates.add(date);
     });
