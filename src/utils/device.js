@@ -99,7 +99,16 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}
  * @param {String} manufacturer Manufacturer name
  */
 export function getUppercasedManufacturer(manufacturer = '') {
-  return _.map(manufacturer.split(' '), part => (part === 'diy' ? _.upperCase(part) : _.upperFirst(part))).join(' ');
+  return _.map(manufacturer.split(' '), part => {
+    switch (part) {
+      case 'diy':
+        return _.upperCase(part);
+      case 'twiist':
+        return part;
+      default:
+        return _.upperFirst(part);
+    }
+  }).join(' ');
 }
 
 /**
