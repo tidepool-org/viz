@@ -91,7 +91,7 @@ export class StatUtil {
       uniqueDatumDates.add(date);
     });
 
-    rawBasalData.forEach(datum => {
+    rawBasalData.forEach(datum => { // use rawBasalData to avoid counting dates of overlap
       const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
       uniqueDatumDates.add(date);
     });
