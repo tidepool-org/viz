@@ -42,22 +42,25 @@ export function isTidepoolLoop(datum = {}) {
 }
 
 /**
- * Check to see if and upload datum is from Twiist Loop
+ * Check to see datum is from Twiist Loop
 */
-export function isTwiistLoop(upload = {}) {
-  const majorVersion = parseInt(_.get(upload, 'client.version', '0').split('.')[0], 10);
-  return (/^com.sequelmedtech.tidepool-service/).test(_.get(upload, 'client.name', '')) && majorVersion >= 2;
+export function isTwiistLoop(datum = {}) {
+  if (datum.type == 'upload') {
+    const majorVersion = parseInt(_.get(datum, 'client.version', '0').split('.')[0], 10);
+    return (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', '')) && majorVersion >= 2;
+  }
+  return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**
  * Check to see if datum is from a known Loop device
  */
 export function isLoop(datum = {}) {
-  return datum.tags?.loop || isDIYLoop(datum) || isTidepoolLoop(datum) || (datum.type === 'upload' && isTwiistLoop(datum));
+  return datum.tags?.loop || isDIYLoop(datum) || isTidepoolLoop(datum) || isTwiistLoop(datum);
 }
 
 /**
- * Check if the provided upload datum was for an automated basal device
+ * Check if the provided datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @param {String} deviceModel Device model number
@@ -70,7 +73,7 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, 
 }
 
 /**
- * Check if the provided upload datum was for an automated bolus device
+ * Check if the provided datum was for an automated bolus device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
@@ -81,7 +84,7 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) 
 }
 
 /**
- * Check if the provided upload datum was for a settings-overrideable device
+ * Check if the provided datum was for a settings-overrideable device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
