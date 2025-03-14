@@ -589,7 +589,6 @@ describe('basics data utils', () => {
       },
       bgPrefs: bgPrefs[MGDL_UNITS],
       timePrefs,
-      query: { excludeDaysWithoutBolus: true },
       metaData: {
         devices: [
           { id: 'deviceWithLabelId', label: 'Device With Label' },
