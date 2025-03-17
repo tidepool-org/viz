@@ -295,7 +295,7 @@ const NonTandem = (props) => {
 NonTandem.propTypes = {
   bgUnits: PropTypes.oneOf([MMOLL_UNITS, MGDL_UNITS]).isRequired,
   copySettingsClicked: PropTypes.func.isRequired,
-  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'tidepool loop', 'twiist loop']).isRequired,
+  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'tidepool loop', 'twiist']).isRequired,
   openedSections: PropTypes.object.isRequired,
   pumpSettings: PropTypes.shape({
     activeSchedule: PropTypes.string.isRequired,

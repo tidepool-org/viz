@@ -45,7 +45,7 @@ export function deviceMeta(settings, timePrefs) {
 
 /**
  * bolusTitle
- * @param  {String} manufacturer one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist loop
+ * @param  {String} manufacturer one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist
  *
  * @return {String}              bolus title for given manufacturer
  */
@@ -57,7 +57,7 @@ export function bolusTitle(manufacturer) {
     microtech: t('Bolus Calculator'),
     'tidepool loop': t('Bolus Calculator'),
     'diy loop': t('Bolus Calculator'),
-    'twiist loop': t('Bolus Calculator'),
+    twiist: t('Bolus Calculator'),
   };
   return BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[manufacturer];
 }
@@ -90,7 +90,7 @@ function basalColumns() {
  * basal
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist
  * @return {Object}                object with basal title, columns and rows
  */
 export function basal(schedule, settings, manufacturer) {
@@ -124,7 +124,7 @@ function sensitivityTitle(manufacturer) {
     microtech: t('Insulin Sensitivity'),
     'diy loop': t('Insulin Sensitivities'),
     'tidepool loop': t('Insulin Sensitivities'),
-    'twiist loop': t('Insulin Sensitivities'),
+    twiist: t('Insulin Sensitivities'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -176,7 +176,7 @@ function ratioTitle(manufacturer) {
     microtech: t('Carbohydrate Ratio'),
     'diy loop': t('Carb Ratios'),
     'tidepool loop': t('Carb Ratios'),
-    'twiist loop': t('Carb Ratios'),
+    twiist: t('Carb Ratios'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -201,7 +201,7 @@ function ratioRows(settings) {
  * ratio
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist
  * @return {Object}                object with ratio title, columns and rows
  */
 export function ratio(settings, manufacturer) {
@@ -224,7 +224,7 @@ function targetTitle(manufacturer) {
     microtech: t('Target BG'),
     'diy loop': t('Correction Range'),
     'tidepool loop': t('Correction Range'),
-    'twiist loop': t('Correction Range'),
+    twiist: t('Correction Range'),
   };
   return BG_TARGET_BY_MANUFACTURER[manufacturer];
 }
@@ -265,7 +265,7 @@ function targetColumns(manufacturer) {
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
     ],
-    'twiist loop': [
+    twiist: [
       { key: 'start', label: t('Start time') },
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
@@ -286,9 +286,9 @@ function targetRows(settings, units, manufacturer) {
     microtech: { columnTwo: 'low', columnThree: 'high' },
     'diy loop': { columnTwo: 'low', columnThree: 'high' },
     'tidepool loop': { columnTwo: 'low', columnThree: 'high' },
-    'twiist loop': { columnTwo: 'low', columnThree: 'high' },
+    twiist: { columnTwo: 'low', columnThree: 'high' },
   };
-  const targetData = _.includes(['diy loop', 'tidepool loop', 'twiist loop'], manufacturer)
+  const targetData = _.includes(['diy loop', 'tidepool loop', 'twiist'], manufacturer)
     ? settings.bgTargets[settings.activeSchedule]
     : settings.bgTarget;
 
@@ -303,7 +303,7 @@ function targetRows(settings, units, manufacturer) {
  * target
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist
  * @param  {String} units          MGDL_UNITS or MMOLL_UNITS
  * @return {Object}                object with target title, columns and rows
  */
