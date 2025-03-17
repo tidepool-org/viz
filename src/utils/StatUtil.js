@@ -84,17 +84,11 @@ export class StatUtil {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
 
-    const uniqueDatumDates = new Set();
-
-    bolusData.forEach(datum => {
-      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
-      uniqueDatumDates.add(date);
-    });
-
-    rawBasalData.forEach(datum => { // use rawBasalData to avoid counting dates of overlap
-      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
-      uniqueDatumDates.add(date);
-    });
+    // Create a list all dates for which we have at least one datum
+    const uniqueDatumDates = new Set([
+      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+    ]);
 
     const activeDaysWithInsulinData = uniqueDatumDates.size;
 
@@ -117,17 +111,11 @@ export class StatUtil {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
-    const uniqueDatumDates = new Set();
-
-    wizardData.forEach(datum => {
-      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
-      uniqueDatumDates.add(date);
-    });
-
-    foodData.forEach(datum => {
-      const date = formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD');
-      uniqueDatumDates.add(date);
-    });
+    // Create a list all dates for which we have at least one datum
+    const uniqueDatumDates = new Set([
+      ...wizardData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+    ]);
 
     const activeDaysWithCarbData = uniqueDatumDates.size;
 
