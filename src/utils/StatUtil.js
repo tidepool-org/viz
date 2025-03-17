@@ -25,7 +25,6 @@ export class StatUtil {
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.bgSource = _.get(dataUtil, 'bgSources.current', BGM_DATA_KEY);
     this.activeDays = dataUtil.activeEndpoints.activeDays;
-    this.bolusDays = dataUtil.activeEndpoints.bolusDays || this.activeDays;
     this.endpoints = dataUtil.activeEndpoints.range;
     this.timePrefs = _.get(dataUtil, 'timePrefs');
 
@@ -99,7 +98,7 @@ export class StatUtil {
       bolus: bolusData.length ? getTotalBolus(bolusData) : NaN,
     };
 
-    if (this.bolusDays > 1) {
+    if (activeDaysWithInsulinData > 1) {
       basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
       basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
     }
@@ -150,7 +149,7 @@ export class StatUtil {
       exchanges: wizardCarbs.exchanges,
     };
 
-    if (this.activeDays > 1) {
+    if (activeDaysWithCarbData > 1) {
       carbs = {
         grams: carbs.grams / activeDaysWithCarbData,
         exchanges: carbs.exchanges / activeDaysWithCarbData,
