@@ -648,8 +648,6 @@ class BasicsPrintView extends PrintView {
       const xPos = pos.x + padding.left;
       const yPos = pos.y + padding.top;
 
-      const isEmptyBolusDay = color === this.colors.bolus && count === 0;
-
       this.setFill((type === 'outOfRange') ? this.colors.lightGrey : 'black', 1);
 
       this.doc

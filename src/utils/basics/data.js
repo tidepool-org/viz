@@ -377,7 +377,6 @@ export function basicsText(patient, data, stats, aggregations) {
       },
     },
     metaData,
-    query,
     timePrefs,
   } = data;
 
