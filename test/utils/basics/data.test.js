@@ -690,7 +690,7 @@ describe('basics data utils', () => {
 
     it('should add a note regarding excluded basics bolus days', () => {
       dataUtils.basicsText(patient, data, stats, aggregations);
-      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Days with no boluses have been excluded from bolus calculations');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Days with no insulin data have been excluded from calculations');
     });
 
     it('should build the basics stats section', () => {
