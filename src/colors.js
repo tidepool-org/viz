@@ -1,6 +1,7 @@
 export const system = {
   // Whites
   white: '#FFFFFF',
+  black: '#000000',
 
   // Grays
   gray50: '#707070',
