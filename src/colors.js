@@ -11,7 +11,7 @@ export const system = {
   gray00: '#F6F6F6',
 
   // Purples
-  purple: '#271B46',
+  purple90: '#271B46',
 
   // Indigos
   indigo50: '#4A60E2',
