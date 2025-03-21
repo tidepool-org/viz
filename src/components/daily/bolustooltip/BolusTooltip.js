@@ -237,8 +237,8 @@ class BolusTooltip extends PureComponent {
 
     if (this.isLoop) {
       const { activeSchedule, carbRatios, insulinSensitivities } = _.get(wizard, 'dosingDecision.pumpSettings', {});
-      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || null;
-      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || null;
+      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || carbRatio;
+      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || isf;
     }
 
     const delivered = bolusUtils.getDelivered(wizard);

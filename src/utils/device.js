@@ -56,11 +56,11 @@ export function isTwiistLoop(datum = {}) {
  * Check to see if datum is from a known Loop device
  */
 export function isLoop(datum = {}) {
-  return datum.tags?.loop || isDIYLoop(datum) || isTidepoolLoop(datum) || (datum.type === 'upload' && isTwiistLoop(datum));
+  return datum.tags?.loop || isDIYLoop(datum) || isTidepoolLoop(datum) || isTwiistLoop(datum);
 }
 
 /**
- * Check if the provided upload datum was for an automated basal device
+ * Check if the provided datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @param {String} deviceModel Device model number
@@ -73,7 +73,7 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, 
 }
 
 /**
- * Check if the provided upload datum was for an automated bolus device
+ * Check if the provided datum was for an automated bolus device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
@@ -84,7 +84,7 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) 
 }
 
 /**
- * Check if the provided upload datum was for a settings-overrideable device
+ * Check if the provided datum was for a settings-overrideable device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
@@ -99,7 +99,16 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}
  * @param {String} manufacturer Manufacturer name
  */
 export function getUppercasedManufacturer(manufacturer = '') {
-  return _.map(manufacturer.split(' '), part => (part === 'diy' ? _.upperCase(part) : _.upperFirst(part))).join(' ');
+  return _.map(manufacturer.split(' '), part => {
+    switch (part) {
+      case 'diy':
+        return _.upperCase(part);
+      case 'twiist':
+        return part;
+      default:
+        return _.upperFirst(part);
+    }
+  }).join(' ');
 }
 
 /**
