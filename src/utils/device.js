@@ -42,11 +42,14 @@ export function isTidepoolLoop(datum = {}) {
 }
 
 /**
- * Check to see if and upload datum is from Twiist Loop
+ * Check to see datum is from Twiist Loop
 */
-export function isTwiistLoop(upload = {}) {
-  const majorVersion = parseInt(_.get(upload, 'client.version', '0').split('.')[0], 10);
-  return (/^com.sequelmedtech.tidepool-service/).test(_.get(upload, 'client.name', '')) && majorVersion >= 2;
+export function isTwiistLoop(datum = {}) {
+  if (datum.type === 'upload') {
+    const majorVersion = parseInt(_.get(datum, 'client.version', '0').split('.')[0], 10);
+    return (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', '')) && majorVersion >= 2;
+  }
+  return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**
