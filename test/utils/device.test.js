@@ -145,20 +145,34 @@ describe('device utility functions', () => {
   });
 
   describe('isTwiistLoop', () => {
-    it('should return `true` for a matching pattern within `client.name` and a major version above 2', () => {
-      const datum = { client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } };
-      const datum2 = { client: { name: 'com.sequelmedtech.tidepool-service', version: '4.10.30' } };
+    it('should return `true` for an upload datum witha a matching pattern within `client.name` and a major version above 2', () => {
+      const datum = { type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } };
+      const datum2 = { type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '4.10.30' } };
       expect(device.isTwiistLoop(datum)).to.be.true;
       expect(device.isTwiistLoop(datum2)).to.be.true;
     });
 
-    it('should return `false` for a non-matching pattern within `client.name`', () => {
-      const datum = { client: { name: 'com.tidepool.Loop', version: '2.0.0' } };
+    it('should return `false` for an upload datum with a non-matching pattern within `client.name`', () => {
+      const datum = { type: 'upload', client: { name: 'com.tidepool.Loop', version: '2.0.0' } };
       expect(device.isTwiistLoop(datum)).to.be.false;
     });
 
-    it('should return `false` for a client major version below 2', () => {
-      const datum = { client: { name: 'com.sequelmedtech.tidepool-service', version: '1.9.9' } };
+    it('should return `false` for an upload datum with a client major version below 2', () => {
+      const datum = { type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '1.9.9' } };
+      expect(device.isTwiistLoop(datum)).to.be.false;
+    });
+
+    it('should return `true` for a non-upload datum with `origin.name` or `client.name` matching `com.dekaresearch.twiist` pattern', () => {
+      const datum = { type: 'pumpSettings', origin: { name: 'com.dekaresearch.twiist' } };
+      const datum2 = { type: 'pumpSettings', client: { name: 'com.dekaresearch.twiist' } };
+      const datum3 = { type: 'upload', client: { name: 'com.dekaresearch.twiist' } };
+      expect(device.isTwiistLoop(datum)).to.be.true;
+      expect(device.isTwiistLoop(datum2)).to.be.true;
+      expect(device.isTwiistLoop(datum3)).to.be.false;
+    });
+
+    it('should return `false` for a non-upload datum with a non-matching pattern within `origin.name`', () => {
+      const datum = { type: 'pumpSettings', origin: { name: 'com.tidepool.Loop' } };
       expect(device.isTwiistLoop(datum)).to.be.false;
     });
   });
