@@ -545,11 +545,10 @@ export class DataUtil {
       const isOverrideEvent = d.subType === 'pumpSettingsOverride';
 
       if (_.isFinite(d.duration)) {
-        // Loop is reporting these durations in seconds instead of the milliseconds historically
-        // used by Tandem.
-        // For now, until a fix is present, we'll convert.  Once a fix is present, we will only
-        // convert for Loop versions prior to the fix.
-        if (isOverrideEvent && isLoop(d)) d.duration = d.duration * 1000;
+        // DIY and Tidepool Loop are reporting these durations in seconds instead of the milliseconds.
+        // For now, until a fix is present, we'll convert for Tidepool Loop and DIY Loop.
+        // Once a fix is present, we will only convert for DIY and Tidepool Loop versions prior to the fix.
+        if (isOverrideEvent && (isTidepoolLoop(d) || isDIYLoop(d))) d.duration = d.duration * 1000;
         d.normalEnd = d.normalTime + d.duration;
 
         // If the provided duration extends into the future, we truncate the normalEnd to the
