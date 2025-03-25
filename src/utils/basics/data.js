@@ -19,7 +19,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import i18next from 'i18next';
 
-import { getPumpVocabulary, getUppercasedManufacturer, isLoop, isTwiistLoop } from '../device';
+import { getPumpVocabulary, getUppercasedManufacturer, isDIYLoop, isLoop, isTidepoolLoop, isTwiistLoop } from '../device';
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -130,7 +130,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6, hideEmpty: hideEmptyWizardDimensions },
         ];
 
-        if (isLoop(pumpUpload.settings)) {
+        if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
           dimensions[1].label = t('Meal');
           dimensions.splice(3, 1);
           dimensions[2].selectorIndex = 6;
