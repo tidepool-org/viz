@@ -1,5 +1,5 @@
 export const system = {
-  // Whites
+  // Black and White
   white: '#FFFFFF',
   black: '#000000',
 
