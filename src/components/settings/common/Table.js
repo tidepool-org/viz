@@ -22,7 +22,7 @@ import React, { PureComponent } from 'react';
 import _ from 'lodash';
 
 import StatTooltip from '../../common/tooltips/StatTooltip';
-import InfoIcon from '../../common/stat/assets/info-outline-24-px.svg';
+import InfoIcon from '../../common/stat/assets/info-outline-24-px.png';
 import styles from './Table.css';
 
 class Table extends PureComponent {
