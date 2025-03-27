@@ -40,6 +40,8 @@ import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } fr
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
 
+import colors from './colors';
+
 import {
   formatDateRange,
   formatTimeAgo,
@@ -158,6 +160,7 @@ const utils = {
 };
 
 export {
+  colors,
   components,
   containers,
   utils,
