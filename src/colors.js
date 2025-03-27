@@ -44,7 +44,7 @@ export const system = {
   green50: '#00754E',
   green30: '#08A057',
   green05: '#DAF9E4',
-}
+};
 
 export const bgChart = {
   veryLow: '#E9695E',
@@ -52,10 +52,7 @@ export const bgChart = {
   target: '#8DD0A9',
   high: '#B69CE2',
   veryHigh: '#856ACF',
-}
-
-// partnerDexcom: '#56A846',
-// borderFocus: '#4C9AFF',
+};
 
 const colors = {
   ...system,
