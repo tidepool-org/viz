@@ -1065,7 +1065,7 @@ export class DataUtil {
           if (deviceManufacturer === 'Dexcom' && isContinuous) {
             label = t('Dexcom API');
           } else if (deviceManufacturer === 'Abbott' && isContinuous) {
-            label = t('LibreView');
+            label = t('FreeStyle Libre (from LibreView)');
           } else {
             label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }
