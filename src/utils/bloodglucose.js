@@ -105,8 +105,6 @@ export function convertToMGDL(val) {
 export function reshapeBgClassesToBgBounds(bgPrefs) {
   const { bgClasses, bgUnits } = bgPrefs;
 
-  console.log('bgPrefs', bgPrefs)
-
   const bgBounds = {
     veryHighThreshold: _.get(bgClasses, 'high.boundary', DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold),
     targetUpperBound: _.get(bgClasses, 'target.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound),
