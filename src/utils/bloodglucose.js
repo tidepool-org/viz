@@ -155,7 +155,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       low: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.veryLowThreshold}-${thresholds.targetLowerBound}`,
+        value: `${thresholds.veryLowThreshold}-${thresholds.lowThreshold}`,
       },
       target: {
         prefix: 'between',
@@ -165,7 +165,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       high: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.targetUpperBound}-${thresholds.veryHighThreshold}`,
+        value: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
       },
       veryHigh: {
         prefix: 'above',
