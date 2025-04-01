@@ -3089,7 +3089,7 @@ describe('DataUtil', () => {
           bgm: true,
           cgm: true,
           id: 'MyAbbott123',
-          label: 'LibreView',
+          label: 'FreeStyle Libre (from LibreView)',
           pump: false,
           serialNumber: undefined
         },
