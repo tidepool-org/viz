@@ -59,6 +59,11 @@ export const DEFAULT_BG_BOUNDS = {
   },
 };
 
+export const BG_DISPLAY_MINIMUM_INCREMENTS = {
+  [MGDL_UNITS]: 1,
+  [MMOLL_UNITS]: 0.1,
+}
+
 export const LBS_PER_KG = 2.2046226218;
 
 const ONE_WEEK = 7;

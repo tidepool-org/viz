@@ -18,7 +18,7 @@
 import _ from 'lodash';
 import { max, mean, median, min, quantile, range } from 'd3-array';
 
-import { DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
 import { TWENTY_FOUR_HRS } from './datetime';
 
 import { formatBgValue } from './format.js';
@@ -105,6 +105,8 @@ export function convertToMGDL(val) {
 export function reshapeBgClassesToBgBounds(bgPrefs) {
   const { bgClasses, bgUnits } = bgPrefs;
 
+  console.log('bgPrefs', bgPrefs)
+
   const bgBounds = {
     veryHighThreshold: _.get(bgClasses, 'high.boundary', DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold),
     targetUpperBound: _.get(bgClasses, 'target.boundary', DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound),
@@ -126,14 +128,18 @@ export function reshapeBgClassesToBgBounds(bgPrefs) {
  */
 export function generateBgRangeLabels(bgPrefs, opts = {}) {
   const { bgBounds, bgUnits } = bgPrefs;
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+
   const thresholds = _.mapValues(bgBounds, threshold => formatBgValue(threshold, bgPrefs));
+  thresholds.highThreshold = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);
+  thresholds.lowThreshold = formatBgValue(bgBounds.targetLowerBound - minimumIncrement, bgPrefs);
 
   if (opts.condensed) {
     return {
       veryLow: `<${thresholds.veryLowThreshold}`,
-      low: `${thresholds.veryLowThreshold}-${thresholds.targetLowerBound}`,
+      low: `${thresholds.veryLowThreshold}-${thresholds.lowThreshold}`,
       target: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
-      high: `${thresholds.targetUpperBound}-${thresholds.veryHighThreshold}`,
+      high: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
       veryHigh: `>${thresholds.veryHighThreshold}`,
       extremeHigh: `>${thresholds.extremeHighThreshold}`,
     };
