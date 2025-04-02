@@ -136,8 +136,10 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
     return {
       veryLow: `<${thresholds.veryLowThreshold}`,
       low: `${thresholds.veryLowThreshold}-${thresholds.lowThreshold}`,
+      anyLow: `<${thresholds.targetLowerBound}`,
       target: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
       high: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
+      anyHigh: `>${thresholds.targetUpperBound}`,
       veryHigh: `>${thresholds.veryHighThreshold}`,
       extremeHigh: `>${thresholds.extremeHighThreshold}`,
     };
@@ -155,6 +157,11 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
         suffix: bgUnits,
         value: `${thresholds.veryLowThreshold}-${thresholds.lowThreshold}`,
       },
+      anyLow: {
+        prefix: 'below',
+        suffix: bgUnits,
+        value: `<${thresholds.targetLowerBound}`,
+      },
       target: {
         prefix: 'between',
         suffix: bgUnits,
@@ -164,6 +171,11 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
         prefix: 'between',
         suffix: bgUnits,
         value: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
+      },
+      anyHigh: {
+        prefix: 'above',
+        suffix: bgUnits,
+        value: `>${thresholds.targetUpperBound}`,
       },
       veryHigh: {
         prefix: 'above',
@@ -181,8 +193,10 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
   return {
     veryLow: `below ${thresholds.veryLowThreshold} ${bgUnits}`,
     low: `between ${thresholds.veryLowThreshold} - ${thresholds.lowThreshold} ${bgUnits}`,
+    anyLow: `below ${thresholds.targetLowerBound} ${bgUnits}`,
     target: `between ${thresholds.targetLowerBound} - ${thresholds.targetUpperBound} ${bgUnits}`,
     high: `between ${thresholds.highThreshold} - ${thresholds.veryHighThreshold} ${bgUnits}`,
+    anyHigh: `above ${thresholds.targetUpperBound} ${bgUnits}`,
     veryHigh: `above ${thresholds.veryHighThreshold} ${bgUnits}`,
     extremeHigh: `above ${thresholds.extremeHighThreshold} ${bgUnits}`,
   };
