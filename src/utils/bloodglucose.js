@@ -148,9 +148,8 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
   if (opts.segmented) {
     return {
       veryLow: {
-        prefix: 'below',
         suffix: bgUnits,
-        value: `${thresholds.veryLowThreshold}`,
+        value: `<${thresholds.veryLowThreshold}`,
       },
       low: {
         prefix: 'between',
@@ -173,19 +172,16 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
         value: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
       },
       anyHigh: {
-        prefix: 'above',
         suffix: bgUnits,
         value: `>${thresholds.targetUpperBound}`,
       },
       veryHigh: {
-        prefix: 'above',
         suffix: bgUnits,
-        value: `${thresholds.veryHighThreshold}`,
+        value: `>${thresholds.veryHighThreshold}`,
       },
       extremeHigh: {
-        prefix: 'above',
         suffix: bgUnits,
-        value: `${thresholds.extremeHighThreshold}`,
+        value: `>${thresholds.extremeHighThreshold}`,
       },
     };
   }
