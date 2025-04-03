@@ -177,17 +177,20 @@ export function formatPercentage(val, precision = 0, useAGPFormat) {
 
 /**
  * formatDisplayedPercentage
- * @param {Number} val - percentage, range 0.0 to 100.0
+ * @param {Number} val - percentage, range 0.0 to 1.0
  *
  * @return {String} percentage
  */
-export function formatDisplayedPercentage(value) {
-  if (Number.isNaN(value)) return '--';
+export function formatDisplayedPercentage(val) {
+  if (Number.isNaN(val)) return '--';
 
-  const percentage = value * 100;
+  const percentage = val * 100;
+
+  // Show 1 decimal place if below 1, and no decimal place if above 1;
   const precision = percentage >= 1 ? 0 : 1;
+  const returnValue = bankersRound(percentage, precision);
 
-  return bankersRound(percentage, precision);
+  return String(returnValue);
 }
 
 /**
