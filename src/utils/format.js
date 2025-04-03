@@ -176,6 +176,21 @@ export function formatPercentage(val, precision = 0, useAGPFormat) {
 }
 
 /**
+ * formatDisplayedPercentage
+ * @param {Number} val - percentage, range 0.0 to 100.0
+ *
+ * @return {String} percentage
+ */
+export function formatDisplayedPercentage(value) {
+  if (Number.isNaN(value)) return '--';
+
+  const percentage = value * 100;
+  const precision = percentage >= 1 ? 0 : 1;
+
+  return bankersRound(percentage, precision);
+}
+
+/**
  * removeTrailingZeroes
  * @param {String} - formatted decimal value, may have trailing zeroes
  *
