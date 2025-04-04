@@ -35,7 +35,7 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
-import { formatBgValue, formatPercentage, formatDisplayedPercentage, bankersRound } from './utils/format';
+import { formatBgValue, formatPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
@@ -133,7 +133,6 @@ const utils = {
     commonStats,
     formatDatum,
     formatPercentage,
-    formatDisplayedPercentage,
     getStatAnnotations,
     getStatData,
     getStatDefinition,
