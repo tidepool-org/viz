@@ -182,29 +182,26 @@ export function getSegmentDose(duration, rate) {
  * @return {Number} Formatted total insulin dose
  */
 export function getTotalBasalFromEndpoints(data, endpoints) {
-  const start = new Date(endpoints[0]);
-  const end = new Date(endpoints[1]);
+  const rangeStart = new Date(endpoints[0]).valueOf();
+  const rangeEnd = new Date(endpoints[1]).valueOf();
   let dose = 0;
 
+  const trimmedDuration = (datumStart, datumEnd) => {
+    const trimmedStart = _.max([rangeStart, datumStart]);
+    const trimmedEnd = _.min([rangeEnd, datumEnd]);
+    return trimmedEnd - trimmedStart;
+  };
+
   _.each(data, datum => {
-    const datumStart = new Date(datum.normalTime);
-    const datumEnd = new Date(datum.normalEnd);
+    const datumStart = new Date(datum.normalTime).valueOf();
+    const datumEnd = new Date(datum.normalEnd).valueOf();
 
-    const datumStartIsWithinRange = start.valueOf() <= datumStart.valueOf() && datumStart.valueOf() < end.valueOf();
-    const datumEndIsWithinRange = start.valueOf() < datumEnd.valueOf() && datumEnd.valueOf() <= end.valueOf();
+    const datumStartIsWithinRange = rangeStart <= datumStart && datumStart < rangeEnd;
+    const datumEndIsWithinRange = rangeStart < datumEnd && datumEnd <= rangeEnd;
+    const datumEncompassesRange = rangeStart >= datumStart && datumEnd >= rangeEnd;
 
-    if (datumStartIsWithinRange || datumEndIsWithinRange) {
-      let duration = 0;
-
-      if (datumStartIsWithinRange && datumEndIsWithinRange) {
-        duration = datum.duration;
-      } else if (datumEndIsWithinRange) {
-        duration = _.min([datumEnd - start, datum.duration]);
-      } else if (datumStartIsWithinRange) {
-        duration = _.min([end - datumStart, datum.duration]);
-      }
-
-      dose += getSegmentDose(duration, datum.rate);
+    if (datumStartIsWithinRange || datumEndIsWithinRange || datumEncompassesRange) {
+      dose += getSegmentDose(trimmedDuration(datumStart, datumEnd), datum.rate);
     }
   });
 
