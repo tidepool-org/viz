@@ -444,6 +444,22 @@ describe('basal utilties', () => {
         '2018-01-02T05:00:00.000Z',
       ];
       expect(basalUtils.getTotalBasalFromEndpoints(data, endpoints)).to.equal('10.25');
+
+      // basal completely encompasses endpoints
+      endpoints = [
+        '2018-01-01T05:00:00.000Z',
+        '2018-01-02T05:00:00.000Z',
+      ];
+
+      const multiDayBasalData = [
+        { // 72 U total delivery, but endpoints are only 24h
+          duration: MS_IN_HOUR * 72,
+          rate: 1,
+          normalTime: '2017-12-31T05:00:00.000Z',
+          normalEnd: '2018-01-03T05:00:00.000Z',
+        },
+      ];
+      expect(basalUtils.getTotalBasalFromEndpoints(multiDayBasalData, endpoints)).to.equal('24.0');
     });
   });
 
