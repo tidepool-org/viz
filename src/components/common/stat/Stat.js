@@ -626,15 +626,6 @@ class Stat extends PureComponent {
               isDisabled={() => this.state.isDisabled}
               domain={domain}
               text={(datum = {}) => {
-
-                if (
-                  _.get(chartData, datum.index, datum)?.id === 'veryLow'
-                ) {
-                console.log(_.get(chartData, datum.index, datum),
-                  props.dataFormat.label,
-                  props);
-                }
-
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.label,
