@@ -176,9 +176,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.cv:
       if (value >= 0) {
         id = classifyCvValue(value);
-        value = useAGPFormat
-          ? bankersRound(value, 1).toString()
-          : formatDecimalNumber(value);
+        value = formatStatsPercentage(value / 100);
         suffix = '%';
       } else {
         disableStat();
