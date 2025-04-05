@@ -177,8 +177,8 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       if (value >= 0) {
         id = classifyCvValue(value);
         value = useAGPFormat
-        ? bankersRound(value, 1).toString()
-        : formatDecimalNumber(value);
+          ? bankersRound(value, 1).toString()
+          : formatDecimalNumber(value);
         suffix = '%';
       } else {
         disableStat();
