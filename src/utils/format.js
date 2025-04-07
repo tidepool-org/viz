@@ -175,6 +175,12 @@ export function formatPercentage(val, precision = 0, useAGPFormat) {
     : format(`.${precision}%`)(val);
 }
 
+/**
+ * formatStatsPercentage
+ * @param {Number} val - raw decimal proportion, range of 0.0 to 1.0
+ *
+ * @return {String} percentage
+ */
 export function formatStatsPercentage(value) {
   if (Number.isNaN(value)) return '--';
 
@@ -185,7 +191,7 @@ export function formatStatsPercentage(value) {
   const roundedValue = bankersRound(percentage, precision);
 
   return _.toString(roundedValue);
-};
+}
 
 /**
  * removeTrailingZeroes
