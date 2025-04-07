@@ -481,7 +481,7 @@ describe('basal utilties', () => {
           subType: 'automated',
         },
         {
-          duration: MS_IN_HOUR * 7,
+          duration: MS_IN_HOUR * 19,
           rate: 0.5,
           normalTime: '2018-01-01T05:00:00.000Z',
           normalEnd: '2018-01-02T00:00:00.000Z',
@@ -503,19 +503,18 @@ describe('basal utilties', () => {
       ];
       expect(basalUtils.getBasalGroupDurationsFromEndpoints(data, endpoints)).to.eql({
         automated: MS_IN_HOUR * 2,
-        manual: MS_IN_HOUR * 10,
+        manual: MS_IN_HOUR * 22,
       });
 
-      // endpoints shifted to an hour after basal delivery begins
+      // endpoints shifted to an hour after basal delivery ends
       endpoints = [
-        '2018-01-01T01:00:00.000Z',
-        '2018-01-02T01:00:00.000Z',
+        '2018-01-01T04:00:00.000Z',
+        '2018-01-02T04:00:00.000Z',
       ];
       expect(basalUtils.getBasalGroupDurationsFromEndpoints(data, endpoints)).to.eql({
-        automated: MS_IN_HOUR * 2,
-        manual: MS_IN_HOUR * 10,
+        automated: MS_IN_HOUR * 1,
+        manual: MS_IN_HOUR * 22,
       });
-
 
       // endpoints shifted to an hour before basal delivery begins
       endpoints = [
@@ -524,7 +523,7 @@ describe('basal utilties', () => {
       ];
       expect(basalUtils.getBasalGroupDurationsFromEndpoints(data, endpoints)).to.eql({
         automated: MS_IN_HOUR * 2,
-        manual: MS_IN_HOUR * 9,
+        manual: MS_IN_HOUR * 21,
       });
 
       // endpoints shifted to two hours after basal delivery ends
@@ -533,8 +532,28 @@ describe('basal utilties', () => {
         '2018-01-02T05:00:00.000Z',
       ];
       expect(basalUtils.getBasalGroupDurationsFromEndpoints(data, endpoints)).to.eql({
-        automated: MS_IN_HOUR * 2,
-        manual: MS_IN_HOUR * 8,
+        automated: 0,
+        manual: MS_IN_HOUR * 22,
+      });
+
+       // basal completely encompasses endpoints
+       endpoints = [
+        '2018-01-01T05:00:00.000Z',
+        '2018-01-02T05:00:00.000Z',
+      ];
+
+      const multiDayBasalData = [
+        { // 72 U total delivery, but endpoints are only 24h
+          duration: MS_IN_HOUR * 72,
+          rate: 1,
+          normalTime: '2017-12-31T05:00:00.000Z',
+          normalEnd: '2018-01-03T05:00:00.000Z',
+          subType: 'automated',
+        },
+      ];
+      expect(basalUtils.getBasalGroupDurationsFromEndpoints(multiDayBasalData, endpoints)).to.eql({
+        automated: MS_IN_HOUR * 24,
+        manual: 0,
       });
     });
   });

@@ -176,33 +176,42 @@ export function getSegmentDose(duration, rate) {
 }
 
 /**
+ * Get the duration of a basal datum within a given time range
+ * @param {Object} datum A single basal datum
+ * @param {[]String} enpoints ISO date strings for the start, end of the range, in that order
+ * @returns {Number} Duration of the basal datum falling within the range in milliseconds
+ */
+export function getBasalDurationWithinRange(datum, endpoints) {
+  const rangeStart = new Date(endpoints[0]).valueOf();
+  const rangeEnd = new Date(endpoints[1]).valueOf();
+  const datumStart = new Date(datum.normalTime).valueOf();
+  const datumEnd = new Date(datum.normalEnd).valueOf();
+
+  const datumStartIsWithinRange = rangeStart <= datumStart && datumStart < rangeEnd;
+  const datumEndIsWithinRange = rangeStart < datumEnd && datumEnd <= rangeEnd;
+  const datumEncompassesRange = rangeStart >= datumStart && datumEnd >= rangeEnd;
+
+  const trimmedStart = _.max([rangeStart, datumStart]);
+  const trimmedEnd = _.min([rangeEnd, datumEnd]);
+
+  if (datumStartIsWithinRange || datumEndIsWithinRange || datumEncompassesRange) {
+    return trimmedEnd - trimmedStart;
+  }
+
+  return 0;
+}
+
+/**
  * Get total basal delivered for a given time range
  * @param {Array} data Array of Tidepool basal data
  * @param {[]String} enpoints ISO date strings for the start, end of the range, in that order
  * @return {Number} Formatted total insulin dose
  */
 export function getTotalBasalFromEndpoints(data, endpoints) {
-  const rangeStart = new Date(endpoints[0]).valueOf();
-  const rangeEnd = new Date(endpoints[1]).valueOf();
   let dose = 0;
 
-  const trimmedDuration = (datumStart, datumEnd) => {
-    const trimmedStart = _.max([rangeStart, datumStart]);
-    const trimmedEnd = _.min([rangeEnd, datumEnd]);
-    return trimmedEnd - trimmedStart;
-  };
-
   _.each(data, datum => {
-    const datumStart = new Date(datum.normalTime).valueOf();
-    const datumEnd = new Date(datum.normalEnd).valueOf();
-
-    const datumStartIsWithinRange = rangeStart <= datumStart && datumStart < rangeEnd;
-    const datumEndIsWithinRange = rangeStart < datumEnd && datumEnd <= rangeEnd;
-    const datumEncompassesRange = rangeStart >= datumStart && datumEnd >= rangeEnd;
-
-    if (datumStartIsWithinRange || datumEndIsWithinRange || datumEncompassesRange) {
-      dose += getSegmentDose(trimmedDuration(datumStart, datumEnd), datum.rate);
-    }
+    dose += getSegmentDose(getBasalDurationWithinRange(datum, endpoints), datum.rate);
   });
 
   return formatInsulin(dose);
@@ -215,24 +224,13 @@ export function getTotalBasalFromEndpoints(data, endpoints) {
  * @return {Number} Formatted total insulin dose
  */
 export function getBasalGroupDurationsFromEndpoints(data, endpoints) {
-  const start = new Date(endpoints[0]);
-  const end = new Date(endpoints[1]);
-
   const durations = {
     automated: 0,
     manual: 0,
   };
 
-  _.each(data, (datum, index) => {
-    let duration = datum.duration;
-    if (index === 0) {
-      // handle first segment, which may have started before the start endpoint
-      duration = _.min([new Date(datum.normalEnd) - start, datum.duration]);
-    } else if (index === data.length - 1) {
-      // handle last segment, which may go past the end endpoint
-      duration = _.min([end - new Date(datum.normalTime), datum.duration]);
-    }
-    durations[getBasalPathGroupType(datum)] += duration;
+  _.each(data, datum => {
+    durations[getBasalPathGroupType(datum)] += getBasalDurationWithinRange(datum, endpoints);
   });
 
   return durations;
