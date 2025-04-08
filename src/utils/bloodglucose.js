@@ -18,20 +18,26 @@
 import _ from 'lodash';
 import { max, mean, median, min, quantile, range } from 'd3-array';
 
-import { BG_DISPLAY_MINIMUM_INCREMENTS, DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MMOLL_UNITS, MS_IN_MIN } from './constants';
 import { TWENTY_FOUR_HRS } from './datetime';
 
-import { formatBgValue } from './format.js';
+import { bankersRound, formatBgValue } from './format.js';
+
+export const classificationTypes = {
+  THREE_WAY: 'THREE_WAY',
+  FIVE_WAY: 'FIVE_WAY',
+}
 
 /**
  * classifyBgValue
  * @param {Object} bgBounds - object describing boundaries for blood glucose categories
+ * @param {String} bgUnits     MGDL_UNITS or MMOLL_UNITS
  * @param {Number} bgValue - integer or float blood glucose value in either mg/dL or mmol/L
- * @param {String} classificationType - 'threeWay' or 'fiveWay'
+ * @param {String} classificationType - 'THREE_WAY' or 'FIVE_WAY'
  *
  * @return {String} bgClassification - low, target, high
  */
-export function classifyBgValue(bgBounds, bgValue, classificationType = 'threeWay') {
+export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType) {
   if (_.isEmpty(bgBounds) ||
   !_.isNumber(_.get(bgBounds, 'targetLowerBound')) ||
   !_.isNumber(_.get(bgBounds, 'targetUpperBound'))) {
@@ -42,25 +48,37 @@ export function classifyBgValue(bgBounds, bgValue, classificationType = 'threeWa
   if (!_.isNumber(bgValue) || !_.gt(bgValue, 0)) {
     throw new Error('You must provide a positive, numerical blood glucose value to categorize!');
   }
+  if (!Object.values(classificationTypes).includes(classificationType)) {
+    throw new Error('You must provide a valid classification type!');
+  }
+
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
-  if (classificationType === 'fiveWay') {
-    if (bgValue < veryLowThreshold) {
-      return 'veryLow';
-    } else if (bgValue >= veryLowThreshold && bgValue < targetLowerBound) {
-      return 'low';
-    } else if (bgValue > targetUpperBound && bgValue <= veryHighThreshold) {
-      return 'high';
-    } else if (bgValue > veryHighThreshold) {
-      return 'veryHigh';
-    }
-    return 'target';
-  }
-  if (bgValue < targetLowerBound) {
-    return 'low';
-  } else if (bgValue > targetUpperBound) {
-    return 'high';
-  }
-  return 'target';
+  const { THREE_WAY, FIVE_WAY } = classificationTypes;
+
+  switch(classificationType) {
+    case THREE_WAY:
+      if (bgValue < targetLowerBound) {
+        return 'low';
+      } else if (bgValue > targetUpperBound) {
+        return 'high';
+      }
+      return 'target';
+
+    case FIVE_WAY:
+      const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
+      const roundedValue = bankersRound(bgValue, precision);
+
+      if (roundedValue < veryLowThreshold) {
+        return 'veryLow';
+      } else if (roundedValue > veryHighThreshold) {
+        return 'veryHigh';
+      } else if (roundedValue <= targetLowerBound) {
+        return 'low';
+      } else if (roundedValue >= targetUpperBound) {
+        return 'high';
+      }
+      return 'target';
+  };
 }
 
 /**

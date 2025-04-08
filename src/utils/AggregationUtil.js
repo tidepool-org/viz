@@ -9,7 +9,7 @@ import {
 } from './basal';
 
 import { formatLocalizedFromUTC } from './datetime';
-import { classifyBgValue } from './bloodglucose';
+import { classificationTypes, classifyBgValue } from './bloodglucose';
 import { MS_IN_DAY } from './constants';
 
 export class AggregationUtil {
@@ -24,6 +24,7 @@ export class AggregationUtil {
   init = (dataUtil) => {
     this.dataUtil = dataUtil;
     this.bgBounds = _.get(dataUtil, 'bgPrefs.bgBounds');
+    this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
     this.rangeDates = [
@@ -642,7 +643,7 @@ export class AggregationUtil {
         if (d.type !== type) return false;
         const datum = _.clone(d);
         this.dataUtil.normalizeDatumBgUnits(datum);
-        return classifyBgValue(this.bgBounds, datum.value, 'fiveWay') === bgClass;
+        return classifyBgValue(this.bgBounds, this.bgUnits, datum.value, classificationTypes.FIVE_WAY) === bgClass;
       });
   };
   /* eslint-enable lodash/prefer-lodash-method */

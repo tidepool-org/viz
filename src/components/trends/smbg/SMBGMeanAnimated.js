@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 
-import { classifyBgValue } from '../../../utils/bloodglucose';
+import { classifyBgValue, classificationTypes } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import withDefaultYPosition from '../common/withDefaultYPosition';
 
@@ -24,6 +24,7 @@ export class SMBGMeanAnimated extends PureComponent {
       targetLowerBound: PropTypes.number.isRequired,
       veryLowThreshold: PropTypes.number.isRequired,
     }).isRequired,
+    bgUnits: PropTypes.string.isRequired,
     datum: PropTypes.shape({
       id: PropTypes.string.isRequired,
       max: PropTypes.number,
@@ -71,7 +72,7 @@ export class SMBGMeanAnimated extends PureComponent {
 
   render() {
     const {
-      bgBounds, datum, defaultY, meanHeight, someSmbgDataIsFocused, width, xScale, yScale,
+      bgBounds, bgUnits, datum, defaultY, meanHeight, someSmbgDataIsFocused, width, xScale, yScale,
     } = this.props;
 
     const xPos = xScale(datum.msX);
@@ -81,11 +82,13 @@ export class SMBGMeanAnimated extends PureComponent {
       max: yScale(datum.max),
     };
 
+    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.mean, classificationTypes.FIVE_WAY);
+
     const meanClasses = datum.mean ?
       cx({
         [styles.smbgMean]: true,
-        [styles[`${classifyBgValue(bgBounds, datum.mean, 'fiveWay')}FadeIn`]]: !someSmbgDataIsFocused,
-        [styles[`${classifyBgValue(bgBounds, datum.mean, 'fiveWay')}FadeOut`]]: someSmbgDataIsFocused,
+        [styles[`${bgValueClassification}FadeIn`]]: !someSmbgDataIsFocused,
+        [styles[`${bgValueClassification}FadeOut`]]: someSmbgDataIsFocused,
       }) :
       cx({
         [styles.smbgMean]: true,

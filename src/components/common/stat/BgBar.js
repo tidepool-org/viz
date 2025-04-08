@@ -4,14 +4,14 @@ import _ from 'lodash';
 import { Point, Rect } from 'victory';
 import { Arc } from 'victory-core';
 import colors from '../../../styles/colors.css';
-import { classifyBgValue } from '../../../utils/bloodglucose';
+import { classifyBgValue, classificationTypes } from '../../../utils/bloodglucose';
 
 /* eslint-disable no-underscore-dangle */
 
 export const BgBar = props => {
   const {
     barWidth,
-    bgPrefs: { bgBounds } = {},
+    bgPrefs: { bgBounds, bgUnits } = {},
     chartLabelWidth,
     datum = {},
     domain,
@@ -48,6 +48,10 @@ export const BgBar = props => {
   const dev2X = scale.y(datum._y + deviation) * widthCorrection;
 
   const isEnabled = renderMean ? datum._y > 0 : dev1Value > 0 && dev2Value > 0;
+
+  const meanFillColor = colors[classifyBgValue(bgBounds, bgUnits, datum._y, classificationTypes.THREE_WAY)];
+  const deviationStartFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev1Value, classificationTypes.THREE_WAY)];
+  const deviationEndFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev2Value, classificationTypes.THREE_WAY)];
 
   return (
     <g className="bgBar">
@@ -120,7 +124,7 @@ export const BgBar = props => {
             x={datumX}
             y={datumY}
             style={{
-              fill: colors[classifyBgValue(bgBounds, datum._y)],
+              fill: meanFillColor,
               stroke: colors.white,
               strokeWidth: 2,
             }}
@@ -140,7 +144,7 @@ export const BgBar = props => {
             style={{
               stroke: 'white',
               strokeWidth: 2,
-              fill: colors[classifyBgValue(bgBounds, _.max([dev1Value, 0.1]))],
+              fill: deviationStartFillColor,
             }}
           />
 
@@ -153,7 +157,7 @@ export const BgBar = props => {
             style={{
               stroke: 'white',
               strokeWidth: 2,
-              fill: colors[classifyBgValue(bgBounds, dev2Value)],
+              fill: deviationEndFillColor,
             }}
           />
         </g>

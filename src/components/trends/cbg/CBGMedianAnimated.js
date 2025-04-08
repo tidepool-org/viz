@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 
-import { classifyBgValue } from '../../../utils/bloodglucose';
+import { classifyBgValue, classificationTypes } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import withDefaultYPosition from '../common/withDefaultYPosition';
 
@@ -22,6 +22,7 @@ export class CBGMedianAnimated extends PureComponent {
       targetLowerBound: PropTypes.number.isRequired,
       veryLowThreshold: PropTypes.number.isRequired,
     }).isRequired,
+    bgUnits: PropTypes.string.isRequired,
     datum: PropTypes.shape({
       firstQuartile: PropTypes.number,
       id: PropTypes.string.isRequired,
@@ -73,6 +74,7 @@ export class CBGMedianAnimated extends PureComponent {
   render() {
     const {
       bgBounds,
+      bgUnits,
       datum,
       defaultY,
       displayingMedian,
@@ -82,11 +84,13 @@ export class CBGMedianAnimated extends PureComponent {
       yScale,
     } = this.props;
 
+    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.median, classificationTypes.FIVE_WAY);
+
     const medianClasses = datum.median ?
       cx({
         [styles.median]: true,
-        [styles[`${classifyBgValue(bgBounds, datum.median, 'fiveWay')}FadeIn`]]: !showingCbgDateTraces,
-        [styles[`${classifyBgValue(bgBounds, datum.median, 'fiveWay')}FadeOut`]]: showingCbgDateTraces,
+        [styles[`${bgValueClassification}FadeIn`]]: !showingCbgDateTraces,
+        [styles[`${bgValueClassification}FadeOut`]]: showingCbgDateTraces,
       }) :
       cx({
         [styles.median]: true,

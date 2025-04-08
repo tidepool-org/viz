@@ -4,7 +4,7 @@ import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
-import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
+import { cgmSampleFrequency, classificationTypes, classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
 
@@ -251,10 +251,12 @@ export class StatUtil {
     const smbgData = _.cloneDeep(this.dataUtil.filter.byType('smbg').top(Infinity));
     _.each(smbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
+    const { FIVE_WAY } = classificationTypes;
+
     const readingsInRangeData = _.reduce(
       smbgData,
       (result, datum) => {
-        const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
+        const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, FIVE_WAY);
         result.counts[classification]++;
         result.counts.total++;
         return result;
@@ -411,10 +413,12 @@ export class StatUtil {
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
+    const { FIVE_WAY } = classificationTypes;
+
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
-        const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
+        const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, FIVE_WAY);
         const duration = cgmSampleFrequency(datum);
         result.durations[classification] += duration;
         result.durations.total += duration;

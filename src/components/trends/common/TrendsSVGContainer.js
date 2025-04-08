@@ -141,6 +141,7 @@ export class TrendsSVGContainer extends PureComponent {
     return (
       <SMBGRangeAvgContainer
         bgBounds={this.props.bgPrefs.bgBounds}
+        bgUnits={this.props.bgPrefs.bgUnits}
         data={data}
         focusSmbgRange={this.props.focusSmbgRange}
         unfocusSmbgRange={this.props.unfocusSmbgRange}
@@ -160,6 +161,7 @@ export class TrendsSVGContainer extends PureComponent {
       const slices = (
         <CBGSlicesContainer
           bgBounds={this.props.bgPrefs.bgBounds}
+          bgUnits={this.props.bgPrefs.bgUnits}
           sliceWidth={this.state.chartWidth / 56}
           data={this.props.cbgData}
           displayFlags={this.props.displayFlags}
@@ -177,6 +179,7 @@ export class TrendsSVGContainer extends PureComponent {
       const dateTraces = (
         <CBGDateTracesAnimationContainer
           bgBounds={this.props.bgPrefs.bgBounds}
+          bgUnits={this.props.bgPrefs.bgUnits}
           data={focusedSegmentDataGroupedByDate}
           dates={_.keys(focusedSegmentDataGroupedByDate) || []}
           focusCbgDateTrace={this.props.focusCbgDateTrace}
@@ -217,6 +220,7 @@ export class TrendsSVGContainer extends PureComponent {
         <SMBGsByDateContainer
           anSmbgRangeAvgIsFocused={this.props.focusedSmbgRangeAvg !== null}
           bgBounds={this.props.bgPrefs.bgBounds}
+          bgUnits={this.props.bgPrefs.bgUnits}
           data={this.props.smbgData}
           dates={this.props.dates}
           focusSmbg={this.props.focusSmbg}
@@ -239,6 +243,7 @@ export class TrendsSVGContainer extends PureComponent {
         <SMBGsByDateContainer
           anSmbgRangeAvgIsFocused={false}
           bgBounds={this.props.bgPrefs.bgBounds}
+          bgUnits={this.props.bgPrefs.bgUnits}
           data={this.props.focusedSmbg.allSmbgsOnDate}
           dates={[this.props.focusedSmbg.date]}
           focusSmbg={this.props.focusSmbg}

@@ -20,6 +20,7 @@ import React, { PureComponent } from 'react';
 import _ from 'lodash';
 import {
   classifyBgValue,
+  classificationTypes,
   reshapeBgClassesToBgBounds,
   getOutOfRangeThreshold,
 } from '../../../utils/bloodglucose';
@@ -69,8 +70,9 @@ class SMBGTooltip extends PureComponent {
     if (!_.isEmpty(outOfRangeMessage)) {
       const bgClass = classifyBgValue(
         reshapeBgClassesToBgBounds(this.props.bgPrefs),
+        this.props.bgPrefs.bgUnits,
         this.props.smbg.value,
-        'fiveWay'
+        classificationTypes.FIVE_WAY,
       );
       rows.push(
         <div
@@ -92,8 +94,9 @@ class SMBGTooltip extends PureComponent {
   render() {
     const bgClass = classifyBgValue(
       reshapeBgClassesToBgBounds(this.props.bgPrefs),
+      this.props.bgPrefs.bgUnits,
       this.props.smbg.value,
-      'fiveWay'
+      classificationTypes.FIVE_WAY,
     );
     const title = this.props.title ? this.props.title : (
       <div className={styles.title}>
