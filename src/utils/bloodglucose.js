@@ -23,7 +23,7 @@ import { TWENTY_FOUR_HRS } from './datetime';
 
 import { bankersRound, formatBgValue } from './format.js';
 
-export const classificationTypes = {
+export const BG_CLASSIFICATION_TYPE = {
   THREE_WAY: 'THREE_WAY',
   FIVE_WAY: 'FIVE_WAY',
 }
@@ -48,12 +48,12 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType) 
   if (!_.isNumber(bgValue) || !_.gt(bgValue, 0)) {
     throw new Error('You must provide a positive, numerical blood glucose value to categorize!');
   }
-  if (!Object.values(classificationTypes).includes(classificationType)) {
+  if (!Object.values(BG_CLASSIFICATION_TYPE).includes(classificationType)) {
     throw new Error('You must provide a valid classification type!');
   }
 
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
-  const { THREE_WAY, FIVE_WAY } = classificationTypes;
+  const { THREE_WAY, FIVE_WAY } = BG_CLASSIFICATION_TYPE;
 
   switch(classificationType) {
     case THREE_WAY:

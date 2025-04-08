@@ -7,7 +7,7 @@ import {
   classifyBgValue,
   classifyCvValue,
   reshapeBgClassesToBgBounds,
-  classificationTypes,
+  BG_CLASSIFICATION_TYPE,
 } from './bloodglucose';
 
 import {
@@ -122,7 +122,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     forcePlainTextValues = false,
   } = opts;
 
-  const { THREE_WAY } = classificationTypes;
+  const { THREE_WAY } = BG_CLASSIFICATION_TYPE;
 
   const total = _.get(data, 'total.value');
 

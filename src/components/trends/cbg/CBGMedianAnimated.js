@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 
-import { classifyBgValue, classificationTypes } from '../../../utils/bloodglucose';
+import { classifyBgValue, BG_CLASSIFICATION_TYPE } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import withDefaultYPosition from '../common/withDefaultYPosition';
 
@@ -84,7 +84,7 @@ export class CBGMedianAnimated extends PureComponent {
       yScale,
     } = this.props;
 
-    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.median, classificationTypes.FIVE_WAY);
+    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.median, BG_CLASSIFICATION_TYPE.FIVE_WAY);
 
     const medianClasses = datum.median ?
       cx({

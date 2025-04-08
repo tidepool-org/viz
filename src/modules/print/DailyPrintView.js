@@ -31,7 +31,7 @@ import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
 import { getPumpVocabulary } from '../../utils/device';
 import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
-  classificationTypes,
+  BG_CLASSIFICATION_TYPE,
   classifyBgValue,
   getOutOfRangeThreshold,
 } from '../../utils/bloodglucose';
@@ -755,7 +755,7 @@ class DailyPrintView extends PrintView {
   renderCbgs({ bgScale, data: { cbg: cbgs }, xScale }) {
     _.each(cbgs, (cbg) => {
       this.doc.circle(xScale(cbg.normalTime), bgScale(cbg.value), 1)
-        .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, cbg.value, classificationTypes.THREE_WAY)]);
+        .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, cbg.value, BG_CLASSIFICATION_TYPE.THREE_WAY)]);
     });
 
     return this;
@@ -772,7 +772,7 @@ class DailyPrintView extends PrintView {
       const labelEndX = labelStartX + labelWidth;
 
       this.doc.circle(xPos, yPos, this.smbgRadius)
-        .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, smbg.value, classificationTypes.THREE_WAY)]);
+        .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, smbg.value, BG_CLASSIFICATION_TYPE.THREE_WAY)]);
 
       // Ensure label is printed within chart area for the x-axis
       if (labelStartX <= this.chartArea.leftEdge) {

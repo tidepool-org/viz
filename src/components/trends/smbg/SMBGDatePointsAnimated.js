@@ -22,7 +22,7 @@ import _ from 'lodash';
 
 import {
   classifyBgValue,
-  classificationTypes,
+  BG_CLASSIFICATION_TYPE,
   findBinForTimeOfDay
 } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
@@ -156,7 +156,7 @@ export class SMBGDatePointsAnimated extends PureComponent {
           return {
             key: smbg.id,
             data: {
-              classes: styles[classifyBgValue(bgBounds, bgUnits, smbg.value, classificationTypes.FIVE_WAY)],
+              classes: styles[classifyBgValue(bgBounds, bgUnits, smbg.value, BG_CLASSIFICATION_TYPE.FIVE_WAY)],
               position,
               smbg,
             },

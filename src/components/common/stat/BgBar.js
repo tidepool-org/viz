@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { Point, Rect } from 'victory';
 import { Arc } from 'victory-core';
 import colors from '../../../styles/colors.css';
-import { classifyBgValue, classificationTypes } from '../../../utils/bloodglucose';
+import { classifyBgValue, BG_CLASSIFICATION_TYPE } from '../../../utils/bloodglucose';
 
 /* eslint-disable no-underscore-dangle */
 
@@ -49,9 +49,9 @@ export const BgBar = props => {
 
   const isEnabled = renderMean ? datum._y > 0 : dev1Value > 0 && dev2Value > 0;
 
-  const meanFillColor = colors[classifyBgValue(bgBounds, bgUnits, datum._y, classificationTypes.THREE_WAY)];
-  const deviationStartFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev1Value, classificationTypes.THREE_WAY)];
-  const deviationEndFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev2Value, classificationTypes.THREE_WAY)];
+  const meanFillColor = colors[classifyBgValue(bgBounds, bgUnits, datum._y, BG_CLASSIFICATION_TYPE.THREE_WAY)];
+  const deviationStartFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev1Value, BG_CLASSIFICATION_TYPE.THREE_WAY)];
+  const deviationEndFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev2Value, BG_CLASSIFICATION_TYPE.THREE_WAY)];
 
   return (
     <g className="bgBar">
