@@ -231,7 +231,7 @@ export function weightedCGMCount(data) {
 export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
 
-  if (datum.sampleInterval) {
+  if (datum?.sampleInterval) {
     return datum.sampleInterval;
   }
 
