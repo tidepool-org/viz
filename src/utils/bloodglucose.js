@@ -46,27 +46,30 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
 
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
 
-  if (classificationType === 'fiveWay') {
-    const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
-    const roundedValue = bankersRound(bgValue, precision);
+  switch(classificationType) {
+    case 'fiveWay':
+      const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
+      const roundedValue = bankersRound(bgValue, precision);
 
-    if (roundedValue < veryLowThreshold) {
-      return 'veryLow';
-    } else if (roundedValue > veryHighThreshold) {
-      return 'veryHigh';
-    } else if (roundedValue <= targetLowerBound) {
-      return 'low';
-    } else if (roundedValue >= targetUpperBound) {
-      return 'high';
-    }
-    return 'target';
+      if (roundedValue < veryLowThreshold) {
+        return 'veryLow';
+      } else if (roundedValue > veryHighThreshold) {
+        return 'veryHigh';
+      } else if (roundedValue < targetLowerBound) {
+        return 'low';
+      } else if (roundedValue > targetUpperBound) {
+        return 'high';
+      }
+      return 'target';
+
+    case 'threeWay':
+      if (bgValue < targetLowerBound) {
+        return 'low';
+      } else if (bgValue > targetUpperBound) {
+        return 'high';
+      }
+      return 'target';
   }
-  if (bgValue < targetLowerBound) {
-    return 'low';
-  } else if (bgValue > targetUpperBound) {
-    return 'high';
-  }
-  return 'target';
 }
 
 /**

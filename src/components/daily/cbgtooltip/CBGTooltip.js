@@ -21,7 +21,7 @@ import _ from 'lodash';
 import {
   classifyBgValue,
   reshapeBgClassesToBgBounds,
-  getOutOfRangeThreshold
+  getOutOfRangeThreshold,
 } from '../../../utils/bloodglucose';
 import { formatBgValue } from '../../../utils/format';
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
