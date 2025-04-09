@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 
-import { classifyBgValue, BG_CLASSIFICATION_TYPE } from '../../../utils/bloodglucose';
+import { classifyBgValue } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import withDefaultYPosition from '../common/withDefaultYPosition';
 
@@ -82,7 +82,7 @@ export class SMBGMeanAnimated extends PureComponent {
       max: yScale(datum.max),
     };
 
-    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.mean, BG_CLASSIFICATION_TYPE.FIVE_WAY);
+    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.mean, 'fiveWay');
 
     const meanClasses = datum.mean ?
       cx({

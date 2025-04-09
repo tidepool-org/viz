@@ -25,7 +25,7 @@ import moment from 'moment';
 
 import PrintView from './PrintView';
 import { formatBgValue } from '../../utils/format';
-import { classifyBgValue, BG_CLASSIFICATION_TYPE, getOutOfRangeThreshold } from '../../utils/bloodglucose';
+import { classifyBgValue, getOutOfRangeThreshold } from '../../utils/bloodglucose';
 import { formatClocktimeFromMsPer24, THREE_HRS } from '../../utils/datetime';
 import { MS_IN_HOUR } from '../../utils/constants';
 
@@ -274,7 +274,7 @@ class BgLogPrintView extends PrintView {
 
           this.doc
             .circle(xPos, yPos, this.smbgRadius)
-            .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, datum.value, BG_CLASSIFICATION_TYPE.FIVE_WAY)]);
+            .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay')]);
 
           const smbgLabel = formatBgValue(datum.value, this.bgPrefs, getOutOfRangeThreshold(datum));
           const labelWidth = this.doc.widthOfString(smbgLabel);

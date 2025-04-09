@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { Point, Rect } from 'victory';
 import { Arc } from 'victory-core';
 import colors from '../../../styles/colors.css';
-import { classifyBgValue, BG_CLASSIFICATION_TYPE } from '../../../utils/bloodglucose';
+import { classifyBgValue } from '../../../utils/bloodglucose';
 
 /* eslint-disable no-underscore-dangle */
 
@@ -48,10 +48,6 @@ export const BgBar = props => {
   const dev2X = scale.y(datum._y + deviation) * widthCorrection;
 
   const isEnabled = renderMean ? datum._y > 0 : dev1Value > 0 && dev2Value > 0;
-
-  const meanFillColor = colors[classifyBgValue(bgBounds, bgUnits, datum._y, BG_CLASSIFICATION_TYPE.THREE_WAY)];
-  const deviationStartFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev1Value, BG_CLASSIFICATION_TYPE.THREE_WAY)];
-  const deviationEndFillColor = colors[classifyBgValue(bgBounds, bgUnits, dev2Value, BG_CLASSIFICATION_TYPE.THREE_WAY)];
 
   return (
     <g className="bgBar">
@@ -124,7 +120,7 @@ export const BgBar = props => {
             x={datumX}
             y={datumY}
             style={{
-              fill: meanFillColor,
+              fill: colors[classifyBgValue(bgBounds, bgUnits, datum._y, 'threeWay')],
               stroke: colors.white,
               strokeWidth: 2,
             }}
@@ -144,7 +140,7 @@ export const BgBar = props => {
             style={{
               stroke: 'white',
               strokeWidth: 2,
-              fill: deviationStartFillColor,
+              fill: colors[classifyBgValue(bgBounds, bgUnits, dev1Value, 'threeWay')],
             }}
           />
 
@@ -157,7 +153,7 @@ export const BgBar = props => {
             style={{
               stroke: 'white',
               strokeWidth: 2,
-              fill: deviationEndFillColor,
+              fill: colors[classifyBgValue(bgBounds, bgUnits, dev2Value, 'threeWay')],
             }}
           />
         </g>

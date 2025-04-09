@@ -20,7 +20,7 @@ import {
 import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
-import { classifyBgValue, BG_CLASSIFICATION_TYPE, mungeBGDataBins } from '../../../utils/bloodglucose';
+import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
 import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
 import moment from 'moment';
 
@@ -1225,9 +1225,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       const rx = pixelsToChartScale(paperWidth, bgPlotRadius);
       const ry = pixelsToChartScale(paperHeight, bgPlotRadius);
 
-      const { FIVE_WAY } = BG_CLASSIFICATION_TYPE;
-
-      const renderBgReadings = bgRange => _.map(_.filter(bgData, ({ value }) => classifyBgValue(bgPrefs.bgBounds, bgPrefs.bgUnits, value, FIVE_WAY) === bgRange), d => ({
+      const renderBgReadings = bgRange => _.map(_.filter(bgData, ({ value }) => classifyBgValue(bgPrefs.bgBounds, bgPrefs.bgUnits, value, 'fiveWay') === bgRange), d => ({
         type: 'circle',
         x0: d.msPer24 / (MS_IN_DAY) - rx,
         x1: d.msPer24 / (MS_IN_DAY) + rx,
@@ -1475,7 +1473,7 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
       ...dayData,
       msPer24: dayData.msPer24 + MS_IN_DAY * index,
       bgRange: dayData.type === BGM_DATA_KEY
-        ? classifyBgValue(bgPrefs.bgBounds, bgPrefs.bgUnits, dayData.value, BG_CLASSIFICATION_TYPE.THREE_WAY)
+        ? classifyBgValue(bgPrefs.bgBounds, bgPrefs.bgUnits, dayData.value, 'threeWay')
         : undefined,
     })))));
 

@@ -3,7 +3,7 @@ import { TweenMax } from 'gsap';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
-import { classifyBgValue, BG_CLASSIFICATION_TYPE } from '../../../utils/bloodglucose';
+import { classifyBgValue } from '../../../utils/bloodglucose';
 
 import styles from './CBGDateTraceAnimated.css';
 
@@ -78,7 +78,7 @@ export class CBGDateTraceAnimated extends PureComponent {
       <g id={`cbgDateTrace-${date}`}>
         {_.map(data, (d) => (
           <circle
-            className={styles[classifyBgValue(bgBounds, bgUnits, d.value, BG_CLASSIFICATION_TYPE.FIVE_WAY)]}
+            className={styles[classifyBgValue(bgBounds, bgUnits, d.value, 'fiveWay')]}
             cx={xScale(d.msPer24)}
             cy={yScale(d.value)}
             id={`cbgCircle-${d.id}`}

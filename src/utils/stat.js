@@ -7,7 +7,6 @@ import {
   classifyBgValue,
   classifyCvValue,
   reshapeBgClassesToBgBounds,
-  BG_CLASSIFICATION_TYPE,
 } from './bloodglucose';
 
 import {
@@ -122,8 +121,6 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     forcePlainTextValues = false,
   } = opts;
 
-  const { THREE_WAY } = BG_CLASSIFICATION_TYPE;
-
   const total = _.get(data, 'total.value');
 
   const disableStat = () => {
@@ -149,7 +146,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
     case statFormats.bgValue:
       if (value >= 0) {
-        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, value, THREE_WAY);
+        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, value, 'threeWay');
         value = formatBgValue(value, bgPrefs, undefined, useAGPFormat);
       } else {
         disableStat();
@@ -222,11 +219,11 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       if (value >= 0 && deviation >= 0) {
         lowerValue = value - deviation;
         lowerColorId = lowerValue >= 0
-          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, lowerValue, THREE_WAY)
+          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, lowerValue, 'threeWay')
           : 'low';
 
         upperValue = value + deviation;
-        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, upperValue, THREE_WAY);
+        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, upperValue, 'threeWay');
 
         lowerValue = formatBgValue(lowerValue, bgPrefs);
         upperValue = formatBgValue(upperValue, bgPrefs);

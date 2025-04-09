@@ -20,11 +20,7 @@ import React, { PureComponent } from 'react';
 import { TransitionMotion, spring } from 'react-motion';
 import _ from 'lodash';
 
-import {
-  classifyBgValue,
-  BG_CLASSIFICATION_TYPE,
-  findBinForTimeOfDay
-} from '../../../utils/bloodglucose';
+import { classifyBgValue, findBinForTimeOfDay } from '../../../utils/bloodglucose';
 import { springConfig } from '../../../utils/constants';
 import { THREE_HRS } from '../../../utils/datetime';
 
@@ -156,7 +152,7 @@ export class SMBGDatePointsAnimated extends PureComponent {
           return {
             key: smbg.id,
             data: {
-              classes: styles[classifyBgValue(bgBounds, bgUnits, smbg.value, BG_CLASSIFICATION_TYPE.FIVE_WAY)],
+              classes: styles[classifyBgValue(bgBounds, bgUnits, smbg.value, 'fiveWay')],
               position,
               smbg,
             },

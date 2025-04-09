@@ -9,7 +9,7 @@ import {
 } from './basal';
 
 import { formatLocalizedFromUTC } from './datetime';
-import { BG_CLASSIFICATION_TYPE, classifyBgValue } from './bloodglucose';
+import { classifyBgValue } from './bloodglucose';
 import { MS_IN_DAY } from './constants';
 
 export class AggregationUtil {
@@ -643,7 +643,7 @@ export class AggregationUtil {
         if (d.type !== type) return false;
         const datum = _.clone(d);
         this.dataUtil.normalizeDatumBgUnits(datum);
-        return classifyBgValue(this.bgBounds, this.bgUnits, datum.value, BG_CLASSIFICATION_TYPE.FIVE_WAY) === bgClass;
+        return classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay') === bgClass;
       });
   };
   /* eslint-enable lodash/prefer-lodash-method */

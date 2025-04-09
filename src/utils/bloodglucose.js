@@ -23,21 +23,16 @@ import { TWENTY_FOUR_HRS } from './datetime';
 
 import { bankersRound, formatBgValue } from './format.js';
 
-export const BG_CLASSIFICATION_TYPE = {
-  THREE_WAY: 'THREE_WAY',
-  FIVE_WAY: 'FIVE_WAY',
-}
-
 /**
  * classifyBgValue
  * @param {Object} bgBounds - object describing boundaries for blood glucose categories
  * @param {String} bgUnits     MGDL_UNITS or MMOLL_UNITS
  * @param {Number} bgValue - integer or float blood glucose value in either mg/dL or mmol/L
- * @param {String} classificationType - 'THREE_WAY' or 'FIVE_WAY'
+ * @param {String} classificationType - 'threeWay' or 'fiveWay'
  *
  * @return {String} bgClassification - low, target, high
  */
-export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType) {
+export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType = 'threeWay') {
   if (_.isEmpty(bgBounds) ||
   !_.isNumber(_.get(bgBounds, 'targetLowerBound')) ||
   !_.isNumber(_.get(bgBounds, 'targetUpperBound'))) {
@@ -48,15 +43,11 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType) 
   if (!_.isNumber(bgValue) || !_.gt(bgValue, 0)) {
     throw new Error('You must provide a positive, numerical blood glucose value to categorize!');
   }
-  if (!Object.values(BG_CLASSIFICATION_TYPE).includes(classificationType)) {
-    throw new Error('You must provide a valid classification type!');
-  }
 
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
-  const { THREE_WAY, FIVE_WAY } = BG_CLASSIFICATION_TYPE;
 
   switch(classificationType) {
-    case THREE_WAY:
+    case 'threeWay':
       if (bgValue < targetLowerBound) {
         return 'low';
       } else if (bgValue > targetUpperBound) {
@@ -64,7 +55,7 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType) 
       }
       return 'target';
 
-    case FIVE_WAY:
+    case 'fiveWay':
       const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
       const roundedValue = bankersRound(bgValue, precision);
 

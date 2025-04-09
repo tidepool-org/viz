@@ -18,12 +18,7 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
-import {
-  classifyBgValue,
-  BG_CLASSIFICATION_TYPE,
-  reshapeBgClassesToBgBounds,
-  getOutOfRangeThreshold,
-} from '../../../utils/bloodglucose';
+import { classifyBgValue, reshapeBgClassesToBgBounds, getOutOfRangeThreshold } from '../../../utils/bloodglucose';
 import { formatBgValue } from '../../../utils/format';
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { getOutOfRangeAnnotationMessage } from '../../../utils/annotations';
@@ -48,7 +43,7 @@ class CBGTooltip extends PureComponent {
         reshapeBgClassesToBgBounds(this.props.bgPrefs),
         this.props.bgPrefs.bgUnits,
         this.props.cbg.value,
-        BG_CLASSIFICATION_TYPE.FIVE_WAY,
+        'fiveWay'
       );
       rows.push(
         <div
@@ -72,7 +67,7 @@ class CBGTooltip extends PureComponent {
       reshapeBgClassesToBgBounds(this.props.bgPrefs),
       this.props.bgPrefs.bgUnits,
       this.props.cbg.value,
-      BG_CLASSIFICATION_TYPE.FIVE_WAY,
+      'fiveWay'
     );
     const title = this.props.title ? this.props.title : (
       <div className={styles.title}>
