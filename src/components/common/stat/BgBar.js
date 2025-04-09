@@ -140,7 +140,7 @@ export const BgBar = props => {
             style={{
               stroke: 'white',
               strokeWidth: 2,
-              fill: colors[classifyBgValue(bgBounds, bgUnits, dev1Value, 'threeWay')],
+              fill: colors[classifyBgValue(bgBounds, bgUnits, _.max([dev1Value, 0.1]), 'threeWay')],
             }}
           />
 

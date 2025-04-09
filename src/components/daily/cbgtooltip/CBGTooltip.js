@@ -18,7 +18,11 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
-import { classifyBgValue, reshapeBgClassesToBgBounds, getOutOfRangeThreshold } from '../../../utils/bloodglucose';
+import {
+  classifyBgValue,
+  reshapeBgClassesToBgBounds,
+  getOutOfRangeThreshold
+} from '../../../utils/bloodglucose';
 import { formatBgValue } from '../../../utils/format';
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { getOutOfRangeAnnotationMessage } from '../../../utils/annotations';

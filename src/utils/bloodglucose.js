@@ -46,30 +46,27 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
 
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
 
-  switch(classificationType) {
-    case 'threeWay':
-      if (bgValue < targetLowerBound) {
-        return 'low';
-      } else if (bgValue > targetUpperBound) {
-        return 'high';
-      }
-      return 'target';
+  if (classificationType === 'fiveWay') {
+    const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
+    const roundedValue = bankersRound(bgValue, precision);
 
-    case 'fiveWay':
-      const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
-      const roundedValue = bankersRound(bgValue, precision);
-
-      if (roundedValue < veryLowThreshold) {
-        return 'veryLow';
-      } else if (roundedValue > veryHighThreshold) {
-        return 'veryHigh';
-      } else if (roundedValue <= targetLowerBound) {
-        return 'low';
-      } else if (roundedValue >= targetUpperBound) {
-        return 'high';
-      }
-      return 'target';
-  };
+    if (roundedValue < veryLowThreshold) {
+      return 'veryLow';
+    } else if (roundedValue > veryHighThreshold) {
+      return 'veryHigh';
+    } else if (roundedValue <= targetLowerBound) {
+      return 'low';
+    } else if (roundedValue >= targetUpperBound) {
+      return 'high';
+    }
+    return 'target';
+  }
+  if (bgValue < targetLowerBound) {
+    return 'low';
+  } else if (bgValue > targetUpperBound) {
+    return 'high';
+  }
+  return 'target';
 }
 
 /**
@@ -138,16 +135,16 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
   const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
 
   const thresholds = _.mapValues(bgBounds, threshold => formatBgValue(threshold, bgPrefs));
-  thresholds.highThreshold = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);
-  thresholds.lowThreshold = formatBgValue(bgBounds.targetLowerBound - minimumIncrement, bgPrefs);
+  thresholds.highLowerBound = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);
+  thresholds.lowUpperBound = formatBgValue(bgBounds.targetLowerBound - minimumIncrement, bgPrefs);
 
   if (opts.condensed) {
     return {
       veryLow: `<${thresholds.veryLowThreshold}`,
-      low: `${thresholds.veryLowThreshold}-${thresholds.lowThreshold}`,
+      low: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
       anyLow: `<${thresholds.targetLowerBound}`,
       target: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
-      high: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
+      high: `${thresholds.highLowerBound}-${thresholds.veryHighThreshold}`,
       anyHigh: `>${thresholds.targetUpperBound}`,
       veryHigh: `>${thresholds.veryHighThreshold}`,
       extremeHigh: `>${thresholds.extremeHighThreshold}`,
@@ -163,7 +160,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       low: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.veryLowThreshold}-${thresholds.lowThreshold}`,
+        value: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
       },
       anyLow: {
         prefix: 'below',
@@ -178,7 +175,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       high: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.highThreshold}-${thresholds.veryHighThreshold}`,
+        value: `${thresholds.highLowerBound}-${thresholds.veryHighThreshold}`,
       },
       anyHigh: {
         suffix: bgUnits,
@@ -197,10 +194,10 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
 
   return {
     veryLow: `below ${thresholds.veryLowThreshold} ${bgUnits}`,
-    low: `between ${thresholds.veryLowThreshold} - ${thresholds.lowThreshold} ${bgUnits}`,
+    low: `between ${thresholds.veryLowThreshold} - ${thresholds.lowUpperBound} ${bgUnits}`,
     anyLow: `below ${thresholds.targetLowerBound} ${bgUnits}`,
     target: `between ${thresholds.targetLowerBound} - ${thresholds.targetUpperBound} ${bgUnits}`,
-    high: `between ${thresholds.highThreshold} - ${thresholds.veryHighThreshold} ${bgUnits}`,
+    high: `between ${thresholds.highLowerBound} - ${thresholds.veryHighThreshold} ${bgUnits}`,
     anyHigh: `above ${thresholds.targetUpperBound} ${bgUnits}`,
     veryHigh: `above ${thresholds.veryHighThreshold} ${bgUnits}`,
     extremeHigh: `above ${thresholds.extremeHighThreshold} ${bgUnits}`,
