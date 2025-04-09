@@ -82,13 +82,11 @@ export class SMBGMeanAnimated extends PureComponent {
       max: yScale(datum.max),
     };
 
-    const bgValueClassification = classifyBgValue(bgBounds, bgUnits, datum.mean, 'fiveWay');
-
     const meanClasses = datum.mean ?
       cx({
         [styles.smbgMean]: true,
-        [styles[`${bgValueClassification}FadeIn`]]: !someSmbgDataIsFocused,
-        [styles[`${bgValueClassification}FadeOut`]]: someSmbgDataIsFocused,
+        [styles[`${classifyBgValue(bgBounds, bgUnits, datum.mean, 'fiveWay')}FadeIn`]]: !someSmbgDataIsFocused,
+        [styles[`${classifyBgValue(bgBounds, bgUnits, datum.mean, 'fiveWay')}FadeOut`]]: someSmbgDataIsFocused,
       }) :
       cx({
         [styles.smbgMean]: true,

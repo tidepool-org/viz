@@ -175,7 +175,6 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
         value: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
       },
       anyLow: {
-        prefix: 'below',
         suffix: bgUnits,
         value: `<${thresholds.targetLowerBound}`,
       },

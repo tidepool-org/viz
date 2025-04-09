@@ -297,9 +297,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: 'below 55 mg/dL',
-        low: 'between 55 - 70 mg/dL',
+        low: 'between 55 - 69 mg/dL',
+        anyLow: 'below 70 mg/dL',
         target: 'between 70 - 180 mg/dL',
-        high: 'between 180 - 300 mg/dL',
+        high: 'between 181 - 300 mg/dL',
+        anyHigh: 'above 180 mg/dL',
         veryHigh: 'above 300 mg/dL',
         extremeHigh: 'above 350 mg/dL',
       });
@@ -315,9 +317,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: '<55',
-        low: '55-70',
+        low: '55-69',
+        anyLow: '<70',
         target: '70-180',
-        high: '180-300',
+        high: '181-300',
+        anyHigh: '>180',
         veryHigh: '>300',
         extremeHigh: '>350',
       });
@@ -331,16 +335,21 @@ describe('blood glucose utilities', () => {
 
       const result = bgUtils.generateBgRangeLabels(bgPrefs, { segmented: true });
 
+      console.log('@ECHO', result)
+
       expect(result).to.eql({
         veryLow: {
-          prefix: 'below',
           suffix: bgPrefs.bgUnits,
-          value: '55',
+          value: '<55',
         },
         low: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '55-70',
+          value: '55-69',
+        },
+        anyLow: {
+          suffix: bgPrefs.bgUnits,
+          value: '<70',
         },
         target: {
           prefix: 'between',
@@ -350,17 +359,19 @@ describe('blood glucose utilities', () => {
         high: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '180-300',
+          value: '181-300',
+        },
+        anyHigh: {
+          suffix: bgPrefs.bgUnits,
+          value: '>180',
         },
         veryHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '300',
+          value: '>300',
         },
         extremeHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '350',
+          value: '>350',
         },
       });
     });
@@ -375,9 +386,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: 'below 3.1 mmol/L',
-        low: 'between 3.1 - 3.9 mmol/L',
+        low: 'between 3.1 - 3.8 mmol/L',
+        anyLow: 'below 3.9 mmol/L',
         target: 'between 3.9 - 10.0 mmol/L',
-        high: 'between 10.0 - 16.7 mmol/L',
+        high: 'between 10.1 - 16.7 mmol/L',
+        anyHigh: 'above 10.0 mmol/L',
         veryHigh: 'above 16.7 mmol/L',
         extremeHigh: 'above 19.4 mmol/L',
       });
@@ -393,9 +406,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: '<3.1',
-        low: '3.1-3.9',
+        low: '3.1-3.8',
+        anyLow: '<3.9',
         target: '3.9-10.0',
-        high: '10.0-16.7',
+        high: '10.1-16.7',
+        anyHigh: '>10.0',
         veryHigh: '>16.7',
         extremeHigh: '>19.4',
       });
@@ -409,16 +424,21 @@ describe('blood glucose utilities', () => {
 
       const result = bgUtils.generateBgRangeLabels(bgPrefs, { segmented: true });
 
+      console.log('@DELTA', result)
+
       expect(result).to.eql({
         veryLow: {
-          prefix: 'below',
           suffix: bgPrefs.bgUnits,
-          value: '3.1',
+          value: '<3.1',
         },
         low: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '3.1-3.9',
+          value: '3.1-3.8',
+        },
+        anyLow: {
+          suffix: bgPrefs.bgUnits,
+          value: '<3.9',
         },
         target: {
           prefix: 'between',
@@ -428,17 +448,19 @@ describe('blood glucose utilities', () => {
         high: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '10.0-16.7',
+          value: '10.1-16.7',
+        },
+        anyHigh: {
+          suffix: bgPrefs.bgUnits,
+          value: '>10.0',
         },
         veryHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '16.7',
+          value: '>16.7',
         },
         extremeHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '19.4',
+          value: '>19.4',
         },
       });
     });
