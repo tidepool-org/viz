@@ -43,42 +43,41 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
   if (!_.isNumber(bgValue) || !_.gt(bgValue, 0)) {
     throw new Error('You must provide a positive, numerical blood glucose value to categorize!');
   }
-  if (![MMOLL_UNITS, MGDL_UNITS].includes(bgUnits)) {
+  if (!_.includes([MMOLL_UNITS, MGDL_UNITS], bgUnits)) {
     throw new Error('Must provide a valid blood glucose unit of measure!');
   }
 
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
 
-  switch(classificationType) {
-    case 'fiveWay':
-      if (bgValue < veryLowThreshold) {
-        return 'veryLow';
-      } else if (bgValue > veryHighThreshold) {
-        return 'veryHigh';
-      }
+  if (classificationType === 'fiveWay') {
+    if (bgValue < veryLowThreshold) {
+      return 'veryLow';
+    } else if (bgValue > veryHighThreshold) {
+      return 'veryHigh';
+    }
 
-      // Low, Target, and High ranges are non-contiguous in the ADA Standardized CGM metrics.
-      // We ensure that values falling between these ranges are rounded into an appropriate
-      // range before trying to classify them. See the unit tests for examples of scenarios.
-      const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
-      const roundedValue = bankersRound(bgValue, precision);
+    // Low, Target, and High ranges are non-contiguous in the ADA Standardized CGM metrics.
+    // We ensure that values falling between these ranges are rounded into an appropriate
+    // range before trying to classify them. See the unit tests for examples of scenarios.
+    const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
+    const roundedValue = bankersRound(bgValue, precision);
 
-      if (roundedValue < targetLowerBound) {
-        return 'low';
-      } else if (roundedValue > targetUpperBound) {
-        return 'high';
-      }
+    if (roundedValue < targetLowerBound) {
+      return 'low';
+    } else if (roundedValue > targetUpperBound) {
+      return 'high';
+    }
 
-      return 'target';
-
-    case 'threeWay':
-      if (bgValue < targetLowerBound) {
-        return 'low';
-      } else if (bgValue > targetUpperBound) {
-        return 'high';
-      }
-      return 'target';
+    return 'target';
   }
+
+  // threeWay
+  if (bgValue < targetLowerBound) {
+    return 'low';
+  } else if (bgValue > targetUpperBound) {
+    return 'high';
+  }
+  return 'target';
 }
 
 /**

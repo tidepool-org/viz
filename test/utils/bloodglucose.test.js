@@ -99,7 +99,7 @@ describe('blood glucose utilities', () => {
         bgUtils.classifyBgValue({ targetLowerBound: 80, targetUpperBound: 180 }, MGDL_UNITS, 100);
       };
       expect(fn1).not.to.throw;
-    })
+    });
 
     describe('three-way classification (low, target, high)', () => {
       it('should return `low` for a value < the `targetLowerBound`', () => {
@@ -133,7 +133,7 @@ describe('blood glucose utilities', () => {
           targetLowerBound: 70,
           veryLowThreshold: 54,
           clampThreshold: 600
-        }
+        };
 
         it('should return `veryLow` for a value < 54', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 50, 'fiveWay')).to.equal('veryLow');
@@ -194,11 +194,11 @@ describe('blood glucose utilities', () => {
 
       describe('when units are mmol/L and bgBounds follow ADA Standardized CGM metrics', () => {
         const bgBounds = {
-          "veryHighThreshold": 13.9,
-          "targetUpperBound": 10,
-          "targetLowerBound": 3.9,
-          "veryLowThreshold": 3,
-          "clampThreshold": 33.3
+          veryHighThreshold: 13.9,
+          targetUpperBound: 10,
+          targetLowerBound: 3.9,
+          veryLowThreshold: 3,
+          clampThreshold: 33.3
         };
 
         it('should return `veryLow` for a value < 3.0', () => {
@@ -335,8 +335,6 @@ describe('blood glucose utilities', () => {
 
       const result = bgUtils.generateBgRangeLabels(bgPrefs, { segmented: true });
 
-      console.log('@ECHO', result)
-
       expect(result).to.eql({
         veryLow: {
           suffix: bgPrefs.bgUnits,
@@ -423,8 +421,6 @@ describe('blood glucose utilities', () => {
       };
 
       const result = bgUtils.generateBgRangeLabels(bgPrefs, { segmented: true });
-
-      console.log('@DELTA', result)
 
       expect(result).to.eql({
         veryLow: {
