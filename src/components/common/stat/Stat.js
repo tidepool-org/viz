@@ -476,7 +476,7 @@ class Stat extends PureComponent {
 
         _.assign(chartProps, {
           alignment: 'middle',
-          containerComponent: <VictoryContainer responsive={false} />,
+          containerComponent: <VictoryContainer responsive={false} style={{ touchAction: 'auto' }} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
@@ -568,7 +568,7 @@ class Stat extends PureComponent {
 
         _.assign(chartProps, {
           alignment: 'middle',
-          containerComponent: <VictoryContainer responsive={false} />,
+          containerComponent: <VictoryContainer responsive={false} style={{ touchAction: 'auto' }} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
