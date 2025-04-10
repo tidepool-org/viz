@@ -96,12 +96,14 @@ describe('DataUtil', () => {
     }),
     new Types.CBG({
       deviceId: 'Dexcom-XXX-XXXX',
+      origin: { name: 'Dexcom G6', version: '2.3.2' },
       value: 190,
       deviceTime: '2018-02-01T00:45:00',
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'Dexcom-XXX-XXXX',
+      origin: { name: 'Dexcom G6', version: '3.1.0' },
       value: 260,
       deviceTime: '2018-02-01T00:50:00',
       ...useRawData,
@@ -4070,9 +4072,9 @@ describe('DataUtil', () => {
       dataUtil.getStats(['averageGlucose', 'totalInsulin']);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'Dexcom-XXX-XXXX': true,
-        'AbbottFreeStyleLibre-XXX-XXXX': true,
-        'Test Page Data - 123': true,
+        'Dexcom-XXX-XXXX': { 'Dexcom G6_2.3.2': true, 'Dexcom G6_3.1.0': true },
+        'AbbottFreeStyleLibre-XXX-XXXX': {'AbbottFreeStyleLibre-XXX-XXXX_0.0': true },
+        'Test Page Data - 123': {'Test Page Data - 123_0.0': true },
       });
 
       dataUtil.setBgSources('smbg');
@@ -4081,7 +4083,7 @@ describe('DataUtil', () => {
       dataUtil.getStats(['averageGlucose']);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'OneTouch-XXX-XXXX': true,
+        'OneTouch-XXX-XXXX': {'OneTouch-XXX-XXXX_0.0': true },
       });
 
       // Should not update if `matchDevices` is false
@@ -4128,21 +4130,21 @@ describe('DataUtil', () => {
       dataUtil.getAggregationsByDate(['basals']);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
+        'Test Page Data - 123': { 'Test Page Data - 123_0.0': true },
       });
 
       dataUtil.clearMatchedDevices();
       dataUtil.getAggregationsByDate(['fingersticks']);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'OneTouch-XXX-XXXX': true,
+        'OneTouch-XXX-XXXX': { 'OneTouch-XXX-XXXX_0.0': true },
       });
 
       dataUtil.clearMatchedDevices();
       dataUtil.getAggregationsByDate(['boluses']);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
+        'Test Page Data - 123': { 'Test Page Data - 123_0.0': true },
       });
 
       // Should not update if `matchDevices` is false
@@ -4619,9 +4621,8 @@ describe('DataUtil', () => {
       dataUtil.matchDevices = true;
       dataUtil.setTypes({ bolus: {} });
       dataUtil.getTypeData(dataUtil.types);
-
       expect(dataUtil.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
+        'Test Page Data - 123': { 'Test Page Data - 123_0.0': true },
       });
 
       dataUtil.clearMatchedDevices();
@@ -4629,7 +4630,7 @@ describe('DataUtil', () => {
       dataUtil.getTypeData(dataUtil.types);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'OneTouch-XXX-XXXX': true,
+        'OneTouch-XXX-XXXX': { 'OneTouch-XXX-XXXX_0.0': true },
       });
 
       dataUtil.clearMatchedDevices();
@@ -4637,7 +4638,7 @@ describe('DataUtil', () => {
       dataUtil.getTypeData(dataUtil.types);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'Test Page Data - 123': true,
+        'Test Page Data - 123': { 'Test Page Data - 123_0.0': true },
       });
 
       dataUtil.clearMatchedDevices();
@@ -4645,8 +4646,8 @@ describe('DataUtil', () => {
       dataUtil.getTypeData(dataUtil.types);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'Dexcom-XXX-XXXX': true,
-        'AbbottFreeStyleLibre-XXX-XXXX': true,
+        'Dexcom-XXX-XXXX': { 'Dexcom G6_2.3.2': true, 'Dexcom G6_3.1.0': true },
+        'AbbottFreeStyleLibre-XXX-XXXX': { 'AbbottFreeStyleLibre-XXX-XXXX_0.0': true },
       });
 
       // Should not update if `matchDevices` is false
