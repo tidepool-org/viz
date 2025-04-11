@@ -30,7 +30,7 @@ class Header extends PureComponent {
         <ul className={`${styles.header} ${styles.headerExpanded}`}>
           <li className={styles.headerOuter}>
             <span className={styles.headerInner}>
-              {t('Therapy Settings - Active at Upload on')} {this.props.deviceMeta.uploaded}
+              {t('Active at Upload on')} {this.props.deviceMeta.uploaded}
             </span>
           </li>
         </ul>

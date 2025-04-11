@@ -147,7 +147,7 @@ class BasicsPrintView extends PrintView {
     this.renderCalendarSection({
       title: {
         text: this.sections.boluses.title,
-        subText: _.get(this.data, 'query.excludeDaysWithoutBolus') ? t('(days with no boluses have been excluded)') : false,
+        subText: t('(days with no insulin data have been excluded)'),
       },
       data: this.aggregationsByDate.boluses.byDate,
       type: 'bolus',
@@ -650,10 +650,7 @@ class BasicsPrintView extends PrintView {
       const xPos = pos.x + padding.left;
       const yPos = pos.y + padding.top;
 
-      const isEmptyBolusDay = color === this.colors.bolus && count === 0;
-      const isExcludedBolusDay = isEmptyBolusDay && _.get(this.data, 'query.excludeDaysWithoutBolus', false);
-
-      this.setFill((type === 'outOfRange' || isExcludedBolusDay) ? this.colors.lightGrey : 'black', 1);
+      this.setFill((type === 'outOfRange') ? this.colors.lightGrey : 'black', 1);
 
       this.doc
         .fontSize(this.extraSmallFontSize)

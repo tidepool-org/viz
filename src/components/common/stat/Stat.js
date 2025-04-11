@@ -19,9 +19,9 @@ import BgBar from './BgBar';
 import BgBarLabel from './BgBarLabel';
 import StatTooltip from '../tooltips/StatTooltip';
 import StatLegend from './StatLegend';
-import CollapseIconOpen from './assets/expand-more-24-px.svg';
-import CollapseIconClose from './assets/chevron-right-24-px.svg';
-import InfoIcon from './assets/info-outline-24-px.svg';
+import CollapseIconOpen from './assets/expand-more-24-px.png';
+import CollapseIconClose from './assets/chevron-right-24-px.png';
+import InfoIcon from './assets/info-outline-24-px.png';
 import InputGroup from '../controls/InputGroup';
 
 /* global document */
@@ -465,8 +465,8 @@ class Stat extends PureComponent {
         height = chartProps.height || barWidth * 6;
 
         domain = {
-          x: [0, bgUnits === MGDL_UNITS ? MGDL_CLAMP_TOP : MMOLL_CLAMP_TOP],
-          y: [0, 1],
+          x: [0, 1],
+          y: [0, bgUnits === MGDL_UNITS ? MGDL_CLAMP_TOP : MMOLL_CLAMP_TOP],
         };
 
         padding = {
@@ -502,7 +502,7 @@ class Stat extends PureComponent {
               barWidth={barWidth}
               bgPrefs={props.bgPrefs}
               domain={domain}
-              text={(datum = {}) => {
+              text={({ datum = {} }) => {
                 const datumRef = _.get(chartData, datum.index, datum);
                 const { value } = formatDatum(
                   _.get(datumRef, 'deviation', datumRef),
@@ -511,7 +511,7 @@ class Stat extends PureComponent {
                 );
                 return `${value}`;
               }}
-              tooltipText={(datum = {}) => {
+              tooltipText={({ datum = {} }) => {
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
@@ -525,11 +525,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: datum => this.getDatumColor(datum),
+              fill: ({ datum }) => this.getDatumColor(datum),
               width: () => barWidth,
             },
             labels: {
-              fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({ datum }) => this.getDatumColor(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
@@ -557,8 +557,8 @@ class Stat extends PureComponent {
         }
 
         domain = {
-          x: [0, 1],
-          y: [0, chartData.length],
+          x: [0, chartData.length],
+          y: [0, 1],
         };
 
         padding = {
@@ -647,11 +647,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: datum => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
+              fill: ({ datum }) => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
               width: () => barWidth,
             },
             labels: {
-              fill: datum => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({ datum }) => this.getDatumColor(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
