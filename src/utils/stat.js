@@ -736,7 +736,7 @@ export const getStatTitle = (type, opts = {}) => {
       break;
 
     case commonStats.bgExtents:
-      title = t('{{bgTypeLabel}} Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource], bgTypeLabel  });
+      title = t('{{bgTypeLabel}} Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource], bgTypeLabel });
       break;
 
     case commonStats.carbs:
