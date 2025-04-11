@@ -407,6 +407,7 @@ export default {
     equil: v.compile(pumpSettingsEquil),
     'diy loop': v.compile(pumpSettingsLoop),
     'tidepool loop': v.compile(pumpSettingsLoop),
+    twiist: v.compile(pumpSettingsLoop),
   },
   smbg: v.compile(bg),
   wizard: v.compile(wizard),

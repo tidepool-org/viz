@@ -43,6 +43,7 @@ import {
   SITE_CHANGE,
   TIDEPOOL_LOOP,
   DIY_LOOP,
+  TWIIST_LOOP,
 } from '../../utils/constants';
 
 const siteChangeImages = {
@@ -52,6 +53,7 @@ const siteChangeImages = {
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
   [`${TIDEPOOL_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
   [`${DIY_LOOP.toLowerCase()}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${TWIIST_LOOP.toLowerCase()}_${SITE_CHANGE_RESERVOIR}`]: 'images/sitechange-twiist-cassette.png',
 };
 
 const t = i18next.t.bind(i18next);
@@ -226,7 +228,7 @@ class BasicsPrintView extends PrintView {
         timeInRange,
         {
           heading: {
-            text: 'BG Distribution',
+            text: 'Time in Range',
             note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
           secondaryFormatKey: 'tooltip',
@@ -239,7 +241,7 @@ class BasicsPrintView extends PrintView {
         readingsInRange,
         {
           heading: {
-            text: 'BG Distribution',
+            text: 'Readings in Range',
             note: t('{{source}} data from {{count}} readings', {
               source: statBgSourceLabels[this.bgSource],
               count: readingsInRange.data?.raw?.counts?.total,

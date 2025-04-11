@@ -230,16 +230,17 @@ export function weightedCGMCount(data) {
  */
 export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
+
+  if (datum?.sampleInterval) {
+    return datum.sampleInterval;
+  }
+
   if (deviceId.indexOf('AbbottFreeStyleLibre3') === 0) {
     return 5 * MS_IN_MIN;
   }
 
   if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
     return 15 * MS_IN_MIN;
-  }
-
-  if (deviceId.indexOf('tandemCIQ') === 0 && _.get(datum, 'payload.fsl2')) {
-    return MS_IN_MIN;
   }
 
   return 5 * MS_IN_MIN;

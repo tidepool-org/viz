@@ -238,17 +238,17 @@ describe('basics data utils', () => {
     });
 
     context('manufacturers: tandem, medtronic, animas', () => {
-      it('should return `undeclared` as the site change source if not stored in patient settings', () => {
-        expect(dataUtils.getSiteChangeSource(patient, 'tandem')).to.equal('undeclared');
-        expect(dataUtils.getSiteChangeSource(patient, 'medtronic')).to.equal('undeclared');
-        expect(dataUtils.getSiteChangeSource(patient, 'animas')).to.equal('undeclared');
+      it('should return `cannulaPrime` as the site change source if not stored in patient settings', () => {
+        expect(dataUtils.getSiteChangeSource(patient, 'tandem')).to.equal('cannulaPrime');
+        expect(dataUtils.getSiteChangeSource(patient, 'medtronic')).to.equal('cannulaPrime');
+        expect(dataUtils.getSiteChangeSource(patient, 'animas')).to.equal('cannulaPrime');
       });
 
-      it('should return `undeclared` as the site change source value stored in patient settings is not in allowed list', () => {
+      it('should return `cannulaPrime` as the site change source value stored in patient settings is not in allowed list', () => {
         const patientWithBadSiteChangeSource = { ...patient, settings: { siteChangeSource: 'foo' } };
-        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'tandem')).to.equal('undeclared');
-        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'medtronic')).to.equal('undeclared');
-        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'animas')).to.equal('undeclared');
+        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'tandem')).to.equal('cannulaPrime');
+        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'medtronic')).to.equal('cannulaPrime');
+        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'animas')).to.equal('cannulaPrime');
       });
 
       it('should return the site change source value stored in patient settings if it is in allowed list', () => {
@@ -264,38 +264,57 @@ describe('basics data utils', () => {
         expect(dataUtils.getSiteChangeSource(patientWithTubingPrime, 'animas')).to.equal('tubingPrime');
       });
     });
+
+    context('manufacturers: twiist', () => {
+      it('should return `reservoirChange` as the site change source if not stored in patient settings', () => {
+        expect(dataUtils.getSiteChangeSource(patient, 'twiist')).to.equal('reservoirChange');
+      });
+
+      it('should return `reservoirChange` as the site change source value stored in patient settings is not in allowed list', () => {
+        const patientWithBadSiteChangeSource = { ...patient, settings: { siteChangeSource: 'foo' } };
+        expect(dataUtils.getSiteChangeSource(patientWithBadSiteChangeSource, 'twiist')).to.equal('reservoirChange');
+      });
+
+      it('should return the site change source value stored in patient settings if it is in allowed list', () => {
+        const patientWithReservoirChange = { ...patient, settings: { siteChangeSource: 'reservoirChange' } };
+        const patientWithCannulaPrime = { ...patient, settings: { siteChangeSource: 'cannulaPrime' } };
+
+        expect(dataUtils.getSiteChangeSource(patientWithReservoirChange, 'twiist')).to.equal('reservoirChange');
+        expect(dataUtils.getSiteChangeSource(patientWithCannulaPrime, 'twiist')).to.equal('cannulaPrime');
+      });
+    });
   });
 
   describe('getSiteChangeSourceLabel', () => {
     it('should return the appropriate labels for animas pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'animas')).to.equal('Fill Cannula');
+      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'animas')).to.equal('Cannula Fill');
       expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'animas')).to.equal('Go Prime');
     });
 
     it('should return the appropriate labels for medtronic pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'medtronic')).to.equal('Prime Cannula');
+      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'medtronic')).to.equal('Cannula Prime');
       expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'medtronic')).to.equal('Prime');
     });
 
     it('should return the appropriate labels for tandem pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'tandem')).to.equal('Fill Cannula');
-      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tandem')).to.equal('Fill Tubing');
+      expect(dataUtils.getSiteChangeSourceLabel('cannulaPrime', 'tandem')).to.equal('Cannula Fill');
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tandem')).to.equal('Tubing Fill');
     });
 
     it('should return the appropriate labels for insulet pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('reservoirChange', 'insulet')).to.equal('Change Pod');
+      expect(dataUtils.getSiteChangeSourceLabel('reservoirChange', 'insulet')).to.equal('Pod Change');
     });
 
     it('should return the appropriate labels for DIY Loop pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'diy loop')).to.equal('Fill Tubing');
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'diy loop')).to.equal('Tubing Fill');
     });
 
     it('should return the appropriate labels for Tidepool Loop pumps', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tidepool loop')).to.equal('Fill Tubing');
+      expect(dataUtils.getSiteChangeSourceLabel('tubingPrime', 'tidepool loop')).to.equal('Tubing Fill');
     });
 
     it('should fall back to a default label when a manufacturer-specific label cannot be found', () => {
-      expect(dataUtils.getSiteChangeSourceLabel('myEvent', 'pumpCo')).to.equal('Change Cartridge');
+      expect(dataUtils.getSiteChangeSourceLabel('myEvent', 'pumpCo')).to.equal('Cartridge Change');
     });
 
     it('should return `null` when siteChangeSource is `undeclared`', () => {
@@ -385,10 +404,6 @@ describe('basics data utils', () => {
 
       // siteChanges gets emptyText set when no data
       expect(resultWithMissingData.siteChanges.emptyText).to.equal("This section requires data from an insulin pump, so there's nothing to display.");
-
-      // siteChanges gets emptyText set when data present but no siteChangeSource selected
-      const resultWithSiteChangeDataNoSource = dataUtils.processBasicsAggregations({ ...aggregations }, { ...data, siteChanges: { byDate: { '2019-12-02': 'data' } } }, patient, manufacturer);
-      expect(resultWithSiteChangeDataNoSource.siteChanges.emptyText).to.equal("Please choose a preferred site change source from the 'Basics' web view to view this data.");
     });
   });
 
@@ -645,8 +660,8 @@ describe('basics data utils', () => {
       },
       siteChanges: {
         type: 'siteChanges',
-        title: 'Infusion site changes',
-        subTitle: 'Fill Cannula',
+        title: 'Site Changes',
+        subTitle: 'Cannula Fill',
         source: 'cannulaPrime',
       },
     };
@@ -724,7 +739,7 @@ describe('basics data utils', () => {
       dataUtils.basicsText(patient, data, stats, aggregations);
       sinon.assert.calledWith(
         textUtilStub.buildTextTable,
-        'Infusion site changes from \'Fill Cannula\'',
+        'Site Changes from \'Cannula Fill\'',
         [{ label: 'Mean Duration', value: '2 days' }, { label: 'Longest Duration', value: '3 days' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );
@@ -745,7 +760,7 @@ describe('basics data utils', () => {
       dataUtils.basicsText(patient, updatedData, stats, aggregations);
       sinon.assert.calledWith(
         textUtilStub.buildTextTable,
-        'Infusion site changes from \'Fill Cannula\'',
+        'Site Changes from \'Cannula Fill\'',
         [{ label: 'Mean Duration', value: '4.3 days' }, { label: 'Longest Duration', value: '5 days' }],
         [{ key: 'label', label: 'Label' }, { key: 'value', label: 'Value' }], { showHeader: false }
       );

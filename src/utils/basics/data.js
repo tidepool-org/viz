@@ -19,7 +19,7 @@ import _ from 'lodash';
 import moment from 'moment';
 import i18next from 'i18next';
 
-import { getPumpVocabulary, getUppercasedManufacturer, isLoop } from '../device';
+import { getPumpVocabulary, getUppercasedManufacturer, isDIYLoop, isLoop, isTidepoolLoop, isTwiistLoop } from '../device';
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -41,6 +41,7 @@ import {
   MICROTECH,
   pumpVocabulary,
   TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';
@@ -86,6 +87,9 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
     let summaryTitle;
     let perRow = 3;
 
+    // TODO: Remove this once we have twiist bolus and wizards linked
+    const hideEmptyWizardDimensions = isTwiistLoop(pumpUpload.settings);
+
     switch (section) {
       case 'basals':
         title = 'Basals';
@@ -118,15 +122,15 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         summaryTitle = t('Avg boluses / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
-          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
-          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true, selectorIndex: 1 },
+          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0, hideEmpty: hideEmptyWizardDimensions },
+          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true, selectorIndex: 1, hideEmpty: hideEmptyWizardDimensions },
           { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true, selectorIndex: 4 },
           { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 5 },
-          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
-          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
+          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2, hideEmpty: hideEmptyWizardDimensions },
+          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6, hideEmpty: hideEmptyWizardDimensions },
         ];
 
-        if (isLoop(pumpUpload.settings)) {
+        if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
           dimensions[1].label = t('Meal');
           dimensions.splice(3, 1);
           dimensions[2].selectorIndex = 6;
@@ -156,7 +160,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         break;
 
       case 'siteChanges':
-        title = t('Infusion site changes');
+        title = t('Site Changes');
         break;
 
       default:
@@ -208,10 +212,17 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
 
     if (!_.includes(allowedSources, siteChangeSource)) {
-      siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
+      siteChangeSource = SITE_CHANGE_CANNULA;
     }
   } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
+  } else if (_.includes(_.map([TWIIST_LOOP], _.lowerCase), manufacturer)) {
+    siteChangeSource = _.get(settings, 'siteChangeSource');
+    const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_RESERVOIR];
+
+    if (!_.includes(allowedSources, siteChangeSource)) {
+      siteChangeSource = SITE_CHANGE_RESERVOIR;
+    }
   } else if (_.includes(_.map([DIY_LOOP, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_TUBING;
   }
@@ -265,9 +276,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
         break;
 
       case 'siteChanges':
-        emptyText = hasDataInRange(aggregationData[aggregationKey])
-          ? t("Please choose a preferred site change source from the 'Basics' web view to view this data.")
-          : t("This section requires data from an insulin pump, so there's nothing to display.");
+        emptyText = t("This section requires data from an insulin pump, so there's nothing to display.");
         break;
 
       case 'fingersticks':
@@ -300,7 +309,7 @@ export function processBasicsAggregations(aggregations, data, patient, manufactu
     } else if (type === 'siteChanges') {
       aggregations[key].source = getSiteChangeSource(patient, manufacturer);
       aggregations[key].manufacturer = manufacturer;
-      disabled = aggregations[key].source === SITE_CHANGE_TYPE_UNDECLARED;
+      disabled = !hasDataInRange(aggregationData[type]);
       if (!disabled) {
         aggregations[key].subTitle = getSiteChangeSourceLabel(
           aggregations[key].source,
