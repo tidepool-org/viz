@@ -208,13 +208,13 @@ describe('format', () => {
       expect(format.formatStatsPercentage(0.008)).to.equal('0.8');
       expect(format.formatStatsPercentage(0.0085)).to.equal('0.8');
       expect(format.formatStatsPercentage(0.0092)).to.equal('0.9');
-    })
+    });
 
-    it('should format to whole number if bankers round would round to 1', () =>{
+    it('should format to whole number if bankers round would round to 1', () => {
       expect(format.formatStatsPercentage(0.0095)).to.equal('1');
       expect(format.formatStatsPercentage(0.00956)).to.equal('1');
       expect(format.formatStatsPercentage(0.0099)).to.equal('1');
-    })
+    });
 
     it('should format to whole number using bankers round when value >= 1%', () => {
       expect(format.formatStatsPercentage(0.01)).to.equal('1');
@@ -225,7 +225,7 @@ describe('format', () => {
       expect(format.formatStatsPercentage(0.085001)).to.equal('9');
       expect(format.formatStatsPercentage(0.095)).to.equal('10');
       expect(format.formatStatsPercentage(0.295)).to.equal('30');
-    })
+    });
   });
 
   describe('removeTrailingZeroes', () => {
