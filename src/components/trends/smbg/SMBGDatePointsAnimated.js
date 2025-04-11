@@ -122,6 +122,7 @@ export class SMBGDatePointsAnimated extends PureComponent {
     const {
       anSmbgRangeAvgIsFocused,
       bgBounds,
+      bgUnits,
       data,
       date,
       focusSmbg,
@@ -151,7 +152,7 @@ export class SMBGDatePointsAnimated extends PureComponent {
           return {
             key: smbg.id,
             data: {
-              classes: styles[classifyBgValue(bgBounds, smbg.value, 'fiveWay')],
+              classes: styles[classifyBgValue(bgBounds, bgUnits, smbg.value, 'fiveWay')],
               position,
               smbg,
             },

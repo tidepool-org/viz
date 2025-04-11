@@ -69,6 +69,7 @@ class SMBGTooltip extends PureComponent {
     if (!_.isEmpty(outOfRangeMessage)) {
       const bgClass = classifyBgValue(
         reshapeBgClassesToBgBounds(this.props.bgPrefs),
+        this.props.bgPrefs.bgUnits,
         this.props.smbg.value,
         'fiveWay'
       );
@@ -92,6 +93,7 @@ class SMBGTooltip extends PureComponent {
   render() {
     const bgClass = classifyBgValue(
       reshapeBgClassesToBgBounds(this.props.bgPrefs),
+      this.props.bgPrefs.bgUnits,
       this.props.smbg.value,
       'fiveWay'
     );

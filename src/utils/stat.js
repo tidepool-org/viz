@@ -19,7 +19,7 @@ import {
 } from './constants';
 
 import { getPumpVocabulary, getSettingsOverrides } from './device';
-import { bankersRound, formatDecimalNumber, formatBgValue } from './format';
+import { bankersRound, formatDecimalNumber, formatBgValue, formatStatsPercentage } from './format';
 import { formatDuration } from './datetime';
 
 const t = i18next.t.bind(i18next);
@@ -146,7 +146,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
     case statFormats.bgValue:
       if (value >= 0) {
-        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), value);
+        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, value, 'threeWay');
         value = formatBgValue(value, bgPrefs, undefined, useAGPFormat);
       } else {
         disableStat();
@@ -207,14 +207,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.percentage:
       if (total && total >= 0) {
         value = _.max([value, 0]);
-        const percentage = (value / total) * 100;
-        let precision = 0;
-        // We want to show extra precision on very small percentages so that we avoid showing 0%
-        // when there is some data there.
-        if (percentage > 0 && percentage < 0.5) {
-          precision = percentage < 0.05 ? 2 : 1;
-        }
-        value = formatDecimalNumber(percentage, precision);
+        value = formatStatsPercentage(value / total);
         suffix = '%';
       } else {
         disableStat();
@@ -226,11 +219,11 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       if (value >= 0 && deviation >= 0) {
         lowerValue = value - deviation;
         lowerColorId = lowerValue >= 0
-          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), lowerValue)
+          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, lowerValue, 'threeWay')
           : 'low';
 
         upperValue = value + deviation;
-        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), upperValue);
+        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, upperValue, 'threeWay');
 
         lowerValue = formatBgValue(lowerValue, bgPrefs);
         upperValue = formatBgValue(upperValue, bgPrefs);

@@ -32,10 +32,12 @@ import SVGContainer from '../../../helpers/SVGContainer';
 import {
   CBGDateTraceAnimated,
 } from '../../../../src/components/trends/cbg/CBGDateTraceAnimated';
+import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('CBGDateTraceAnimated', () => {
   const props = {
     bgBounds,
+    bgUnits: MGDL_UNITS,
     data: [{
       id: 'a1b2c3',
       localDate: '2016-12-25',

@@ -15,6 +15,7 @@ export default class CBGSlicesContainer extends PureComponent {
       targetLowerBound: PropTypes.number.isRequired,
       veryLowThreshold: PropTypes.number.isRequired,
     }).isRequired,
+    bgUnits: PropTypes.string.isRequired,
     binSize: PropTypes.number.isRequired,
     sliceWidth: PropTypes.number.isRequired,
     data: PropTypes.arrayOf(PropTypes.shape({
@@ -85,6 +86,7 @@ export default class CBGSlicesContainer extends PureComponent {
             />
             <CBGMedianAnimated
               bgBounds={this.props.bgBounds}
+              bgUnits={this.props.bgUnits}
               datum={bin}
               displayingMedian={this.props.displayFlags.cbgMedianEnabled}
               showingCbgDateTraces={this.props.showingCbgDateTraces}

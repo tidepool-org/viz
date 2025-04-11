@@ -274,7 +274,7 @@ class BgLogPrintView extends PrintView {
 
           this.doc
             .circle(xPos, yPos, this.smbgRadius)
-            .fill(this.colors[classifyBgValue(this.bgBounds, datum.value, 'fiveWay')]);
+            .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay')]);
 
           const smbgLabel = formatBgValue(datum.value, this.bgPrefs, getOutOfRangeThreshold(datum));
           const labelWidth = this.doc.widthOfString(smbgLabel);

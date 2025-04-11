@@ -231,7 +231,7 @@ describe('stat', () => {
         expect(stat.formatDatum({
           id: 'low',
         }, statFormats.bgRange, customOpts)).to.include({
-          value: '39-70',
+          value: '39-69',
         });
 
         expect(stat.formatDatum({
@@ -243,7 +243,7 @@ describe('stat', () => {
         expect(stat.formatDatum({
           id: 'high',
         }, statFormats.bgRange, customOpts)).to.include({
-          value: '180-250',
+          value: '181-250',
         });
 
         expect(stat.formatDatum({
@@ -592,7 +592,7 @@ describe('stat', () => {
         expect(stat.formatDatum({
           value: 0.0049,
         }, statFormats.percentage, customOpts)).to.include({
-          value: '0.05',
+          value: '0',
           suffix: '%',
         });
       });
@@ -1327,7 +1327,7 @@ describe('stat', () => {
           id: 'low',
           value: 2,
           title: 'Readings Below Range',
-          legendTitle: '54-70',
+          legendTitle: '54-69',
         },
         {
           id: 'target',
@@ -1339,7 +1339,7 @@ describe('stat', () => {
           id: 'high',
           value: 4,
           title: 'Readings Above Range',
-          legendTitle: '180-250',
+          legendTitle: '181-250',
         },
         {
           id: 'veryHigh',
@@ -1389,7 +1389,7 @@ describe('stat', () => {
           id: 'low',
           value: 7,
           title: 'Readings Below Range',
-          legendTitle: '54-70',
+          legendTitle: '54-69',
         },
         {
           id: 'target',
@@ -1401,7 +1401,7 @@ describe('stat', () => {
           id: 'high',
           value: 9,
           title: 'Readings Above Range',
-          legendTitle: '180-250',
+          legendTitle: '181-250',
         },
         {
           id: 'veryHigh',
@@ -1568,7 +1568,7 @@ describe('stat', () => {
           id: 'low',
           value: 20000,
           title: 'Time Below Range',
-          legendTitle: '54-70',
+          legendTitle: '54-69',
         },
         {
           id: 'target',
@@ -1580,7 +1580,7 @@ describe('stat', () => {
           id: 'high',
           value: 40000,
           title: 'Time Above Range',
-          legendTitle: '180-250',
+          legendTitle: '181-250',
         },
         {
           id: 'veryHigh',
