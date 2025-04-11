@@ -228,7 +228,7 @@ class BasicsPrintView extends PrintView {
         timeInRange,
         {
           heading: {
-            text: 'BG Distribution',
+            text: 'Time in Range',
             note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
           secondaryFormatKey: 'tooltip',
@@ -241,7 +241,7 @@ class BasicsPrintView extends PrintView {
         readingsInRange,
         {
           heading: {
-            text: 'BG Distribution',
+            text: 'Readings in Range',
             note: t('{{source}} data from {{count}} readings', {
               source: statBgSourceLabels[this.bgSource],
               count: readingsInRange.data?.raw?.counts?.total,

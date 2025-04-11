@@ -284,7 +284,7 @@ class BolusTooltip extends PureComponent {
     );
     const bgLine = !!bg && (
       <div className={styles.bg}>
-        <div className={styles.label}>{t('BG')} ({this.bgUnits})</div>
+        <div className={styles.label}>{t('Glucose')} ({this.bgUnits})</div>
         <div className={styles.value}>{this.formatBgValue(bg)}</div>
         <div className={this.unitStyles} />
       </div>

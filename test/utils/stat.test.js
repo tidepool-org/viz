@@ -1667,7 +1667,7 @@ describe('stat', () => {
       });
 
       it('should return title for `bgExtents` stat when bgSource is `cbg`', () => {
-        expect(stat.getStatTitle(commonStats.bgExtents, cbgOpts)).to.equal('BG Extents (CGM)');
+        expect(stat.getStatTitle(commonStats.bgExtents, cbgOpts)).to.equal('Glucose Extents (CGM)');
       });
     });
 
