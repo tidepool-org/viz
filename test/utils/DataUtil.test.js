@@ -259,12 +259,14 @@ describe('DataUtil', () => {
       dataSetType: 'continuous',
       deviceTime: '2018-02-03T00:00:00',
       uploadId: 'upload-3',
+      client: { name: 'org.tidepool.Loop' },
       ...useRawData,
     }),
     new Types.Upload({
       dataSetType: 'continuous',
       deviceTime: '2018-02-04T00:00:00',
       uploadId: 'upload-4',
+      client: { name: 'com.loopkit.Loop' },
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -432,6 +434,29 @@ describe('DataUtil', () => {
       ]);
 
       expect(dataUtil.wizardToBolusIdMap[newWizard.id]).to.equal(newBolus.id);
+    });
+
+    it('should create and/or update the `loopDataSetsByIdMap`', () => {
+      delete dataUtil.loopDataSetsByIdMap;
+      expect(dataUtil.loopDataSetsByIdMap).to.be.undefined;
+
+      dataUtil.addData(defaultData, defaultPatientId);
+
+      expect(dataUtil.loopDataSetsByIdMap).to.be.an('object').and.have.keys([
+        uploadData[3].id,
+        uploadData[4].id,
+      ]);
+
+      const newUpload = new Types.Upload({ ...useRawData, dataSetType: 'continuous', client: { name: 'com.loopkit.Loop' } });
+      dataUtil.addData([newUpload], defaultPatientId);
+
+      expect(dataUtil.loopDataSetsByIdMap).to.be.an('object').and.have.keys([
+        uploadData[3].id,
+        uploadData[4].id,
+        newUpload.id,
+      ]);
+
+      expect(dataUtil.loopDataSetsByIdMap[newUpload.id].id).to.equal(newUpload.id);
     });
 
     it('should create and/or update the `bolusDatumsByIdMap`', () => {
@@ -952,7 +977,9 @@ describe('DataUtil', () => {
 
   describe('joinBolusAndDosingDecision', () => {
     it('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other', () => {
-      const bolus = { type: 'bolus', id: 'bolus1', time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
+      const uploadId = 'upload1';
+      const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
+      const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
       const pumpSettings = { ...loopMultirate, id: 'pumpSettings1' };
 
       const dosingDecision = {
@@ -972,6 +999,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
+      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
 
       dataUtil.joinBolusAndDosingDecision(bolus);
       // should attach associated pump settings to dosingDecisions
@@ -1206,6 +1234,17 @@ describe('DataUtil', () => {
         expect(dosingDecisionBolus.tags.underride).to.be.false;
         expect(dosingDecisionBolus.tags.wizard).to.be.true;
       });
+
+      it('should tag a loop bolus with `loop`', () => {
+        const loopUploadId = 'upload1';
+        const loopUpload = { type: 'upload', id: loopUploadId, dataSetType: 'continuous', uploadId: loopUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
+        dataUtil.loopDataSetsByIdMap = { [loopUploadId]: loopUpload };
+        const loopBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', uploadId: loopUploadId };
+
+        expect(loopBolus.tags).to.be.undefined;
+        dataUtil.tagDatum(loopBolus);
+        expect(loopBolus.tags.loop).to.be.true;
+      });
     });
 
     context('smbg', () => {
@@ -1225,6 +1264,19 @@ describe('DataUtil', () => {
         dataUtil.tagDatum(meterSMBG);
         expect(meterSMBG.tags.manual).to.be.false;
         expect(meterSMBG.tags.meter).to.be.true;
+      });
+    });
+
+    context('food', () => {
+      it('should tag a loop food datum with `loop`', () => {
+        const loopUploadId = 'upload1';
+        const loopUpload = { type: 'upload', id: loopUploadId, dataSetType: 'continuous', uploadId: loopUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
+        dataUtil.loopDataSetsByIdMap = { [loopUploadId]: loopUpload };
+        const loopFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: loopUploadId, ...useRawData });
+
+        expect(loopFood.tags).to.be.undefined;
+        dataUtil.tagDatum(loopFood);
+        expect(loopFood.tags.loop).to.be.true;
       });
     });
 

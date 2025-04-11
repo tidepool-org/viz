@@ -362,7 +362,7 @@ describe('BasicsPrintView', () => {
         'timeInRangeStub',
         {
           heading: {
-            text: 'BG Distribution',
+            text: 'Time in Range',
             note: 'Showing CGM data',
           },
           secondaryFormatKey: 'tooltip',
@@ -382,7 +382,7 @@ describe('BasicsPrintView', () => {
         { data: { raw: { counts: { total: 11 } } } },
         {
           heading: {
-            text: 'BG Distribution',
+            text: 'Readings in Range',
             note: 'BGM data from 11 readings',
           },
           secondaryFormatKey: 'tooltip',
