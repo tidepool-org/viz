@@ -722,6 +722,7 @@ export const getStatData = (data, type, opts = {}) => {
 export const getStatTitle = (type, opts = {}) => {
   const { bgSource, days } = opts;
   const vocabulary = getPumpVocabulary(opts.manufacturer);
+  const bgTypeLabel = bgSource === 'cbg' ? t('Glucose') : t('BG');
 
   let title;
 
@@ -735,7 +736,7 @@ export const getStatTitle = (type, opts = {}) => {
       break;
 
     case commonStats.bgExtents:
-      title = t('BG Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
+      title = t('{{bgTypeLabel}} Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource], bgTypeLabel });
       break;
 
     case commonStats.carbs:
