@@ -4126,8 +4126,8 @@ describe('DataUtil', () => {
 
       expect(dataUtil.matchedDevices).to.eql({
         'Dexcom-XXX-XXXX': { 'Dexcom G6_2.3.2': true, 'Dexcom G6_3.1.0': true },
-        'AbbottFreeStyleLibre-XXX-XXXX': {'AbbottFreeStyleLibre-XXX-XXXX_0.0': true },
-        'Test Page Data - 123': {'Test Page Data - 123_0.0': true },
+        'AbbottFreeStyleLibre-XXX-XXXX': { 'AbbottFreeStyleLibre-XXX-XXXX_0.0': true },
+        'Test Page Data - 123': { 'Test Page Data - 123_0.0': true },
       });
 
       dataUtil.setBgSources('smbg');
@@ -4136,7 +4136,7 @@ describe('DataUtil', () => {
       dataUtil.getStats(['averageGlucose']);
 
       expect(dataUtil.matchedDevices).to.eql({
-        'OneTouch-XXX-XXXX': {'OneTouch-XXX-XXXX_0.0': true },
+        'OneTouch-XXX-XXXX': { 'OneTouch-XXX-XXXX_0.0': true },
       });
 
       // Should not update if `matchDevices` is false
