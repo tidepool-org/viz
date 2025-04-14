@@ -386,7 +386,6 @@ export function basicsText(patient, data, stats, aggregations) {
       },
     },
     metaData,
-    query,
     timePrefs,
   } = data;
 
@@ -395,9 +394,7 @@ export function basicsText(patient, data, stats, aggregations) {
   let basicsString = textUtil.buildDocumentHeader('Basics');
   basicsString += textUtil.buildDocumentDates();
 
-  if (_.get(query, 'excludeDaysWithoutBolus')) {
-    basicsString += textUtil.buildTextLine(t('Days with no boluses have been excluded from bolus calculations'));
-  }
+  basicsString += textUtil.buildTextLine(t('Days with no insulin data have been excluded from calculations'));
 
   basicsString += utils.statsText(stats, textUtil, bgPrefs);
 

@@ -436,7 +436,7 @@ describe('DailyPrintView', () => {
     });
 
     it('should render the Average BG stat if available', () => {
-      sinon.assert.calledWith(Renderer.doc.text, 'Average BG');
+      sinon.assert.calledWith(Renderer.doc.text, 'Avg Glucose');
       sinon.assert.calledWith(Renderer.doc.text, '120 mg/dL');
     });
 
@@ -482,7 +482,7 @@ describe('DailyPrintView', () => {
       });
 
       it('should render the Average BG in mmol/L with correct formatting', () => {
-        sinon.assert.calledWith(Renderer.doc.text, 'Average BG');
+        sinon.assert.calledWith(Renderer.doc.text, 'Avg Glucose');
         sinon.assert.calledWith(Renderer.doc.text, '12.3 mmol/L');
       });
     });

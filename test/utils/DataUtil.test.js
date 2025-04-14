@@ -3122,6 +3122,59 @@ describe('DataUtil', () => {
 
       expect(dataUtil.excludedDevices).to.eql(['tandem12345']);
     });
+
+    it('should add set the proper device label for LibreView data', () => {
+      initDataUtil([{
+        ...uploadData[3],
+        deviceManufacturers: ['Abbott'],
+        deviceId: 'MyAbbott123',
+        dataSetType: 'continuous',
+        deviceTags: [
+          'bgm',
+          'cgm'
+        ],
+      }]);
+
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: true,
+          cgm: true,
+          id: 'MyAbbott123',
+          label: 'FreeStyle Libre (from LibreView)',
+          pump: false,
+          serialNumber: undefined
+        },
+      ]);
+    });
+
+    it('should add set the proper device label for Dexcom API data', () => {
+      initDataUtil([{
+        ...uploadData[3],
+        deviceManufacturers: ['Dexcom'],
+        deviceId: 'MyDexcom123',
+        dataSetType: 'continuous',
+        deviceTags: [
+          'cgm'
+        ],
+      }]);
+
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: true,
+          id: 'MyDexcom123',
+          label: 'Dexcom API',
+          pump: false,
+          serialNumber: undefined
+        },
+      ]);
+    });
   });
 
   describe('setMetaData', () => {
