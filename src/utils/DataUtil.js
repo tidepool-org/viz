@@ -845,8 +845,16 @@ export class DataUtil {
           'wizard',
           'food',
         ], this.dimension.byType.currentFilter())) {
-          _.each(this.dimension.byDeviceId.top(Infinity), ({ deviceId }) => {
-            if (deviceId && !this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = true;
+          _.each(this.dimension.byDeviceId.top(Infinity), datum => {
+            const { deviceId, origin } = datum;
+
+            if (deviceId) {
+              const version = origin?.version || '0.0';
+              const deviceName = origin?.name || deviceId;
+              const deviceVersionId = `${deviceName}_${version}`;
+              if (!this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = {};
+              if (!this.matchedDevices[deviceId][deviceVersionId]) this.matchedDevices[deviceId][deviceVersionId] = true;
+            }
           });
         }
       }
