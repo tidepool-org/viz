@@ -1,6 +1,7 @@
 import React from 'react';
 import { mount } from 'enzyme';
 import _ from 'lodash';
+import { Rect } from 'victory-core';
 
 import BgBar from '../../../../src/components/common/stat/BgBar';
 import colors from '../../../../src/styles/colors.css';
@@ -45,8 +46,8 @@ describe('BgBar', () => {
     chartLabelWidth: 80,
     datum: avgGlucoseDatum,
     domain: {
-      x: [0, MGDL_CLAMP_TOP],
-      y: [0, 1],
+      x: [0, 1],
+      y: [0, MGDL_CLAMP_TOP],
     },
     scale: {
       x: val => val,
@@ -121,9 +122,9 @@ describe('BgBar', () => {
     it('should render a three-bar scale with arcs on each end', () => {
       expect(bgScale().children()).to.have.length(5);
       expect(bgScale().childAt(0).is('Arc')).to.be.true;
-      expect(bgScale().childAt(1).is('Rect')).to.be.true;
-      expect(bgScale().childAt(2).is('Rect')).to.be.true;
-      expect(bgScale().childAt(3).is('Rect')).to.be.true;
+      expect(bgScale().childAt(1).is(Rect)).to.be.true;
+      expect(bgScale().childAt(2).is(Rect)).to.be.true;
+      expect(bgScale().childAt(3).is(Rect)).to.be.true;
       expect(bgScale().childAt(4).is('Arc')).to.be.true;
     });
 
@@ -221,8 +222,8 @@ describe('BgBar', () => {
 
     it('should render 2 standard deviation markers', () => {
       expect(bgDeviation().children()).to.have.length(2);
-      expect(bgDeviation().childAt(0).is('Rect')).to.be.true;
-      expect(bgDeviation().childAt(1).is('Rect')).to.be.true;
+      expect(bgDeviation().childAt(0).is(Rect)).to.be.true;
+      expect(bgDeviation().childAt(1).is(Rect)).to.be.true;
     });
 
     it('should render the deviation markers with the proper colors', () => {

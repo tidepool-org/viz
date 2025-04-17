@@ -232,7 +232,7 @@ describe('BasicsPrintView', () => {
       sinon.assert.calledWithMatch(Renderer.renderCalendarSection, {
         title: {
           text: Renderer.sections.boluses.title,
-          subText: '(days with no boluses have been excluded)',
+          subText: '(days with no insulin data have been excluded)',
         },
         data: Renderer.aggregationsByDate.boluses.byDate,
         type: 'bolus',

@@ -37,6 +37,7 @@ const config = {
         },
       },
       plugins: [...config.plugins, ...custom.plugins],
+      devtool: 'inline-source-map',
     };
 
     return finalConfig;

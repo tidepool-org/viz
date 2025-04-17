@@ -423,6 +423,15 @@ describe('StatUtil', () => {
       });
     });
 
+    it('calculates insulin delivery using only data-populated days when viewing more than 1 day', () => {
+      filterEndpoints(twoDayEndpoints);
+      statUtil.activeDays = 7; // data only exists for 2 days; this should not impact the calculation
+      expect(statUtil.getBasalBolusData()).to.eql({
+        basal: 0.75,
+        bolus: 7.5,
+      });
+    });
+
     context('basal delivery overlaps endpoints', () => {
       it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
@@ -477,6 +486,15 @@ describe('StatUtil', () => {
 
     it('should return the avg daily carbs from wizard and food data when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
+      expect(statUtil.getCarbsData()).to.eql({
+        carbs: { grams: 21.5, exchanges: 1 },
+        total: 7,
+      });
+    });
+
+    it('calculates avg daily carbs using only data-populated days when viewing more than 1 day', () => {
+      filterEndpoints(twoDayEndpoints);
+      statUtil.activeDays = 7; // data only exists for 2 days; this should not impact the calculation
       expect(statUtil.getCarbsData()).to.eql({
         carbs: { grams: 21.5, exchanges: 1 },
         total: 7,

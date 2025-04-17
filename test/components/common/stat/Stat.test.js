@@ -1482,10 +1482,10 @@ describe('Stat', () => {
 
       it('should set `containerComponent` to a non-responsive `VictoryContainer` component', () => {
         const result = instance.getChartPropsByType(instance.props);
-        const containerComponentInstance = shallow(result.containerComponent).instance();
+        const containerComponent = mount(result.containerComponent);
 
-        expect(containerComponentInstance).to.be.instanceOf(VictoryContainer);
-        expect(containerComponentInstance.props.responsive).to.be.false;
+        expect(containerComponent.is(VictoryContainer)).to.be.true;
+        expect(containerComponent.prop('responsive')).to.be.false;
       });
 
       it('should set `dataComponent` to a `BgBar` component with necessary props', () => {
@@ -1544,8 +1544,8 @@ describe('Stat', () => {
         const result = instance.getChartPropsByType(instance.props);
 
         expect(result.domain).to.eql({
-          x: [0, MGDL_CLAMP_TOP],
-          y: [0, 1],
+          x: [0, 1],
+          y: [0, MGDL_CLAMP_TOP],
         });
       });
 
@@ -1557,8 +1557,8 @@ describe('Stat', () => {
         const result = instance.getChartPropsByType(instance.props);
 
         expect(result.domain).to.eql({
-          x: [0, MMOLL_CLAMP_TOP],
-          y: [0, 1],
+          x: [0, 1],
+          y: [0, MMOLL_CLAMP_TOP],
         });
       });
 
@@ -1657,10 +1657,10 @@ describe('Stat', () => {
 
       it('should set `containerComponent` to a non-responsive `VictoryContainer` component', () => {
         const result = instance.getChartPropsByType(instance.props);
-        const containerComponentInstance = shallow(result.containerComponent).instance();
+        const containerComponent = mount(result.containerComponent);
 
-        expect(containerComponentInstance).to.be.instanceOf(VictoryContainer);
-        expect(containerComponentInstance.props.responsive).to.be.false;
+        expect(containerComponent.is(VictoryContainer)).to.be.true;
+        expect(containerComponent.prop('responsive')).to.be.false;
       });
 
       it('should set `dataComponent` to a `HoverBar` component with necessary props', () => {
@@ -1718,8 +1718,8 @@ describe('Stat', () => {
         const result = instance.getChartPropsByType(instance.props);
 
         expect(result.domain).to.eql({
-          x: [0, 1],
-          y: [0, 2],
+          x: [0, 2],
+          y: [0, 1],
         });
 
         // Remove a datum

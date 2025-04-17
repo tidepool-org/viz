@@ -35,7 +35,7 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
-import { formatBgValue } from './utils/format';
+import { formatBgValue, formatPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
@@ -52,6 +52,8 @@ import { deviceName } from './utils/settings/data';
 
 import {
   commonStats,
+  statFormats,
+  formatDatum,
   getStatAnnotations,
   getStatData,
   getStatDefinition,
@@ -62,6 +64,7 @@ import {
 
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
+import { agpCGMText } from './utils/agp/data';
 import TextUtil from './utils/text/TextUtil';
 import { generateAGPFigureDefinitions } from './utils/print/plotly';
 
@@ -126,13 +129,17 @@ const utils = {
     getTimezoneFromTimePrefs,
   },
   stat: {
+    bankersRound,
     commonStats,
+    formatDatum,
+    formatPercentage,
     getStatAnnotations,
     getStatData,
     getStatDefinition,
     getStatTitle,
     statBgSourceLabels,
     statFetchMethods,
+    statFormats,
   },
   settings: {
     deviceName,
@@ -146,6 +153,7 @@ const utils = {
     trendsText,
     basicsText,
     bgLogText,
+    agpCGMText,
   },
 };
 

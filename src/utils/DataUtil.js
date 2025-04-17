@@ -275,7 +275,7 @@ export class DataUtil {
         const datumToPopulate = _.omit(datumMap[idMap[d.id]], d.type);
 
         if (isWizard && d.uploadId !== datumToPopulate.uploadId) {
-          // Due to an issue stemming from a fix for wizard datums in Ulpoader >= v2.35.0, we have a
+          // Due to an issue stemming from a fix for wizard datums in Uploader >= v2.35.0, we have a
           // possibility of duplicates of older wizard datums from previous uploads. The boluses and
           // corrected wizards should both reference the same uploadId, so we can safely reject
           // wizards that don't reference the same upload as the bolus it's referencing.
@@ -845,8 +845,16 @@ export class DataUtil {
           'wizard',
           'food',
         ], this.dimension.byType.currentFilter())) {
-          _.each(this.dimension.byDeviceId.top(Infinity), ({ deviceId }) => {
-            if (deviceId && !this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = true;
+          _.each(this.dimension.byDeviceId.top(Infinity), datum => {
+            const { deviceId, origin } = datum;
+
+            if (deviceId) {
+              const version = origin?.version || '0.0';
+              const deviceName = origin?.name || deviceId;
+              const deviceVersionId = `${deviceName}_${version}`;
+              if (!this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = {};
+              if (!this.matchedDevices[deviceId][deviceVersionId]) this.matchedDevices[deviceId][deviceVersionId] = true;
+            }
           });
         }
       }
@@ -1077,6 +1085,8 @@ export class DataUtil {
         if (deviceManufacturer || deviceModel) {
           if (deviceManufacturer === 'Dexcom' && isContinuous) {
             label = t('Dexcom API');
+          } else if (deviceManufacturer === 'Abbott' && isContinuous) {
+            label = t('FreeStyle Libre (from LibreView)');
           } else {
             label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }

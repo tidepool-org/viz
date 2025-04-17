@@ -148,6 +148,7 @@ export class CBG extends Common {
 
     this.deviceTime = opts.deviceTime;
     this.deviceId = opts.deviceId;
+    this.origin = opts.origin;
     this.units = opts.units;
     this.value = opts.value;
 

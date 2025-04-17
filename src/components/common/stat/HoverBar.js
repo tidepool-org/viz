@@ -18,7 +18,7 @@ export const HoverBar = props => {
       y: _.noop,
     },
     width,
-    y,
+    x
   } = props;
 
   const barGridWidth = barWidth / 6;
@@ -34,12 +34,13 @@ export const HoverBar = props => {
           y={scale.x(index + 1) - (barWidth / 2) - (barSpacing / 2)}
           rx={barGridRadius}
           ry={barGridRadius}
-          width={scale.y(domain.x[1])}
+          width={scale.y(domain.y[1])}
           height={barWidth + barSpacing}
           style={{
             stroke: 'transparent',
             fill: 'transparent',
           }}
+          {...props.events}
         />
       </g>
       <g className="barBg" pointerEvents="none">
@@ -49,7 +50,7 @@ export const HoverBar = props => {
           y={scale.x(index + 1) - (barGridWidth / 2)}
           rx={barGridRadius}
           ry={barGridRadius}
-          width={scale.y(domain.x[1]) - chartLabelWidth}
+          width={scale.y(domain.y[1]) - chartLabelWidth}
           height={barGridWidth}
           style={{
             stroke: 'transparent',
@@ -61,7 +62,7 @@ export const HoverBar = props => {
         <Bar
           {...props}
           width={scale.y(domain.x[1]) - chartLabelWidth}
-          y={y * widthCorrection}
+          x={x * widthCorrection}
         />
       </g>
     </g>
