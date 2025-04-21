@@ -333,18 +333,6 @@ export function isInterruptedBolus(insulinEvent) {
 }
 
 /**
- * isDifferentBeyondPrecision
- * @param {number} a - The first number to compare.
- * @param {number} b - The second number to compare.
- * @param {number} precision - The number of decimal places to consider.
- *
- * @returns {boolean} Whether the numbers are different when rounded to the specified precision.
- */
-export function isDifferentBeyondPrecision(a, b, precision) {
-  return _.round(a, precision) !== _.round(b, precision);
-}
-
-/**
  * isOverride
  * @param {Object} insulinEvent - a Tidepool bolus or wizard object
  *

@@ -1022,56 +1022,6 @@ describe('bolus utilities', () => {
     });
   });
 
-  describe('isDifferentBeyondPrecision', () => {
-    it('should be a function', () => {
-      assert.isFunction(bolusUtils.isDifferentBeyondPrecision);
-    });
-
-    it('should return false when numbers are the same at specified precision', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(1.234, 1.233, 2)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(5.67, 5.68, 1)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(10, 10.004, 2)).to.be.false;
-    });
-
-    it('should return true when numbers are different at specified precision', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(1.234, 1.233, 3)).to.be.true;
-      expect(bolusUtils.isDifferentBeyondPrecision(1.234, 1.235, 2)).to.be.true;
-      expect(bolusUtils.isDifferentBeyondPrecision(5.67, 5.68, 2)).to.be.true;
-      expect(bolusUtils.isDifferentBeyondPrecision(10, 10.1, 1)).to.be.true;
-    });
-
-    it('should handle zero precision correctly', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(1.4, 1.3, 0)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(1.4, 2.6, 0)).to.be.true;
-    });
-
-    it('should handle large numbers correctly', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(1000000.001, 1000000.002, 2)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(1000000.001, 1000000.002, 3)).to.be.true;
-    });
-
-    it('should handle negative numbers correctly', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(-1.234, -1.235, 2)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(-1.234, -1.236, 2)).to.be.true;
-      expect(bolusUtils.isDifferentBeyondPrecision(-1.234, -1.235, 3)).to.be.true;
-    });
-
-    it('should handle mixed positive and negative numbers', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(-0.001, 0.001, 2)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(-0.001, 0.001, 3)).to.be.true;
-    });
-
-    it('should handle very small differences correctly', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision(0.0000001, 0.0000002, 6)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision(0.0000001, 0.0000002, 7)).to.be.true;
-    });
-
-    it('should handle very large precision values', () => {
-      expect(bolusUtils.isDifferentBeyondPrecision((1 / 3), 0.333333, 6)).to.be.false;
-      expect(bolusUtils.isDifferentBeyondPrecision((1 / 3), 0.333333, 7)).to.be.true;
-    });
-  });
-
   describe('isCorrection', () => {
     it('should return `false` for all non-correction boluses', () => {
       expect(bolusUtils.isCorrection(normal)).to.be.false;
