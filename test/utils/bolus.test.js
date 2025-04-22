@@ -62,6 +62,28 @@ const apparentOverrideByPrecision = {
   },
 };
 
+const overrideWithDifferenceOverThreshold = {
+  type: 'wizard',
+  bolus: {
+    normal: 2,
+  },
+  recommended: {
+    carb: 0,
+    correction: 1.98,
+  },
+};
+
+const overrideWithDifferenceUnderThreshold = {
+  type: 'wizard',
+  bolus: {
+    normal: 2,
+  },
+  recommended: {
+    carb: 0,
+    correction: 1.993,
+  },
+};
+
 const underride = {
   type: 'wizard',
   bolus: {
@@ -81,6 +103,28 @@ const apparentUnderrideByPrecision = {
   recommended: {
     carb: 0,
     correction: 2.001,
+  },
+};
+
+const underrideWithDifferenceUnderThreshold = { // Difference < 0.01
+  type: 'wizard',
+  bolus: {
+    normal: 2.995,
+  },
+  recommended: {
+    carb: 0,
+    correction: 3,
+  },
+};
+
+const underrideWithDifferenceOverThreshold = { // Difference >= 0.01
+  type: 'wizard',
+  bolus: {
+    normal: 2.98,
+  },
+  recommended: {
+    carb: 0,
+    correction: 3,
   },
 };
 
@@ -965,9 +1009,10 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isOverride(withDosingDecisionOverride)).to.be.true;
     });
 
-    it('should return `false` on all boluses where the recommendation is slightly less than ' +
-     'the programmed amount due to different precision', () => {
-            expect(bolusUtils.isOverride(apparentOverrideByPrecision)).to.be.false;
+    it('should return true only when difference is above minimum threshold', () => {
+      expect(bolusUtils.isOverride(apparentOverrideByPrecision)).to.be.false;
+      expect(bolusUtils.isOverride(overrideWithDifferenceUnderThreshold)).to.be.false;
+      expect(bolusUtils.isOverride(overrideWithDifferenceOverThreshold)).to.be.true;
     });
 
     it('should also work for boluses with wizard datum nested under the `wizard` property', () => {
@@ -999,9 +1044,10 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isUnderride(correctionOverride)).to.be.false;
     });
 
-    it('should return `false` on all boluses where the recommendation is slightly greater than ' +
-     'the programmed amount due to different precision', () => {
+    it('should return true only when difference is above minimum threshold', () => {
       expect(bolusUtils.isUnderride(apparentUnderrideByPrecision)).to.be.false;
+      expect(bolusUtils.isUnderride(underrideWithDifferenceUnderThreshold)).to.be.false;
+      expect(bolusUtils.isUnderride(underrideWithDifferenceOverThreshold)).to.be.true;
     });
 
     it('should return `true` on all underridden boluses', () => {
