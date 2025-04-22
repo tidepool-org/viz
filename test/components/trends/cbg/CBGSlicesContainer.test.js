@@ -34,6 +34,7 @@ import * as bgUtils from '../../../../src/utils/bloodglucose';
 import CBGSlicesContainer
   from '../../../../src/components/trends/cbg/CBGSlicesContainer';
 import CBGSliceAnimated from '../../../../src/components/trends/cbg/CBGSliceAnimated';
+import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('CBGSlicesContainer', () => {
   let wrapper;
@@ -43,6 +44,7 @@ describe('CBGSlicesContainer', () => {
 
   const props = {
     bgBounds,
+    bgUnits: MGDL_UNITS,
     binSize,
     data: [],
     displayFlags: {},
