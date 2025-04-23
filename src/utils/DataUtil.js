@@ -945,15 +945,22 @@ export class DataUtil {
       if (_.get(upload, 'source')) {
         source = upload.source;
       } else if (_.isArray(upload.deviceManufacturers) && !_.isEmpty(upload.deviceManufacturers)) {
-        // Uploader does not specify `source` for CareLink uploads, so they incorrectly get set to
-        // `Medtronic`, which should only be used for Medtronic Direct uploads. Check if
-        // manufacturer equals Medtronic, then check pumpSettings array for uploads with that upload
-        // ID and a source of `carelink`, then override appropriately.
         if (upload.deviceManufacturers[0] === 'Medtronic' && _.filter(pumpSettingsData, {
           uploadId: upload.uploadId,
           source: 'carelink',
         }).length) {
+          // Uploader does not specify `source` for CareLink uploads, so they incorrectly get set to
+          // `Medtronic`, which should only be used for Medtronic Direct uploads. Check if
+          // manufacturer equals Medtronic, then check pumpSettings array for uploads with that upload
+          // ID and a source of `carelink`, then override appropriately.
           source = 'carelink';
+        } else if (upload.deviceManufacturers[0] === 'Sequel' && _.filter(pumpSettingsData, {
+          uploadId: upload.uploadId,
+          model: 'twiist',
+        }).length) {
+          // Beginning with `client.version >= 3.0.0`, sequel twiist uploads include the deviceManufacturers
+          // field, which contains `Sequel`. We treat these as `twiist` uploads for rendering purposes.
+          source = TWIIST_LOOP.toLowerCase();
         } else {
           source = upload.deviceManufacturers[0];
         }
@@ -962,6 +969,7 @@ export class DataUtil {
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {
+        // We still need to check here for pre-3.0.0 uploads, which do not include the deviceManufacturers array
         source = TWIIST_LOOP.toLowerCase();
       }
 
