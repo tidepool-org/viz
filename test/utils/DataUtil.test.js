@@ -2830,6 +2830,17 @@ describe('DataUtil', () => {
         deviceSerialNumber: 'sn-2',
       });
     });
+
+    it('should set `source` field for Sequel uploads to `twiist`', () => {
+      dataUtil.updateDatum({ ...uploadData[2], source: undefined, deviceManufacturers: ['Sequel'] });
+      dataUtil.updateDatum({ ...pumpSettingsData[1], uploadId: uploadData[2].uploadId, model: 'twiist' });
+
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap[uploadData[2].uploadId]).to.eql({
+        source: 'twiist',
+        deviceSerialNumber: 'sn-2',
+      });
+    });
   });
 
   describe('setIncompleteSuspends', () => {
