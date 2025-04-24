@@ -872,7 +872,7 @@ describe('stat', () => {
 
       it('should return annotations for `averageDailyDose` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.averageDailyDose, multiDayOpts)).to.have.ordered.members([
-          '**Avg. Daily Insulin:** All basal and bolus insulin delivery (in Units) added together, divided by the number of days in this view.',
+          '**Avg. Daily Insulin:** All basal and bolus insulin delivery (in Units) added together, divided by the number of days in this view for which we have insulin data.',
         ]);
       });
     });
@@ -887,7 +887,7 @@ describe('stat', () => {
 
       it('should return annotations for `carbs` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.carbs, multiDayOpts)).to.have.ordered.members([
-          '**Avg. Daily Carbs**: All carb entries added together, then divided by the number of days in this view. Note, these entries come from either bolus wizard events, or Apple Health records.',
+          '**Avg. Daily Carbs**: All carb entries added together, then divided by the number of days in this view for which we have carb data. Note, these entries come from either bolus wizard events, or Apple Health records.',
           'Derived from _**10**_ carb entries.',
         ]);
       });
@@ -1033,14 +1033,14 @@ describe('stat', () => {
       it('should return annotations for `totalInsulin` stat when viewing a single day of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.totalInsulin, singleDayOpts)).to.have.ordered.members([
           '**Total Insulin:** All basal and bolus insulin delivery (in Units) added together',
-          '**How we calculate this:**\n\n**(%)** is the respective total of basal or bolus delivery divided by total insulin delivered for this time period.',
+          '**How we calculate this:**\n\n**(%)** is the respective total of basal or bolus delivery divided by total insulin delivered for the time period for which we have insulin data.',
         ]);
       });
 
       it('should return annotations for `totalInsulin` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.totalInsulin, multiDayOpts)).to.have.ordered.members([
-          '**Total Insulin:** All basal and bolus insulin delivery (in Units) added together, divided by the number of days in this view',
-          '**How we calculate this:**\n\n**(%)** is the respective total of basal or bolus delivery divided by total insulin delivered for this time period.',
+          '**Total Insulin:** All basal and bolus insulin delivery (in Units) added together, divided by the number of days in this view for which we have insulin data',
+          '**How we calculate this:**\n\n**(%)** is the respective total of basal or bolus delivery divided by total insulin delivered for the time period for which we have insulin data.',
         ]);
       });
     });
@@ -1667,7 +1667,7 @@ describe('stat', () => {
       });
 
       it('should return title for `bgExtents` stat when bgSource is `cbg`', () => {
-        expect(stat.getStatTitle(commonStats.bgExtents, cbgOpts)).to.equal('BG Extents (CGM)');
+        expect(stat.getStatTitle(commonStats.bgExtents, cbgOpts)).to.equal('Glucose Extents (CGM)');
       });
     });
 

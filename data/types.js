@@ -148,6 +148,7 @@ export class CBG extends Common {
 
     this.deviceTime = opts.deviceTime;
     this.deviceId = opts.deviceId;
+    this.origin = opts.origin;
     this.units = opts.units;
     this.value = opts.value;
 
@@ -340,6 +341,8 @@ export class Upload extends Common {
     this.deviceManufacturers = opts.deviceManufacturers;
     this.deviceSerialNumber = opts.deviceSerialNumber;
     this.dataSetType = opts.dataSetType;
+    this.origin = opts.origin;
+    this.client = opts.client;
 
     this.time = this.makeTime();
     this.timezone = opts.timezone;

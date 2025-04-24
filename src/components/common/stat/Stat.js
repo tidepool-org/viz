@@ -19,9 +19,9 @@ import BgBar from './BgBar';
 import BgBarLabel from './BgBarLabel';
 import StatTooltip from '../tooltips/StatTooltip';
 import StatLegend from './StatLegend';
-import CollapseIconOpen from './assets/expand-more-24-px.svg';
-import CollapseIconClose from './assets/chevron-right-24-px.svg';
-import InfoIcon from './assets/info-outline-24-px.svg';
+import CollapseIconOpen from './assets/expand-more-24-px.png';
+import CollapseIconClose from './assets/chevron-right-24-px.png';
+import InfoIcon from './assets/info-outline-24-px.png';
 import InputGroup from '../controls/InputGroup';
 
 /* global document */
@@ -476,7 +476,7 @@ class Stat extends PureComponent {
 
         _.assign(chartProps, {
           alignment: 'middle',
-          containerComponent: <VictoryContainer responsive={false} />,
+          containerComponent: <VictoryContainer responsive={false} style={{ touchAction: 'auto' }} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,
@@ -568,7 +568,7 @@ class Stat extends PureComponent {
 
         _.assign(chartProps, {
           alignment: 'middle',
-          containerComponent: <VictoryContainer responsive={false} />,
+          containerComponent: <VictoryContainer responsive={false} style={{ touchAction: 'auto' }} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
           data: _.map(chartData, (d, i) => ({
             ...d,

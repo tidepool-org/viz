@@ -31,6 +31,7 @@ import {
   SLEEP,
   PHYSICAL_ACTIVITY,
   PREPRANDIAL,
+  TWIIST_LOOP
 } from '../../src/utils/constants';
 
 import { types as Types } from '../../data/types';
@@ -144,6 +145,43 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isTwiistLoop', () => {
+    it('should return `true` for an upload matching pattern within `client.name` and a major version above 2', () => {
+      const datum = { type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } };
+      const datum2 = { type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '4.10.30' } };
+      expect(device.isTwiistLoop(datum)).to.be.true;
+      expect(device.isTwiistLoop(datum2)).to.be.true;
+    });
+
+    it('should return `false` for an upload with non-matching pattern within `client.name`', () => {
+      const datum = { type: 'upload', client: { name: 'com.tidepool.Loop', version: '2.0.0' } };
+      expect(device.isTwiistLoop(datum)).to.be.false;
+    });
+
+    it('should return `false` for an upload with client major version below 2', () => {
+      const datum = { type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '1.9.9' } };
+      expect(device.isTwiistLoop(datum)).to.be.false;
+    });
+
+    it('should return `true` for a non-upload data types with matching `origin.name` for Twiist Loop', () => {
+      const foodDatum = { type: 'food', origin: { name: 'com.dekaresearch.twiist' } };
+      const bolusDatum = { type: 'bolus', origin: { name: 'com.dekaresearch.twiist' } };
+      const arbitraryDatum = { origin: { name: 'com.dekaresearch.twiist' } };
+      expect(device.isTwiistLoop(foodDatum)).to.be.true;
+      expect(device.isTwiistLoop(bolusDatum)).to.be.true;
+      expect(device.isTwiistLoop(arbitraryDatum)).to.be.true;
+    });
+
+    it('should return `false` for a non-upload data types without matching `origin.name` for Twiist Loop', () => {
+      const wrongFoodDatum = { type: 'food', origin: { name: 'com.dekaresearch.twiis' } };
+      const wrongBolusDatum = { type: 'bolus', origin: { name: 'com.dekaesearch.twist' } };
+      const wrongArbitraryDatum = { origin: { name: 'co.dekaresearch.twiist' }, client: { name: 'com.sequelmedtech.tidepool-service', version: '1.9.9' } };
+      expect(device.isTwiistLoop(wrongFoodDatum)).to.be.false;
+      expect(device.isTwiistLoop(wrongBolusDatum)).to.be.false;
+      expect(device.isTwiistLoop(wrongArbitraryDatum)).to.be.false;
+    });
+  });
+
   describe('isLoop', () => {
     it('should return `true` for a matching pattern within `origin.name` for DIY Loop or Tidepool Loop', () => {
       const diyLoop = { origin: { name: 'com.loopkit.Loop' } };
@@ -166,13 +204,39 @@ describe('device utility functions', () => {
       expect(device.isLoop(tidepoolLoop)).to.be.true;
     });
 
+    it('should return `true` for a datum tagged as "loop"', () => {
+      const loopTaggedDatum = { tags: { loop: true } };
+      expect(device.isLoop(loopTaggedDatum)).to.be.true;
+    });
+
     it('should return `false` for a non-matching pattern within `client.name`', () => {
       const diyLoopBad = { client: { name: 'org.loopkit.Loop' } };
       const tidepoolLoopBad = { client: { name: 'com.tidepool.Loop' } };
       expect(device.isLoop(diyLoopBad)).to.be.false;
       expect(device.isLoop(tidepoolLoopBad)).to.be.false;
     });
+
+    it('should return `true` for an upload datum matching pattern within `client.name` for Twiist Loop and version above 2', () => {
+      const twiistLoop = { client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' }, type: 'upload' };
+      expect(device.isLoop(twiistLoop)).to.be.true;
+    });
+
+    it('should return `false` for a upload datum matching pattern within `client.name` for Twiist Loop and version below 2', () => {
+      const twiistLoop = { client: { name: 'com.sequelmedtech.tidepool-service', version: '1.0.0' }, type: 'upload' };
+      expect(device.isLoop(twiistLoop)).to.be.false;
+    });
+
+    it('should return `true` for non-upload datum matching pattern within `origin.name` for Twiist Loop', () => {
+      const twiistLoop = { origin: { name: 'com.dekaresearch.twiist' } };
+      expect(device.isLoop(twiistLoop)).to.be.true;
+    });
+
+    it('should return `false` for non-upload datum not matching pattern within `origin.name` for Twiist Loop', () => {
+      const twiistLoop = { origin: { name: 'com.dekaresearch.twist' } };
+      expect(device.isLoop(twiistLoop)).to.be.false;
+    });
   });
+
 
   describe('isAutomatedBasalDevice', () => {
     it('should return `true` for an upload record for a pump with automated basal delivery capabilities', () => {
@@ -180,6 +244,7 @@ describe('device utility functions', () => {
       expect(device.isAutomatedBasalDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
       expect(device.isAutomatedBasalDevice('tidepool loop', { origin: { name: 'org.tidepool.Loop' } })).to.be.true;
       expect(device.isAutomatedBasalDevice('diy loop', { origin: { name: 'com.loopkit.Loop' } })).to.be.true;
+      expect(device.isAutomatedBasalDevice('twiist', { origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without automated basal delivery capabilities', () => {
@@ -196,6 +261,7 @@ describe('device utility functions', () => {
     it('should return `false` for an upload record for a pump without automated bolus delivery capabilities', () => {
       expect(device.isAutomatedBolusDevice('tandem', { deviceId: 'tandem123456' })).to.be.false;
       expect(device.isAutomatedBolusDevice('tidepool loop', { origin: { name: 'org.tidepool.Loop' } })).to.be.false;
+      expect(device.isAutomatedBolusDevice('twiist', { origin: { name: 'com.dekaresearch.twist' } })).to.be.false;
     });
   });
 
@@ -204,6 +270,7 @@ describe('device utility functions', () => {
       expect(device.isSettingsOverrideDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
       expect(device.isSettingsOverrideDevice('tidepool loop', { origin: { name: 'org.tidepool.Loop' } })).to.be.true;
       expect(device.isSettingsOverrideDevice('diy loop', { origin: { name: 'com.loopkit.Loop' } })).to.be.true;
+      expect(device.isSettingsOverrideDevice('twiist', { origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without settings override capabilities', () => {
@@ -215,6 +282,7 @@ describe('device utility functions', () => {
     it('should return a pump settings overrides list by manufacturer, with default fallback for manufacturer', () => {
       expect(device.getSettingsOverrides(TANDEM)).to.have.members([SLEEP, PHYSICAL_ACTIVITY]);
       expect(device.getSettingsOverrides(TIDEPOOL_LOOP)).to.have.members([PREPRANDIAL, PHYSICAL_ACTIVITY]);
+      expect(device.getSettingsOverrides(TWIIST_LOOP)).to.have.members([PREPRANDIAL, PHYSICAL_ACTIVITY]);
       expect(device.getSettingsOverrides(DIY_LOOP)).to.have.members([PREPRANDIAL]);
       expect(device.getSettingsOverrides(undefined)).to.have.members([SLEEP, PREPRANDIAL, PHYSICAL_ACTIVITY]);
     });
@@ -273,4 +341,3 @@ describe('device utility functions', () => {
     });
   });
 });
-/* eslint-enable max-len */
