@@ -42,45 +42,56 @@ export function isTidepoolLoop(datum = {}) {
 }
 
 /**
+ * Check to see datum is from Twiist Loop
+*/
+export function isTwiistLoop(datum = {}) {
+  if (datum.type === 'upload') {
+    const majorVersion = parseInt(_.get(datum, 'client.version', '0').split('.')[0], 10);
+    return (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', '')) && majorVersion >= 2;
+  }
+  return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
+}
+
+/**
  * Check to see if datum is from a known Loop device
  */
 export function isLoop(datum = {}) {
-  return isDIYLoop(datum) || isTidepoolLoop(datum);
+  return datum.tags?.loop || isDIYLoop(datum) || isTidepoolLoop(datum) || isTwiistLoop(datum);
 }
 
 /**
- * Check if the provided upload datum was for an automated basal device
+ * Check if the provided datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
- * @param {Object} pumpSettings Tidepool pumpSettings datum
+ * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @param {String} deviceModel Device model number
  * @returns {Boolean}
  */
-export function isAutomatedBasalDevice(manufacturer, pumpSettings = {}, deviceModel) {
+export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, deviceModel) {
   return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []), deviceModel)
-    || (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-    || isLoop(pumpSettings);
+    || (manufacturer === 'tandem' && _.get(pumpSettingsOrUpload, 'deviceId', '').indexOf('tandemCIQ') === 0)
+    || isLoop(pumpSettingsOrUpload);
 }
 
 /**
- * Check if the provided upload datum was for an automated bolus device
+ * Check if the provided datum was for an automated bolus device
  * @param {String} manufacturer Manufacturer name
- * @param {Object} pumpSettings Tidepool pumpSettings datum
+ * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
  */
-export function isAutomatedBolusDevice(manufacturer, pumpSettings = {}) {
-  return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-    || isDIYLoop(pumpSettings);
+export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) {
+  return (manufacturer === 'tandem' && _.get(pumpSettingsOrUpload, 'deviceId', '').indexOf('tandemCIQ') === 0)
+    || isDIYLoop(pumpSettingsOrUpload);
 }
 
 /**
- * Check if the provided upload datum was for a settings-overrideable device
+ * Check if the provided datum was for a settings-overrideable device
  * @param {String} manufacturer Manufacturer name
- * @param {Object} pumpSettings Tidepool pumpSettings datum
+ * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
  */
-export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
-  return (manufacturer === 'tandem' && _.get(pumpSettings, 'deviceId', '').indexOf('tandemCIQ') === 0)
-  || isLoop(pumpSettings);
+export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}) {
+  return (manufacturer === 'tandem' && _.get(pumpSettingsOrUpload, 'deviceId', '').indexOf('tandemCIQ') === 0)
+  || isLoop(pumpSettingsOrUpload);
 }
 
 /**
@@ -88,7 +99,16 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettings = {}) {
  * @param {String} manufacturer Manufacturer name
  */
 export function getUppercasedManufacturer(manufacturer = '') {
-  return _.map(manufacturer.split(' '), part => (part === 'diy' ? _.upperCase(part) : _.upperFirst(part))).join(' ');
+  return _.map(manufacturer.split(' '), part => {
+    switch (part) {
+      case 'diy':
+        return _.upperCase(part);
+      case 'twiist':
+        return part;
+      default:
+        return _.upperFirst(part);
+    }
+  }).join(' ');
 }
 
 /**

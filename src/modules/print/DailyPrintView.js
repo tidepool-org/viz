@@ -566,7 +566,7 @@ class DailyPrintView extends PrintView {
 
       this.doc.fontSize(this.smallFontSize).font(this.boldFont)
         .text(
-          t('Average BG'),
+          t('Avg Glucose'),
           smallIndent,
           yPos.update(),
           { continued: true, width: widthWithoutIndent }

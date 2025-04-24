@@ -58,6 +58,7 @@ export function deviceName(manufacturer) {
     microtech: 'Equil',
     'diy loop': 'DIY Loop',
     'tidepool loop': 'Tidepool Loop',
+    twiist: 'twiist',
   };
   return DEVICE_DISPLAY_NAME_BY_MANUFACTURER[manufacturer] || manufacturer;
 }
@@ -158,7 +159,7 @@ export function getTotalBasalRates(scheduleData) {
  * getScheduleLabel
  * @param  {String} scheduleName  basal schedule name
  * @param  {String} activeName    name of active basal schedule at time of upload
- * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
+ * @param  {String} deviceKey    one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop, twiist
  * @param  {Boolean} noUnits      whether units should be included in label object
  *
  * @return {Object}              object representing basal schedule label
@@ -389,7 +390,7 @@ export function startTimeAndValue(valueKey) {
  * insulinSettings
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop
+ * @param  {String} manufacturer   one of: animas, carelink, insulet, medtronic, tandem, microtech, tidepool loop, diy loop, twiist
  * @param  {String} [scheduleName] name of schedule for tandem settings
  */
 export function insulinSettings(settings, manufacturer, scheduleName) {
@@ -400,7 +401,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
 
-  if (_.includes(['diy loop', 'tidepool loop'], manufacturer)) {
+  if (_.includes(['diy loop', 'tidepool loop', 'twiist'], manufacturer)) {
     insulinDuration = _.get(settings, 'insulinModel.actionDuration');
     insulinDurationUnits = 'milliseconds';
   }
@@ -482,7 +483,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
  * presetSettings
  *
  * @param  {Object} settings       object with pump settings data
- * @param  {String} manufacturer   one of: tidepool loop, diy loop
+ * @param  {String} manufacturer   one of: tidepool loop, diy loop, twiist
  */
 export function presetSettings(settings, manufacturer) {
   const deviceLabels = getPumpVocabulary(manufacturer);
