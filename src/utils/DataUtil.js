@@ -275,7 +275,7 @@ export class DataUtil {
         const datumToPopulate = _.omit(datumMap[idMap[d.id]], d.type);
 
         if (isWizard && d.uploadId !== datumToPopulate.uploadId) {
-          // Due to an issue stemming from a fix for wizard datums in Ulpoader >= v2.35.0, we have a
+          // Due to an issue stemming from a fix for wizard datums in Uploader >= v2.35.0, we have a
           // possibility of duplicates of older wizard datums from previous uploads. The boluses and
           // corrected wizards should both reference the same uploadId, so we can safely reject
           // wizards that don't reference the same upload as the bolus it's referencing.
@@ -845,8 +845,16 @@ export class DataUtil {
           'wizard',
           'food',
         ], this.dimension.byType.currentFilter())) {
-          _.each(this.dimension.byDeviceId.top(Infinity), ({ deviceId }) => {
-            if (deviceId && !this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = true;
+          _.each(this.dimension.byDeviceId.top(Infinity), datum => {
+            const { deviceId, origin } = datum;
+
+            if (deviceId) {
+              const version = origin?.version || '0.0';
+              const deviceName = origin?.name || deviceId;
+              const deviceVersionId = `${deviceName}_${version}`;
+              if (!this.matchedDevices[deviceId]) this.matchedDevices[deviceId] = {};
+              if (!this.matchedDevices[deviceId][deviceVersionId]) this.matchedDevices[deviceId][deviceVersionId] = true;
+            }
           });
         }
       }
@@ -937,15 +945,22 @@ export class DataUtil {
       if (_.get(upload, 'source')) {
         source = upload.source;
       } else if (_.isArray(upload.deviceManufacturers) && !_.isEmpty(upload.deviceManufacturers)) {
-        // Uploader does not specify `source` for CareLink uploads, so they incorrectly get set to
-        // `Medtronic`, which should only be used for Medtronic Direct uploads. Check if
-        // manufacturer equals Medtronic, then check pumpSettings array for uploads with that upload
-        // ID and a source of `carelink`, then override appropriately.
         if (upload.deviceManufacturers[0] === 'Medtronic' && _.filter(pumpSettingsData, {
           uploadId: upload.uploadId,
           source: 'carelink',
         }).length) {
+          // Uploader does not specify `source` for CareLink uploads, so they incorrectly get set to
+          // `Medtronic`, which should only be used for Medtronic Direct uploads. Check if
+          // manufacturer equals Medtronic, then check pumpSettings array for uploads with that upload
+          // ID and a source of `carelink`, then override appropriately.
           source = 'carelink';
+        } else if (upload.deviceManufacturers[0] === 'Sequel' && _.filter(pumpSettingsData, {
+          uploadId: upload.uploadId,
+          model: 'twiist',
+        }).length) {
+          // Beginning with `client.version >= 3.0.0`, sequel twiist uploads include the deviceManufacturers
+          // field, which contains `Sequel`. We treat these as `twiist` uploads for rendering purposes.
+          source = TWIIST_LOOP.toLowerCase();
         } else {
           source = upload.deviceManufacturers[0];
         }
@@ -954,6 +969,7 @@ export class DataUtil {
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {
+        // We still need to check here for pre-3.0.0 uploads, which do not include the deviceManufacturers array
         source = TWIIST_LOOP.toLowerCase();
       }
 
@@ -1077,6 +1093,8 @@ export class DataUtil {
         if (deviceManufacturer || deviceModel) {
           if (deviceManufacturer === 'Dexcom' && isContinuous) {
             label = t('Dexcom API');
+          } else if (deviceManufacturer === 'Abbott' && isContinuous) {
+            label = t('FreeStyle Libre (from LibreView)');
           } else {
             label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }
