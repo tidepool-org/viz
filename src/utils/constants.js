@@ -91,6 +91,7 @@ export const PHYSICAL_ACTIVITY = 'physicalActivity';
 export const PREPRANDIAL = 'preprandial';
 export const MAX_BOLUS = 'maxBolus';
 export const MAX_BASAL = 'maxBasal';
+export const ONE_BUTTON_BOLUS = 'oneButtonBolus';
 export const INSULIN_DURATION = 'insulinDuration';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
@@ -188,6 +189,7 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
+    [ONE_BUTTON_BOLUS]: t('One-Button'),
   },
 };
 
