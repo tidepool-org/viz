@@ -45,6 +45,7 @@ describe('AggregationUtil', () => {
   const overrideBolus = { ...bolus, normal: 2, recommended: { net: 1 } };
   const underrideBolus = { ...bolus, normal: 1, recommended: { net: 2 } };
   const wizardBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', wizard: '12345' };
+  const oneButtonBolus = { ...bolus, deliveryContext: 'oneButton' };
 
   const bolusData = _.map([
     correctionBolus,
@@ -55,6 +56,7 @@ describe('AggregationUtil', () => {
     overrideBolus,
     underrideBolus,
     wizardBolus,
+    oneButtonBolus
   ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
 
   const calibration = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'calibration', ...useRawData });
@@ -264,38 +266,40 @@ describe('AggregationUtil', () => {
     });
 
     it('should summarize total count for all non-automated bolus events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.total).to.equal(7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.total).to.equal(8);
     });
 
     it('should summarize average daily number of bolus events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.avgPerDay).to.equal(3.5);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.avgPerDay).to.equal(4);
     });
 
 
-    it('should summarize total `correction`, `extended`, `interrupted`, `manual`, `automated`, `override`, `underride`, and `wizard` bolus events for the entire date range', () => {
+    it('should summarize total `correction`, `extended`, `interrupted`, `manual`, `automated`, `oneButton`, `override`, `underride`, and `wizard` bolus events for the entire date range', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.count).to.equal(1);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.count).to.equal(6);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.count).to.equal(7);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.count).to.equal(1);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.oneButton.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.underride.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.wizard.count).to.equal(1);
     });
 
-    it('should summarize percentage of `correction`, `extended`, `interrupted`, `manual`, `automated`, `override`, `underride`, and `wizard` bolus events for the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.percentage).to.equal(1 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.percentage).to.equal(1 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.percentage).to.equal(1 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.percentage).to.equal(6 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.percentage).to.equal(1 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.percentage).to.equal(1 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.underride.percentage).to.equal(1 / 7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.wizard.percentage).to.equal(1 / 7);
+    it('should summarize percentage of `correction`, `extended`, `interrupted`, `manual`, `automated`, `oneButton`, `override`, `underride`, and `wizard` bolus events for the entire date range', () => {
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.percentage).to.equal(7 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.oneButton.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.underride.percentage).to.equal(1 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.wizard.percentage).to.equal(1 / 8);
     });
 
     it('should summarize total count for all bolus events for each date in the date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].total).to.equal(6);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].total).to.equal(7);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].total).to.equal(1);
     });
 
@@ -303,8 +307,9 @@ describe('AggregationUtil', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.correction).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.extended).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.interrupted).to.equal(1);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.manual).to.equal(6);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.manual).to.equal(7);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.automated).to.equal(1);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.oneButton).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.override).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.underride).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].subtotals.wizard).to.equal(1);
@@ -403,11 +408,10 @@ describe('AggregationUtil', () => {
 
     it('should aggregate the data by date and by the types set in `dataUtil.types`', () => {
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-02'].bolus).to.be.an('array').and.have.lengthOf(1);
-      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].bolus).to.be.an('array').and.have.lengthOf(7);
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].bolus).to.be.an('array').and.have.lengthOf(8);
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-02'].smbg).to.be.an('array').and.have.lengthOf(1);
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].smbg).to.be.an('array').and.have.lengthOf(3);
     });
-
 
     it('should aggregate data by date correctly if endpoints go beyond the available data range', () => {
       aggregationUtil = createAggregationUtil(data, {
@@ -418,7 +422,7 @@ describe('AggregationUtil', () => {
       groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
 
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-02'].bolus).to.be.an('array').and.have.lengthOf(1);
-      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].bolus).to.be.an('array').and.have.lengthOf(7);
+      expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].bolus).to.be.an('array').and.have.lengthOf(8);
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-02'].smbg).to.be.an('array').and.have.lengthOf(1);
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-01'].smbg).to.be.an('array').and.have.lengthOf(3);
       expect(aggregationUtil.aggregateDataByDate(groupByDate)['2018-02-03']).to.be.undefined;

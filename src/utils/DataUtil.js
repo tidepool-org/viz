@@ -22,6 +22,7 @@ import {
   isAutomated,
   isCorrection,
   isInterruptedBolus,
+  isOneButton,
   isOverride,
   isUnderride,
 } from './bolus';
@@ -364,6 +365,7 @@ export class DataUtil {
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
         loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        oneButton: isOneButton(d),
       };
     }
 
