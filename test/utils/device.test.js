@@ -306,6 +306,7 @@ describe('device utility functions', () => {
           'reservoirChange',
           'tubingPrime',
           'cannulaPrime',
+          'automatedBolus',
           'automatedDelivery',
           'automatedSuspend',
           'automatedModeExited',
@@ -317,6 +318,7 @@ describe('device utility functions', () => {
           'maxBolus',
           'maxBasal',
           'insulinDuration',
+          'oneButtonBolus',
         ]);
       });
 

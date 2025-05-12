@@ -179,6 +179,7 @@ export const pumpVocabulary = {
     [SITE_CHANGE_RESERVOIR]: t('Cartridge Change'),
     [SITE_CHANGE_TUBING]: t('Tubing Fill'),
     [SITE_CHANGE_CANNULA]: t('Cannula Fill'),
+    [AUTOMATED_BOLUS]: t('Automated'),
     [AUTOMATED_DELIVERY]: t('Automated'),
     [AUTOMATED_SUSPEND]: t('Automated Suspend'),
     [AUTOMATED_MODE_EXITED]: t('Exited'),
@@ -191,7 +192,6 @@ export const pumpVocabulary = {
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
     [ONE_BUTTON_BOLUS]: t('One-Button Bolus'),
-    [AUTOMATED_BOLUS]: t('Automated'),
   },
 };
 
