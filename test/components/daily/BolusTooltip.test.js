@@ -639,7 +639,7 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.include('Automated');
   });
 
-  it('should render a one-button bikys header label for a one-button bolus', () => {
+  it('should render a one-button bolus header label for a one-button bolus', () => {
     const wrapper = mount(<BolusTooltip {...props} bolus={oneButton} />);
     expect(wrapper.find(formatClassesAsSelector(styles.title))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.include('One-Button Bolus');
