@@ -81,6 +81,7 @@ export const SITE_CHANGE_RESERVOIR = 'reservoirChange';
 export const SITE_CHANGE_TUBING = 'tubingPrime';
 export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 
+export const AUTOMATED_BOLUS = 'automatedBolus';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';
 export const AUTOMATED_MODE_EXITED = 'automatedModeExited';
@@ -189,7 +190,8 @@ export const pumpVocabulary = {
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
-    [ONE_BUTTON_BOLUS]: t('One-Button'),
+    [ONE_BUTTON_BOLUS]: t('One-Button Bolus'),
+    [AUTOMATED_BOLUS]: t('Automated'),
   },
 };
 

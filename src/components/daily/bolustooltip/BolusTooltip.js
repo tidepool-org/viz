@@ -19,6 +19,8 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
 import * as bolusUtils from '../../../utils/bolus';
+import { getPumpVocabulary } from '../../../utils/device';
+import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
 import { isLoop } from '../../../utils/device';
@@ -41,6 +43,7 @@ class BolusTooltip extends PureComponent {
     this.isLoop = isLoop(props.bolus);
     this.msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
     this.unitStyles = (carbsInput && this.carbUnits === 'exch') ? styles.unitsWide : styles.units;
+    this.deviceLabels = getPumpVocabulary(props.bolus?.source);
   }
 
   formatBgValue(val) {
@@ -404,6 +407,7 @@ class BolusTooltip extends PureComponent {
 
   render() {
     const isAutomated = _.get(this.props.bolus, 'subType') === 'automated';
+    const isOneButton = bolusUtils.isOneButton(this.props.bolus);
     const tailColor = this.props.tailColor || isAutomated ? colors.bolusAutomated : colors.bolus;
 
     const borderColor = this.props.borderColor || isAutomated
@@ -412,8 +416,11 @@ class BolusTooltip extends PureComponent {
 
     const title = (
       <div className={styles.title}>
+        <div className={styles.types}>
+          {isOneButton && <div>{this.deviceLabels[ONE_BUTTON_BOLUS]}</div>}
+          {isAutomated && <div>{this.deviceLabels[AUTOMATED_BOLUS]}</div>}
+        </div>
         {formatLocalizedFromUTC(this.props.bolus.normalTime, this.props.timePrefs, 'h:mm a')}
-        {isAutomated && <div>{t('Automated')}</div>}
       </div>
     );
 
