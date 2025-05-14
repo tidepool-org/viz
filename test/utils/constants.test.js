@@ -365,6 +365,7 @@ describe('constants', () => {
           [constants.SITE_CHANGE_RESERVOIR]: 'Cartridge Change',
           [constants.SITE_CHANGE_TUBING]: 'Tubing Fill',
           [constants.SITE_CHANGE_CANNULA]: 'Cannula Fill',
+          [constants.AUTOMATED_BOLUS]: 'Automated',
           [constants.AUTOMATED_DELIVERY]: 'Automated',
           [constants.AUTOMATED_SUSPEND]: 'Automated Suspend',
           [constants.AUTOMATED_MODE_EXITED]: 'Exited',
@@ -376,6 +377,7 @@ describe('constants', () => {
           [constants.MAX_BOLUS]: 'Max Bolus',
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
+          [constants.ONE_BUTTON_BOLUS]: 'One-Button Bolus',
         },
       });
     });
