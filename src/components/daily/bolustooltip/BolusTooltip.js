@@ -19,9 +19,10 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
 import * as bolusUtils from '../../../utils/bolus';
+import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
-import { isLoop } from '../../../utils/device';
+import { getPumpVocabulary, isLoop } from '../../../utils/device';
 import { getAnnotationMessages } from '../../../utils/annotations';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -41,6 +42,7 @@ class BolusTooltip extends PureComponent {
     this.isLoop = isLoop(props.bolus);
     this.msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
     this.unitStyles = (carbsInput && this.carbUnits === 'exch') ? styles.unitsWide : styles.units;
+    this.deviceLabels = getPumpVocabulary(props.bolus?.source);
   }
 
   formatBgValue(val) {
@@ -237,8 +239,8 @@ class BolusTooltip extends PureComponent {
 
     if (this.isLoop) {
       const { activeSchedule, carbRatios, insulinSensitivities } = _.get(wizard, 'dosingDecision.pumpSettings', {});
-      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || null;
-      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || null;
+      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || carbRatio;
+      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || isf;
     }
 
     const delivered = bolusUtils.getDelivered(wizard);
@@ -284,7 +286,7 @@ class BolusTooltip extends PureComponent {
     );
     const bgLine = !!bg && (
       <div className={styles.bg}>
-        <div className={styles.label}>{t('BG')} ({this.bgUnits})</div>
+        <div className={styles.label}>{t('Glucose')} ({this.bgUnits})</div>
         <div className={styles.value}>{this.formatBgValue(bg)}</div>
         <div className={this.unitStyles} />
       </div>
@@ -404,6 +406,7 @@ class BolusTooltip extends PureComponent {
 
   render() {
     const isAutomated = _.get(this.props.bolus, 'subType') === 'automated';
+    const isOneButton = bolusUtils.isOneButton(this.props.bolus);
     const tailColor = this.props.tailColor || isAutomated ? colors.bolusAutomated : colors.bolus;
 
     const borderColor = this.props.borderColor || isAutomated
@@ -412,8 +415,11 @@ class BolusTooltip extends PureComponent {
 
     const title = (
       <div className={styles.title}>
+        <div className={styles.types}>
+          {isOneButton && <div>{this.deviceLabels[ONE_BUTTON_BOLUS]}</div>}
+          {isAutomated && <div>{this.deviceLabels[AUTOMATED_BOLUS]}</div>}
+        </div>
         {formatLocalizedFromUTC(this.props.bolus.normalTime, this.props.timePrefs, 'h:mm a')}
-        {isAutomated && <div>{t('Automated')}</div>}
       </div>
     );
 

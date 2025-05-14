@@ -634,8 +634,7 @@ describe('blood glucose utilities', () => {
       expect(bgUtils.cgmSampleFrequency(libre3Datum)).to.equal(5 * MS_IN_MIN);
 
       const libre2CIQDatum = {
-        deviceId: 'tandemCIQ_XXXXX',
-        payload: { fsl2: true },
+        sampleInterval: MS_IN_MIN,
       };
 
       const g7CIQDatum = {

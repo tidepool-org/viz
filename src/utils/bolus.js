@@ -333,28 +333,17 @@ export function isInterruptedBolus(insulinEvent) {
 }
 
 /**
- * isDifferentBeyondPrecision
- * @param {number} a - The first number to compare.
- * @param {number} b - The second number to compare.
- * @param {number} precision - The number of decimal places to consider.
- *
- * @returns {boolean} Whether the numbers are different when rounded to the specified precision.
- */
-export function isDifferentBeyondPrecision(a, b, precision) {
-  return _.round(a, precision) !== _.round(b, precision);
-}
-
-/**
  * isOverride
  * @param {Object} insulinEvent - a Tidepool bolus or wizard object
  *
  * @return {Boolean} Whether the programmed amount is both significantly different (beyond 2 decimal places) from and larger than the recommended amount.
  */
 export function isOverride(insulinEvent) {
+  const MINIMUM_THRESHOLD = 0.01;
   const amountRecommended = getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
   const amountProgrammed = getProgrammed(insulinEvent);
 
-  return isDifferentBeyondPrecision(amountRecommended, amountProgrammed, 2) && amountProgrammed > amountRecommended;
+  return (amountProgrammed - amountRecommended) >= MINIMUM_THRESHOLD;
 }
 
 /**
@@ -364,10 +353,11 @@ export function isOverride(insulinEvent) {
  * @return {Boolean} Whether the programmed amount is both significantly different (beyond 2 decimal places) from and smaller than the recommended amount.
  */
 export function isUnderride(insulinEvent) {
+  const MINIMUM_THRESHOLD = 0.01;
   const amountRecommended = getRecommended(insulinEvent.wizard || insulinEvent.dosingDecision || insulinEvent);
   const amountProgrammed = getProgrammed(insulinEvent);
 
-  return isDifferentBeyondPrecision(amountRecommended, amountProgrammed, 2) && amountProgrammed < amountRecommended;
+  return (amountRecommended - amountProgrammed) >= MINIMUM_THRESHOLD;
 }
 
 /**
@@ -395,6 +385,17 @@ export function isCorrection(insulinEvent) {
 export function isAutomated(insulinEvent) {
   const bolus = getBolusFromInsulinEvent(insulinEvent);
   return _.get(bolus, 'subType') === 'automated';
+}
+
+/**
+ * isOneButton
+ * @param {Object} insulinEvent - a Tidepool bolus or wizard object
+ *
+ * @return {Boolean} whether the bolus has a one-button delivery context
+ */
+export function isOneButton(insulinEvent) {
+  const bolus = getBolusFromInsulinEvent(insulinEvent);
+  return _.get(bolus, 'deliveryContext') === 'oneButton';
 }
 
 /**

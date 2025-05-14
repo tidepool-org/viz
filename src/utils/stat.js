@@ -358,11 +358,11 @@ export const getStatAnnotations = (data, type, opts = {}) => {
 
     case commonStats.timeInOverride:
       if (days > 1) {
-        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a {{overrideLabelLowerCase}}.', labels));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabelLowerCase}}.', labels));
       } else {
-        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a {{overrideLabelLowerCase}}.', labels));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is total duration of time in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is total duration of time in {{overrideLabelLowerCase}}.', labels));
       }
       break;
 
@@ -715,6 +715,7 @@ export const getStatData = (data, type, opts = {}) => {
 export const getStatTitle = (type, opts = {}) => {
   const { bgSource, days } = opts;
   const vocabulary = getPumpVocabulary(opts.manufacturer);
+  const bgTypeLabel = bgSource === 'cbg' ? t('Glucose') : t('BG');
 
   let title;
 
@@ -728,7 +729,7 @@ export const getStatTitle = (type, opts = {}) => {
       break;
 
     case commonStats.bgExtents:
-      title = t('BG Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource] });
+      title = t('{{bgTypeLabel}} Extents ({{bgSourceLabel}})', { bgSourceLabel: statBgSourceLabels[bgSource], bgTypeLabel });
       break;
 
     case commonStats.carbs:
