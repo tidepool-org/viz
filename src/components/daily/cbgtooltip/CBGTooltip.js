@@ -53,6 +53,7 @@ class CBGTooltip extends PureComponent {
     if (!_.isEmpty(outOfRangeMessage)) {
       const bgClass = classifyBgValue(
         reshapeBgClassesToBgBounds(this.props.bgPrefs),
+        this.props.bgPrefs.bgUnits,
         this.props.cbg.value,
         'fiveWay'
       );
@@ -76,6 +77,7 @@ class CBGTooltip extends PureComponent {
   render() {
     const bgClass = classifyBgValue(
       reshapeBgClassesToBgBounds(this.props.bgPrefs),
+      this.props.bgPrefs.bgUnits,
       this.props.cbg.value,
       'fiveWay'
     );

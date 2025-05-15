@@ -754,7 +754,7 @@ class DailyPrintView extends PrintView {
   renderCbgs({ bgScale, data: { cbg: cbgs }, xScale }) {
     _.each(cbgs, (cbg) => {
       this.doc.circle(xScale(cbg.normalTime), bgScale(cbg.value), 1)
-        .fill(this.colors[classifyBgValue(this.bgBounds, cbg.value)]);
+        .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, cbg.value, 'threeWay')]);
     });
 
     return this;
@@ -771,7 +771,7 @@ class DailyPrintView extends PrintView {
       const labelEndX = labelStartX + labelWidth;
 
       this.doc.circle(xPos, yPos, this.smbgRadius)
-        .fill(this.colors[classifyBgValue(this.bgBounds, smbg.value)]);
+        .fill(this.colors[classifyBgValue(this.bgBounds, this.bgUnits, smbg.value, 'threeWay')]);
 
       // Ensure label is printed within chart area for the x-axis
       if (labelStartX <= this.chartArea.leftEdge) {
