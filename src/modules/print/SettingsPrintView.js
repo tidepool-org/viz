@@ -35,12 +35,14 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
-import { getPumpVocabulary } from '../../utils/device';
+import { getPumpVocabulary, isControlIQ } from '../../utils/device';
 
 import {
   basalSchedules as profileSchedules,
   basal as tandemBasal,
 } from '../../utils/settings/tandemData';
+import { line } from 'd3-shape';
+import { lineGap } from 'pdfkit';
 
 const t = i18next.t.bind(i18next);
 
@@ -205,6 +207,26 @@ class SettingsPrintView extends PrintView {
 
       this.renderInsulinSettings(this.latestPumpUpload.settings, schedule.name);
       this.doc.moveDown();
+
+      if (isControlIQ(this.latestPumpUpload.settings)) {
+        this.setFill(this.colors.grey);
+
+        this.doc
+          .font(this.font)
+          .text(t('* - The numbers displayed here are the user-defined values. During automation, Tandem Control-IQ uses its own preset Insulin Duration and Target BG. However users can set different values for these parameters that '), {
+            continued: true,
+            lineGap: 4,
+          })
+          .font(this.boldFont)
+          .text(t('only'), {
+            continued: true,
+          })
+          .font(this.font)
+          .text(t(' apply in manual mode.'));
+
+        this.setFill();
+        this.doc.moveDown();
+      }
     });
   }
 

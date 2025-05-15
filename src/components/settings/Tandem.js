@@ -29,6 +29,8 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import { deviceName, insulinSettings } from '../../utils/settings/data';
 import * as tandemData from '../../utils/settings/tandemData';
 import { tandemText } from '../../utils/settings/textData';
+import { isControlIQ } from '../../utils/device';
+import { Trans } from 'react-i18next';
 
 import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
@@ -83,6 +85,14 @@ const Tandem = (props) => {
             columns={settingsColumns}
             tableStyle={styles.settingsTableInverted}
           />
+
+          {isControlIQ(pumpSettings) && (
+            <div className={styles.annotations}>
+              <Trans i18nKey="tandem.annotations">
+                * - The numbers displayed here are the user-defined values. During automation, Tandem Control-IQ uses its own preset Insulin Duration and Target BG. However users can set different values for these parameters that <strong>only</strong> apply in manual mode.
+              </Trans>
+            </div>
+          )}
         </CollapsibleContainer>
       </div>
     );
