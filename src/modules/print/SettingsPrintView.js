@@ -41,8 +41,6 @@ import {
   basalSchedules as profileSchedules,
   basal as tandemBasal,
 } from '../../utils/settings/tandemData';
-import { line } from 'd3-shape';
-import { lineGap } from 'pdfkit';
 
 const t = i18next.t.bind(i18next);
 

@@ -65,7 +65,7 @@ function basalRows(schedule, settings, units) {
  * basalColumns
  * @private
  */
-function basalColumns(styles = {}, units, isControlIQ = false) {
+function basalColumns(styles = {}, units, CIQAnnotation = false) {
   return [
     { key: 'start',
       label: 'Start time' },
@@ -77,7 +77,7 @@ function basalColumns(styles = {}, units, isControlIQ = false) {
       className: styles.basalScheduleHeader },
     { key: 'bgTarget',
       label: {
-        main: t('Target BG') + (isControlIQ ? '*' : ''),
+        main: t('Target BG') + (CIQAnnotation ? '*' : ''),
         secondary: units,
       },
       className: styles.bolusSettingsHeader },
