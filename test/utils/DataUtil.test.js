@@ -3161,6 +3161,34 @@ describe('DataUtil', () => {
       ]);
     });
 
+    it('should add set the proper device label for Sequel data', () => {
+      initDataUtil([{
+        ...uploadData[3],
+        deviceManufacturers: ['Sequel'],
+        deviceId: 'MySequel123',
+        dataSetType: 'continuous',
+        deviceTags: [
+          'bgm',
+          'cgm',
+          'insulin-pump',
+        ],
+      }]);
+
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: true,
+          cgm: true,
+          id: 'MySequel123',
+          label: 'twiist',
+          pump: true,
+          serialNumber: undefined
+        },
+      ]);
+    });
+
     it('should add set the proper device label for Dexcom API data', () => {
       initDataUtil([{
         ...uploadData[3],
