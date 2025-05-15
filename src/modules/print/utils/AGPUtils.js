@@ -1225,7 +1225,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       const rx = pixelsToChartScale(paperWidth, bgPlotRadius);
       const ry = pixelsToChartScale(paperHeight, bgPlotRadius);
 
-      const renderBgReadings = bgRange => _.map(_.filter(bgData, ({ value }) => classifyBgValue(bgPrefs.bgBounds, value, 'fiveWay') === bgRange), d => ({
+      const renderBgReadings = bgRange => _.map(_.filter(bgData, ({ value }) => classifyBgValue(bgPrefs.bgBounds, bgPrefs.bgUnits, value, 'fiveWay') === bgRange), d => ({
         type: 'circle',
         x0: d.msPer24 / (MS_IN_DAY) - rx,
         x1: d.msPer24 / (MS_IN_DAY) + rx,
@@ -1473,7 +1473,7 @@ export const generateDailyGlucoseProfilesFigure = (section, bgData, bgPrefs, dat
       ...dayData,
       msPer24: dayData.msPer24 + MS_IN_DAY * index,
       bgRange: dayData.type === BGM_DATA_KEY
-        ? classifyBgValue(bgPrefs.bgBounds, dayData.value)
+        ? classifyBgValue(bgPrefs.bgBounds, bgPrefs.bgUnits, dayData.value, 'threeWay')
         : undefined,
     })))));
 

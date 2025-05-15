@@ -13,6 +13,7 @@ export default class SMBGRangeAvgContainer extends PureComponent {
       targetLowerBound: PropTypes.number.isRequired,
       veryLowThreshold: PropTypes.number.isRequired,
     }).isRequired,
+    bgUnits: PropTypes.string.isRequired,
     binSize: PropTypes.number.isRequired,
     data: PropTypes.arrayOf(PropTypes.shape({
       // here only documenting the properties we actually use rather than the *whole* data model!
@@ -56,6 +57,7 @@ export default class SMBGRangeAvgContainer extends PureComponent {
         {_.map(mungedData, (datum) => (
           <SMBGComponent
             bgBounds={this.props.bgBounds}
+            bgUnits={this.props.bgUnits}
             datum={datum}
             focusSmbgRange={this.props.focusSmbgRange}
             unfocusSmbgRange={this.props.unfocusSmbgRange}

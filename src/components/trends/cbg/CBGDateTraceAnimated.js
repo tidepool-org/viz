@@ -21,6 +21,7 @@ export class CBGDateTraceAnimated extends PureComponent {
       targetLowerBound: PropTypes.number.isRequired,
       veryLowThreshold: PropTypes.number.isRequired,
     }).isRequired,
+    bgUnits: PropTypes.string.isRequired,
     cbgRadius: PropTypes.number.isRequired,
     data: PropTypes.arrayOf(PropTypes.shape({
       // here only documenting the properties we actually use rather than the *whole* data model!
@@ -71,12 +72,13 @@ export class CBGDateTraceAnimated extends PureComponent {
   }
 
   render() {
-    const { bgBounds, cbgRadius, data, date, topMargin, xScale, yScale } = this.props;
+    const { bgBounds, bgUnits, cbgRadius, data, date, topMargin, xScale, yScale } = this.props;
+
     return (
       <g id={`cbgDateTrace-${date}`}>
         {_.map(data, (d) => (
           <circle
-            className={styles[classifyBgValue(bgBounds, d.value, 'fiveWay')]}
+            className={styles[classifyBgValue(bgBounds, bgUnits, d.value, 'fiveWay')]}
             cx={xScale(d.msPer24)}
             cy={yScale(d.value)}
             id={`cbgCircle-${d.id}`}

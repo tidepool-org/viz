@@ -30,6 +30,7 @@ import bgBounds from '../../../helpers/bgBounds';
 
 import { THREE_HRS } from '../../../../src/utils/datetime';
 import { SMBGMeanAnimated } from '../../../../src/components/trends/smbg/SMBGMeanAnimated';
+import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('SMBGMeanAnimated', () => {
   let wrapper;
@@ -44,6 +45,7 @@ describe('SMBGMeanAnimated', () => {
   };
   const props = {
     bgBounds,
+    bgUnits: MGDL_UNITS,
     datum,
     defaultY: 100,
     focus,
