@@ -388,6 +388,12 @@ describe('SettingsPrintView', () => {
       // ensure it's rendering 2 tables for each schedule
       sinon.assert.callCount(Renderer.renderTable, schedules.length * 2);
     });
+
+    it('should render an annotation for Tandem C-IQ data', () => {
+      Renderer = createRenderer({ ...data.tandemFlatrate, deviceId: 'tandemCIQ123' }, opts, MGDL_UNITS);
+      Renderer.renderTandemProfiles();
+      sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match('Tandem Control-IQ uses its own preset'));
+    });
   });
 
   describe('renderPumpSettings', () => {
