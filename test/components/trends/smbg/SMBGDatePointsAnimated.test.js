@@ -35,6 +35,7 @@ const {
 import SVGContainer from '../../../helpers/SVGContainer';
 import { SMBGDatePointsAnimated }
   from '../../../../src/components/trends/smbg/SMBGDatePointsAnimated';
+import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('SMBGDatePointsAnimated', () => {
   let wrapper;
@@ -56,6 +57,7 @@ describe('SMBGDatePointsAnimated', () => {
 
   const props = {
     bgBounds,
+    bgUnits: MGDL_UNITS,
     data,
     date,
     focusedDay,

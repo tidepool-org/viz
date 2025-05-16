@@ -22,6 +22,7 @@ export class CBGMedianAnimated extends PureComponent {
       targetLowerBound: PropTypes.number.isRequired,
       veryLowThreshold: PropTypes.number.isRequired,
     }).isRequired,
+    bgUnits: PropTypes.string.isRequired,
     datum: PropTypes.shape({
       firstQuartile: PropTypes.number,
       id: PropTypes.string.isRequired,
@@ -73,6 +74,7 @@ export class CBGMedianAnimated extends PureComponent {
   render() {
     const {
       bgBounds,
+      bgUnits,
       datum,
       defaultY,
       displayingMedian,
@@ -85,8 +87,8 @@ export class CBGMedianAnimated extends PureComponent {
     const medianClasses = datum.median ?
       cx({
         [styles.median]: true,
-        [styles[`${classifyBgValue(bgBounds, datum.median, 'fiveWay')}FadeIn`]]: !showingCbgDateTraces,
-        [styles[`${classifyBgValue(bgBounds, datum.median, 'fiveWay')}FadeOut`]]: showingCbgDateTraces,
+        [styles[`${classifyBgValue(bgBounds, bgUnits, datum.median, 'fiveWay')}FadeIn`]]: !showingCbgDateTraces,
+        [styles[`${classifyBgValue(bgBounds, bgUnits, datum.median, 'fiveWay')}FadeOut`]]: showingCbgDateTraces,
       }) :
       cx({
         [styles.median]: true,

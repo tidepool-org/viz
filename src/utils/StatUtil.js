@@ -254,7 +254,7 @@ export class StatUtil {
     const readingsInRangeData = _.reduce(
       smbgData,
       (result, datum) => {
-        const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
+        const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         result.counts[classification]++;
         result.counts.total++;
         return result;
@@ -414,7 +414,7 @@ export class StatUtil {
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
-        const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
+        const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         const duration = cgmSampleFrequency(datum);
         result.durations[classification] += duration;
         result.durations.total += duration;
