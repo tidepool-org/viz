@@ -182,6 +182,23 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isControlIQ', () => {
+    it('should return `true` for a deviceId starting with tandemCIQ', () => {
+      const datum = { deviceId: 'tandemCIQ123456' };
+      expect(device.isControlIQ(datum)).to.be.true;
+    });
+
+    it('should return `false` for a deviceId not starting with tandemCIQ', () => {
+      const datum = { deviceId: 'tandem123456' };
+      expect(device.isControlIQ(datum)).to.be.false;
+    });
+
+    it('should return `false` for a datum without a deviceId', () => {
+      const datum = {};
+      expect(device.isControlIQ(datum)).to.be.false;
+    });
+  });
+
   describe('isLoop', () => {
     it('should return `true` for a matching pattern within `origin.name` for DIY Loop or Tidepool Loop', () => {
       const diyLoop = { origin: { name: 'com.loopkit.Loop' } };

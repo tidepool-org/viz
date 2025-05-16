@@ -14,8 +14,12 @@
  * not, you can obtain one from Tidepool Project at tidepool.org.
  * == BSD2 LICENSE ==
  */
+import i18next from 'i18next';
+
+import { isControlIQ } from '../device';
 import * as data from './data';
 
+const t = i18next.t.bind(i18next);
 /**
  * basalSchedules
  * @param  {Object} settings    object with basal schedule properties
@@ -61,31 +65,31 @@ function basalRows(schedule, settings, units) {
  * basalColumns
  * @private
  */
-function basalColumns(styles = {}, units) {
+function basalColumns(styles = {}, units, CIQAnnotation = false) {
   return [
     { key: 'start',
       label: 'Start time' },
     { key: 'rate',
       label: {
-        main: 'Basal Rates',
+        main: t('Basal Rates'),
         secondary: 'U/hr',
       },
       className: styles.basalScheduleHeader },
     { key: 'bgTarget',
       label: {
-        main: 'Target BG',
+        main: t('Target BG') + (CIQAnnotation ? '*' : ''),
         secondary: units,
       },
       className: styles.bolusSettingsHeader },
     { key: 'carbRatio',
       label: {
-        main: 'Carb Ratio',
+        main: t('Carb Ratio'),
         secondary: 'g/U',
       },
       className: styles.bolusSettingsHeader },
     { key: 'insulinSensitivity',
       label: {
-        main: 'Correction Factor',
+        main: t('Correction Factor'),
         secondary: `${units}/U`,
       },
       className: styles.bolusSettingsHeader },
@@ -106,7 +110,7 @@ export function basal(schedule, settings, units, styles = {}) {
     scheduleName: schedule.name,
     activeAtUpload: (schedule.name === settings.activeSchedule),
     title: scheduleLabel(schedule.name, settings.activeSchedule),
-    columns: basalColumns(styles, units),
+    columns: basalColumns(styles, units, isControlIQ(settings)),
     rows: basalRows(schedule, settings, units),
   };
 }
