@@ -1717,6 +1717,9 @@ export class DataUtil {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
       const returnAllFields = fields[0] === '*';
 
+      // Filter cgm data by the currently-set sample interval range
+      if (type === CGM_DATA_KEY) this.filter.bySampleIntervalRange(...(this.bgPrefs?.cgmSampleIntervalRange));
+
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
       _.each(typeData, d => this.normalizeDatumOut(d, fields));
 
