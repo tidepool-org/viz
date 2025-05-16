@@ -4,8 +4,8 @@ import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
-import { classifyBgValue, defaultCGMSampleInterval } from './bloodglucose';
-import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { classifyBgValue } from './bloodglucose';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
@@ -33,7 +33,13 @@ export class StatUtil {
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
   };
 
+  filterCBGDataByDefaultSampleInterval = () => {
+    this.dataUtil.filter.bySampleIntervalRange(...this.dataUtil.defaultCGMSampleIntervalRange);
+  };
+
   getAverageGlucoseData = (returnBgData = false) => {
+    if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
+
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
@@ -50,6 +56,8 @@ export class StatUtil {
   };
 
   getBgExtentsData = () => {
+    if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
+
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
@@ -279,6 +287,7 @@ export class StatUtil {
   };
 
   getSensorUsage = () => {
+    this.filterCBGDataByDefaultSampleInterval();
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
     const count = cbgData.length;
 
@@ -297,7 +306,7 @@ export class StatUtil {
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
-    const sampleFrequency = newestDatum?.sampleInterval || defaultCGMSampleInterval;
+    const sampleFrequency = newestDatum?.sampleInterval || this.dataUtil.defaultCGMSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
@@ -408,6 +417,7 @@ export class StatUtil {
   };
 
   getTimeInRangeData = () => {
+    this.filterCBGDataByDefaultSampleInterval();
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 

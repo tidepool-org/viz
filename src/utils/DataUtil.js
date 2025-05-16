@@ -27,7 +27,7 @@ import {
   isUnderride,
 } from './bolus';
 
-import { convertToMGDL, defaultCGMSampleInterval } from './bloodglucose';
+import { convertToMGDL } from './bloodglucose';
 
 import {
   BGM_DATA_KEY,
@@ -79,6 +79,8 @@ export class DataUtil {
     this.startTimer('init total');
     this.data = crossfilter([]);
     this.queryDataCount = 0;
+    this.defaultCGMSampleInterval = 5 * MS_IN_MIN;
+    this.defaultCGMSampleIntervalRange = [this.defaultCGMSampleInterval, Infinity];
 
     this.buildDimensions();
     this.buildFilters();
@@ -206,7 +208,7 @@ export class DataUtil {
     if (d.type === 'cbg' && !d.sampleInterval) {
       // Legacy CGM data does not include sampleInterval, so we need to add it if unavailable, since
       // we rely on it for stat calculations and data filtering from the frontend queries.
-      let sampleInterval = defaultCGMSampleInterval;
+      let sampleInterval = this.defaultCGMSampleInterval;
 
       // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
       // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
@@ -825,7 +827,7 @@ export class DataUtil {
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
     this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
     this.filter.byId = id => this.dimension.byId.filterExact(id);
-    this.filter.bySampleInterval = (min, max = Infinity) => this.dimension.bySampleInterval.filterRange([min, max]);
+    this.filter.bySampleIntervalRange = (min = this.defaultCGMSampleIntervalRange[0], max = this.defaultCGMSampleIntervalRange[1]) => this.dimension.bySampleInterval.filterRange([min, max]);
 
     this.filter.bySubType = subType => {
       this.activeSubType = subType;
@@ -890,6 +892,7 @@ export class DataUtil {
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
     this.dimension.byDeviceId.filterAll();
+    // this.dimension.bySampleIntervalRange.filterAll(); // TODO: do I need this here?
     this.endTimer('clearFilters');
   };
 
@@ -1367,6 +1370,7 @@ export class DataUtil {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
       bgClasses = {},
       bgUnits = MGDL_UNITS,
+      cgmSampleIntervalRange = this.defaultCGMSampleIntervalRange,
       ...rest
     } = bgPrefs;
 
@@ -1382,6 +1386,7 @@ export class DataUtil {
       bgBounds,
       bgClasses,
       bgUnits,
+      cgmSampleIntervalRange,
       ...rest,
     };
     this.endTimer('setBgPrefs');

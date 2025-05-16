@@ -23,8 +23,6 @@ import { TWENTY_FOUR_HRS } from './datetime';
 
 import { bankersRound, formatBgValue } from './format.js';
 
-export const defaultCGMSampleInterval = 5 * MS_IN_MIN;
-
 /**
  * classifyBgValue
  * @param {Object} bgBounds - object describing boundaries for blood glucose categories
