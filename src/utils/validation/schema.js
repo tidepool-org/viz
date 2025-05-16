@@ -168,6 +168,11 @@ const bg = {
   units: { type: 'string', enum: [MGDL_UNITS, MMOLL_UNITS] },
 };
 
+const cbg = {
+  ...bg,
+  sampleInterval: postiveNumber,
+};
+
 const deviceEvent = {
   ...common,
   annotations: {
@@ -395,7 +400,7 @@ export default {
     extended: v.compile(extendedBolus),
     combination: v.compile(combinationBolus),
   },
-  cbg: v.compile(bg),
+  cbg: v.compile(cbg),
   common: v.compile(common),
   deviceEvent: v.compile(deviceEvent),
   message: v.compile(message),
