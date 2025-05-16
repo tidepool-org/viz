@@ -27,7 +27,7 @@ import {
   isUnderride,
 } from './bolus';
 
-import { convertToMGDL } from './bloodglucose';
+import { convertToMGDL, defaultCGMSampleInterval } from './bloodglucose';
 
 import {
   BGM_DATA_KEY,
@@ -201,6 +201,20 @@ export class DataUtil {
       d.messageText = d.messagetext;
       d.parentMessage = d.parentmessage || null;
       d.time = d.timestamp;
+    }
+
+    if (d.type === 'cbg' && !d.sampleInterval) {
+      // Legacy CGM data does not include sampleInterval, so we need to add it if unavailable, since
+      // we rely on it for stat calculations and data filtering from the frontend queries.
+      let sampleInterval = defaultCGMSampleInterval;
+
+      // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
+      // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
+      if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+        sampleInterval =  15 * MS_IN_MIN;
+      }
+
+      d.sampleInterval = sampleInterval;
     }
 
     // We validate datums before converting the time and deviceTime to hammerTime integers,
@@ -781,6 +795,10 @@ export class DataUtil {
     this.dimension.byDeviceId = this.data.dimension(d => d.deviceId || '');
   };
 
+  buildBySampleIntervalDimension = () => {
+    this.dimension.bySampleInterval = this.data.dimension(d => d.sampleInterval);
+  };
+
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
   // which would introduce additional performance overhead as per crossfilter docs.
   buildDimensions = () => {
@@ -793,6 +811,7 @@ export class DataUtil {
     this.buildByTimeDimension();
     this.buildByTypeDimension();
     this.buildByDeviceIdDimension();
+    this.buildBySampleIntervalDimension();
     this.endTimer('buildDimensions');
   };
 
@@ -804,6 +823,14 @@ export class DataUtil {
       .filterFunction(d => _.includes(activeDays, d));
 
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
+    this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
+    this.filter.byId = id => this.dimension.byId.filterExact(id);
+    this.filter.bySampleInterval = (min, max = Infinity) => this.dimension.bySampleInterval.filterRange([min, max]);
+
+    this.filter.bySubType = subType => {
+      this.activeSubType = subType;
+      return this.dimension.bySubType.filterExact(subType);
+    };
 
     this.filter.byType = type => {
       this.activeType = type;
@@ -815,14 +842,6 @@ export class DataUtil {
       return this.dimension.byType.filterFunction(type => _.includes(types, type));
     };
 
-    this.filter.bySubType = subType => {
-      this.activeSubType = subType;
-      return this.dimension.bySubType.filterExact(subType);
-    };
-
-    this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
-
-    this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
 
@@ -875,6 +894,30 @@ export class DataUtil {
   };
 
   setBgSources = current => {
+    this.startTimer('setBgSources');
+    this.clearFilters();
+
+    const bgSources = {
+      cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
+      smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
+      current: _.includes([CGM_DATA_KEY, BGM_DATA_KEY], current) ? current : undefined,
+    };
+
+    if (!bgSources.current) {
+      if (_.get(this, 'bgSources.current')) {
+        bgSources.current = this.bgSources.current;
+      } else if (bgSources.cbg) {
+        bgSources.current = CGM_DATA_KEY;
+      } else if (bgSources.smbg) {
+        bgSources.current = BGM_DATA_KEY;
+      }
+    }
+
+    this.bgSources = bgSources;
+    this.endTimer('setBgSources');
+  };
+
+  setBgIntervals = current => {
     this.startTimer('setBgSources');
     this.clearFilters();
 

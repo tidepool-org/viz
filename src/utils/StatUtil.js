@@ -4,7 +4,7 @@ import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
-import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
+import { classifyBgValue, defaultCGMSampleInterval } from './bloodglucose';
 import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
 
@@ -213,7 +213,7 @@ export class StatUtil {
     const getTotalCbgDuration = () => _.reduce(
       bgData,
       (result, datum) => {
-        result += cgmSampleFrequency(datum);
+        result += datum.sampleInterval;
         return result;
       },
       0
@@ -286,7 +286,7 @@ export class StatUtil {
     const duration = _.reduce(
       cbgData,
       (result, datum) => {
-        result += cgmSampleFrequency(datum);
+        result += datum.sampleInterval;
         return result;
       },
       0
@@ -297,7 +297,7 @@ export class StatUtil {
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
-    const sampleFrequency = cgmSampleFrequency(newestDatum);
+    const sampleFrequency = newestDatum?.sampleInterval || defaultCGMSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
@@ -415,7 +415,7 @@ export class StatUtil {
       cbgData,
       (result, datum) => {
         const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
-        const duration = cgmSampleFrequency(datum);
+        const duration = datum.sampleInterval;
         result.durations[classification] += duration;
         result.durations.total += duration;
         result.counts[classification]++;
