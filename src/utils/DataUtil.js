@@ -827,7 +827,10 @@ export class DataUtil {
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
     this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
     this.filter.byId = id => this.dimension.byId.filterExact(id);
-    this.filter.bySampleIntervalRange = (min = this.defaultCGMSampleIntervalRange[0], max = this.defaultCGMSampleIntervalRange[1]) => this.dimension.bySampleInterval.filterRange([min, max]);
+
+    this.filter.bySampleIntervalRange = (min = this.defaultCGMSampleIntervalRange[0], max = this.defaultCGMSampleIntervalRange[1]) => {
+      return min === max ? this.dimension.bySampleInterval.filterExact(min) : this.dimension.bySampleInterval.filterRange([min, max]);
+    }
 
     this.filter.bySubType = subType => {
       this.activeSubType = subType;
@@ -892,7 +895,7 @@ export class DataUtil {
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
     this.dimension.byDeviceId.filterAll();
-    // this.dimension.bySampleIntervalRange.filterAll(); // TODO: do I need this here?
+    this.dimension.bySampleIntervalRange.filterAll();
     this.endTimer('clearFilters');
   };
 
