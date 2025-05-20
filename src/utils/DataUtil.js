@@ -895,7 +895,7 @@ export class DataUtil {
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
     this.dimension.byDeviceId.filterAll();
-    this.dimension.bySampleIntervalRange.filterAll();
+    this.dimension.bySampleInterval.filterAll();
     this.endTimer('clearFilters');
   };
 
@@ -1721,7 +1721,7 @@ export class DataUtil {
       const returnAllFields = fields[0] === '*';
 
       // Filter cgm data by the currently-set sample interval range
-      if (type === CGM_DATA_KEY) this.filter.bySampleIntervalRange(...(this.bgPrefs?.cgmSampleIntervalRange));
+      if (type === CGM_DATA_KEY) this.filter.bySampleIntervalRange(...(this.bgPrefs?.cgmSampleIntervalRange || []));
 
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
       _.each(typeData, d => this.normalizeDatumOut(d, fields));
