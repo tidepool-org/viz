@@ -923,28 +923,8 @@ export class DataUtil {
     this.endTimer('setBgSources');
   };
 
-  setBgIntervals = current => {
-    this.startTimer('setBgSources');
-    this.clearFilters();
-
-    const bgSources = {
-      cbg: this.filter.byType(CGM_DATA_KEY).top(Infinity).length > 0,
-      smbg: this.filter.byType(BGM_DATA_KEY).top(Infinity).length > 0,
-      current: _.includes([CGM_DATA_KEY, BGM_DATA_KEY], current) ? current : undefined,
-    };
-
-    if (!bgSources.current) {
-      if (_.get(this, 'bgSources.current')) {
-        bgSources.current = this.bgSources.current;
-      } else if (bgSources.cbg) {
-        bgSources.current = CGM_DATA_KEY;
-      } else if (bgSources.smbg) {
-        bgSources.current = BGM_DATA_KEY;
-      }
-    }
-
-    this.bgSources = bgSources;
-    this.endTimer('setBgSources');
+  setCgmSampleIntervalRange = (cgmSampleIntervalRange = this.defaultCGMSampleIntervalRange) => {
+    this.cgmSampleIntervalRange = cgmSampleIntervalRange;
   };
 
   setLatestPumpUpload = () => {
@@ -1373,7 +1353,6 @@ export class DataUtil {
       bgBounds = DEFAULT_BG_BOUNDS[MGDL_UNITS],
       bgClasses = {},
       bgUnits = MGDL_UNITS,
-      cgmSampleIntervalRange = this.defaultCGMSampleIntervalRange,
       ...rest
     } = bgPrefs;
 
@@ -1389,7 +1368,6 @@ export class DataUtil {
       bgBounds,
       bgClasses,
       bgUnits,
-      cgmSampleIntervalRange,
       ...rest,
     };
     this.endTimer('setBgPrefs');
@@ -1422,6 +1400,7 @@ export class DataUtil {
       aggregationsByDate,
       bgPrefs,
       bgSource,
+      cgmSampleIntervalRange,
       endpoints,
       excludeDaysWithoutBolus,
       excludedDevices,
@@ -1453,6 +1432,7 @@ export class DataUtil {
 
     this.setReturnRawData(raw);
     this.setBgSources(bgSource);
+    this.setCgmSampleIntervalRange(cgmSampleIntervalRange);
     this.setTypes(types);
     this.setStats(stats);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
@@ -1721,7 +1701,7 @@ export class DataUtil {
       const returnAllFields = fields[0] === '*';
 
       // Filter cgm data by the currently-set sample interval range
-      if (type === CGM_DATA_KEY) this.filter.bySampleIntervalRange(...(this.bgPrefs?.cgmSampleIntervalRange || []));
+      if (type === CGM_DATA_KEY) this.filter.bySampleIntervalRange(...this.cgmSampleIntervalRange);
 
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
       _.each(typeData, d => this.normalizeDatumOut(d, fields));

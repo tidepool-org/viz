@@ -462,16 +462,9 @@ stories.add('Query Generator', (opts, props) => {
   const getBGPrefs = () => {
     const bgUnits = options('BG Units', { [MGDL_UNITS]: MGDL_UNITS, [MMOLL_UNITS]: MMOLL_UNITS, ...noneOption }, MGDL_UNITS, { display: 'select' });
 
-    const cgmSampleIntervalRange = options('CGM Sample Interval', {
-      '1 minute': [MS_IN_MIN, MS_IN_MIN],
-      '>= 1 minute': [MS_IN_MIN],
-      '>= 5 minutes': 'Default'
-    }, 'Default', { display: 'select' });
-
     return bgUnits !== 'None' ? {
       bgUnits,
       bgBounds: DEFAULT_BG_BOUNDS[bgUnits],
-      cgmSampleIntervalRange: cgmSampleIntervalRange !== 'Default' ? cgmSampleIntervalRange : undefined,
     } : undefined;
   };
 
@@ -479,6 +472,16 @@ stories.add('Query Generator', (opts, props) => {
     const bgSource = options('Stats BG Source', { ..._.pick(types, ['cbg', 'smbg']), ...noneOption }, 'None', { display: 'select' });
 
     return bgSource !== 'None' ? bgSource : undefined;
+  };
+
+  const getCGMSampleIntervalRange = () => {
+    const cgmSampleIntervalRange = options('CGM Sample Interval', {
+      '1 minute': [MS_IN_MIN, MS_IN_MIN],
+      '>= 1 minute': [MS_IN_MIN],
+      '>= 5 minutes': 'Default'
+    }, 'Default', { display: 'select' });
+
+    return cgmSampleIntervalRange !== 'Default' ? cgmSampleIntervalRange : undefined;
   };
 
   const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' });
@@ -536,6 +539,7 @@ stories.add('Query Generator', (opts, props) => {
     types: getTypes(),
     timePrefs,
     bgPrefs: getBGPrefs(),
+    cgmSampleIntervalRange: getCGMSampleIntervalRange(),
     bgSource: getBGSource(),
     nextDays: getNextDays(),
     prevDays: getPrevDays(),
