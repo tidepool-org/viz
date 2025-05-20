@@ -1701,7 +1701,11 @@ export class DataUtil {
       const returnAllFields = fields[0] === '*';
 
       // Filter cgm data by the currently-set sample interval range
-      if (type === CGM_DATA_KEY) this.filter.bySampleIntervalRange(...this.cgmSampleIntervalRange);
+      if (type === CGM_DATA_KEY) {
+        this.filter.bySampleIntervalRange(...this.cgmSampleIntervalRange);
+      } else {
+        this.dimension.bySampleInterval.filterAll();
+      }
 
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
       _.each(typeData, d => this.normalizeDatumOut(d, fields));
