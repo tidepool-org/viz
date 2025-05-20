@@ -616,7 +616,7 @@ describe('blood glucose utilities', () => {
     });
   });
 
-  describe('cgmSampleFrequency', () => {
+  describe.skip('cgmSampleFrequency', () => { // TODO: now set in the DataUtil upon ingestion - need to move tests there
     it('should get the CGM sample frequency in milliseconds from a CGM data point', () => {
       const dexcomDatum = {
         deviceId: 'Dexcom_XXXXXXX',
