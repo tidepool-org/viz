@@ -45,15 +45,21 @@ describe('format', () => {
 
     describe('no recogizable units provided', () => {
       it('should return a String integer by default (no recogizable `units` provided)', () => {
-        expect(format.formatBgValue(120.5)).to.equal('121');
-        expect(format.formatBgValue(120.5, 'foo')).to.equal('121');
+        expect(format.formatBgValue(120.5)).to.equal('120');
+        expect(format.formatBgValue(120.5, 'foo')).to.equal('120');
       });
     });
 
     describe('when units are `mg/dL`', () => {
       it('should return a String integer', () => {
-        expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('121');
+        expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('120');
       });
+
+      it ('should round half to even', () => {
+        expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('120');
+        expect(format.formatBgValue(120.50001, { bgUnits: MGDL_UNITS })).to.equal('121');
+        expect(format.formatBgValue(121.5, { bgUnits: MGDL_UNITS })).to.equal('122');
+      })
 
       it('should give no decimals', () => {
         expect(format.formatBgValue(352, { bgUnits: MGDL_UNITS })).to.equal('352');
