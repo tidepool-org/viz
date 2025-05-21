@@ -55,11 +55,11 @@ describe('format', () => {
         expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('120');
       });
 
-      it ('should round half to even', () => {
+      it('should round half to even', () => {
         expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('120');
         expect(format.formatBgValue(120.50001, { bgUnits: MGDL_UNITS })).to.equal('121');
         expect(format.formatBgValue(121.5, { bgUnits: MGDL_UNITS })).to.equal('122');
-      })
+      });
 
       it('should give no decimals', () => {
         expect(format.formatBgValue(352, { bgUnits: MGDL_UNITS })).to.equal('352');
