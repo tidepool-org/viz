@@ -924,7 +924,7 @@ export class DataUtil {
   };
 
   setCgmSampleIntervalRange = (cgmSampleIntervalRange = this.defaultCGMSampleIntervalRange) => {
-    this.cgmSampleIntervalRange = cgmSampleIntervalRange;
+    this.cgmSampleIntervalRange = _.compact(cgmSampleIntervalRange);
   };
 
   setLatestPumpUpload = () => {
