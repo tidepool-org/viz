@@ -306,28 +306,28 @@ export class StatUtil {
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
-    const sampleFrequency = newestDatum?.sampleInterval || this.dataUtil.defaultCGMSampleInterval;
+    const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCGMSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
     let cgmMinutesWorn;
 
     if (rawCbgData.length < 2) {
-      cgmMinutesWorn = rawCbgData.length === 1 ? sampleFrequency : 0;
+      cgmMinutesWorn = rawCbgData.length === 1 ? sampleInterval : 0;
     } else {
       cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
     }
 
     const sensorUsageAGP = (
       count /
-      ((cgmMinutesWorn / (sampleFrequency / MS_IN_MIN)) + 1)
+      ((cgmMinutesWorn / (sampleInterval / MS_IN_MIN)) + 1)
     ) * 100;
 
     return {
       sensorUsage: duration,
       sensorUsageAGP,
       total,
-      sampleFrequency,
+      sampleInterval,
       count,
     };
   };

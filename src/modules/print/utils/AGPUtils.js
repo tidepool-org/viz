@@ -48,7 +48,7 @@ export const calculateCGMDataSufficiency = (data = {}) => {
 
   const {
     count,
-    sampleFrequency,
+    sampleInterval,
     sensorUsageAGP,
   } = data.data?.current?.stats?.sensorUsage || {};
 
@@ -59,7 +59,7 @@ export const calculateCGMDataSufficiency = (data = {}) => {
     percentInRanges: true,
   };
 
-  const hoursOfCGMData = (count * sampleFrequency) / MS_IN_HOUR;
+  const hoursOfCGMData = (count * sampleInterval) / MS_IN_HOUR;
 
   if (hoursOfCGMData < 24) {
     // Show nothing if <24 hours total cgm time
@@ -88,7 +88,7 @@ export const calculateCGMDataSufficiency = (data = {}) => {
   const sensorUsageByDate = _.map(cgmCalendarDays, (date, index) => {
     const {
       count: countForDate,
-      sampleFrequency: sampleFrequencyForDate,
+      sampleInterval: sampleFrequencyForDate,
     } = statsByDate[date]?.sensorUsage || {};
 
     const {
