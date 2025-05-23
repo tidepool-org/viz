@@ -28,6 +28,7 @@ import TwoOptionToggle from './components/common/controls/TwoOptionToggle';
 import PumpSettingsContainer from './components/settings/common/PumpSettingsContainer';
 import TrendsContainer from './components/trends/common/TrendsContainer';
 import Tooltip from './components/common/tooltips/Tooltip';
+import CgmSampleIntervalTooltip from './components/common/tooltips/CgmSampleIntervalTooltip';
 import BolusTooltip from './components/daily/bolustooltip/BolusTooltip';
 import PumpSettingsOverrideTooltip from './components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import SMBGTooltip from './components/daily/smbgtooltip/SMBGTooltip';
@@ -96,6 +97,7 @@ const components = {
   Stat,
   CBGTooltip,
   FoodTooltip,
+  CgmSampleIntervalTooltip,
 };
 
 const containers = {

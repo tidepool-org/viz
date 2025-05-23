@@ -723,7 +723,7 @@ describe('StatUtil', () => {
       let result = statUtil.getSensorUsage();
       expect(result.sensorUsage).to.equal(MS_IN_MIN * 55); // 3 * 15m for libre readings, 2 * 5m for dex readings
       expect(result.total).to.equal(MS_IN_DAY);
-      expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
+      expect(result.sampleInterval).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
       expect(result.sensorUsageAGP).to.equal((
         expectedCount /
@@ -737,7 +737,7 @@ describe('StatUtil', () => {
       result = statUtil.getSensorUsage();
       expect(result.sensorUsage).to.equal(MS_IN_MIN * 60); // 3 * 15m for libre readings, 3 * 5m for dex readings
       expect(result.total).to.equal(MS_IN_DAY * 14);
-      expect(result.sampleFrequency).to.equal(expectedSampleFrequency);
+      expect(result.sampleInterval).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
       expect(result.sensorUsageAGP).to.equal((
         expectedCount /

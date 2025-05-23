@@ -252,31 +252,6 @@ export function weightedCGMCount(data) {
 }
 
 /**
- * Get the CGM sample frequency in milliseconds from a CGM data point. Most devices default at a
- * 5 minute interval, but others, such as the Abbot FreeStyle Libre, sample every 15 mins, while
- * Abbot FreeStyle Libre 2, coming from a Tandem CIQ pump, samples every minute.
- *
- * @param {Array} datum - a cgm data point
- */
-export function cgmSampleFrequency(datum) {
-  const deviceId = _.get(datum, 'deviceId', '');
-
-  if (datum?.sampleInterval) {
-    return datum.sampleInterval;
-  }
-
-  if (deviceId.indexOf('AbbottFreeStyleLibre3') === 0) {
-    return 5 * MS_IN_MIN;
-  }
-
-  if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
-    return 15 * MS_IN_MIN;
-  }
-
-  return 5 * MS_IN_MIN;
-}
-
-/**
  * Determine if a patient is using a custom target bg range
  *
  * @param {Object} bgPrefs - bgPrefs object containing viz-style bgBounds and the bgUnits

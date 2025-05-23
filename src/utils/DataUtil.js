@@ -79,6 +79,8 @@ export class DataUtil {
     this.startTimer('init total');
     this.data = crossfilter([]);
     this.queryDataCount = 0;
+    this.defaultCGMSampleInterval = 5 * MS_IN_MIN;
+    this.defaultCGMSampleIntervalRange = [this.defaultCGMSampleInterval, Infinity];
 
     this.buildDimensions();
     this.buildFilters();
@@ -201,6 +203,20 @@ export class DataUtil {
       d.messageText = d.messagetext;
       d.parentMessage = d.parentmessage || null;
       d.time = d.timestamp;
+    }
+
+    if (d.type === 'cbg' && !d.sampleInterval) {
+      // Legacy CGM data does not include sampleInterval, so we need to add it if unavailable, since
+      // we rely on it for stat calculations and data filtering from the frontend queries.
+      let sampleInterval = this.defaultCGMSampleInterval;
+
+      // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
+      // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
+      if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+        sampleInterval =  15 * MS_IN_MIN;
+      }
+
+      d.sampleInterval = sampleInterval;
     }
 
     // We validate datums before converting the time and deviceTime to hammerTime integers,
@@ -781,6 +797,10 @@ export class DataUtil {
     this.dimension.byDeviceId = this.data.dimension(d => d.deviceId || '');
   };
 
+  buildBySampleIntervalDimension = () => {
+    this.dimension.bySampleInterval = this.data.dimension(d => d.sampleInterval);
+  };
+
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
   // which would introduce additional performance overhead as per crossfilter docs.
   buildDimensions = () => {
@@ -793,6 +813,7 @@ export class DataUtil {
     this.buildByTimeDimension();
     this.buildByTypeDimension();
     this.buildByDeviceIdDimension();
+    this.buildBySampleIntervalDimension();
     this.endTimer('buildDimensions');
   };
 
@@ -804,6 +825,17 @@ export class DataUtil {
       .filterFunction(d => _.includes(activeDays, d));
 
     this.filter.byEndpoints = endpoints => this.dimension.byTime.filterRange(endpoints);
+    this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
+    this.filter.byId = id => this.dimension.byId.filterExact(id);
+
+    this.filter.bySampleIntervalRange = (min = this.defaultCGMSampleIntervalRange[0], max = this.defaultCGMSampleIntervalRange[1]) => {
+      return min === max ? this.dimension.bySampleInterval.filterExact(min) : this.dimension.bySampleInterval.filterRange([min, max]);
+    }
+
+    this.filter.bySubType = subType => {
+      this.activeSubType = subType;
+      return this.dimension.bySubType.filterExact(subType);
+    };
 
     this.filter.byType = type => {
       this.activeType = type;
@@ -815,14 +847,6 @@ export class DataUtil {
       return this.dimension.byType.filterFunction(type => _.includes(types, type));
     };
 
-    this.filter.bySubType = subType => {
-      this.activeSubType = subType;
-      return this.dimension.bySubType.filterExact(subType);
-    };
-
-    this.filter.byDeviceIds = (excludedDeviceIds = []) => this.dimension.byDeviceId.filterFunction(deviceId => !_.includes(excludedDeviceIds, deviceId));
-
-    this.filter.byId = id => this.dimension.byId.filterExact(id);
     this.endTimer('buildFilters');
   };
 
@@ -871,6 +895,7 @@ export class DataUtil {
     this.dimension.byId.filterAll();
     this.dimension.byDayOfWeek.filterAll();
     this.dimension.byDeviceId.filterAll();
+    this.dimension.bySampleInterval.filterAll();
     this.endTimer('clearFilters');
   };
 
@@ -896,6 +921,10 @@ export class DataUtil {
 
     this.bgSources = bgSources;
     this.endTimer('setBgSources');
+  };
+
+  setCgmSampleIntervalRange = (cgmSampleIntervalRange = this.defaultCGMSampleIntervalRange) => {
+    this.cgmSampleIntervalRange = _.compact(cgmSampleIntervalRange);
   };
 
   setLatestPumpUpload = () => {
@@ -1371,6 +1400,7 @@ export class DataUtil {
       aggregationsByDate,
       bgPrefs,
       bgSource,
+      cgmSampleIntervalRange,
       endpoints,
       excludeDaysWithoutBolus,
       excludedDevices,
@@ -1402,6 +1432,7 @@ export class DataUtil {
 
     this.setReturnRawData(raw);
     this.setBgSources(bgSource);
+    this.setCgmSampleIntervalRange(cgmSampleIntervalRange);
     this.setTypes(types);
     this.setStats(stats);
     if (bgPrefs) this.setBgPrefs(bgPrefs);
@@ -1668,6 +1699,13 @@ export class DataUtil {
     _.each(types, ({ type, select = '*', sort = {} }) => {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
       const returnAllFields = fields[0] === '*';
+
+      // Filter cgm data by the currently-set sample interval range
+      if (type === CGM_DATA_KEY) {
+        this.filter.bySampleIntervalRange(...this.cgmSampleIntervalRange);
+      } else {
+        this.dimension.bySampleInterval.filterAll();
+      }
 
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
       _.each(typeData, d => this.normalizeDatumOut(d, fields));

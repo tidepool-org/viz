@@ -32,7 +32,7 @@ import moment from 'moment';
 
 import Stat from '../../src/components/common/stat/Stat';
 import { commonStats, getStatDefinition } from '../../src/utils/stat';
-import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, DEFAULT_BG_BOUNDS, MS_IN_MIN } from '../../src/utils/constants';
 import { getOffset } from '../../src/utils/datetime';
 
 const stories = storiesOf('DataUtil', module);
@@ -156,6 +156,7 @@ stories.add('Query Generator', (opts, props) => {
     cbg: {
       ...commonFields,
       ...computedFields,
+      sampleInterval: 'sampleInterval',
       msPer24: 'msPer24',
       units: 'units',
       value: 'value',
@@ -337,7 +338,7 @@ stories.add('Query Generator', (opts, props) => {
     const fields = options(
       type,
       fieldsByType[type],
-      ['id', 'normalTime'],
+      ['id', '_time'],
       { display: 'check' }
     );
     return { select: queryFormat === 'string' ? fields.join(',') : fields };
@@ -473,6 +474,16 @@ stories.add('Query Generator', (opts, props) => {
     return bgSource !== 'None' ? bgSource : undefined;
   };
 
+  const getCGMSampleIntervalRange = () => {
+    const cgmSampleIntervalRange = options('CGM Sample Interval', {
+      '1 minute': [MS_IN_MIN, MS_IN_MIN],
+      '>= 1 minute': [MS_IN_MIN],
+      '>= 5 minutes': 'Default'
+    }, 'Default', { display: 'select' });
+
+    return cgmSampleIntervalRange !== 'Default' ? cgmSampleIntervalRange : undefined;
+  };
+
   const getStatsQueryFormat = () => options('Stats Query Format', { ...stringQueryFormat, ...arrayQueryFormat }, 'string', { display: 'radio' });
   const getStats = () => {
     const queryFormat = getStatsQueryFormat();
@@ -528,6 +539,7 @@ stories.add('Query Generator', (opts, props) => {
     types: getTypes(),
     timePrefs,
     bgPrefs: getBGPrefs(),
+    cgmSampleIntervalRange: getCGMSampleIntervalRange(),
     bgSource: getBGSource(),
     nextDays: getNextDays(),
     prevDays: getPrevDays(),
