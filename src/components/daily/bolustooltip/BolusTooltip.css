@@ -54,6 +54,13 @@
 .title {
   composes: smallSize from '../../../styles/typography.css';
   text-align: right;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.types {
+  text-align: left;
 }
 
 .suggested {

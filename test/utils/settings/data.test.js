@@ -363,6 +363,19 @@ describe('[settings] data utils', () => {
       });
     });
 
+    it('should return columns and rows for insulin settings from Tandem C-IQ pump settings', () => {
+      expect(data.insulinSettings({ ...tandemFlatrateData, deviceId: 'tandemCIQ123' }, 'tandem', 'Normal')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          { setting: 'Max Bolus', value: '12 U' },
+          { setting: 'Insulin Duration*', value: '5 hrs' },
+        ],
+      });
+    });
+
     it('should return columns and rows for insulin settings from Omnipod pump settings', () => {
       expect(data.insulinSettings(omnipodMultirateData, 'insulet')).to.eql({
         columns: [

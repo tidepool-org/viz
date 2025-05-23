@@ -388,6 +388,17 @@ export function isAutomated(insulinEvent) {
 }
 
 /**
+ * isOneButton
+ * @param {Object} insulinEvent - a Tidepool bolus or wizard object
+ *
+ * @return {Boolean} whether the bolus has a one-button delivery context
+ */
+export function isOneButton(insulinEvent) {
+  const bolus = getBolusFromInsulinEvent(insulinEvent);
+  return _.get(bolus, 'deliveryContext') === 'oneButton';
+}
+
+/**
  * getAnnoations
  * @param {Object} insulinEvent - a Tidebool bolus or wizard object
  *

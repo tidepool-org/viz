@@ -31,6 +31,7 @@ const SMBGsByDateContainer = (props) => {
   const {
     anSmbgRangeAvgIsFocused,
     bgBounds,
+    bgUnits,
     dates,
     focusSmbg,
     unfocusSmbg,
@@ -104,6 +105,7 @@ const SMBGsByDateContainer = (props) => {
       <SMBGDatePointsAnimated
         anSmbgRangeAvgIsFocused={anSmbgRangeAvgIsFocused}
         bgBounds={bgBounds}
+        bgUnits={bgUnits}
         data={smbgs}
         date={date}
         focusSmbg={focusSmbg}
@@ -138,6 +140,7 @@ SMBGsByDateContainer.propTypes = {
     targetLowerBound: PropTypes.number.isRequired,
     veryLowThreshold: PropTypes.number.isRequired,
   }).isRequired,
+  bgUnits: PropTypes.string.isRequired,
   data: PropTypes.arrayOf(PropTypes.shape({
     // here only documenting the properties we actually use rather than the *whole* data model!
     id: PropTypes.string.isRequired,

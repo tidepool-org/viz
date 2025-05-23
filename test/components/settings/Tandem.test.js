@@ -22,6 +22,8 @@ import { mount, shallow } from 'enzyme';
 
 import CollapsibleContainer from '../../../src/components/settings/common/CollapsibleContainer';
 import Tandem from '../../../src/components/settings/Tandem';
+import styles from '../../../src/components/settings/Tandem.css';
+import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../src/utils/constants';
 import { formatDecimalNumber } from '../../../src/utils/format';
 
@@ -188,6 +190,24 @@ describe('Tandem', () => {
       expect(insulinSettingsTable.find('tr').at(1).text()).contains('Insulin Duration');
       assert.equal(flatrateData.bolus[flatrateData.activeSchedule].calculator.insulin.duration, 245);
       expect(insulinSettingsTable.find('tr').at(1).text()).contains('4:05 hrs');
+    });
+  });
+
+  describe('Tandem C-IQ annotation', () => {
+    let mounted;
+
+    before(() => {
+      props.pumpSettings = { ...flatrateData, deviceId: 'tandemCIQ123' };
+      props.bgUnits = MMOLL_UNITS;
+      props.openedSections = { [flatrateData.activeSchedule]: true };
+      mounted = mount(
+        <Tandem {...props} />
+      );
+    });
+
+    it('should render an annotation', () => {
+      const annotation = mounted.find(formatClassesAsSelector(styles.annotations)).hostNodes().at(0);
+      expect(annotation.text()).contains('Tandem Control-IQ uses its own preset');
     });
   });
 });

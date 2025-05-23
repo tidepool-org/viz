@@ -6,12 +6,13 @@ import TransitionGroupPlus from 'react-transition-group-plus';
 import CBGDateTraceAnimated from './CBGDateTraceAnimated';
 
 const CBGDateTracesAnimationContainer = (props) => {
-  const { bgBounds, data, dates, topMargin, xScale, yScale } = props;
+  const { bgBounds, bgUnits, data, dates, topMargin, xScale, yScale } = props;
   return (
     <TransitionGroupPlus component="g" id="cbgDateTraces" transitionMode="simultaneous">
       {_.map(dates, (localDate) => (
         <CBGDateTraceAnimated
           bgBounds={bgBounds}
+          bgUnits={bgUnits}
           data={data[localDate]}
           date={localDate}
           focusDateTrace={props.focusCbgDateTrace}

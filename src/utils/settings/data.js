@@ -20,7 +20,7 @@ import i18next from 'i18next';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
-import { getPumpVocabulary, isLoop } from '../device';
+import { getPumpVocabulary, isControlIQ, isLoop } from '../device';
 
 import {
   MAX_BOLUS,
@@ -432,7 +432,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   const rows = [
     { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
-    { setting: deviceLabels[INSULIN_DURATION], value: insulinDuration ? `${insulinDuration} hrs` : '-' },
+    { setting: deviceLabels[INSULIN_DURATION] + (isControlIQ(settings) ? '*' : ''), value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
 
   if (isLoop(settings)) {

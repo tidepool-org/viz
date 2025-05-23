@@ -22,6 +22,7 @@ import {
   isAutomated,
   isCorrection,
   isInterruptedBolus,
+  isOneButton,
   isOverride,
   isUnderride,
 } from './bolus';
@@ -364,6 +365,7 @@ export class DataUtil {
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
         loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        oneButton: isOneButton(d),
       };
     }
 
@@ -1095,6 +1097,8 @@ export class DataUtil {
             label = t('Dexcom API');
           } else if (deviceManufacturer === 'Abbott' && isContinuous) {
             label = t('FreeStyle Libre (from LibreView)');
+          } else if (deviceManufacturer === 'Sequel' && isContinuous) {
+            label = t('twiist');
           } else {
             label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }

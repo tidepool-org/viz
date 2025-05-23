@@ -39,6 +39,7 @@ import {
   DIY_LOOP,
   MEDTRONIC,
   MICROTECH,
+  ONE_BUTTON_BOLUS,
   pumpVocabulary,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
@@ -135,6 +136,10 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           dimensions.splice(3, 1);
           dimensions[2].selectorIndex = 6;
           dimensions[5].selectorIndex = 7;
+        }
+
+        if (isTwiistLoop(pumpUpload.settings)) {
+          dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 7, hideEmpty: hideEmptyWizardDimensions });
         }
 
         if (pumpUpload.isAutomatedBolusDevice) {
