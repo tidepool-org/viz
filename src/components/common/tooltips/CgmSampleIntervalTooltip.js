@@ -47,15 +47,15 @@ const CgmSampleIntervalTooltip = props => {
             <div className={styles.row}>{interval.title}</div>
 
             <ul className={styles.annotations}>
-              {_.map(interval.annotations, (annotation, index) => (
-                <li key={`annotation-${index}`} className={styles.annotation}>{annotation}</li>
+              {_.map(interval.annotations, (annotation, annotationIndex) => (
+                <li key={`annotation-${annotationIndex}`} className={styles.annotation}>{annotation}</li>
               ))}
             </ul>
           </div>
         ))}
       </div>
     );
-  }
+  };
 
   return (
     <Tooltip

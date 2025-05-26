@@ -215,7 +215,7 @@ export class DataUtil {
       // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
       // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
       if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
-        sampleInterval =  15 * MS_IN_MIN;
+        sampleInterval = 15 * MS_IN_MIN;
       }
 
       d.sampleInterval = sampleInterval;
@@ -831,17 +831,12 @@ export class DataUtil {
     this.filter.byId = id => this.dimension.byId.filterExact(id);
 
     this.filter.bySampleIntervalRange = (min = this.defaultCGMSampleIntervalRange[0], max = this.defaultCGMSampleIntervalRange[1]) => {
-      this.ignoreFilterChangeHandler = true;
-
       if (min === max) {
-        this.dimension.bySampleInterval.filterExact(min)
+        return this.dimension.bySampleInterval.filterExact(min);
       } else {
-        this.dimension.bySampleInterval.filterRange([min, max]);
+        return this.dimension.bySampleInterval.filterRange([min, max]);
       }
-
-      this.ignoreFilterChangeHandler = false;
-      // return min === max ? this.dimension.bySampleInterval.filterExact(min) : this.dimension.bySampleInterval.filterRange([min, max]);
-    }
+    };
 
     this.filter.bySubType = subType => {
       this.activeSubType = subType;

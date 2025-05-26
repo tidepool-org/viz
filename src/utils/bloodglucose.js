@@ -238,7 +238,7 @@ export function weightedCGMCount(data) { // TODO: do I need to account for 1min 
   return _.reduce(data, (total, datum) => {
     const sampleInterval = _.get(datum, 'sampleInterval', 5 * MS_IN_MIN);
     const sampleIntervalInMinutes = sampleInterval / MS_IN_MIN;
-    let datumWeight = sampleIntervalInMinutes / 5; // Default weight is 1, for 5 minute samples
+    const datumWeight = sampleIntervalInMinutes / 5; // Default weight is 1, for 5 minute samples
     return total + datumWeight;
   }, 0);
 }
