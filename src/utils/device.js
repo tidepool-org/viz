@@ -102,6 +102,15 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}
 }
 
 /**
+ * Check if the provided datum was for a settings-overrideable device
+ * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
+ * @returns {Boolean}
+ */
+export function isOneMinCGMSampleIntervalDevice(pumpSettingsOrUpload = {}) {
+  return isTwiistLoop(pumpSettingsOrUpload);
+}
+
+/**
  * Get the uppercased manufacturer name
  * @param {String} manufacturer Manufacturer name
  */

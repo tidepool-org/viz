@@ -15,6 +15,7 @@ import {
   isDIYLoop,
   isTidepoolLoop,
   isTwiistLoop,
+  isOneMinCGMSampleIntervalDevice,
 } from './device';
 
 import {
@@ -1138,6 +1139,7 @@ export class DataUtil {
         device = {
           bgm: _.includes(upload.deviceTags, 'bgm'),
           cgm: _.includes(upload.deviceTags, 'cgm'),
+          oneMinCgmSampleInterval: isOneMinCGMSampleIntervalDevice(upload),
           id: key,
           label,
           pump: _.includes(upload.deviceTags, 'insulin-pump'),
