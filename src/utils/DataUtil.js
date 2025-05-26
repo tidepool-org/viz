@@ -82,6 +82,7 @@ export class DataUtil {
     this.queryDataCount = 0;
     this.defaultCGMSampleInterval = 5 * MS_IN_MIN;
     this.defaultCGMSampleIntervalRange = [this.defaultCGMSampleInterval, Infinity];
+    this.setCgmSampleIntervalRange();
 
     this.buildDimensions();
     this.buildFilters();
@@ -799,7 +800,7 @@ export class DataUtil {
   };
 
   buildBySampleIntervalDimension = () => {
-    this.dimension.bySampleInterval = this.data.dimension(d => d.sampleInterval);
+    this.dimension.bySampleInterval = this.data.dimension(d => d.sampleInterval || '');
   };
 
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
@@ -830,7 +831,16 @@ export class DataUtil {
     this.filter.byId = id => this.dimension.byId.filterExact(id);
 
     this.filter.bySampleIntervalRange = (min = this.defaultCGMSampleIntervalRange[0], max = this.defaultCGMSampleIntervalRange[1]) => {
-      return min === max ? this.dimension.bySampleInterval.filterExact(min) : this.dimension.bySampleInterval.filterRange([min, max]);
+      this.ignoreFilterChangeHandler = true;
+
+      if (min === max) {
+        this.dimension.bySampleInterval.filterExact(min)
+      } else {
+        this.dimension.bySampleInterval.filterRange([min, max]);
+      }
+
+      this.ignoreFilterChangeHandler = false;
+      // return min === max ? this.dimension.bySampleInterval.filterExact(min) : this.dimension.bySampleInterval.filterRange([min, max]);
     }
 
     this.filter.bySubType = subType => {
@@ -1526,6 +1536,10 @@ export class DataUtil {
     this.statUtil = new StatUtil(this);
     _.each(stats, stat => {
       const method = statFetchMethods[stat];
+      // Reset the byType and bySampleInterval filters prior to each stat calculation.
+      // Stats that need to filter by these will do so internally within the statUtil.
+      this.dimension.byType.filterAll();
+      this.dimension.bySampleInterval.filterAll();
 
       if (_.isFunction(this.statUtil[method])) {
         this.startTimer(`stat | ${stat}`);
@@ -1702,13 +1716,16 @@ export class DataUtil {
       const fields = _.isString(select) ? _.map(select.split(','), _.trim) : select;
       const returnAllFields = fields[0] === '*';
 
-      // Filter cgm data by the currently-set sample interval range
+      // Clear any previous byType and bySampleInterval filters
+      this.dimension.byType.filterAll();
+      this.dimension.bySampleInterval.filterAll();
+
+      // Filter cgm data by the currently-set sample interval range.
       if (type === CGM_DATA_KEY) {
         this.filter.bySampleIntervalRange(...this.cgmSampleIntervalRange);
-      } else {
-        this.dimension.bySampleInterval.filterAll();
       }
 
+      // Filter data by the requested type
       let typeData = _.cloneDeep(this.filter.byType(type).top(Infinity));
       _.each(typeData, d => this.normalizeDatumOut(d, fields));
 
