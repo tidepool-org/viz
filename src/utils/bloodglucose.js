@@ -234,19 +234,11 @@ export function getOutOfRangeThreshold(bgDatum) {
  * @param {Array} data - cgm data
  * @return {Integer} count - the weighted count
  */
-export function weightedCGMCount(data) {
+export function weightedCGMCount(data) { // TODO: do I need to account for 1min samples here?
   return _.reduce(data, (total, datum) => {
-    let datumWeight = 1;
-    const deviceId = _.get(datum, 'deviceId', '');
-
-    // Because our decision as to whether or not there's enough cgm data to warrant using
-    // it to calculate average BGs is based on the expected number of readings in a day,
-    // we need to adjust the weight of a for the Freestyle Libre datum, as it only
-    // collects BG samples every 15 minutes as opposed the default 5 minutes from dexcom.
-    if (datum.type === 'cbg' && deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
-      datumWeight = 3;
-    }
-
+    const sampleInterval = _.get(datum, 'sampleInterval', 5 * MS_IN_MIN);
+    const sampleIntervalInMinutes = sampleInterval / MS_IN_MIN;
+    let datumWeight = sampleIntervalInMinutes / 5; // Default weight is 1, for 5 minute samples
     return total + datumWeight;
   }, 0);
 }

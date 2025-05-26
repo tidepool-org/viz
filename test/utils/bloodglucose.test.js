@@ -597,7 +597,7 @@ describe('blood glucose utilities', () => {
 
     it('should return a count of 3 for every FreeStyle Libre cgm datum by default', () => {
       const data = _.map(_.range(0, 10), () => ({
-        deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+        sampleInterval: 15 * MS_IN_MIN,
         type: 'cbg',
       }));
 
@@ -608,7 +608,7 @@ describe('blood glucose utilities', () => {
       const data = _.map(_.range(0, 10), () => ({
         deviceId: 'Dexcom_XXXXXXX',
       })).concat(_.map(_.range(0, 10), () => ({
-        deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+        sampleInterval: 15 * MS_IN_MIN,
         type: 'cbg',
       })));
 
