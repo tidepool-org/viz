@@ -95,18 +95,21 @@ describe('StatUtil', () => {
       deviceId: 'AbbottFreeStyleLibre-XXX-XXXX',
       value: 50,
       deviceTime: '2018-02-01T00:00:00',
+      sampleInterval: 15 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'AbbottFreeStyleLibre-XXX-XXXX',
       value: 60,
       deviceTime: '2018-02-01T00:15:00',
+      sampleInterval: 15 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'AbbottFreeStyleLibre-XXX-XXXX',
       value: 100,
       deviceTime: '2018-02-01T00:30:00',
+      sampleInterval: 15 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({

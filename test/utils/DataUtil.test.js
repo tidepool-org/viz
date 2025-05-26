@@ -3079,6 +3079,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
@@ -3099,6 +3100,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandem12345',
           label: 'Tandem 12345',
           pump: true,
@@ -3116,6 +3118,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandem12345',
           label: 'Tandem 12345',
           pump: true,
@@ -3124,6 +3127,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
@@ -3153,6 +3157,7 @@ describe('DataUtil', () => {
         {
           bgm: true,
           cgm: true,
+          oneMinCgmSampleInterval: false,
           id: 'MyAbbott123',
           label: 'FreeStyle Libre (from LibreView)',
           pump: false,
@@ -3164,6 +3169,10 @@ describe('DataUtil', () => {
     it('should add set the proper device label for Sequel data', () => {
       initDataUtil([{
         ...uploadData[3],
+        client: {
+          name: 'com.sequelmedtech.tidepool-service',
+          version: '2.0.0',
+        },
         deviceManufacturers: ['Sequel'],
         deviceId: 'MySequel123',
         dataSetType: 'continuous',
@@ -3181,6 +3190,7 @@ describe('DataUtil', () => {
         {
           bgm: true,
           cgm: true,
+          oneMinCgmSampleInterval: true,
           id: 'MySequel123',
           label: 'twiist',
           pump: true,
@@ -3207,6 +3217,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: true,
+          oneMinCgmSampleInterval: false,
           id: 'MyDexcom123',
           label: 'Dexcom API',
           pump: false,
@@ -4163,6 +4174,7 @@ describe('DataUtil', () => {
       dataUtil.matchDevices = true;
       dataUtil.getStats(['averageGlucose', 'totalInsulin']);
 
+      console.log('dataUtil.matchedDevices', dataUtil.matchedDevices);
       expect(dataUtil.matchedDevices).to.eql({
         'Dexcom-XXX-XXXX': { 'Dexcom G6_2.3.2': true, 'Dexcom G6_3.1.0': true },
         'AbbottFreeStyleLibre-XXX-XXXX': { 'AbbottFreeStyleLibre-XXX-XXXX_0.0': true },
@@ -4382,7 +4394,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
@@ -4417,7 +4429,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
