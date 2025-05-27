@@ -860,6 +860,54 @@ describe('DataUtil', () => {
       });
     });
 
+    context('cbg', () => {
+      it('should set the CGM sampleIntval in milliseconds from datums that do not have it', () => {
+        const dexcomDatum = {
+          type: 'cbg',
+          deviceId: 'Dexcom_XXXXXXX',
+        };
+        dataUtil.normalizeDatumIn(dexcomDatum);
+        expect(dexcomDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+
+        const libreDatum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+        };
+        dataUtil.normalizeDatumIn(libreDatum);
+        expect(libreDatum.sampleInterval).to.equal(15 * MS_IN_MIN);
+
+        const libre3Datum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
+        };
+        dataUtil.normalizeDatumIn(libre3Datum);
+        expect(libre3Datum.sampleInterval).to.equal(5 * MS_IN_MIN);
+
+        const libre2CIQDatum = {
+          type: 'cbg',
+          sampleInterval: MS_IN_MIN,
+        };
+        dataUtil.normalizeDatumIn(libre2CIQDatum);
+        expect(libre2CIQDatum.sampleInterval).to.equal(MS_IN_MIN); // unchanged, since it was already set
+
+        const g7CIQDatum = {
+          type: 'cbg',
+          deviceId: 'tandemCIQ_XXXXX',
+          payload: { g7: true },
+        };
+        dataUtil.normalizeDatumIn(g7CIQDatum);
+        expect(g7CIQDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+
+        const g6CIQDatum = {
+          type: 'cbg',
+          deviceId: 'tandemCIQ_XXXXX',
+          payload: { g6: true },
+        };
+        dataUtil.normalizeDatumIn(g6CIQDatum);
+        expect(g6CIQDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+      });
+    });
+
     context('wizard', () => {
       it('should add the datum to the `wizardDatumsByIdMap` if bolus field is a string', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);

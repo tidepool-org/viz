@@ -616,43 +616,6 @@ describe('blood glucose utilities', () => {
     });
   });
 
-  describe.skip('cgmSampleFrequency', () => { // TODO: now set in the DataUtil upon ingestion - need to move tests there
-    it('should get the CGM sample frequency in milliseconds from a CGM data point', () => {
-      const dexcomDatum = {
-        deviceId: 'Dexcom_XXXXXXX',
-      };
-      expect(bgUtils.cgmSampleFrequency(dexcomDatum)).to.equal(5 * MS_IN_MIN);
-
-      const libreDatum = {
-        deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
-      };
-      expect(bgUtils.cgmSampleFrequency(libreDatum)).to.equal(15 * MS_IN_MIN);
-
-      const libre3Datum = {
-        deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
-      };
-      expect(bgUtils.cgmSampleFrequency(libre3Datum)).to.equal(5 * MS_IN_MIN);
-
-      const libre2CIQDatum = {
-        sampleInterval: MS_IN_MIN,
-      };
-
-      const g7CIQDatum = {
-        deviceId: 'tandemCIQ_XXXXX',
-        payload: { g7: true },
-      };
-
-      const g6CIQDatum = {
-        deviceId: 'tandemCIQ_XXXXX',
-        payload: { g6: true },
-      };
-
-      expect(bgUtils.cgmSampleFrequency(libre2CIQDatum)).to.equal(MS_IN_MIN);
-      expect(bgUtils.cgmSampleFrequency(g7CIQDatum)).to.equal(5 * MS_IN_MIN);
-      expect(bgUtils.cgmSampleFrequency(g6CIQDatum)).to.equal(5 * MS_IN_MIN);
-    });
-  });
-
   describe('isCustomBgRange', () => {
     const defaultBGPrefsMgdl = {
       bgBounds: DEFAULT_BG_BOUNDS[MGDL_UNITS],
