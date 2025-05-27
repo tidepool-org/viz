@@ -34,7 +34,7 @@ export class StatUtil {
   };
 
   filterCBGDataByDefaultSampleInterval = () => {
-    this.dataUtil.filter.bySampleIntervalRange(...this.dataUtil.defaultCGMSampleIntervalRange);
+    this.dataUtil.filter.bySampleIntervalRange(...this.dataUtil.defaultCgmSampleIntervalRange);
   };
 
   getAverageGlucoseData = (returnBgData = false) => {
@@ -306,7 +306,7 @@ export class StatUtil {
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
-    const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCGMSampleInterval;
+    const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 

@@ -387,6 +387,22 @@ describe('StatUtil', () => {
   });
 
   describe('getAverageGlucoseData', () => {
+    it('should call filterCBGDataByDefaultSampleInterval when bgSource is CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'cbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getAverageGlucoseData();
+      expect(spy.calledOnce).to.be.true;
+      spy.restore();
+    });
+
+    it('should not call filterCBGDataByDefaultSampleInterval when bgSource is not CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'smbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getAverageGlucoseData();
+      expect(spy.notCalled).to.be.true;
+      spy.restore();
+    });
+
     it('should return the median glucose for cbg data', () => {
       statUtil.bgSource = 'cbg';
       expect(statUtil.getAverageGlucoseData()).to.eql({
@@ -457,6 +473,22 @@ describe('StatUtil', () => {
   });
 
   describe('getBgExtentsData', () => {
+    it('should call filterCBGDataByDefaultSampleInterval when bgSource is CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'cbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getBgExtentsData();
+      expect(spy.calledOnce).to.be.true;
+      spy.restore();
+    });
+
+    it('should not call filterCBGDataByDefaultSampleInterval when bgSource is not CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'smbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getBgExtentsData();
+      expect(spy.notCalled).to.be.true;
+      spy.restore();
+    });
+
     it('should return the min and max glucose, oldest and newest, and days worn for cbg data', () => {
       statUtil.bgSource = 'cbg';
       const result = statUtil.getBgExtentsData();
@@ -606,6 +638,22 @@ describe('StatUtil', () => {
   });
 
   describe('getGlucoseManagementIndicatorData', () => {
+    it('should call filterCBGDataByDefaultSampleInterval via getAverageGlucoseData when bgSource is CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'cbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getGlucoseManagementIndicatorData();
+      expect(spy.calledOnce).to.be.true;
+      spy.restore();
+    });
+
+    it('should not call filterCBGDataByDefaultSampleInterval when bgSource is not CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'smbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getGlucoseManagementIndicatorData();
+      expect(spy.notCalled).to.be.true;
+      spy.restore();
+    });
+
     it('should return the GMI data when viewing at least 14 days of data and 70% coverage', () => {
       const requiredDexcomDatums = 2823; // 288(total daily possible readings) * .7(%required) * 14(days)
       const sufficientData = _.map(
@@ -717,6 +765,13 @@ describe('StatUtil', () => {
   });
 
   describe('getSensorUsage', () => {
+    it('should call filterCBGDataByDefaultSampleInterval', () => {
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getSensorUsage();
+      expect(spy.called).to.be.true;
+      spy.restore();
+    });
+
     it('should return the duration of sensor usage and total duration of the endpoint range', () => {
       filterEndpoints(dayEndpoints);
       const expectedSampleFrequency = 300000;
@@ -750,6 +805,22 @@ describe('StatUtil', () => {
   });
 
   describe('getStandardDevData', () => {
+    it('should call filterCBGDataByDefaultSampleInterval via getAverageGlucoseData when bgSource is CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'cbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getStandardDevData();
+      expect(spy.calledOnce).to.be.true;
+      spy.restore();
+    });
+
+    it('should not call filterCBGDataByDefaultSampleInterval when bgSource is not CGM_DATA_KEY', () => {
+      statUtil.bgSource = 'smbg';
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getStandardDevData();
+      expect(spy.notCalled).to.be.true;
+      spy.restore();
+    });
+
     it('should return the average glucose and standard deviation for cbg data', () => {
       statUtil.bgSource = 'cbg';
       expect(statUtil.getStandardDevData()).to.eql({
@@ -856,6 +927,13 @@ describe('StatUtil', () => {
   });
 
   describe('getTimeInRangeData', () => {
+    it('should call filterCBGDataByDefaultSampleInterval', () => {
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getTimeInRangeData();
+      expect(spy.calledOnce).to.be.true;
+      spy.restore();
+    });
+
     it('should return the time in range data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
 
@@ -934,6 +1012,16 @@ describe('StatUtil', () => {
           totalInsulin: 17.5,
         });
       });
+    });
+  });
+
+  describe('filterCBGDataByDefaultSampleInterval', () => {
+    it('should call dataUtil.filter.bySampleIntervalRange with defaultCgmSampleIntervalRange', () => {
+      const spy = sinon.spy(statUtil.dataUtil.filter, 'bySampleIntervalRange');
+      statUtil.filterCBGDataByDefaultSampleInterval();
+      expect(spy.calledOnce).to.be.true;
+      expect(spy.firstCall.args).to.eql(statUtil.dataUtil.defaultCgmSampleIntervalRange);
+      spy.restore();
     });
   });
 });

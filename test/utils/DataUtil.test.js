@@ -385,6 +385,18 @@ describe('DataUtil', () => {
     it('should set up crossfilter sorts', () => {
       expect(dataUtil.sort).to.be.an('object');
     });
+
+    it('should define the default cgm sample interval', () => {
+      expect(dataUtil.defaultCgmSampleInterval).to.equal(MS_IN_MIN * 5);
+    });
+
+    it('should define the default cgm sample interval range', () => {
+      expect(dataUtil.defaultCgmSampleIntervalRange).to.eql([MS_IN_MIN * 5, Infinity]);
+    });
+
+    it('should set the active cgm sample interval range to the default range', () => {
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN * 5, Infinity]);
+    });
   });
 
   describe('addData', () => {
@@ -2593,6 +2605,34 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('buildBySampleIntervalDimension', () => {
+    it('should build the `byDeviceId` dimension', () => {
+      delete dataUtil.dimension.byDeviceId;
+
+      dataUtil.buildByDeviceIdDimension();
+      expect(dataUtil.dimension.byDeviceId).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildBySampleIntervalDimension', () => {
+    it('should build the `bySampleInterval` dimension', () => {
+      delete dataUtil.dimension.bySampleInterval;
+
+      dataUtil.buildBySampleIntervalDimension();
+      expect(dataUtil.dimension.bySampleInterval).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
   describe('buildDimensions', () => {
     it('should build the data dimensions', () => {
       dataUtil.dimension = {};
@@ -2604,6 +2644,7 @@ describe('DataUtil', () => {
       expect(dataUtil.dimension.byTime).to.be.an('object');
       expect(dataUtil.dimension.byType).to.be.an('object');
       expect(dataUtil.dimension.byDeviceId).to.be.an('object');
+      expect(dataUtil.dimension.bySampleInterval).to.be.an('object');
     });
   });
 
@@ -2618,6 +2659,7 @@ describe('DataUtil', () => {
       expect(dataUtil.filter.bySubType).to.be.a('function');
       expect(dataUtil.filter.byId).to.be.a('function');
       expect(dataUtil.filter.byDeviceIds).to.be.a('function');
+      expect(dataUtil.filter.bySampleIntervalRange).to.be.a('function');
     });
   });
 
@@ -2637,6 +2679,7 @@ describe('DataUtil', () => {
       const clearbyIdSpy = sinon.spy(dataUtil.dimension.byId, 'filterAll');
       const clearbyDayOfWeekSpy = sinon.spy(dataUtil.dimension.byDayOfWeek, 'filterAll');
       const clearbyDeviceIdSpy = sinon.spy(dataUtil.dimension.byDeviceId, 'filterAll');
+      const clearbySampleIntervalSpy = sinon.spy(dataUtil.dimension.bySampleInterval, 'filterAll');
 
       sinon.assert.callCount(clearbyTimeSpy, 0);
       sinon.assert.callCount(clearbyTypeSpy, 0);
@@ -2644,6 +2687,7 @@ describe('DataUtil', () => {
       sinon.assert.callCount(clearbyIdSpy, 0);
       sinon.assert.callCount(clearbyDayOfWeekSpy, 0);
       sinon.assert.callCount(clearbyDeviceIdSpy, 0);
+      sinon.assert.callCount(clearbySampleIntervalSpy, 0);
 
       dataUtil.clearFilters();
 
@@ -2653,6 +2697,7 @@ describe('DataUtil', () => {
       sinon.assert.callCount(clearbyIdSpy, 1);
       sinon.assert.callCount(clearbyDayOfWeekSpy, 1);
       sinon.assert.callCount(clearbyDeviceIdSpy, 1);
+      sinon.assert.callCount(clearbySampleIntervalSpy, 1);
     });
   });
 
@@ -2725,6 +2770,29 @@ describe('DataUtil', () => {
           expect(dataUtil.bgSources.current).to.equal('smbg');
         });
       });
+    });
+  });
+
+  describe('setCgmSampleIntervalRange', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should set the cgmSampleIntervalRange to the default when called with no arguments', () => {
+      dataUtil.cgmSampleIntervalRange = [1, 2];
+      dataUtil.setCgmSampleIntervalRange();
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([dataUtil.defaultCgmSampleInterval, Infinity]);
+    });
+
+    it('should set the cgmSampleIntervalRange to the default when called with valid arguments', () => {
+      dataUtil.cgmSampleIntervalRange = [1, 2];
+      dataUtil.setCgmSampleIntervalRange([MS_IN_MIN, MS_IN_MIN * 2]);
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN, MS_IN_MIN * 2]);
+    });
+
+    it('should set the cgmSampleIntervalRange to the provided array, filtering out falsy values', () => {
+      dataUtil.setCgmSampleIntervalRange([MS_IN_MIN, null]);
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN]);
     });
   });
 
@@ -3794,6 +3862,7 @@ describe('DataUtil', () => {
     it('should clear all filters before calling other setters', () => {
       sinon.spy(dataUtil, 'clearFilters');
       sinon.spy(dataUtil, 'setBgSources');
+      sinon.spy(dataUtil, 'setCgmSampleIntervalRange');
       sinon.spy(dataUtil, 'setTypes');
       sinon.spy(dataUtil, 'setBgPrefs');
       sinon.spy(dataUtil, 'setTimePrefs');
@@ -3815,6 +3884,7 @@ describe('DataUtil', () => {
 
       sinon.assert.calledTwice(dataUtil.clearFilters);
       sinon.assert.calledOnce(dataUtil.setBgSources);
+      sinon.assert.calledOnce(dataUtil.setCgmSampleIntervalRange);
       sinon.assert.calledOnce(dataUtil.setTypes);
       sinon.assert.calledOnce(dataUtil.setBgPrefs);
       sinon.assert.calledOnce(dataUtil.setTimePrefs);
@@ -3825,9 +3895,9 @@ describe('DataUtil', () => {
 
       sinon.assert.callOrder(
         dataUtil.clearFilters,
-        dataUtil.setBgSources,
-        dataUtil.clearFilters,
         dataUtil.clearMatchedDevices,
+        dataUtil.setBgSources,
+        dataUtil.setCgmSampleIntervalRange,
         dataUtil.setTypes,
         dataUtil.setBgPrefs,
         dataUtil.setTimePrefs,
@@ -4222,7 +4292,6 @@ describe('DataUtil', () => {
       dataUtil.matchDevices = true;
       dataUtil.getStats(['averageGlucose', 'totalInsulin']);
 
-      console.log('dataUtil.matchedDevices', dataUtil.matchedDevices);
       expect(dataUtil.matchedDevices).to.eql({
         'Dexcom-XXX-XXXX': { 'Dexcom G6_2.3.2': true, 'Dexcom G6_3.1.0': true },
         'AbbottFreeStyleLibre-XXX-XXXX': { 'AbbottFreeStyleLibre-XXX-XXXX_0.0': true },
@@ -4243,6 +4312,19 @@ describe('DataUtil', () => {
       dataUtil.matchDevices = false;
       dataUtil.getStats(['averageGlucose', 'totalInsulin']);
       expect(dataUtil.matchedDevices).to.eql({});
+    });
+
+    it('should call filterAll on byType and bySampleInterval dimensions before generating each stat', () => {
+      const byTypeFilterAllSpy = sinon.spy(dataUtil.dimension.byType, 'filterAll');
+      const bySampleIntervalFilterAllSpy = sinon.spy(dataUtil.dimension.bySampleInterval, 'filterAll');
+
+      dataUtil.getStats(['averageGlucose', 'totalInsulin']);
+
+      expect(byTypeFilterAllSpy.callCount).to.equal(2);
+      expect(bySampleIntervalFilterAllSpy.callCount).to.equal(2);
+
+      byTypeFilterAllSpy.restore();
+      bySampleIntervalFilterAllSpy.restore();
     });
   });
 
@@ -4808,6 +4890,51 @@ describe('DataUtil', () => {
       dataUtil.setTypes({ bolus: {} });
       dataUtil.getTypeData(dataUtil.types);
       expect(dataUtil.matchedDevices).to.eql({});
+    });
+
+    it('should call `filterAll` on `byType` and `bySampleInterval` dimensions before processing each type', () => {
+      const byTypeFilterAllSpy = sinon.spy(dataUtil.dimension.byType, 'filterAll');
+      const bySampleIntervalFilterAllSpy = sinon.spy(dataUtil.dimension.bySampleInterval, 'filterAll');
+
+      dataUtil.setTypes({ bolus: {}, cgb: {}, deviceEvent: {} });
+      dataUtil.getTypeData(dataUtil.types);
+
+      expect(byTypeFilterAllSpy.callCount).to.equal(3);
+      expect(bySampleIntervalFilterAllSpy.callCount).to.equal(3);
+
+      byTypeFilterAllSpy.restore();
+      bySampleIntervalFilterAllSpy.restore();
+    });
+
+    it('should call `filter.bySampleIntervalRange` with `cgmSampleIntervalRange` before processing cbg data type', () => {
+      const bySampleIntervalRangeSpy = sinon.spy(dataUtil.filter, 'bySampleIntervalRange');
+      sinon.assert.notCalled(bySampleIntervalRangeSpy);
+      dataUtil.cgmSampleIntervalRange = [1, 2];
+
+      dataUtil.setTypes({ bolus: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      sinon.assert.notCalled(bySampleIntervalRangeSpy);
+
+      dataUtil.setTypes({ cbg: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      sinon.assert.calledWith(bySampleIntervalRangeSpy, 1, 2);
+
+      bySampleIntervalRangeSpy.restore();
+    });
+
+    it('should call `filter.bySampleIntervalRange` with `defaultCgmSampleIntervalRange` before processing cbg data type if range is not set', () => {
+      const bySampleIntervalRangeSpy = sinon.spy(dataUtil.filter, 'bySampleIntervalRange');
+      sinon.assert.notCalled(bySampleIntervalRangeSpy);
+
+      assert(dataUtil.defaultCgmSampleIntervalRange[0] === MS_IN_MIN * 5);
+      assert(dataUtil.defaultCgmSampleIntervalRange[1] === Infinity);
+      delete dataUtil.cgmSampleIntervalRange;
+
+      dataUtil.setTypes({ cbg: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      sinon.assert.calledWith(bySampleIntervalRangeSpy, MS_IN_MIN * 5, Infinity);
+
+      bySampleIntervalRangeSpy.restore();
     });
   });
 
