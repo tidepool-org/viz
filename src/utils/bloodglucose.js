@@ -18,20 +18,21 @@
 import _ from 'lodash';
 import { max, mean, median, min, quantile, range } from 'd3-array';
 
-import { DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MS_IN_MIN } from './constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, DEFAULT_BG_BOUNDS, MGDL_PER_MMOLL, MGDL_UNITS, MMOLL_UNITS, MS_IN_MIN } from './constants';
 import { TWENTY_FOUR_HRS } from './datetime';
 
-import { formatBgValue } from './format.js';
+import { bankersRound, formatBgValue } from './format.js';
 
 /**
  * classifyBgValue
  * @param {Object} bgBounds - object describing boundaries for blood glucose categories
+ * @param {String} bgUnits     MGDL_UNITS or MMOLL_UNITS
  * @param {Number} bgValue - integer or float blood glucose value in either mg/dL or mmol/L
  * @param {String} classificationType - 'threeWay' or 'fiveWay'
  *
  * @return {String} bgClassification - low, target, high
  */
-export function classifyBgValue(bgBounds, bgValue, classificationType = 'threeWay') {
+export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType = 'threeWay') {
   if (_.isEmpty(bgBounds) ||
   !_.isNumber(_.get(bgBounds, 'targetLowerBound')) ||
   !_.isNumber(_.get(bgBounds, 'targetUpperBound'))) {
@@ -42,19 +43,35 @@ export function classifyBgValue(bgBounds, bgValue, classificationType = 'threeWa
   if (!_.isNumber(bgValue) || !_.gt(bgValue, 0)) {
     throw new Error('You must provide a positive, numerical blood glucose value to categorize!');
   }
+  if (!_.includes([MMOLL_UNITS, MGDL_UNITS], bgUnits)) {
+    throw new Error('Must provide a valid blood glucose unit of measure!');
+  }
+
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
+
   if (classificationType === 'fiveWay') {
     if (bgValue < veryLowThreshold) {
       return 'veryLow';
-    } else if (bgValue >= veryLowThreshold && bgValue < targetLowerBound) {
-      return 'low';
-    } else if (bgValue > targetUpperBound && bgValue <= veryHighThreshold) {
-      return 'high';
     } else if (bgValue > veryHighThreshold) {
       return 'veryHigh';
     }
+
+    // Low, Target, and High ranges are non-contiguous in the ADA Standardized CGM metrics.
+    // We ensure that values falling between these ranges are rounded into an appropriate
+    // range before trying to classify them. See the unit tests for examples of scenarios.
+    const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
+    const roundedValue = bankersRound(bgValue, precision);
+
+    if (roundedValue < targetLowerBound) {
+      return 'low';
+    } else if (roundedValue > targetUpperBound) {
+      return 'high';
+    }
+
     return 'target';
   }
+
+  // threeWay
   if (bgValue < targetLowerBound) {
     return 'low';
   } else if (bgValue > targetUpperBound) {
@@ -126,14 +143,20 @@ export function reshapeBgClassesToBgBounds(bgPrefs) {
  */
 export function generateBgRangeLabels(bgPrefs, opts = {}) {
   const { bgBounds, bgUnits } = bgPrefs;
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+
   const thresholds = _.mapValues(bgBounds, threshold => formatBgValue(threshold, bgPrefs));
+  thresholds.highLowerBound = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);
+  thresholds.lowUpperBound = formatBgValue(bgBounds.targetLowerBound - minimumIncrement, bgPrefs);
 
   if (opts.condensed) {
     return {
       veryLow: `<${thresholds.veryLowThreshold}`,
-      low: `${thresholds.veryLowThreshold}-${thresholds.targetLowerBound}`,
+      low: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
+      anyLow: `<${thresholds.targetLowerBound}`,
       target: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
-      high: `${thresholds.targetUpperBound}-${thresholds.veryHighThreshold}`,
+      high: `${thresholds.highLowerBound}-${thresholds.veryHighThreshold}`,
+      anyHigh: `>${thresholds.targetUpperBound}`,
       veryHigh: `>${thresholds.veryHighThreshold}`,
       extremeHigh: `>${thresholds.extremeHighThreshold}`,
     };
@@ -142,14 +165,17 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
   if (opts.segmented) {
     return {
       veryLow: {
-        prefix: 'below',
         suffix: bgUnits,
-        value: `${thresholds.veryLowThreshold}`,
+        value: `<${thresholds.veryLowThreshold}`,
       },
       low: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.veryLowThreshold}-${thresholds.targetLowerBound}`,
+        value: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
+      },
+      anyLow: {
+        suffix: bgUnits,
+        value: `<${thresholds.targetLowerBound}`,
       },
       target: {
         prefix: 'between',
@@ -159,26 +185,30 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       high: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.targetUpperBound}-${thresholds.veryHighThreshold}`,
+        value: `${thresholds.highLowerBound}-${thresholds.veryHighThreshold}`,
+      },
+      anyHigh: {
+        suffix: bgUnits,
+        value: `>${thresholds.targetUpperBound}`,
       },
       veryHigh: {
-        prefix: 'above',
         suffix: bgUnits,
-        value: `${thresholds.veryHighThreshold}`,
+        value: `>${thresholds.veryHighThreshold}`,
       },
       extremeHigh: {
-        prefix: 'above',
         suffix: bgUnits,
-        value: `${thresholds.extremeHighThreshold}`,
+        value: `>${thresholds.extremeHighThreshold}`,
       },
     };
   }
 
   return {
     veryLow: `below ${thresholds.veryLowThreshold} ${bgUnits}`,
-    low: `between ${thresholds.veryLowThreshold} - ${thresholds.targetLowerBound} ${bgUnits}`,
+    low: `between ${thresholds.veryLowThreshold} - ${thresholds.lowUpperBound} ${bgUnits}`,
+    anyLow: `below ${thresholds.targetLowerBound} ${bgUnits}`,
     target: `between ${thresholds.targetLowerBound} - ${thresholds.targetUpperBound} ${bgUnits}`,
-    high: `between ${thresholds.targetUpperBound} - ${thresholds.veryHighThreshold} ${bgUnits}`,
+    high: `between ${thresholds.highLowerBound} - ${thresholds.veryHighThreshold} ${bgUnits}`,
+    anyHigh: `above ${thresholds.targetUpperBound} ${bgUnits}`,
     veryHigh: `above ${thresholds.veryHighThreshold} ${bgUnits}`,
     extremeHigh: `above ${thresholds.extremeHighThreshold} ${bgUnits}`,
   };
@@ -230,16 +260,17 @@ export function weightedCGMCount(data) {
  */
 export function cgmSampleFrequency(datum) {
   const deviceId = _.get(datum, 'deviceId', '');
+
+  if (datum?.sampleInterval) {
+    return datum.sampleInterval;
+  }
+
   if (deviceId.indexOf('AbbottFreeStyleLibre3') === 0) {
     return 5 * MS_IN_MIN;
   }
 
   if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
     return 15 * MS_IN_MIN;
-  }
-
-  if (deviceId.indexOf('tandemCIQ') === 0 && _.get(datum, 'payload.fsl2')) {
-    return MS_IN_MIN;
   }
 
   return 5 * MS_IN_MIN;

@@ -18,6 +18,7 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import _ from 'lodash';
+import i18next from 'i18next';
 import {
   classifyBgValue,
   reshapeBgClassesToBgBounds,
@@ -30,13 +31,20 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './CBGTooltip.css';
 
+const t = i18next.t.bind(i18next);
+
 class CBGTooltip extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.bgUnits = this.props.bgPrefs?.bgUnits || '';
+  }
+
   renderCBG() {
     const cbg = this.props.cbg;
     const outOfRangeMessage = getOutOfRangeAnnotationMessage(cbg);
     const rows = [
       <div key={'bg'} className={styles.bg}>
-        <div className={styles.label}>BG</div>
+        <div className={styles.label}>{t('Glucose')} ({this.bgUnits})</div>
         <div className={styles.value}>
           {`${formatBgValue(cbg.value, this.props.bgPrefs, getOutOfRangeThreshold(cbg))}`}
         </div>
@@ -45,6 +53,7 @@ class CBGTooltip extends PureComponent {
     if (!_.isEmpty(outOfRangeMessage)) {
       const bgClass = classifyBgValue(
         reshapeBgClassesToBgBounds(this.props.bgPrefs),
+        this.props.bgPrefs.bgUnits,
         this.props.cbg.value,
         'fiveWay'
       );
@@ -68,6 +77,7 @@ class CBGTooltip extends PureComponent {
   render() {
     const bgClass = classifyBgValue(
       reshapeBgClassesToBgBounds(this.props.bgPrefs),
+      this.props.bgPrefs.bgUnits,
       this.props.cbg.value,
       'fiveWay'
     );

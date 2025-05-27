@@ -112,6 +112,7 @@ export function getMedtronic600AnnotationMessages(datum) {
  */
 export function getOutOfRangeAnnotationMessage(datum) {
   const annotations = getAnnotations(datum);
+  const bgTypeLabel = datum?.type === 'cbg' ? t('glucose') : t('BG');
   const messages = [];
   _.each(annotations, annotation => {
     if (_.get(annotation, 'code', '') === 'bg/out-of-range') {
@@ -119,7 +120,7 @@ export function getOutOfRangeAnnotationMessage(datum) {
       messages.push(
         _.assign({}, annotation, {
           message: {
-            value: t('* This BG value was {{value}}er than your device could record. Your actual BG value is {{value}}er than it appears here.', { value }),
+            value: t('* This {{bgTypeLabel}} value was {{value}}er than your device could record. Your actual {{bgTypeLabel}} value is {{value}}er than it appears here.', { value, bgTypeLabel }),
           },
         })
       );

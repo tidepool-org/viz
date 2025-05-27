@@ -6,6 +6,7 @@ import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from 
 import { getTotalBolus } from './bolus';
 import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -24,8 +25,8 @@ export class StatUtil {
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.bgSource = _.get(dataUtil, 'bgSources.current', BGM_DATA_KEY);
     this.activeDays = dataUtil.activeEndpoints.activeDays;
-    this.bolusDays = dataUtil.activeEndpoints.bolusDays || this.activeDays;
     this.endpoints = dataUtil.activeEndpoints.range;
+    this.timePrefs = _.get(dataUtil, 'timePrefs');
 
     this.log('activeDays', this.activeDays);
     this.log('bgSource', this.bgSource);
@@ -82,6 +83,14 @@ export class StatUtil {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
 
+    // Create a list of all dates for which we have at least one datum
+    const uniqueDatumDates = new Set([
+      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+    ]);
+
+    const activeDaysWithInsulinData = uniqueDatumDates.size;
+
     const basalBolusData = {
       basal: basalData.length
         ? parseFloat(getTotalBasalFromEndpoints(basalData, this.endpoints))
@@ -89,9 +98,9 @@ export class StatUtil {
       bolus: bolusData.length ? getTotalBolus(bolusData) : NaN,
     };
 
-    if (this.bolusDays > 1) {
-      basalBolusData.basal = basalBolusData.basal / this.bolusDays;
-      basalBolusData.bolus = basalBolusData.bolus / this.bolusDays;
+    if (activeDaysWithInsulinData > 1) {
+      basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
+      basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
     }
 
     return basalBolusData;
@@ -100,6 +109,14 @@ export class StatUtil {
   getCarbsData = () => {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
+
+    // Create a list of all dates for which we have at least one datum
+    const uniqueDatumDates = new Set([
+      ...wizardData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+    ]);
+
+    const activeDaysWithCarbData = uniqueDatumDates.size;
 
     const wizardCarbs = _.reduce(
       wizardData,
@@ -132,10 +149,10 @@ export class StatUtil {
       exchanges: wizardCarbs.exchanges,
     };
 
-    if (this.activeDays > 1) {
+    if (activeDaysWithCarbData > 1) {
       carbs = {
-        grams: carbs.grams / this.activeDays,
-        exchanges: carbs.exchanges / this.activeDays,
+        grams: carbs.grams / activeDaysWithCarbData,
+        exchanges: carbs.exchanges / activeDaysWithCarbData,
       };
     }
 
@@ -237,7 +254,7 @@ export class StatUtil {
     const readingsInRangeData = _.reduce(
       smbgData,
       (result, datum) => {
-        const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
+        const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         result.counts[classification]++;
         result.counts.total++;
         return result;
@@ -397,7 +414,7 @@ export class StatUtil {
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
-        const classification = classifyBgValue(this.bgBounds, datum.value, 'fiveWay');
+        const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         const duration = cgmSampleFrequency(datum);
         result.durations[classification] += duration;
         result.durations.total += duration;

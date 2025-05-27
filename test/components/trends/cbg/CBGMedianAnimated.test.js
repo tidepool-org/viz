@@ -30,6 +30,7 @@ import bgBounds from '../../../helpers/bgBounds';
 import SVGContainer from '../../../helpers/SVGContainer';
 
 import { CBGMedianAnimated } from '../../../../src/components/trends/cbg/CBGMedianAnimated';
+import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('CBGMedianAnimated', () => {
   const datum = {
@@ -47,6 +48,7 @@ describe('CBGMedianAnimated', () => {
   };
   const props = {
     bgBounds,
+    bgUnits: MGDL_UNITS,
     datum,
     defaultY: 100,
     displayingMedian: true,

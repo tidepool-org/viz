@@ -24,7 +24,7 @@ import { range, shuffle } from 'd3-array';
 import { DEFAULT_BG_BOUNDS, MGDL_UNITS, MMOLL_UNITS, MS_IN_HOUR, MS_IN_MIN } from '../../src/utils/constants';
 
 describe('blood glucose utilities', () => {
-  const bgBounds = {
+  const defaultBgBounds = {
     veryHighThreshold: 300,
     targetUpperBound: 180,
     targetLowerBound: 70,
@@ -37,24 +37,24 @@ describe('blood glucose utilities', () => {
     });
 
     it('should error if no `bgBounds` with numerical lower & upper bounds provided', () => {
-      const fn1 = () => { bgUtils.classifyBgValue(null, 100); };
+      const fn1 = () => { bgUtils.classifyBgValue(null, MGDL_UNITS, 100); };
       expect(fn1).to.throw(
         'You must provide a `bgBounds` object with a `targetLowerBound` and a `targetUpperBound`!'
       );
-      const fn2 = () => { bgUtils.classifyBgValue(undefined, 100); };
+      const fn2 = () => { bgUtils.classifyBgValue(undefined, MGDL_UNITS, 100); };
       expect(fn2).to.throw(
         'You must provide a `bgBounds` object with a `targetLowerBound` and a `targetUpperBound`!'
       );
-      const fn3 = () => { bgUtils.classifyBgValue({}, 100); };
+      const fn3 = () => { bgUtils.classifyBgValue({}, MGDL_UNITS, 100); };
       expect(fn3).to.throw(
         'You must provide a `bgBounds` object with a `targetLowerBound` and a `targetUpperBound`!'
       );
-      const fn4 = () => { bgUtils.classifyBgValue({ foo: 'bar' }, 100); };
+      const fn4 = () => { bgUtils.classifyBgValue({ foo: 'bar' }, MGDL_UNITS, 100); };
       expect(fn4).to.throw(
         'You must provide a `bgBounds` object with a `targetLowerBound` and a `targetUpperBound`!'
       );
       const fn5 = () => {
-        bgUtils.classifyBgValue({ targetLowerBound: 80, targetUpperBound: 'one eighty' }, 100);
+        bgUtils.classifyBgValue({ targetLowerBound: 80, targetUpperBound: 'one eighty' }, MGDL_UNITS, 100);
       };
       expect(fn5).to.throw(
         'You must provide a `bgBounds` object with a `targetLowerBound` and a `targetUpperBound`!'
@@ -62,89 +62,198 @@ describe('blood glucose utilities', () => {
     });
 
     it('should error if no `bgValue` or non-numerical `bgValue`', () => {
-      const fn0 = () => { bgUtils.classifyBgValue(bgBounds); };
+      const fn0 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS); };
       expect(fn0).to.throw(
         'You must provide a positive, numerical blood glucose value to categorize!'
       );
-      const fn1 = () => { bgUtils.classifyBgValue(bgBounds, null); };
+      const fn1 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, null); };
       expect(fn1).to.throw(
         'You must provide a positive, numerical blood glucose value to categorize!'
       );
-      const fn2 = () => { bgUtils.classifyBgValue(bgBounds, undefined); };
+      const fn2 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, undefined); };
       expect(fn2).to.throw(
         'You must provide a positive, numerical blood glucose value to categorize!'
       );
-      const fn3 = () => { bgUtils.classifyBgValue(bgBounds, {}); };
+      const fn3 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, {}); };
       expect(fn3).to.throw(
         'You must provide a positive, numerical blood glucose value to categorize!'
       );
-      const fn4 = () => { bgUtils.classifyBgValue(bgBounds, -100); };
+      const fn4 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, -100); };
       expect(fn4).to.throw(
         'You must provide a positive, numerical blood glucose value to categorize!'
       );
-      const fn5 = () => { bgUtils.classifyBgValue(bgBounds, 4.4); };
+      const fn5 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 4.4); };
       expect(fn5).to.not.throw;
-      const fn6 = () => { bgUtils.classifyBgValue(bgBounds, 100); };
+      const fn6 = () => { bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 100); };
       expect(fn6).to.not.throw;
+    });
+
+    it('should error if bgUnits specified incorrectly', () => {
+      const fn0 = () => {
+        bgUtils.classifyBgValue({ targetLowerBound: 80, targetUpperBound: 180 }, 'mgdl', 100);
+      };
+      expect(fn0).to.throw(
+        'Must provide a valid blood glucose unit of measure!'
+      );
+      const fn1 = () => {
+        bgUtils.classifyBgValue({ targetLowerBound: 80, targetUpperBound: 180 }, MGDL_UNITS, 100);
+      };
+      expect(fn1).not.to.throw;
     });
 
     describe('three-way classification (low, target, high)', () => {
       it('should return `low` for a value < the `targetLowerBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 69)).to.equal('low');
+        expect(bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 69)).to.equal('low');
       });
 
       it('should return `target` for a value equal to the `targetLowerBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 70)).to.equal('target');
+        expect(bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 70)).to.equal('target');
       });
 
       it('should return `target` for a value > `targetLowerBound` and < `targetUpperBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 100)).to.equal('target');
+        expect(bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 100)).to.equal('target');
       });
 
       it('should return `target` for a value equal to the `targetUpperBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 180)).to.equal('target');
+        expect(bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 180)).to.equal('target');
       });
 
       it('should return `high` for a value > the `targetUpperBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 181)).to.equal('high');
+        expect(bgUtils.classifyBgValue(defaultBgBounds, MGDL_UNITS, 181)).to.equal('high');
       });
     });
 
     describe('five-way classification (veryLow, low, target, high, veryHigh)', () => {
-      it('should return `veryLow` for a value < the `veryLowThreshold`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 54, 'fiveWay')).to.equal('veryLow');
+      const { classifyBgValue } = bgUtils;
+
+      describe('when units are mg/dL and bgBounds follow ADA Standardized CGM metrics', () => {
+        const bgBounds = {
+          veryHighThreshold: 250,
+          targetUpperBound: 180,
+          targetLowerBound: 70,
+          veryLowThreshold: 54,
+          clampThreshold: 600
+        };
+
+        it('should return `veryLow` for a value < 54', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 50, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.6, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.999, 'fiveWay')).to.equal('veryLow');
+        });
+
+        it('should return `low` for a value between 54 - 69', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 54, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 57, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 62, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69, 'fiveWay')).to.equal('low');
+        });
+
+        it('should round to `low` or `target` appropriately for values between 69 - 70', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.1, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.4, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.4999, 'fiveWay')).to.equal('low');
+
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.5, 'fiveWay')).to.equal('target'); // banker's round up
+
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.6, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.8, 'fiveWay')).to.equal('target');
+        });
+
+        it('should return `target` for a value between 70 - 180', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 70, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 91, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 145, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 166, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180, 'fiveWay')).to.equal('target');
+        });
+
+        it('should round to `target` or `high` appropriately for values between 180 - 181', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.1, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.4, 'fiveWay')).to.equal('target');
+
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.5, 'fiveWay')).to.equal('target'); // banker's round down
+
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.5001, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.8, 'fiveWay')).to.equal('high');
+        });
+
+        it('should return `high` for a value between 181 - 250', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 181, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 200, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 231, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 250, 'fiveWay')).to.equal('high');
+        });
+
+
+        it('should return `veryHigh` for a value > 250', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 250.001, 'fiveWay')).to.equal('veryHigh');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 251, 'fiveWay')).to.equal('veryHigh');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 260, 'fiveWay')).to.equal('veryHigh');
+        });
       });
 
-      it('should return `low` for a value equal to the `veryLowThreshold`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 55, 'fiveWay')).to.equal('low');
-      });
+      describe('when units are mmol/L and bgBounds follow ADA Standardized CGM metrics', () => {
+        const bgBounds = {
+          veryHighThreshold: 13.9,
+          targetUpperBound: 10,
+          targetLowerBound: 3.9,
+          veryLowThreshold: 3,
+          clampThreshold: 33.3
+        };
 
-      it('should return `low` for a value < the `targetLowerBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 69, 'fiveWay')).to.equal('low');
-      });
+        it('should return `veryLow` for a value < 3.0', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.85, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.9, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.9999, 'fiveWay')).to.equal('veryLow');
+        });
 
-      it('should return `target` for a value equal to the `targetLowerBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 70, 'fiveWay')).to.equal('target');
-      });
+        it('should return `low` for a value between 3.0 - 3.8', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.55, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.8, 'fiveWay')).to.equal('low');
+        });
 
-      it('should return `target` for a value > `targetLowerBound` and < `targetUpperBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 100, 'fiveWay')).to.equal('target');
-      });
+        it('should round to `low` or `target` appropriately for values between 3.8 - 3.9', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.81, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.84, 'fiveWay')).to.equal('low');
 
-      it('should return `target` for a value equal to the `targetUpperBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 180, 'fiveWay')).to.equal('target');
-      });
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.85, 'fiveWay')).to.equal('low'); // banker's round down
 
-      it('should return `high` for a value > the `targetUpperBound`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 181, 'fiveWay')).to.equal('high');
-      });
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.85001, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.88, 'fiveWay')).to.equal('target');
+        });
 
-      it('should return `high` for a value equal to the `veryHighThreshold`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 300, 'fiveWay')).to.equal('high');
-      });
+        it('should return `target` for a value between 3.9 - 10.0', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.9, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 4, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 7, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 9, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10, 'fiveWay')).to.equal('target');
+        });
 
-      it('should return `veryHigh` for a value > the `veryHighThreshold`', () => {
-        expect(bgUtils.classifyBgValue(bgBounds, 301, 'fiveWay')).to.equal('veryHigh');
+        it('should round to `target` or `high` appropriately for values between 10.0 - 10.1', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.001, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.04, 'fiveWay')).to.equal('target');
+
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.05, 'fiveWay')).to.equal('target'); // banker's round down
+
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.05001, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.08, 'fiveWay')).to.equal('high');
+        });
+
+        it('should return `high` for a value between 10.1 - 13.9', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.1, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 12, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.9, 'fiveWay')).to.equal('high');
+        });
+
+
+        it('should return `veryHigh` for a value > 13.9`', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.9001, 'fiveWay')).to.equal('veryHigh');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.95, 'fiveWay')).to.equal('veryHigh');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 14, 'fiveWay')).to.equal('veryHigh');
+        });
       });
     });
   });
@@ -188,9 +297,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: 'below 55 mg/dL',
-        low: 'between 55 - 70 mg/dL',
+        low: 'between 55 - 69 mg/dL',
+        anyLow: 'below 70 mg/dL',
         target: 'between 70 - 180 mg/dL',
-        high: 'between 180 - 300 mg/dL',
+        high: 'between 181 - 300 mg/dL',
+        anyHigh: 'above 180 mg/dL',
         veryHigh: 'above 300 mg/dL',
         extremeHigh: 'above 350 mg/dL',
       });
@@ -206,9 +317,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: '<55',
-        low: '55-70',
+        low: '55-69',
+        anyLow: '<70',
         target: '70-180',
-        high: '180-300',
+        high: '181-300',
+        anyHigh: '>180',
         veryHigh: '>300',
         extremeHigh: '>350',
       });
@@ -224,14 +337,17 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: {
-          prefix: 'below',
           suffix: bgPrefs.bgUnits,
-          value: '55',
+          value: '<55',
         },
         low: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '55-70',
+          value: '55-69',
+        },
+        anyLow: {
+          suffix: bgPrefs.bgUnits,
+          value: '<70',
         },
         target: {
           prefix: 'between',
@@ -241,17 +357,19 @@ describe('blood glucose utilities', () => {
         high: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '180-300',
+          value: '181-300',
+        },
+        anyHigh: {
+          suffix: bgPrefs.bgUnits,
+          value: '>180',
         },
         veryHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '300',
+          value: '>300',
         },
         extremeHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '350',
+          value: '>350',
         },
       });
     });
@@ -266,9 +384,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: 'below 3.1 mmol/L',
-        low: 'between 3.1 - 3.9 mmol/L',
+        low: 'between 3.1 - 3.8 mmol/L',
+        anyLow: 'below 3.9 mmol/L',
         target: 'between 3.9 - 10.0 mmol/L',
-        high: 'between 10.0 - 16.7 mmol/L',
+        high: 'between 10.1 - 16.7 mmol/L',
+        anyHigh: 'above 10.0 mmol/L',
         veryHigh: 'above 16.7 mmol/L',
         extremeHigh: 'above 19.4 mmol/L',
       });
@@ -284,9 +404,11 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: '<3.1',
-        low: '3.1-3.9',
+        low: '3.1-3.8',
+        anyLow: '<3.9',
         target: '3.9-10.0',
-        high: '10.0-16.7',
+        high: '10.1-16.7',
+        anyHigh: '>10.0',
         veryHigh: '>16.7',
         extremeHigh: '>19.4',
       });
@@ -302,14 +424,17 @@ describe('blood glucose utilities', () => {
 
       expect(result).to.eql({
         veryLow: {
-          prefix: 'below',
           suffix: bgPrefs.bgUnits,
-          value: '3.1',
+          value: '<3.1',
         },
         low: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '3.1-3.9',
+          value: '3.1-3.8',
+        },
+        anyLow: {
+          suffix: bgPrefs.bgUnits,
+          value: '<3.9',
         },
         target: {
           prefix: 'between',
@@ -319,17 +444,19 @@ describe('blood glucose utilities', () => {
         high: {
           prefix: 'between',
           suffix: bgPrefs.bgUnits,
-          value: '10.0-16.7',
+          value: '10.1-16.7',
+        },
+        anyHigh: {
+          suffix: bgPrefs.bgUnits,
+          value: '>10.0',
         },
         veryHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '16.7',
+          value: '>16.7',
         },
         extremeHigh: {
-          prefix: 'above',
           suffix: bgPrefs.bgUnits,
-          value: '19.4',
+          value: '>19.4',
         },
       });
     });
@@ -507,8 +634,7 @@ describe('blood glucose utilities', () => {
       expect(bgUtils.cgmSampleFrequency(libre3Datum)).to.equal(5 * MS_IN_MIN);
 
       const libre2CIQDatum = {
-        deviceId: 'tandemCIQ_XXXXX',
-        payload: { fsl2: true },
+        sampleInterval: MS_IN_MIN,
       };
 
       const g7CIQDatum = {
