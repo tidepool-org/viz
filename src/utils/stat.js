@@ -147,7 +147,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.bgValue:
       if (value >= 0) {
         id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, value, 'threeWay');
-        value = formatBgValue(value, bgPrefs, undefined, useAGPFormat);
+        value = formatBgValue(value, bgPrefs);
       } else {
         disableStat();
       }
