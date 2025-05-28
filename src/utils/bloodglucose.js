@@ -234,7 +234,7 @@ export function getOutOfRangeThreshold(bgDatum) {
  * @param {Array} data - cgm data
  * @return {Integer} count - the weighted count
  */
-export function weightedCGMCount(data) { // TODO: do I need to account for 1min samples here?
+export function weightedCGMCount(data) {
   return _.reduce(data, (total, datum) => {
     const sampleInterval = _.get(datum, 'sampleInterval', 5 * MS_IN_MIN);
     const sampleIntervalInMinutes = sampleInterval / MS_IN_MIN;
