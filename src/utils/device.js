@@ -102,7 +102,7 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}
 }
 
 /**
- * Check if the provided datum was for a settings-overrideable device
+ * Check if the provided datum was for a 1-minute CGM sample interval device
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}
  */

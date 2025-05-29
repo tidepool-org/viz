@@ -2605,7 +2605,7 @@ describe('DataUtil', () => {
     });
   });
 
-  describe('buildBySampleIntervalDimension', () => {
+  describe('buildByDeviceIdDimension', () => {
     it('should build the `byDeviceId` dimension', () => {
       delete dataUtil.dimension.byDeviceId;
 
@@ -2784,7 +2784,7 @@ describe('DataUtil', () => {
       expect(dataUtil.cgmSampleIntervalRange).to.eql([dataUtil.defaultCgmSampleInterval, Infinity]);
     });
 
-    it('should set the cgmSampleIntervalRange to the default when called with valid arguments', () => {
+    it('should set the cgmSampleIntervalRange to the specified range when called with valid arguments', () => {
       dataUtil.cgmSampleIntervalRange = [1, 2];
       dataUtil.setCgmSampleIntervalRange([MS_IN_MIN, MS_IN_MIN * 2]);
       expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN, MS_IN_MIN * 2]);
