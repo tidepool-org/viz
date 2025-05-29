@@ -301,7 +301,7 @@ describe('device utility functions', () => {
       expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
     });
 
-    it('should return `false` for an upload record for a device upload with one minute cgm interval capabilities', () => {
+    it('should return `false` for an upload record for a device upload without one minute cgm interval capabilities', () => {
       expect(device.isOneMinCGMSampleIntervalDevice({ deviceId: 'tandem123456' })).to.be.false;
       expect(device.isOneMinCGMSampleIntervalDevice({ deviceId: 'tandemCIQ123456' })).to.be.false;
       expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'org.tidepool.Loop' } })).to.be.false;
