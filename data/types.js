@@ -18,7 +18,7 @@
 /* eslint-disable no-bitwise, no-mixed-operators, max-len */
 import _ from 'lodash';
 
-import { MGDL_UNITS, MS_IN_DAY, MMOLL_UNITS, MGDL_PER_MMOLL } from '../src/utils/constants';
+import { MGDL_UNITS, MS_IN_DAY, MMOLL_UNITS, MGDL_PER_MMOLL, MS_IN_MIN } from '../src/utils/constants';
 
 const APPEND = '.000Z';
 
@@ -140,6 +140,7 @@ export class CBG extends Common {
     _.defaults(opts, {
       deviceId: 'DexG4Rec_XXXXXXXXX',
       deviceTime: this.makeDeviceTime(),
+      sampleInterval: 5 * MS_IN_MIN,
       units: MGDL_UNITS,
       value: 100,
     });
@@ -149,6 +150,7 @@ export class CBG extends Common {
     this.deviceTime = opts.deviceTime;
     this.deviceId = opts.deviceId;
     this.origin = opts.origin;
+    this.sampleInterval = opts.sampleInterval;
     this.units = opts.units;
     this.value = opts.value;
 

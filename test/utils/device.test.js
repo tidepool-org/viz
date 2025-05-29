@@ -295,6 +295,20 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isOneMinCGMSampleIntervalDevice', () => {
+    it('should return `true` for an upload record for a device upload with one minute cgm interval capabilities', () => {
+      expect(device.isOneMinCGMSampleIntervalDevice({ type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } })).to.be.true;
+      expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
+    });
+
+    it('should return `false` for an upload record for a device upload without one minute cgm interval capabilities', () => {
+      expect(device.isOneMinCGMSampleIntervalDevice({ deviceId: 'tandem123456' })).to.be.false;
+      expect(device.isOneMinCGMSampleIntervalDevice({ deviceId: 'tandemCIQ123456' })).to.be.false;
+      expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'org.tidepool.Loop' } })).to.be.false;
+      expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'com.loopkit.Loop' } })).to.be.false;
+    });
+  });
+
   describe('getSettingsOverrides', () => {
     it('should return a pump settings overrides list by manufacturer, with default fallback for manufacturer', () => {
       expect(device.getSettingsOverrides(TANDEM)).to.have.members([SLEEP, PHYSICAL_ACTIVITY]);
