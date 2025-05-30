@@ -303,7 +303,7 @@ const withDosingDecision = {
   insulinOnBoard: 2.654,
   dosingDecision: {
     recommendedBolus: {
-      amount: 2.8,
+      normal: 2.8,
     },
     insulinOnBoard: {
       amount: 2.2354,
@@ -321,7 +321,7 @@ const withDosingDecisionOverride = {
   dosingDecision: {
     ...withDosingDecision.dosingDecision,
     recommendedBolus: {
-      amount: withDosingDecision.normal - 0.5,
+      normal: withDosingDecision.normal - 0.5,
     },
   },
 };
@@ -331,7 +331,7 @@ const withDosingDecisionUnderride = {
   dosingDecision: {
     ...withDosingDecision.dosingDecision,
     recommendedBolus: {
-      amount: withDosingDecision.normal + 0.5,
+      normal: withDosingDecision.normal + 0.5,
     },
   },
 };
@@ -340,7 +340,7 @@ const withDosingDecisionCorrection = {
   ...withDosingDecision,
   dosingDecision: {
     ...withDosingDecision.dosingDecision,
-    recommendedBolus: { amount: 0.5 },
+    recommendedBolus: { normal: 0.5 },
     food: { nutrition: { carbohydrate: { net: 0 } } },
   },
 };
@@ -552,9 +552,9 @@ describe('bolus utilities', () => {
       expect(bolusUtils.getRecommended(withNetRec)).to.equal(net);
     });
 
-    it('should return `amount` rec when `amount` rec exists on dosing decision', () => {
-      const { recommendedBolus: { amount } } = withDosingDecision.dosingDecision;
-      expect(bolusUtils.getRecommended(withDosingDecision)).to.equal(amount);
+    it('should return `normal` rec when `normal` rec exists on dosing decision', () => {
+      const { recommendedBolus } = withDosingDecision.dosingDecision;
+      expect(bolusUtils.getRecommended(withDosingDecision)).to.equal(recommendedBolus.normal);
     });
 
     it('should return 0 when no bolus recommended, even if overridden', () => {

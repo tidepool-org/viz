@@ -4,7 +4,7 @@
     "node": "20.8.0"
   },
   "packageManager": "yarn@3.6.4",
-  "version": "1.46.0-web-3677-one-five-min-cgm-toggle.2",
+  "version": "1.46.1-web-3698-dosing-decision-bolus-normal",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"

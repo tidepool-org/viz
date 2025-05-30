@@ -221,6 +221,16 @@ export class DataUtil {
       d.sampleInterval = sampleInterval;
     }
 
+    // Use normal instead of deprecated amount for recommendedBolus and requestedBolus
+    if (d.type === 'dosingDecision') {
+      _.each([d.recommendedBolus, d.requestedBolus], (bolus) => {
+        if (_.isObject(bolus)) {
+          bolus.normal = _.get(bolus, 'normal', _.get(bolus, 'amount'));
+          delete bolus.amount;
+        }
+      });
+    }
+
     // We validate datums before converting the time and deviceTime to hammerTime integers,
     // as we want to validate that they are valid ISO date strings
     this.validateDatumIn(d);
@@ -253,7 +263,7 @@ export class DataUtil {
     }
 
     // Populate mappings to be used for 2-way join of boluses and dosing decisions
-    if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus'], d.reason)) {
+    if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus', 'oneButtonBolus'], d.reason)) {
       this.bolusDosingDecisionDatumsByIdMap[d.id] = d;
     }
 
@@ -320,7 +330,7 @@ export class DataUtil {
       );
 
       const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
-      const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.amount === d.normal);
+      const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.normal === d.normal);
       d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
 
       if (d.dosingDecision) {
@@ -329,7 +339,7 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.expectedNormal = d.dosingDecision.requestedBolus?.amount;
+        d.expectedNormal = d.dosingDecision.requestedBolus?.normal;
         d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
         d.bgInput = _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
@@ -550,6 +560,7 @@ export class DataUtil {
     if (d.type === 'dosingDecision') {
       this.normalizeDatumBgUnits(d, ['bgTargetSchedule'], ['low', 'high']);
       this.normalizeDatumBgUnits(d, ['bgForecast'], ['value']);
+      this.normalizeDatumBgUnits(d, ['bgHistorical'], ['value']);
       this.normalizeDatumBgUnits(d, ['smbg'], ['value']);
       if (_.isObject(d.pumpSettings)) this.normalizeDatumOut(d.pumpSettings, fields);
     }
