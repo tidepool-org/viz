@@ -408,6 +408,8 @@ describe('schema validation', () => {
     const negativeValue = { ...cbg, value: -1 };
     const zeroValue = { ...cbg, value: 0 };
     const invalidUnits = { ...cbg, units: 'foo' };
+    const negativeSampleInterval = { ...cbg, sampleInterval: -1 };
+    const zeroSampleInterval = { ...cbg, sampleInterval: 0 };
 
     it('should validate a valid `cbg` datum', () => {
       expect(Validator.cbg(cbg)).to.be.true;
@@ -420,6 +422,11 @@ describe('schema validation', () => {
     it('should return an error for a non-positive `value`', () => {
       expect(_.find(Validator.cbg(negativeValue), { field: 'value' }).message).to.equal('The \'value\' field must be a positive number!');
       expect(_.find(Validator.cbg(zeroValue), { field: 'value' }).message).to.equal('The \'value\' field must be a positive number!');
+    });
+
+    it('should return an error for a non-positive `sampleInterval`', () => {
+      expect(_.find(Validator.cbg(negativeSampleInterval), { field: 'sampleInterval' }).message).to.equal('The \'sampleInterval\' field must be a positive number!');
+      expect(_.find(Validator.cbg(zeroSampleInterval), { field: 'sampleInterval' }).message).to.equal('The \'sampleInterval\' field must be a positive number!');
     });
 
     it('should return an error for an invalid `units`', () => {

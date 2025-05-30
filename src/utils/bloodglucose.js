@@ -236,44 +236,11 @@ export function getOutOfRangeThreshold(bgDatum) {
  */
 export function weightedCGMCount(data) {
   return _.reduce(data, (total, datum) => {
-    let datumWeight = 1;
-    const deviceId = _.get(datum, 'deviceId', '');
-
-    // Because our decision as to whether or not there's enough cgm data to warrant using
-    // it to calculate average BGs is based on the expected number of readings in a day,
-    // we need to adjust the weight of a for the Freestyle Libre datum, as it only
-    // collects BG samples every 15 minutes as opposed the default 5 minutes from dexcom.
-    if (datum.type === 'cbg' && deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
-      datumWeight = 3;
-    }
-
+    const sampleInterval = _.get(datum, 'sampleInterval', 5 * MS_IN_MIN);
+    const sampleIntervalInMinutes = sampleInterval / MS_IN_MIN;
+    const datumWeight = sampleIntervalInMinutes / 5; // Default weight is 1, for 5 minute samples
     return total + datumWeight;
   }, 0);
-}
-
-/**
- * Get the CGM sample frequency in milliseconds from a CGM data point. Most devices default at a
- * 5 minute interval, but others, such as the Abbot FreeStyle Libre, sample every 15 mins, while
- * Abbot FreeStyle Libre 2, coming from a Tandem CIQ pump, samples every minute.
- *
- * @param {Array} datum - a cgm data point
- */
-export function cgmSampleFrequency(datum) {
-  const deviceId = _.get(datum, 'deviceId', '');
-
-  if (datum?.sampleInterval) {
-    return datum.sampleInterval;
-  }
-
-  if (deviceId.indexOf('AbbottFreeStyleLibre3') === 0) {
-    return 5 * MS_IN_MIN;
-  }
-
-  if (deviceId.indexOf('AbbottFreeStyleLibre') === 0) {
-    return 15 * MS_IN_MIN;
-  }
-
-  return 5 * MS_IN_MIN;
 }
 
 /**
