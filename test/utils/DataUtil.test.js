@@ -972,17 +972,18 @@ describe('DataUtil', () => {
       it('should add the datum to the `bolusDosingDecisionDatumsByIdMap`', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);
 
-        const acceptableReasons = ['normalBolus', 'simpleBolus', 'watchBolus'];
-        const dosingDecisionReasons = ['loop', 'normalBolus', 'simpleBolus', 'watchBolus'];
+        const acceptableReasons = ['normalBolus', 'simpleBolus', 'watchBolus', 'oneButtonBolus'];
+        const dosingDecisionReasons = ['loop', 'normalBolus', 'simpleBolus', 'watchBolus', 'oneButtonBolus'];
         _.each(dosingDecisionReasons, (reason, index) => {
           dataUtil.normalizeDatumIn({ type: 'dosingDecision', id: `ID${index}`, reason });
         });
 
         // the 'loop' reason datum should not be added
-        expect(_.keys(dataUtil.bolusDosingDecisionDatumsByIdMap)).to.have.lengthOf(3);
+        expect(_.keys(dataUtil.bolusDosingDecisionDatumsByIdMap)).to.have.lengthOf(4);
         expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID1.reason).to.eql(acceptableReasons[0]);
         expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID2.reason).to.eql(acceptableReasons[1]);
         expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID3.reason).to.eql(acceptableReasons[2]);
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap.ID4.reason).to.eql(acceptableReasons[3]);
       });
     });
 
@@ -1050,7 +1051,7 @@ describe('DataUtil', () => {
         time: Date.parse('2024-02-02T10:05:00.000Z'),
         origin: { name: 'org.tidepool.Loop' },
         associations: [{ reason: 'pumpSettings', id: 'pumpSettings1' }],
-        requestedBolus: { amount: 12 },
+        requestedBolus: { normal: 12 },
         insulinOnBoard: { amount: 4 },
         food: { nutrition: { carbohydrate: { net: 30 } } },
         bgHistorical: [
@@ -2014,6 +2015,13 @@ describe('DataUtil', () => {
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
         sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgForecast'], ['value']);
+      });
+
+      it('should call `normalizeDatumBgUnits` on bgHistorical field objects', () => {
+        sinon.spy(dataUtil, 'normalizeDatumBgUnits');
+        const datum = { type: 'dosingDecision' };
+        dataUtil.normalizeDatumOut(datum);
+        sinon.assert.calledWithMatch(dataUtil.normalizeDatumBgUnits, datum, ['bgHistorical'], ['value']);
       });
 
       it('should call `normalizeDatumBgUnits` on smbg field objects', () => {
