@@ -182,6 +182,23 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isControlIQ', () => {
+    it('should return `true` for a deviceId starting with tandemCIQ', () => {
+      const datum = { deviceId: 'tandemCIQ123456' };
+      expect(device.isControlIQ(datum)).to.be.true;
+    });
+
+    it('should return `false` for a deviceId not starting with tandemCIQ', () => {
+      const datum = { deviceId: 'tandem123456' };
+      expect(device.isControlIQ(datum)).to.be.false;
+    });
+
+    it('should return `false` for a datum without a deviceId', () => {
+      const datum = {};
+      expect(device.isControlIQ(datum)).to.be.false;
+    });
+  });
+
   describe('isLoop', () => {
     it('should return `true` for a matching pattern within `origin.name` for DIY Loop or Tidepool Loop', () => {
       const diyLoop = { origin: { name: 'com.loopkit.Loop' } };
@@ -278,6 +295,20 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isOneMinCGMSampleIntervalDevice', () => {
+    it('should return `true` for an upload record for a device upload with one minute cgm interval capabilities', () => {
+      expect(device.isOneMinCGMSampleIntervalDevice({ type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } })).to.be.true;
+      expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
+    });
+
+    it('should return `false` for an upload record for a device upload without one minute cgm interval capabilities', () => {
+      expect(device.isOneMinCGMSampleIntervalDevice({ deviceId: 'tandem123456' })).to.be.false;
+      expect(device.isOneMinCGMSampleIntervalDevice({ deviceId: 'tandemCIQ123456' })).to.be.false;
+      expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'org.tidepool.Loop' } })).to.be.false;
+      expect(device.isOneMinCGMSampleIntervalDevice({ origin: { name: 'com.loopkit.Loop' } })).to.be.false;
+    });
+  });
+
   describe('getSettingsOverrides', () => {
     it('should return a pump settings overrides list by manufacturer, with default fallback for manufacturer', () => {
       expect(device.getSettingsOverrides(TANDEM)).to.have.members([SLEEP, PHYSICAL_ACTIVITY]);
@@ -306,6 +337,7 @@ describe('device utility functions', () => {
           'reservoirChange',
           'tubingPrime',
           'cannulaPrime',
+          'automatedBolus',
           'automatedDelivery',
           'automatedSuspend',
           'automatedModeExited',
@@ -317,6 +349,7 @@ describe('device utility functions', () => {
           'maxBolus',
           'maxBasal',
           'insulinDuration',
+          'oneButtonBolus',
         ]);
       });
 

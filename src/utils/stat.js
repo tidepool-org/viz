@@ -19,7 +19,7 @@ import {
 } from './constants';
 
 import { getPumpVocabulary, getSettingsOverrides } from './device';
-import { bankersRound, formatDecimalNumber, formatBgValue } from './format';
+import { bankersRound, formatDecimalNumber, formatBgValue, formatStatsPercentage } from './format';
 import { formatDuration } from './datetime';
 
 const t = i18next.t.bind(i18next);
@@ -146,8 +146,8 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
     case statFormats.bgValue:
       if (value >= 0) {
-        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), value);
-        value = formatBgValue(value, bgPrefs, undefined, useAGPFormat);
+        id = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, value, 'threeWay');
+        value = formatBgValue(value, bgPrefs);
       } else {
         disableStat();
       }
@@ -207,14 +207,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
     case statFormats.percentage:
       if (total && total >= 0) {
         value = _.max([value, 0]);
-        const percentage = (value / total) * 100;
-        let precision = 0;
-        // We want to show extra precision on very small percentages so that we avoid showing 0%
-        // when there is some data there.
-        if (percentage > 0 && percentage < 0.5) {
-          precision = percentage < 0.05 ? 2 : 1;
-        }
-        value = formatDecimalNumber(percentage, precision);
+        value = formatStatsPercentage(value / total);
         suffix = '%';
       } else {
         disableStat();
@@ -226,11 +219,11 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
       if (value >= 0 && deviation >= 0) {
         lowerValue = value - deviation;
         lowerColorId = lowerValue >= 0
-          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), lowerValue)
+          ? classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, lowerValue, 'threeWay')
           : 'low';
 
         upperValue = value + deviation;
-        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), upperValue);
+        upperColorId = classifyBgValue(_.get(bgPrefs, 'bgBounds'), bgPrefs?.bgUnits, upperValue, 'threeWay');
 
         lowerValue = formatBgValue(lowerValue, bgPrefs);
         upperValue = formatBgValue(upperValue, bgPrefs);
@@ -365,11 +358,11 @@ export const getStatAnnotations = (data, type, opts = {}) => {
 
     case commonStats.timeInOverride:
       if (days > 1) {
-        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in a {{overrideLabelLowerCase}}.', labels));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**Time In {{overrideLabel}}:** Daily average of the time spent in {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in {{overrideLabelLowerCase}}.', labels));
       } else {
-        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in a {{overrideLabelLowerCase}}.', labels));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in a {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is total duration of time in a {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**Time In {{overrideLabel}}:** Time spent in {{overrideLabelLowerCase}}.', labels));
+        annotations.push(t('**How we calculate this:**\n\n**(%)** is the duration in {{overrideLabelLowerCase}} divided by the total duration for this time period.\n\n**(time)** is total duration of time in {{overrideLabelLowerCase}}.', labels));
       }
       break;
 

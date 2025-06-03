@@ -42,7 +42,7 @@ export function isTidepoolLoop(datum = {}) {
 }
 
 /**
- * Check to see datum is from Twiist Loop
+ * Check to see if datum is from Twiist Loop
 */
 export function isTwiistLoop(datum = {}) {
   if (datum.type === 'upload') {
@@ -50,6 +50,13 @@ export function isTwiistLoop(datum = {}) {
     return (/^com.sequelmedtech.tidepool-service/).test(_.get(datum, 'client.name', '')) && majorVersion >= 2;
   }
   return (/^com.dekaresearch.twiist/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
+}
+
+/**
+ * Check to see if datum is from Control-IQ
+ */
+export function isControlIQ(datum = {}) {
+  return _.get(datum, 'deviceId', '').indexOf('tandemCIQ') === 0;
 }
 
 /**
@@ -68,7 +75,7 @@ export function isLoop(datum = {}) {
  */
 export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, deviceModel) {
   return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []), deviceModel)
-    || (manufacturer === 'tandem' && _.get(pumpSettingsOrUpload, 'deviceId', '').indexOf('tandemCIQ') === 0)
+    || (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
     || isLoop(pumpSettingsOrUpload);
 }
 
@@ -79,7 +86,7 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, 
  * @returns {Boolean}
  */
 export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) {
-  return (manufacturer === 'tandem' && _.get(pumpSettingsOrUpload, 'deviceId', '').indexOf('tandemCIQ') === 0)
+  return (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
     || isDIYLoop(pumpSettingsOrUpload);
 }
 
@@ -90,8 +97,17 @@ export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) 
  * @returns {Boolean}
  */
 export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}) {
-  return (manufacturer === 'tandem' && _.get(pumpSettingsOrUpload, 'deviceId', '').indexOf('tandemCIQ') === 0)
+  return (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
   || isLoop(pumpSettingsOrUpload);
+}
+
+/**
+ * Check if the provided datum was for a 1-minute CGM sample interval device
+ * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
+ * @returns {Boolean}
+ */
+export function isOneMinCGMSampleIntervalDevice(pumpSettingsOrUpload = {}) {
+  return isTwiistLoop(pumpSettingsOrUpload);
 }
 
 /**

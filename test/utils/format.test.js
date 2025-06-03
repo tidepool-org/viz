@@ -45,14 +45,20 @@ describe('format', () => {
 
     describe('no recogizable units provided', () => {
       it('should return a String integer by default (no recogizable `units` provided)', () => {
-        expect(format.formatBgValue(120.5)).to.equal('121');
-        expect(format.formatBgValue(120.5, 'foo')).to.equal('121');
+        expect(format.formatBgValue(120.5)).to.equal('120');
+        expect(format.formatBgValue(120.5, 'foo')).to.equal('120');
       });
     });
 
     describe('when units are `mg/dL`', () => {
       it('should return a String integer', () => {
-        expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('121');
+        expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('120');
+      });
+
+      it('should round half to even', () => {
+        expect(format.formatBgValue(120.5, { bgUnits: MGDL_UNITS })).to.equal('120');
+        expect(format.formatBgValue(120.50001, { bgUnits: MGDL_UNITS })).to.equal('121');
+        expect(format.formatBgValue(121.5, { bgUnits: MGDL_UNITS })).to.equal('122');
       });
 
       it('should give no decimals', () => {
@@ -190,6 +196,41 @@ describe('format', () => {
         expect(format.formatPercentage(0.7135, 1, true)).to.equal('71.4%');
         expect(format.formatPercentage(0.7145, 1, true)).to.equal('71.4%');
       });
+    });
+  });
+
+  describe('formatStatsPercentage', () => {
+    it('should be a function', () => {
+      assert.isFunction(format.formatPercentage);
+    });
+
+    it('should return `--` on `NaN` input', () => {
+      expect(format.formatStatsPercentage(NaN)).to.equal('--');
+    });
+
+    it('should format to 1 decimal place using bankers round when value < 1%', () => {
+      expect(format.formatStatsPercentage(0.003)).to.equal('0.3');
+      expect(format.formatStatsPercentage(0.0035)).to.equal('0.4');
+      expect(format.formatStatsPercentage(0.008)).to.equal('0.8');
+      expect(format.formatStatsPercentage(0.0085)).to.equal('0.8');
+      expect(format.formatStatsPercentage(0.0092)).to.equal('0.9');
+    });
+
+    it('should format to whole number if bankers round would round to 1', () => {
+      expect(format.formatStatsPercentage(0.0095)).to.equal('1');
+      expect(format.formatStatsPercentage(0.00956)).to.equal('1');
+      expect(format.formatStatsPercentage(0.0099)).to.equal('1');
+    });
+
+    it('should format to whole number using bankers round when value >= 1%', () => {
+      expect(format.formatStatsPercentage(0.01)).to.equal('1');
+      expect(format.formatStatsPercentage(0.01001)).to.equal('1');
+      expect(format.formatStatsPercentage(0.015)).to.equal('2');
+      expect(format.formatStatsPercentage(0.062)).to.equal('6');
+      expect(format.formatStatsPercentage(0.085)).to.equal('8');
+      expect(format.formatStatsPercentage(0.085001)).to.equal('9');
+      expect(format.formatStatsPercentage(0.095)).to.equal('10');
+      expect(format.formatStatsPercentage(0.295)).to.equal('30');
     });
   });
 

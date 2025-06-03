@@ -231,7 +231,7 @@ describe('stat', () => {
         expect(stat.formatDatum({
           id: 'low',
         }, statFormats.bgRange, customOpts)).to.include({
-          value: '39-70',
+          value: '39-69',
         });
 
         expect(stat.formatDatum({
@@ -243,7 +243,7 @@ describe('stat', () => {
         expect(stat.formatDatum({
           id: 'high',
         }, statFormats.bgRange, customOpts)).to.include({
-          value: '180-250',
+          value: '181-250',
         });
 
         expect(stat.formatDatum({
@@ -366,7 +366,7 @@ describe('stat', () => {
         });
       });
 
-      it('should use agp-style bankers rounding when requested', () => {
+      it('should use agp-style bankers rounding', () => {
         const customOpts = opts({
           bgPrefs: {
             bgUnits: MGDL_UNITS,
@@ -382,13 +382,6 @@ describe('stat', () => {
         expect(stat.formatDatum({
           value: 108.5,
         }, statFormats.bgValue, customOpts)).to.include({
-          id: 'target',
-          value: '109',
-        });
-
-        expect(stat.formatDatum({
-          value: 108.5,
-        }, statFormats.bgValue, { ...customOpts, useAGPFormat: true })).to.include({
           id: 'target',
           value: '108',
         });
@@ -592,7 +585,7 @@ describe('stat', () => {
         expect(stat.formatDatum({
           value: 0.0049,
         }, statFormats.percentage, customOpts)).to.include({
-          value: '0.05',
+          value: '0',
           suffix: '%',
         });
       });
@@ -1000,15 +993,15 @@ describe('stat', () => {
     describe('timeInOverride', () => {
       it('should return annotations for `timeInOverride` stat when viewing a single day of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, singleDayOpts)).to.have.ordered.members([
-          '**Time In Settings Override:** Time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in a settings override divided by the total duration for this time period.\n\n**(time)** is total duration of time in a settings override.',
+          '**Time In Settings Override:** Time spent in settings override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in settings override divided by the total duration for this time period.\n\n**(time)** is total duration of time in settings override.',
         ]);
       });
 
       it('should return annotations for `timeInOverride` stat when viewing multiple days of data', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInOverride, multiDayOpts)).to.have.ordered.members([
-          '**Time In Settings Override:** Daily average of the time spent in a settings override.',
-          '**How we calculate this:**\n\n**(%)** is the duration in a settings override divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in a settings override.',
+          '**Time In Settings Override:** Daily average of the time spent in settings override.',
+          '**How we calculate this:**\n\n**(%)** is the duration in settings override divided by the total duration for this time period.\n\n**(time)** is 24 hours multiplied by % in settings override.',
         ]);
       });
     });
@@ -1327,7 +1320,7 @@ describe('stat', () => {
           id: 'low',
           value: 2,
           title: 'Readings Below Range',
-          legendTitle: '54-70',
+          legendTitle: '54-69',
         },
         {
           id: 'target',
@@ -1339,7 +1332,7 @@ describe('stat', () => {
           id: 'high',
           value: 4,
           title: 'Readings Above Range',
-          legendTitle: '180-250',
+          legendTitle: '181-250',
         },
         {
           id: 'veryHigh',
@@ -1389,7 +1382,7 @@ describe('stat', () => {
           id: 'low',
           value: 7,
           title: 'Readings Below Range',
-          legendTitle: '54-70',
+          legendTitle: '54-69',
         },
         {
           id: 'target',
@@ -1401,7 +1394,7 @@ describe('stat', () => {
           id: 'high',
           value: 9,
           title: 'Readings Above Range',
-          legendTitle: '180-250',
+          legendTitle: '181-250',
         },
         {
           id: 'veryHigh',
@@ -1568,7 +1561,7 @@ describe('stat', () => {
           id: 'low',
           value: 20000,
           title: 'Time Below Range',
-          legendTitle: '54-70',
+          legendTitle: '54-69',
         },
         {
           id: 'target',
@@ -1580,7 +1573,7 @@ describe('stat', () => {
           id: 'high',
           value: 40000,
           title: 'Time Above Range',
-          legendTitle: '180-250',
+          legendTitle: '181-250',
         },
         {
           id: 'veryHigh',

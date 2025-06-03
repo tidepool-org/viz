@@ -105,6 +105,14 @@
   composes: bolusHeaderBackground settingsHeader from './settings.css';
 }
 
+.annotations {
+  margin-left: 40px;
+  margin-right: 40px;
+  margin-top: 30px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
 @media print {
 
   .title {

@@ -56,7 +56,7 @@ const data = {
           sensorUsage: 2532600000,
           sensorUsageAGP: 99.95264030310206,
           total: 2592000000,
-          sampleFrequency: 300000,
+          sampleInterval: 300000,
           count: 8442,
         },
         timeInRange: {

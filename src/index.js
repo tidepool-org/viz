@@ -28,6 +28,7 @@ import TwoOptionToggle from './components/common/controls/TwoOptionToggle';
 import PumpSettingsContainer from './components/settings/common/PumpSettingsContainer';
 import TrendsContainer from './components/trends/common/TrendsContainer';
 import Tooltip from './components/common/tooltips/Tooltip';
+import CgmSampleIntervalTooltip from './components/common/tooltips/CgmSampleIntervalTooltip';
 import BolusTooltip from './components/daily/bolustooltip/BolusTooltip';
 import PumpSettingsOverrideTooltip from './components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import SMBGTooltip from './components/daily/smbgtooltip/SMBGTooltip';
@@ -35,7 +36,7 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
-import { formatBgValue, formatPercentage, bankersRound } from './utils/format';
+import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
 import { DEFAULT_BG_BOUNDS } from './utils/constants';
@@ -96,6 +97,7 @@ const components = {
   Stat,
   CBGTooltip,
   FoodTooltip,
+  CgmSampleIntervalTooltip,
 };
 
 const containers = {
@@ -133,6 +135,7 @@ const utils = {
     commonStats,
     formatDatum,
     formatPercentage,
+    formatStatsPercentage,
     getStatAnnotations,
     getStatData,
     getStatDefinition,

@@ -90,7 +90,7 @@ export function precisionRound(value, precision = 0) {
  *
  * @return {String} formatted blood glucose value
  */
-export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) {
+export function formatBgValue(val, bgPrefs, outOfRangeThresholds) {
   const units = _.get(bgPrefs, 'bgUnits', '');
 
   if (!_.isEmpty(outOfRangeThresholds)) {
@@ -114,14 +114,10 @@ export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) 
   }
 
   if (units === MMOLL_UNITS) {
-    return useAGPFormat
-      ? bankersRound(val, 1).toFixed(1)
-      : format('.1f')(val);
+    return bankersRound(val, 1).toFixed(1);
   }
 
-  return useAGPFormat
-    ? bankersRound(val).toString()
-    : format('d')(val);
+  return bankersRound(val).toString();
 }
 
 /**
@@ -173,6 +169,24 @@ export function formatPercentage(val, precision = 0, useAGPFormat) {
   return useAGPFormat
     ? `${bankersRound(val * 100, precision)}%`
     : format(`.${precision}%`)(val);
+}
+
+/**
+ * formatStatsPercentage
+ * @param {Number} val - raw decimal proportion, range of 0.0 to 1.0
+ *
+ * @return {String} percentage
+ */
+export function formatStatsPercentage(value) {
+  if (Number.isNaN(value)) return '--';
+
+  const percentage = value * 100;
+
+  // Round to one decimal place if below 1, and zero decimal places if above 1;
+  const precision = percentage >= 1 ? 0 : 1;
+  const roundedValue = bankersRound(percentage, precision);
+
+  return _.toString(roundedValue);
 }
 
 /**

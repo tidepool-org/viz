@@ -74,11 +74,11 @@ describe('AGPUtils', () => {
 
   describe('calculateCGMDataSufficiency', () => {
     const lessThan24HrsData = _.cloneDeep(cbgAGPData);
-    lessThan24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
+    lessThan24HrsData.data.current.stats.sensorUsage.sampleInterval = MS_IN_MIN * 60;
     lessThan24HrsData.data.current.stats.sensorUsage.count = 23;
 
     const sensorUSage70Percent24HrsData = _.cloneDeep(cbgAGPData);
-    sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.sampleFrequency = MS_IN_MIN * 60;
+    sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.sampleInterval = MS_IN_MIN * 60;
     sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.count = 24;
     sensorUSage70Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 70;
 
