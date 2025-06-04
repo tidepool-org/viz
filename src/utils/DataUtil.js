@@ -133,12 +133,12 @@ export class DataUtil {
     _.each(data, this.joinBolusAndDosingDecision);
     this.endTimer('joinBolusAndDosingDecision');
 
-    // Join bolus and dosingDecision datums
+    // Add missing suppressed basals to select basal datums
     this.startTimer('addMissingSuppressedBasals');
     this.addMissingSuppressedBasals(data);
     this.endTimer('addMissingSuppressedBasals');
 
-    // Filter out any data that failed validation, and and duplicates by `id`
+    // Filter out any data that failed validation, and any duplicates by `id`
     this.startTimer('filterValidData');
     this.clearFilters();
     const validData = _.uniqBy(data, 'id');
@@ -347,6 +347,13 @@ export class DataUtil {
     // ordered by start time in descending order for easier comparison with basals
     const getOrderedPumpSettingsSchedules = ({ activeSchedule, basalSchedules, time }) => ({ basalSchedule: _.orderBy(basalSchedules?.[activeSchedule], 'start', 'desc'), time });
 
+    const shouldGenerateSuppressedBasal = (d) => (
+      d.type === 'basal' &&
+      !d.suppressed &&
+      _.includes(['automated', 'temp'], d.deliveryType) &&
+      isTwiistLoop(d)
+    );
+
     // Get the pump settings datums ordered by start time in descending order
     const pumpSettingsByStartTimes = _.orderBy(
       _.map(_.values(this.pumpSettingsDatumsByIdMap), getOrderedPumpSettingsSchedules),
@@ -355,7 +362,7 @@ export class DataUtil {
     );
 
     _.each(data, d => {
-      if (d.type === 'basal' && !d.suppressed && d.deliveryType === 'automated' && isTwiistLoop(d)) {
+      if (shouldGenerateSuppressedBasal(d)) {
         // Get the pump settings datum that is active at the time of the basal by grabbing the first
         // datum with a time less than or equal to the basal's time
         const pumpSettingsDatum = _.find(pumpSettingsByStartTimes, ps => ps.time <= d.time);
