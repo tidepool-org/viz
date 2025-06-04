@@ -133,6 +133,11 @@ export class DataUtil {
     _.each(data, this.joinBolusAndDosingDecision);
     this.endTimer('joinBolusAndDosingDecision');
 
+    // Join bolus and dosingDecision datums
+    this.startTimer('addMissingSuppressedBasals');
+    this.addMissingSuppressedBasals(data);
+    this.endTimer('addMissingSuppressedBasals');
+
     // Filter out any data that failed validation, and and duplicates by `id`
     this.startTimer('filterValidData');
     this.clearFilters();
@@ -335,6 +340,47 @@ export class DataUtil {
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
       }
     }
+  };
+
+  addMissingSuppressedBasals = data => {
+    // Mapping function to get the basal schedules for a given pumpSettings datum,
+    // ordered by start time in descending order for easier comparison with basals
+    const getOrderedPumpSettingsSchedules = ({ activeSchedule, basalSchedules, time }) => ({ basalSchedule: _.orderBy(basalSchedules?.[activeSchedule], 'start', 'desc'), time });
+
+    // Get the pump settings datums ordered by start time in descending order
+    const pumpSettingsByStartTimes = _.orderBy(
+      _.map(_.values(this.pumpSettingsDatumsByIdMap), getOrderedPumpSettingsSchedules),
+      'time',
+      'desc'
+    );
+
+    _.each(data, d => {
+      if (d.type === 'basal' && !d.suppressed && d.deliveryType === 'automated' && isTwiistLoop(d)) {
+        // Get the pump settings datum that is active at the time of the basal by grabbing the first
+        // datum with a time less than or equal to the basal's time
+        const pumpSettingsDatum = _.find(pumpSettingsByStartTimes, ps => ps.time <= d.time);
+        const activeSchedule = pumpSettingsDatum?.basalSchedule;
+
+        // Get the msPer24 for the utc time of the basal datum, then adjust for timezone offset
+        let basalMsPer24WithOffset = getMsPer24(d.time) + ((d.timezoneOffset || 0) * MS_IN_MIN);
+
+        if (basalMsPer24WithOffset < 0) {
+          // If the offset msPer24 is negative, as can happen with negative timezone offsets,
+          // we need to add a day to adjust it to be within the 24-hour range
+          basalMsPer24WithOffset += MS_IN_DAY;
+        }
+
+        // Find the rate in the active schedule that corresponds to the basal's time of day
+        const { rate = 0 } = _.find(activeSchedule, ({ start }) => start <= basalMsPer24WithOffset) || {};
+
+        // Add the generated suppressed scheduled basal datum
+        d.suppressed = {
+          ...d,
+          deliveryType: 'scheduled',
+          rate,
+        };
+      }
+    });
   };
 
   /**
