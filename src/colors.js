@@ -19,6 +19,8 @@ export const system = {
   indigo00: '#F4F5FF',
 
   // Blues
+  blue80: '#375178',
+  blue60: '#EEF3FF',
   blue50: '#4F6A92',
   blue30: '#708FC2',
   blue05: '#E1EAF9',
