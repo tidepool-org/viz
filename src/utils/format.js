@@ -90,7 +90,7 @@ export function precisionRound(value, precision = 0) {
  *
  * @return {String} formatted blood glucose value
  */
-export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) {
+export function formatBgValue(val, bgPrefs, outOfRangeThresholds) {
   const units = _.get(bgPrefs, 'bgUnits', '');
 
   if (!_.isEmpty(outOfRangeThresholds)) {
@@ -114,14 +114,10 @@ export function formatBgValue(val, bgPrefs, outOfRangeThresholds, useAGPFormat) 
   }
 
   if (units === MMOLL_UNITS) {
-    return useAGPFormat
-      ? bankersRound(val, 1).toFixed(1)
-      : format('.1f')(val);
+    return bankersRound(val, 1).toFixed(1);
   }
 
-  return useAGPFormat
-    ? bankersRound(val).toString()
-    : format('d')(val);
+  return bankersRound(val).toString();
 }
 
 /**

@@ -4,8 +4,8 @@ import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
-import { cgmSampleFrequency, classifyBgValue } from './bloodglucose';
-import { BGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { classifyBgValue } from './bloodglucose';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
@@ -33,7 +33,13 @@ export class StatUtil {
     this.log('bgPrefs', { bgBounds: this.bgBounds, bgUnits: this.bgUnits });
   };
 
+  filterCBGDataByDefaultSampleInterval = () => {
+    this.dataUtil.filter.bySampleIntervalRange(...this.dataUtil.defaultCgmSampleIntervalRange);
+  };
+
   getAverageGlucoseData = (returnBgData = false) => {
+    if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
+
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
@@ -50,6 +56,8 @@ export class StatUtil {
   };
 
   getBgExtentsData = () => {
+    if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
+
     const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
@@ -213,7 +221,7 @@ export class StatUtil {
     const getTotalCbgDuration = () => _.reduce(
       bgData,
       (result, datum) => {
-        result += cgmSampleFrequency(datum);
+        result += datum.sampleInterval;
         return result;
       },
       0
@@ -279,6 +287,7 @@ export class StatUtil {
   };
 
   getSensorUsage = () => {
+    this.filterCBGDataByDefaultSampleInterval();
     const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
     const count = cbgData.length;
 
@@ -286,7 +295,7 @@ export class StatUtil {
     const duration = _.reduce(
       cbgData,
       (result, datum) => {
-        result += cgmSampleFrequency(datum);
+        result += datum.sampleInterval;
         return result;
       },
       0
@@ -297,28 +306,28 @@ export class StatUtil {
     // Data for AGP sensor usage stat
     const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
-    const sampleFrequency = cgmSampleFrequency(newestDatum);
+    const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
     let cgmMinutesWorn;
 
     if (rawCbgData.length < 2) {
-      cgmMinutesWorn = rawCbgData.length === 1 ? sampleFrequency : 0;
+      cgmMinutesWorn = rawCbgData.length === 1 ? sampleInterval : 0;
     } else {
       cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
     }
 
     const sensorUsageAGP = (
       count /
-      ((cgmMinutesWorn / (sampleFrequency / MS_IN_MIN)) + 1)
+      ((cgmMinutesWorn / (sampleInterval / MS_IN_MIN)) + 1)
     ) * 100;
 
     return {
       sensorUsage: duration,
       sensorUsageAGP,
       total,
-      sampleFrequency,
+      sampleInterval,
       count,
     };
   };
@@ -408,6 +417,7 @@ export class StatUtil {
   };
 
   getTimeInRangeData = () => {
+    this.filterCBGDataByDefaultSampleInterval();
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
@@ -415,7 +425,7 @@ export class StatUtil {
       cbgData,
       (result, datum) => {
         const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
-        const duration = cgmSampleFrequency(datum);
+        const duration = datum.sampleInterval;
         result.durations[classification] += duration;
         result.durations.total += duration;
         result.counts[classification]++;

@@ -1,0 +1,30 @@
+.container {
+  width: 260px;
+}
+
+.row {
+  composes: smallSize from '../../../styles/typography.css';
+  line-height: 16px;
+  color: var(--stat--default);
+  margin-bottom: 8px;
+  font-weight: medium;
+}
+
+.title {
+  composes: row;
+  font-weight: bold;
+}
+
+.subtitle {
+  composes: row;
+}
+
+.annotations {
+  padding-left: 24px;
+  margin: 0 0 6px;
+}
+
+.annotation {
+  composes: row;
+  margin-bottom: 2px;
+}

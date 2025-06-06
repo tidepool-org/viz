@@ -366,7 +366,7 @@ describe('stat', () => {
         });
       });
 
-      it('should use agp-style bankers rounding when requested', () => {
+      it('should use agp-style bankers rounding', () => {
         const customOpts = opts({
           bgPrefs: {
             bgUnits: MGDL_UNITS,
@@ -382,13 +382,6 @@ describe('stat', () => {
         expect(stat.formatDatum({
           value: 108.5,
         }, statFormats.bgValue, customOpts)).to.include({
-          id: 'target',
-          value: '109',
-        });
-
-        expect(stat.formatDatum({
-          value: 108.5,
-        }, statFormats.bgValue, { ...customOpts, useAGPFormat: true })).to.include({
           id: 'target',
           value: '108',
         });

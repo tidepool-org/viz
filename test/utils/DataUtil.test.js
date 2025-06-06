@@ -385,6 +385,18 @@ describe('DataUtil', () => {
     it('should set up crossfilter sorts', () => {
       expect(dataUtil.sort).to.be.an('object');
     });
+
+    it('should define the default cgm sample interval', () => {
+      expect(dataUtil.defaultCgmSampleInterval).to.equal(MS_IN_MIN * 5);
+    });
+
+    it('should define the default cgm sample interval range', () => {
+      expect(dataUtil.defaultCgmSampleIntervalRange).to.eql([MS_IN_MIN * 5, Infinity]);
+    });
+
+    it('should set the active cgm sample interval range to the default range', () => {
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN * 5, Infinity]);
+    });
   });
 
   describe('addData', () => {
@@ -857,6 +869,54 @@ describe('DataUtil', () => {
         const message = { messagetext: 'hi', timestamp: '12345' };
         dataUtil.normalizeDatumIn(message);
         expect(message.time).to.equal('12345');
+      });
+    });
+
+    context('cbg', () => {
+      it('should set the CGM sampleIntval in milliseconds from datums that do not have it', () => {
+        const dexcomDatum = {
+          type: 'cbg',
+          deviceId: 'Dexcom_XXXXXXX',
+        };
+        dataUtil.normalizeDatumIn(dexcomDatum);
+        expect(dexcomDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+
+        const libreDatum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+        };
+        dataUtil.normalizeDatumIn(libreDatum);
+        expect(libreDatum.sampleInterval).to.equal(15 * MS_IN_MIN);
+
+        const libre3Datum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
+        };
+        dataUtil.normalizeDatumIn(libre3Datum);
+        expect(libre3Datum.sampleInterval).to.equal(5 * MS_IN_MIN);
+
+        const libre2CIQDatum = {
+          type: 'cbg',
+          sampleInterval: MS_IN_MIN,
+        };
+        dataUtil.normalizeDatumIn(libre2CIQDatum);
+        expect(libre2CIQDatum.sampleInterval).to.equal(MS_IN_MIN); // unchanged, since it was already set
+
+        const g7CIQDatum = {
+          type: 'cbg',
+          deviceId: 'tandemCIQ_XXXXX',
+          payload: { g7: true },
+        };
+        dataUtil.normalizeDatumIn(g7CIQDatum);
+        expect(g7CIQDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+
+        const g6CIQDatum = {
+          type: 'cbg',
+          deviceId: 'tandemCIQ_XXXXX',
+          payload: { g6: true },
+        };
+        dataUtil.normalizeDatumIn(g6CIQDatum);
+        expect(g6CIQDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
       });
     });
 
@@ -2545,6 +2605,34 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('buildByDeviceIdDimension', () => {
+    it('should build the `byDeviceId` dimension', () => {
+      delete dataUtil.dimension.byDeviceId;
+
+      dataUtil.buildByDeviceIdDimension();
+      expect(dataUtil.dimension.byDeviceId).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
+  describe('buildBySampleIntervalDimension', () => {
+    it('should build the `bySampleInterval` dimension', () => {
+      delete dataUtil.dimension.bySampleInterval;
+
+      dataUtil.buildBySampleIntervalDimension();
+      expect(dataUtil.dimension.bySampleInterval).to.be.an('object').and.include.keys([
+        'filter',
+        'filterAll',
+        'top',
+        'bottom',
+      ]);
+    });
+  });
+
   describe('buildDimensions', () => {
     it('should build the data dimensions', () => {
       dataUtil.dimension = {};
@@ -2556,6 +2644,7 @@ describe('DataUtil', () => {
       expect(dataUtil.dimension.byTime).to.be.an('object');
       expect(dataUtil.dimension.byType).to.be.an('object');
       expect(dataUtil.dimension.byDeviceId).to.be.an('object');
+      expect(dataUtil.dimension.bySampleInterval).to.be.an('object');
     });
   });
 
@@ -2570,6 +2659,7 @@ describe('DataUtil', () => {
       expect(dataUtil.filter.bySubType).to.be.a('function');
       expect(dataUtil.filter.byId).to.be.a('function');
       expect(dataUtil.filter.byDeviceIds).to.be.a('function');
+      expect(dataUtil.filter.bySampleIntervalRange).to.be.a('function');
     });
   });
 
@@ -2589,6 +2679,7 @@ describe('DataUtil', () => {
       const clearbyIdSpy = sinon.spy(dataUtil.dimension.byId, 'filterAll');
       const clearbyDayOfWeekSpy = sinon.spy(dataUtil.dimension.byDayOfWeek, 'filterAll');
       const clearbyDeviceIdSpy = sinon.spy(dataUtil.dimension.byDeviceId, 'filterAll');
+      const clearbySampleIntervalSpy = sinon.spy(dataUtil.dimension.bySampleInterval, 'filterAll');
 
       sinon.assert.callCount(clearbyTimeSpy, 0);
       sinon.assert.callCount(clearbyTypeSpy, 0);
@@ -2596,6 +2687,7 @@ describe('DataUtil', () => {
       sinon.assert.callCount(clearbyIdSpy, 0);
       sinon.assert.callCount(clearbyDayOfWeekSpy, 0);
       sinon.assert.callCount(clearbyDeviceIdSpy, 0);
+      sinon.assert.callCount(clearbySampleIntervalSpy, 0);
 
       dataUtil.clearFilters();
 
@@ -2605,6 +2697,7 @@ describe('DataUtil', () => {
       sinon.assert.callCount(clearbyIdSpy, 1);
       sinon.assert.callCount(clearbyDayOfWeekSpy, 1);
       sinon.assert.callCount(clearbyDeviceIdSpy, 1);
+      sinon.assert.callCount(clearbySampleIntervalSpy, 1);
     });
   });
 
@@ -2677,6 +2770,29 @@ describe('DataUtil', () => {
           expect(dataUtil.bgSources.current).to.equal('smbg');
         });
       });
+    });
+  });
+
+  describe('setCgmSampleIntervalRange', () => {
+    beforeEach(() => {
+      initDataUtil(defaultData);
+    });
+
+    it('should set the cgmSampleIntervalRange to the default when called with no arguments', () => {
+      dataUtil.cgmSampleIntervalRange = [1, 2];
+      dataUtil.setCgmSampleIntervalRange();
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([dataUtil.defaultCgmSampleInterval, Infinity]);
+    });
+
+    it('should set the cgmSampleIntervalRange to the specified range when called with valid arguments', () => {
+      dataUtil.cgmSampleIntervalRange = [1, 2];
+      dataUtil.setCgmSampleIntervalRange([MS_IN_MIN, MS_IN_MIN * 2]);
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN, MS_IN_MIN * 2]);
+    });
+
+    it('should set the cgmSampleIntervalRange to the provided array, filtering out falsy values', () => {
+      dataUtil.setCgmSampleIntervalRange([MS_IN_MIN, null]);
+      expect(dataUtil.cgmSampleIntervalRange).to.eql([MS_IN_MIN]);
     });
   });
 
@@ -3079,6 +3195,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
@@ -3099,6 +3216,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandem12345',
           label: 'Tandem 12345',
           pump: true,
@@ -3116,6 +3234,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandem12345',
           label: 'Tandem 12345',
           pump: true,
@@ -3124,6 +3243,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
@@ -3153,6 +3273,7 @@ describe('DataUtil', () => {
         {
           bgm: true,
           cgm: true,
+          oneMinCgmSampleInterval: false,
           id: 'MyAbbott123',
           label: 'FreeStyle Libre (from LibreView)',
           pump: false,
@@ -3164,6 +3285,10 @@ describe('DataUtil', () => {
     it('should add set the proper device label for Sequel data', () => {
       initDataUtil([{
         ...uploadData[3],
+        client: {
+          name: 'com.sequelmedtech.tidepool-service',
+          version: '2.0.0',
+        },
         deviceManufacturers: ['Sequel'],
         deviceId: 'MySequel123',
         dataSetType: 'continuous',
@@ -3181,6 +3306,7 @@ describe('DataUtil', () => {
         {
           bgm: true,
           cgm: true,
+          oneMinCgmSampleInterval: true,
           id: 'MySequel123',
           label: 'twiist',
           pump: true,
@@ -3207,6 +3333,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: true,
+          oneMinCgmSampleInterval: false,
           id: 'MyDexcom123',
           label: 'Dexcom API',
           pump: false,
@@ -3735,6 +3862,7 @@ describe('DataUtil', () => {
     it('should clear all filters before calling other setters', () => {
       sinon.spy(dataUtil, 'clearFilters');
       sinon.spy(dataUtil, 'setBgSources');
+      sinon.spy(dataUtil, 'setCgmSampleIntervalRange');
       sinon.spy(dataUtil, 'setTypes');
       sinon.spy(dataUtil, 'setBgPrefs');
       sinon.spy(dataUtil, 'setTimePrefs');
@@ -3756,6 +3884,7 @@ describe('DataUtil', () => {
 
       sinon.assert.calledTwice(dataUtil.clearFilters);
       sinon.assert.calledOnce(dataUtil.setBgSources);
+      sinon.assert.calledOnce(dataUtil.setCgmSampleIntervalRange);
       sinon.assert.calledOnce(dataUtil.setTypes);
       sinon.assert.calledOnce(dataUtil.setBgPrefs);
       sinon.assert.calledOnce(dataUtil.setTimePrefs);
@@ -3766,9 +3895,9 @@ describe('DataUtil', () => {
 
       sinon.assert.callOrder(
         dataUtil.clearFilters,
-        dataUtil.setBgSources,
-        dataUtil.clearFilters,
         dataUtil.clearMatchedDevices,
+        dataUtil.setBgSources,
+        dataUtil.setCgmSampleIntervalRange,
         dataUtil.setTypes,
         dataUtil.setBgPrefs,
         dataUtil.setTimePrefs,
@@ -4184,6 +4313,19 @@ describe('DataUtil', () => {
       dataUtil.getStats(['averageGlucose', 'totalInsulin']);
       expect(dataUtil.matchedDevices).to.eql({});
     });
+
+    it('should call filterAll on byType and bySampleInterval dimensions before generating each stat', () => {
+      const byTypeFilterAllSpy = sinon.spy(dataUtil.dimension.byType, 'filterAll');
+      const bySampleIntervalFilterAllSpy = sinon.spy(dataUtil.dimension.bySampleInterval, 'filterAll');
+
+      dataUtil.getStats(['averageGlucose', 'totalInsulin']);
+
+      expect(byTypeFilterAllSpy.callCount).to.equal(2);
+      expect(bySampleIntervalFilterAllSpy.callCount).to.equal(2);
+
+      byTypeFilterAllSpy.restore();
+      bySampleIntervalFilterAllSpy.restore();
+    });
   });
 
   describe('getAggregationsByDate', () => {
@@ -4382,7 +4524,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
@@ -4417,7 +4559,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
@@ -4748,6 +4890,51 @@ describe('DataUtil', () => {
       dataUtil.setTypes({ bolus: {} });
       dataUtil.getTypeData(dataUtil.types);
       expect(dataUtil.matchedDevices).to.eql({});
+    });
+
+    it('should call `filterAll` on `byType` and `bySampleInterval` dimensions before processing each type', () => {
+      const byTypeFilterAllSpy = sinon.spy(dataUtil.dimension.byType, 'filterAll');
+      const bySampleIntervalFilterAllSpy = sinon.spy(dataUtil.dimension.bySampleInterval, 'filterAll');
+
+      dataUtil.setTypes({ bolus: {}, cgb: {}, deviceEvent: {} });
+      dataUtil.getTypeData(dataUtil.types);
+
+      expect(byTypeFilterAllSpy.callCount).to.equal(3);
+      expect(bySampleIntervalFilterAllSpy.callCount).to.equal(3);
+
+      byTypeFilterAllSpy.restore();
+      bySampleIntervalFilterAllSpy.restore();
+    });
+
+    it('should call `filter.bySampleIntervalRange` with `cgmSampleIntervalRange` before processing cbg data type', () => {
+      const bySampleIntervalRangeSpy = sinon.spy(dataUtil.filter, 'bySampleIntervalRange');
+      sinon.assert.notCalled(bySampleIntervalRangeSpy);
+      dataUtil.cgmSampleIntervalRange = [1, 2];
+
+      dataUtil.setTypes({ bolus: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      sinon.assert.notCalled(bySampleIntervalRangeSpy);
+
+      dataUtil.setTypes({ cbg: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      sinon.assert.calledWith(bySampleIntervalRangeSpy, 1, 2);
+
+      bySampleIntervalRangeSpy.restore();
+    });
+
+    it('should call `filter.bySampleIntervalRange` with `defaultCgmSampleIntervalRange` before processing cbg data type if range is not set', () => {
+      const bySampleIntervalRangeSpy = sinon.spy(dataUtil.filter, 'bySampleIntervalRange');
+      sinon.assert.notCalled(bySampleIntervalRangeSpy);
+
+      assert(dataUtil.defaultCgmSampleIntervalRange[0] === MS_IN_MIN * 5);
+      assert(dataUtil.defaultCgmSampleIntervalRange[1] === Infinity);
+      delete dataUtil.cgmSampleIntervalRange;
+
+      dataUtil.setTypes({ cbg: {} });
+      dataUtil.getTypeData(dataUtil.types);
+      sinon.assert.calledWith(bySampleIntervalRangeSpy, MS_IN_MIN * 5, Infinity);
+
+      bySampleIntervalRangeSpy.restore();
     });
   });
 
