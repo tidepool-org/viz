@@ -106,8 +106,8 @@ export class Basal extends Common {
     this.time = opts.time || this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
     if (!opts.raw) this.time = Date.parse(this.time);
-    if (!opts.raw) this.deviceTime = Date.parse(this.deviceTime);
     if (!opts.raw) this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.deviceTime = Date.parse(this.deviceTime);
     if (!opts.raw) this.normalEnd = this.normalTime + this.duration;
   }
 }

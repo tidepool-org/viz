@@ -11,7 +11,7 @@ import loopMultirate from '../../data/pumpSettings/loop/multirate.raw.json';
 import { use } from 'chai';
 /* eslint-disable max-len, no-underscore-dangle */
 
-describe.only('DataUtil', () => {
+describe('DataUtil', () => {
   let dataUtil;
 
   const useRawData = {
@@ -5070,7 +5070,7 @@ describe.only('DataUtil', () => {
     });
   });
 
-  describe.only('addMissingSuppressedBasals', () => {
+  describe('addMissingSuppressedBasals', () => {
     const createBasal = (overrides = {}) => new Types.Basal({
       deviceTime: '2018-02-01T10:00:00',
       duration: MS_IN_HOUR,
@@ -5258,10 +5258,10 @@ describe.only('DataUtil', () => {
       expect(newBasal.suppressed.deviceTime).to.equal(newBasal.deviceTime);
     });
 
-    it.only('should use the most recent pump settings datum for basal time', () => {
+    it('should use the most recent pump settings datum for basal time', () => {
       const olderPumpSettings = createPumpSettings({
         id: 'pumpSettings0',
-        time: '2018-01-31T00:00:00.000Z',
+        deviceTime: '2018-01-31T00:00:00',
         basalSchedules: {
           standard: [{ start: 0, rate: 0.3 }],
         },
@@ -5269,7 +5269,7 @@ describe.only('DataUtil', () => {
 
       const newerPumpSettings = createPumpSettings({
         id: 'pumpSettings1',
-        time: '2018-02-01T00:00:00.000Z',
+        deviceTime: '2018-02-01T00:00:00',
         basalSchedules: {
           standard: [{ start: 0, rate: 0.9 }],
         },
@@ -5289,6 +5289,50 @@ describe.only('DataUtil', () => {
       dataUtil.addMissingSuppressedBasals(data);
 
       expect(basal.suppressed.rate).to.equal(0.9); // Should use newer settings
+    });
+
+    it('should use the most recent pump settings datum for basal time with a matching deviceId', () => {
+      const olderPumpSettings = createPumpSettings({
+        id: 'pumpSettings0',
+        deviceTime: '2018-01-31T00:00:00',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.3 }],
+        },
+      });
+
+      const newerPumpSettings = createPumpSettings({
+        id: 'pumpSettings1',
+        deviceTime: '2018-02-01T00:00:00',
+        deviceId: 'deviceId2',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.6 }],
+        },
+      });
+
+      const newestPumpSettings = createPumpSettings({
+        id: 'pumpSettings1',
+        deviceTime: '2018-02-01T01:00:00',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.9 }],
+        },
+      });
+
+      const basal = createBasal({
+        deviceTime: '2018-02-01T10:00:00',
+        deviceId: 'deviceId2',
+      });
+
+      const data = [basal];
+
+      dataUtil.pumpSettingsDatumsByIdMap = {
+        [olderPumpSettings.id]: olderPumpSettings,
+        [newerPumpSettings.id]: newerPumpSettings,
+        [newestPumpSettings.id]: newestPumpSettings,
+      };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed.rate).to.equal(0.6); // Should not use newest settings, since deviceId does not match
     });
 
     it('should handle basals that span multiple segments correctly', () => {
@@ -5386,8 +5430,6 @@ describe.only('DataUtil', () => {
         dataUtil.filter.byType('basal');
         const processedBasals = dataUtil.dimension.byType.top(Infinity);
         const processedBasal = _.find(processedBasals, { id: basal.id });
-
-        console.log('processedBasal', processedBasal);
 
         expect(processedBasal.suppressed).to.be.an('object');
         expect(processedBasal.suppressed.deliveryType).to.equal('scheduled');

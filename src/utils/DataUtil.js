@@ -358,8 +358,6 @@ export class DataUtil {
       isTwiistLoop(d)
     );
 
-    console.log('this.pumpSettingsDatumsByIdMap', this.pumpSettingsDatumsByIdMap);
-
     // Get the pump settings datums ordered by start time in descending order
     const pumpSettingsByStartTimes = _.orderBy(
       _.map(_.values(this.pumpSettingsDatumsByIdMap), getOrderedPumpSettingsSchedules),
@@ -374,12 +372,8 @@ export class DataUtil {
       if (shouldGenerateSuppressedBasal(d)) {
         // Get the pump settings datum that is active at the time of the basal by grabbing the first
         // datum with a time less than or equal to the basal's time
-
-        console.log('pumpSettingsByStartTimes', pumpSettingsByStartTimes);
         const pumpSettingsDatum = _.find(pumpSettingsByStartTimes, ps => ps.deviceId === d.deviceId && ps.time <= d.time);
         const activeSchedule = pumpSettingsDatum?.basalSchedule;
-
-        console.log('pumpSettingsDatum', pumpSettingsDatum);
 
         if (!activeSchedule?.length) {
           // No schedule available, skip this basal
@@ -459,8 +453,6 @@ export class DataUtil {
 
         // Combine segments in chronological order: current day first, then next day
         const overlappingSegments = [...currentDaySegments, ...nextDaySegments];
-
-        console.log('overlappingSegments', overlappingSegments);
 
         // It's expected that a basal will overlap with at least one segment
         if (overlappingSegments.length === 1) {
