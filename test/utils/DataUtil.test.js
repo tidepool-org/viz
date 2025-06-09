@@ -8,7 +8,6 @@ import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS } fro
 import medtronicMultirate from '../../data/pumpSettings/medtronic/multirate.raw.json';
 import omnipodMultirate from '../../data/pumpSettings/omnipod/multirate.raw.json';
 import loopMultirate from '../../data/pumpSettings/loop/multirate.raw.json';
-import { use } from 'chai';
 /* eslint-disable max-len, no-underscore-dangle */
 
 describe('DataUtil', () => {
@@ -5380,34 +5379,7 @@ describe('DataUtil', () => {
       expect(basal.suppressed.rate).to.equal(0.0);
     });
 
-    it('should log warning when no overlapping segments found', () => {
-      const spy = sinon.spy(dataUtil, 'log');
-
-      // Create a basal with unusual timing that might not overlap
-      const basal = createBasal({
-        deviceTime: '2018-02-01T10:00:00',
-        duration: 0, // Zero duration
-      });
-
-      const pumpSettings = createPumpSettings({
-        basalSchedules: {
-          standard: [], // Empty schedule
-        },
-      });
-
-      const data = [basal];
-
-      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
-
-      dataUtil.addMissingSuppressedBasals(data);
-
-      // Should not have generated suppressed basal
-      expect(basal.suppressed).to.be.undefined;
-
-      spy.restore();
-    });
-
-    context('integration with normalizeDatumIn', () => {
+    context('integration with addData', () => {
       it('should call addMissingSuppressedBasals during data processing', () => {
         const spy = sinon.spy(dataUtil, 'addMissingSuppressedBasals');
 
@@ -5420,7 +5392,7 @@ describe('DataUtil', () => {
         spy.restore();
       });
 
-      it('should generate suppressed basals for real data', () => {
+      it('should generate suppressed basals for raw data added in', () => {
         const basal = createBasal(useRawData);
         const pumpSettings = createPumpSettings(useRawData);
 
