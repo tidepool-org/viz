@@ -430,7 +430,7 @@ export class DataUtil {
           }
 
           // Also check if basal overlaps with this segment when extended to next day
-          // This handles cases where the basal crosses midnight but the schedule doesn't
+          // This handles cases where the basal crosses midnight
           if (basalMsPer24WithOffset.end > MS_IN_DAY) {
             const extendedSegmentStart = segmentStart + MS_IN_DAY;
             const extendedSegmentEnd = segmentEnd + MS_IN_DAY;
