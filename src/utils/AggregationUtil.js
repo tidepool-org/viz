@@ -547,6 +547,14 @@ export class AggregationUtil {
         const groupedData = _.groupBy(sortedData, 'type');
         const groupedBasals = _.cloneDeep(groupedData.basal || []);
 
+        // Filter cgm data by the currently-set sample interval range.
+        this.dataUtil.filter.bySampleIntervalRange(...(this.dataUtil.cgmSampleIntervalRange || this.dataUtil.defaultCgmSampleIntervalRange));
+        groupedData.cbg = this.dataUtil.filter.byType('cbg').top(Infinity);
+
+        // Clear the previous byType and bySampleInterval filters so as to not affect the next aggregations
+        this.dataUtil.dimension.byType.filterAll();
+        this.dataUtil.dimension.bySampleInterval.filterAll();
+
         const groupedPumpSettingsOverrides = _.filter(
           _.cloneDeep(groupedData.deviceEvent || []),
           { subType: 'pumpSettingsOverride' }
