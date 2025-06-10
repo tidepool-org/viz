@@ -5068,4 +5068,362 @@ describe('DataUtil', () => {
       });
     });
   });
+
+  describe('addMissingSuppressedBasals', () => {
+    const createBasal = (overrides = {}) => new Types.Basal({
+      deviceTime: '2018-02-01T10:00:00',
+      duration: MS_IN_HOUR,
+      deliveryType: 'automated',
+      rate: 1.0,
+      uploadId: 'upload-3',
+      origin: { name: 'com.dekaresearch.twiist' }, // Twiist basal
+      timezoneOffset: 0,
+      ...overrides,
+    });
+
+    const createPumpSettings = (overrides = {}) => new Types.Settings({
+      id: 'pumpSettings1',
+      type: 'pumpSettings',
+      time: '2018-02-01T00:00:00.000Z',
+      deviceTime: '2018-02-01T00:00:00',
+      activeSchedule: 'standard',
+      basalSchedules: {
+        standard: [
+          { start: 0, rate: 0.5 }, // 12:00 AM
+          { start: 6 * MS_IN_HOUR, rate: 0.8 }, // 6:00 AM
+          { start: 12 * MS_IN_HOUR, rate: 0.6 }, // 12:00 PM
+          { start: 18 * MS_IN_HOUR, rate: 0.7 }, // 6:00 PM
+        ],
+      },
+      uploadId: 'upload-3',
+      ...overrides,
+    });
+
+    beforeEach(() => {
+      initDataUtil([]);
+    });
+
+    it('should only process Twiist Loop basal datums with automated or temp delivery types and no existing suppressed', () => {
+      const nonTwiistBasal = createBasal({
+        origin: { name: 'com.other.device' }, // Non-twiist basal
+      });
+
+      const scheduledBasal = createBasal({
+        deliveryType: 'scheduled',
+      });
+
+      const basalWithSuppressed = createBasal({
+        suppressed: { rate: 0.5 },
+      });
+
+      const validBasal = createBasal();
+
+      const expectedValidBasalSuppressed = {
+        ...validBasal,
+        id: `${validBasal.id}_suppressed`,
+        deliveryType: 'scheduled',
+        rate: 0.8, // Rate from 6AM-12PM segment
+      };
+
+      const data = [nonTwiistBasal, scheduledBasal, basalWithSuppressed, validBasal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(nonTwiistBasal.suppressed).to.be.undefined;
+      expect(scheduledBasal.suppressed).to.be.undefined;
+      expect(basalWithSuppressed.suppressed).to.eql({ rate: 0.5 });
+      expect(validBasal.suppressed).to.eql(expectedValidBasalSuppressed);
+
+      expect(data.length).to.equal(4); // No new datums added
+    });
+
+    it('should skip basals when no pump settings schedule is available', () => {
+      const basal = createBasal();
+      const data = [basal];
+
+      dataUtil.pumpSettingsDatumsByIdMap = {};
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed).to.be.undefined;
+    });
+
+    it('should generate suppressed basal for simple case within single schedule segment', () => {
+      const basal = createBasal({
+        deviceTime: '2018-02-01T10:00:00', // 10:00 AM - falls in 6AM-12PM segment
+        duration: MS_IN_HOUR,
+      });
+
+      const data = [basal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed).to.be.an('object');
+      expect(basal.suppressed.id).to.equal(`${basal.id}_suppressed`);
+      expect(basal.suppressed.deliveryType).to.equal('scheduled');
+      expect(basal.suppressed.rate).to.equal(0.8); // Rate from 6AM-12PM segment
+      expect(basal.duration).to.equal(MS_IN_HOUR); // Original duration unchanged
+    });
+
+    it('should split basal when it crosses multiple schedule segments', () => {
+      const basal = createBasal({
+        deviceTime: '2018-02-01T11:00:00', // 11:00 AM
+        duration: 2 * MS_IN_HOUR, // Crosses 12:00 PM boundary
+      });
+
+      const data = [basal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      const originalDataLength = data.length;
+      dataUtil.addMissingSuppressedBasals(data);
+
+      // Should have added one new basal datum
+      expect(data.length).to.equal(originalDataLength + 1);
+
+      // Original basal should be shortened to end at 12:00 PM
+      expect(basal.duration).to.equal(MS_IN_HOUR); // 1 hour until boundary
+      expect(basal.suppressed.rate).to.equal(0.8); // 6AM-12PM rate
+
+      // New basal should start at 12:00 PM
+      const newBasal = data[data.length - 1];
+      expect(newBasal.id).to.equal(`${basal.id}_split_1`);
+      expect(newBasal.time).to.equal(basal.time + MS_IN_HOUR);
+      expect(newBasal.duration).to.equal(MS_IN_HOUR); // Remaining 1 hour
+      expect(newBasal.suppressed.rate).to.equal(0.6); // 12PM-6PM rate
+    });
+
+    it('should handle day boundary crossing correctly', () => {
+      const basal = createBasal({
+        deviceTime: '2018-02-01T23:00:00', // 11:00 PM
+        duration: 2 * MS_IN_HOUR, // Crosses midnight
+      });
+
+      const data = [basal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      // Should split at midnight boundary
+      expect(data.length).to.equal(2);
+      expect(basal.suppressed.rate).to.equal(0.7); // 6PM-12AM rate
+
+      const newBasal = data[data.length - 1];
+      expect(newBasal.suppressed.rate).to.equal(0.5); // 12AM-6AM rate
+    });
+
+    it('should handle negative timezone offsets correctly', () => {
+      const basal = createBasal({
+        deviceTime: '2018-02-01T02:00:00',
+        duration: MS_IN_HOUR,
+        timezoneOffset: -300, // UTC-5 (e.g., EST)
+      });
+
+      const data = [basal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed).to.be.an('object');
+      expect(basal.suppressed.rate).to.equal(0.5); // 12AM-6AM rate
+    });
+
+    it('should preserve deviceTime in split basals when available', () => {
+      const basal = createBasal({
+        deviceTime: '2018-02-01T11:00:00',
+        duration: 2 * MS_IN_HOUR,
+      });
+
+      const data = [basal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      const newBasal = data[data.length - 1];
+      expect(newBasal.deviceTime).to.equal(basal.deviceTime + MS_IN_HOUR);
+      expect(newBasal.suppressed.deviceTime).to.equal(newBasal.deviceTime);
+    });
+
+    it('should use the most recent pump settings datum for basal time', () => {
+      const olderPumpSettings = createPumpSettings({
+        id: 'pumpSettings0',
+        deviceTime: '2018-01-31T00:00:00',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.3 }],
+        },
+      });
+
+      const newerPumpSettings = createPumpSettings({
+        id: 'pumpSettings1',
+        deviceTime: '2018-02-01T00:00:00',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.9 }],
+        },
+      });
+
+      const basal = createBasal({
+        deviceTime: '2018-02-01T10:00:00',
+      });
+
+      const data = [basal];
+
+      dataUtil.pumpSettingsDatumsByIdMap = {
+        [olderPumpSettings.id]: olderPumpSettings,
+        [newerPumpSettings.id]: newerPumpSettings,
+      };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed.rate).to.equal(0.9); // Should use newer settings
+    });
+
+    it('should use the most recent pump settings datum for basal time with a matching deviceId', () => {
+      const olderPumpSettings = createPumpSettings({
+        id: 'pumpSettings0',
+        deviceTime: '2018-01-31T00:00:00',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.3 }],
+        },
+      });
+
+      const newerPumpSettings = createPumpSettings({
+        id: 'pumpSettings1',
+        deviceTime: '2018-02-01T00:00:00',
+        deviceId: 'deviceId2',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.6 }],
+        },
+      });
+
+      const newestPumpSettings = createPumpSettings({
+        id: 'pumpSettings2',
+        deviceTime: '2018-02-01T01:00:00',
+        basalSchedules: {
+          standard: [{ start: 0, rate: 0.9 }],
+        },
+      });
+
+      const basal = createBasal({
+        deviceTime: '2018-02-01T10:00:00',
+        deviceId: 'deviceId2',
+      });
+
+      const data = [basal];
+
+      dataUtil.pumpSettingsDatumsByIdMap = {
+        [olderPumpSettings.id]: olderPumpSettings,
+        [newerPumpSettings.id]: newerPumpSettings,
+        [newestPumpSettings.id]: newestPumpSettings,
+      };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed.rate).to.equal(0.6); // Should not use newest settings, since deviceId does not match
+    });
+
+    it('should handle basals that span multiple segments correctly', () => {
+      const basal = createBasal({
+        deviceTime: '2018-02-01T05:00:00', // 5:00 AM
+        duration: 8 * MS_IN_HOUR, // Spans 3 segments: 12AM-6AM, 6AM-12PM, 12PM-6PM
+      });
+
+      const data = [basal];
+      const pumpSettings = createPumpSettings();
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      // Should have added 2 additional basals (for segments 2 and 3)
+      expect(data.length).to.equal(3);
+
+      // Verify rates for each segment
+      expect(basal.suppressed.rate).to.equal(0.5); // 12AM-6AM rate
+      expect(data[1].suppressed.rate).to.equal(0.8); // 6AM-12PM rate
+      expect(data[2].suppressed.rate).to.equal(0.6); // 12PM-6PM rate
+    });
+
+    it('should handle zero rate segments correctly', () => {
+      const pumpSettings = createPumpSettings({
+        basalSchedules: {
+          standard: [
+            { start: 0, rate: 0.0 }, // Zero rate segment
+            { start: 6 * MS_IN_HOUR, rate: 0.8 },
+          ],
+        },
+      });
+
+      const basal = createBasal({
+        deviceTime: '2018-02-01T02:00:00', // Falls in zero rate segment
+      });
+
+      const data = [basal];
+
+      dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+      dataUtil.addMissingSuppressedBasals(data);
+
+      expect(basal.suppressed.rate).to.equal(0.0);
+    });
+
+    context('integration with addData', () => {
+      it('should call addMissingSuppressedBasals during data processing', () => {
+        const spy = sinon.spy(dataUtil, 'addMissingSuppressedBasals');
+
+        const basal = createBasal();
+        const pumpSettings = createPumpSettings();
+
+        dataUtil.addData([basal, pumpSettings], defaultPatientId);
+
+        expect(spy.calledOnce).to.be.true;
+        spy.restore();
+      });
+
+      it('should generate suppressed basals for raw data added in', () => {
+        const basal = createBasal(useRawData);
+        const pumpSettings = createPumpSettings(useRawData);
+
+        dataUtil.addData([basal, pumpSettings], defaultPatientId);
+
+        // Retrieve the processed basal
+        dataUtil.filter.byType('basal');
+        const processedBasals = dataUtil.dimension.byType.top(Infinity);
+        const processedBasal = _.find(processedBasals, { id: basal.id });
+
+        expect(processedBasal.suppressed).to.be.an('object');
+        expect(processedBasal.suppressed.deliveryType).to.equal('scheduled');
+      });
+    });
+
+    context('temp delivery type', () => {
+      it('should process temp basals same as automated basals', () => {
+        const basal = createBasal({
+          deliveryType: 'temp',
+        });
+
+        const data = [basal];
+        const pumpSettings = createPumpSettings();
+
+        dataUtil.pumpSettingsDatumsByIdMap = { [pumpSettings.id]: pumpSettings };
+
+        dataUtil.addMissingSuppressedBasals(data);
+
+        expect(basal.suppressed).to.be.an('object');
+        expect(basal.suppressed.deliveryType).to.equal('scheduled');
+      });
+    });
+  });
 });

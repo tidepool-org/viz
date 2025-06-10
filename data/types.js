@@ -95,6 +95,7 @@ export class Basal extends Common {
     this.deliveryType = opts.deliveryType;
     this.deviceTime = opts.deviceTime;
     this.duration = opts.duration;
+    this.origin = opts.origin;
     this.rate = opts.rate;
     this.scheduleName = opts.scheduleName;
     this.annotations = opts.annotations;
@@ -104,7 +105,9 @@ export class Basal extends Common {
 
     this.time = opts.time || this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
+    if (!opts.raw) this.time = Date.parse(this.time);
     if (!opts.raw) this.normalTime = this.makeNormalTime();
+    if (!opts.raw) this.deviceTime = Date.parse(this.deviceTime);
     if (!opts.raw) this.normalEnd = this.normalTime + this.duration;
   }
 }
@@ -229,7 +232,7 @@ export class Settings extends Common {
       },
     });
 
-    this.type = 'settings';
+    this.type = 'pumpSettings';
 
     this.activeSchedule = opts.activeSchedule;
     this.basalSchedules = opts.basalSchedules;
@@ -238,6 +241,7 @@ export class Settings extends Common {
     this.deviceTime = opts.deviceTime;
     this.insulinSensitivity = opts.insulinSensitivity;
     this.units = opts.units;
+    this.id = opts.id;
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
@@ -249,6 +253,7 @@ export class Settings extends Common {
       if (this.bgTarget.high) this.bgTarget.high = this.bgTarget.high / MGDL_PER_MMOLL;
     } else {
       this.normalTime = this.makeNormalTime();
+      this.time = Date.parse(this.time);
     }
   }
 }
