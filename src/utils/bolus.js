@@ -127,7 +127,7 @@ export function getRecommended(insulinEvent) {
     return NaN;
   }
   const netRecommendation = event.recommendedBolus
-    ? _.get(event, ['recommendedBolus', 'amount'], null)
+    ? _.get(event, ['recommendedBolus', 'normal'], null)
     : _.get(event, ['recommended', 'net'], null);
 
   if (netRecommendation !== null) {
@@ -369,7 +369,7 @@ export function isUnderride(insulinEvent) {
 export function isCorrection(insulinEvent) {
   const recommended = insulinEvent.dosingDecision
     ? {
-      correction: _.get(insulinEvent, 'dosingDecision.recommendedBolus.amount'),
+      correction: _.get(insulinEvent, 'dosingDecision.recommendedBolus.normal'),
       carb: _.get(insulinEvent, 'dosingDecision.food.nutrition.carbohydrate.net', 0),
     }
     : _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
