@@ -241,6 +241,7 @@ export class Settings extends Common {
     this.deviceTime = opts.deviceTime;
     this.insulinSensitivity = opts.insulinSensitivity;
     this.units = opts.units;
+    this.id = opts.id;
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();

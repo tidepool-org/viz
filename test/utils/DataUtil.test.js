@@ -5236,7 +5236,7 @@ describe('DataUtil', () => {
       dataUtil.addMissingSuppressedBasals(data);
 
       expect(basal.suppressed).to.be.an('object');
-      expect(basal.suppressed.rate).to.be.a('number');
+      expect(basal.suppressed.rate).to.equal(0.5); // 12AM-6AM rate
     });
 
     it('should preserve deviceTime in split basals when available', () => {
@@ -5309,7 +5309,7 @@ describe('DataUtil', () => {
       });
 
       const newestPumpSettings = createPumpSettings({
-        id: 'pumpSettings1',
+        id: 'pumpSettings2',
         deviceTime: '2018-02-01T01:00:00',
         basalSchedules: {
           standard: [{ start: 0, rate: 0.9 }],
