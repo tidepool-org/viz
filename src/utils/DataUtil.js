@@ -226,14 +226,10 @@ export class DataUtil {
       d.sampleInterval = sampleInterval;
     }
 
-    // Use normal instead of deprecated amount for recommendedBolus and requestedBolus
-    if (d.type === 'dosingDecision') {
-      _.each([d.recommendedBolus, d.requestedBolus], (bolus) => {
-        if (_.isObject(bolus)) {
-          bolus.normal = _.get(bolus, 'normal', _.get(bolus, 'amount'));
-          delete bolus.amount;
-        }
-      });
+    // Use `normal` instead of deprecated `amount` for requestedBolus
+    if (d.type === 'dosingDecision' && d.requestedBolus?.amount) {
+      d.requestedBolus.normal = d.requestedBolus.amount;
+      delete d.requestedBolus.amount;
     }
 
     // We validate datums before converting the time and deviceTime to hammerTime integers,
