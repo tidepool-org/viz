@@ -395,7 +395,7 @@ export function isAutomated(insulinEvent) {
  */
 export function isOneButton(insulinEvent) {
   const bolus = getBolusFromInsulinEvent(insulinEvent);
-  return _.get(bolus, 'deliveryContext') === 'oneButton';
+  return _.get(bolus, 'deliveryContext') === 'oneButton' || _.get(bolus, 'dosingDecision.reason') === 'oneButtonBolus';
 }
 
 /**
