@@ -89,7 +89,7 @@ const Tandem = (props) => {
           {isControlIQ(pumpSettings) && (
             <div className={styles.annotations}>
               <Trans i18nKey="tandem.annotations">
-                * - The numbers displayed here are the user-defined values. During automation, Tandem Control-IQ uses its own preset Insulin Duration and Target BG. However users can set different values for these parameters that <strong>only</strong> apply in manual mode.
+                * - The numbers displayed here are the user-defined values. During automation, Tandem's Control-IQ Technology uses its own preset Insulin Duration and Target BG. However, users can set different values for these parameters that <strong>only</strong> apply in manual mode.
               </Trans>
             </div>
           )}
