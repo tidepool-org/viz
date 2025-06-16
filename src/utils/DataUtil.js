@@ -226,10 +226,20 @@ export class DataUtil {
       d.sampleInterval = sampleInterval;
     }
 
-    // Use `normal` instead of deprecated `amount` for requestedBolus
-    if (d.type === 'dosingDecision' && d.requestedBolus?.amount) {
-      d.requestedBolus.normal = d.requestedBolus.amount;
-      delete d.requestedBolus.amount;
+    if (d.type === 'dosingDecision') {
+      // Use `normal` instead of deprecated `amount` for requestedBolus
+      if (!d.requestedBolus?.normal && d.requestedBolus?.amount) {
+        d.requestedBolus.normal = d.requestedBolus.amount;
+        delete d.requestedBolus.amount;
+      }
+
+      // Use `amount` field instead of `normal` and/or `extended | duration` for recommendedBolus
+      if (!d.recommendedBolus?.amount && (d.recommendedBolus?.extended || d.recommendedBolus?.normal)) {
+        d.recommendedBolus.amount = (d.recommendedBolus.extended || 0) + (d.recommendedBolus.normal || 0);
+        delete d.recommendedBolus.extended;
+        delete d.recommendedBolus.normal;
+        delete d.recommendedBolus.duration;
+      }
     }
 
     // We validate datums before converting the time and deviceTime to hammerTime integers,
@@ -322,17 +332,26 @@ export class DataUtil {
     if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
-      const proximateDosingDecisions = _.filter(
-        _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
-        ({ time }) => {
-          const timeOffset = Math.abs(time - d.time);
-          return timeOffset <= timeThreshold;
-        }
-      );
+      // Find the dosing decision that matches the bolus by checking if there is a definitive association
+      d.dosingDecision = _.find(_.mapValues(this.bolusDosingDecisionDatumsByIdMap), ({ associations = [] }) => {
+        return _.some(associations, { reason: 'bolus', id: d.id });
+      });
 
-      const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
-      const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.normal === d.normal);
-      d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+      // If no definitive dosing decision association is found, such as can be the case with Tidepool
+      // and DIY Loop, we look for the closest dosing decision within a time threshold
+      if (!d.dosingDecision) {
+        const proximateDosingDecisions = _.filter(
+          _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
+          ({ time }) => {
+            const timeOffset = Math.abs(time - d.time);
+            return timeOffset <= timeThreshold;
+          }
+        );
+
+        const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
+        const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.normal === d.normal);
+        d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+      }
 
       if (d.dosingDecision) {
         // attach associated pump settings to dosingDecisions
@@ -340,10 +359,17 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.expectedNormal = d.dosingDecision.requestedBolus?.normal;
         d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
         d.bgInput = _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
+
+        // Loop interrupted boluses may not have expectedNormal set,
+        // so we set it to the requested normal from the dosing decision
+        const requestedNormal = d.dosingDecision.requestedBolus?.normal;
+
+        if ((!d.expectedNormal && requestedNormal) && (d.normal !== requestedNormal)) {
+          d.expectedNormal = requestedNormal;
+        }
       }
     }
   };
