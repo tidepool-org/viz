@@ -405,19 +405,15 @@ class BolusTooltip extends PureComponent {
   }
 
   render() {
-    const isAutomated = _.get(this.props.bolus, 'subType') === 'automated';
-    const isOneButton = bolusUtils.isOneButton(this.props.bolus);
-    const tailColor = this.props.tailColor || isAutomated ? colors.bolusAutomated : colors.bolus;
-
-    const borderColor = this.props.borderColor || isAutomated
-      ? colors.bolusAutomated
-      : colors.bolus;
+    const { automated, oneButton } = bolusUtils.getBolusFromInsulinEvent(this.props.bolus)?.tags || {};
+    const tailColor = this.props.tailColor ?? (automated ? colors.bolusAutomated : colors.bolus);
+    const borderColor = this.props.borderColor ?? (automated ? colors.bolusAutomated : colors.bolus);
 
     const title = (
       <div className={styles.title}>
         <div className={styles.types}>
-          {isOneButton && <div>{this.deviceLabels[ONE_BUTTON_BOLUS]}</div>}
-          {isAutomated && <div>{this.deviceLabels[AUTOMATED_BOLUS]}</div>}
+          {oneButton && <div>{this.deviceLabels[ONE_BUTTON_BOLUS]}</div>}
+          {automated && <div>{this.deviceLabels[AUTOMATED_BOLUS]}</div>}
         </div>
         {formatLocalizedFromUTC(this.props.bolus.normalTime, this.props.timePrefs, 'h:mm a')}
       </div>
