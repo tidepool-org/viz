@@ -337,12 +337,16 @@ export class DataUtil {
         return _.some(associations, { reason: 'bolus', id: d.id });
       });
 
-      // If no definitive dosing decision association is found, such as can be the case with Tidepool
+      // If no definitive dosing decision association is provided, such as can be the case with Tidepool
       // and DIY Loop, we look for the closest dosing decision within a time threshold
-      if (!d.dosingDecision) {
+      if (!d.dosingDecision ) {
         const proximateDosingDecisions = _.filter(
           _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
-          ({ time }) => {
+          ({ time, associations }) => {
+            // If there is a definitive association, we skip this decision, as it would have been
+            // associated with the bolus already in the code above if the id matched
+            if (_.some(associations, { reason: 'bolus' })) return false;
+
             const timeOffset = Math.abs(time - d.time);
             return timeOffset <= timeThreshold;
           }
@@ -350,7 +354,17 @@ export class DataUtil {
 
         const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
         const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.normal === d.normal);
+
+        // Set the best-matching dosing decision, if available, or the first one within the time threshold
         d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+
+        if (d.dosingDecision) {
+          // Set the assocation to this bolus so that we don't risk associating it again if other proximate matches occur
+          this.bolusDosingDecisionDatumsByIdMap[d.dosingDecision.id].associations = [
+            ...d.dosingDecision.associations || [],
+            { reason: 'bolus', id: d.id },
+          ];
+        }
       }
 
       if (d.dosingDecision) {
