@@ -406,11 +406,8 @@ class BolusTooltip extends PureComponent {
 
   render() {
     const { automated, oneButton } = bolusUtils.getBolusFromInsulinEvent(this.props.bolus)?.tags || {};
-    const tailColor = this.props.tailColor || automated ? colors.bolusAutomated : colors.bolus;
-
-    const borderColor = this.props.borderColor || automated
-      ? colors.bolusAutomated
-      : colors.bolus;
+    const tailColor = this.props.tailColor ?? (automated ? colors.bolusAutomated : colors.bolus);
+    const borderColor = this.props.borderColor ?? (automated ? colors.bolusAutomated : colors.bolus);
 
     const title = (
       <div className={styles.title}>
