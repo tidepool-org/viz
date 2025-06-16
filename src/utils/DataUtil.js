@@ -333,13 +333,14 @@ export class DataUtil {
       const timeThreshold = MS_IN_MIN;
 
       // Find the dosing decision that matches the bolus by checking if there is a definitive association
-      d.dosingDecision = _.find(_.mapValues(this.bolusDosingDecisionDatumsByIdMap), ({ associations = [] }) => {
-        return _.some(associations, { reason: 'bolus', id: d.id });
-      });
+      d.dosingDecision = _.find(
+        _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
+        ({ associations = [] }) => _.some(associations, { reason: 'bolus', id: d.id })
+      );
 
       // If no definitive dosing decision association is provided, such as can be the case with Tidepool
       // and DIY Loop, we look for the closest dosing decision within a time threshold
-      if (!d.dosingDecision ) {
+      if (!d.dosingDecision) {
         const proximateDosingDecisions = _.filter(
           _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
           ({ time, associations }) => {
