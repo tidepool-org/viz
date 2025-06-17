@@ -426,7 +426,7 @@ export class DosingDecision extends Common {
       }],
       deviceTime: this.makeDeviceTime(),
       reason: 'normalBolus',
-      recommendedBolus: { normal: '2' },
+      recommendedBolus: { amount: '2' },
       requestedBolus: { normal: '1.5' },
       units: MGDL_UNITS,
     });

@@ -969,6 +969,32 @@ describe('DataUtil', () => {
     });
 
     context('dosingDecision', () => {
+      it('should convert requestedBolus.amount to requestedBolus.normal and remove amount', () => {
+        const datum = {
+          type: 'dosingDecision',
+          requestedBolus: { amount: 3.5 },
+        };
+
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+        dataUtil.normalizeDatumIn(datum);
+        expect(datum.requestedBolus.normal).to.equal(3.5);
+        expect(datum.requestedBolus).to.not.have.property('amount');
+      });
+
+      it('should convert recommendedBolus.normal and recommendedBolus.extended to recommendedBolus.amount and remove normal, extended, duration', () => {
+        const datum = {
+          type: 'dosingDecision',
+          recommendedBolus: { normal: 2, extended: 1, duration: 60000 },
+        };
+
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+        dataUtil.normalizeDatumIn(datum);
+        expect(datum.recommendedBolus.amount).to.equal(3);
+        expect(datum.recommendedBolus).to.not.have.property('normal');
+        expect(datum.recommendedBolus).to.not.have.property('extended');
+        expect(datum.recommendedBolus).to.not.have.property('duration');
+      });
+
       it('should add the datum to the `bolusDosingDecisionDatumsByIdMap`', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);
 
@@ -1039,7 +1065,51 @@ describe('DataUtil', () => {
   });
 
   describe('joinBolusAndDosingDecision', () => {
-    it('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other', () => {
+    it('should join loop dosing decisions, and associated pump settings, to boluses that are definitively associated by ID', () => {
+      const uploadId = 'upload1';
+      const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
+      const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
+      const bolus2 = { type: 'bolus', id: 'bolus2', uploadId, time: Date.parse('2024-02-02T11:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
+      const pumpSettings = { ...loopMultirate, id: 'pumpSettings1' };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+        associations: [
+          { reason: 'bolus', id: 'bolus2' },
+          { reason: 'pumpSettings', id: 'pumpSettings1' },
+        ],
+        requestedBolus: { normal: 12 },
+        insulinOnBoard: { amount: 4 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        bgHistorical: [
+          { value: 100 },
+          { value: 110 },
+        ],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
+      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+
+      _.each([bolus, bolus2], dataUtil.joinBolusAndDosingDecision);
+      // should not attach dosing decision to bolus that is not associated
+      expect(bolus.dosingDecision).to.be.undefined;
+
+      // should attach associated pump settings to dosingDecisions
+      expect(bolus2.dosingDecision).to.eql(dosingDecision);
+      expect(bolus2.dosingDecision.pumpSettings).to.eql(pumpSettings);
+
+      // should translate relevant dosing decision data onto expected bolus fields
+      expect(bolus2.expectedNormal).to.equal(12);
+      expect(bolus2.carbInput).to.equal(30);
+      expect(bolus2.bgInput).to.equal(110);
+      expect(bolus2.insulinOnBoard).to.equal(4);
+    });
+
+    it('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other if not definitive associations exist', () => {
       const uploadId = 'upload1';
       const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
       const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
@@ -1074,6 +1144,38 @@ describe('DataUtil', () => {
       expect(bolus.carbInput).to.equal(30);
       expect(bolus.bgInput).to.equal(110);
       expect(bolus.insulinOnBoard).to.equal(4);
+    });
+
+    it('should not add expectedNormal to joined loop dosing decisions if the requested normal is equal to the bolus normal', () => {
+      const uploadId = 'upload1';
+      const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
+      const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' }, normal: 12 };
+      const pumpSettings = { ...loopMultirate, id: 'pumpSettings1' };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+        associations: [{ reason: 'pumpSettings', id: 'pumpSettings1' }],
+        requestedBolus: { normal: 12 },
+        insulinOnBoard: { amount: 4 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        bgHistorical: [
+          { value: 100 },
+          { value: 110 },
+        ],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
+      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.dosingDecision).to.eql(dosingDecision);
+
+      // should not add the bolus.expectedNormal field since the requested normal is equal to the bolus normal
+      expect(bolus.expectedNormal).to.be.undefined;
     });
 
     it('should not join loop dosing decisions to boluses that are outside of a minute of each other', () => {
