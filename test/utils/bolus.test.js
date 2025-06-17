@@ -553,8 +553,8 @@ describe('bolus utilities', () => {
     });
 
     it('should return `amount` rec when `amount` rec exists on dosing decision', () => {
-      const { recommendedBolus: { amount } } = withDosingDecision.dosingDecision;
-      expect(bolusUtils.getRecommended(withDosingDecision)).to.equal(amount);
+      const { recommendedBolus } = withDosingDecision.dosingDecision;
+      expect(bolusUtils.getRecommended(withDosingDecision)).to.equal(recommendedBolus.amount);
     });
 
     it('should return 0 when no bolus recommended, even if overridden', () => {

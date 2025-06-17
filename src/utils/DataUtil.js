@@ -133,7 +133,12 @@ export class DataUtil {
     _.each(data, this.joinBolusAndDosingDecision);
     this.endTimer('joinBolusAndDosingDecision');
 
-    // Filter out any data that failed validation, and and duplicates by `id`
+    // Add missing suppressed basals to select basal datums
+    this.startTimer('addMissingSuppressedBasals');
+    this.addMissingSuppressedBasals(data);
+    this.endTimer('addMissingSuppressedBasals');
+
+    // Filter out any data that failed validation, and any duplicates by `id`
     this.startTimer('filterValidData');
     this.clearFilters();
     const validData = _.uniqBy(data, 'id');
@@ -221,6 +226,22 @@ export class DataUtil {
       d.sampleInterval = sampleInterval;
     }
 
+    if (d.type === 'dosingDecision') {
+      // Use `normal` instead of deprecated `amount` for requestedBolus
+      if (!d.requestedBolus?.normal && d.requestedBolus?.amount) {
+        d.requestedBolus.normal = d.requestedBolus.amount;
+        delete d.requestedBolus.amount;
+      }
+
+      // Use `amount` field instead of `normal` and/or `extended | duration` for recommendedBolus
+      if (!d.recommendedBolus?.amount && (d.recommendedBolus?.extended || d.recommendedBolus?.normal)) {
+        d.recommendedBolus.amount = (d.recommendedBolus.extended || 0) + (d.recommendedBolus.normal || 0);
+        delete d.recommendedBolus.extended;
+        delete d.recommendedBolus.normal;
+        delete d.recommendedBolus.duration;
+      }
+    }
+
     // We validate datums before converting the time and deviceTime to hammerTime integers,
     // as we want to validate that they are valid ISO date strings
     this.validateDatumIn(d);
@@ -253,7 +274,7 @@ export class DataUtil {
     }
 
     // Populate mappings to be used for 2-way join of boluses and dosing decisions
-    if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus'], d.reason)) {
+    if (d.type === 'dosingDecision' && _.includes(['normalBolus', 'simpleBolus', 'watchBolus', 'oneButtonBolus'], d.reason)) {
       this.bolusDosingDecisionDatumsByIdMap[d.id] = d;
     }
 
@@ -311,17 +332,41 @@ export class DataUtil {
     if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
-      const proximateDosingDecisions = _.filter(
+      // Find the dosing decision that matches the bolus by checking if there is a definitive association
+      d.dosingDecision = _.find(
         _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
-        ({ time }) => {
-          const timeOffset = Math.abs(time - d.time);
-          return timeOffset <= timeThreshold;
-        }
+        ({ associations = [] }) => _.some(associations, { reason: 'bolus', id: d.id })
       );
 
-      const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
-      const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.amount === d.normal);
-      d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+      // If no definitive dosing decision association is provided, such as can be the case with Tidepool
+      // and DIY Loop, we look for the closest dosing decision within a time threshold
+      if (!d.dosingDecision) {
+        const proximateDosingDecisions = _.filter(
+          _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
+          ({ time, associations }) => {
+            // If there is a definitive association, we skip this decision, as it would have been
+            // associated with the bolus already in the code above if the id matched
+            if (_.some(associations, { reason: 'bolus' })) return false;
+
+            const timeOffset = Math.abs(time - d.time);
+            return timeOffset <= timeThreshold;
+          }
+        );
+
+        const sortedProximateDosingDecisions = _.orderBy(proximateDosingDecisions, ({ time }) => Math.abs(time - d.time), 'asc');
+        const dosingDecisionWithMatchingNormal = _.find(sortedProximateDosingDecisions, dosingDecision => dosingDecision.requestedBolus?.normal === d.normal);
+
+        // Set the best-matching dosing decision, if available, or the first one within the time threshold
+        d.dosingDecision = dosingDecisionWithMatchingNormal || sortedProximateDosingDecisions[0];
+
+        if (d.dosingDecision) {
+          // Set the assocation to this bolus so that we don't risk associating it again if other proximate matches occur
+          this.bolusDosingDecisionDatumsByIdMap[d.dosingDecision.id].associations = [
+            ...d.dosingDecision.associations || [],
+            { reason: 'bolus', id: d.id },
+          ];
+        }
+      }
 
       if (d.dosingDecision) {
         // attach associated pump settings to dosingDecisions
@@ -329,12 +374,204 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.expectedNormal = d.dosingDecision.requestedBolus?.amount;
         d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
         d.bgInput = _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
+
+        // Loop interrupted boluses may not have expectedNormal set,
+        // so we set it to the requested normal from the dosing decision
+        const requestedNormal = d.dosingDecision.requestedBolus?.normal;
+
+        if ((!d.expectedNormal && requestedNormal) && (d.normal !== requestedNormal)) {
+          d.expectedNormal = requestedNormal;
+        }
       }
     }
+  };
+
+  addMissingSuppressedBasals = data => {
+    // Mapping function to get the basal schedules for a given pumpSettings datum,
+    // ordered by start time in descending order for easier comparison with basals
+    const getOrderedPumpSettingsSchedules = ({ activeSchedule, basalSchedules, deviceId, time }) => ({
+      basalSchedule: _.orderBy(basalSchedules?.[activeSchedule], 'start', 'desc'),
+      time,
+      deviceId,
+    });
+
+    const shouldGenerateSuppressedBasal = (d) => (
+      d.type === 'basal' &&
+      !d.suppressed &&
+      _.includes(['automated', 'temp'], d.deliveryType) &&
+      isTwiistLoop(d)
+    );
+
+    // Get the pump settings datums ordered by start time in descending order
+    const pumpSettingsByStartTimes = _.orderBy(
+      _.map(_.values(this.pumpSettingsDatumsByIdMap), getOrderedPumpSettingsSchedules),
+      'time',
+      'desc'
+    );
+
+    // We will need add additional basals when we split existing basals that overlap with pump settings schedules
+    const basalsToAdd = [];
+
+    _.each(data, d => {
+      if (shouldGenerateSuppressedBasal(d)) {
+        // Get the pump settings datum that is active at the time of the basal by grabbing the first
+        // datum with a time less than or equal to the basal's time
+        const pumpSettingsDatum = _.find(pumpSettingsByStartTimes, ps => ps.deviceId === d.deviceId && ps.time <= d.time);
+        const activeSchedule = pumpSettingsDatum?.basalSchedule;
+
+        if (!activeSchedule?.length) {
+          // No schedule available, skip this basal
+          return;
+        }
+
+        // Calculate the end time of the basal
+        const basalEndTime = d.time + (d.duration || 0);
+
+        // Get the msPer24 for the utc start and end times of the basal datum, then adjust for timezone offset
+        const timezoneOffsetMs = (d.timezoneOffset || 0) * MS_IN_MIN;
+        const basalMsPer24WithOffset = {
+          start: getMsPer24(d.time) + timezoneOffsetMs,
+          end: getMsPer24(basalEndTime) + timezoneOffsetMs,
+        };
+
+        // If the offset msPer24 is negative, as can happen with negative timezone offsets,
+        // we need to add a day to adjust it to be within the 24-hour range
+        if (basalMsPer24WithOffset.start < 0) basalMsPer24WithOffset.start += MS_IN_DAY;
+        if (basalMsPer24WithOffset.end < 0) basalMsPer24WithOffset.end += MS_IN_DAY;
+
+        // If end time crosses midnight (is less than start), extend it to next day
+        if (basalMsPer24WithOffset.end < basalMsPer24WithOffset.start) {
+          basalMsPer24WithOffset.end += MS_IN_DAY;
+        }
+
+        // Find all schedule segments that this basal overlaps
+        const currentDaySegments = [];
+        const nextDaySegments = [];
+
+        // Sort schedule by start time ascending for easier processing
+        const sortedSchedule = _.sortBy(activeSchedule, 'start');
+
+        for (let i = 0; i < sortedSchedule.length; i++) {
+          const segment = sortedSchedule[i];
+          const nextSegment = sortedSchedule[i + 1];
+
+          const segmentStart = segment.start;
+          const segmentEnd = nextSegment ? nextSegment.start : MS_IN_DAY;
+
+          // Check if basal overlaps with this segment in the current day
+          const basalOverlapsCurrentDay = (
+            basalMsPer24WithOffset.start < segmentEnd &&
+            basalMsPer24WithOffset.end > segmentStart
+          );
+
+          if (basalOverlapsCurrentDay) {
+            currentDaySegments.push({
+              ...segment,
+              segmentEnd,
+              overlapStart: Math.max(basalMsPer24WithOffset.start, segmentStart),
+              overlapEnd: Math.min(basalMsPer24WithOffset.end, segmentEnd)
+            });
+          }
+
+          // Also check if basal overlaps with this segment when extended to next day
+          // This handles cases where the basal crosses midnight
+          if (basalMsPer24WithOffset.end > MS_IN_DAY) {
+            const extendedSegmentStart = segmentStart + MS_IN_DAY;
+            const extendedSegmentEnd = segmentEnd + MS_IN_DAY;
+
+            const basalOverlapsNextDay = (
+              basalMsPer24WithOffset.start < extendedSegmentEnd &&
+              basalMsPer24WithOffset.end > extendedSegmentStart
+            );
+
+            if (basalOverlapsNextDay) {
+              nextDaySegments.push({
+                ...segment,
+                segmentEnd: extendedSegmentEnd,
+                overlapStart: Math.max(basalMsPer24WithOffset.start, extendedSegmentStart),
+                overlapEnd: Math.min(basalMsPer24WithOffset.end, extendedSegmentEnd)
+              });
+            }
+          }
+        }
+
+        // Combine segments in chronological order: current day first, then next day
+        const overlappingSegments = [...currentDaySegments, ...nextDaySegments];
+
+        // It's expected that a basal will overlap with at least one segment
+        if (overlappingSegments.length === 1) {
+          // Simple case: basal is within a single schedule segment
+          const segment = overlappingSegments[0];
+          d.suppressed = {
+            ...d,
+            id: `${d.id}_suppressed`,
+            deliveryType: 'scheduled',
+            rate: segment.rate || 0,
+          };
+        } else if (overlappingSegments.length > 1) {
+          // Complex case: basal crosses schedule boundaries, need to split
+          const originalDuration = d.duration || 0;
+          const basalDurationMs24 = basalMsPer24WithOffset.end - basalMsPer24WithOffset.start;
+
+          // Update the original basal to cover only the first segment
+          const firstSegment = overlappingSegments[0];
+          const firstSegmentMs24Duration = firstSegment.overlapEnd - firstSegment.overlapStart;
+          const firstSegmentDuration = (firstSegmentMs24Duration / basalDurationMs24) * originalDuration;
+
+          d.duration = firstSegmentDuration;
+          d.suppressed = {
+            ...d,
+            id: `${d.id}_suppressed`,
+            deliveryType: 'scheduled',
+            rate: firstSegment.rate || 0,
+            duration: firstSegmentDuration,
+            time: d.time, // Keep original time
+          };
+
+          // Create additional basal datums for the remaining segments
+          let cumulativeDuration = firstSegmentDuration;
+
+          for (let i = 1; i < overlappingSegments.length; i++) {
+            const segment = overlappingSegments[i];
+            const segmentMs24Duration = segment.overlapEnd - segment.overlapStart;
+            const segmentDuration = (segmentMs24Duration / basalDurationMs24) * originalDuration;
+
+            const newBasal = {
+              ...d,
+              id: `${d.id}_split_${i}`,
+              time: d.time + cumulativeDuration,
+              duration: segmentDuration,
+              suppressed: {
+                ...d,
+                id: `${d.id}_suppressed_split_${i}`,
+                deliveryType: 'scheduled',
+                rate: segment.rate || 0,
+                duration: segmentDuration,
+                time: d.time + cumulativeDuration,
+              }
+            };
+
+            // Update deviceTime if it exists
+            if (d.deviceTime) {
+              newBasal.deviceTime = d.deviceTime + cumulativeDuration;
+              newBasal.suppressed.deviceTime = newBasal.deviceTime;
+            }
+
+            basalsToAdd.push(newBasal);
+            cumulativeDuration += segmentDuration;
+          }
+        } else {
+          // Fallback: no overlapping segments found (shouldn't happen normally)
+          this.log('Warning: No overlapping segments found for basal', d.id);
+        }
+      }
+    });
+
+    // Add the new split basal datums to the data array
+    data.push(...basalsToAdd);
   };
 
   /**
@@ -550,6 +787,7 @@ export class DataUtil {
     if (d.type === 'dosingDecision') {
       this.normalizeDatumBgUnits(d, ['bgTargetSchedule'], ['low', 'high']);
       this.normalizeDatumBgUnits(d, ['bgForecast'], ['value']);
+      this.normalizeDatumBgUnits(d, ['bgHistorical'], ['value']);
       this.normalizeDatumBgUnits(d, ['smbg'], ['value']);
       if (_.isObject(d.pumpSettings)) this.normalizeDatumOut(d.pumpSettings, fields);
     }

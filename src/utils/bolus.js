@@ -119,13 +119,16 @@ export function getProgrammed(insulinEvent) {
  */
 export function getRecommended(insulinEvent) {
   let event = insulinEvent;
+
   if (_.get(insulinEvent, 'type') === 'bolus') {
     event = event.dosingDecision || getWizardFromInsulinEvent(insulinEvent);
   }
+
   // a simple manual/"quick" bolus won't have a `recommended` field
   if (!event.recommendedBolus && !event.recommended) {
     return NaN;
   }
+
   const netRecommendation = event.recommendedBolus
     ? _.get(event, ['recommendedBolus', 'amount'], null)
     : _.get(event, ['recommended', 'net'], null);
@@ -133,6 +136,7 @@ export function getRecommended(insulinEvent) {
   if (netRecommendation !== null) {
     return netRecommendation;
   }
+
   let rec = 0;
   rec += _.get(event, ['recommended', 'carb'], 0);
   rec += _.get(event, ['recommended', 'correction'], 0);
@@ -395,7 +399,7 @@ export function isAutomated(insulinEvent) {
  */
 export function isOneButton(insulinEvent) {
   const bolus = getBolusFromInsulinEvent(insulinEvent);
-  return _.get(bolus, 'deliveryContext') === 'oneButton';
+  return _.get(bolus, 'deliveryContext') === 'oneButton' || _.get(bolus, 'dosingDecision.reason') === 'oneButtonBolus';
 }
 
 /**
