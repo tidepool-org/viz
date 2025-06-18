@@ -42,6 +42,17 @@ import {
   DIY_LOOP,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
+  SITE_CHANGE_RESERVOIR,
+  SITE_CHANGE_TUBING,
+  SITE_CHANGE_CANNULA,
+  SITE_CHANGE,
+  ALARM,
+  ALARM_NO_DELIVERY,
+  ALARM_AUTO_OFF,
+  ALARM_NO_INSULIN,
+  ALARM_NO_POWER,
+  ALARM_OCCLUSION,
+  ALARM_OVER_LIMIT,
 } from './constants';
 
 import {
@@ -55,6 +66,7 @@ import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
 import { statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
+import { is } from 'bluebird';
 
 const t = i18next.t.bind(i18next);
 
@@ -638,6 +650,18 @@ export class DataUtil {
     }
 
     if (d.type === 'deviceEvent') {
+      const isReservoirChange = d.subType === 'reservoirChange';
+      const isPrime = d.subType === 'prime';
+
+      const recognizedAlarmTypes = [
+        ALARM_NO_DELIVERY,
+        ALARM_AUTO_OFF,
+        ALARM_NO_INSULIN,
+        ALARM_NO_POWER,
+        ALARM_OCCLUSION,
+        ALARM_OVER_LIMIT,
+      ];
+
       d.tags = {
         automatedSuspend: (
           d.subType === 'status'
@@ -646,9 +670,17 @@ export class DataUtil {
           && d.payload?.suspended?.reason === 'Auto suspend by PLGS'
         ),
         calibration: d.subType === 'calibration',
-        reservoirChange: d.subType === 'reservoirChange',
-        cannulaPrime: d.subType === 'prime' && d.primeTarget === 'cannula',
-        tubingPrime: d.subType === 'prime' && d.primeTarget === 'tubing',
+        [SITE_CHANGE]: isReservoirChange || isPrime,
+        [SITE_CHANGE_RESERVOIR]: isReservoirChange,
+        [SITE_CHANGE_TUBING]: isPrime && d.primeTarget === 'cannula',
+        [SITE_CHANGE_CANNULA]: isPrime && d.primeTarget === 'tubing',
+        [ALARM]: _.includes(recognizedAlarmTypes, d.alarmType),
+        [ALARM_NO_DELIVERY]: d.alarmType === ALARM_NO_DELIVERY,
+        [ALARM_AUTO_OFF]: d.alarmType === ALARM_AUTO_OFF,
+        [ALARM_NO_INSULIN]: d.alarmType === ALARM_NO_INSULIN,
+        [ALARM_NO_POWER]: d.alarmType === ALARM_NO_POWER,
+        [ALARM_OCCLUSION]: d.alarmType === ALARM_OCCLUSION,
+        [ALARM_OVER_LIMIT]: d.alarmType === ALARM_OVER_LIMIT,
       };
     }
   };
