@@ -207,7 +207,7 @@ describe('Tandem', () => {
 
     it('should render an annotation', () => {
       const annotation = mounted.find(formatClassesAsSelector(styles.annotations)).hostNodes().at(0);
-      expect(annotation.text()).contains('Tandem Control-IQ uses its own preset');
+      expect(annotation.text()).contains('Tandem\'s Control-IQ Technology uses its own preset');
     });
   });
 });
