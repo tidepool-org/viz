@@ -2,7 +2,7 @@ import React from 'react';
 
 import { storiesOf } from '@storybook/react';
 
-import EventsTooltip from '../../../../src/components/common/tooltips/EventsTooltip';
+import EventsInfoTooltip from '../../../../src/components/common/tooltips/EventsInfoTooltip';
 
 const props = {
   position: { top: 205, left: 105 },
@@ -27,12 +27,12 @@ const refDiv = (
   />
 );
 
-const stories = storiesOf('EventsTooltip', module);
+const stories = storiesOf('EventsInfoTooltip', module);
 stories.addDecorator(BackgroundDecorator);
 
 stories.add('default tootlip', () => (
   <div>
     {refDiv}
-    <EventsTooltip {...props} />
+    <EventsInfoTooltip {...props} />
   </div>
 ));

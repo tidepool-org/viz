@@ -4,7 +4,7 @@ import _ from 'lodash';
 
 import InfoTooltip from './InfoTooltip';
 
-const EventsTooltip = props => {
+const EventsInfoTooltip = props => {
   const { t, ...tooltipProps } = props;
 
   const content = {
@@ -29,7 +29,7 @@ const EventsTooltip = props => {
   return <InfoTooltip {...tooltipProps} content={content} />;
 };
 
-EventsTooltip.propTypes = InfoTooltip.propTypes;
-EventsTooltip.defaultProps = InfoTooltip.defaultProps;
+EventsInfoTooltip.propTypes = InfoTooltip.propTypes;
+EventsInfoTooltip.defaultProps = InfoTooltip.defaultProps;
 
-export default withTranslation()(EventsTooltip);
+export default withTranslation()(EventsInfoTooltip);
