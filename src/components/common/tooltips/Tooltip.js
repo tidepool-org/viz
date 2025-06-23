@@ -22,6 +22,7 @@ import React, { PureComponent } from 'react';
 import _ from 'lodash';
 
 import styles from './Tooltip.css';
+import colors from '../../../colors';
 
 class Tooltip extends PureComponent {
   constructor(props) {
@@ -30,6 +31,10 @@ class Tooltip extends PureComponent {
 
     this.setElementRef = ref => {
       this.element = ref;
+    };
+
+    this.setTitleElemRef = ref => {
+      this.titleElem = ref;
     };
 
     this.setTailElemRef = ref => {
@@ -55,48 +60,85 @@ class Tooltip extends PureComponent {
 
   calculateOffset(currentProps) {
     if (this.element) {
-      const { offset: propOffset, side, tail } = currentProps;
+      const {
+        content,
+        offset: propOffset,
+        side,
+        tail,
+        tailHeight,
+        tailWidth,
+        title
+      } = currentProps;
       const offset = {};
       const tooltipRect = this.element.getBoundingClientRect();
+      const titleElementHeightOffset = title && content ? this.titleElem?.getBoundingClientRect()?.height || 0 : 0;
 
-      let horizontalOffset = (propOffset.left != null)
+      const horizontalTailOffset = tail ? tailWidth * 2 : 0;
+      const verticalTailOffset = tail ? tailHeight * 2 : 0;
+
+      let horizontalOffset = horizontalTailOffset + ((propOffset.left != null)
         ? propOffset.left
-        : (propOffset.horizontal || 0);
+        : (propOffset.horizontal || 0));
 
       if (side === 'left') {
         horizontalOffset = -horizontalOffset;
       }
 
+      let verticalOffset = verticalTailOffset + ((propOffset.top != null)
+        ? propOffset.top
+        : (propOffset.vertical || 0));
+
+      if (side === 'top') {
+        verticalOffset = -verticalOffset;
+      }
+
       if (tail) {
-        const tailRect = this.tailElem.getBoundingClientRect();
-        const tailCenter = {
-          top: tailRect.top + (tailRect.height / 2),
-          left: tailRect.left + (tailRect.width / 2),
-        };
-        offset.top = -tailCenter.top + tooltipRect.top + propOffset.top;
-        offset.left = -tailCenter.left + tooltipRect.left + horizontalOffset;
+        // Position tooltip accounting for tail on all sides
+        switch (side) {
+          case 'top':
+            offset.top = -tooltipRect.height + propOffset.top + verticalOffset;
+            offset.left = -tooltipRect.width / 2;
+            break;
+
+          case 'bottom':
+            offset.top = propOffset.top + verticalOffset;
+            offset.left = -tooltipRect.width / 2;
+            break;
+
+          case 'right':
+            offset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
+            offset.left = horizontalOffset;
+            break;
+
+          case 'left':
+            offset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
+            offset.left = -tooltipRect.width + horizontalOffset;
+        }
       } else {
-        let leftOffset;
-        let topOffset;
+        let leftOffset = 0;
+        let topOffset = 0;
+
         switch (side) {
           case 'top':
             leftOffset = -tooltipRect.width / 2;
             topOffset = -tooltipRect.height;
             break;
+
           case 'bottom':
             leftOffset = -tooltipRect.width / 2;
             topOffset = 0;
             break;
+
           case 'right':
             leftOffset = 0;
             topOffset = -tooltipRect.height / 2;
             break;
+
           case 'left':
-          default:
             leftOffset = -tooltipRect.width;
             topOffset = -tooltipRect.height / 2;
         }
-        offset.top = topOffset + propOffset.top;
+        offset.top = topOffset + verticalOffset;
         offset.left = leftOffset + horizontalOffset;
       }
 
@@ -104,45 +146,97 @@ class Tooltip extends PureComponent {
     }
   }
 
-  renderTail(backgroundColor = 'white') {
-    const { tailWidth, tailHeight, borderWidth, borderColor, side } = this.props;
-    const tailSide = (side === 'left') ? 'right' : 'left';
-    const padding = 10;
-    let marginOuterValue;
-    let marginInnerValue;
-    if (tailSide === 'left') {
-      marginOuterValue = `calc(-100% - (4 * ${tailWidth}px - ${padding}px)`;
-      marginInnerValue = `calc(-100% - (4 * ${tailWidth}px - ${padding}px - ${borderWidth + 1}px))`;
-    } else {
-      marginOuterValue = `calc(${padding}px + ${borderWidth}px)`;
-      marginInnerValue = `${padding - 1}px`;
+  renderTail() {
+    const {
+      backgroundColor = 'white',
+      borderColor,
+      borderWidth,
+      offset,
+      side,
+      tailHeight,
+      tailWidth,
+    } = this.props;
+
+    const titleElemRect = this.titleElem ? this.titleElem.getBoundingClientRect() : null;
+
+    const tailColor = this.props.tailColor || backgroundColor;
+    const tailStyle = {};
+    let innerTailStyle = {};
+
+    const renderInnerTail = tailColor !== borderColor;
+
+    // Set the appropriate border color and width, and position based on tail direction
+    switch (side) {
+      case 'top':
+        tailStyle.left = `calc(50% - ${offset.left || 0}px)`;
+        tailStyle.borderTopColor = borderColor;
+        tailStyle.borderWidth = `${(tailHeight * 2) + borderWidth}px ${tailWidth + borderWidth}px`;
+
+        if (renderInnerTail) {
+          innerTailStyle = {
+            ...tailStyle,
+            top: `calc(100% - ${borderWidth + Math.ceil(tailHeight / tailWidth)}px)`,
+            borderTopColor: tailColor,
+          };
+        }
+        break;
+
+      case 'bottom':
+        tailStyle.left = `calc(50% - ${offset.left || 0}px)`;
+        tailStyle.bottom = `calc(100% + ${titleElemRect?.height || 0}px)`;
+        tailStyle.borderBottomColor = borderColor;
+        tailStyle.borderWidth = `${(tailHeight * 2) + borderWidth}px ${tailWidth + borderWidth}px`;
+
+        if (renderInnerTail) {
+          innerTailStyle = {
+            ...tailStyle,
+            bottom: `calc(100% + ${titleElemRect?.height || 0}px - ${borderWidth + Math.ceil(tailHeight / tailWidth)}px)`,
+            borderBottomColor: tailColor,
+          };
+        }
+        break;
+
+      case 'left':
+        tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
+        tailStyle.borderLeftColor = borderColor;
+        tailStyle.borderWidth = `${tailHeight + borderWidth}px ${(tailWidth * 2) + borderWidth}px`;
+
+        if (renderInnerTail) {
+          innerTailStyle = {
+            ...tailStyle,
+            left: `calc(100% - ${borderWidth + Math.ceil(tailWidth / tailHeight)}px)`,
+            borderLeftColor: tailColor,
+          };
+        }
+        break;
+
+      case 'right':
+        tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
+        tailStyle.borderRightColor = borderColor;
+        tailStyle.borderWidth = `${tailHeight + borderWidth}px ${(tailWidth * 2) + borderWidth}px`;
+
+        if (renderInnerTail) {
+          innerTailStyle = {
+            ...tailStyle,
+            right: `calc(100% - ${borderWidth + (tailWidth / tailHeight)}px)`,
+            borderRightColor: tailColor,
+          };
+        }
+        break;
     }
-    const borderSide = (tailSide === 'left') ? 'right' : 'left';
-    const tailInnerColor = this.props.tailColor || this.props.backgroundColor || backgroundColor;
-    // The two child divs form the solid color tail and the border around it by layering
-    // on one another offset by the border width adjusted slightly for the angle
+
     return (
-      <div>
+      <div style={{ position: 'static' }}>
         <div
           ref={this.setTailElemRef}
-          className={styles.tail}
-          style={{
-            marginTop: `-${tailHeight}px`,
-            marginLeft: marginOuterValue,
-            borderWidth: `${tailHeight}px ${2 * tailWidth}px`,
-            [`border${_.upperFirst(borderSide)}Color`]: borderColor,
-          }}
+          className={`${styles.tail} ${styles[side]}`}
+          style={tailStyle}
         />
-        {tailInnerColor !== borderColor && (
+
+        {renderInnerTail && (
           <div
-            className={styles.tail}
-            style={{
-              marginTop: `-${tailHeight}px`,
-              marginLeft: marginInnerValue,
-              borderWidth: `${tailHeight}px ${2 * tailWidth}px`,
-              [`border${_.upperFirst(borderSide)}Color`]:
-                this.props.tailColor || this.props.backgroundColor || backgroundColor,
-            }}
+            className={`${styles.tail} ${styles[side]}`}
+            style={innerTailStyle}
           />
         )}
       </div>
@@ -154,9 +248,9 @@ class Tooltip extends PureComponent {
     let renderedTitle = null;
     if (title) {
       renderedTitle = (
-        <div className={styles.title}>
+        <div ref={this.setTitleElemRef} className={styles.title}>
           <span>{title}</span>
-          {tail && !content && this.renderTail(styles.tooltipTitleBg)}
+          {tail && !content && this.renderTail(colors.gray05)}
         </div>
       );
     }
@@ -168,7 +262,7 @@ class Tooltip extends PureComponent {
     const { tail } = this.props;
     if (content) {
       renderedContent = (
-        <div className={styles.content}>
+        <div ref={this.setContentElemRef} className={styles.content}>
           <span>{content}</span>
           {tail && this.renderTail()}
         </div>
@@ -223,7 +317,7 @@ Tooltip.propTypes = {
 Tooltip.defaultProps = {
   tail: true,
   side: 'left',
-  tailWidth: 7,
+  tailWidth: 8,
   tailHeight: 8,
   borderColor: 'black',
   borderWidth: 2,

@@ -3,6 +3,7 @@ import React from 'react';
 import { storiesOf } from '@storybook/react';
 
 import Tooltip from '../../../../src/components/common/tooltips/Tooltip';
+import { colors } from '../../../../src';
 
 const props = {
   title: <span style={{ padding: '5px', display: 'block' }}>Title</span>,
@@ -101,7 +102,7 @@ storiesOf('Tooltip', module)
   .add('tail, no content', () => (
     <div>
       {refDiv}
-      <Tooltip {...props} content={null} />
+      <Tooltip {...props} content={null} tailColor={colors.gray05} />
     </div>
   ))
   .add('no tail, no content', () => (
