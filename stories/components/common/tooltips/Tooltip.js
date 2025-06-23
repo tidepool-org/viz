@@ -7,7 +7,7 @@ import Tooltip from '../../../../src/components/common/tooltips/Tooltip';
 const props = {
   title: <span style={{ padding: '5px', display: 'block' }}>Title</span>,
   content: <span style={{ fontSize: '15px', display: 'block', padding: '5px' }}>Some Content</span>,
-  position: { top: 200, left: 200 },
+  position: { top: 205, left: 205 },
 };
 
 const BackgroundDecorator = (story) => (
@@ -22,8 +22,8 @@ const refDiv = (
       position: 'absolute',
       width: '10px',
       height: '10px',
-      top: '199px',
-      left: '199px',
+      top: '200px',
+      left: '200px',
       backgroundColor: 'FireBrick',
       opacity: 0.50,
       zIndex: '1',
