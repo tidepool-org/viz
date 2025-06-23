@@ -137,11 +137,11 @@ describe('blood glucose utilities', () => {
 
         it('should return `veryLow` for a value < 54', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 50, 'fiveWay')).to.equal('veryLow');
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.6, 'fiveWay')).to.equal('veryLow');
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.999, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.4, 'fiveWay')).to.equal('veryLow');
         });
 
         it('should return `low` for a value between 54 - 69', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.98, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 54, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 57, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 62, 'fiveWay')).to.equal('low');
@@ -182,11 +182,12 @@ describe('blood glucose utilities', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 200, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 231, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 250, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 250.001, 'fiveWay')).to.equal('high');
         });
 
 
         it('should return `veryHigh` for a value > 250', () => {
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 250.001, 'fiveWay')).to.equal('veryHigh');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 250.55, 'fiveWay')).to.equal('veryHigh');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 251, 'fiveWay')).to.equal('veryHigh');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 260, 'fiveWay')).to.equal('veryHigh');
         });
@@ -205,10 +206,11 @@ describe('blood glucose utilities', () => {
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2, 'fiveWay')).to.equal('veryLow');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.85, 'fiveWay')).to.equal('veryLow');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.9, 'fiveWay')).to.equal('veryLow');
-          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.9999, 'fiveWay')).to.equal('veryLow');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.94, 'fiveWay')).to.equal('veryLow');
         });
 
         it('should return `low` for a value between 3.0 - 3.8', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 2.9999, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.55, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.8, 'fiveWay')).to.equal('low');
@@ -246,11 +248,12 @@ describe('blood glucose utilities', () => {
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.1, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 12, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.9, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.9001, 'fiveWay')).to.equal('high');
         });
 
 
         it('should return `veryHigh` for a value > 13.9`', () => {
-          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.9001, 'fiveWay')).to.equal('veryHigh');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.96, 'fiveWay')).to.equal('veryHigh');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.95, 'fiveWay')).to.equal('veryHigh');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 14, 'fiveWay')).to.equal('veryHigh');
         });
