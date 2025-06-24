@@ -33,7 +33,7 @@ const CgmSampleIntervalTooltip = props => {
     ]
   };
 
-  return <InfoTooltip {...tooltipProps} content={content} offset={{ top: 130, left: 0 }} />;
+  return <InfoTooltip {...tooltipProps} content={content} offset={{ top: 135, left: 0 }} />;
 };
 
 CgmSampleIntervalTooltip.propTypes = InfoTooltip.propTypes;

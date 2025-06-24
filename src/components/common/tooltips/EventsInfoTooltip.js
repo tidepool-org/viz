@@ -26,7 +26,7 @@ const EventsInfoTooltip = props => {
     ]
   };
 
-  return <InfoTooltip {...tooltipProps} content={content} offset={{ top: 55, left: 0 }} />;
+  return <InfoTooltip {...tooltipProps} content={content} offset={{ top: 60, left: 0 }} />;
 };
 
 EventsInfoTooltip.propTypes = InfoTooltip.propTypes;

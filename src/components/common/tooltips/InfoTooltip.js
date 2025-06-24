@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 
 import Tooltip from '../../common/tooltips/Tooltip';
-import colors from '../../../styles/colors.css';
+import colors from '../../../colors';
 import styles from './InfoTooltip.css';
 
 const InfoTooltip = props => {
@@ -65,8 +65,8 @@ InfoTooltip.defaultProps = {
   side: 'right',
   tailWidth: 8,
   tailHeight: 16,
-  tailColor: colors.statDefault,
-  borderColor: colors.statDefault,
+  tailColor: colors.gray30,
+  borderColor: colors.gray30,
   borderWidth: 2,
   offset: { top: 0, left: 0 },
 };
