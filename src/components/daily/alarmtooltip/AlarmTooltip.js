@@ -17,13 +17,25 @@
 
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import Markdown from 'react-markdown';
-import _ from 'lodash';
+import i18next from 'i18next';
+
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../colors';
-import styles from './EventTooltip.css';
+import styles from './AlarmTooltip.css';
+import { getPumpVocabulary } from '../../../utils/device';
+import { formatClocktimeFromMsPer24, getMsPer24 } from '../../../utils/datetime';
 
-class EventTooltip extends PureComponent {
+const t = i18next.t.bind(i18next);
+
+class AlarmTooltip extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.msPer24 = getMsPer24(props.alarm?.normalTime, props.timePrefs?.timezoneName);
+    this.clockTime = formatClocktimeFromMsPer24(this.msPer24);
+    this.deviceLabels = getPumpVocabulary(props.alarm?.source);
+    this.alarmType = this.deviceLabels[props.alarm?.alarmType] || props.alarm?.alarmType || t('Unknown Alarm');
+  }
+
   static propTypes = {
     annotations: PropTypes.arrayOf(PropTypes.string),
     position: PropTypes.shape({
@@ -45,6 +57,11 @@ class EventTooltip extends PureComponent {
     borderColor: PropTypes.string.isRequired,
     borderWidth: PropTypes.number.isRequired,
     showDividers: PropTypes.bool,
+    alarm: PropTypes.shape({
+      alarmType: PropTypes.string,
+      normalTime: PropTypes.number.isRequired,
+    }).isRequired,
+    timePrefs: PropTypes.object.isRequired,
   };
 
   static defaultProps = {
@@ -53,46 +70,29 @@ class EventTooltip extends PureComponent {
     side: 'bottom',
     tailWidth: 16,
     tailHeight: 8,
-    tailColor: colors.gray10,
-    borderColor: colors.gray10,
+    tailColor: colors.gray30,
+    borderColor: colors.gray30,
     borderWidth: 2,
-    showDividers: true,
   };
 
-  renderMessages() {
-    const annotations = this.props.annotations;
-    const rows = [];
-
-    _.each(annotations, (message, index) => {
-      rows.push(
-        <Markdown
-          key={`message-${index}`}
-          className={styles.message}
-          children={message}
-          linkTarget="_blank"
-        />
-      );
-      if (index !== annotations.length - 1) {
-        rows.push(
-          <div
-            key={`divider-${index}`}
-            className={this.props.showDividers ? styles.divider : styles.hiddenDivider}
-          />
-        );
-      }
-    });
-
-    return <div className={styles.container}>{rows}</div>;
+  renderAlarm() {
+    return (
+      <div>
+        <div className={styles.time}>{this.clockTime}</div>
+        <div className={styles.title}>{t('Pump Alarm')}</div>
+        <div className={styles.description}>{this.alarmType}</div>
+      </div>
+    );
   }
 
   render() {
     return (
       <Tooltip
         {...this.props}
-        content={this.renderMessages()}
+        content={this.renderAlarm()}
       />
     );
   }
 }
 
-export default EventTooltip;
+export default AlarmTooltip;

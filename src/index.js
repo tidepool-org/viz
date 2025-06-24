@@ -35,7 +35,7 @@ import PumpSettingsOverrideTooltip from './components/daily/pumpsettingsoverride
 import SMBGTooltip from './components/daily/smbgtooltip/SMBGTooltip';
 import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
-import EventTooltip from './components/daily/eventtooltip/EventTooltip';
+import AlarmTooltip from './components/daily/alarmtooltip/AlarmTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
 import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
@@ -87,13 +87,13 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
 }
 
 const components = {
+  AlarmTooltip,
   BolusTooltip,
   CBGDateTraceLabel,
   CBGTooltip,
   CgmSampleIntervalTooltip,
   ClipboardButton,
   EventsInfoTooltip,
-  EventTooltip,
   FocusedRangeLabels,
   FocusedSMBGPointLabel,
   FoodTooltip,

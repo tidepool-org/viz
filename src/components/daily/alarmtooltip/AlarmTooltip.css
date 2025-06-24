@@ -1,0 +1,24 @@
+.row {
+  composes: smallSize from '../../../styles/typography.css';
+  line-height: 16px;
+  max-width: 200px;
+  min-width: 100px;
+  font-weight: 500;
+  color: var(--stat--default);
+  text-align: center;
+}
+
+.time {
+  composes: row;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.title {
+  composes: row;
+  font-weight: 900;
+}
+
+.description {
+  composes: row;
+}
