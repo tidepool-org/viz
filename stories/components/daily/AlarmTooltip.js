@@ -5,11 +5,6 @@ import { storiesOf } from '@storybook/react';
 import AlarmTooltip from '../../../src/components/daily/alarmtooltip/AlarmTooltip';
 import { getBrowserTimezone } from '../../../src/utils/datetime';
 
-const props = {
-  position: { top: 105, left: 105 },
-  timePrefs: { timezoneName: getBrowserTimezone() },
-};
-
 const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
@@ -43,6 +38,12 @@ const alarmTypes = [
   'occlusion',
   'over_limit',
 ];
+
+const props = {
+  position: { top: 105, left: 105 },
+  offset: { top: 0, left: 40 },
+  timePrefs: { timezoneName: getBrowserTimezone() },
+};
 
 _.each(alarmTypes, (alarmType, index) => {
   stories.add(alarmType, () => (

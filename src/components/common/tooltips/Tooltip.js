@@ -97,12 +97,12 @@ class Tooltip extends PureComponent {
         switch (side) {
           case 'top':
             offset.top = -tooltipRect.height + propOffset.top + verticalOffset;
-            offset.left = -tooltipRect.width / 2;
+            offset.left = -tooltipRect.width / 2 + propOffset.left;
             break;
 
           case 'bottom':
             offset.top = propOffset.top + verticalOffset;
-            offset.left = -tooltipRect.width / 2;
+            offset.left = -tooltipRect.width / 2 + propOffset.left;
             break;
 
           case 'right':
