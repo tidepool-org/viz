@@ -140,44 +140,34 @@ describe('blood glucose utilities', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.4, 'fiveWay')).to.equal('veryLow');
         });
 
-        it('should return `low` for a value between 54 - 69', () => {
+        it('should return `low` for a value between 54 - 70', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 53.98, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 54, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 57, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 62, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 69, 'fiveWay')).to.equal('low');
-        });
-
-        it('should round to `low` or `target` appropriately for values between 69 - 70', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.1, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.4, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.4999, 'fiveWay')).to.equal('low');
-
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.5, 'fiveWay')).to.equal('target'); // banker's round up
-
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.6, 'fiveWay')).to.equal('target');
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.8, 'fiveWay')).to.equal('target');
         });
 
         it('should return `target` for a value between 70 - 180', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.5, 'fiveWay')).to.equal('target'); // banker's round up
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.6, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 69.8, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 70, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 91, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 145, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 166, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 180, 'fiveWay')).to.equal('target');
-        });
-
-        it('should round to `target` or `high` appropriately for values between 180 - 181', () => {
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.1, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.4, 'fiveWay')).to.equal('target');
-
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.5, 'fiveWay')).to.equal('target'); // banker's round down
-
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.5001, 'fiveWay')).to.equal('high');
-          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.8, 'fiveWay')).to.equal('high');
         });
 
         it('should return `high` for a value between 181 - 250', () => {
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.5001, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MGDL_UNITS, 180.8, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 181, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 200, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MGDL_UNITS, 231, 'fiveWay')).to.equal('high');
@@ -214,37 +204,27 @@ describe('blood glucose utilities', () => {
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.55, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.8, 'fiveWay')).to.equal('low');
-        });
-
-        it('should round to `low` or `target` appropriately for values between 3.8 - 3.9', () => {
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.81, 'fiveWay')).to.equal('low');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.84, 'fiveWay')).to.equal('low');
-
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.85, 'fiveWay')).to.equal('low'); // banker's round down
-
-          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.85001, 'fiveWay')).to.equal('target');
-          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.88, 'fiveWay')).to.equal('target');
         });
 
         it('should return `target` for a value between 3.9 - 10.0', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.85001, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.88, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 3.9, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 4, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 7, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 9, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10, 'fiveWay')).to.equal('target');
-        });
-
-        it('should round to `target` or `high` appropriately for values between 10.0 - 10.1', () => {
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.001, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.04, 'fiveWay')).to.equal('target');
-
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.05, 'fiveWay')).to.equal('target'); // banker's round down
-
-          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.05001, 'fiveWay')).to.equal('high');
-          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.08, 'fiveWay')).to.equal('high');
         });
 
         it('should return `high` for a value between 10.1 - 13.9', () => {
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.05001, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.08, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 10.1, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 12, 'fiveWay')).to.equal('high');
           expect(classifyBgValue(bgBounds, MMOLL_UNITS, 13.9, 'fiveWay')).to.equal('high');
