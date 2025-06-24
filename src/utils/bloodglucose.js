@@ -49,20 +49,16 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
 
   const { veryLowThreshold, targetLowerBound, targetUpperBound, veryHighThreshold } = bgBounds;
 
+  const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
+  const roundedValue = bankersRound(bgValue, precision);
+
+  // fiveWay
   if (classificationType === 'fiveWay') {
-    if (bgValue < veryLowThreshold) {
+    if (roundedValue < veryLowThreshold) {
       return 'veryLow';
-    } else if (bgValue > veryHighThreshold) {
+    } else if (roundedValue > veryHighThreshold) {
       return 'veryHigh';
-    }
-
-    // Low, Target, and High ranges are non-contiguous in the ADA Standardized CGM metrics.
-    // We ensure that values falling between these ranges are rounded into an appropriate
-    // range before trying to classify them. See the unit tests for examples of scenarios.
-    const precision = bgUnits === MMOLL_UNITS ? 1 : 0;
-    const roundedValue = bankersRound(bgValue, precision);
-
-    if (roundedValue < targetLowerBound) {
+    } else if (roundedValue < targetLowerBound) {
       return 'low';
     } else if (roundedValue > targetUpperBound) {
       return 'high';
@@ -72,9 +68,9 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
   }
 
   // threeWay
-  if (bgValue < targetLowerBound) {
+  if (roundedValue < targetLowerBound) {
     return 'low';
-  } else if (bgValue > targetUpperBound) {
+  } else if (roundedValue > targetUpperBound) {
     return 'high';
   }
   return 'target';
