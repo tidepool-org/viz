@@ -66,7 +66,6 @@ import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
 import { statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
-import { is } from 'bluebird';
 
 const t = i18next.t.bind(i18next);
 

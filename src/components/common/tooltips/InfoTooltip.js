@@ -9,30 +9,28 @@ import styles from './InfoTooltip.css';
 const InfoTooltip = props => {
   const { content, ...tooltipProps } = props;
 
-  const renderContent = () => {
-    return (
-      <div className={styles.container}>
-        {content.title && <div className={styles.title}>{content.title}</div>}
-        {content.subtitle && <div className={styles.subtitle}>{content.subtitle}</div>}
+  const renderContent = () => (
+    <div className={styles.container}>
+      {content.title && <div className={styles.title}>{content.title}</div>}
+      {content.subtitle && <div className={styles.subtitle}>{content.subtitle}</div>}
 
-        {_.map(content.sections, (section, index) => (
-          <div key={`section-${index}`}>
-            {section.title && <div className={styles.row}>{section.title}</div>}
+      {_.map(content.sections, (section, index) => (
+        <div key={`section-${index}`}>
+          {section.title && <div className={styles.row}>{section.title}</div>}
 
-            {section.items.length && (
-              <ul className={styles.items}>
-                {_.map(section.items, (item, itemIndex) => (
-                  <li key={`item-${itemIndex}`} className={styles.item}>{item}</li>
-                ))}
-              </ul>
-            )}
+          {section.items.length && (
+          <ul className={styles.items}>
+            {_.map(section.items, (item, itemIndex) => (
+              <li key={`item-${itemIndex}`} className={styles.item}>{item}</li>
+            ))}
+          </ul>
+          )}
 
-            {section.note && <div className={styles.note}>{section.note}</div>}
-          </div>
-        ))}
-      </div>
-    );
-  };
+          {section.note && <div className={styles.note}>{section.note}</div>}
+        </div>
+      ))}
+    </div>
+  );
 
   return (
     <Tooltip

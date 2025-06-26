@@ -17,9 +17,8 @@
 
 /* global requestAnimationFrame */
 
-import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
-import _ from 'lodash';
+import PropTypes from 'prop-types';
 
 import styles from './Tooltip.css';
 import colors from '../../../colors';
@@ -111,6 +110,7 @@ class Tooltip extends PureComponent {
             break;
 
           case 'left':
+          default:
             offset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
             offset.left = -tooltipRect.width + horizontalOffset;
         }
@@ -135,6 +135,7 @@ class Tooltip extends PureComponent {
             break;
 
           case 'left':
+          default:
             leftOffset = -tooltipRect.width;
             topOffset = -tooltipRect.height / 2;
         }
@@ -196,20 +197,6 @@ class Tooltip extends PureComponent {
         }
         break;
 
-      case 'left':
-        tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
-        tailStyle.borderLeftColor = borderColor;
-        tailStyle.borderWidth = `${tailHeight + borderWidth}px ${(tailWidth * 2) + borderWidth}px`;
-
-        if (renderInnerTail) {
-          innerTailStyle = {
-            ...tailStyle,
-            left: `calc(100% - ${borderWidth + Math.ceil(tailWidth / tailHeight)}px)`,
-            borderLeftColor: tailColor,
-          };
-        }
-        break;
-
       case 'right':
         tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
         tailStyle.borderRightColor = borderColor;
@@ -220,6 +207,21 @@ class Tooltip extends PureComponent {
             ...tailStyle,
             right: `calc(100% - ${borderWidth + (tailWidth / tailHeight)}px)`,
             borderRightColor: tailColor,
+          };
+        }
+        break;
+
+      case 'left':
+      default:
+        tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
+        tailStyle.borderLeftColor = borderColor;
+        tailStyle.borderWidth = `${tailHeight + borderWidth}px ${(tailWidth * 2) + borderWidth}px`;
+
+        if (renderInnerTail) {
+          innerTailStyle = {
+            ...tailStyle,
+            left: `calc(100% - ${borderWidth + Math.ceil(tailWidth / tailHeight)}px)`,
+            borderLeftColor: tailColor,
           };
         }
         break;
