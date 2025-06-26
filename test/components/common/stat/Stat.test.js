@@ -1999,8 +1999,8 @@ describe('Stat', () => {
       sinon.assert.callCount(setStateSpy, 1);
       sinon.assert.calledWith(setStateSpy, sinon.match({
         showMessages: true,
-        messageTooltipOffset: { horizontal: 100, top: -100 },
-        messageTooltipPosition: { left: 100, top: 50 },
+        messageTooltipOffset: { horizontal: 100, top: 0 },
+        messageTooltipPosition: { left: 100, top: -50 },
         messageTooltipSide: 'right',
       }));
     });

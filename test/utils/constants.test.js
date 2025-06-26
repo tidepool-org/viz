@@ -346,6 +346,7 @@ describe('constants', () => {
           [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
           [constants.MAX_BOLUS]: 'Maximum Bolus',
           [constants.MAX_BASAL]: 'Maximum Basal Rate',
+          [constants.ALARM_OCCLUSION]: 'Line Blocked',
         },
         [constants.DIY_LOOP]: {
           [constants.AUTOMATED_DELIVERY]: 'Automation',
@@ -378,6 +379,12 @@ describe('constants', () => {
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
           [constants.ONE_BUTTON_BOLUS]: 'One-Button Bolus',
+          [constants.ALARM_NO_DELIVERY]: 'Insulin Delivery Stopped',
+          [constants.ALARM_AUTO_OFF]: 'Pump Auto-Off',
+          [constants.ALARM_NO_INSULIN]: 'Reservoir Empty',
+          [constants.ALARM_NO_POWER]: 'Battery Empty',
+          [constants.ALARM_OCCLUSION]: 'Occlusion Detected',
+          [constants.ALARM_OVER_LIMIT]: 'Insulin Delivery Limit Exceeded',
         },
       });
     });
