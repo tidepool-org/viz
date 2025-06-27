@@ -25,6 +25,15 @@ import styles from './AlarmTooltip.css';
 import { getPumpVocabulary } from '../../../utils/device';
 import { formatClocktimeFromMsPer24, getMsPer24 } from '../../../utils/datetime';
 
+import {
+  ALARM_NO_DELIVERY,
+  ALARM_AUTO_OFF,
+  ALARM_NO_INSULIN,
+  ALARM_NO_POWER,
+  ALARM_OCCLUSION,
+  ALARM_OVER_LIMIT,
+} from '../../../utils/constants';
+
 const t = i18next.t.bind(i18next);
 
 class AlarmTooltip extends PureComponent {
@@ -76,11 +85,27 @@ class AlarmTooltip extends PureComponent {
   };
 
   renderAlarm() {
+    let deviceAlarmTitle;
+
+    switch (this.props.alarm?.alarmType) {
+      case ALARM_NO_DELIVERY:
+      case ALARM_AUTO_OFF:
+      case ALARM_NO_INSULIN:
+      case ALARM_NO_POWER:
+      case ALARM_OCCLUSION:
+      case ALARM_OVER_LIMIT:
+        deviceAlarmTitle = t('Pump Alarm');
+        break;
+      default:
+        deviceAlarmTitle = t('Device Alarm');
+        break;
+    }
+
     return (
       <div>
         <div className={styles.time}>{this.clockTime}</div>
-        <div className={styles.title}>{t('Pump Alarm')}</div>
-        <div className={styles.description}>{this.alarmType}</div>
+        <div className={styles.deviceAlarmTitle}>{deviceAlarmTitle}</div>
+        <div className={styles.alarmType}>{this.alarmType}</div>
       </div>
     );
   }

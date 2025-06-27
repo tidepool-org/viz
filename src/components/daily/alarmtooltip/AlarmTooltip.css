@@ -14,11 +14,11 @@
   margin-bottom: 6px;
 }
 
-.title {
+.deviceAlarmTitle {
   composes: row;
   font-weight: 900;
 }
 
-.description {
+.alarmType {
   composes: row;
 }
