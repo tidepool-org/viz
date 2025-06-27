@@ -29,11 +29,13 @@ import PumpSettingsContainer from './components/settings/common/PumpSettingsCont
 import TrendsContainer from './components/trends/common/TrendsContainer';
 import Tooltip from './components/common/tooltips/Tooltip';
 import CgmSampleIntervalTooltip from './components/common/tooltips/CgmSampleIntervalTooltip';
+import EventsInfoTooltip from './components/common/tooltips/EventsInfoTooltip';
 import BolusTooltip from './components/daily/bolustooltip/BolusTooltip';
 import PumpSettingsOverrideTooltip from './components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import SMBGTooltip from './components/daily/smbgtooltip/SMBGTooltip';
 import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
+import AlarmTooltip from './components/daily/alarmtooltip/AlarmTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 
 import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
@@ -85,21 +87,23 @@ if (_.get(i18next, 'options.returnEmptyString') === undefined) {
 }
 
 const components = {
+  AlarmTooltip,
+  BolusTooltip,
   CBGDateTraceLabel,
+  CBGTooltip,
+  CgmSampleIntervalTooltip,
   ClipboardButton,
+  EventsInfoTooltip,
   FocusedRangeLabels,
   FocusedSMBGPointLabel,
+  FoodTooltip,
   Loader,
-  RangeSelect,
-  TwoOptionToggle,
-  Tooltip,
-  BolusTooltip,
   PumpSettingsOverrideTooltip,
+  RangeSelect,
   SMBGTooltip,
   Stat,
-  CBGTooltip,
-  FoodTooltip,
-  CgmSampleIntervalTooltip,
+  Tooltip,
+  TwoOptionToggle,
 };
 
 const containers = {

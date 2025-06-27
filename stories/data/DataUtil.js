@@ -272,6 +272,7 @@ stories.add('Query Generator', (opts, props) => {
       subType: 'subType',
       primeTarget: 'primeTarget',
       overrideType: 'overrideType',
+      alarmType: 'alarmType',
       overridePreset: 'overridePreset',
       method: 'method',
       duration: 'duration',

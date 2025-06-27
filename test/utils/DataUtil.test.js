@@ -5124,7 +5124,21 @@ describe('DataUtil', () => {
       d.normalTime = d.deviceTime;
       d.normalEnd = d.normalTime + d.duration;
       d.displayOffset = 0;
-      d.tags = { automatedSuspend: false, calibration: false, reservoirChange: false, cannulaPrime: false, tubingPrime: false };
+      d.tags = {
+        automatedSuspend: false,
+        calibration: false,
+        siteChange: false,
+        reservoirChange: false,
+        cannulaPrime: false,
+        tubingPrime: false,
+        alarm: false,
+        no_delivery: false,
+        auto_off: false,
+        no_insulin: false,
+        no_power: false,
+        occlusion: false,
+        over_limit: false,
+      };
       return d;
     };
     /* eslint-enable no-param-reassign */
