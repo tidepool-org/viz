@@ -198,6 +198,32 @@ describe('basics data utils', () => {
         const tempFilter = _.find(result.basals.dimensions, { key: 'temp' });
         expect(tempFilter.hideEmpty).to.be.true;
       });
+
+      it('should hide the `temp` basals when empty for twiist Loop devices', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
+        const tempFilter = _.find(result.basals.dimensions, { key: 'temp' });
+        expect(tempFilter.hideEmpty).to.be.true;
+      });
+    });
+
+    context('is twiist device', () => {
+      it('should set `perRow` property to 4 for the boluses section', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
+        expect(result.boluses.perRow).to.equal(4);
+      });
+
+      it('should add a one-button bolus selector', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
+        expect(result.boluses.dimensions[7].key).to.equal('oneButton');
+      });
+
+      it('should set `selectorIndex` for underrides to render directly after overrides', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
+        expect(result.boluses.dimensions[5].key).to.equal('override');
+        expect(result.boluses.dimensions[5].selectorIndex).to.equal(2);
+        expect(result.boluses.dimensions[6].key).to.equal('underride');
+        expect(result.boluses.dimensions[6].selectorIndex).to.equal(3);
+      });
     });
   });
 

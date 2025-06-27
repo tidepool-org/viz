@@ -35,12 +35,14 @@ const automated = {
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
   subType: 'automated',
+  tags: { automated: true },
 };
 
 const oneButton = {
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
   deliveryContext: 'oneButton',
+  tags: { oneButton: true },
 };
 
 const cancelled = {

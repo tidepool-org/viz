@@ -88,9 +88,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
     let summaryTitle;
     let perRow = 3;
 
-    // TODO: Remove this once we have twiist bolus and wizards linked
-    const hideEmptyWizardDimensions = isTwiistLoop(pumpUpload.settings);
-
     switch (section) {
       case 'basals':
         title = 'Basals';
@@ -123,12 +120,12 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         summaryTitle = t('Avg boluses / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
-          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0, hideEmpty: hideEmptyWizardDimensions },
-          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true, selectorIndex: 1, hideEmpty: hideEmptyWizardDimensions },
+          { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
+          { path: 'summary.subtotals', key: 'correction', label: t('Correction'), percentage: true, selectorIndex: 1 },
           { path: 'summary.subtotals', key: 'extended', label: t('Extended'), percentage: true, selectorIndex: 4 },
           { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 5 },
-          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2, hideEmpty: hideEmptyWizardDimensions },
-          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6, hideEmpty: hideEmptyWizardDimensions },
+          { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
+          { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
         ];
 
         if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
@@ -139,7 +136,9 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         }
 
         if (isTwiistLoop(pumpUpload.settings)) {
-          dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 7, hideEmpty: hideEmptyWizardDimensions });
+          dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 6 });
+          dimensions[6].selectorIndex = 3; // Move the 'Underride' filter next to the 'Override'
+          perRow = 4;
         }
 
         if (pumpUpload.isAutomatedBolusDevice) {
