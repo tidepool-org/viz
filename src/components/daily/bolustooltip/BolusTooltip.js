@@ -457,8 +457,8 @@ BolusTooltip.propTypes = {
 BolusTooltip.defaultProps = {
   tail: true,
   side: 'right',
-  tailWidth: 9,
-  tailHeight: 17,
+  tailWidth: 8,
+  tailHeight: 16,
   borderWidth: 2,
 };
 

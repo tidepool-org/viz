@@ -132,8 +132,8 @@ CBGTooltip.propTypes = {
 CBGTooltip.defaultProps = {
   tail: true,
   side: 'right',
-  tailWidth: 9,
-  tailHeight: 17,
+  tailWidth: 8,
+  tailHeight: 16,
   tailColor: colors.bolus,
   borderColor: colors.bolus,
   borderWidth: 2,
