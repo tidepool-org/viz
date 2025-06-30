@@ -1109,7 +1109,7 @@ describe('DataUtil', () => {
       expect(bolus2.insulinOnBoard).to.equal(4);
     });
 
-    it.only('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other if not definitive associations exist', () => {
+    it('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other if not definitive associations exist', () => {
       const uploadId = 'upload1';
       const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
       const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
