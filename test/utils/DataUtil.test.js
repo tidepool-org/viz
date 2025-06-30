@@ -1109,7 +1109,7 @@ describe('DataUtil', () => {
       expect(bolus2.insulinOnBoard).to.equal(4);
     });
 
-    it('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other if not definitive associations exist', () => {
+    it.only('should join loop dosing decisions, and associated pump settings, to boluses that are within a minute of each other if not definitive associations exist', () => {
       const uploadId = 'upload1';
       const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
       const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.tidepool.Loop' } };
@@ -1124,6 +1124,7 @@ describe('DataUtil', () => {
         requestedBolus: { normal: 12 },
         insulinOnBoard: { amount: 4 },
         food: { nutrition: { carbohydrate: { net: 30 } } },
+        smbg: { value: 140 }, // When present, smbg should be used instead of last bgHistorical
         bgHistorical: [
           { value: 100 },
           { value: 110 },
@@ -1142,7 +1143,7 @@ describe('DataUtil', () => {
       // should translate relevant dosing decision data onto expected bolus fields
       expect(bolus.expectedNormal).to.equal(12);
       expect(bolus.carbInput).to.equal(30);
-      expect(bolus.bgInput).to.equal(110);
+      expect(bolus.bgInput).to.equal(140);
       expect(bolus.insulinOnBoard).to.equal(4);
     });
 

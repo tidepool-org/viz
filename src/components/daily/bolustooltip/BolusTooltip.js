@@ -226,19 +226,15 @@ class BolusTooltip extends PureComponent {
     const wizard = this.props.bolus;
     const recommended = bolusUtils.getRecommended(wizard);
     const suggested = _.isFinite(recommended) ? `${recommended}` : null;
-
-    const bg = wizard?.dosingDecision
-      ? _.get(wizard, 'dosingDecision.smbg.value', _.get(wizard, 'dosingDecision.bgForecast.0.value', null))
-      : _.get(wizard, 'bgInput', null);
-
-    const iob = _.get(wizard, 'insulinOnBoard', null);
+    const bg = wizard?.bgInput || null;
+    const iob = wizard?.insulinOnBoard || null;
     const carbs = bolusUtils.getCarbs(wizard);
     const carbsInput = _.isFinite(carbs) && carbs > 0;
-    let carbRatio = _.get(wizard, 'insulinCarbRatio', null);
-    let isf = _.get(wizard, 'insulinSensitivity', null);
+    let carbRatio = wizard?.insulinCarbRatio || null;
+    let isf = wizard?.insulinSensitivity || null;
 
     if (this.isLoop) {
-      const { activeSchedule, carbRatios, insulinSensitivities } = _.get(wizard, 'dosingDecision.pumpSettings', {});
+      const { activeSchedule, carbRatios, insulinSensitivities } = wizard?.dosingDecision?.pumpSettings || {};
       carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || carbRatio;
       isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || isf;
     }
