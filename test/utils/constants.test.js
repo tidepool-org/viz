@@ -182,6 +182,24 @@ describe('constants', () => {
     });
   });
 
+  describe('alarms', () => {
+    it('should export keys for `alarm` and all alarm types', () => {
+      expect(constants.ALARM).to.equal('alarm');
+      expect(constants.ALARM_NO_DELIVERY).to.equal('no_delivery');
+      expect(constants.ALARM_AUTO_OFF).to.equal('auto_off');
+      expect(constants.ALARM_NO_INSULIN).to.equal('no_insulin');
+      expect(constants.ALARM_NO_POWER).to.equal('no_power');
+      expect(constants.ALARM_OCCLUSION).to.equal('occlusion');
+      expect(constants.ALARM_OVER_LIMIT).to.equal('over_limit');
+    });
+  });
+
+  describe('AUTOMATED_BOLUS', () => {
+    it('should be `automatedBolus`', () => {
+      expect(constants.AUTOMATED_BOLUS).to.equal('automatedBolus');
+    });
+  });
+
   describe('AUTOMATED_DELIVERY', () => {
     it('should be `automatedDelivery`', () => {
       expect(constants.AUTOMATED_DELIVERY).to.equal('automatedDelivery');
