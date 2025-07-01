@@ -1124,6 +1124,7 @@ describe('DataUtil', () => {
         requestedBolus: { normal: 12 },
         insulinOnBoard: { amount: 4 },
         food: { nutrition: { carbohydrate: { net: 30 } } },
+        smbg: { value: 140 }, // When present, smbg should be used instead of last bgHistorical
         bgHistorical: [
           { value: 100 },
           { value: 110 },
@@ -1142,7 +1143,7 @@ describe('DataUtil', () => {
       // should translate relevant dosing decision data onto expected bolus fields
       expect(bolus.expectedNormal).to.equal(12);
       expect(bolus.carbInput).to.equal(30);
-      expect(bolus.bgInput).to.equal(110);
+      expect(bolus.bgInput).to.equal(140);
       expect(bolus.insulinOnBoard).to.equal(4);
     });
 

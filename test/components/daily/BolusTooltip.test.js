@@ -393,6 +393,7 @@ const withTandemTarget = {
 
 const withLoopDosingDecision = {
   type: 'bolus',
+  bgInput: 192,
   origin: { name: 'com.loopkit.Loop' },
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
@@ -400,9 +401,6 @@ const withLoopDosingDecision = {
   expectedNormal: 6,
   insulinOnBoard: 2.654,
   dosingDecision: {
-    smbg: {
-      value: 192,
-    },
     insulinOnBoard: {
       amount: 2.2354,
     },
