@@ -459,6 +459,11 @@ const withLoopDosingDecision = {
   },
 };
 
+const withTwiistLoopDosingDecision = {
+  ...withLoopDosingDecision,
+  origin: { name: 'com.dekaresearch.twiist' },
+}
+
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
@@ -651,6 +656,16 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
+  it('should render appropriate fields for a bolus with a twiist Loop dosing decision', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={withTwiistLoopDosingDecision} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(0); // No bg field shown for twiist Loop
     expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
