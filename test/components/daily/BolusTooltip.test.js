@@ -462,7 +462,7 @@ const withLoopDosingDecision = {
 const withTwiistLoopDosingDecision = {
   ...withLoopDosingDecision,
   origin: { name: 'com.dekaresearch.twiist' },
-}
+};
 
 const props = {
   position: { top: 200, left: 200 },
