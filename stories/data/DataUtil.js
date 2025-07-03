@@ -287,6 +287,7 @@ stories.add('Query Generator', (opts, props) => {
       ...computedFields,
       associations: 'associations',
       bgForecast: 'bgForecast',
+      bgHistorical: 'bgHistorical',
       bgTargetSchedule: 'bgTargetSchedule',
       bolus: 'bolus',
       food: 'food',

@@ -35,12 +35,14 @@ const automated = {
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
   subType: 'automated',
+  tags: { automated: true },
 };
 
 const oneButton = {
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
   deliveryContext: 'oneButton',
+  tags: { oneButton: true },
 };
 
 const cancelled = {
@@ -391,6 +393,7 @@ const withTandemTarget = {
 
 const withLoopDosingDecision = {
   type: 'bolus',
+  bgInput: 192,
   origin: { name: 'com.loopkit.Loop' },
   normal: 5,
   normalTime: '2017-11-11T05:45:52.000Z',
@@ -398,9 +401,6 @@ const withLoopDosingDecision = {
   expectedNormal: 6,
   insulinOnBoard: 2.654,
   dosingDecision: {
-    smbg: {
-      value: 192,
-    },
     insulinOnBoard: {
       amount: 2.2354,
     },
@@ -457,6 +457,11 @@ const withLoopDosingDecision = {
       },
     }
   },
+};
+
+const withTwiistLoopDosingDecision = {
+  ...withLoopDosingDecision,
+  origin: { name: 'com.dekaresearch.twiist' },
 };
 
 const props = {
@@ -651,6 +656,16 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
+  it('should render appropriate fields for a bolus with a twiist Loop dosing decision', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={withTwiistLoopDosingDecision} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(0); // No bg field shown for twiist Loop
     expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
