@@ -375,7 +375,7 @@ export class DataUtil {
 
         // Translate relevant dosing decision data onto expected bolus fields
         d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
-        d.bgInput = _.last(d.dosingDecision.bgHistorical || [])?.value;
+        d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
         // Loop interrupted boluses may not have expectedNormal set,
