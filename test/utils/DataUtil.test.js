@@ -1479,6 +1479,42 @@ describe('DataUtil', () => {
       });
     });
 
+    context('wizard', () => {
+      const wizard = new Types.Wizard({ deviceTime: '2018-02-01T01:00:00', carbInput: 10, ...useRawData });
+      const extendedWizard = { ...wizard, bolus: { extended: 1, duration: 1 } };
+      const interruptedWizard = { ...wizard, bolus: { normal: 1, expectedNormal: 2 } };
+      const overrideWizard = { ...wizard, bolus: { normal: 2, recommended: { net: 1 } } };
+      const underrideWizard = { ...wizard, bolus: { normal: 1 }, recommended: { net: 2 } };
+
+      beforeEach(() => {
+        dataUtil.loopDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
+      });
+
+      it('should tag an extended wizard with `extended`', () => {
+        expect(extendedWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(extendedWizard);
+        expect(extendedWizard.tags.extended).to.be.true;
+      });
+
+      it('should tag an interrupted wizard with `interrupted`', () => {
+        expect(interruptedWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(interruptedWizard);
+        expect(interruptedWizard.tags.interrupted).to.be.true;
+      });
+
+      it('should tag an override wizard with `override`', () => {
+        expect(overrideWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(overrideWizard);
+        expect(overrideWizard.tags.override).to.be.true;
+      });
+
+      it('should tag an underride wizard with `underride`', () => {
+        expect(underrideWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(underrideWizard);
+        expect(underrideWizard.tags.underride).to.be.true;
+      });
+    });
+
     context('smbg', () => {
       const smbg = new Types.SMBG({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
       const manualSMBG = { ...smbg, subType: 'manual' };

@@ -630,6 +630,15 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'wizard') {
+      d.tags = {
+        extended: hasExtended(d),
+        interrupted: isInterruptedBolus(d),
+        override: isOverride(d),
+        underride: isUnderride(d),
+      };
+    }
+
     if (d.type === 'smbg') {
       d.tags = {
         manual: d.subType === 'manual',
