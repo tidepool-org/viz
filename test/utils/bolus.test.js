@@ -354,9 +354,11 @@ const normalOnlyDeliveredCombo = {
   expectedDuration: 3600000,
   dosingDecision: {
     recommendedBolus: { amount: 20.9 },
-    requestedBolusNormal: 10.45,
-    requestedBolusExtended: 10.45,
-    requestedBolusDuration: 3600000,
+    requestedBolus: {
+      normal: 10.45,
+      extended: 10.45,
+      duration: 3600000,
+    },
   },
 };
 
