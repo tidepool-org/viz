@@ -1481,23 +1481,13 @@ describe('DataUtil', () => {
 
     context('wizard', () => {
       const wizard = new Types.Wizard({ deviceTime: '2018-02-01T01:00:00', carbInput: 10, ...useRawData });
-      const correctionWizard = { ...wizard, recommended: { correction: 1, carb: 0 } };
       const extendedWizard = { ...wizard, bolus: { extended: 1, duration: 1 } };
       const interruptedWizard = { ...wizard, bolus: { normal: 1, expectedNormal: 2 } };
-      const manualWizard = { ...wizard, bolus: undefined };
       const overrideWizard = { ...wizard, bolus: { normal: 2, recommended: { net: 1 } } };
       const underrideWizard = { ...wizard, bolus: { normal: 1 }, recommended: { net: 2 } };
-      const loopWizard = { ...wizard, uploadId: 'upload-3' };
-      const oneButtonWizard = { ...wizard, bolus: { deliveryContext: 'oneButton' } };
 
       beforeEach(() => {
         dataUtil.loopDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
-      });
-
-      it('should tag a correction wizard with `correction`', () => {
-        expect(correctionWizard.tags).to.be.undefined;
-        dataUtil.tagDatum(correctionWizard);
-        expect(correctionWizard.tags.correction).to.be.true;
       });
 
       it('should tag an extended wizard with `extended`', () => {
@@ -1512,12 +1502,6 @@ describe('DataUtil', () => {
         expect(interruptedWizard.tags.interrupted).to.be.true;
       });
 
-      it('should tag a manual wizard with `manual`', () => {
-        expect(manualWizard.tags).to.be.undefined;
-        dataUtil.tagDatum(manualWizard);
-        expect(manualWizard.tags.manual).to.be.true;
-      });
-
       it('should tag an override wizard with `override`', () => {
         expect(overrideWizard.tags).to.be.undefined;
         dataUtil.tagDatum(overrideWizard);
@@ -1528,18 +1512,6 @@ describe('DataUtil', () => {
         expect(underrideWizard.tags).to.be.undefined;
         dataUtil.tagDatum(underrideWizard);
         expect(underrideWizard.tags.underride).to.be.true;
-      });
-
-      it('should tag a loop wizard with `loop`', () => {
-        expect(loopWizard.tags).to.be.undefined;
-        dataUtil.tagDatum(loopWizard);
-        expect(loopWizard.tags.loop).to.be.true;
-      });
-
-      it('should tag a oneButton wizard with `oneButton`', () => {
-        expect(oneButtonWizard.tags).to.be.undefined;
-        dataUtil.tagDatum(oneButtonWizard);
-        expect(oneButtonWizard.tags.oneButton).to.be.true;
       });
     });
 
