@@ -624,6 +624,20 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'wizard') {
+      d.tags = {
+        automated: isAutomated(d),
+        correction: isCorrection(d),
+        extended: hasExtended(d),
+        interrupted: isInterruptedBolus(d),
+        manual: !d.bolus,
+        override: isOverride(d),
+        underride: isUnderride(d),
+        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        oneButton: isOneButton(d),
+      };
+    }
+
     if (d.type === 'smbg') {
       d.tags = {
         manual: d.subType === 'manual',
