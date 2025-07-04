@@ -228,16 +228,22 @@ export class DataUtil {
 
     if (d.type === 'dosingDecision') {
       // Use `normal` instead of deprecated `amount` for requestedBolus
-      if (!d.requestedBolus?.normal && d.requestedBolus?.amount) {
+      if (d.requestedBolus?.normal == null && d.requestedBolus?.amount != null) {
         d.requestedBolus.normal = d.requestedBolus.amount;
         delete d.requestedBolus.amount;
       }
 
-      // Use `amount` field instead of `normal` and/or `extended | duration` for recommendedBolus
-      if (!d.recommendedBolus?.amount && (d.recommendedBolus?.extended || d.recommendedBolus?.normal)) {
-        d.recommendedBolus.amount = (d.recommendedBolus.extended || 0) + (d.recommendedBolus.normal || 0);
-        delete d.recommendedBolus.extended;
+      // Use `amount` field for recommendedBolus if not present, but normal/extended are
+      if (
+        d.recommendedBolus &&
+        d.recommendedBolus.amount == null &&
+        (d.recommendedBolus.normal != null || d.recommendedBolus.extended != null)
+      ) {
+        // Both normal and extended can be zero, so check for null/undefined only
+        d.recommendedBolus.amount =
+          (d.recommendedBolus.normal ?? 0) + (d.recommendedBolus.extended ?? 0);
         delete d.recommendedBolus.normal;
+        delete d.recommendedBolus.extended;
         delete d.recommendedBolus.duration;
       }
     }
@@ -621,6 +627,15 @@ export class DataUtil {
         wizard: !!isWizardOrDosingDecision,
         loop: !!this.loopDataSetsByIdMap[d.uploadId],
         oneButton: isOneButton(d),
+      };
+    }
+
+    if (d.type === 'wizard') {
+      d.tags = {
+        extended: hasExtended(d),
+        interrupted: isInterruptedBolus(d),
+        override: isOverride(d),
+        underride: isUnderride(d),
       };
     }
 

@@ -269,6 +269,25 @@ const withBGInputAndIOB = {
   insulinOnBoard: 0.5,
 };
 
+const withBGInputAndZeroIOB = {
+  type: 'wizard',
+  bgTarget: {
+    target: 100,
+  },
+  bolus: {
+    normal: 5,
+    normalTime: '2017-11-11T05:45:52.000Z',
+  },
+  recommended: {
+    carb: 5,
+    correction: 0,
+    net: 5,
+  },
+  bgInput: 280,
+  insulinSensitivity: 70,
+  insulinOnBoard: 0,
+};
+
 const withAutoTarget = {
   type: 'wizard',
   annotations: [
@@ -636,6 +655,11 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
+  it('should render iob when iob is 0', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={withBGInputAndZeroIOB} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
   });
 
   it('should render an automated header label for automated bolus', () => {

@@ -392,7 +392,7 @@ describe('SettingsPrintView', () => {
     it('should render an annotation for Tandem C-IQ data', () => {
       Renderer = createRenderer({ ...data.tandemFlatrate, deviceId: 'tandemCIQ123' }, opts, MGDL_UNITS);
       Renderer.renderTandemProfiles();
-      sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match('Tandem Control-IQ uses its own preset'));
+      sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match('Tandem\'s Control-IQ Technology uses its own preset'));
     });
   });
 

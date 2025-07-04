@@ -345,6 +345,23 @@ const withDosingDecisionCorrection = {
   },
 };
 
+const normalOnlyDeliveredCombo = {
+  type: 'bolus',
+  normal: 10.45,
+  extended: 0,
+  expectedExtended: 10.45,
+  duration: 0,
+  expectedDuration: 3600000,
+  dosingDecision: {
+    recommendedBolus: { amount: 20.9 },
+    requestedBolus: {
+      normal: 10.45,
+      extended: 10.45,
+      duration: 3600000,
+    },
+  },
+};
+
 describe('bolus utilities', () => {
   describe('getBolusFromInsulinEvent', () => {
     it('should be a function', () => {
@@ -977,6 +994,10 @@ describe('bolus utilities', () => {
       expect(bolusUtils.isInterruptedBolus(underride)).to.be.false;
       expect(bolusUtils.isInterruptedBolus(comboOverride)).to.be.false;
       expect(bolusUtils.isInterruptedBolus(extendedUnderride)).to.be.false;
+    });
+
+    it('should return true for a combo bolus where only the normal portion was delivered and extended was not delivered (but expected)', () => {
+      expect(bolusUtils.isInterruptedBolus(normalOnlyDeliveredCombo)).to.be.true;
     });
   });
 
