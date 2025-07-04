@@ -1013,6 +1013,72 @@ describe('DataUtil', () => {
       });
     });
 
+    context('dosingDecision normalization', () => {
+      const dosingDecisionBuilder = (requestedBolus, recommendedBolus) => ({
+        type: 'dosingDecision',
+        requestedBolus,
+        recommendedBolus,
+      });
+
+      beforeEach(() => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+      });
+
+      it('should move `requestedBolus.amount` to `requestedBolus.normal` if `normal` is not present', () => {
+        const dosingDecision = dosingDecisionBuilder({ amount: 5 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.requestedBolus.normal).to.equal(5);
+        expect(dosingDecision.requestedBolus.amount).to.be.undefined;
+      });
+
+      it('should not overwrite an existing `requestedBolus.normal` value', () => {
+        const dosingDecision = dosingDecisionBuilder({ amount: 5, normal: 2 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.requestedBolus.normal).to.equal(2);
+        expect(dosingDecision.requestedBolus.amount).to.equal(5);
+      });
+
+      it('should create `recommendedBolus.amount` from `normal` and `extended` if not present', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { normal: 2, extended: 3 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(5);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should create `recommendedBolus.amount` from `normal` if `extended` is not present', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { normal: 2 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(2);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should create `recommendedBolus.amount` from `extended` if `normal` is not present', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { extended: 3 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(3);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should handle `0` values when creating `recommendedBolus.amount`', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { normal: 0, extended: 0 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(0);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should not overwrite an existing `recommendedBolus.amount` value', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { amount: 5, normal: 3, extended: 4 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(5);
+        expect(dosingDecision.recommendedBolus.normal).to.equal(3);
+        expect(dosingDecision.recommendedBolus.extended).to.equal(4);
+      });
+    });
+
     context('pumpSettings', () => {
       it('should add the datum to the `pumpSettingsDatumsByIdMap`', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);
