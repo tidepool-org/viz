@@ -1071,11 +1071,11 @@ describe('DataUtil', () => {
       });
 
       it('should not overwrite an existing `recommendedBolus.amount` value', () => {
-        const dosingDecision = dosingDecisionBuilder(undefined, { amount: 5, normal: 2, extended: 3 });
+        const dosingDecision = dosingDecisionBuilder(undefined, { amount: 5, normal: 3, extended: 4 });
         dataUtil.normalizeDatumIn(dosingDecision);
         expect(dosingDecision.recommendedBolus.amount).to.equal(5);
-        expect(dosingDecision.recommendedBolus.normal).to.equal(2);
-        expect(dosingDecision.recommendedBolus.extended).to.equal(3);
+        expect(dosingDecision.recommendedBolus.normal).to.equal(3);
+        expect(dosingDecision.recommendedBolus.extended).to.equal(4);
       });
     });
 
