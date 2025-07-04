@@ -228,7 +228,7 @@ class BolusTooltip extends PureComponent {
     const recommended = bolusUtils.getRecommended(wizard);
     const suggested = _.isFinite(recommended) ? `${recommended}` : null;
     const bg = wizard?.bgInput || null;
-    const iob = wizard?.insulinOnBoard || null;
+    const iob = wizard?.insulinOnBoard;
     const carbs = bolusUtils.getCarbs(wizard);
     const carbsInput = _.isFinite(carbs) && carbs > 0;
     let carbRatio = wizard?.insulinCarbRatio || null;
