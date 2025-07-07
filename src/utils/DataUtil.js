@@ -666,6 +666,7 @@ export class DataUtil {
     if (d.type === 'deviceEvent') {
       const isReservoirChange = d.subType === 'reservoirChange';
       const isPrime = d.subType === 'prime';
+      const isAlarm = d.subType === 'alarm';
 
       const recognizedAlarmTypes = [
         ALARM_NO_DELIVERY,
@@ -688,7 +689,7 @@ export class DataUtil {
         [SITE_CHANGE_RESERVOIR]: isReservoirChange,
         [SITE_CHANGE_CANNULA]: isPrime && d.primeTarget === 'cannula',
         [SITE_CHANGE_TUBING]: isPrime && d.primeTarget === 'tubing',
-        [ALARM]: _.includes(recognizedAlarmTypes, d.alarmType),
+        [ALARM]: isAlarm && _.includes(recognizedAlarmTypes, d.alarmType),
         [ALARM_NO_DELIVERY]: d.alarmType === ALARM_NO_DELIVERY,
         [ALARM_AUTO_OFF]: d.alarmType === ALARM_AUTO_OFF,
         [ALARM_NO_INSULIN]: d.alarmType === ALARM_NO_INSULIN,
