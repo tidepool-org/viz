@@ -1,23 +1,7 @@
-/*
- * == BSD2 LICENSE ==
- * Copyright (c) 2016, Tidepool Project
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the associated License, which is identical to the BSD 2-Clause
- * License as published by the Open Source Initiative at opensource.org.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the License for more details.
- *
- * You should have received a copy of the License along with this program; ifg
- * not, you can obtain one from Tidepool Project at tidepool.org.
- * == BSD2 LICENSE ==
- */
-
+import React from 'react';
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
 import _ from 'lodash';
+import i18next from 'i18next';
 import * as bolusUtils from '../../../utils/bolus';
 import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
@@ -27,40 +11,36 @@ import { getAnnotationMessages } from '../../../utils/annotations';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './BolusTooltip.css';
-import i18next from 'i18next';
 
 const t = i18next.t.bind(i18next);
 
-class BolusTooltip extends PureComponent {
-  constructor(props) {
-    super(props);
-    const carbs = bolusUtils.getCarbs(props.bolus);
-    const carbsInput = _.isFinite(carbs) && carbs > 0;
-    this.bgUnits = this.props.bgPrefs?.bgUnits || '';
-    this.carbUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'exch' : 'g';
-    this.carbRatioUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'U/exch' : 'g/U';
-    this.isLoop = isLoop(props.bolus);
-    this.isTwiistLoop = isTwiistLoop(props.bolus);
-    this.msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
-    this.unitStyles = (carbsInput && this.carbUnits === 'exch') ? styles.unitsWide : styles.units;
-    this.deviceLabels = getPumpVocabulary(props.bolus?.source);
-  }
+const BolusTooltip = (props) => {
+  const carbs = bolusUtils.getCarbs(props.bolus);
+  const carbsInput = _.isFinite(carbs) && carbs > 0;
+  const bgUnits = props.bgPrefs?.bgUnits || '';
+  const carbUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'exch' : 'g';
+  const carbRatioUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'U/exch' : 'g/U';
+  const isLoopBolus = isLoop(props.bolus);
+  const isTwiistLoopBolus = isTwiistLoop(props.bolus);
+  const msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
+  const unitStyles = (carbsInput && carbUnits === 'exch') ? styles.unitsWide : styles.units;
+  const deviceLabels = getPumpVocabulary(props.bolus?.source);
 
-  formatBgValue(val) {
-    return formatBgValue(val, this.props.bgPrefs);
-  }
+  const formatBgValueForTooltip = (val) => {
+    return formatBgValue(val, props.bgPrefs);
+  };
 
-  isAnimasExtended() {
-    const annotations = bolusUtils.getAnnotations(this.props.bolus);
-    const isAnimasExtended =
+  const isAnimasExtended = () => {
+    const annotations = bolusUtils.getAnnotations(props.bolus);
+    const isAnimasExtendedValue =
       _.findIndex(annotations, { code: 'animas/bolus/extended-equal-split' }) !== -1;
-    return isAnimasExtended;
-  }
+    return isAnimasExtendedValue;
+  };
 
-  animasExtendedAnnotationMessage() {
+  const animasExtendedAnnotationMessage = () => {
     let content = null;
-    if (this.isAnimasExtended()) {
-      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(this.props.bolus));
+    if (isAnimasExtended()) {
+      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(props.bolus));
       content = (
         <div className={styles.annotation}>
           {_.find(messages, { code: 'animas/bolus/extended-equal-split' }).message.value}
@@ -68,19 +48,19 @@ class BolusTooltip extends PureComponent {
       );
     }
     return content;
-  }
+  };
 
-  isMedronicDeconvertedExchange() {
-    const annotations = _.get(this.props.bolus, 'annotations', []);
-    const isMedronicDeconvertedExchange = _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) !== -1;
-    return isMedronicDeconvertedExchange;
-  }
+  const isMedronicDeconvertedExchange = () => {
+    const annotations = _.get(props.bolus, 'annotations', []);
+    const isMedronicDeconvertedExchangeValue = _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) !== -1;
+    return isMedronicDeconvertedExchangeValue;
+  };
 
-  medronicDeconvertedExchangeMessage() {
+  const medronicDeconvertedExchangeMessage = () => {
     let content = null;
 
-    if (this.isMedronicDeconvertedExchange()) {
-      const messages = getAnnotationMessages(this.props.bolus);
+    if (isMedronicDeconvertedExchange()) {
+      const messages = getAnnotationMessages(props.bolus);
 
       content = (
         <div className={styles.annotation}>
@@ -90,15 +70,15 @@ class BolusTooltip extends PureComponent {
     }
 
     return content;
-  }
+  };
 
-  getTarget() {
-    const wizardTarget = _.get(this.props.bolus, 'bgTarget');
+  const getTarget = () => {
+    const wizardTarget = _.get(props.bolus, 'bgTarget');
     const target = _.get(wizardTarget, 'target', null);
     const targetLow = _.get(wizardTarget, 'low', null);
     const targetHigh = _.get(wizardTarget, 'high', null);
     const targetRange = _.get(wizardTarget, 'range', null);
-    const isAutomatedTarget = _.findIndex(_.get(this.props.bolus, 'annotations', []), {
+    const isAutomatedTarget = _.findIndex(_.get(props.bolus, 'annotations', []), {
       code: 'wizard/target-automated',
     }) !== -1;
     if (isAutomatedTarget) {
@@ -106,7 +86,7 @@ class BolusTooltip extends PureComponent {
         <div className={styles.target}>
           <div className={styles.label}>{t('Target')}</div>
           <div className={styles.value}>{t('Auto')}</div>
-          <div className={this.unitStyles} />
+          <div className={unitStyles} />
         </div>
       );
     }
@@ -114,15 +94,15 @@ class BolusTooltip extends PureComponent {
       // medtronic
       let value;
       if (targetLow === targetHigh) {
-        value = `${this.formatBgValue(targetLow)}`;
+        value = `${formatBgValueForTooltip(targetLow)}`;
       } else {
-        value = `${this.formatBgValue(targetLow)}-${this.formatBgValue(targetHigh)}`;
+        value = `${formatBgValueForTooltip(targetLow)}-${formatBgValueForTooltip(targetHigh)}`;
       }
       return (
         <div className={styles.target}>
           <div className={styles.label}>{t('Target')}</div>
           <div className={styles.value}>{value}</div>
-          <div className={this.unitStyles} />
+          <div className={unitStyles} />
         </div>
       );
     }
@@ -131,13 +111,13 @@ class BolusTooltip extends PureComponent {
       return [
         <div className={styles.target} key={'target'}>
           <div className={styles.label}>{t('Target')}</div>
-          <div className={styles.value}>{`${this.formatBgValue(target)}`}</div>
-          <div className={this.unitStyles} />
+          <div className={styles.value}>{`${formatBgValueForTooltip(target)}`}</div>
+          <div className={unitStyles} />
         </div>,
         <div className={styles.target} key={'range'}>
           <div className={styles.label}>{t('Range')}</div>
-          <div className={styles.value}>{`${this.formatBgValue(targetRange)}`}</div>
-          <div className={this.unitStyles} />
+          <div className={styles.value}>{`${formatBgValueForTooltip(targetRange)}`}</div>
+          <div className={unitStyles} />
         </div>,
       ];
     }
@@ -146,26 +126,26 @@ class BolusTooltip extends PureComponent {
       return [
         <div className={styles.target} key={'target'}>
           <div className={styles.label}>{t('Target')}</div>
-          <div className={styles.value}>{`${this.formatBgValue(target)}`}</div>
-          <div className={this.unitStyles} />
+          <div className={styles.value}>{`${formatBgValueForTooltip(target)}`}</div>
+          <div className={unitStyles} />
         </div>,
         <div className={styles.target} key={'high'}>
           <div className={styles.label}>{t('High')}</div>
-          <div className={styles.value}>{`${this.formatBgValue(targetHigh)}`}</div>
-          <div className={this.unitStyles} />
+          <div className={styles.value}>{`${formatBgValueForTooltip(targetHigh)}`}</div>
+          <div className={unitStyles} />
         </div>,
       ];
     }
-    if (this.isLoop) {
+    if (isLoopBolus) {
       // loop
-      const schedules = _.get(this.props.bolus, 'dosingDecision.bgTargetSchedule', []);
-      const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < this.msPer24);
+      const schedules = _.get(props.bolus, 'dosingDecision.bgTargetSchedule', []);
+      const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < msPer24);
       const label = t('Correction Range');
       return (
         <div className={styles.target}>
-          <div className={styles.label}>{label} ({this.bgUnits})</div>
-          <div className={styles.value}>{`${this.formatBgValue(range?.low)}-${this.formatBgValue(range?.high)}`}</div>
-          <div className={this.unitStyles} />
+          <div className={styles.label}>{label} ({bgUnits})</div>
+          <div className={styles.value}>{`${formatBgValueForTooltip(range?.low)}-${formatBgValueForTooltip(range?.high)}`}</div>
+          <div className={unitStyles} />
         </div>
       );
     }
@@ -173,24 +153,24 @@ class BolusTooltip extends PureComponent {
     return (
       <div className={styles.target}>
         <div className={styles.label}>{t('Target')}</div>
-        <div className={styles.value}>{`${this.formatBgValue(target)}`}</div>
-        <div className={this.unitStyles} />
+        <div className={styles.value}>{`${formatBgValueForTooltip(target)}`}</div>
+        <div className={unitStyles} />
       </div>
     );
-  }
+  };
 
-  getExtended() {
-    const bolus = bolusUtils.getBolusFromInsulinEvent(this.props.bolus);
+  const getExtended = () => {
+    const bolus = bolusUtils.getBolusFromInsulinEvent(props.bolus);
     const hasExtended = bolusUtils.hasExtended(bolus);
     const normalPercentage = bolusUtils.getNormalPercentage(bolus);
     const normal = _.get(bolus, 'normal', NaN);
-    const isAnimasExtended = this.isAnimasExtended();
+    const isAnimasExtendedValue = isAnimasExtended();
     const extendedPercentage = _.isNaN(bolusUtils.getExtendedPercentage(bolus))
       ? ''
       : `(${bolusUtils.getExtendedPercentage(bolus)})`;
     let extendedLine = null;
     if (hasExtended) {
-      if (isAnimasExtended) {
+      if (isAnimasExtendedValue) {
         extendedLine = (
           <div className={styles.extended}>
             <div className={styles.label}>Extended Over*</div>
@@ -205,7 +185,7 @@ class BolusTooltip extends PureComponent {
                 {t('Up Front ({{normalPercentage}})', { normalPercentage })}
               </div>
               <div className={styles.value}>{`${formatInsulin(normal)}`}</div>
-              <div className={this.unitStyles}>U</div>
+              <div className={unitStyles}>U</div>
             </div>
           ),
           <div className={styles.extended} key={'extended'}>
@@ -215,37 +195,37 @@ class BolusTooltip extends PureComponent {
             <div className={styles.value}>
               {`${formatInsulin(bolusUtils.getExtended(bolus))}`}
             </div>
-            <div className={this.unitStyles}>U</div>
+            <div className={unitStyles}>U</div>
           </div>,
         ];
       }
     }
     return extendedLine;
-  }
+  };
 
-  renderWizard() {
-    const wizard = this.props.bolus;
+  const renderWizard = () => {
+    const wizard = props.bolus;
     const recommended = bolusUtils.getRecommended(wizard);
     const suggested = _.isFinite(recommended) ? `${recommended}` : null;
     const bg = wizard?.bgInput || null;
     const iob = wizard?.insulinOnBoard;
-    const carbs = bolusUtils.getCarbs(wizard);
-    const carbsInput = _.isFinite(carbs) && carbs > 0;
+    const carbsValue = bolusUtils.getCarbs(wizard);
+    const carbsInputValue = _.isFinite(carbsValue) && carbsValue > 0;
     let carbRatio = wizard?.insulinCarbRatio || null;
     let isf = wizard?.insulinSensitivity || null;
 
-    if (this.isLoop) {
+    if (isLoopBolus) {
       const { activeSchedule, carbRatios, insulinSensitivities } = wizard?.dosingDecision?.pumpSettings || {};
-      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || carbRatio;
-      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || isf;
+      carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || carbRatio;
+      isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || isf;
     }
 
     const delivered = bolusUtils.getDelivered(wizard);
     const isInterrupted = bolusUtils.isInterruptedBolus(wizard);
     const programmed = bolusUtils.getProgrammed(wizard);
     const hasExtended = bolusUtils.hasExtended(wizard);
-    const isAnimasExtended = this.isAnimasExtended();
-    const isMedronicDeconvertedExchange = this.isMedronicDeconvertedExchange();
+    const isAnimasExtendedValue = isAnimasExtended();
+    const isMedronicDeconvertedExchangeValue = isMedronicDeconvertedExchange();
 
     let overrideLine = null;
     if (bolusUtils.isOverride(wizard)) {
@@ -253,7 +233,7 @@ class BolusTooltip extends PureComponent {
         <div className={styles.override}>
           <div className={styles.label}>{t('Override')}</div>
           <div className={styles.value}>{`+${formatInsulin(programmed - recommended)}`}</div>
-          <div className={this.unitStyles}>U</div>
+          <div className={unitStyles}>U</div>
         </div>
       );
     }
@@ -262,7 +242,7 @@ class BolusTooltip extends PureComponent {
         <div className={styles.override}>
           <div className={styles.label}>{t('Underride')}</div>
           <div className={styles.value}>{`-${formatInsulin(recommended - programmed)}`}</div>
-          <div className={this.unitStyles}>U</div>
+          <div className={unitStyles}>U</div>
         </div>
       );
     }
@@ -270,7 +250,7 @@ class BolusTooltip extends PureComponent {
       <div className={styles.delivered}>
         <div className={styles.label}>{t('Delivered')}</div>
         <div className={styles.value}>{`${formatInsulin(delivered)}`}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
     const suggestedLine = (isInterrupted || overrideLine) &&
@@ -278,51 +258,51 @@ class BolusTooltip extends PureComponent {
       <div className={styles.suggested}>
         <div className={styles.label}>{t('Recommended')}</div>
         <div className={styles.value}>{formatInsulin(suggested)}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
-    const bgLine = !!bg && !this.isTwiistLoop && (
+    const bgLine = !!bg && !isTwiistLoopBolus && (
       <div className={styles.bg}>
-        <div className={styles.label}>{t('Glucose')} ({this.bgUnits})</div>
-        <div className={styles.value}>{this.formatBgValue(bg)}</div>
-        <div className={this.unitStyles} />
+        <div className={styles.label}>{t('Glucose')} ({bgUnits})</div>
+        <div className={styles.value}>{formatBgValueForTooltip(bg)}</div>
+        <div className={unitStyles} />
       </div>
     );
-    const carbsLine = !!carbs && (
+    const carbsLine = !!carbsValue && (
       <div className={styles.carbs}>
         <div className={styles.label}>{t('Carbs')}</div>
-        <div className={styles.value}>{carbs}</div>
-        <div className={this.unitStyles}>{this.carbUnits}</div>
+        <div className={styles.value}>{carbsValue}</div>
+        <div className={unitStyles}>{carbUnits}</div>
       </div>
     );
     const iobLine = _.isFinite(iob) && (
       <div className={styles.iob}>
         <div className={styles.label}>{t('IOB')}</div>
         <div className={styles.value}>{`${formatInsulin(iob)}`}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
     const interruptedLine = isInterrupted && (
       <div className={styles.interrupted}>
         <div className={styles.label}>{t('Interrupted')}</div>
         <div className={styles.value}>{`-${formatInsulin(programmed - delivered)}`}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
-    const icRatioLine = !!carbsInput &&
+    const icRatioLine = !!carbsInputValue &&
       !!carbRatio && (
       <div className={styles.carbRatio}>
-        <div className={styles.label}>{t('I:C Ratio')}{isMedronicDeconvertedExchange && '*'} {` (${this.carbRatioUnits})`}</div>
+        <div className={styles.label}>{t('I:C Ratio')}{isMedronicDeconvertedExchangeValue && '*'} {` (${carbRatioUnits})`}</div>
         <div className={styles.value}>{carbRatio}</div>
-        <div className={this.unitStyles} />
+        <div className={unitStyles} />
       </div>
     );
     const isfLine = !!isf &&
       !!bg && (
       <div className={styles.isf}>
-        <div className={styles.label}>{t('ISF')} ({this.bgUnits}/U)</div>
-        <div className={styles.value}>{`${this.formatBgValue(isf)}`}</div>
-        <div className={this.unitStyles} />
+        <div className={styles.label}>{t('ISF')} ({bgUnits}/U)</div>
+        <div className={styles.value}>{`${formatBgValueForTooltip(isf)}`}</div>
+        <div className={unitStyles} />
       </div>
     );
 
@@ -332,42 +312,42 @@ class BolusTooltip extends PureComponent {
         {carbsLine}
         {iobLine}
         {suggestedLine}
-        {this.getExtended()}
+        {getExtended()}
         {(isInterrupted || overrideLine || hasExtended) && <div className={styles.divider} />}
         {overrideLine}
         {interruptedLine}
         {deliveredLine}
-        {(icRatioLine || isfLine || bg || isAnimasExtended || isMedronicDeconvertedExchange) && (
+        {(icRatioLine || isfLine || bg || isAnimasExtendedValue || isMedronicDeconvertedExchangeValue) && (
           <div className={styles.divider} />
         )}
         {icRatioLine}
         {isfLine}
-        {!!bg && this.getTarget()}
-        {this.animasExtendedAnnotationMessage()}
-        {this.medronicDeconvertedExchangeMessage()}
+        {!!bg && getTarget()}
+        {animasExtendedAnnotationMessage()}
+        {medronicDeconvertedExchangeMessage()}
       </div>
     );
-  }
+  };
 
-  renderNormal() {
-    const bolus = this.props.bolus;
+  const renderNormal = () => {
+    const bolus = props.bolus;
     const delivered = bolusUtils.getDelivered(bolus);
     const isInterrupted = bolusUtils.isInterruptedBolus(bolus);
     const programmed = bolusUtils.getProgrammed(bolus);
-    const isAnimasExtended = this.isAnimasExtended();
+    const isAnimasExtendedValue = isAnimasExtended();
 
     const deliveredLine = _.isFinite(delivered) && (
       <div className={styles.delivered}>
         <div className={styles.label}>{t('Delivered')}</div>
         <div className={styles.value}>{`${formatInsulin(delivered)}`}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
     const interruptedLine = isInterrupted && (
       <div className={styles.interrupted}>
         <div className={styles.label}>{t('Interrupted')}</div>
         <div className={styles.value}>{`-${formatInsulin(programmed - delivered)}`}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
     const programmedLine = isInterrupted &&
@@ -375,7 +355,7 @@ class BolusTooltip extends PureComponent {
       <div className={styles.programmed}>
         <div className={styles.label}>{t('Programmed')}</div>
         <div className={styles.value}>{`${formatInsulin(programmed)}`}</div>
-        <div className={this.unitStyles}>U</div>
+        <div className={unitStyles}>U</div>
       </div>
     );
 
@@ -384,47 +364,47 @@ class BolusTooltip extends PureComponent {
         {programmedLine}
         {interruptedLine}
         {deliveredLine}
-        {this.getExtended()}
-        {isAnimasExtended && <div className={styles.divider} />}
-        {this.animasExtendedAnnotationMessage()}
+        {getExtended()}
+        {isAnimasExtendedValue && <div className={styles.divider} />}
+        {animasExtendedAnnotationMessage()}
       </div>
     );
-  }
+  };
 
-  renderBolus() {
+  const renderBolus = () => {
     let content;
-    if (this.props.bolus.type === 'wizard' || this.props.bolus?.dosingDecision) {
-      content = this.renderWizard();
+    if (props.bolus.type === 'wizard' || props.bolus?.dosingDecision) {
+      content = renderWizard();
     } else {
-      content = this.renderNormal();
+      content = renderNormal();
     }
     return content;
-  }
+  };
 
-  render() {
-    const { automated, oneButton } = bolusUtils.getBolusFromInsulinEvent(this.props.bolus)?.tags || {};
-    const tailColor = this.props.tailColor ?? (automated ? colors.bolusAutomated : colors.bolus);
-    const borderColor = this.props.borderColor ?? (automated ? colors.bolusAutomated : colors.bolus);
+  const { automated, oneButton } = bolusUtils.getBolusFromInsulinEvent(props.bolus)?.tags || {};
+  const tailColor = props.tailColor ?? (automated ? colors.bolusAutomated : colors.bolus);
+  const borderColor = props.borderColor ?? (automated ? colors.bolusAutomated : colors.bolus);
 
-    const title = (
-      <div className={styles.title}>
-        <div className={styles.types}>
-          {oneButton && <div>{this.deviceLabels[ONE_BUTTON_BOLUS]}</div>}
-          {automated && <div>{this.deviceLabels[AUTOMATED_BOLUS]}</div>}
-        </div>
-        {formatLocalizedFromUTC(this.props.bolus.normalTime, this.props.timePrefs, 'h:mm a')}
+  const title = (
+    <div className={styles.title}>
+      <div className={styles.types}>
+        {oneButton && <div>{deviceLabels[ONE_BUTTON_BOLUS]}</div>}
+        {automated && <div>{deviceLabels[AUTOMATED_BOLUS]}</div>}
       </div>
-    );
+      {formatLocalizedFromUTC(props.bolus.normalTime, props.timePrefs, 'h:mm a')}
+    </div>
+  );
 
-    return <Tooltip
-      {...this.props}
+  return (
+    <Tooltip
+      {...props}
       borderColor={borderColor}
       tailColor={tailColor}
       title={title}
-      content={this.renderBolus()}
-    />;
-  }
-}
+      content={renderBolus()}
+    />
+  );
+};
 
 BolusTooltip.propTypes = {
   position: PropTypes.shape({

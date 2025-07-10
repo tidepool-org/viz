@@ -1,4 +1,4 @@
-import React, { PureComponent } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
 import i18next from 'i18next';
 
@@ -19,58 +19,16 @@ import {
 
 const t = i18next.t.bind(i18next);
 
-class AlarmTooltip extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.msPer24 = getMsPer24(props.alarm?.normalTime, props.timePrefs?.timezoneName);
-    this.clockTime = formatClocktimeFromMsPer24(this.msPer24);
-    this.deviceLabels = getPumpVocabulary(props.alarm?.source);
-    this.alarmType = this.deviceLabels[props.alarm?.alarmType] || props.alarm?.alarmType || t('Unknown Alarm');
-  }
+const AlarmTooltip = (props) => {
+  const msPer24 = getMsPer24(props.alarm?.normalTime, props.timePrefs?.timezoneName);
+  const clockTime = formatClocktimeFromMsPer24(msPer24);
+  const deviceLabels = getPumpVocabulary(props.alarm?.source);
+  const alarmType = deviceLabels[props.alarm?.alarmType] || props.alarm?.alarmType || t('Unknown Alarm');
 
-  static propTypes = {
-    annotations: PropTypes.arrayOf(PropTypes.string),
-    position: PropTypes.shape({
-      top: PropTypes.number.isRequired,
-      left: PropTypes.number.isRequired,
-    }).isRequired,
-    offset: PropTypes.shape({
-      top: PropTypes.number.isRequired,
-      left: PropTypes.number,
-      horizontal: PropTypes.number,
-    }),
-    title: PropTypes.node,
-    tail: PropTypes.bool.isRequired,
-    side: PropTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
-    tailColor: PropTypes.string.isRequired,
-    tailWidth: PropTypes.number.isRequired,
-    tailHeight: PropTypes.number.isRequired,
-    backgroundColor: PropTypes.string,
-    borderColor: PropTypes.string.isRequired,
-    borderWidth: PropTypes.number.isRequired,
-    showDividers: PropTypes.bool,
-    alarm: PropTypes.shape({
-      alarmType: PropTypes.string,
-      normalTime: PropTypes.number.isRequired,
-    }).isRequired,
-    timePrefs: PropTypes.object.isRequired,
-  };
-
-  static defaultProps = {
-    annotations: [],
-    tail: true,
-    side: 'bottom',
-    tailWidth: 16,
-    tailHeight: 8,
-    tailColor: colors.gray30,
-    borderColor: colors.gray30,
-    borderWidth: 2,
-  };
-
-  renderAlarm() {
+  const renderAlarm = () => {
     let deviceAlarmTitle;
 
-    switch (this.props.alarm?.alarmType) {
+    switch (props.alarm?.alarmType) {
       case ALARM_NO_DELIVERY:
       case ALARM_AUTO_OFF:
       case ALARM_NO_INSULIN:
@@ -86,21 +44,58 @@ class AlarmTooltip extends PureComponent {
 
     return (
       <div>
-        <div className={styles.time}>{this.clockTime}</div>
+        <div className={styles.time}>{clockTime}</div>
         <div className={styles.deviceAlarmTitle}>{deviceAlarmTitle}</div>
-        <div className={styles.alarmType}>{this.alarmType}</div>
+        <div className={styles.alarmType}>{alarmType}</div>
       </div>
     );
-  }
+  };
 
-  render() {
-    return (
-      <Tooltip
-        {...this.props}
-        content={this.renderAlarm()}
-      />
-    );
-  }
-}
+  return (
+    <Tooltip
+      {...props}
+      content={renderAlarm()}
+    />
+  );
+};
+
+AlarmTooltip.propTypes = {
+  annotations: PropTypes.arrayOf(PropTypes.string),
+  position: PropTypes.shape({
+    top: PropTypes.number.isRequired,
+    left: PropTypes.number.isRequired,
+  }).isRequired,
+  offset: PropTypes.shape({
+    top: PropTypes.number.isRequired,
+    left: PropTypes.number,
+    horizontal: PropTypes.number,
+  }),
+  title: PropTypes.node,
+  tail: PropTypes.bool.isRequired,
+  side: PropTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
+  tailColor: PropTypes.string.isRequired,
+  tailWidth: PropTypes.number.isRequired,
+  tailHeight: PropTypes.number.isRequired,
+  backgroundColor: PropTypes.string,
+  borderColor: PropTypes.string.isRequired,
+  borderWidth: PropTypes.number.isRequired,
+  showDividers: PropTypes.bool,
+  alarm: PropTypes.shape({
+    alarmType: PropTypes.string,
+    normalTime: PropTypes.number.isRequired,
+  }).isRequired,
+  timePrefs: PropTypes.object.isRequired,
+};
+
+AlarmTooltip.defaultProps = {
+  annotations: [],
+  tail: true,
+  side: 'bottom',
+  tailWidth: 16,
+  tailHeight: 8,
+  tailColor: colors.gray30,
+  borderColor: colors.gray30,
+  borderWidth: 2,
+};
 
 export default AlarmTooltip;

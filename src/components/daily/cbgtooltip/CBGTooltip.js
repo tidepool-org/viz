@@ -16,7 +16,7 @@
  */
 
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import _ from 'lodash';
 import i18next from 'i18next';
 import {
@@ -33,28 +33,25 @@ import styles from './CBGTooltip.css';
 
 const t = i18next.t.bind(i18next);
 
-class CBGTooltip extends PureComponent {
-  constructor(props) {
-    super(props);
-    this.bgUnits = this.props.bgPrefs?.bgUnits || '';
-  }
+const CBGTooltip = (props) => {
+  const bgUnits = props.bgPrefs?.bgUnits || '';
 
-  renderCBG() {
-    const cbg = this.props.cbg;
+  const renderCBG = () => {
+    const cbg = props.cbg;
     const outOfRangeMessage = getOutOfRangeAnnotationMessage(cbg);
     const rows = [
       <div key={'bg'} className={styles.bg}>
-        <div className={styles.label}>{t('Glucose')} ({this.bgUnits})</div>
+        <div className={styles.label}>{t('Glucose')} ({bgUnits})</div>
         <div className={styles.value}>
-          {`${formatBgValue(cbg.value, this.props.bgPrefs, getOutOfRangeThreshold(cbg))}`}
+          {`${formatBgValue(cbg.value, props.bgPrefs, getOutOfRangeThreshold(cbg))}`}
         </div>
       </div>,
     ];
     if (!_.isEmpty(outOfRangeMessage)) {
       const bgClass = classifyBgValue(
-        reshapeBgClassesToBgBounds(this.props.bgPrefs),
-        this.props.bgPrefs.bgUnits,
-        this.props.cbg.value,
+        reshapeBgClassesToBgBounds(props.bgPrefs),
+        props.bgPrefs.bgUnits,
+        props.cbg.value,
         'fiveWay'
       );
       rows.push(
@@ -72,31 +69,30 @@ class CBGTooltip extends PureComponent {
     }
 
     return <div className={styles.container}>{rows}</div>;
-  }
+  };
 
-  render() {
-    const bgClass = classifyBgValue(
-      reshapeBgClassesToBgBounds(this.props.bgPrefs),
-      this.props.bgPrefs.bgUnits,
-      this.props.cbg.value,
-      'fiveWay'
-    );
-    const title = this.props.title ? this.props.title : (
-      <div className={styles.title}>
-        {formatLocalizedFromUTC(this.props.cbg.normalTime, this.props.timePrefs, 'h:mm a')}
-      </div>
-    );
-    return (
-      <Tooltip
-        {...this.props}
-        title={title}
-        content={this.renderCBG()}
-        borderColor={colors[bgClass]}
-        tailColor={colors[bgClass]}
-      />
-    );
-  }
-}
+  const bgClass = classifyBgValue(
+    reshapeBgClassesToBgBounds(props.bgPrefs),
+    props.bgPrefs.bgUnits,
+    props.cbg.value,
+    'fiveWay'
+  );
+  const title = props.title ? props.title : (
+    <div className={styles.title}>
+      {formatLocalizedFromUTC(props.cbg.normalTime, props.timePrefs, 'h:mm a')}
+    </div>
+  );
+
+  return (
+    <Tooltip
+      {...props}
+      title={title}
+      content={renderCBG()}
+      borderColor={colors[bgClass]}
+      tailColor={colors[bgClass]}
+    />
+  );
+};
 
 CBGTooltip.propTypes = {
   position: PropTypes.shape({
