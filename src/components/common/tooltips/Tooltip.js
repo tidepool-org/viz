@@ -70,7 +70,10 @@ class Tooltip extends PureComponent {
       } = currentProps;
       const offset = {};
       const tooltipRect = this.element.getBoundingClientRect();
-      const titleElementHeightOffset = title && content ? this.titleElem?.getBoundingClientRect()?.height || 0 : 0;
+
+      const titleElementHeightOffset = (title && content)
+        ? this.titleElem?.getBoundingClientRect()?.height || 0
+        : 0;
 
       const horizontalTailOffset = tail ? tailWidth * 2 : 0;
       const verticalTailOffset = tail ? tailHeight * 2 : 0;
@@ -252,7 +255,7 @@ class Tooltip extends PureComponent {
       renderedTitle = (
         <div ref={this.setTitleElemRef} className={styles.title}>
           <span>{title}</span>
-          {tail && !content && this.renderTail(colors.gray05)}
+          {tail && !content && this.renderTail()}
         </div>
       );
     }
@@ -264,7 +267,7 @@ class Tooltip extends PureComponent {
     const { tail } = this.props;
     if (content) {
       renderedContent = (
-        <div ref={this.setContentElemRef} className={styles.content}>
+        <div className={styles.content}>
           <span>{content}</span>
           {tail && this.renderTail()}
         </div>
