@@ -755,7 +755,7 @@ describe('BolusTooltip', () => {
       expect(isAnimasExtended(normal)).to.be.false;
     });
     it('should return false for non-Animas annotated bolus', () => {
-      const bolus=_.extend(normal, { annotations: [{ code: 'some/awesome-annotation' }] });
+      const bolus = _.extend(normal, { annotations: [{ code: 'some/awesome-annotation' }] });
       expect(isAnimasExtended(bolus)).to.be.false;
     });
   });

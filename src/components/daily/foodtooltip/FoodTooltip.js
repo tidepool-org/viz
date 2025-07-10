@@ -30,20 +30,13 @@ import styles from './FoodTooltip.css';
 
 const t = i18next.t.bind(i18next);
 
-export const getAbsorptionTime = (food) => {
-  return _.round(_.get(food, 'nutrition.estimatedAbsorptionDuration', 0) * 1000 / MS_IN_HOUR, 1);
-};
+export const getAbsorptionTime = (food) => _.round(_.get(food, 'nutrition.estimatedAbsorptionDuration', 0) * 1000 / MS_IN_HOUR, 1);
 
-export const getCarbs = (food) => {
-  return _.round(_.get(food, 'nutrition.carbohydrate.net', 0), 1);
-};
+export const getCarbs = (food) => _.round(_.get(food, 'nutrition.carbohydrate.net', 0), 1);
 
-export const getName = (food) => {
-  return _.get(food, 'name');
-};
+export const getName = (food) => _.get(food, 'name');
 
 const FoodTooltip = (props) => {
-
   const renderFood = () => {
     const food = props.food;
 
