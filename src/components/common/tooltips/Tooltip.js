@@ -17,20 +17,48 @@
 
 /* global requestAnimationFrame */
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import React, { PureComponent } from 'react';
 import PropTypes from 'prop-types';
 
 import styles from './Tooltip.css';
 import colors from '../../../colors';
 
-const Tooltip = (props) => {
-  const [offset, setOffset] = useState({ top: 0, left: 0 });
-  const elementRef = useRef(null);
-  const titleElemRef = useRef(null);
-  const tailElemRef = useRef(null);
+class Tooltip extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = { offset: { top: 0, left: 0 } };
 
-  const calculateOffset = useCallback((currentProps) => {
-    if (elementRef.current) {
+    this.setElementRef = ref => {
+      this.element = ref;
+    };
+
+    this.setTitleElemRef = ref => {
+      this.titleElem = ref;
+    };
+
+    this.setTailElemRef = ref => {
+      this.tailElem = ref;
+    };
+  }
+
+  componentDidMount() {
+    this.calculateOffset(this.props);
+
+    // In cases where the tooltip CSS width is not statically set, we may need to re-caculate
+    // the offset after updates to get the proper positioning after browser reflow is complete,
+    // but before repaint happens. The second call within requestAnimationFrame ensures the tooltip
+    // is properly positioned on the first render.
+    requestAnimationFrame(() => {
+      this.calculateOffset(this.props);
+    });
+  }
+
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    this.calculateOffset(nextProps);
+  }
+
+  calculateOffset(currentProps) {
+    if (this.element) {
       const {
         content,
         offset: propOffset,
@@ -40,11 +68,11 @@ const Tooltip = (props) => {
         tailWidth,
         title
       } = currentProps;
-      const newOffset = {};
-      const tooltipRect = elementRef.current.getBoundingClientRect();
+      const offset = {};
+      const tooltipRect = this.element.getBoundingClientRect();
 
       const titleElementHeightOffset = (title && content)
-        ? titleElemRef.current?.getBoundingClientRect()?.height || 0
+        ? this.titleElem?.getBoundingClientRect()?.height || 0
         : 0;
 
       const horizontalTailOffset = tail ? tailWidth * 2 : 0;
@@ -70,24 +98,24 @@ const Tooltip = (props) => {
         // Position tooltip accounting for tail on all sides
         switch (side) {
           case 'top':
-            newOffset.top = -tooltipRect.height + propOffset.top + verticalOffset;
-            newOffset.left = -tooltipRect.width / 2 + propOffset.left;
+            offset.top = -tooltipRect.height + propOffset.top + verticalOffset;
+            offset.left = -tooltipRect.width / 2 + propOffset.left;
             break;
 
           case 'bottom':
-            newOffset.top = propOffset.top + verticalOffset;
-            newOffset.left = -tooltipRect.width / 2 + propOffset.left;
+            offset.top = propOffset.top + verticalOffset;
+            offset.left = -tooltipRect.width / 2 + propOffset.left;
             break;
 
           case 'right':
-            newOffset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
-            newOffset.left = horizontalOffset;
+            offset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
+            offset.left = horizontalOffset;
             break;
 
           case 'left':
           default:
-            newOffset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
-            newOffset.left = -tooltipRect.width + horizontalOffset;
+            offset.top = -(tooltipRect.height + titleElementHeightOffset) / 2 + propOffset.top;
+            offset.left = -tooltipRect.width + horizontalOffset;
         }
       } else {
         let leftOffset = 0;
@@ -114,40 +142,28 @@ const Tooltip = (props) => {
             leftOffset = -tooltipRect.width;
             topOffset = -tooltipRect.height / 2;
         }
-        newOffset.top = topOffset + verticalOffset;
-        newOffset.left = leftOffset + horizontalOffset;
+        offset.top = topOffset + verticalOffset;
+        offset.left = leftOffset + horizontalOffset;
       }
 
-      setOffset(newOffset);
+      this.setState({ offset });
     }
-  }, []);
+  }
 
-  useEffect(() => {
-    calculateOffset(props);
-
-    // In cases where the tooltip CSS width is not statically set, we may need to re-caculate
-    // the offset after updates to get the proper positioning after browser reflow is complete,
-    // but before repaint happens. The second call within requestAnimationFrame ensures the tooltip
-    // is properly positioned on the first render.
-    requestAnimationFrame(() => {
-      calculateOffset(props);
-    });
-  }, [props, calculateOffset]);
-
-  const renderTail = () => {
+  renderTail() {
     const {
       backgroundColor = 'white',
       borderColor,
       borderWidth,
-      offset: propOffset,
+      offset,
       side,
       tailHeight,
       tailWidth,
-    } = props;
+    } = this.props;
 
-    const titleElemRect = titleElemRef.current ? titleElemRef.current.getBoundingClientRect() : null;
+    const titleElemRect = this.titleElem ? this.titleElem.getBoundingClientRect() : null;
 
-    const tailColor = props.tailColor || backgroundColor;
+    const tailColor = this.props.tailColor || backgroundColor;
     const tailStyle = {};
     let innerTailStyle = {};
 
@@ -156,7 +172,7 @@ const Tooltip = (props) => {
     // Set the appropriate border color and width, and position based on tail direction
     switch (side) {
       case 'top':
-        tailStyle.left = `calc(50% - ${propOffset.left || 0}px)`;
+        tailStyle.left = `calc(50% - ${offset.left || 0}px)`;
         tailStyle.borderTopColor = borderColor;
         tailStyle.borderWidth = `${(tailHeight * 2) + borderWidth}px ${tailWidth + borderWidth}px`;
 
@@ -170,7 +186,7 @@ const Tooltip = (props) => {
         break;
 
       case 'bottom':
-        tailStyle.left = `calc(50% - ${propOffset.left || 0}px)`;
+        tailStyle.left = `calc(50% - ${offset.left || 0}px)`;
         tailStyle.bottom = `calc(100% + ${titleElemRect?.height || 0}px)`;
         tailStyle.borderBottomColor = borderColor;
         tailStyle.borderWidth = `${(tailHeight * 2) + borderWidth}px ${tailWidth + borderWidth}px`;
@@ -185,7 +201,7 @@ const Tooltip = (props) => {
         break;
 
       case 'right':
-        tailStyle.top = `calc(50% - ${propOffset.top || 0}px)`;
+        tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
         tailStyle.borderRightColor = borderColor;
         tailStyle.borderWidth = `${tailHeight + borderWidth}px ${(tailWidth * 2) + borderWidth}px`;
 
@@ -200,7 +216,7 @@ const Tooltip = (props) => {
 
       case 'left':
       default:
-        tailStyle.top = `calc(50% - ${propOffset.top || 0}px)`;
+        tailStyle.top = `calc(50% - ${offset.top || 0}px)`;
         tailStyle.borderLeftColor = borderColor;
         tailStyle.borderWidth = `${tailHeight + borderWidth}px ${(tailWidth * 2) + borderWidth}px`;
 
@@ -217,7 +233,7 @@ const Tooltip = (props) => {
     return (
       <div style={{ position: 'static' }}>
         <div
-          ref={tailElemRef}
+          ref={this.setTailElemRef}
           className={`${styles.tail} ${styles[side]}`}
           style={tailStyle}
         />
@@ -230,51 +246,54 @@ const Tooltip = (props) => {
         )}
       </div>
     );
-  };
+  }
 
-  const renderTitle = (title) => {
-    const { tail, content } = props;
+  renderTitle(title) {
+    const { tail, content } = this.props;
     let renderedTitle = null;
     if (title) {
       renderedTitle = (
-        <div ref={titleElemRef} className={styles.title}>
+        <div ref={this.setTitleElemRef} className={styles.title}>
           <span>{title}</span>
-          {tail && !content && renderTail()}
+          {tail && !content && this.renderTail()}
         </div>
       );
     }
     return renderedTitle;
-  };
+  }
 
-  const renderContent = (content) => {
+  renderContent(content) {
     let renderedContent = null;
-    const { tail } = props;
+    const { tail } = this.props;
     if (content) {
       renderedContent = (
         <div className={styles.content}>
           <span>{content}</span>
-          {tail && renderTail()}
+          {tail && this.renderTail()}
         </div>
       );
     }
     return renderedContent;
-  };
+  }
 
-  const { title, content, position, backgroundColor, borderColor, borderWidth } = props;
-  const top = position.top + offset.top;
-  const left = position.left + offset.left;
+  render() {
+    const { title, content, position, backgroundColor, borderColor, borderWidth } = this.props;
+    const { offset } = this.state;
+    const top = position.top + offset.top;
+    const left = position.left + offset.left;
 
-  return (
-    <div
-      className={styles.tooltip}
-      style={{ top, left, backgroundColor, borderColor, borderWidth: `${borderWidth}px` }}
-      ref={elementRef}
-    >
-      {title && renderTitle(title)}
-      {content && renderContent(content)}
-    </div>
-  );
-};
+    return (
+      <div
+        className={styles.tooltip}
+        style={{ top, left, backgroundColor, borderColor, borderWidth: `${borderWidth}px` }}
+        ref={this.setElementRef}
+      >
+        {title && this.renderTitle(title)}
+        {content && this.renderContent(content)}
+      </div>
+    );
+  }
+}
 
 Tooltip.displayName = 'Tooltip';
 
