@@ -30,7 +30,7 @@ const refDiv = (
 const stories = storiesOf('EventsInfoTooltip', module);
 stories.addDecorator(BackgroundDecorator);
 
-stories.add('default tootlip', () => (
+stories.add('default tooltip', () => (
   <div>
     {refDiv}
     <EventsInfoTooltip {...props} />

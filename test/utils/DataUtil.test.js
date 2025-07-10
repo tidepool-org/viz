@@ -1658,7 +1658,7 @@ describe('DataUtil', () => {
         expect(alarmOverLimit.tags.over_limit).to.equal(true);
       });
 
-      it('should not an alarm with an unrecognized alarmType', () => {
+      it('should not tag an alarm with an unrecognized alarmType', () => {
         expect(alarmTypeUnrecognized.tags).to.be.undefined;
         dataUtil.tagDatum(alarmTypeUnrecognized);
         expect(alarmTypeUnrecognized.tags.alarm).to.equal(false);
