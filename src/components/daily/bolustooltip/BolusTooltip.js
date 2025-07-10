@@ -14,194 +14,191 @@ import styles from './BolusTooltip.css';
 
 const t = i18next.t.bind(i18next);
 
+export const isAnimasExtended = (bolus) => {
+  const annotations = bolusUtils.getAnnotations(bolus);
+  const isAnimasExtendedValue =
+    _.findIndex(annotations, { code: 'animas/bolus/extended-equal-split' }) !== -1;
+  return isAnimasExtendedValue;
+};
+
+export const animasExtendedAnnotationMessage = (bolus) => {
+  let content = null;
+  if (isAnimasExtended(bolus)) {
+    const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(bolus));
+    content = (
+      <div className={styles.annotation}>
+        {_.find(messages, { code: 'animas/bolus/extended-equal-split' }).message.value}
+      </div>
+    );
+  }
+  return content;
+};
+
+export const isMedronicDeconvertedExchange = (bolus) => {
+  const annotations = _.get(bolus, 'annotations', []);
+  const isMedronicDeconvertedExchangeValue = _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) !== -1;
+  return isMedronicDeconvertedExchangeValue;
+};
+
+export const medronicDeconvertedExchangeMessage = (bolus) => {
+  let content = null;
+
+  if (isMedronicDeconvertedExchange(bolus)) {
+    const messages = getAnnotationMessages(bolus);
+
+    content = (
+      <div className={styles.annotation}>
+        {_.find(messages, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }).message.value}
+      </div>
+    );
+  }
+
+  return content;
+};
+
+export const getTarget = (bolus, bgPrefs, timePrefs, unitStyles) => {
+  const msPer24 = getMsPer24(bolus?.normalTime, timePrefs?.timezoneName);
+  const bgUnits = bgPrefs?.bgUnits || '';
+  const wizardTarget = _.get(bolus, 'bgTarget');
+  const target = _.get(wizardTarget, 'target', null);
+  const targetLow = _.get(wizardTarget, 'low', null);
+  const targetHigh = _.get(wizardTarget, 'high', null);
+  const targetRange = _.get(wizardTarget, 'range', null);
+  const isAutomatedTarget = _.findIndex(_.get(bolus, 'annotations', []), {
+    code: 'wizard/target-automated',
+  }) !== -1;
+  if (isAutomatedTarget) {
+    return (
+      <div className={styles.target}>
+        <div className={styles.label}>{t('Target')}</div>
+        <div className={styles.value}>{t('Auto')}</div>
+        <div className={unitStyles} />
+      </div>
+    );
+  }
+  if (targetLow) {
+    // medtronic
+    let value;
+    if (targetLow === targetHigh) {
+      value = `${formatBgValue(targetLow, bgPrefs)}`;
+    } else {
+      value = `${formatBgValue(targetLow, bgPrefs)}-${formatBgValue(targetHigh, bgPrefs)}`;
+    }
+    return (
+      <div className={styles.target}>
+        <div className={styles.label}>{t('Target')}</div>
+        <div className={styles.value}>{value}</div>
+        <div className={unitStyles} />
+      </div>
+    );
+  }
+  if (targetRange) {
+    // animas
+    return [
+      <div className={styles.target} key={'target'}>
+        <div className={styles.label}>{t('Target')}</div>
+        <div className={styles.value}>{`${formatBgValue(target, bgPrefs)}`}</div>
+        <div className={unitStyles} />
+      </div>,
+      <div className={styles.target} key={'range'}>
+        <div className={styles.label}>{t('Range')}</div>
+        <div className={styles.value}>{`${formatBgValue(targetRange, bgPrefs)}`}</div>
+        <div className={unitStyles} />
+      </div>,
+    ];
+  }
+  if (targetHigh) {
+    // insulet
+    return [
+      <div className={styles.target} key={'target'}>
+        <div className={styles.label}>{t('Target')}</div>
+        <div className={styles.value}>{`${formatBgValue(target, bgPrefs)}`}</div>
+        <div className={unitStyles} />
+      </div>,
+      <div className={styles.target} key={'high'}>
+        <div className={styles.label}>{t('High')}</div>
+        <div className={styles.value}>{`${formatBgValue(targetHigh, bgPrefs)}`}</div>
+        <div className={unitStyles} />
+      </div>,
+    ];
+  }
+  if (isLoop(bolus)) {
+    // loop
+    const schedules = _.get(bolus, 'dosingDecision.bgTargetSchedule', []);
+    const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < msPer24);
+    const label = t('Correction Range');
+    return (
+      <div className={styles.target}>
+        <div className={styles.label}>{label} ({bgUnits})</div>
+        <div className={styles.value}>{`${formatBgValue(range?.low, bgPrefs)}-${formatBgValue(range?.high, bgPrefs)}`}</div>
+        <div className={unitStyles} />
+      </div>
+    );
+  }
+  // tandem
+  return (
+    <div className={styles.target}>
+      <div className={styles.label}>{t('Target')}</div>
+      <div className={styles.value}>{`${formatBgValue(target, bgPrefs)}`}</div>
+      <div className={unitStyles} />
+    </div>
+  );
+};
+
+export const getExtended = (bolusProp, unitStyles = styles.units) => {
+  const bolus = bolusUtils.getBolusFromInsulinEvent(bolusProp);
+  const hasExtended = bolusUtils.hasExtended(bolus);
+  const normalPercentage = bolusUtils.getNormalPercentage(bolus);
+  const normal = _.get(bolus, 'normal', NaN);
+  const isAnimasExtendedValue = isAnimasExtended(bolusProp);
+  const extendedPercentage = _.isNaN(bolusUtils.getExtendedPercentage(bolus))
+    ? ''
+    : `(${bolusUtils.getExtendedPercentage(bolus)})`;
+  let extendedLine = null;
+  if (hasExtended) {
+    if (isAnimasExtendedValue) {
+      extendedLine = (
+        <div className={styles.extended}>
+          <div className={styles.label}>Extended Over*</div>
+          <div className={styles.value}>{formatDuration(bolusUtils.getDuration(bolus))}</div>
+        </div>
+      );
+    } else {
+      extendedLine = [
+        !!normal && (
+          <div className={styles.normal} key={'normal'}>
+            <div className={styles.label}>
+              {t('Up Front ({{normalPercentage}})', { normalPercentage })}
+            </div>
+            <div className={styles.value}>{`${formatInsulin(normal)}`}</div>
+            <div className={unitStyles}>U</div>
+          </div>
+        ),
+        <div className={styles.extended} key={'extended'}>
+          <div className={styles.label}>
+            {`Over ${formatDuration(bolusUtils.getDuration(bolus))} ${extendedPercentage}`}
+          </div>
+          <div className={styles.value}>
+            {`${formatInsulin(bolusUtils.getExtended(bolus))}`}
+          </div>
+          <div className={unitStyles}>U</div>
+        </div>,
+      ];
+    }
+  }
+  return extendedLine;
+};
+
 const BolusTooltip = (props) => {
   const carbs = bolusUtils.getCarbs(props.bolus);
   const carbsInput = _.isFinite(carbs) && carbs > 0;
   const bgUnits = props.bgPrefs?.bgUnits || '';
   const carbUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'exch' : 'g';
   const carbRatioUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'U/exch' : 'g/U';
-  const isLoopBolus = isLoop(props.bolus);
   const isTwiistLoopBolus = isTwiistLoop(props.bolus);
   const msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
   const unitStyles = (carbsInput && carbUnits === 'exch') ? styles.unitsWide : styles.units;
   const deviceLabels = getPumpVocabulary(props.bolus?.source);
-
-  const formatBgValueForTooltip = (val) => {
-    return formatBgValue(val, props.bgPrefs);
-  };
-
-  const isAnimasExtended = () => {
-    const annotations = bolusUtils.getAnnotations(props.bolus);
-    const isAnimasExtendedValue =
-      _.findIndex(annotations, { code: 'animas/bolus/extended-equal-split' }) !== -1;
-    return isAnimasExtendedValue;
-  };
-
-  const animasExtendedAnnotationMessage = () => {
-    let content = null;
-    if (isAnimasExtended()) {
-      const messages = getAnnotationMessages(bolusUtils.getBolusFromInsulinEvent(props.bolus));
-      content = (
-        <div className={styles.annotation}>
-          {_.find(messages, { code: 'animas/bolus/extended-equal-split' }).message.value}
-        </div>
-      );
-    }
-    return content;
-  };
-
-  const isMedronicDeconvertedExchange = () => {
-    const annotations = _.get(props.bolus, 'annotations', []);
-    const isMedronicDeconvertedExchangeValue = _.findIndex(annotations, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }) !== -1;
-    return isMedronicDeconvertedExchangeValue;
-  };
-
-  const medronicDeconvertedExchangeMessage = () => {
-    let content = null;
-
-    if (isMedronicDeconvertedExchange()) {
-      const messages = getAnnotationMessages(props.bolus);
-
-      content = (
-        <div className={styles.annotation}>
-          {_.find(messages, { code: 'medtronic/wizard/carb-to-exchange-ratio-deconverted' }).message.value}
-        </div>
-      );
-    }
-
-    return content;
-  };
-
-  const getTarget = () => {
-    const wizardTarget = _.get(props.bolus, 'bgTarget');
-    const target = _.get(wizardTarget, 'target', null);
-    const targetLow = _.get(wizardTarget, 'low', null);
-    const targetHigh = _.get(wizardTarget, 'high', null);
-    const targetRange = _.get(wizardTarget, 'range', null);
-    const isAutomatedTarget = _.findIndex(_.get(props.bolus, 'annotations', []), {
-      code: 'wizard/target-automated',
-    }) !== -1;
-    if (isAutomatedTarget) {
-      return (
-        <div className={styles.target}>
-          <div className={styles.label}>{t('Target')}</div>
-          <div className={styles.value}>{t('Auto')}</div>
-          <div className={unitStyles} />
-        </div>
-      );
-    }
-    if (targetLow) {
-      // medtronic
-      let value;
-      if (targetLow === targetHigh) {
-        value = `${formatBgValueForTooltip(targetLow)}`;
-      } else {
-        value = `${formatBgValueForTooltip(targetLow)}-${formatBgValueForTooltip(targetHigh)}`;
-      }
-      return (
-        <div className={styles.target}>
-          <div className={styles.label}>{t('Target')}</div>
-          <div className={styles.value}>{value}</div>
-          <div className={unitStyles} />
-        </div>
-      );
-    }
-    if (targetRange) {
-      // animas
-      return [
-        <div className={styles.target} key={'target'}>
-          <div className={styles.label}>{t('Target')}</div>
-          <div className={styles.value}>{`${formatBgValueForTooltip(target)}`}</div>
-          <div className={unitStyles} />
-        </div>,
-        <div className={styles.target} key={'range'}>
-          <div className={styles.label}>{t('Range')}</div>
-          <div className={styles.value}>{`${formatBgValueForTooltip(targetRange)}`}</div>
-          <div className={unitStyles} />
-        </div>,
-      ];
-    }
-    if (targetHigh) {
-      // insulet
-      return [
-        <div className={styles.target} key={'target'}>
-          <div className={styles.label}>{t('Target')}</div>
-          <div className={styles.value}>{`${formatBgValueForTooltip(target)}`}</div>
-          <div className={unitStyles} />
-        </div>,
-        <div className={styles.target} key={'high'}>
-          <div className={styles.label}>{t('High')}</div>
-          <div className={styles.value}>{`${formatBgValueForTooltip(targetHigh)}`}</div>
-          <div className={unitStyles} />
-        </div>,
-      ];
-    }
-    if (isLoopBolus) {
-      // loop
-      const schedules = _.get(props.bolus, 'dosingDecision.bgTargetSchedule', []);
-      const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < msPer24);
-      const label = t('Correction Range');
-      return (
-        <div className={styles.target}>
-          <div className={styles.label}>{label} ({bgUnits})</div>
-          <div className={styles.value}>{`${formatBgValueForTooltip(range?.low)}-${formatBgValueForTooltip(range?.high)}`}</div>
-          <div className={unitStyles} />
-        </div>
-      );
-    }
-    // tandem
-    return (
-      <div className={styles.target}>
-        <div className={styles.label}>{t('Target')}</div>
-        <div className={styles.value}>{`${formatBgValueForTooltip(target)}`}</div>
-        <div className={unitStyles} />
-      </div>
-    );
-  };
-
-  const getExtended = () => {
-    const bolus = bolusUtils.getBolusFromInsulinEvent(props.bolus);
-    const hasExtended = bolusUtils.hasExtended(bolus);
-    const normalPercentage = bolusUtils.getNormalPercentage(bolus);
-    const normal = _.get(bolus, 'normal', NaN);
-    const isAnimasExtendedValue = isAnimasExtended();
-    const extendedPercentage = _.isNaN(bolusUtils.getExtendedPercentage(bolus))
-      ? ''
-      : `(${bolusUtils.getExtendedPercentage(bolus)})`;
-    let extendedLine = null;
-    if (hasExtended) {
-      if (isAnimasExtendedValue) {
-        extendedLine = (
-          <div className={styles.extended}>
-            <div className={styles.label}>Extended Over*</div>
-            <div className={styles.value}>{formatDuration(bolusUtils.getDuration(bolus))}</div>
-          </div>
-        );
-      } else {
-        extendedLine = [
-          !!normal && (
-            <div className={styles.normal} key={'normal'}>
-              <div className={styles.label}>
-                {t('Up Front ({{normalPercentage}})', { normalPercentage })}
-              </div>
-              <div className={styles.value}>{`${formatInsulin(normal)}`}</div>
-              <div className={unitStyles}>U</div>
-            </div>
-          ),
-          <div className={styles.extended} key={'extended'}>
-            <div className={styles.label}>
-              {`Over ${formatDuration(bolusUtils.getDuration(bolus))} ${extendedPercentage}`}
-            </div>
-            <div className={styles.value}>
-              {`${formatInsulin(bolusUtils.getExtended(bolus))}`}
-            </div>
-            <div className={unitStyles}>U</div>
-          </div>,
-        ];
-      }
-    }
-    return extendedLine;
-  };
 
   const renderWizard = () => {
     const wizard = props.bolus;
@@ -214,7 +211,7 @@ const BolusTooltip = (props) => {
     let carbRatio = wizard?.insulinCarbRatio || null;
     let isf = wizard?.insulinSensitivity || null;
 
-    if (isLoopBolus) {
+    if (isLoop(wizard)) {
       const { activeSchedule, carbRatios, insulinSensitivities } = wizard?.dosingDecision?.pumpSettings || {};
       carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || carbRatio;
       isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || isf;
@@ -224,8 +221,8 @@ const BolusTooltip = (props) => {
     const isInterrupted = bolusUtils.isInterruptedBolus(wizard);
     const programmed = bolusUtils.getProgrammed(wizard);
     const hasExtended = bolusUtils.hasExtended(wizard);
-    const isAnimasExtendedValue = isAnimasExtended();
-    const isMedronicDeconvertedExchangeValue = isMedronicDeconvertedExchange();
+    const isAnimasExtendedValue = isAnimasExtended(wizard);
+    const isMedronicDeconvertedExchangeValue = isMedronicDeconvertedExchange(wizard);
 
     let overrideLine = null;
     if (bolusUtils.isOverride(wizard)) {
@@ -264,7 +261,7 @@ const BolusTooltip = (props) => {
     const bgLine = !!bg && !isTwiistLoopBolus && (
       <div className={styles.bg}>
         <div className={styles.label}>{t('Glucose')} ({bgUnits})</div>
-        <div className={styles.value}>{formatBgValueForTooltip(bg)}</div>
+        <div className={styles.value}>{formatBgValue(bg, props.bgPrefs)}</div>
         <div className={unitStyles} />
       </div>
     );
@@ -301,7 +298,7 @@ const BolusTooltip = (props) => {
       !!bg && (
       <div className={styles.isf}>
         <div className={styles.label}>{t('ISF')} ({bgUnits}/U)</div>
-        <div className={styles.value}>{`${formatBgValueForTooltip(isf)}`}</div>
+        <div className={styles.value}>{`${formatBgValue(isf, props.bgPrefs)}`}</div>
         <div className={unitStyles} />
       </div>
     );
@@ -312,7 +309,7 @@ const BolusTooltip = (props) => {
         {carbsLine}
         {iobLine}
         {suggestedLine}
-        {getExtended()}
+        {getExtended(wizard, unitStyles)}
         {(isInterrupted || overrideLine || hasExtended) && <div className={styles.divider} />}
         {overrideLine}
         {interruptedLine}
@@ -322,9 +319,9 @@ const BolusTooltip = (props) => {
         )}
         {icRatioLine}
         {isfLine}
-        {!!bg && getTarget()}
-        {animasExtendedAnnotationMessage()}
-        {medronicDeconvertedExchangeMessage()}
+        {!!bg && getTarget(wizard, props.bgPrefs, unitStyles)}
+        {animasExtendedAnnotationMessage(wizard)}
+        {medronicDeconvertedExchangeMessage(wizard)}
       </div>
     );
   };
@@ -334,7 +331,7 @@ const BolusTooltip = (props) => {
     const delivered = bolusUtils.getDelivered(bolus);
     const isInterrupted = bolusUtils.isInterruptedBolus(bolus);
     const programmed = bolusUtils.getProgrammed(bolus);
-    const isAnimasExtendedValue = isAnimasExtended();
+    const isAnimasExtendedValue = isAnimasExtended(bolus);
 
     const deliveredLine = _.isFinite(delivered) && (
       <div className={styles.delivered}>
@@ -364,9 +361,9 @@ const BolusTooltip = (props) => {
         {programmedLine}
         {interruptedLine}
         {deliveredLine}
-        {getExtended()}
+        {getExtended(bolus, unitStyles)}
         {isAnimasExtendedValue && <div className={styles.divider} />}
-        {animasExtendedAnnotationMessage()}
+        {animasExtendedAnnotationMessage(bolus)}
       </div>
     );
   };
