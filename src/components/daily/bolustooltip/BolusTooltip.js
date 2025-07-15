@@ -22,7 +22,7 @@ import * as bolusUtils from '../../../utils/bolus';
 import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
-import { getPumpVocabulary, isLoop } from '../../../utils/device';
+import { getPumpVocabulary, isLoop, isTwiistLoop } from '../../../utils/device';
 import { getAnnotationMessages } from '../../../utils/annotations';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -40,6 +40,7 @@ class BolusTooltip extends PureComponent {
     this.carbUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'exch' : 'g';
     this.carbRatioUnits = _.get(props, 'bolus.carbUnits') === 'exchanges' ? 'U/exch' : 'g/U';
     this.isLoop = isLoop(props.bolus);
+    this.isTwiistLoop = isTwiistLoop(props.bolus);
     this.msPer24 = getMsPer24(props.bolus?.normalTime, props.timePrefs?.timezoneName);
     this.unitStyles = (carbsInput && this.carbUnits === 'exch') ? styles.unitsWide : styles.units;
     this.deviceLabels = getPumpVocabulary(props.bolus?.source);
@@ -226,19 +227,15 @@ class BolusTooltip extends PureComponent {
     const wizard = this.props.bolus;
     const recommended = bolusUtils.getRecommended(wizard);
     const suggested = _.isFinite(recommended) ? `${recommended}` : null;
-
-    const bg = wizard?.dosingDecision
-      ? _.get(wizard, 'dosingDecision.smbg.value', _.get(wizard, 'dosingDecision.bgForecast.0.value', null))
-      : _.get(wizard, 'bgInput', null);
-
-    const iob = _.get(wizard, 'insulinOnBoard', null);
+    const bg = wizard?.bgInput || null;
+    const iob = wizard?.insulinOnBoard;
     const carbs = bolusUtils.getCarbs(wizard);
     const carbsInput = _.isFinite(carbs) && carbs > 0;
-    let carbRatio = _.get(wizard, 'insulinCarbRatio', null);
-    let isf = _.get(wizard, 'insulinSensitivity', null);
+    let carbRatio = wizard?.insulinCarbRatio || null;
+    let isf = wizard?.insulinSensitivity || null;
 
     if (this.isLoop) {
-      const { activeSchedule, carbRatios, insulinSensitivities } = _.get(wizard, 'dosingDecision.pumpSettings', {});
+      const { activeSchedule, carbRatios, insulinSensitivities } = wizard?.dosingDecision?.pumpSettings || {};
       carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || carbRatio;
       isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < this.msPer24)?.amount || isf;
     }
@@ -284,7 +281,7 @@ class BolusTooltip extends PureComponent {
         <div className={this.unitStyles}>U</div>
       </div>
     );
-    const bgLine = !!bg && (
+    const bgLine = !!bg && !this.isTwiistLoop && (
       <div className={styles.bg}>
         <div className={styles.label}>{t('Glucose')} ({this.bgUnits})</div>
         <div className={styles.value}>{this.formatBgValue(bg)}</div>

@@ -328,7 +328,7 @@ export function isInterruptedBolus(insulinEvent) {
   );
 
   if (_.inRange(bolus.normal, Infinity)) {
-    if (!bolus.extended) {
+    if (!_.isFinite(bolus.extended)) {
       return cancelledDuringNormal;
     }
     return cancelledDuringNormal || cancelledDuringExtended;
