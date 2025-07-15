@@ -434,8 +434,8 @@ describe('SettingsPrintView', () => {
       Renderer.renderInsulinSettings(data.tandemMultirate, 'Normal');
 
       sinon.assert.calledWith(Renderer.renderTable, [
-        { id: 'setting', align: 'left', width: 250 },
-        { id: 'value', align: 'right', width: 50 },
+        { id: 'setting', align: 'left', width: 245 },
+        { id: 'value', align: 'right', width: 55 },
       ], [
         { setting: 'Max Bolus', value: '12 U' },
         { setting: 'Insulin Duration', value: '5 hrs' },
@@ -451,8 +451,8 @@ describe('SettingsPrintView', () => {
       Renderer.renderInsulinSettings(data.omnipodMultirate);
 
       sinon.assert.calledWith(Renderer.renderTable, [
-        { id: 'setting', align: 'left', width: 250 },
-        { id: 'value', align: 'right', width: 50 },
+        { id: 'setting', align: 'left', width: 245 },
+        { id: 'value', align: 'right', width: 55 },
       ], [
         { setting: 'Max Basal Rate', value: '2 U/hr' },
         { setting: 'Maximum Bolus', value: '9.5 U' },
