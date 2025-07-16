@@ -516,10 +516,14 @@ class PrintView {
                   || _.get(data, '_renderedContent.height', 0);
 
       const fontKey = isHeader ? 'headerFont' : 'font';
+      const fontSize = _.get(column, 'fontSize', this.defaultFontSize);
+
+      const subTextFontSize = _.get(column, 'subTextFontSize', this.defaultFontSize);
+      const subTextYOffset = Math.ceil((fontSize - subTextFontSize) / 2);
 
       this.doc
         .font(_.get(column, fontKey, boldRow ? this.boldFont : this.font))
-        .fontSize(_.get(column, 'fontSize', this.defaultFontSize));
+        .fontSize(fontSize);
 
       if (column.valign === 'center') {
         const textHeight = this.doc.heightOfString(text, { width });
@@ -536,11 +540,10 @@ class PrintView {
         align,
         width,
       });
-
-      this.doc.font(this.font);
+      this.doc.font(this.font).fontSize(subTextFontSize);
 
       if (subText) {
-        this.doc.text(`${subText}`, xPos, yPos, {
+        this.doc.text(`${subText}`, xPos, yPos + subTextYOffset, {
           align,
           width,
         });
@@ -549,7 +552,7 @@ class PrintView {
       if (note) {
         this.doc
           .fontSize(_.get(column, 'noteFontSize', this.defaultFontSize))
-          .text(note, {
+          .text(note, xPos, this.doc.y + subTextYOffset, {
             align,
             width,
           });
