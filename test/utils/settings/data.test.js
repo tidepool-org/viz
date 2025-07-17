@@ -383,7 +383,7 @@ describe('[settings] data utils', () => {
           { key: 'value' },
         ],
         rows: [
-          { setting: 'Max Basal Rate', value: '2 U/hr' },
+          { setting: 'Max Basal Rate', value: '2.000 U/hr' },
           { setting: 'Maximum Bolus', value: '9.5 U' },
           { setting: 'Duration of Insulin Action', value: '4:05 hrs' },
         ],
@@ -397,7 +397,7 @@ describe('[settings] data utils', () => {
           { key: 'value' },
         ],
         rows: [
-          { setting: 'Max Basal', value: '2 U/hr' },
+          { setting: 'Max Basal', value: '2.000 U/hr' },
           { setting: 'Max Bolus', value: '9.5 U' },
           { setting: 'Active Insulin Time', value: '4 hrs' },
         ],
@@ -416,7 +416,7 @@ describe('[settings] data utils', () => {
             setting: 'Glucose Safety Limit',
             value: '4.2 mmol/L',
           },
-          { setting: 'Maximum Basal Rate', value: '3.55 U/hr' },
+          { setting: 'Maximum Basal Rate', value: '3.550 U/hr' },
           { setting: 'Maximum Bolus', value: '10 U' },
           {
             annotations: [
@@ -442,7 +442,7 @@ describe('[settings] data utils', () => {
             setting: 'Glucose Safety Limit',
             value: '4.2 mmol/L',
           },
-          { setting: 'Maximum Basal Rate', value: '3.55 U/hr' },
+          { setting: 'Maximum Basal Rate', value: '3.550 U/hr' },
           { setting: 'Maximum Bolus', value: '10 U' },
           {
             annotations: [

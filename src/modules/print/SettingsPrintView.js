@@ -237,7 +237,7 @@ class SettingsPrintView extends PrintView {
     this.setLayoutColumns({
       width: this.chartArea.width,
       count: 3,
-      gutter: 15,
+      gutter: 14,
     });
 
     this.renderInsulinSettings(this.latestPumpUpload.settings);
@@ -246,7 +246,7 @@ class SettingsPrintView extends PrintView {
 
   renderInsulinSettings(settings, scheduleName) {
     const columnWidth = this.getActiveColumnWidth();
-    const valueWidth = 55;
+    const valueWidth = columnWidth / 3;
     const { rows: tableRows, columns } = insulinSettings(settings, this.manufacturer, scheduleName);
 
     const tableColumns = _.map(columns, (column, index) => ({
@@ -273,7 +273,7 @@ class SettingsPrintView extends PrintView {
     this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
 
     this.renderTable(tableColumns, tableRows, {
-      bottomMargin: 15,
+      bottomMargin: 14,
       columnDefaults: {
         zebra: true,
         headerFill: true,
@@ -291,7 +291,7 @@ class SettingsPrintView extends PrintView {
     this.setLayoutColumns({
       width: this.chartArea.width,
       count: 3,
-      gutter: 15,
+      gutter: 14,
     });
 
     const {
@@ -304,7 +304,7 @@ class SettingsPrintView extends PrintView {
 
     const tableColumns = _.map(startTimeAndValue('rate'), (column, index) => {
       const isValue = index === 1;
-      const valueWidth = 55;
+      const valueWidth = columnWidth / 3;
 
       return {
         id: column.key,
@@ -383,7 +383,7 @@ class SettingsPrintView extends PrintView {
             zebra: true,
             headerFill: true,
           },
-          bottomMargin: 15,
+          bottomMargin: 14,
         });
 
         this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
@@ -403,7 +403,7 @@ class SettingsPrintView extends PrintView {
     this.setLayoutColumns({
       width: this.chartArea.width,
       count: 3,
-      gutter: 15,
+      gutter: 14,
     });
 
     this.renderSensitivity();
@@ -422,7 +422,7 @@ class SettingsPrintView extends PrintView {
 
     const tableColumns = _.map(settings.columns, (column, index) => {
       const isValue = index > 0;
-      const valueWidth = 55;
+      const valueWidth = columnWidth / 3;
 
       return {
         id: column.key,
