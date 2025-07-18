@@ -416,7 +416,7 @@ describe('[settings] data utils', () => {
             setting: 'Glucose Safety Limit',
             value: '4.2 mmol/L',
           },
-          { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
+          { setting: 'Maximum Basal Rate', value: '3.55 U/hr' },
           { setting: 'Maximum Bolus', value: '10 U' },
           {
             annotations: [
@@ -442,7 +442,7 @@ describe('[settings] data utils', () => {
             setting: 'Glucose Safety Limit',
             value: '4.2 mmol/L',
           },
-          { setting: 'Maximum Basal Rate', value: '3.5 U/hr' },
+          { setting: 'Maximum Basal Rate', value: '3.55 U/hr' },
           { setting: 'Maximum Bolus', value: '10 U' },
           {
             annotations: [

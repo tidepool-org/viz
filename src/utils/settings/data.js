@@ -430,7 +430,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   }
 
   const rows = [
-    { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${maxBasal} U/hr` : '-' },
+    { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${+(maxBasal.toFixed(DISPLAY_PRECISION_PLACES))} U/hr` : '-' },
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
     { setting: deviceLabels[INSULIN_DURATION] + (isControlIQ(settings) ? '*' : ''), value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
