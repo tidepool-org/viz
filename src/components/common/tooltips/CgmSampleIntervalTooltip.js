@@ -16,7 +16,7 @@ const CgmSampleIntervalTooltip = props => {
       subtitle: t('Your CGM provides two types of measurements:'),
       intervals: [
         {
-          title: t('1. Real-time Data (1min Data):'),
+          title: t('1. Real-time Data (1 min Data):'),
           annotations: [
             t('Updated every minute while wearing your device'),
             t('Used by your pump for automated insulin dosing'),
@@ -26,7 +26,7 @@ const CgmSampleIntervalTooltip = props => {
           ],
         },
         {
-          title: t('2. Display Data (5min Data):'),
+          title: t('2. Display Data (5 min Data):'),
           annotations: [
             t('Smoothed data created for easier viewing'),
             t('Not used by your pump for insulin decisions'),

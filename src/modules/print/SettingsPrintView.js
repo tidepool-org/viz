@@ -73,12 +73,15 @@ class SettingsPrintView extends PrintView {
 
   renderDeviceMeta() {
     const device = deviceName(this.manufacturer) || t('Unknown');
+    const { serial } = this.deviceMeta;
+    const serialText = serial === 'Unknown' ? '' : ` › ${t('Serial Number: {{serial}}', { serial })}`;
+
     this.doc
       .font(this.boldFont)
       .fontSize(this.defaultFontSize)
       .text(device, { continued: true })
       .font(this.font)
-      .text(' › ' + t('Serial Number: {{serial}}', { serial: this.deviceMeta.serial })) // eslint-disable-line prefer-template
+      .text(serialText)
       .moveDown();
 
     this.resetText();
@@ -243,7 +246,7 @@ class SettingsPrintView extends PrintView {
 
   renderInsulinSettings(settings, scheduleName) {
     const columnWidth = this.getActiveColumnWidth();
-    const valueWidth = 50;
+    const valueWidth = 55;
     const { rows: tableRows, columns } = insulinSettings(settings, this.manufacturer, scheduleName);
 
     const tableColumns = _.map(columns, (column, index) => ({
@@ -301,7 +304,7 @@ class SettingsPrintView extends PrintView {
 
     const tableColumns = _.map(startTimeAndValue('rate'), (column, index) => {
       const isValue = index === 1;
-      const valueWidth = 50;
+      const valueWidth = 55;
 
       return {
         id: column.key,
@@ -419,7 +422,7 @@ class SettingsPrintView extends PrintView {
 
     const tableColumns = _.map(settings.columns, (column, index) => {
       const isValue = index > 0;
-      const valueWidth = 50;
+      const valueWidth = 55;
 
       return {
         id: column.key,
