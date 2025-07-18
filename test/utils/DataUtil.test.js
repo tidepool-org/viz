@@ -1550,10 +1550,20 @@ describe('DataUtil', () => {
 
     context('deviceEvent', () => {
       const calibration = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'calibration', ...useRawData });
+
       const siteChange = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
       const cannulaPrime = { ...siteChange, subType: 'prime', primeTarget: 'cannula' };
       const reservoirChange = { ...siteChange, subType: 'reservoirChange' };
       const tubingPrime = { ...siteChange, deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing' };
+
+      const alarm = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'alarm', ...useRawData });
+      const alarmNoDelivery = { ...alarm, alarmType: 'no_delivery' };
+      const alarmAutoOff = { ...alarm, alarmType: 'auto_off' };
+      const alarmNoInsulin = { ...alarm, alarmType: 'no_insulin' };
+      const alarmNo_power = { ...alarm, alarmType: 'no_power' };
+      const alarmOcclusion = { ...alarm, alarmType: 'occlusion' };
+      const alarmOverLimit = { ...alarm, alarmType: 'over_limit' };
+      const alarmTypeUnrecognized = { ...alarm, alarmType: 'foo' };
 
       const automatedSuspendBasal = new Types.DeviceEvent({
         deviceTime: '2018-02-01T01:00:00',
@@ -1604,6 +1614,54 @@ describe('DataUtil', () => {
         expect(automatedSuspendBasal.tags).to.be.undefined;
         dataUtil.tagDatum(automatedSuspendBasal);
         expect(automatedSuspendBasal.tags.automatedSuspend).to.be.true;
+      });
+
+      it('should tag an alarm with alarmType of `no_delivery`', () => {
+        expect(alarmNoDelivery.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmNoDelivery);
+        expect(alarmNoDelivery.tags.alarm).to.equal(true);
+        expect(alarmNoDelivery.tags.no_delivery).to.equal(true);
+      });
+
+      it('should tag an alarm with alarmType of `auto_off`', () => {
+        expect(alarmAutoOff.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmAutoOff);
+        expect(alarmAutoOff.tags.alarm).to.equal(true);
+        expect(alarmAutoOff.tags.auto_off).to.equal(true);
+      });
+
+      it('should tag an alarm with alarmType of `no_insulin`', () => {
+        expect(alarmNoInsulin.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmNoInsulin);
+        expect(alarmNoInsulin.tags.alarm).to.equal(true);
+        expect(alarmNoInsulin.tags.no_insulin).to.equal(true);
+      });
+
+      it('should tag an alarm with alarmType of `no_power`', () => {
+        expect(alarmNo_power.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmNo_power);
+        expect(alarmNo_power.tags.alarm).to.equal(true);
+        expect(alarmNo_power.tags.no_power).to.equal(true);
+      });
+
+      it('should tag an alarm with alarmType of `occlusion`', () => {
+        expect(alarmOcclusion.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmOcclusion);
+        expect(alarmOcclusion.tags.alarm).to.equal(true);
+        expect(alarmOcclusion.tags.occlusion).to.equal(true);
+      });
+
+      it('should tag an alarm with alarmType of `over_limit`', () => {
+        expect(alarmOverLimit.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmOverLimit);
+        expect(alarmOverLimit.tags.alarm).to.equal(true);
+        expect(alarmOverLimit.tags.over_limit).to.equal(true);
+      });
+
+      it('should not tag an alarm with an unrecognized alarmType', () => {
+        expect(alarmTypeUnrecognized.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmTypeUnrecognized);
+        expect(alarmTypeUnrecognized.tags.alarm).to.equal(false);
       });
     });
   });
@@ -5227,7 +5285,21 @@ describe('DataUtil', () => {
       d.normalTime = d.deviceTime;
       d.normalEnd = d.normalTime + d.duration;
       d.displayOffset = 0;
-      d.tags = { automatedSuspend: false, calibration: false, reservoirChange: false, cannulaPrime: false, tubingPrime: false };
+      d.tags = {
+        automatedSuspend: false,
+        calibration: false,
+        siteChange: false,
+        reservoirChange: false,
+        cannulaPrime: false,
+        tubingPrime: false,
+        alarm: false,
+        no_delivery: false,
+        auto_off: false,
+        no_insulin: false,
+        no_power: false,
+        occlusion: false,
+        over_limit: false,
+      };
       return d;
     };
     /* eslint-enable no-param-reassign */
