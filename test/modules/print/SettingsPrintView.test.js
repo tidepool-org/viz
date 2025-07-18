@@ -454,7 +454,7 @@ describe('SettingsPrintView', () => {
         { id: 'setting', align: 'left', width: 200 }, // 2/3 of column width
         { id: 'value', align: 'right', width: 100 }, // 1/3 of column width
       ], [
-        { setting: 'Max Basal Rate', value: '2.000 U/hr' },
+        { setting: 'Max Basal Rate', value: '2.00 U/hr' },
         { setting: 'Maximum Bolus', value: '9.5 U' },
         { setting: 'Duration of Insulin Action', value: '4:05 hrs' },
       ]);
