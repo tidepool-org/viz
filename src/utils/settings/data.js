@@ -31,7 +31,8 @@ import {
 } from '../../utils/constants';
 
 const t = i18next.t.bind(i18next);
-const DISPLAY_PRECISION_PLACES = 3;
+const BASAL_RATE_PRECISION_PLACES = 3;
+const MAX_BASAL_RATE_PRECISION_PLACES = 2;
 
 /**
  * noData
@@ -78,7 +79,7 @@ function getBasalRate(scheduleData, startTime) {
   if (noData(rate)) {
     return '';
   }
-  return format.formatDecimalNumber(rate, DISPLAY_PRECISION_PLACES);
+  return format.formatDecimalNumber(rate, BASAL_RATE_PRECISION_PLACES);
 }
 
 /**
@@ -149,10 +150,10 @@ export function getTotalBasalRates(scheduleData) {
       finish = scheduleData[next].start;
     }
     const hrs = (finish - start) / HOUR_IN_MILLISECONDS;
-    const amount = parseFloat(scheduleData[i].rate.toFixed(DISPLAY_PRECISION_PLACES)) * hrs;
-    total += parseFloat(amount.toFixed(DISPLAY_PRECISION_PLACES));
+    const amount = parseFloat(scheduleData[i].rate.toFixed(BASAL_RATE_PRECISION_PLACES)) * hrs;
+    total += parseFloat(amount.toFixed(BASAL_RATE_PRECISION_PLACES));
   }
-  return format.formatDecimalNumber(total, DISPLAY_PRECISION_PLACES);
+  return format.formatDecimalNumber(total, BASAL_RATE_PRECISION_PLACES);
 }
 
 /**
@@ -430,7 +431,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   }
 
   const rows = [
-    { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${+(maxBasal.toFixed(DISPLAY_PRECISION_PLACES))} U/hr` : '-' },
+    { setting: deviceLabels[MAX_BASAL], value: maxBasal ? `${format.formatDecimalNumber(maxBasal, MAX_BASAL_RATE_PRECISION_PLACES)} U/hr` : '-' },
     { setting: deviceLabels[MAX_BOLUS], value: maxBolus ? `${maxBolus} U` : '-' },
     { setting: deviceLabels[INSULIN_DURATION] + (isControlIQ(settings) ? '*' : ''), value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
