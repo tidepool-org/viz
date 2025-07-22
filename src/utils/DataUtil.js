@@ -1250,7 +1250,7 @@ export class DataUtil {
 
       this.uploadMap[upload.uploadId] = {
         source,
-        deviceSerialNumber: upload.deviceSerialNumber || upload.serialNumber || 'Unknown',
+        deviceSerialNumber: upload.deviceSerialNumber || upload.serialNumber || pumpSettings?.serialNumber || 'Unknown',
       };
     });
     this.endTimer('setUploadMap');

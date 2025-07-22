@@ -3027,6 +3027,19 @@ describe('DataUtil', () => {
       });
     });
 
+    it('should set `deviceSerialNumber` from the `pumpSettings.serialNumber` associated with an upload when not available on the upload', () => {
+      const uploadId = 'id1';
+      dataUtil.updateDatum({ ...uploadData[2], deviceSerialNumber: undefined, uploadId });
+      dataUtil.updateDatum({ ...pumpSettingsData[2], serialNumber: '53R147', uploadId });
+
+      dataUtil.setUploadMap();
+
+      expect(dataUtil.uploadMap[uploadId]).to.eql({
+        source: 'Medtronic',
+        deviceSerialNumber: '53R147',
+      });
+    });
+
     it('should set `deviceSerialNumber` to unknown when not available', () => {
       dataUtil.updateDatum({ ...uploadData[2], deviceSerialNumber: undefined });
 
