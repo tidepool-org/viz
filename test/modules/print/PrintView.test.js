@@ -954,9 +954,11 @@ describe('PrintView', () => {
         align: 'left',
         font: 'comic sans',
         fontSize: 13,
+        subTextFontSize: 11,
         noteFontSize: 9,
       });
 
+      Renderer.doc.y = 100;
       Renderer.renderCustomTextCell(table, cellData, draw, customColumn, pos, padding);
 
       sinon.assert.calledWith(Renderer.doc.font, 'comic sans');
@@ -979,7 +981,7 @@ describe('PrintView', () => {
         Renderer.doc.text,
         'bar',
         pos.x,
-        pos.y,
+        pos.y + 1, // should offset by 1 for half the difference between the text and the subText fontSizes
         {
           align: 'left',
           width: 100,
@@ -989,6 +991,8 @@ describe('PrintView', () => {
       sinon.assert.calledWith(
         Renderer.doc.text,
         'baz',
+        pos.x,
+        Renderer.doc.y + 1, // should offset by 1 for half the difference between the text and the subText fontSizes
         {
           align: 'left',
           width: 100,
@@ -1030,8 +1034,10 @@ describe('PrintView', () => {
         headerAlign: 'center',
         headerFont: 'courrier new',
         fontSize: 15,
+        subTextFontSize: 11,
         noteFontSize: 11,
       });
+      Renderer.doc.y = 100;
 
       Renderer.renderCustomTextCell(table, cellData, draw, customColumn, pos, padding, true);
 
@@ -1055,7 +1061,7 @@ describe('PrintView', () => {
         Renderer.doc.text,
         'cat',
         pos.x,
-        pos.y,
+        pos.y + 2, // should offset by 2 for half the difference between the text and the subText fontSizes
         {
           align: 'center',
           width: 200,
@@ -1065,6 +1071,8 @@ describe('PrintView', () => {
       sinon.assert.calledWith(
         Renderer.doc.text,
         'mouse',
+        pos.x,
+        Renderer.doc.y + 2, // should offset by 2 for half the difference between the text and the subText fontSizes
         {
           align: 'center',
           width: 200,
