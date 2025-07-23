@@ -1013,6 +1013,72 @@ describe('DataUtil', () => {
       });
     });
 
+    context('dosingDecision normalization', () => {
+      const dosingDecisionBuilder = (requestedBolus, recommendedBolus) => ({
+        type: 'dosingDecision',
+        requestedBolus,
+        recommendedBolus,
+      });
+
+      beforeEach(() => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+      });
+
+      it('should move `requestedBolus.amount` to `requestedBolus.normal` if `normal` is not present', () => {
+        const dosingDecision = dosingDecisionBuilder({ amount: 5 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.requestedBolus.normal).to.equal(5);
+        expect(dosingDecision.requestedBolus.amount).to.be.undefined;
+      });
+
+      it('should not overwrite an existing `requestedBolus.normal` value', () => {
+        const dosingDecision = dosingDecisionBuilder({ amount: 5, normal: 2 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.requestedBolus.normal).to.equal(2);
+        expect(dosingDecision.requestedBolus.amount).to.equal(5);
+      });
+
+      it('should create `recommendedBolus.amount` from `normal` and `extended` if not present', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { normal: 2, extended: 3 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(5);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should create `recommendedBolus.amount` from `normal` if `extended` is not present', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { normal: 2 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(2);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should create `recommendedBolus.amount` from `extended` if `normal` is not present', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { extended: 3 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(3);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should handle `0` values when creating `recommendedBolus.amount`', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { normal: 0, extended: 0 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(0);
+        expect(dosingDecision.recommendedBolus.normal).to.be.undefined;
+        expect(dosingDecision.recommendedBolus.extended).to.be.undefined;
+      });
+
+      it('should not overwrite an existing `recommendedBolus.amount` value', () => {
+        const dosingDecision = dosingDecisionBuilder(undefined, { amount: 5, normal: 3, extended: 4 });
+        dataUtil.normalizeDatumIn(dosingDecision);
+        expect(dosingDecision.recommendedBolus.amount).to.equal(5);
+        expect(dosingDecision.recommendedBolus.normal).to.equal(3);
+        expect(dosingDecision.recommendedBolus.extended).to.equal(4);
+      });
+    });
+
     context('pumpSettings', () => {
       it('should add the datum to the `pumpSettingsDatumsByIdMap`', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);
@@ -1410,6 +1476,42 @@ describe('DataUtil', () => {
         expect(loopBolus.tags).to.be.undefined;
         dataUtil.tagDatum(loopBolus);
         expect(loopBolus.tags.loop).to.be.true;
+      });
+    });
+
+    context('wizard', () => {
+      const wizard = new Types.Wizard({ deviceTime: '2018-02-01T01:00:00', carbInput: 10, ...useRawData });
+      const extendedWizard = { ...wizard, bolus: { extended: 1, duration: 1 } };
+      const interruptedWizard = { ...wizard, bolus: { normal: 1, expectedNormal: 2 } };
+      const overrideWizard = { ...wizard, bolus: { normal: 2, recommended: { net: 1 } } };
+      const underrideWizard = { ...wizard, bolus: { normal: 1 }, recommended: { net: 2 } };
+
+      beforeEach(() => {
+        dataUtil.loopDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
+      });
+
+      it('should tag an extended wizard with `extended`', () => {
+        expect(extendedWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(extendedWizard);
+        expect(extendedWizard.tags.extended).to.be.true;
+      });
+
+      it('should tag an interrupted wizard with `interrupted`', () => {
+        expect(interruptedWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(interruptedWizard);
+        expect(interruptedWizard.tags.interrupted).to.be.true;
+      });
+
+      it('should tag an override wizard with `override`', () => {
+        expect(overrideWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(overrideWizard);
+        expect(overrideWizard.tags.override).to.be.true;
+      });
+
+      it('should tag an underride wizard with `underride`', () => {
+        expect(underrideWizard.tags).to.be.undefined;
+        dataUtil.tagDatum(underrideWizard);
+        expect(underrideWizard.tags.underride).to.be.true;
       });
     });
 

@@ -215,7 +215,7 @@ class SettingsPrintView extends PrintView {
 
       this.doc
         .font(this.font)
-        .text(t('* - The numbers displayed here are the user-defined values. During automation, Tandem Control-IQ uses its own preset Insulin Duration and Target BG. However users can set different values for these parameters that '), {
+        .text(t('* - The numbers displayed here are the user-defined values. During automation, Tandem\'s Control-IQ Technology uses its own preset Insulin Duration and Target BG. However, users can set different values for these parameters that '), {
           continued: true,
           lineGap: 4,
         })
