@@ -54,9 +54,9 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
 
   // fiveWay
   if (classificationType === 'fiveWay') {
-    if (roundedValue < veryLowThreshold) {
+    if (!!veryLowThreshold && roundedValue < veryLowThreshold) {
       return 'veryLow';
-    } else if (roundedValue > veryHighThreshold) {
+    } else if (!!veryHighThreshold && roundedValue > veryHighThreshold) {
       return 'veryHigh';
     } else if (roundedValue < targetLowerBound) {
       return 'low';

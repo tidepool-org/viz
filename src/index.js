@@ -41,7 +41,7 @@ import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
-import { DEFAULT_BG_BOUNDS } from './utils/constants';
+import { DEFAULT_BG_BOUNDS, GESTATIONAL_T2_BG_BOUNDS, HIGH_RISK_BG_BOUNDS, PREGNANCY_T1_BG_BOUNDS } from './utils/constants';
 
 import colors from './colors';
 
@@ -127,6 +127,9 @@ const utils = {
   },
   constants: {
     DEFAULT_BG_BOUNDS,
+    HIGH_RISK_BG_BOUNDS,
+    PREGNANCY_T1_BG_BOUNDS,
+    GESTATIONAL_T2_BG_BOUNDS,
   },
   datetime: {
     findBasicsStart,
