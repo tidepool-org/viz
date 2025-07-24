@@ -103,6 +103,8 @@ export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
 
 export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : parseFloat(value));
 
+export const isRangeDefined = value => ensureNumeric(value) > -1;
+
 export const formatDatum = (datum = {}, format, opts = {}) => {
   let id = datum.id;
   let value = _.isFinite(datum) ? datum : datum.value;
@@ -523,12 +525,12 @@ export const getStatData = (data, type, opts = {}) => {
 
     case commonStats.readingsInRange:
       statData.data = [
-        {
+        (isRangeDefined(data[readingsInRangeDataPath]?.veryLow) && ({
           id: 'veryLow',
           value: ensureNumeric(data[readingsInRangeDataPath].veryLow),
           title: t('Readings Below Range'),
           legendTitle: bgRanges.veryLow,
-        },
+        })),
         {
           id: 'low',
           value: ensureNumeric(data[readingsInRangeDataPath].low),
@@ -547,13 +549,13 @@ export const getStatData = (data, type, opts = {}) => {
           title: t('Readings Above Range'),
           legendTitle: bgRanges.high,
         },
-        {
+        (isRangeDefined(data[readingsInRangeDataPath]?.veryHigh) && ({
           id: 'veryHigh',
           value: ensureNumeric(data[readingsInRangeDataPath].veryHigh),
           title: t('Readings Above Range'),
           legendTitle: bgRanges.veryHigh,
-        },
-      ];
+        })),
+      ].filter(Boolean);
 
       statData.total = { value: getSum(statData.data) };
       statData.dataPaths = {
@@ -640,12 +642,12 @@ export const getStatData = (data, type, opts = {}) => {
 
     case commonStats.timeInRange:
       statData.data = [
-        {
+        (isRangeDefined(data.durations.veryLow) && ({
           id: 'veryLow',
           value: ensureNumeric(data.durations.veryLow),
           title: t('Time Below Range'),
           legendTitle: bgRanges.veryLow,
-        },
+        })),
         {
           id: 'low',
           value: ensureNumeric(data.durations.low),
@@ -664,13 +666,13 @@ export const getStatData = (data, type, opts = {}) => {
           title: t('Time Above Range'),
           legendTitle: bgRanges.high,
         },
-        {
+        (isRangeDefined(data.durations.veryHigh) && ({
           id: 'veryHigh',
           value: ensureNumeric(data.durations.veryHigh),
           title: t('Time Above Range'),
           legendTitle: bgRanges.veryHigh,
-        },
-      ];
+        })),
+      ].filter(Boolean);
 
       statData.total = { value: getSum(statData.data) };
       statData.dataPaths = {
