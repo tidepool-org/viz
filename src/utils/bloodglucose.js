@@ -141,20 +141,34 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
   const { bgBounds, bgUnits } = bgPrefs;
   const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
 
-  const thresholds = _.mapValues(bgBounds, threshold => formatBgValue(threshold, bgPrefs));
+  const thresholds = _.mapValues(
+    bgBounds,
+    threshold => !!threshold ? formatBgValue(threshold, bgPrefs) : null,
+  );
+
   thresholds.highLowerBound = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);
   thresholds.lowUpperBound = formatBgValue(bgBounds.targetLowerBound - minimumIncrement, bgPrefs);
 
+  const {
+    veryLowThreshold,
+    lowUpperBound,
+    targetLowerBound,
+    targetUpperBound,
+    highLowerBound,
+    veryHighThreshold,
+    extremeHighThreshold,
+  } = thresholds;
+
   if (opts.condensed) {
     return {
-      veryLow: `<${thresholds.veryLowThreshold}`,
-      low: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
-      anyLow: `<${thresholds.targetLowerBound}`,
-      target: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
-      high: `${thresholds.highLowerBound}-${thresholds.veryHighThreshold}`,
-      anyHigh: `>${thresholds.targetUpperBound}`,
-      veryHigh: `>${thresholds.veryHighThreshold}`,
-      extremeHigh: `>${thresholds.extremeHighThreshold}`,
+      veryLow: !!veryLowThreshold ? `<${veryLowThreshold}` : null,
+      low: !!veryLowThreshold ? `${veryLowThreshold}-${lowUpperBound}` : `<${lowUpperBound}`,
+      anyLow: `<${targetLowerBound}`,
+      target: `${targetLowerBound}-${targetUpperBound}`,
+      high: !!veryHighThreshold ? `${highLowerBound}-${veryHighThreshold}` : `>${highLowerBound}`,
+      anyHigh: `>${targetUpperBound}`,
+      veryHigh: !!veryHighThreshold ? `>${veryHighThreshold}` : null,
+      extremeHigh: `>${extremeHighThreshold}`,
     };
   }
 
@@ -162,51 +176,51 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
     return {
       veryLow: {
         suffix: bgUnits,
-        value: `<${thresholds.veryLowThreshold}`,
+        value: !!veryLowThreshold ? `<${veryLowThreshold}` : null,
       },
       low: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.veryLowThreshold}-${thresholds.lowUpperBound}`,
+        value: !!veryLowThreshold ? `${veryLowThreshold}-${lowUpperBound}` : `<${lowUpperBound}`,
       },
       anyLow: {
         suffix: bgUnits,
-        value: `<${thresholds.targetLowerBound}`,
+        value: `<${targetLowerBound}`,
       },
       target: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.targetLowerBound}-${thresholds.targetUpperBound}`,
+        value: `${targetLowerBound}-${targetUpperBound}`,
       },
       high: {
         prefix: 'between',
         suffix: bgUnits,
-        value: `${thresholds.highLowerBound}-${thresholds.veryHighThreshold}`,
+        value: !!veryHighThreshold ? `${highLowerBound}-${veryHighThreshold}` : `>${highLowerBound}`,
       },
       anyHigh: {
         suffix: bgUnits,
-        value: `>${thresholds.targetUpperBound}`,
+        value: `>${targetUpperBound}`,
       },
       veryHigh: {
         suffix: bgUnits,
-        value: `>${thresholds.veryHighThreshold}`,
+        value: !!veryHighThreshold ? `>${veryHighThreshold}` : null,
       },
       extremeHigh: {
         suffix: bgUnits,
-        value: `>${thresholds.extremeHighThreshold}`,
+        value: `>${extremeHighThreshold}`,
       },
     };
   }
 
   return {
-    veryLow: `below ${thresholds.veryLowThreshold} ${bgUnits}`,
-    low: `between ${thresholds.veryLowThreshold} - ${thresholds.lowUpperBound} ${bgUnits}`,
-    anyLow: `below ${thresholds.targetLowerBound} ${bgUnits}`,
-    target: `between ${thresholds.targetLowerBound} - ${thresholds.targetUpperBound} ${bgUnits}`,
-    high: `between ${thresholds.highLowerBound} - ${thresholds.veryHighThreshold} ${bgUnits}`,
-    anyHigh: `above ${thresholds.targetUpperBound} ${bgUnits}`,
-    veryHigh: `above ${thresholds.veryHighThreshold} ${bgUnits}`,
-    extremeHigh: `above ${thresholds.extremeHighThreshold} ${bgUnits}`,
+    veryLow: !!veryLowThreshold ? `below ${veryLowThreshold} ${bgUnits}` : null,
+    low: !!veryLowThreshold ? `between ${veryLowThreshold} - ${lowUpperBound} ${bgUnits}` : `below ${lowUpperBound} ${bgUnits}`,
+    anyLow: `below ${targetLowerBound} ${bgUnits}`,
+    target: `between ${targetLowerBound} - ${targetUpperBound} ${bgUnits}`,
+    high: !!veryHighThreshold ? `between ${highLowerBound} - ${veryHighThreshold} ${bgUnits}` : `above ${highLowerBound} ${bgUnits}`,
+    anyHigh: `above ${targetUpperBound} ${bgUnits}`,
+    veryHigh: !!veryHighThreshold ? `above ${veryHighThreshold} ${bgUnits}` : null,
+    extremeHigh: `above ${extremeHighThreshold} ${bgUnits}`,
   };
 }
 
