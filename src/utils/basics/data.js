@@ -69,6 +69,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
   const bgLabels = generateBgRangeLabels(bgPrefs);
   bgLabels.veryLow = _.upperFirst(bgLabels.veryLow);
   bgLabels.low = _.upperFirst(bgLabels.low);
+  bgLabels.high = _.upperFirst(bgLabels.high);
   bgLabels.veryHigh = _.upperFirst(bgLabels.veryHigh);
 
   const deviceLabels = getPumpVocabulary(manufacturer);
