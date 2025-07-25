@@ -68,6 +68,7 @@ export const utils = {
 export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {}) {
   const bgLabels = generateBgRangeLabels(bgPrefs);
   bgLabels.veryLow = _.upperFirst(bgLabels.veryLow);
+  bgLabels.low = _.upperFirst(bgLabels.low);
   bgLabels.veryHigh = _.upperFirst(bgLabels.veryHigh);
 
   const deviceLabels = getPumpVocabulary(manufacturer);
@@ -158,9 +159,15 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'smbg.summary.subtotals', key: 'meter', label: t('Meter'), percentage: true },
           { path: 'smbg.summary.subtotals', key: 'manual', label: t('Manual'), percentage: true },
           { path: 'calibration.summary.subtotals', key: 'calibration', label: t('Calibrations'), hideEmpty: true },
-          { path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
-          { path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
-        ];
+          ( !!bgPrefs?.bgBounds?.veryLow
+            ? ({ path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true })
+            : ({ path: 'smbg.summary.subtotals', key: 'low', label: bgLabels.low, percentage: true })
+          ),
+          ( !!bgPrefs?.bgBounds?.veryHigh
+            ? ({ path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true })
+            : ({ path: 'smbg.summary.subtotals', key: 'high', label: bgLabels.high, percentage: true })
+          ),
+        ].filter(Boolean);
         break;
 
       case 'siteChanges':
