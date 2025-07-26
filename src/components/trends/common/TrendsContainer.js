@@ -99,10 +99,10 @@ export class TrendsContainer extends PureComponent {
     }).isRequired,
     bgPrefs: PropTypes.shape({
       bgBounds: PropTypes.shape({
-        veryHighThreshold: PropTypes.number.isRequired,
+        veryHighThreshold: PropTypes.number,
         targetUpperBound: PropTypes.number.isRequired,
         targetLowerBound: PropTypes.number.isRequired,
-        veryLowThreshold: PropTypes.number.isRequired,
+        veryLowThreshold: PropTypes.number,
       }).isRequired,
       bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
     }).isRequired,
@@ -277,7 +277,7 @@ export class TrendsContainer extends PureComponent {
     const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop, mostRecentDatetimeLocation } = props;
     const upperBound = yScaleClampTop[bgUnits];
     const yScaleDomain = [bgDomain[0], upperBound];
-    if (!bgDomain[0] || bgDomain[0] > bgBounds.veryLowThreshold) {
+    if (!bgDomain[0] || bgDomain[0] > bgBounds.veryLowThreshold) { // TODO: Resolve
       yScaleDomain[0] = bgBounds.veryLowThreshold;
     }
     const yScale = scaleLinear().domain(yScaleDomain).clamp(true);

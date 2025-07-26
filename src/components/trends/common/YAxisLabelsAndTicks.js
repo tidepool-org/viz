@@ -7,14 +7,18 @@ import { formatBgValue } from '../../../utils/format';
 
 import styles from './YAxisLabelsAndTicks.css';
 
+const BOUND_KEYS = ['targetLowerBound', 'targetUpperBound', 'veryHighThreshold', 'veryLowThreshold'];
+
 const YAxisLabels = (props) => {
   const { bgPrefs, margins, textToTickGap, tickWidth, yScale } = props;
   const { bgBounds } = bgPrefs;
 
+  // Some target range presets don't have a veryLow or veryHigh range
+  const renderedBoundKeys = BOUND_KEYS.filter(bound => !!bgBounds[bound]);
+
   return (
     <g id="yAxisLabels">
-      {_.map(['targetLowerBound', 'targetUpperBound', 'veryHighThreshold', 'veryLowThreshold'],
-        (boundKey) => (
+      {_.map(renderedBoundKeys, (boundKey) => (
           <g id="yAxisLabel" key={boundKey}>
             <text
               className={styles.text}
@@ -45,10 +49,10 @@ YAxisLabels.defaultProps = {
 YAxisLabels.propTypes = {
   bgPrefs: PropTypes.shape({
     bgBounds: PropTypes.shape({
-      veryHighThreshold: PropTypes.number.isRequired,
+      veryHighThreshold: PropTypes.number,
       targetUpperBound: PropTypes.number.isRequired,
       targetLowerBound: PropTypes.number.isRequired,
-      veryLowThreshold: PropTypes.number.isRequired,
+      veryLowThreshold: PropTypes.number,
     }),
     bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
   }),

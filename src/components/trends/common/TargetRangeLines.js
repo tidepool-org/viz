@@ -48,10 +48,10 @@ const TargetRangeLines = (props) => {
 
 TargetRangeLines.propTypes = {
   bgBounds: PropTypes.shape({
-    veryHighThreshold: PropTypes.number.isRequired,
+    veryHighThreshold: PropTypes.number,
     targetUpperBound: PropTypes.number.isRequired,
     targetLowerBound: PropTypes.number.isRequired,
-    veryLowThreshold: PropTypes.number.isRequired,
+    veryLowThreshold: PropTypes.number,
   }),
   smbgOpts: PropTypes.shape({
     maxR: PropTypes.number.isRequired,
