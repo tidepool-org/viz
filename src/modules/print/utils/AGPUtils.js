@@ -789,25 +789,37 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       },
     });
 
+    // Define ranges to show on AGP. Start with only Low, Target, and High
     const bgRangeKeys = [
-      'veryLow',
       'low',
       'target',
       'high',
-      'veryHigh',
     ];
 
     const bgTicks = [
       0,
-      bgPrefs?.bgBounds?.veryLowThreshold,
-      bgPrefs?.bgBounds?.targetLowerBound,
-      bgPrefs?.bgBounds?.targetUpperBound,
-      bgPrefs?.bgBounds?.veryHighThreshold,
+      bgPrefs.bgBounds.targetLowerBound,
+      bgPrefs.bgBounds.targetUpperBound,
       yClamp,
     ];
 
+    // Add veryLow and veryHigh range if their respective thresholds exist.
+    if (!!bgPrefs?.bgBounds?.veryHighThreshold) {
+      bgRangeKeys.splice(3, 0, 'veryHigh');
+      bgTicks.splice(3, 0, bgPrefs.bgBounds.veryHighThreshold);
+    }
+
+    if (!!bgPrefs?.bgBounds?.veryLowThreshold) {
+      bgRangeKeys.splice(1, 0, 'veryLow');
+      bgTicks.splice(1, 0, bgPrefs.bgBounds.veryLowThreshold);
+    }
+
+    const targetStart = bgRangeKeys.findIndex(key => key === 'target');
+    const targetEnd = targetStart + 1;
+
     const bgTickAnnotations = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([2, 3], index);
+      const isTarget = _.includes([targetStart, targetEnd], index);
+
       let yshift = 0;
       if (index === 0) yshift = 4;
       if (index === 1) yshift = -2;
@@ -857,7 +869,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       ].join(' ');
     };
 
-    const bgTargetMarkers = _.map(_.slice(bgTicks, 2, 4), tick => ({
+    const bgTargetMarkers = _.map(_.slice(bgTicks, targetStart, targetEnd + 1), tick => ({
       fillcolor: colors.line.range.target,
       line: {
         width: 0,
@@ -875,7 +887,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
     const bgGridLines = _.map(bgTicks, (tick, index) => {
       const isClamp = index === 5;
-      const isTarget = _.includes([2, 3], index);
+      const isTarget = _.includes([targetStart, targetEnd], index);
       const isZero = index === 0;
 
       return {
