@@ -235,17 +235,20 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
   const yScale = pixelsToChartScale.bind(null, paperHeight);
   const xScale = pixelsToChartScale.bind(null, paperWidth);
 
+  const hasVeryLow = !!bgPrefs?.bgBounds?.veryLowThreshold;
+  const hasVeryHigh = !!bgPrefs?.bgBounds?.veryHighThreshold;
+
   const statTotal = _.get(stat, 'data.raw.counts.total', 0);
   if (section.sufficientData) {
     const rawCounts = _.get(stat, 'data.raw.counts', {});
 
     const statDatums = [
-      { id: 'veryLow', value: rawCounts.veryLow },
+      hasVeryLow && { id: 'veryLow', value: rawCounts.veryLow },
       { id: 'low', value: rawCounts.low },
       { id: 'target', value: rawCounts.target },
       { id: 'high', value: rawCounts.high },
-      { id: 'veryHigh', value: rawCounts.veryHigh },
-    ];
+      hasVeryHigh && { id: 'veryHigh', value: rawCounts.veryHigh },
+    ].filter(Boolean);
 
     const chartData = _.reduce(statDatums, (res, datum, i) => {
       const value = _.toNumber(datum.value) / statTotal * 1;
@@ -278,24 +281,26 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       },
     }));
 
-    const bgTicks = _.map([
-      bgPrefs?.bgBounds?.veryLowThreshold,
-      bgPrefs?.bgBounds?.targetLowerBound,
-      bgPrefs?.bgBounds?.targetUpperBound,
-      bgPrefs?.bgBounds?.veryHighThreshold,
+    const bgTicks = [
+      hasVeryLow && bgPrefs?.bgBounds?.veryLowThreshold,
+      bgPrefs.bgBounds.targetLowerBound,
+      bgPrefs.bgBounds.targetUpperBound,
+      hasVeryHigh && bgPrefs?.bgBounds?.veryHighThreshold,
       bgPrefs?.bgUnits,
-    ], (tick, index) => createAnnotation({
+    ]
+    .filter(Boolean)
+    .map((tick, index, arr) => createAnnotation({
       align: 'right',
       font: {
         size: fontSizes.percentInRanges.ticks,
       },
-      text: index === 4 // bgUnits label
+      text: index === arr.length - 1 // bgUnits label
         ? boldText(tick)
-        : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
+        : boldText(formatBgValue(tick, bgPrefs, { low: bgPrefs.bgBounds.targetLowerBound, high: bgPrefs.bgBounds.targetUpperBound })),
       x: 0,
       xanchor: 'right',
       xshift: -2,
-      y: index === 4 // bgUnits label
+      y: index === arr.length - 1 // bgUnits label
         ? chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2)
         : chartData.ticks[index],
       yanchor: 'middle',
@@ -367,25 +372,29 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       ].join(' ');
     };
 
+    const ticks = [...chartData.ticks];
+    !hasVeryLow && ticks.unshift(null);
+    !hasVeryHigh && ticks.push(null);
+
     const bracketYPos = [
       // Low Brackets
-      chartData.ticks[0],
-      yScale(-11),
+      ticks[0],                                 // Low Bracket
+      yScale(-11),                              // Very Low Bracket
 
       // Target Bracket
-      chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2),
+      ticks[1] + ((ticks[2] - ticks[1]) / 2),   // Target Bracket
 
       // High Brackets
-      chartData.ticks[4],
-      chartData.ticks[2] + ((chartData.ticks[3] - chartData.ticks[2]) / 2),
-    ];
+      ticks[4],                                 // Very High Bracket
+      ticks[2] + ((ticks[3] - ticks[2]) / 2),   // High Bracket
+    ]
 
     const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
 
     const bracketPos = {
-      low: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(0, 2)),
+      low: getBracketPosValues(...bracketXExtents, ...(ticks[0] ? bracketYPos.slice(0, 2) : [bracketYPos[0]])),
       target: getBracketPosValues(...bracketXExtents, bracketYPos[2]),
-      high: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(3)),
+      high: getBracketPosValues(...bracketXExtents, ...(ticks[4] ? bracketYPos.slice(3) : [bracketYPos[4]])),
     };
 
     const brackets = _.map(_.values(bracketPos), pos => ({
@@ -420,10 +429,15 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
 
     const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 2)];
 
-    const leaderPos = {
-      veryLow: [...leaderXExtents, ...leaderYPos.slice(0, 2)],
-      veryHigh: [...leaderXExtents, ...leaderYPos.slice(2)],
-    };
+    const leaderPos = {};
+
+    if (hasVeryLow) {
+      leaderPos.veryLow = [...leaderXExtents, ...leaderYPos.slice(0, 2)];
+    }
+
+    if (hasVeryHigh) {
+      leaderPos.veryHigh = [...leaderXExtents, ...leaderYPos.slice(2)];
+    }
 
     const leaders = _.map(_.values(leaderPos), pos => ({
       type: 'path',
@@ -436,17 +450,17 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       veryLow: bracketPos.low.posY2,
       low: bracketPos.low.posY,
       target: bracketPos.target.posY,
-      high: bracketPos.high.posY2,
+      high: hasVeryHigh ? bracketPos.high.posY2 : bracketPos.high.posY,
       veryHigh: bracketPos.high.posY,
     };
 
     const rangePosYOrderedKeys = [
-      'veryLow',
+      hasVeryLow && 'veryLow',
       'low',
       'target',
       'high',
-      'veryHigh',
-    ];
+      hasVeryHigh && 'veryHigh',
+    ].filter(Boolean);
 
     const rangeLabels = _.map(rangePosYOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -464,11 +478,11 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
     }));
 
     const rangeValuesOrderedKeys = [
-      'veryLow',
+      hasVeryLow && 'veryLow',
       'low',
       'high',
-      'veryHigh',
-    ];
+      hasVeryHigh && 'veryHigh',
+    ].filter(Boolean);
 
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
