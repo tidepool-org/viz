@@ -429,15 +429,13 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
 
     const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 2)];
 
-    const leaderPos = {};
+    const leaderPos = {
+      veryLow: [...leaderXExtents, ...leaderYPos.slice(0, 2)],
+      veryHigh: [...leaderXExtents, ...leaderYPos.slice(2)],
+    };
 
-    if (hasVeryLow) {
-      leaderPos.veryLow = [...leaderXExtents, ...leaderYPos.slice(0, 2)];
-    }
-
-    if (hasVeryHigh) {
-      leaderPos.veryHigh = [...leaderXExtents, ...leaderYPos.slice(2)];
-    }
+    if (!hasVeryLow) delete leaderPos.veryLow;
+    if (!hasVeryHigh) delete leaderPos.veryHigh;
 
     const leaders = _.map(_.values(leaderPos), pos => ({
       type: 'path',
@@ -479,8 +477,8 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
 
     const rangeValuesOrderedKeys = [
       hasVeryLow && 'veryLow',
-      'low',
-      'high',
+      hasVeryLow && 'low',
+      hasVeryHigh && 'high',
       hasVeryHigh && 'veryHigh',
     ].filter(Boolean);
 
@@ -500,15 +498,15 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
     }));
 
     const rangeSummaryPosY = {
-      low: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
+      low: bracketPos.low.posY2 ? (bracketPos.low.posY2 + bracketPos.low.subBracketYOffset) : bracketPos.low.posY,
       target: bracketPos.target.posY,
-      high: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
+      high: bracketPos.high.posY2 ? (bracketPos.high.posY2 + bracketPos.high.subBracketYOffset) : bracketPos.high.posY,
     };
 
     const combinedRangeSummaryValues = {
-      low: chartData.rawById.veryLow + chartData.rawById.low,
+      low: (chartData.rawById.veryLow || 0) + chartData.rawById.low,
       target: chartData.rawById.target,
-      high: chartData.rawById.veryHigh + chartData.rawById.high,
+      high: (chartData.rawById.veryHigh || 0) + chartData.rawById.high,
     };
 
     const rangeSummaryOrderedKeys = [
@@ -604,7 +602,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         xanchor: 'right',
         xref: 'paper',
         xshift: plotMarginX - 7,
-        y: bracketPos.low.posY2,
+        y: hasVeryLow ? bracketPos.low.posY2 : 0,
         yshift: -12,
       },
     };
