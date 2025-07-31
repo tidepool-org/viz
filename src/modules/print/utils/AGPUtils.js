@@ -281,6 +281,10 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       },
     }));
 
+    const ticks = [...chartData.ticks];
+    !hasVeryLow && ticks.unshift(0);
+    !hasVeryHigh && ticks.push(1);
+
     const bgTicks = [
       hasVeryLow && bgPrefs?.bgBounds?.veryLowThreshold,
       bgPrefs.bgBounds.targetLowerBound,
@@ -294,14 +298,14 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       font: {
         size: fontSizes.percentInRanges.ticks,
       },
-      text: index === arr.length - 1 // bgUnits label
+      text: (index === arr.length - 1) // bgUnits label
         ? boldText(tick)
         : boldText(formatBgValue(tick, bgPrefs, { low: bgPrefs.bgBounds.targetLowerBound, high: bgPrefs.bgBounds.targetUpperBound })),
       x: 0,
       xanchor: 'right',
       xshift: -2,
-      y: index === arr.length - 1 // bgUnits label
-        ? chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2)
+      y: (index === arr.length - 1) // bgUnits label
+        ? ticks[1] + ((ticks[2] - ticks[1]) / 2)
         : chartData.ticks[index],
       yanchor: 'middle',
     }));
@@ -372,10 +376,6 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       ].join(' ');
     };
 
-    const ticks = [...chartData.ticks];
-    !hasVeryLow && ticks.unshift(null);
-    !hasVeryHigh && ticks.push(null);
-
     const bracketYPos = [
       // Low Brackets
       ticks[0],                                 // Low Bracket
@@ -392,9 +392,9 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
     const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
 
     const bracketPos = {
-      low: getBracketPosValues(...bracketXExtents, ...(ticks[0] ? bracketYPos.slice(0, 2) : [bracketYPos[0]])),
+      low: getBracketPosValues(...bracketXExtents, ...(hasVeryLow ? bracketYPos.slice(0, 2) : [bracketYPos[0]])),
       target: getBracketPosValues(...bracketXExtents, bracketYPos[2]),
-      high: getBracketPosValues(...bracketXExtents, ...(ticks[4] ? bracketYPos.slice(3) : [bracketYPos[4]])),
+      high: getBracketPosValues(...bracketXExtents, ...(hasVeryHigh ? bracketYPos.slice(3) : [bracketYPos[4]])),
     };
 
     const brackets = _.map(_.values(bracketPos), pos => ({
