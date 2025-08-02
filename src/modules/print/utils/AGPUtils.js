@@ -221,7 +221,12 @@ export const generateChartSections = (data, bgSource) => {
  * @param {*} bgPrefs
  * @returns
  */
-export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
+export const generatePercentInRangesFigure = (
+  section,
+  stat,
+  bgPrefs,
+  glycemicRanges = 'ADA standard', // TODO: Standardize key
+) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
@@ -542,7 +547,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
-        y: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
+        y: bracketPos.low.posY2 ? bracketPos.low.posY2 + bracketPos.low.subBracketYOffset : bracketPos.low.posY,
         yshift: 0,
       },
       target: {
@@ -556,7 +561,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
-        y: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
+        y: bracketPos.high.posY2 ? bracketPos.high.posY2 + bracketPos.high.subBracketYOffset : bracketPos.high.posY,
         yshift: 0,
       },
       veryHigh: {
@@ -574,7 +579,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       'target',
       'highCombined',
       'veryHigh',
-    ];
+    ].filter(range => !!text.goals[glycemicRanges][range]);
 
     const goals = _.map(goalsOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -582,7 +587,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         color: colors.text.goals[range],
         size: fontSizes.percentInRanges.goals,
       },
-      text: text.goals[range],
+      text: text.goals[glycemicRanges][range],
       yanchor: 'bottom',
       yref: 'paper',
       ...goalsPos[range],

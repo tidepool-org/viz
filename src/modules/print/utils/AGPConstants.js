@@ -118,12 +118,35 @@ export const text = {
     low: t('Low'),
     veryLow: t('Very Low'),
   },
-  goals: {
-    veryHigh: t('Goal: <5%'),
-    highCombined: t('Goal: <25%'),
-    target: t('Goal: >70%'),
-    lowCombined: t('Goal: <4%'),
-    veryLow: t('Goal: <1%'),
+  goals: { // TODO: Standardize keys
+    'ADA standard': {
+      veryHigh: t('Goal: <5%'),
+      highCombined: t('Goal: <25%'),
+      target: t('Goal: >70%'),
+      lowCombined: t('Goal: <4%'),
+      veryLow: t('Goal: <1%'),
+    },
+    'ADA older or high-risk': {
+      veryHigh: t('Goal: <10%'),
+      highCombined: t('Goal: <50%'),
+      target: t('Goal: >50%'),
+      lowCombined: t('Goal: <1%'),
+      veryLow: null,
+    },
+    'ADA pregnancy type 1': {
+      veryHigh: null,
+      highCombined: t('Goal: <25%'),
+      target: t('Goal: >70%'),
+      lowCombined: t('Goal: <4%'),
+      veryLow: t('Goal: <1%'),
+    },
+    'ADA pregnancy GDM or type 2': {
+      veryHigh: null,
+      highCombined: null,
+      target: null,
+      lowCombined: null,
+      veryLow: null,
+    },
   },
   subLabels: {
     TIRtarget: t('Each 5% increase is clinically beneficial'),
