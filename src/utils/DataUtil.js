@@ -391,7 +391,9 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+        console.log(d.dosingDecision, 'dosing decision')
+        d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
+              d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
