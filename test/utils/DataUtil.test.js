@@ -1170,7 +1170,6 @@ describe('DataUtil', () => {
 
       // should translate relevant dosing decision data onto expected bolus fields
       expect(bolus2.expectedNormal).to.equal(12);
-      expect(bolus2.carbInput).to.equal(30);
       expect(bolus2.bgInput).to.equal(110);
       expect(bolus2.insulinOnBoard).to.equal(4);
     });
@@ -1253,6 +1252,48 @@ describe('DataUtil', () => {
 
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.dosingDecision).to.be.undefined;
+    });
+
+    it('should use originalFood.carbs when present, and fall back to food.carbs otherwise, preserving the original carbs associated with the bolus', () => {
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus1',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+      };
+
+      const base = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+        associations: [],
+        requestedBolus: { normal: 12 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+      };
+
+      dataUtil.loopDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.Loop' } },
+      };
+
+      // originalFood = 42 → overrides food
+      const dd1 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 42 } } } };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd1 };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(42);
+
+      // originalFood = null → falls back to food
+      const dd2 = { ...base, originalFood: null };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd2 };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(30);
+
+      // originalFood = 0 → explicit zero honored
+      const dd3 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 0 } } } };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd3 };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(0);
     });
   });
 
