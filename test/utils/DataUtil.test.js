@@ -1170,6 +1170,7 @@ describe('DataUtil', () => {
 
       // should translate relevant dosing decision data onto expected bolus fields
       expect(bolus2.expectedNormal).to.equal(12);
+      expect(bolus2.carbInput).to.equal(30);
       expect(bolus2.bgInput).to.equal(110);
       expect(bolus2.insulinOnBoard).to.equal(4);
     });
