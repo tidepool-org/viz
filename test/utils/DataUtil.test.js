@@ -1255,7 +1255,7 @@ describe('DataUtil', () => {
       expect(bolus.dosingDecision).to.be.undefined;
     });
 
-    it('should use originalFood.carbs when present, and fall back to food.carbs otherwise, preserving the original carbs associated with the bolus', () => {
+    it('should use originalFood.nutrition.carbohydrate.net when present, and fall back to food.nutrition.carbohydrate.net otherwise, preserving the original carbs associated with the bolus', () => {
       const bolus = {
         type: 'bolus',
         id: 'bolus1',
