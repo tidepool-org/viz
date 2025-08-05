@@ -464,15 +464,16 @@ class DailyPrintView extends PrintView {
 
       yPos.update();
 
-      const lowerStat = {
-        threshold: veryLowThreshold ? veryLowThreshold : targetLowerBound,
-        value: veryLowThreshold ? veryLow : low,
-      };
+      const lowerStat = (
+        veryLowThreshold
+          ? { bound: veryLowThreshold, value: veryLow }
+          : { bound: targetLowerBound, value: low }
+      );
 
       this.doc
         .text(
           t('Below {{threshold}}', {
-            threshold: formatDecimalNumber(lowerStat.threshold, bgPrecision),
+            threshold: formatDecimalNumber(lowerStat.bound, bgPrecision),
           }),
           { indent: statsIndent, continued: true, width: widthWithoutIndent }
         )

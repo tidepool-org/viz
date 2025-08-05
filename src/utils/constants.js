@@ -45,6 +45,13 @@ export const BG_DISPLAY_MINIMUM_INCREMENTS = {
   [MMOLL_UNITS]: 0.1,
 };
 
+export const TARGET_RANGE_PRESETS = {
+  ADA_STANDARD: 'ADA standard',
+  ADA_OLDER_HIGH_RISK: 'ADA older or high-risk',
+  ADA_PREGNANCY_T1: 'ADA pregnancy type 1',
+  ADA_GESTATIONAL_T2: 'ADA pregnancy GDM or type 2',
+}
+
 export const DEFAULT_BG_BOUNDS = {
   [MGDL_UNITS]: {
     veryLowThreshold: 54,

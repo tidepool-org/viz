@@ -3,7 +3,7 @@ import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
 
 import { DPI } from './constants';
-import { BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY, TARGET_RANGE_PRESETS } from '../../../utils/constants';
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
@@ -118,34 +118,34 @@ export const text = {
     low: t('Low'),
     veryLow: t('Very Low'),
   },
-  goals: { // TODO: Standardize keys
-    'ADA standard': {
+  goals: {
+    [TARGET_RANGE_PRESETS.ADA_STANDARD]: {
       veryHigh: t('Goal: <5%'),
       highCombined: t('Goal: <25%'),
       target: t('Goal: >70%'),
       lowCombined: t('Goal: <4%'),
       veryLow: t('Goal: <1%'),
     },
-    'ADA older or high-risk': {
+    [TARGET_RANGE_PRESETS.ADA_OLDER_HIGH_RISK]: {
       veryHigh: t('Goal: <10%'),
       highCombined: t('Goal: <50%'),
       target: t('Goal: >50%'),
       lowCombined: t('Goal: <1%'),
       veryLow: null,
     },
-    'ADA pregnancy type 1': {
+    [TARGET_RANGE_PRESETS.ADA_PREGNANCY_T1]: {
       veryHigh: null,
       highCombined: t('Goal: <25%'),
       target: t('Goal: >70%'),
       lowCombined: t('Goal: <4%'),
       veryLow: t('Goal: <1%'),
     },
-    'ADA pregnancy GDM or type 2': {
+    [TARGET_RANGE_PRESETS.ADA_GESTATIONAL_T2]: {
       veryHigh: null,
-      highCombined: null,
-      target: null,
-      lowCombined: null,
-      veryLow: null,
+      highCombined: t('Goal: n/a'),
+      target: t('Goal: n/a'),
+      lowCombined: t('Goal: n/a'),
+      veryLow: t('Goal: n/a'),
     },
   },
   subLabels: {
