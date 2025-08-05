@@ -727,6 +727,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
+  const hasVeryHigh = !!bgPrefs?.bgBounds?.veryHighThreshold;
+  const hasVeryLow = !!bgPrefs?.bgBounds?.veryLowThreshold;
+
   if (section.sufficientData || bgSource === BGM_DATA_KEY) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
     const chartData = mungeBGDataBins(bgSource, ONE_HR, bgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
@@ -806,30 +809,24 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       },
     });
 
-    // Define ranges to show on AGP. Start with only Low, Target, and High
+    // Define ranges to show on AGP. Start with only Low, Target, and High.
+    // Add veryLow and veryHigh range if their respective thresholds exist.
     const bgRangeKeys = [
+      hasVeryLow && 'veryLow',
       'low',
       'target',
       'high',
-    ];
+      hasVeryHigh && 'veryHigh',
+    ].filter(Boolean);
 
     const bgTicks = [
       0,
+      hasVeryLow && bgPrefs.bgBounds.veryLowThreshold,
       bgPrefs.bgBounds.targetLowerBound,
       bgPrefs.bgBounds.targetUpperBound,
+      hasVeryHigh && bgPrefs.bgBounds.veryHighThreshold,
       yClamp,
-    ];
-
-    // Add veryLow and veryHigh range if their respective thresholds exist.
-    if (!!bgPrefs?.bgBounds?.veryHighThreshold) {
-      bgRangeKeys.splice(3, 0, 'veryHigh');
-      bgTicks.splice(3, 0, bgPrefs.bgBounds.veryHighThreshold);
-    }
-
-    if (!!bgPrefs?.bgBounds?.veryLowThreshold) {
-      bgRangeKeys.splice(1, 0, 'veryLow');
-      bgTicks.splice(1, 0, bgPrefs.bgBounds.veryLowThreshold);
-    }
+    ].filter(_.isNumber);
 
     const targetStart = bgRangeKeys.findIndex(key => key === 'target');
     const targetEnd = targetStart + 1;
