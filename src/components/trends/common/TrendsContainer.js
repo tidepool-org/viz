@@ -275,10 +275,12 @@ export class TrendsContainer extends PureComponent {
     const currentSmbgData = _.filter(allBg, { type: 'smbg' });
 
     const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop, mostRecentDatetimeLocation } = props;
+
     const upperBound = yScaleClampTop[bgUnits];
     const yScaleDomain = [bgDomain[0], upperBound];
-    if (!bgDomain[0] || bgDomain[0] > bgBounds.veryLowThreshold) { // TODO: Resolve
-      yScaleDomain[0] = bgBounds.veryLowThreshold;
+    const lowestThreshold = _.isNil(bgBounds.veryLowThreshold) ? bgBounds.targetLowerBound : bgBounds.veryLowThreshold
+    if (!bgDomain[0] || bgDomain[0] > lowestThreshold) {
+      yScaleDomain[0] = lowestThreshold;
     }
     const yScale = scaleLinear().domain(yScaleDomain).clamp(true);
 
