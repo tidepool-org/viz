@@ -409,7 +409,7 @@ class DailyPrintView extends PrintView {
       stats[statType] = stat;
     });
 
-    const { target, veryLow } = _.get(stats, 'timeInRange.data.raw.durations', {});
+    const { target, veryLow, low } = _.get(stats, 'timeInRange.data.raw.durations', {});
     const totalCbgDuration = _.get(stats, 'timeInRange.data.total.value', {});
     const { averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
     const { carbs } = _.get(stats, 'carbs.data.raw', {});
@@ -464,14 +464,19 @@ class DailyPrintView extends PrintView {
 
       yPos.update();
 
+      const lowerStat = {
+        threshold: veryLowThreshold ? veryLowThreshold : targetLowerBound,
+        value: veryLowThreshold ? veryLow : low,
+      };
+
       this.doc
         .text(
           t('Below {{threshold}}', {
-            threshold: formatDecimalNumber(veryLowThreshold, bgPrecision),
+            threshold: formatDecimalNumber(lowerStat.threshold, bgPrecision),
           }),
           { indent: statsIndent, continued: true, width: widthWithoutIndent }
         )
-        .text(`${formatPercentage(veryLow / totalCbgDuration)}`, { align: 'right' });
+        .text(`${formatPercentage(lowerStat.value / totalCbgDuration)}`, { align: 'right' });
 
       yPos.update();
     }
@@ -721,6 +726,8 @@ class DailyPrintView extends PrintView {
     const renderedBounds = _.pickBy(this.bgBounds, bound => (bound <= this.bgScaleYLimit));
 
     _.each(renderedBounds, (bound, key) => {
+      if (!bound) return;
+
       const bgTick = formatBgValue(bound, this.bgPrefs);
       const xPos = this.chartArea.leftEdge;
       const yPos = bgScale(bound);
