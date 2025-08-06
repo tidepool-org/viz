@@ -268,11 +268,11 @@ export class StatUtil {
       },
     }
 
-    if (!!this.bgBounds.veryLowThreshold || this.bgBounds.veryLowThreshold === 0) {
+    if (_.isNumber(this.bgBounds.veryLowThreshold)) {
       initialValue.counts.veryLow = 0;
     }
 
-    if (!!this.bgBounds.veryHighThreshold || this.bgBounds.veryHighThreshold === 0) {
+    if (_.isNumber(this.bgBounds.veryHighThreshold)) {
       initialValue.counts.veryHigh = 0;
     }
 

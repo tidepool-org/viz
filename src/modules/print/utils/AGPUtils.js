@@ -240,8 +240,8 @@ export const generatePercentInRangesFigure = (
   const yScale = pixelsToChartScale.bind(null, paperHeight);
   const xScale = pixelsToChartScale.bind(null, paperWidth);
 
-  const hasVeryLow = !!bgPrefs?.bgBounds?.veryLowThreshold;
-  const hasVeryHigh = !!bgPrefs?.bgBounds?.veryHighThreshold;
+  const hasVeryLow = _.isNumber(bgPrefs?.bgBounds?.veryLowThreshold);
+  const hasVeryHigh = _.isNumber(bgPrefs?.bgBounds?.veryHighThreshold);
 
   const statTotal = _.get(stat, 'data.raw.counts.total', 0);
   if (section.sufficientData) {
@@ -746,8 +746,8 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
-  const hasVeryHigh = !!bgPrefs?.bgBounds?.veryHighThreshold;
-  const hasVeryLow = !!bgPrefs?.bgBounds?.veryLowThreshold;
+  const hasVeryHigh = _.isNumber(bgPrefs?.bgBounds?.veryHighThreshold);
+  const hasVeryLow = _.isNumber(bgPrefs?.bgBounds?.veryLowThreshold);
 
   if (section.sufficientData || bgSource === BGM_DATA_KEY) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
