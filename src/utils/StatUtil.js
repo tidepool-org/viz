@@ -434,12 +434,12 @@ export class StatUtil {
       counts: { low: 0, target: 0, high: 0, total: 0 },
     }
 
-    if (!!this.bgBounds.veryLowThreshold || this.bgBounds.veryLowThreshold === 0) {
+    if (_.isNumber(this.bgBounds.veryLowThreshold)) {
       initialValue.durations.veryLow = 0;
       initialValue.counts.veryLow = 0;
     }
 
-    if (!!this.bgBounds.veryHighThreshold || this.bgBounds.veryHighThreshold === 0) {
+    if (_.isNumber(this.bgBounds.veryHighThreshold)) {
       initialValue.durations.veryHigh = 0;
       initialValue.counts.veryHigh = 0;
     }
