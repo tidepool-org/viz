@@ -54,9 +54,9 @@ export function classifyBgValue(bgBounds, bgUnits, bgValue, classificationType =
 
   // fiveWay
   if (classificationType === 'fiveWay') {
-    if (!!veryLowThreshold && roundedValue < veryLowThreshold) {
+    if (_.isNumber(veryLowThreshold) && roundedValue < veryLowThreshold) {
       return 'veryLow';
-    } else if (!!veryHighThreshold && roundedValue > veryHighThreshold) {
+    } else if (_.isNumber(veryHighThreshold) && roundedValue > veryHighThreshold) {
       return 'veryHigh';
     } else if (roundedValue < targetLowerBound) {
       return 'low';
@@ -143,7 +143,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
 
   const thresholds = _.mapValues(
     bgBounds,
-    threshold => !!threshold ? formatBgValue(threshold, bgPrefs) : null,
+    threshold => _.isNumber(threshold) ? formatBgValue(threshold, bgPrefs) : null,
   );
 
   thresholds.highLowerBound = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);
