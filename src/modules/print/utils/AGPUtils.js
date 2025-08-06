@@ -286,9 +286,21 @@ export const generatePercentInRangesFigure = (
       },
     }));
 
-    const ticks = [...chartData.ticks];
-    !hasVeryLow && ticks.unshift(0);
-    !hasVeryHigh && ticks.push(1);
+    const tickYPos = (() => {
+      const ticks = [...chartData.ticks];
+
+      if (!hasVeryLow) ticks.unshift(0); // if no veryLow, low range stretches to the bottom
+
+      if (!hasVeryHigh) ticks.push(1); // if no veryHigh, high range to stretches to the top
+
+      return {
+        veryLowThreshold: ticks[0],
+        targetLowerBound: ticks[1],
+        targetUpperBound: ticks[2],
+        veryHighThreshold: ticks[3],
+        max: ticks[4]
+      }
+    })();
 
     const bgTicks = [
       hasVeryLow && bgPrefs?.bgBounds?.veryLowThreshold,
@@ -310,7 +322,7 @@ export const generatePercentInRangesFigure = (
       xanchor: 'right',
       xshift: -2,
       y: (index === arr.length - 1) // bgUnits label
-        ? ticks[1] + ((ticks[2] - ticks[1]) / 2)
+        ? tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2)
         : chartData.ticks[index],
       yanchor: 'middle',
     }));
@@ -383,10 +395,10 @@ export const generatePercentInRangesFigure = (
 
     const bracketYPos = {
       veryLow: yScale(-11),
-      low: ticks[0],
-      target: ticks[1] + ((ticks[2] - ticks[1]) / 2),
-      high: ticks[2] + ((ticks[3] - ticks[2]) / 2),
-      veryHigh: ticks[4],
+      low: tickYPos.veryLowThreshold,
+      target: tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2),
+      high: tickYPos.targetUpperBound + ((tickYPos.veryHighThreshold - tickYPos.targetUpperBound) / 2),
+      veryHigh: tickYPos.max,
     }
 
     const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
