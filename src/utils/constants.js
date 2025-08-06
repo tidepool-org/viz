@@ -45,7 +45,7 @@ export const BG_DISPLAY_MINIMUM_INCREMENTS = {
   [MMOLL_UNITS]: 0.1,
 };
 
-export const TARGET_RANGE_PRESETS = {
+export const GLYCEMIC_RANGE = {
   ADA_STANDARD: 'ADA standard',
   ADA_OLDER_HIGH_RISK: 'ADA older or high-risk',
   ADA_PREGNANCY_T1: 'ADA pregnancy type 1',
@@ -73,7 +73,7 @@ export const DEFAULT_BG_BOUNDS = {
 
 export const ADA_STANDARD_BG_BOUNDS = DEFAULT_BG_BOUNDS;
 
-export const HIGH_RISK_BG_BOUNDS = {
+export const ADA_OLDER_HIGH_RISK_BG_BOUNDS = {
   [MGDL_UNITS]: {
     veryLowThreshold: null,
     targetLowerBound: 70,
@@ -92,7 +92,7 @@ export const HIGH_RISK_BG_BOUNDS = {
   },
 }
 
-export const PREGNANCY_T1_BG_BOUNDS = {
+export const ADA_PREGNANCY_T1_BG_BOUNDS = {
   [MGDL_UNITS]: {
     veryLowThreshold: 54,
     targetLowerBound: 63,
@@ -111,7 +111,7 @@ export const PREGNANCY_T1_BG_BOUNDS = {
   },
 }
 
-export const GESTATIONAL_T2_BG_BOUNDS = PREGNANCY_T1_BG_BOUNDS;
+export const ADA_GESTATIONAL_T2_BG_BOUNDS = ADA_PREGNANCY_T1_BG_BOUNDS;
 
 export const LBS_PER_KG = 2.2046226218;
 

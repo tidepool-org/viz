@@ -21,7 +21,7 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
-import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY, TARGET_RANGE_PRESETS, ADA_STANDARD_BG_BOUNDS } from '../../../utils/constants';
+import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY, GLYCEMIC_RANGE, ADA_STANDARD_BG_BOUNDS } from '../../../utils/constants';
 import moment from 'moment';
 
 export const boldText = textString => `<b>${String(textString)}</b>`;
@@ -225,7 +225,7 @@ export const generatePercentInRangesFigure = (
   section,
   stat,
   bgPrefs,
-  glycemicRanges = TARGET_RANGE_PRESETS.ADA_STANDARD,
+  glycemicRanges = GLYCEMIC_RANGE.ADA_STANDARD,
 ) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
@@ -576,7 +576,7 @@ export const generatePercentInRangesFigure = (
     // User is viewing a PwD self-defined range if glycemicRanges is set to ADA Standard,
     // but targetLowerBound or targetUpperBound do not match those of the ADA Standard
     const isPwdSelfDefinedRange = (
-      glycemicRanges === TARGET_RANGE_PRESETS.ADA_STANDARD && (
+      glycemicRanges === GLYCEMIC_RANGE.ADA_STANDARD && (
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].veryLowThreshold !== bgPrefs.bgBounds?.veryLowThreshold ||
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetLowerBound !== bgPrefs.bgBounds?.targetLowerBound ||
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetUpperBound !== bgPrefs.bgBounds?.targetUpperBound ||
