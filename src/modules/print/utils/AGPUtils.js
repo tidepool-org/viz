@@ -381,25 +381,30 @@ export const generatePercentInRangesFigure = (
       ].join(' ');
     };
 
-    const bracketYPos = [
-      // Low Brackets
-      ticks[0],                                 // Low Bracket
-      yScale(-11),                              // Very Low Bracket
-
-      // Target Bracket
-      ticks[1] + ((ticks[2] - ticks[1]) / 2),   // Target Bracket
-
-      // High Brackets
-      ticks[4],                                 // Very High Bracket
-      ticks[2] + ((ticks[3] - ticks[2]) / 2),   // High Bracket
-    ]
+    const bracketYPos = {
+      veryLow: yScale(-11),
+      low: ticks[0],
+      target: ticks[1] + ((ticks[2] - ticks[1]) / 2),
+      high: ticks[2] + ((ticks[3] - ticks[2]) / 2),
+      veryHigh: ticks[4],
+    }
 
     const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
 
     const bracketPos = {
-      low: getBracketPosValues(...bracketXExtents, ...(hasVeryLow ? bracketYPos.slice(0, 2) : [bracketYPos[0]])),
-      target: getBracketPosValues(...bracketXExtents, bracketYPos[2]),
-      high: getBracketPosValues(...bracketXExtents, ...(hasVeryHigh ? bracketYPos.slice(3) : [bracketYPos[4]])),
+      low: (
+        hasVeryLow
+        ? getBracketPosValues(...bracketXExtents, bracketYPos.low, bracketYPos.veryLow)
+        : getBracketPosValues(...bracketXExtents, bracketYPos.low)
+      ),
+
+      target: getBracketPosValues(...bracketXExtents, bracketYPos.target),
+
+      high: (
+        hasVeryHigh
+        ? getBracketPosValues(...bracketXExtents, bracketYPos.veryHigh, bracketYPos.high)
+        : getBracketPosValues(...bracketXExtents, bracketYPos.high)
+      ),
     };
 
     const brackets = _.map(_.values(bracketPos), pos => ({
