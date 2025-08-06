@@ -21,7 +21,7 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
-import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY, TARGET_RANGE_PRESETS } from '../../../utils/constants';
+import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY, TARGET_RANGE_PRESETS, ADA_STANDARD_BG_BOUNDS } from '../../../utils/constants';
 import moment from 'moment';
 
 export const boldText = textString => `<b>${String(textString)}</b>`;
@@ -503,9 +503,9 @@ export const generatePercentInRangesFigure = (
     }));
 
     const rangeSummaryPosY = {
-      low: bracketPos.low.posY2 ? (bracketPos.low.posY2 + bracketPos.low.subBracketYOffset) : bracketPos.low.posY,
+      low: hasVeryLow ? (bracketPos.low.posY2 + bracketPos.low.subBracketYOffset) : bracketPos.low.posY,
       target: bracketPos.target.posY,
-      high: bracketPos.high.posY2 ? (bracketPos.high.posY2 + bracketPos.high.subBracketYOffset) : bracketPos.high.posY,
+      high: hasVeryHigh ? (bracketPos.high.posY2 + bracketPos.high.subBracketYOffset) : bracketPos.high.posY,
     };
 
     const combinedRangeSummaryValues = {
@@ -547,7 +547,7 @@ export const generatePercentInRangesFigure = (
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
-        y: bracketPos.low.posY2 ? bracketPos.low.posY2 + bracketPos.low.subBracketYOffset : bracketPos.low.posY,
+        y: hasVeryLow ? (bracketPos.low.posY2 + bracketPos.low.subBracketYOffset) : bracketPos.low.posY,
         yshift: 0,
       },
       target: {
@@ -561,7 +561,7 @@ export const generatePercentInRangesFigure = (
         x: bracketXExtents[1],
         xanchor: 'right',
         xshift: 1,
-        y: bracketPos.high.posY2 ? bracketPos.high.posY2 + bracketPos.high.subBracketYOffset : bracketPos.high.posY,
+        y: hasVeryHigh ? (bracketPos.high.posY2 + bracketPos.high.subBracketYOffset) : bracketPos.high.posY,
         yshift: 0,
       },
       veryHigh: {
@@ -573,13 +573,23 @@ export const generatePercentInRangesFigure = (
       },
     };
 
+    // User is viewing a PwD self-defined range if glycemicRanges is set to ADA Standard,
+    // but targetLowerBound or targetUpperBound do not match those of the ADA Standard
+    const isPwdSelfDefinedRange = (
+      glycemicRanges === TARGET_RANGE_PRESETS.ADA_STANDARD && (
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetLowerBound !== bgPrefs.bgBounds?.targetLowerBound ||
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetUpperBound !== bgPrefs.bgBounds?.targetUpperBound
+      )
+    );
+
+    // if PwD self-defined range, show goal for every stat; otherwise show only goals that exist
     const goalsOrderedKeys = [
       'veryLow',
       'lowCombined',
       'target',
       'highCombined',
       'veryHigh',
-    ].filter(range => !!text.goals[glycemicRanges][range]);
+    ].filter(range => isPwdSelfDefinedRange ? true : !!text.goals[glycemicRanges][range]);
 
     const goals = _.map(goalsOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -587,7 +597,9 @@ export const generatePercentInRangesFigure = (
         color: colors.text.goals[range],
         size: fontSizes.percentInRanges.goals,
       },
-      text: text.goals[glycemicRanges][range],
+      text: isPwdSelfDefinedRange
+        ? text.goals['PWD_SELF_DEFINED'][range]
+        : text.goals[glycemicRanges][range],
       yanchor: 'bottom',
       yref: 'paper',
       ...goalsPos[range],

@@ -131,22 +131,29 @@ export const text = {
       highCombined: t('Goal: <50%'),
       target: t('Goal: >50%'),
       lowCombined: t('Goal: <1%'),
-      veryLow: null,
+      // veryLow: undefined,
     },
     [TARGET_RANGE_PRESETS.ADA_PREGNANCY_T1]: {
-      veryHigh: null,
+      // veryHigh: undefined,
       highCombined: t('Goal: <25%'),
       target: t('Goal: >70%'),
       lowCombined: t('Goal: <4%'),
       veryLow: t('Goal: <1%'),
     },
     [TARGET_RANGE_PRESETS.ADA_GESTATIONAL_T2]: {
-      veryHigh: null,
+      // veryHigh: undefined,
       highCombined: t('Goal: n/a'),
       target: t('Goal: n/a'),
       lowCombined: t('Goal: n/a'),
       veryLow: t('Goal: n/a'),
     },
+    PWD_SELF_DEFINED: {
+      veryHigh: t('Goal: n/a'),
+      highCombined: t('Goal: n/a'),
+      target: t('Goal: n/a'),
+      lowCombined: t('Goal: n/a'),
+      veryLow: t('Goal: n/a'),
+    }
   },
   subLabels: {
     TIRtarget: t('Each 5% increase is clinically beneficial'),
