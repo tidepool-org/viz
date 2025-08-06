@@ -498,7 +498,7 @@ const withLoopDosingDecision = {
 
 const props = {
   bgPrefs: { bgUnits: MGDL_UNITS },
-  position: { top: 200, left: 200 },
+  position: { top: 205, left: 205 },
   timePrefs: { timezoneAware: false },
 };
 
@@ -512,8 +512,8 @@ const refDiv = (
       position: 'absolute',
       width: '10px',
       height: '10px',
-      top: '199px',
-      left: '199px',
+      top: '200px',
+      left: '200px',
       backgroundColor: 'FireBrick',
       opacity: 0.5,
       zIndex: '1',

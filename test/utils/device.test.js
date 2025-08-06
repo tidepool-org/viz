@@ -350,6 +350,12 @@ describe('device utility functions', () => {
           'maxBasal',
           'insulinDuration',
           'oneButtonBolus',
+          'no_delivery',
+          'auto_off',
+          'no_insulin',
+          'no_power',
+          'occlusion',
+          'over_limit',
         ]);
       });
 

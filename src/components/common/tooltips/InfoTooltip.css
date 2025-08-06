@@ -19,12 +19,17 @@
   composes: row;
 }
 
-.annotations {
+.note {
+  composes: row;
+  font-style: italic;
+}
+
+.items {
   padding-left: 24px;
   margin: 0 0 6px;
 }
 
-.annotation {
+.item {
   composes: row;
   margin-bottom: 2px;
 }
