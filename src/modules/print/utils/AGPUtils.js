@@ -305,7 +305,7 @@ export const generatePercentInRangesFigure = (
       },
       text: (index === arr.length - 1) // bgUnits label
         ? boldText(tick)
-        : boldText(formatBgValue(tick, bgPrefs, { low: bgPrefs.bgBounds.targetLowerBound, high: bgPrefs.bgBounds.targetUpperBound })),
+        : boldText(formatBgValue(tick, bgPrefs, undefined)),
       x: 0,
       xanchor: 'right',
       xshift: -2,
