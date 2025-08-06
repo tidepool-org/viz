@@ -16,7 +16,7 @@
   "basal": {
     "rateMaximum": {
       "units": "Units/hour",
-      "value": 3.5
+      "value": 3.55000000235
     }
   },
   "basalSchedules": [
