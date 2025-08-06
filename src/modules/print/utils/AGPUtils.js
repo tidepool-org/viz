@@ -577,10 +577,14 @@ export const generatePercentInRangesFigure = (
     // but targetLowerBound or targetUpperBound do not match those of the ADA Standard
     const isPwdSelfDefinedRange = (
       glycemicRanges === TARGET_RANGE_PRESETS.ADA_STANDARD && (
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].veryLowThreshold !== bgPrefs.bgBounds?.veryLowThreshold ||
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetLowerBound !== bgPrefs.bgBounds?.targetLowerBound ||
-        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetUpperBound !== bgPrefs.bgBounds?.targetUpperBound
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetUpperBound !== bgPrefs.bgBounds?.targetUpperBound ||
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].veryHighThreshold !== bgPrefs.bgBounds?.veryHighThreshold
       )
     );
+
+    const goalGlycemicRangesKey = isPwdSelfDefinedRange ? 'PWD_SELF_DEFINED' : glycemicRanges;
 
     // if PwD self-defined range, show goal for every stat; otherwise show only goals that exist
     const goalsOrderedKeys = [
@@ -589,7 +593,7 @@ export const generatePercentInRangesFigure = (
       'target',
       'highCombined',
       'veryHigh',
-    ].filter(range => isPwdSelfDefinedRange ? true : !!text.goals[glycemicRanges][range]);
+    ].filter(range => !!text.goals[goalGlycemicRangesKey][range]);
 
     const goals = _.map(goalsOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -597,9 +601,7 @@ export const generatePercentInRangesFigure = (
         color: colors.text.goals[range],
         size: fontSizes.percentInRanges.goals,
       },
-      text: isPwdSelfDefinedRange
-        ? text.goals['PWD_SELF_DEFINED'][range]
-        : text.goals[glycemicRanges][range],
+      text: text.goals[goalGlycemicRangesKey][range],
       yanchor: 'bottom',
       yref: 'paper',
       ...goalsPos[range],
