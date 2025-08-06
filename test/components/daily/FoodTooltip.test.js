@@ -21,7 +21,7 @@ import { mount } from 'enzyme';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
-import FoodTooltip from '../../../src/components/daily/foodtooltip/FoodTooltip';
+import FoodTooltip, { getCarbs, getAbsorptionTime, getName } from '../../../src/components/daily/foodtooltip/FoodTooltip';
 import styles from '../../../src/components/daily/foodtooltip/FoodTooltip.css';
 
 const normal = {
@@ -116,27 +116,27 @@ describe('FoodTooltip', () => {
     const carbValue = `${formatClassesAsSelector(styles.carb)} ${formatClassesAsSelector(styles.value)}`;
     it('should return 5 for a 5 gram net food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={normal} />);
-      expect(wrapper.instance().getCarbs(normal)).to.equal(5);
+      expect(getCarbs(normal)).to.equal(5);
       expect(wrapper.find(carbValue).text()).to.equal('5');
     });
     it('should return 200 for a 200 gram net food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={large} />);
-      expect(wrapper.instance().getCarbs(large)).to.equal(200);
+      expect(getCarbs(large)).to.equal(200);
       expect(wrapper.find(carbValue).text()).to.equal('200');
     });
     it('should return 15 for a 15.04 gram net food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={roundToInt} />);
-      expect(wrapper.instance().getCarbs(roundToInt)).to.equal(15);
+      expect(getCarbs(roundToInt)).to.equal(15);
       expect(wrapper.find(carbValue).text()).to.equal('15');
     });
     it('should return 15.1 for a 15.05 gram net food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={roundTo1DecimalPlace} />);
-      expect(wrapper.instance().getCarbs(roundTo1DecimalPlace)).to.equal(15.1);
+      expect(getCarbs(roundTo1DecimalPlace)).to.equal(15.1);
       expect(wrapper.find(carbValue).text()).to.equal('15.1');
     });
     it('should return 0 for a non-carbohydrate food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={nonCarb} />);
-      expect(wrapper.instance().getCarbs(nonCarb)).to.equal(0);
+      expect(getCarbs(nonCarb)).to.equal(0);
       expect(wrapper.find(carbValue).text()).to.equal('0');
     });
   });
@@ -146,7 +146,7 @@ describe('FoodTooltip', () => {
     const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
     it('should include the food name for a Loop food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loop} />);
-      expect(wrapper.instance().getName(loop)).to.equal('myfood');
+      expect(getName(loop)).to.equal('myfood');
       expect(wrapper.find(rowValue).at(0).text()).to.contain('myfood');
     });
   });
@@ -156,7 +156,7 @@ describe('FoodTooltip', () => {
     const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
     it('should include the absorption time for a Loop food value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loop} />);
-      expect(wrapper.instance().getAbsorptionTime(loop)).to.equal(3);
+      expect(getAbsorptionTime(loop)).to.equal(3);
       expect(wrapper.find(rowValue).at(1).text()).to.contain('3');
     });
   });

@@ -16,51 +16,16 @@
  */
 
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import Markdown from 'react-markdown';
 import _ from 'lodash';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './StatTooltip.css';
 
-class StatTooltip extends PureComponent {
-  static propTypes = {
-    annotations: PropTypes.arrayOf(PropTypes.string),
-    position: PropTypes.shape({
-      top: PropTypes.number.isRequired,
-      left: PropTypes.number.isRequired,
-    }).isRequired,
-    offset: PropTypes.shape({
-      top: PropTypes.number.isRequired,
-      left: PropTypes.number,
-      horizontal: PropTypes.number,
-    }),
-    title: PropTypes.node,
-    tail: PropTypes.bool.isRequired,
-    side: PropTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
-    tailColor: PropTypes.string.isRequired,
-    tailWidth: PropTypes.number.isRequired,
-    tailHeight: PropTypes.number.isRequired,
-    backgroundColor: PropTypes.string,
-    borderColor: PropTypes.string.isRequired,
-    borderWidth: PropTypes.number.isRequired,
-    showDividers: PropTypes.bool,
-  };
-
-  static defaultProps = {
-    annotations: [],
-    tail: true,
-    side: 'right',
-    tailWidth: 9,
-    tailHeight: 17,
-    tailColor: colors.statDefault,
-    borderColor: colors.statDefault,
-    borderWidth: 2,
-    showDividers: true,
-  };
-
-  renderMessages() {
-    const annotations = this.props.annotations;
+const StatTooltip = (props) => {
+  const renderMessages = () => {
+    const annotations = props.annotations;
     const rows = [];
 
     _.each(annotations, (message, index) => {
@@ -76,23 +41,56 @@ class StatTooltip extends PureComponent {
         rows.push(
           <div
             key={`divider-${index}`}
-            className={this.props.showDividers ? styles.divider : styles.hiddenDivider}
+            className={props.showDividers ? styles.divider : styles.hiddenDivider}
           />
         );
       }
     });
 
     return <div className={styles.container}>{rows}</div>;
-  }
+  };
 
-  render() {
-    return (
-      <Tooltip
-        {...this.props}
-        content={this.renderMessages()}
-      />
-    );
-  }
-}
+  return (
+    <Tooltip
+      {...props}
+      content={renderMessages()}
+    />
+  );
+};
+
+StatTooltip.propTypes = {
+  annotations: PropTypes.arrayOf(PropTypes.string),
+  position: PropTypes.shape({
+    top: PropTypes.number.isRequired,
+    left: PropTypes.number.isRequired,
+  }).isRequired,
+  offset: PropTypes.shape({
+    top: PropTypes.number.isRequired,
+    left: PropTypes.number,
+    horizontal: PropTypes.number,
+  }),
+  title: PropTypes.node,
+  tail: PropTypes.bool.isRequired,
+  side: PropTypes.oneOf(['top', 'right', 'bottom', 'left']).isRequired,
+  tailColor: PropTypes.string.isRequired,
+  tailWidth: PropTypes.number.isRequired,
+  tailHeight: PropTypes.number.isRequired,
+  backgroundColor: PropTypes.string,
+  borderColor: PropTypes.string.isRequired,
+  borderWidth: PropTypes.number.isRequired,
+  showDividers: PropTypes.bool,
+};
+
+StatTooltip.defaultProps = {
+  annotations: [],
+  tail: true,
+  side: 'right',
+  tailWidth: 8,
+  tailHeight: 16,
+  tailColor: colors.statDefault,
+  borderColor: colors.statDefault,
+  borderWidth: 2,
+  showDividers: true,
+};
 
 export default StatTooltip;
