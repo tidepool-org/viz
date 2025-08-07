@@ -451,15 +451,12 @@ export const generatePercentInRangesFigure = (
 
     const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 2)];
 
-    const leaderPos = {
-      veryLow: [...leaderXExtents, ...leaderYPos.slice(0, 2)],
-      veryHigh: [...leaderXExtents, ...leaderYPos.slice(2)],
-    };
+    const leaderPos = [
+      (hasVeryLow && [...leaderXExtents, ...leaderYPos.slice(0, 2)]),
+      (hasVeryHigh && [...leaderXExtents, ...leaderYPos.slice(2)]),
+    ].filter(Boolean);
 
-    if (!hasVeryLow) delete leaderPos.veryLow;
-    if (!hasVeryHigh) delete leaderPos.veryHigh;
-
-    const leaders = _.map(_.values(leaderPos), pos => ({
+    const leaders = _.map(leaderPos, pos => ({
       type: 'path',
       path: createLeaderSVG(...pos),
       line: { color: colors.black, width: 0.5 },
