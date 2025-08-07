@@ -21,7 +21,15 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
-import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY, GLYCEMIC_RANGE, ADA_STANDARD_BG_BOUNDS } from '../../../utils/constants';
+import {
+  MGDL_UNITS,
+  MS_IN_DAY,
+  MS_IN_HOUR,
+  BGM_DATA_KEY,
+  CGM_DATA_KEY,
+  GLYCEMIC_RANGE,
+  ADA_STANDARD_BG_BOUNDS
+} from '../../../utils/constants';
 import moment from 'moment';
 
 export const boldText = textString => `<b>${String(textString)}</b>`;
@@ -156,6 +164,7 @@ export const generateChartSections = (data, bgSource) => {
   const dataSufficiency = bgSource === CGM_DATA_KEY
     ? calculateCGMDataSufficiency(data)
     : calculateBGMDataSufficiency(data);
+  const glycemicRanges = data.query?.glycemicRanges || GLYCEMIC_RANGE.ADA_STANDARD;
 
   sections.percentInRanges = {
     bgSource,
@@ -164,7 +173,10 @@ export const generateChartSections = (data, bgSource) => {
     width: DPI * 3.875,
     height: DPI * 3,
     bordered: true,
-    text: text.percentInRanges[bgSource],
+    text: {
+      title: text.percentInRanges.title[bgSource],
+      subtitle: text.percentInRanges.subtitle[glycemicRanges]
+    },
     sufficientData: dataSufficiency.percentInRanges,
   };
 

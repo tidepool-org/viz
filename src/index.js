@@ -79,6 +79,7 @@ import { trendsText } from './utils/trends/data';
 import { agpCGMText } from './utils/agp/data';
 import TextUtil from './utils/text/TextUtil';
 import { generateAGPFigureDefinitions } from './utils/print/plotly';
+import AGPConstants from './modules/print/utils/AGPConstants';
 
 import {
   basicsText,
@@ -120,6 +121,7 @@ const containers = {
 
 const utils = {
   agp: {
+    AGPConstants,
     generateAGPFigureDefinitions,
   },
   basal: {
