@@ -142,11 +142,38 @@ describe('AGPConstants', () => {
         veryLow: 'Very Low',
       },
       goals: {
-        veryHigh: 'Goal: <5%',
-        highCombined: 'Goal: <25%',
-        target: 'Goal: >70%',
-        lowCombined: 'Goal: <4%',
-        veryLow: 'Goal: <1%',
+        'ADA standard': {
+          veryHigh: 'Goal: <5%',
+          highCombined: 'Goal: <25%',
+          target: 'Goal: >70%',
+          lowCombined: 'Goal: <4%',
+          veryLow: 'Goal: <1%',
+        },
+        'ADA older or high-risk': {
+          veryHigh: 'Goal: <10%',
+          highCombined: 'Goal: <50%',
+          target: 'Goal: >50%',
+          lowCombined: 'Goal: <1%',
+        },
+        'ADA pregnancy type 1': {
+          highCombined: 'Goal: <25%',
+          target: 'Goal: >70%',
+          lowCombined: 'Goal: <4%',
+          veryLow: 'Goal: <1%',
+        },
+        'ADA pregnancy GDM or type 2': {
+          highCombined: 'Goal: n/a',
+          target: 'Goal: n/a',
+          lowCombined: 'Goal: n/a',
+          veryLow: 'Goal: n/a',
+        },
+        PWD_SELF_DEFINED: {
+          veryHigh: 'Goal: n/a',
+          highCombined: 'Goal: n/a',
+          target: 'Goal: n/a',
+          lowCombined: 'Goal: n/a',
+          veryLow: 'Goal: n/a',
+        }
       },
       subLabels: {
         TIRtarget: 'Each 5% increase is clinically beneficial',
