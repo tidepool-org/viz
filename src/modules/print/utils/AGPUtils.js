@@ -328,7 +328,7 @@ export const generatePercentInRangesFigure = (
     }));
 
     /* eslint-disable no-param-reassign */
-    const getBracketPosValues = (posX, posX2, posY, posY2) => {
+    const getBracketPosValues = (name, posX, posX2, posY, posY2) => {
       const minBracketYOffSet = yScale(13);
 
       if (_.isNumber(posY2)) {
@@ -347,15 +347,21 @@ export const generatePercentInRangesFigure = (
         };
       }
 
-      // Only a single Ypos is passed for the target bracket
-      // We need to ensure it's not too close to the range enxtents to avoid potential crowding
-      const targetBracketAllowedYRange = [
-        yScale(AGP_TIR_MIN_TARGET_HEIGHT),
-        1 - (yScale(AGP_TIR_MIN_TARGET_HEIGHT)),
-      ];
+      // If only a single Ypos is passed when:
+      // -- Target bracket
+      // -- Low bracket if veryLow range does not exist
+      // -- High bracket if veryHigh range does not exist
 
-      if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
-      if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
+      // If Target, we need to ensure it's not too close to the range extents to avoid potential crowding
+      if (name === 'TARGET') {
+        const targetBracketAllowedYRange = [
+          yScale(AGP_TIR_MIN_TARGET_HEIGHT),
+          1 - (yScale(AGP_TIR_MIN_TARGET_HEIGHT)),
+        ];
+
+        if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
+        if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
+      }
 
       return { posX, posX2, posY };
     };
@@ -406,16 +412,16 @@ export const generatePercentInRangesFigure = (
     const bracketPos = {
       low: (
         hasVeryLow
-        ? getBracketPosValues(...bracketXExtents, bracketYPos.low, bracketYPos.veryLow)
-        : getBracketPosValues(...bracketXExtents, bracketYPos.low)
+        ? getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low, bracketYPos.veryLow)
+        : getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low)
       ),
 
-      target: getBracketPosValues(...bracketXExtents, bracketYPos.target),
+      target: getBracketPosValues('TARGET', ...bracketXExtents, bracketYPos.target),
 
       high: (
         hasVeryHigh
-        ? getBracketPosValues(...bracketXExtents, bracketYPos.veryHigh, bracketYPos.high)
-        : getBracketPosValues(...bracketXExtents, bracketYPos.high)
+        ? getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.veryHigh, bracketYPos.high)
+        : getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.high)
       ),
     };
 
@@ -635,7 +641,7 @@ export const generatePercentInRangesFigure = (
         xanchor: 'right',
         xref: 'paper',
         xshift: plotMarginX - 7,
-        y: hasVeryLow ? bracketPos.low.posY2 : 0,
+        y: hasVeryLow ? bracketPos.low.posY2 : bracketPos.low.posY - 0.05,
         yshift: -12,
       },
     };
