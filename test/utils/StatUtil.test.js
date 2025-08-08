@@ -927,56 +927,132 @@ describe('StatUtil', () => {
   });
 
   describe('getTimeInRangeData', () => {
-    it('should call filterCBGDataByDefaultSampleInterval', () => {
-      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
-      statUtil.getTimeInRangeData();
-      expect(spy.calledOnce).to.be.true;
-      spy.restore();
+    describe('when using default glycemic ranges', () => {
+      it('should call filterCBGDataByDefaultSampleInterval', () => {
+        const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+        statUtil.getTimeInRangeData();
+        expect(spy.calledOnce).to.be.true;
+        spy.restore();
+      });
+
+      it('should return the time in range data when viewing 1 day', () => {
+        filterEndpoints(dayEndpoints);
+
+        expect(statUtil.getTimeInRangeData().durations).to.eql({
+          veryLow: MS_IN_MIN * 15,
+          low: MS_IN_MIN * 15,
+          target: MS_IN_MIN * 15,
+          high: MS_IN_MIN * 5,
+          veryHigh: MS_IN_MIN * 5,
+          total: MS_IN_MIN * 55,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 1,
+          veryHigh: 1,
+          total: 5,
+        });
+      });
+
+      it('should return the avg daily time in range data when viewing more than 1 day', () => {
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getTimeInRangeData();
+        const totalDuration = result.durations.total;
+
+        expect(result.durations).to.eql({
+          veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          high: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
+          veryHigh: ((MS_IN_MIN * 5) / totalDuration * MS_IN_DAY) * 2,
+          total: MS_IN_MIN * 60,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 1,
+          veryHigh: 2,
+          total: 6,
+        });
+      });
     });
 
-    it('should return the time in range data when viewing 1 day', () => {
-      filterEndpoints(dayEndpoints);
+    describe('when using non-standard glycemic ranges', () => {
+      const pregnancyOpts = {
+        bgPrefs: {
+          bgClasses: {
+            'very-low': { boundary: 54 },
+            low: { boundary: 70 },
+            target: { boundary: 180 },
+            // no veryHigh
+          },
+          bgBounds: {
+            veryLowThreshold: 54,
+            targetLowerBound: 70,
+            targetUpperBound: 180,
+            // no veryHigh
+          },
+          bgUnits: MGDL_UNITS,
+        },
+        endpoints: dayEndpoints,
+      };
 
-      expect(statUtil.getTimeInRangeData().durations).to.eql({
-        veryLow: MS_IN_MIN * 15,
-        low: MS_IN_MIN * 15,
-        target: MS_IN_MIN * 15,
-        high: MS_IN_MIN * 5,
-        veryHigh: MS_IN_MIN * 5,
-        total: MS_IN_MIN * 55,
+      it('should call filterCBGDataByDefaultSampleInterval', () => {
+        statUtil = createStatUtil(data, pregnancyOpts);
+
+        const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+        statUtil.getTimeInRangeData();
+        expect(spy.calledOnce).to.be.true;
+        spy.restore();
       });
 
-      expect(statUtil.getTimeInRangeData().counts).to.eql({
-        veryLow: 1,
-        low: 1,
-        target: 1,
-        high: 1,
-        veryHigh: 1,
-        total: 5,
-      });
-    });
+      it('should return the time in range data when viewing 1 day', () => {
+        statUtil = createStatUtil(data, pregnancyOpts);
+        filterEndpoints(dayEndpoints);
 
-    it('should return the avg daily time in range data when viewing more than 1 day', () => {
-      filterEndpoints(twoDayEndpoints);
-      const result = statUtil.getTimeInRangeData();
-      const totalDuration = result.durations.total;
+        expect(statUtil.getTimeInRangeData().durations).to.eql({
+          veryLow: MS_IN_MIN * 15,
+          low: MS_IN_MIN * 15,
+          target: MS_IN_MIN * 15,
+          high: MS_IN_MIN * 10,
+          total: MS_IN_MIN * 55,
+        });
 
-      expect(result.durations).to.eql({
-        veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
-        low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
-        target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
-        high: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
-        veryHigh: ((MS_IN_MIN * 5) / totalDuration * MS_IN_DAY) * 2,
-        total: MS_IN_MIN * 60,
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 2,
+          total: 5,
+        });
       });
 
-      expect(statUtil.getTimeInRangeData().counts).to.eql({
-        veryLow: 1,
-        low: 1,
-        target: 1,
-        high: 1,
-        veryHigh: 2,
-        total: 6,
+      it('should return the avg daily time in range data when viewing more than 1 day', () => {
+        statUtil = createStatUtil(data, pregnancyOpts);
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getTimeInRangeData();
+        const totalDuration = result.durations.total;
+
+        expect(result.durations).to.eql({
+          veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          high: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          total: MS_IN_MIN * 60,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 3,
+          total: 6,
+        });
       });
     });
   });
