@@ -281,7 +281,7 @@ class DailyPrintView extends PrintView {
     const maxBolusStack = _.max(_.map(
       _.keys(threeHrBinnedBoluses),
       (key) => {
-        const boluses = threeHrBinnedBoluses[key].map(getBolusFromInsulinEvent);
+        const boluses = _.sortBy(threeHrBinnedBoluses[key].map(getBolusFromInsulinEvent), 'normalTime');
         return this.countBolusLinesWithLimit(boluses, 50).count;
       }
     ));
