@@ -56,13 +56,17 @@ describe('AGPConstants', () => {
       reportFooter: 'Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022',
       reportInsuffienctData: 'Insufficient data to generate an AGP Report.',
       percentInRanges: {
-        cbg: {
-          title: 'Time in Ranges',
-          subtitle: 'Goals for Type 1 and Type 2 Diabetes',
+        title: {
+          'cbg': 'Time in Ranges',
+          'smbg': 'Percent BGM Readings in Ranges',
         },
-        smbg: {
-          title: 'Percent BGM Readings in Ranges',
-        },
+        subtitle: {
+          'ADA standard': 'Goals for Type 1 and Type 2 Diabetes',
+          'ADA older or high-risk': 'Goals for Older/High Risk (Type 1 and 2)',
+          'ADA pregnancy type 1': 'Goals for Pregnancy (Type 1)',
+          'ADA pregnancy GDM or type 2': 'For Pregnancy (Gestational and Type 2)',
+          'PWD_SELF_DEFINED': '',
+        }
       },
       reportInfo: {
         dob: 'DOB:',
