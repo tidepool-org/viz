@@ -166,6 +166,28 @@ describe('basics data utils', () => {
       expect(veryLowFilter.label).to.equal('Below 55 mg/dL');
     });
 
+    it('should set the fingerstick filter labels correctly for mg/dL data when veryLow is not specified', () => {
+      const noVeryLowBgPrefs = {
+        [MGDL_UNITS]: {
+          bgBounds: {
+            veryHighThreshold: 300,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: null,
+          },
+          bgUnits: MGDL_UNITS,
+        }
+      };
+
+      const result = dataUtils.defineBasicsAggregations(noVeryLowBgPrefs[MGDL_UNITS]);
+      const veryHighFilter = _.find(result.fingersticks.dimensions, { key: 'veryHigh' });
+      const veryLowFilter = _.find(result.fingersticks.dimensions, { key: 'veryLow' });
+      const lowFilter = _.find(result.fingersticks.dimensions, { key: 'low' });
+      expect(veryHighFilter.label).to.equal('Above 300 mg/dL');
+      expect(veryLowFilter).to.equal(undefined);
+      expect(lowFilter.label).to.equal('Below 69 mg/dL');
+    });
+
     it('should set the veryLow and veryHigh fingerstick filter labels correctly for mmol/L data', () => {
       const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS]);
       const veryHighFilter = _.find(result.fingersticks.dimensions, { key: 'veryHigh' });
