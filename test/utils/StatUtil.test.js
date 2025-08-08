@@ -727,39 +727,99 @@ describe('StatUtil', () => {
   });
 
   describe('getReadingsInRangeData', () => {
-    it('should return the readings in range data when viewing 1 day', () => {
-      filterEndpoints(dayEndpoints);
-      expect(statUtil.getReadingsInRangeData()).to.eql({
-        counts: {
-          veryLow: 0,
-          low: 1,
-          target: 2,
-          high: 1,
-          veryHigh: 1,
-          total: 5,
-        },
+    describe('when using default glycemic ranges', () => {
+      it('should return the readings in range data when viewing 1 day', () => {
+        filterEndpoints(dayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            veryLow: 0,
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+        });
+      });
+
+      it('should return the avg daily readings in range data when viewing more than 1 day', () => {
+        filterEndpoints(twoDayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            veryLow: 0,
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+          dailyAverages: {
+            veryLow: 0,
+            low: 0.5,
+            target: 1,
+            high: 0.5,
+            veryHigh: 0.5,
+            total: 5,
+          },
+        });
       });
     });
 
-    it('should return the avg daily readings in range data when viewing more than 1 day', () => {
-      filterEndpoints(twoDayEndpoints);
-      expect(statUtil.getReadingsInRangeData()).to.eql({
-        counts: {
-          veryLow: 0,
-          low: 1,
-          target: 2,
-          high: 1,
-          veryHigh: 1,
-          total: 5,
+    describe('when using non-standard glycemic ranges', () => {
+      const nonStandardOpts = {
+        bgPrefs: {
+          bgClasses: {
+            // no veryLow,
+            low: { boundary: 70 },
+            target: { boundary: 180 },
+            high: { boundary: 250 },
+          },
+          bgBounds: {
+            // no veryLow
+            targetLowerBound: 70,
+            targetUpperBound: 180,
+            veryHighThreshold: 250,
+          },
+          bgUnits: MGDL_UNITS,
         },
-        dailyAverages: {
-          veryLow: 0,
-          low: 0.5,
-          target: 1,
-          high: 0.5,
-          veryHigh: 0.5,
-          total: 5,
-        },
+        endpoints: dayEndpoints,
+      };
+
+      it('should return the readings in range data when viewing 1 day', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+
+        filterEndpoints(dayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+        });
+      });
+
+      it('should return the avg daily readings in range data when viewing more than 1 day', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+
+        filterEndpoints(twoDayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+          dailyAverages: {
+            low: 0.5,
+            target: 1,
+            high: 0.5,
+            veryHigh: 0.5,
+            total: 5,
+          },
+        });
       });
     });
   });
@@ -983,7 +1043,7 @@ describe('StatUtil', () => {
     });
 
     describe('when using non-standard glycemic ranges', () => {
-      const pregnancyOpts = {
+      const nonStandardOpts = {
         bgPrefs: {
           bgClasses: {
             'very-low': { boundary: 54 },
@@ -1003,7 +1063,7 @@ describe('StatUtil', () => {
       };
 
       it('should call filterCBGDataByDefaultSampleInterval', () => {
-        statUtil = createStatUtil(data, pregnancyOpts);
+        statUtil = createStatUtil(data, nonStandardOpts);
 
         const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
         statUtil.getTimeInRangeData();
@@ -1012,7 +1072,7 @@ describe('StatUtil', () => {
       });
 
       it('should return the time in range data when viewing 1 day', () => {
-        statUtil = createStatUtil(data, pregnancyOpts);
+        statUtil = createStatUtil(data, nonStandardOpts);
         filterEndpoints(dayEndpoints);
 
         expect(statUtil.getTimeInRangeData().durations).to.eql({
@@ -1033,7 +1093,7 @@ describe('StatUtil', () => {
       });
 
       it('should return the avg daily time in range data when viewing more than 1 day', () => {
-        statUtil = createStatUtil(data, pregnancyOpts);
+        statUtil = createStatUtil(data, nonStandardOpts);
         filterEndpoints(twoDayEndpoints);
         const result = statUtil.getTimeInRangeData();
         const totalDuration = result.durations.total;
