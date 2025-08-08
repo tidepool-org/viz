@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -402,7 +402,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, formattedDate);
     });
 
-    it('should render the time in target', () => {
+    it('should render the time in target and time below veryLowThreshold', () => {
       const { targetUpperBound, targetLowerBound, veryLowThreshold } = Renderer.bgBounds;
 
       sinon.assert.calledWith(Renderer.doc.text, 'Time in Target');
@@ -484,6 +484,48 @@ describe('DailyPrintView', () => {
       it('should render the Average BG in mmol/L with correct formatting', () => {
         sinon.assert.calledWith(Renderer.doc.text, 'Avg Glucose');
         sinon.assert.calledWith(Renderer.doc.text, '12.3 mmol/L');
+      });
+    });
+
+    context('mmol/L support with non-standard range that has no veryLow threshold', () => {
+      const nonStandardBgPrefs = {
+        bgBounds: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          'very-low': { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].veryLowThreshold }, // is null
+          low: { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].targetLowerBound },
+          target: { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].targetUpperBound },
+          high: { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].veryHighThreshold },
+        },
+        bgUnits: MMOLL_UNITS,
+      };
+
+      beforeEach(() => {
+        Renderer = new DailyPrintView(doc, _.assign({}, data, { bgPrefs: nonStandardBgPrefs }), opts);
+        args = setArgs(Renderer);
+        Renderer.aggregationsByDate.statsByDate[sampleDate] = {
+          averageGlucose: {
+            averageGlucose: 12.25,
+          },
+          timeInRange: {
+            durations: {
+              target: MS_IN_HOUR * 3,
+              veryLow: MS_IN_HOUR,
+              total: MS_IN_HOUR * 4,
+            },
+          },
+        };
+        Renderer.renderSummary(args);
+      });
+
+      it('should render the time in target range labels in mmol/L with correct formatting', () => {
+        const { targetUpperBound, targetLowerBound } = Renderer.bgBounds;
+        const text = {
+          targetUpper: formatDecimalNumber(targetUpperBound, 1),
+          targetLower: formatDecimalNumber(targetLowerBound, 1),
+        };
+        sinon.assert.calledWith(Renderer.doc.text, 'Time in Target');
+        sinon.assert.calledWith(Renderer.doc.text, `${text.targetLower} - ${text.targetUpper}`);
+        sinon.assert.calledWith(Renderer.doc.text, `Below ${text.targetLower}`);
       });
     });
   });
