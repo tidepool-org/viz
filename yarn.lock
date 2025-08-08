@@ -4238,7 +4238,7 @@ __metadata:
     object-invariant-test-helper: 0.1.1
     optional: 0.1.4
     parse-svg-path: 0.1.2
-    pdfkit: 0.13.0
+    pdfkit: 0.15.0
     plotly.js-basic-dist-min: 2.26.2
     postcss: 8.4.31
     postcss-calc: 9.0.1
@@ -7181,6 +7181,13 @@ __metadata:
   version: 4.1.1
   resolution: "crypto-js@npm:4.1.1"
   checksum: b3747c12ee3a7632fab3b3e171ea50f78b182545f0714f6d3e7e2858385f0f4101a15f2517e033802ce9d12ba50a391575ff4638c9de3dd9b2c4bc47768d5425
+  languageName: node
+  linkType: hard
+
+"crypto-js@npm:^4.2.0":
+  version: 4.2.0
+  resolution: "crypto-js@npm:4.2.0"
+  checksum: f051666dbc077c8324777f44fbd3aaea2986f198fe85092535130d17026c7c2ccf2d23ee5b29b36f7a4a07312db2fae23c9094b644cc35f7858b1b4fcaf27774
   languageName: node
   linkType: hard
 
@@ -11103,6 +11110,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jpeg-exif@npm:^1.1.4":
+  version: 1.1.4
+  resolution: "jpeg-exif@npm:1.1.4"
+  checksum: a8693a7eeb6c6572ca39acc8bbaf4bac1eea1331a26ec7d460410c0c7aefcb944bbc6c31d3c4649a308eea9da89ee4d38e35fe2f2604e4bf2ed09abd600cff0b
+  languageName: node
+  linkType: hard
+
 "js-tokens@npm:^3.0.0 || ^4.0.0, js-tokens@npm:^4.0.0":
   version: 4.0.0
   resolution: "js-tokens@npm:4.0.0"
@@ -13541,7 +13555,20 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pdfkit@npm:0.13.0, pdfkit@npm:>=0.8.1":
+"pdfkit@npm:0.15.0":
+  version: 0.15.0
+  resolution: "pdfkit@npm:0.15.0"
+  dependencies:
+    crypto-js: ^4.2.0
+    fontkit: ^1.8.1
+    jpeg-exif: ^1.1.4
+    linebreak: ^1.0.2
+    png-js: ^1.0.0
+  checksum: 044d24f0efd563834bc4c45f12be6e91f98e31d0d664b042d89f35588d3fb985134566280bba6fa29360f61ae1ba62310dccba4b0f102aa448f307c6bbe65bd1
+  languageName: node
+  linkType: hard
+
+"pdfkit@npm:>=0.8.1":
   version: 0.13.0
   resolution: "pdfkit@npm:0.13.0"
   dependencies:
