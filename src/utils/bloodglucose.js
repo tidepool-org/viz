@@ -162,13 +162,13 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
   if (opts.condensed) {
     return {
       veryLow: !!veryLowThreshold ? `<${veryLowThreshold}` : null,
-      low: !!veryLowThreshold ? `${veryLowThreshold}-${lowUpperBound}` : `<${lowUpperBound}`,
+      low: !!veryLowThreshold ? `${veryLowThreshold}-${lowUpperBound}` : `<${targetLowerBound}`,
       anyLow: `<${targetLowerBound}`,
       target: `${targetLowerBound}-${targetUpperBound}`,
-      high: !!veryHighThreshold ? `${highLowerBound}-${veryHighThreshold}` : `>${highLowerBound}`,
+      high: !!veryHighThreshold ? `${highLowerBound}-${veryHighThreshold}` : `>${targetUpperBound}`,
       anyHigh: `>${targetUpperBound}`,
       veryHigh: !!veryHighThreshold ? `>${veryHighThreshold}` : null,
-      extremeHigh: `>${extremeHighThreshold}`,
+      extremeHigh: !!extremeHighThreshold ? `>${extremeHighThreshold}` : null,
     };
   }
 
@@ -181,7 +181,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       low: {
         prefix: 'between',
         suffix: bgUnits,
-        value: !!veryLowThreshold ? `${veryLowThreshold}-${lowUpperBound}` : `<${lowUpperBound}`,
+        value: !!veryLowThreshold ? `${veryLowThreshold}-${lowUpperBound}` : `<${targetLowerBound}`,
       },
       anyLow: {
         suffix: bgUnits,
@@ -195,7 +195,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       high: {
         prefix: 'between',
         suffix: bgUnits,
-        value: !!veryHighThreshold ? `${highLowerBound}-${veryHighThreshold}` : `>${highLowerBound}`,
+        value: !!veryHighThreshold ? `${highLowerBound}-${veryHighThreshold}` : `>${targetUpperBound}`,
       },
       anyHigh: {
         suffix: bgUnits,
@@ -207,20 +207,20 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
       },
       extremeHigh: {
         suffix: bgUnits,
-        value: `>${extremeHighThreshold}`,
+        value: !!extremeHighThreshold ? `>${extremeHighThreshold}` : null,
       },
     };
   }
 
   return {
     veryLow: !!veryLowThreshold ? `below ${veryLowThreshold} ${bgUnits}` : null,
-    low: !!veryLowThreshold ? `between ${veryLowThreshold} - ${lowUpperBound} ${bgUnits}` : `below ${lowUpperBound} ${bgUnits}`,
+    low: !!veryLowThreshold ? `between ${veryLowThreshold} - ${lowUpperBound} ${bgUnits}` : `below ${targetLowerBound} ${bgUnits}`,
     anyLow: `below ${targetLowerBound} ${bgUnits}`,
     target: `between ${targetLowerBound} - ${targetUpperBound} ${bgUnits}`,
-    high: !!veryHighThreshold ? `between ${highLowerBound} - ${veryHighThreshold} ${bgUnits}` : `above ${highLowerBound} ${bgUnits}`,
+    high: !!veryHighThreshold ? `between ${highLowerBound} - ${veryHighThreshold} ${bgUnits}` : `above ${targetUpperBound} ${bgUnits}`,
     anyHigh: `above ${targetUpperBound} ${bgUnits}`,
     veryHigh: !!veryHighThreshold ? `above ${veryHighThreshold} ${bgUnits}` : null,
-    extremeHigh: `above ${extremeHighThreshold} ${bgUnits}`,
+    extremeHigh: !!extremeHighThreshold ? `above ${extremeHighThreshold} ${bgUnits}` : null,
   };
 }
 

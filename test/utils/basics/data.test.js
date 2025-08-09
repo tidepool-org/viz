@@ -185,7 +185,7 @@ describe('basics data utils', () => {
       const lowFilter = _.find(result.fingersticks.dimensions, { key: 'low' });
       expect(veryHighFilter.label).to.equal('Above 300 mg/dL');
       expect(veryLowFilter).to.equal(undefined);
-      expect(lowFilter.label).to.equal('Below 69 mg/dL');
+      expect(lowFilter.label).to.equal('Below 70 mg/dL');
     });
 
     it('should set the veryLow and veryHigh fingerstick filter labels correctly for mmol/L data', () => {

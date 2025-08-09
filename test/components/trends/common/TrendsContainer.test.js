@@ -541,7 +541,7 @@ describe('TrendsContainer', () => {
             );
         });
 
-        it('should have a minimum yScale domain: [targetLowerBound, yScaleClampTop] if veryLowThreshold is missing', () => {
+        it('should have a minimum yScale domain: [targetLowerBound, yScaleClampTop] if veryLowThreshold is absent', () => {
           const mgdlMissingVeryLow = {...mgdl};
           mgdlMissingVeryLow.bgPrefs.bgBounds.veryLowThreshold = null;
 
