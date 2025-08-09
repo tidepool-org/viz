@@ -126,7 +126,7 @@ describe('blood glucose utilities', () => {
     describe('five-way classification (veryLow, low, target, high, veryHigh)', () => {
       const { classifyBgValue } = bgUtils;
 
-      describe('when units are mg/dL and bgBounds follow ADA Standardized CGM metrics', () => {
+      describe('when units are mg/dL and bgBounds follow ADA Standard CGM targets', () => {
         const bgBounds = {
           veryHighThreshold: 250,
           targetUpperBound: 180,
@@ -183,7 +183,35 @@ describe('blood glucose utilities', () => {
         });
       });
 
-      describe('when units are mmol/L and bgBounds follow ADA Standardized CGM metrics', () => {
+      describe('when units are mg/dL and bgBounds follow non-standard CGM targets', () => {
+        it('should handle missing veryHigh threshold', () => {
+          const customBgBounds = {
+            veryHighThreshold: null,
+            targetUpperBound: 140,
+            targetLowerBound: 63,
+            veryLowThreshold: 54,
+          }
+
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 135, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 145, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 270, 'fiveWay')).to.equal('high');
+        });
+
+        it('should handle missing veryLow threshold', () => {
+          const customBgBounds = {
+            veryHighThreshold: 250,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: null,
+          }
+
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 73, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 64, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 30, 'fiveWay')).to.equal('low');
+        });
+      });
+
+      describe('when units are mmol/L and bgBounds follow ADA Standard CGM targets', () => {
         const bgBounds = {
           veryHighThreshold: 13.9,
           targetUpperBound: 10,
