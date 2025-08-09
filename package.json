@@ -4,7 +4,7 @@
     "node": "20.8.0"
   },
   "packageManager": "yarn@3.6.4",
-  "version": "1.51.0-web-3830-pregnancy-ranges",
+  "version": "1.51.0-web-3830-pregnancy-ranges.1",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
