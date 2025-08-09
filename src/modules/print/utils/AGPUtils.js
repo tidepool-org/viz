@@ -237,7 +237,7 @@ export const generatePercentInRangesFigure = (
   section,
   stat,
   bgPrefs,
-  glycemicRanges = GLYCEMIC_RANGE.ADA_STANDARD,
+  glycemicRanges = GLYCEMIC_RANGE.ADA_STANDARD
 ) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
@@ -259,13 +259,13 @@ export const generatePercentInRangesFigure = (
   if (section.sufficientData) {
     const rawCounts = _.get(stat, 'data.raw.counts', {});
 
-    const statDatums = [
+    const statDatums = _.filter([
       hasVeryLow && { id: 'veryLow', value: rawCounts.veryLow },
       { id: 'low', value: rawCounts.low },
       { id: 'target', value: rawCounts.target },
       { id: 'high', value: rawCounts.high },
       hasVeryHigh && { id: 'veryHigh', value: rawCounts.veryHigh },
-    ].filter(Boolean);
+    ], Boolean);
 
     const chartData = _.reduce(statDatums, (res, datum, i) => {
       const value = _.toNumber(datum.value) / statTotal * 1;
@@ -311,9 +311,10 @@ export const generatePercentInRangesFigure = (
         targetUpperBound: ticks[2],
         veryHighThreshold: ticks[3],
         max: ticks[4]
-      }
+      };
     })();
 
+    /* eslint-disable */
     const bgTicks = [
       hasVeryLow && bgPrefs?.bgBounds?.veryLowThreshold,
       bgPrefs.bgBounds.targetLowerBound,
@@ -321,23 +322,24 @@ export const generatePercentInRangesFigure = (
       hasVeryHigh && bgPrefs?.bgBounds?.veryHighThreshold,
       bgPrefs?.bgUnits,
     ]
-    .filter(Boolean)
-    .map((tick, index, arr) => createAnnotation({
-      align: 'right',
-      font: {
-        size: fontSizes.percentInRanges.ticks,
-      },
-      text: (index === arr.length - 1) // bgUnits label
-        ? boldText(tick)
-        : boldText(formatBgValue(tick, bgPrefs, undefined)),
-      x: 0,
-      xanchor: 'right',
-      xshift: -2,
-      y: (index === arr.length - 1) // bgUnits label
-        ? tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2)
-        : chartData.ticks[index],
-      yanchor: 'middle',
-    }));
+      .filter(Boolean)
+      .map((tick, index, arr) => createAnnotation({
+        align: 'right',
+        font: {
+          size: fontSizes.percentInRanges.ticks,
+        },
+        text: (index === arr.length - 1) // bgUnits label
+          ? boldText(tick)
+          : boldText(formatBgValue(tick, bgPrefs, undefined)),
+        x: 0,
+        xanchor: 'right',
+        xshift: -2,
+        y: (index === arr.length - 1) // bgUnits label
+          ? tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2)
+          : chartData.ticks[index],
+        yanchor: 'middle',
+      }));
+    /* eslint-enable */
 
     /* eslint-disable no-param-reassign */
     const getBracketPosValues = (name, posX, posX2, posY, posY2) => {
@@ -417,23 +419,23 @@ export const generatePercentInRangesFigure = (
       target: tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2),
       high: tickYPos.targetUpperBound + ((tickYPos.veryHighThreshold - tickYPos.targetUpperBound) / 2),
       veryHigh: tickYPos.max,
-    }
+    };
 
     const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
 
     const bracketPos = {
       low: (
         hasVeryLow
-        ? getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low, bracketYPos.veryLow)
-        : getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low)
+          ? getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low, bracketYPos.veryLow)
+          : getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low)
       ),
 
       target: getBracketPosValues('TARGET', ...bracketXExtents, bracketYPos.target),
 
       high: (
         hasVeryHigh
-        ? getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.veryHigh, bracketYPos.high)
-        : getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.high)
+          ? getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.veryHigh, bracketYPos.high)
+          : getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.high)
       ),
     };
 
@@ -469,10 +471,10 @@ export const generatePercentInRangesFigure = (
 
     const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 2)];
 
-    const leaderPos = [
+    const leaderPos = _.filter([
       (hasVeryLow && [...leaderXExtents, ...leaderYPos.slice(0, 2)]),
       (hasVeryHigh && [...leaderXExtents, ...leaderYPos.slice(2)]),
-    ].filter(Boolean);
+    ], Boolean);
 
     const leaders = _.map(leaderPos, pos => ({
       type: 'path',
@@ -489,13 +491,13 @@ export const generatePercentInRangesFigure = (
       veryHigh: bracketPos.high.posY,
     };
 
-    const rangePosYOrderedKeys = [
+    const rangePosYOrderedKeys = _.filter([
       hasVeryLow && 'veryLow',
       'low',
       'target',
       'high',
       hasVeryHigh && 'veryHigh',
-    ].filter(Boolean);
+    ], Boolean);
 
     const rangeLabels = _.map(rangePosYOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -512,12 +514,12 @@ export const generatePercentInRangesFigure = (
       yshift: -1,
     }));
 
-    const rangeValuesOrderedKeys = [
+    const rangeValuesOrderedKeys = _.filter([
       hasVeryLow && 'veryLow',
       hasVeryLow && 'low',
       hasVeryHigh && 'high',
       hasVeryHigh && 'veryHigh',
-    ].filter(Boolean);
+    ], Boolean);
 
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
@@ -619,13 +621,13 @@ export const generatePercentInRangesFigure = (
     const goalGlycemicRangesKey = isPwdSelfDefinedRange ? 'PWD_SELF_DEFINED' : glycemicRanges;
 
     // if PwD self-defined range, show goal for every stat; otherwise show only goals that exist
-    const goalsOrderedKeys = [
+    const goalsOrderedKeys = _.filter([
       'veryLow',
       'lowCombined',
       'target',
       'highCombined',
       'veryHigh',
-    ].filter(range => !!text.goals[goalGlycemicRangesKey][range]);
+    ], range => !!text.goals[goalGlycemicRangesKey][range]);
 
     const goals = _.map(goalsOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -857,24 +859,24 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
     // Define ranges to show on AGP. Start with only Low, Target, and High.
     // Add veryLow and veryHigh range if their respective thresholds exist.
-    const bgRangeKeys = [
+    const bgRangeKeys = _.filter([
       hasVeryLow && 'veryLow',
       'low',
       'target',
       'high',
       hasVeryHigh && 'veryHigh',
-    ].filter(Boolean);
+    ], Boolean);
 
-    const bgTicks = [
+    const bgTicks = _.filter([
       0,
       hasVeryLow && bgPrefs.bgBounds.veryLowThreshold,
       bgPrefs.bgBounds.targetLowerBound,
       bgPrefs.bgBounds.targetUpperBound,
       hasVeryHigh && bgPrefs.bgBounds.veryHighThreshold,
       yClamp,
-    ].filter(_.isNumber);
+    ], tick => _.isNumber(tick));
 
-    const targetStart = bgRangeKeys.findIndex(key => key === 'target');
+    const targetStart = _.findIndex(bgRangeKeys, key => key === 'target');
     const targetEnd = targetStart + 1;
 
     const bgTickAnnotations = _.map(bgTicks, (tick, index) => {

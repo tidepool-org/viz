@@ -190,7 +190,7 @@ describe('blood glucose utilities', () => {
             targetUpperBound: 140,
             targetLowerBound: 63,
             veryLowThreshold: 54,
-          }
+          };
 
           expect(classifyBgValue(customBgBounds, MGDL_UNITS, 135, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(customBgBounds, MGDL_UNITS, 145, 'fiveWay')).to.equal('high');
@@ -203,7 +203,7 @@ describe('blood glucose utilities', () => {
             targetUpperBound: 180,
             targetLowerBound: 70,
             veryLowThreshold: null,
-          }
+          };
 
           expect(classifyBgValue(customBgBounds, MGDL_UNITS, 73, 'fiveWay')).to.equal('target');
           expect(classifyBgValue(customBgBounds, MGDL_UNITS, 64, 'fiveWay')).to.equal('low');

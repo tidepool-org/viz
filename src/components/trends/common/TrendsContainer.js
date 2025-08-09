@@ -278,7 +278,7 @@ export class TrendsContainer extends PureComponent {
 
     const upperBound = yScaleClampTop[bgUnits];
     const yScaleDomain = [bgDomain[0], upperBound];
-    const lowestThreshold = _.isNil(bgBounds.veryLowThreshold) ? bgBounds.targetLowerBound : bgBounds.veryLowThreshold
+    const lowestThreshold = _.isNil(bgBounds.veryLowThreshold) ? bgBounds.targetLowerBound : bgBounds.veryLowThreshold;
     if (!bgDomain[0] || bgDomain[0] > lowestThreshold) {
       yScaleDomain[0] = lowestThreshold;
     }

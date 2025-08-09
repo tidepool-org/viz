@@ -143,7 +143,7 @@ export function generateBgRangeLabels(bgPrefs, opts = {}) {
 
   const thresholds = _.mapValues(
     bgBounds,
-    threshold => _.isNumber(threshold) ? formatBgValue(threshold, bgPrefs) : null,
+    threshold => (_.isNumber(threshold) ? formatBgValue(threshold, bgPrefs) : null)
   );
 
   thresholds.highLowerBound = formatBgValue(bgBounds.targetUpperBound + minimumIncrement, bgPrefs);

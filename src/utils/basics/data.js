@@ -155,20 +155,20 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
       case 'fingersticks':
         title = t('BG readings');
         summaryTitle = t('Avg BG readings / day');
-        dimensions = [
+        dimensions = _.filter([
           { path: 'smbg.summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'smbg.summary.subtotals', key: 'meter', label: t('Meter'), percentage: true },
           { path: 'smbg.summary.subtotals', key: 'manual', label: t('Manual'), percentage: true },
           { path: 'calibration.summary.subtotals', key: 'calibration', label: t('Calibrations'), hideEmpty: true },
-          ( _.isNumber(bgPrefs?.bgBounds?.veryLowThreshold)
+          (_.isNumber(bgPrefs?.bgBounds?.veryLowThreshold)
             ? ({ path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true })
             : ({ path: 'smbg.summary.subtotals', key: 'low', label: bgLabels.low, percentage: true })
           ),
-          ( _.isNumber(bgPrefs?.bgBounds?.veryHighThreshold)
+          (_.isNumber(bgPrefs?.bgBounds?.veryHighThreshold)
             ? ({ path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true })
             : ({ path: 'smbg.summary.subtotals', key: 'high', label: bgLabels.high, percentage: true })
           ),
-        ].filter(Boolean);
+        ], Boolean);
         break;
 
       case 'siteChanges':

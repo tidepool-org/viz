@@ -1361,7 +1361,7 @@ describe('stat', () => {
           },
           bgUnits: MGDL_UNITS,
         },
-      }
+      };
 
       const data = {
         counts: {

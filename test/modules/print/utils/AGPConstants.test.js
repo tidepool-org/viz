@@ -57,15 +57,15 @@ describe('AGPConstants', () => {
       reportInsuffienctData: 'Insufficient data to generate an AGP Report.',
       percentInRanges: {
         title: {
-          'cbg': 'Time in Ranges',
-          'smbg': 'Percent BGM Readings in Ranges',
+          cbg: 'Time in Ranges',
+          smbg: 'Percent BGM Readings in Ranges',
         },
         subtitle: {
           'ADA standard': 'Goals for Type 1 and Type 2 Diabetes',
           'ADA older or high-risk': 'Goals for Older/High Risk (Type 1 and 2)',
           'ADA pregnancy type 1': 'Goals for Pregnancy (Type 1)',
           'ADA pregnancy GDM or type 2': 'For Pregnancy (Gestational and Type 2)',
-          'PWD_SELF_DEFINED': '',
+          PWD_SELF_DEFINED: '',
         }
       },
       reportInfo: {

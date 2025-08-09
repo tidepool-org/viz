@@ -50,7 +50,7 @@ export const GLYCEMIC_RANGE = {
   ADA_OLDER_HIGH_RISK: 'ADA older or high-risk',
   ADA_PREGNANCY_T1: 'ADA pregnancy type 1',
   ADA_GESTATIONAL_T2: 'ADA pregnancy GDM or type 2',
-}
+};
 
 export const DEFAULT_BG_BOUNDS = {
   [MGDL_UNITS]: {
@@ -90,7 +90,7 @@ export const ADA_OLDER_HIGH_RISK_BG_BOUNDS = {
     extremeHighThreshold: null,
     clampThreshold: 33.3,
   },
-}
+};
 
 export const ADA_PREGNANCY_T1_BG_BOUNDS = {
   [MGDL_UNITS]: {
@@ -109,7 +109,7 @@ export const ADA_PREGNANCY_T1_BG_BOUNDS = {
     extremeHighThreshold: null,
     clampThreshold: 33.3,
   },
-}
+};
 
 export const ADA_GESTATIONAL_T2_BG_BOUNDS = ADA_PREGNANCY_T1_BG_BOUNDS;
 

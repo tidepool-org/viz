@@ -266,7 +266,7 @@ export class StatUtil {
         high: 0,
         total: 0,
       },
-    }
+    };
 
     if (_.isNumber(this.bgBounds.veryLowThreshold)) {
       initialValue.counts.veryLow = 0;
@@ -284,7 +284,7 @@ export class StatUtil {
         result.counts.total++;
         return result;
       },
-      initialValue,
+      initialValue
     );
 
     if (this.activeDays > 1) {
@@ -432,7 +432,7 @@ export class StatUtil {
     const initialValue = {
       durations: { low: 0, target: 0, high: 0, total: 0 },
       counts: { low: 0, target: 0, high: 0, total: 0 },
-    }
+    };
 
     if (_.isNumber(this.bgBounds.veryLowThreshold)) {
       initialValue.durations.veryLow = 0;
