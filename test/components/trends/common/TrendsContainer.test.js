@@ -541,6 +541,21 @@ describe('TrendsContainer', () => {
             );
         });
 
+        it('should have a minimum yScale domain: [targetLowerBound, yScaleClampTop] if veryLowThreshold is absent', () => {
+          const mgdlMissingVeryLow = { ...mgdl };
+          mgdlMissingVeryLow.bgPrefs.bgBounds.veryLowThreshold = null;
+
+          minimalData = shallow(
+            <TrendsContainer {...props} {...mgdlMissingVeryLow} {...makeDataProp(justOneDatum())} />,
+          );
+
+          const { yScale } = minimalData.state();
+          expect(yScale.domain())
+            .to.deep.equal(
+              [mgdl.bgPrefs.bgBounds.targetLowerBound, props.yScaleClampTop[MGDL_UNITS]]
+            );
+        });
+
         it('should have a maximum yScale domain: [lowest generated value, yScaleClampTop]', () => {
           const { yScale } = enoughCbgData.state();
           expect(yScale.domain())

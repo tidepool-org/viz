@@ -126,7 +126,7 @@ describe('blood glucose utilities', () => {
     describe('five-way classification (veryLow, low, target, high, veryHigh)', () => {
       const { classifyBgValue } = bgUtils;
 
-      describe('when units are mg/dL and bgBounds follow ADA Standardized CGM metrics', () => {
+      describe('when units are mg/dL and bgBounds follow ADA Standard CGM targets', () => {
         const bgBounds = {
           veryHighThreshold: 250,
           targetUpperBound: 180,
@@ -183,7 +183,35 @@ describe('blood glucose utilities', () => {
         });
       });
 
-      describe('when units are mmol/L and bgBounds follow ADA Standardized CGM metrics', () => {
+      describe('when units are mg/dL and bgBounds follow non-standard CGM targets', () => {
+        it('should handle missing veryHigh threshold', () => {
+          const customBgBounds = {
+            veryHighThreshold: null,
+            targetUpperBound: 140,
+            targetLowerBound: 63,
+            veryLowThreshold: 54,
+          };
+
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 135, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 145, 'fiveWay')).to.equal('high');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 270, 'fiveWay')).to.equal('high');
+        });
+
+        it('should handle missing veryLow threshold', () => {
+          const customBgBounds = {
+            veryHighThreshold: 250,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: null,
+          };
+
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 73, 'fiveWay')).to.equal('target');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 64, 'fiveWay')).to.equal('low');
+          expect(classifyBgValue(customBgBounds, MGDL_UNITS, 30, 'fiveWay')).to.equal('low');
+        });
+      });
+
+      describe('when units are mmol/L and bgBounds follow ADA Standard CGM targets', () => {
         const bgBounds = {
           veryHighThreshold: 13.9,
           targetUpperBound: 10,
@@ -270,43 +298,151 @@ describe('blood glucose utilities', () => {
       },
     };
 
-    it('should generate formatted range labels for mg/dL BG prefs', () => {
-      const bgPrefs = {
-        bgBounds: bounds.mgdl,
-        bgUnits: 'mg/dL',
-      };
+    describe('generating formatted range labels for mg/dL BG prefs', () => {
+      it('should generate correct labels when all bg ranges present', () => {
+        const bgPrefs = {
+          bgBounds: bounds.mgdl,
+          bgUnits: 'mg/dL',
+        };
 
-      const result = bgUtils.generateBgRangeLabels(bgPrefs);
+        const result = bgUtils.generateBgRangeLabels(bgPrefs);
 
-      expect(result).to.eql({
-        veryLow: 'below 55 mg/dL',
-        low: 'between 55 - 69 mg/dL',
-        anyLow: 'below 70 mg/dL',
-        target: 'between 70 - 180 mg/dL',
-        high: 'between 181 - 300 mg/dL',
-        anyHigh: 'above 180 mg/dL',
-        veryHigh: 'above 300 mg/dL',
-        extremeHigh: 'above 350 mg/dL',
+        expect(result).to.eql({
+          veryLow: 'below 55 mg/dL',
+          low: 'between 55 - 69 mg/dL',
+          anyLow: 'below 70 mg/dL',
+          target: 'between 70 - 180 mg/dL',
+          high: 'between 181 - 300 mg/dL',
+          anyHigh: 'above 180 mg/dL',
+          veryHigh: 'above 300 mg/dL',
+          extremeHigh: 'above 350 mg/dL',
+        });
+      });
+
+      it('should generate correct labels when veryHigh is absent', () => {
+        const bgPrefs = {
+          bgBounds: {
+            extremeHighThreshold: null,
+            veryHighThreshold: null,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: 55,
+          },
+          bgUnits: 'mg/dL',
+        };
+
+        const result = bgUtils.generateBgRangeLabels(bgPrefs);
+
+        expect(result).to.eql({
+          veryLow: 'below 55 mg/dL',
+          low: 'between 55 - 69 mg/dL',
+          anyLow: 'below 70 mg/dL',
+          target: 'between 70 - 180 mg/dL',
+          high: 'above 180 mg/dL',
+          anyHigh: 'above 180 mg/dL',
+          veryHigh: null,
+          extremeHigh: null,
+        });
+      });
+
+      it('should generate correct labels when veryLow is absent', () => {
+        const bgPrefs = {
+          bgBounds: {
+            extremeHighThreshold: null,
+            veryHighThreshold: 250,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: null,
+          },
+          bgUnits: 'mg/dL',
+        };
+
+        const result = bgUtils.generateBgRangeLabels(bgPrefs);
+
+        expect(result).to.eql({
+          veryLow: null,
+          low: 'below 70 mg/dL',
+          anyLow: 'below 70 mg/dL',
+          target: 'between 70 - 180 mg/dL',
+          high: 'between 181 - 250 mg/dL',
+          anyHigh: 'above 180 mg/dL',
+          veryHigh: 'above 250 mg/dL',
+          extremeHigh: null,
+        });
       });
     });
 
-    it('should generate condensed formatted range labels for mg/dL BG prefs when condensed option set', () => {
-      const bgPrefs = {
-        bgBounds: bounds.mgdl,
-        bgUnits: 'mg/dL',
-      };
+    describe('generating condensed formatted range labels for mg/dL BG prefs when condensed option set', () => {
+      it('should generate correct formatted range labels when all bg ranges present', () => {
+        const bgPrefs = {
+          bgBounds: bounds.mgdl,
+          bgUnits: 'mg/dL',
+        };
 
-      const result = bgUtils.generateBgRangeLabels(bgPrefs, { condensed: true });
+        const result = bgUtils.generateBgRangeLabels(bgPrefs, { condensed: true });
 
-      expect(result).to.eql({
-        veryLow: '<55',
-        low: '55-69',
-        anyLow: '<70',
-        target: '70-180',
-        high: '181-300',
-        anyHigh: '>180',
-        veryHigh: '>300',
-        extremeHigh: '>350',
+        expect(result).to.eql({
+          veryLow: '<55',
+          low: '55-69',
+          anyLow: '<70',
+          target: '70-180',
+          high: '181-300',
+          anyHigh: '>180',
+          veryHigh: '>300',
+          extremeHigh: '>350',
+        });
+      });
+
+      it('should generate correct formatted range labels when veryHigh is absent', () => {
+        const bgPrefs = {
+          bgBounds: {
+            extremeHighThreshold: null,
+            veryHighThreshold: null,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: 55,
+          },
+          bgUnits: 'mg/dL',
+        };
+
+        const result = bgUtils.generateBgRangeLabels(bgPrefs, { condensed: true });
+
+        expect(result).to.eql({
+          veryLow: '<55',
+          low: '55-69',
+          anyLow: '<70',
+          target: '70-180',
+          high: '>180',
+          anyHigh: '>180',
+          veryHigh: null,
+          extremeHigh: null,
+        });
+      });
+
+      it('should generate correct formatted range labels when veryLow is absent', () => {
+        const bgPrefs = {
+          bgBounds: {
+            extremeHighThreshold: null,
+            veryHighThreshold: 250,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: null,
+          },
+          bgUnits: 'mg/dL',
+        };
+
+        const result = bgUtils.generateBgRangeLabels(bgPrefs, { condensed: true });
+
+        expect(result).to.eql({
+          veryLow: null,
+          low: '<70',
+          anyLow: '<70',
+          target: '70-180',
+          high: '181-250',
+          anyHigh: '>180',
+          veryHigh: '>250',
+          extremeHigh: null,
+        });
       });
     });
 

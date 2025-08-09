@@ -38,7 +38,7 @@ export async function generateAGPFigureDefinitions(data) {
 
   // Generate percentInRanges figure
   if (sections.percentInRanges?.sufficientData) {
-    svgDataURLS.percentInRanges = generatePercentInRangesFigure(sections.percentInRanges, percentInRangesStat, data.bgPrefs);
+    svgDataURLS.percentInRanges = generatePercentInRangesFigure(sections.percentInRanges, percentInRangesStat, data.bgPrefs, data.query?.glycemicRanges);
   }
 
   // Generate ambulatoryGlucoseProfile figure

@@ -1351,6 +1351,63 @@ describe('stat', () => {
       });
     });
 
+    it('should format and return `readingsInRange` data using raw counts if ranges are absent', () => {
+      const nonStandardRangeOpts = {
+        manufacturer: 'medtronic',
+        bgPrefs: {
+          bgBounds: {
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+          },
+          bgUnits: MGDL_UNITS,
+        },
+      };
+
+      const data = {
+        counts: {
+          low: 3,
+          target: 4,
+          high: 5,
+        },
+        dailyAverages: {
+          low: 7,
+          target: 8,
+          high: 9,
+        },
+      };
+
+      const statData = stat.getStatData(data, commonStats.readingsInRange, { ...nonStandardRangeOpts, days: 1 });
+
+      expect(statData.data).to.eql([
+        {
+          id: 'low',
+          value: 3,
+          title: 'Readings Below Range',
+          legendTitle: '<70',
+        },
+        {
+          id: 'target',
+          value: 4,
+          title: 'Readings In Range',
+          legendTitle: '70-180',
+        },
+        {
+          id: 'high',
+          value: 5,
+          title: 'Readings Above Range',
+          legendTitle: '>180',
+        },
+      ]);
+
+      expect(statData.total).to.eql({ value: 12 });
+
+      expect(statData.dataPaths).to.eql({
+        summary: ['data', 1],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
+      });
+    });
+
     it('should format and return `readingsInRange` data using daily average if viewing multiple days', () => {
       const data = {
         counts: {
@@ -1587,6 +1644,51 @@ describe('stat', () => {
 
       expect(statData.dataPaths).to.eql({
         summary: ['data', 2],
+      });
+    });
+
+    it('should format and return `timeInRange` data when veryHigh and veryLow are absent', () => {
+      const data = {
+        durations: {
+          low: 20000,
+          target: 30000,
+          high: 40000,
+        },
+        counts: {
+          low: 2,
+          target: 3,
+          high: 4,
+          total: 9,
+        },
+      };
+
+      const statData = stat.getStatData(data, commonStats.timeInRange, opts);
+
+      expect(statData.data).to.eql([
+        {
+          id: 'low',
+          value: 20000,
+          title: 'Time Below Range',
+          legendTitle: '54-69',
+        },
+        {
+          id: 'target',
+          value: 30000,
+          title: 'Time In Range',
+          legendTitle: '70-180',
+        },
+        {
+          id: 'high',
+          value: 40000,
+          title: 'Time Above Range',
+          legendTitle: '181-250',
+        },
+      ]);
+
+      expect(statData.total).to.eql({ value: 90000 });
+
+      expect(statData.dataPaths).to.eql({
+        summary: ['data', 1],
       });
     });
 
