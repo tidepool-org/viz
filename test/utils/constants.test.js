@@ -182,6 +182,24 @@ describe('constants', () => {
     });
   });
 
+  describe('alarms', () => {
+    it('should export keys for `alarm` and all alarm types', () => {
+      expect(constants.ALARM).to.equal('alarm');
+      expect(constants.ALARM_NO_DELIVERY).to.equal('no_delivery');
+      expect(constants.ALARM_AUTO_OFF).to.equal('auto_off');
+      expect(constants.ALARM_NO_INSULIN).to.equal('no_insulin');
+      expect(constants.ALARM_NO_POWER).to.equal('no_power');
+      expect(constants.ALARM_OCCLUSION).to.equal('occlusion');
+      expect(constants.ALARM_OVER_LIMIT).to.equal('over_limit');
+    });
+  });
+
+  describe('AUTOMATED_BOLUS', () => {
+    it('should be `automatedBolus`', () => {
+      expect(constants.AUTOMATED_BOLUS).to.equal('automatedBolus');
+    });
+  });
+
   describe('AUTOMATED_DELIVERY', () => {
     it('should be `automatedDelivery`', () => {
       expect(constants.AUTOMATED_DELIVERY).to.equal('automatedDelivery');
@@ -346,6 +364,7 @@ describe('constants', () => {
           [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
           [constants.MAX_BOLUS]: 'Maximum Bolus',
           [constants.MAX_BASAL]: 'Maximum Basal Rate',
+          [constants.ALARM_OCCLUSION]: 'Line Blocked',
         },
         [constants.DIY_LOOP]: {
           [constants.AUTOMATED_DELIVERY]: 'Automation',
@@ -378,6 +397,12 @@ describe('constants', () => {
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
           [constants.ONE_BUTTON_BOLUS]: 'One-Button Bolus',
+          [constants.ALARM_NO_DELIVERY]: 'Insulin Delivery Stopped',
+          [constants.ALARM_AUTO_OFF]: 'Pump Auto-Off',
+          [constants.ALARM_NO_INSULIN]: 'Reservoir Empty',
+          [constants.ALARM_NO_POWER]: 'Battery Empty',
+          [constants.ALARM_OCCLUSION]: 'Occlusion Detected',
+          [constants.ALARM_OVER_LIMIT]: 'Insulin Delivery Limit Exceeded',
         },
       });
     });

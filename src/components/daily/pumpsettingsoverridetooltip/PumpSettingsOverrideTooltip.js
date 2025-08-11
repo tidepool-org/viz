@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import get from 'lodash/get';
 import i18next from 'i18next';
 
@@ -13,14 +13,14 @@ import styles from './PumpSettingsOverrideTooltip.css';
 
 const t = i18next.t.bind(i18next);
 
-class PumpSettingsOverrideTooltip extends PureComponent {
-  renderPumpSettingsOverride() {
-    const vocabulary = getPumpVocabulary(get(this.props.override, 'source'));
+const PumpSettingsOverrideTooltip = (props) => {
+  const renderPumpSettingsOverride = () => {
+    const vocabulary = getPumpVocabulary(get(props.override, 'source'));
     const overrideLabel = vocabulary[SETTINGS_OVERRIDE];
-    const overrideType = get(vocabulary[get(this.props.override, 'overrideType')], 'label');
-    const { low: targetLow, high: targetHigh } = get(this.props.override, 'bgTarget', {});
+    const overrideType = get(vocabulary[get(props.override, 'overrideType')], 'label');
+    const { low: targetLow, high: targetHigh } = get(props.override, 'bgTarget', {});
     const showTarget = targetLow && targetHigh;
-    const bgUnits = get(this.props.bgPrefs, 'bgUnits');
+    const bgUnits = get(props.bgPrefs, 'bgUnits');
 
     const rows = [
       <div key={'override type'} className={styles.overrideType}>
@@ -32,9 +32,9 @@ class PumpSettingsOverrideTooltip extends PureComponent {
     if (showTarget) {
       let value;
       if (targetLow === targetHigh) {
-        value = `${formatBgValue(targetLow, this.props.bgPrefs)}`;
+        value = `${formatBgValue(targetLow, props.bgPrefs)}`;
       } else {
-        value = `${formatBgValue(targetLow, this.props.bgPrefs)}-${formatBgValue(targetHigh, this.props.bgPrefs)}`;
+        value = `${formatBgValue(targetLow, props.bgPrefs)}-${formatBgValue(targetHigh, props.bgPrefs)}`;
       }
 
       rows.push(
@@ -46,32 +46,31 @@ class PumpSettingsOverrideTooltip extends PureComponent {
     }
 
     return <div className={styles.container}>{rows}</div>;
-  }
+  };
 
-  render() {
-    const overrideType = get(this.props.override, 'overrideType');
-    const start = get(this.props.override, 'normalTime');
-    const end = get(this.props.override, 'normalEnd');
+  const overrideType = get(props.override, 'overrideType');
+  const start = get(props.override, 'normalTime');
+  const end = get(props.override, 'normalEnd');
 
-    const title = this.props.title ? this.props.title : (
-      <div className={styles.title}>
-        {[
-          formatLocalizedFromUTC(start, this.props.timePrefs, 'h:mm a'),
-          formatLocalizedFromUTC(end, this.props.timePrefs, 'h:mm a'),
-        ].join(' - ')}
-      </div>
-    );
-    return (
-      <Tooltip
-        {...this.props}
-        title={title}
-        content={this.renderPumpSettingsOverride()}
-        borderColor={this.props.borderColor || colors[overrideType]}
-        tailColor={this.props.tailColor || colors[overrideType]}
-      />
-    );
-  }
-}
+  const title = props.title ? props.title : (
+    <div className={styles.title}>
+      {[
+        formatLocalizedFromUTC(start, props.timePrefs, 'h:mm a'),
+        formatLocalizedFromUTC(end, props.timePrefs, 'h:mm a'),
+      ].join(' - ')}
+    </div>
+  );
+
+  return (
+    <Tooltip
+      {...props}
+      title={title}
+      content={renderPumpSettingsOverride()}
+      borderColor={props.borderColor || colors[overrideType]}
+      tailColor={props.tailColor || colors[overrideType]}
+    />
+  );
+};
 
 PumpSettingsOverrideTooltip.propTypes = {
   position: PropTypes.shape({
