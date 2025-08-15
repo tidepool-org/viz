@@ -74,6 +74,8 @@ import {
   processBasalSequencesForDate,
 } from '../../utils/print/data';
 
+import colors from '../../colors';
+
 const t = i18next.t.bind(i18next);
 
 const eventImages = {
@@ -90,6 +92,11 @@ class DailyPrintView extends PrintView {
     this.hasCarbExchanges = _.some(
       _.get(data, 'data.current.data.wizard', []),
       { type: 'wizard', carbUnits: 'exchanges' }
+    );
+
+    this.hasAlarms = _.some(
+      _.get(data, 'data.current.data.deviceEvent', []),
+      d => !!d.tags?.alarm
     );
 
     const deviceLabels = getPumpVocabulary(this.manufacturer);
@@ -395,6 +402,20 @@ class DailyPrintView extends PrintView {
         .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
     });
+
+    if (this.hasAlarms) this.renderAlarmsFootnote();
+  }
+
+  renderAlarmsFootnote() {
+    this.resetText();
+    this.doc
+      .fontSize(this.smallFontSize)
+      .fillColor(colors.gray50)
+      .text(
+        t('1 - The Pump Alarm icon indicates that one of the following alarms occurred: Insulin Delivery Stopped, Pump Auto-Off, Reservoir Empty, Battery Empty, Occlusion Detected or Line Blocked, or Insulin Delivery Limit Exceeded. Please note that not all pump alarms are shown.'),
+        this.leftEdge,
+        this.chartFootnotesYPos
+      );
   }
 
   renderSummary({ date, topEdge }) {
@@ -1171,15 +1192,18 @@ class DailyPrintView extends PrintView {
     const isLastChartOnPage = bottomEdge + this.chartMinimums.total > this.chartArea.bottomEdge;
 
     const padding = (bottomEdge - bottomOfBasalChart) + this.chartMinimums.paddingBelow;
+    const yPos = bottomOfBasalChart + padding / 2;
 
     if (!isLastChartOnPage) {
-      const yPos = bottomOfBasalChart + padding / 2;
-
       this.doc
         .moveTo(this.leftEdge, yPos)
         .lineWidth(1)
         .lineTo(this.rightEdge, yPos)
         .stroke(this.colors.lightGrey);
+
+      this.chartFootnotesYPos = yPos + 10;
+    } else {
+      this.chartFootnotesYPos = yPos - 10;
     }
   }
 
@@ -1566,11 +1590,22 @@ class DailyPrintView extends PrintView {
 
     cursor += this.eventRadius * 2 + legendItemLabelOffset;
 
+
+
     this.doc
       .fontSize(this.smallFontSize)
       .fillColor('black')
-      .text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
-      .text(t('Alarm'));
+      .text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
+
+    if (this.hasAlarms) {
+      // Render the footnote indicator since we will render the alarms footnote on this report
+      this.doc
+        .text(t('Alarm'), { continued: true })
+        .fontSize(this.extraSmallFontSize)
+        .text('1', this.doc.x, this.doc.y - 1.5);
+    } else {
+      this.doc.text(t('Alarm'));
+    }
 
     return this;
   }
