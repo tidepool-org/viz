@@ -74,7 +74,7 @@ import {
   processBasalSequencesForDate,
 } from '../../utils/print/data';
 
-import colors from '../../colors'
+import colors from '../../colors';
 
 const t = i18next.t.bind(i18next);
 
@@ -414,7 +414,7 @@ class DailyPrintView extends PrintView {
       .text(
         t('1 - The Pump Alarm icon indicates that one of the following alarms occurred: Insulin Delivery Stopped, Pump Auto-Off, Reservoir Empty, Battery Empty, Occlusion Detected or Line Blocked, or Insulin Delivery Limit Exceeded. Please note that not all pump alarms are shown.'),
         this.leftEdge,
-        this.chartFootnotesYPos,
+        this.chartFootnotesYPos
       );
   }
 
@@ -1595,7 +1595,7 @@ class DailyPrintView extends PrintView {
     this.doc
       .fontSize(this.smallFontSize)
       .fillColor('black')
-      .text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
+      .text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
 
     if (this.hasAlarms) {
       // Render the footnote indicator since we will render the alarms footnote on this report
