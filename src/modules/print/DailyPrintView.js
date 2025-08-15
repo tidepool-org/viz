@@ -1590,13 +1590,22 @@ class DailyPrintView extends PrintView {
 
     cursor += this.eventRadius * 2 + legendItemLabelOffset;
 
+
+
     this.doc
       .fontSize(this.smallFontSize)
       .fillColor('black')
       .text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
-      .text(t('Alarm'), { continued: true })
-      .fontSize(this.extraSmallFontSize)
-      .text('1', this.doc.x, this.doc.y - 1.5);
+
+    if (this.hasAlarms) {
+      // Render the footnote indicator since we will render the alarms footnote on this report
+      this.doc
+        .text(t('Alarm'), { continued: true })
+        .fontSize(this.extraSmallFontSize)
+        .text('1', this.doc.x, this.doc.y - 1.5);
+    } else {
+      this.doc.text(t('Alarm'));
+    }
 
     return this;
   }
