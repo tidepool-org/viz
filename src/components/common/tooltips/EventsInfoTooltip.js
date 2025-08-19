@@ -17,7 +17,7 @@ const EventsInfoTooltip = props => {
           t('Insulin Delivery Stopped'),
           t('Pump Auto-Off'),
           t('Reservoir Empty'),
-          t('Battery Power Out'),
+          t('Battery Empty'),
           t('Occlusion Detected or Line Blocked'),
           t('Insulin Delivery Limit Exceeded'),
         ],
