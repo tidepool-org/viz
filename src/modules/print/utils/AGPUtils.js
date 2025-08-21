@@ -231,6 +231,7 @@ export const generateChartSections = (data, bgSource) => {
  * @param {*} section
  * @param {*} stat
  * @param {*} bgPrefs
+ * @param {*} glycemicRanges
  * @returns
  */
 export const generatePercentInRangesFigure = (
@@ -314,7 +315,7 @@ export const generatePercentInRangesFigure = (
       };
     })();
 
-    /* eslint-disable */
+    /* eslint-disable lodash/prefer-lodash-method */
     const bgTicks = [
       hasVeryLow && bgPrefs?.bgBounds?.veryLowThreshold,
       bgPrefs.bgBounds.targetLowerBound,
@@ -339,7 +340,7 @@ export const generatePercentInRangesFigure = (
           : chartData.ticks[index],
         yanchor: 'middle',
       }));
-    /* eslint-enable */
+    /* eslint-enable lodash/prefer-lodash-method */
 
     /* eslint-disable no-param-reassign */
     const getBracketPosValues = (name, posX, posX2, posY, posY2) => {

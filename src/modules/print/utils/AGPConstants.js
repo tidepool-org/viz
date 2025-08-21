@@ -327,5 +327,6 @@ export const colors = {
 };
 
 export default {
-  text
+  text,
+  colors
 };
