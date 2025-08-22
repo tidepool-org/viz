@@ -6,7 +6,7 @@ import { SizeMe } from 'react-sizeme';
 import { VictoryBar, VictoryContainer } from 'victory';
 
 import { formatClassesAsSelector } from '../../../helpers/cssmodules';
-import Stat from '../../../../src/components/common/stat/Stat';
+import { Stat } from '../../../../src/components/common/stat/Stat';
 import StatLegend from '../../../../src/components/common/stat/StatLegend';
 import InputGroup from '../../../../src/components/common//controls/InputGroup';
 import styles from '../../../../src/components/common/stat/Stat.css';
