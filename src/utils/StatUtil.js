@@ -259,6 +259,23 @@ export class StatUtil {
     const smbgData = _.cloneDeep(this.dataUtil.filter.byType('smbg').top(Infinity));
     _.each(smbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
+    const initialValue = {
+      counts: {
+        low: 0,
+        target: 0,
+        high: 0,
+        total: 0,
+      },
+    };
+
+    if (_.isNumber(this.bgBounds.veryLowThreshold)) {
+      initialValue.counts.veryLow = 0;
+    }
+
+    if (_.isNumber(this.bgBounds.veryHighThreshold)) {
+      initialValue.counts.veryHigh = 0;
+    }
+
     const readingsInRangeData = _.reduce(
       smbgData,
       (result, datum) => {
@@ -267,16 +284,7 @@ export class StatUtil {
         result.counts.total++;
         return result;
       },
-      {
-        counts: {
-          veryLow: 0,
-          low: 0,
-          target: 0,
-          high: 0,
-          veryHigh: 0,
-          total: 0,
-        },
-      }
+      initialValue
     );
 
     if (this.activeDays > 1) {
@@ -421,6 +429,21 @@ export class StatUtil {
     const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
+    const initialValue = {
+      durations: { low: 0, target: 0, high: 0, total: 0 },
+      counts: { low: 0, target: 0, high: 0, total: 0 },
+    };
+
+    if (_.isNumber(this.bgBounds.veryLowThreshold)) {
+      initialValue.durations.veryLow = 0;
+      initialValue.counts.veryLow = 0;
+    }
+
+    if (_.isNumber(this.bgBounds.veryHighThreshold)) {
+      initialValue.durations.veryHigh = 0;
+      initialValue.counts.veryHigh = 0;
+    }
+
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
@@ -432,24 +455,7 @@ export class StatUtil {
         result.counts.total++;
         return result;
       },
-      {
-        durations: {
-          veryLow: 0,
-          low: 0,
-          target: 0,
-          high: 0,
-          veryHigh: 0,
-          total: 0,
-        },
-        counts: {
-          veryLow: 0,
-          low: 0,
-          target: 0,
-          high: 0,
-          veryHigh: 0,
-          total: 0,
-        },
-      }
+      initialValue
     );
 
     if (this.activeDays > 1) {

@@ -7,6 +7,7 @@
   background-color: var(--bkgrnd-white);
   border-radius: 8px;
   border: 1px solid var(--stat--border);
+  overflow: hidden;
 }
 
 .Stat tspan {
@@ -22,6 +23,22 @@
   height: 1.5em;
   margin: 0.25em 0.625em;
   overflow: hidden;
+}
+
+.statHeaderContainerNonStandardTargets {
+  background: #F0F5FF;
+  margin-top: -0.25em;
+  margin-bottom: 0.75em;
+  padding-top: 0.25em;
+  padding-bottom: 0.5em;
+}
+
+.statHeaderNonStandardWarning {
+  position: relative;
+  top: -4px;
+  margin: 0 0.625em;
+  font-style: italic;
+  font-size: 14px;
 }
 
 .statMain {
