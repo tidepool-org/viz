@@ -84,7 +84,7 @@
     "reductio": "1.0.0",
     "redux": "4.2.1",
     "serialize-svg-path": "0.1.0",
-    "sundial": "1.7.1",
+    "sundial": "1.7.6-rc.1",
     "svg-to-pdfkit": "0.1.8",
     "text-table": "0.2.0",
     "translate-svg-path": "0.0.1",
