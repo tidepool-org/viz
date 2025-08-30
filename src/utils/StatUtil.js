@@ -295,48 +295,40 @@ export class StatUtil {
   };
 
   getSensorUsage = () => {
-    this.filterCBGDataByDefaultSampleInterval();
-    const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    const count = cbgData.length;
+    const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const cbgData = this.dataUtil.sort.byTime(_.cloneDeep(rawCbgData));
 
-    // Data for Tidepool sensor usage stat
-    const duration = _.reduce(
-      cbgData,
-      (result, datum) => {
-        result += datum.sampleInterval;
-        return result;
-      },
-      0
-    );
+    let sensorUsageMs = 0;
+    let blackoutWindow = 0;
+    let count = 0;
+    let lastRecord = cbgData[0];
 
-    const total = this.activeDays * MS_IN_DAY;
+    for(let i = 0; i < cbgData.length; i++) {
+      const currentRecord = cbgData[i];
 
-    // Data for AGP sensor usage stat
-    const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
-    const { newestDatum, oldestDatum } = this.getBgExtentsData();
-    const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
-    if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
-    if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
+      if (i === 0) {
+        blackoutWindow = currentRecord.time + currentRecord.sampleInterval - 10_000;
+        count += 1;
+        continue;
+      }
 
-    let cgmMinutesWorn;
+      if (currentRecord.time <= blackoutWindow) continue;
 
-    if (rawCbgData.length < 2) {
-      cgmMinutesWorn = rawCbgData.length === 1 ? sampleInterval : 0;
-    } else {
-      cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
-    }
+      sensorUsageMs += currentRecord.sampleInterval;
+      count += 1;
+      lastRecord = currentRecord;
+      blackoutWindow = currentRecord.time + currentRecord.sampleInterval - 10_000;
+    };
 
-    const sensorUsageAGP = (
-      count /
-      ((cgmMinutesWorn / (sampleInterval / MS_IN_MIN)) + 1)
-    ) * 100;
+    const potentialTotalMs = this.activeDays * MS_IN_DAY;
+    const totalMs = potentialTotalMs - (moment(lastRecord.time).endOf('hour').valueOf() - lastRecord.time)
 
     return {
-      sensorUsage: duration,
-      sensorUsageAGP,
-      total,
-      sampleInterval,
-      count,
+      sensorUsage:    sensorUsageMs,
+      sensorUsageAGP: sensorUsageMs, // TODO: Add correction factor
+      total:          totalMs,
+      sampleInterval: lastRecord.sampleInterval,
+      count:          count,
     };
   };
 
