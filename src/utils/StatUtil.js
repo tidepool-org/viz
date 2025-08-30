@@ -298,37 +298,42 @@ export class StatUtil {
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
     const cbgData = this.dataUtil.sort.byTime(_.cloneDeep(rawCbgData));
 
-    let sensorUsageMs = 0;
+    const OVERLAP_TOLERANCE = 10_000;
     let blackoutWindow = 0;
-    let count = 0;
-    let lastRecord = cbgData[0];
 
+    let duration = 0;
+    let totalRecords = 0;
+    let lastRecord = cbgData[0] || null;
+
+    // Iterate through the time-ordered list of glucose data. For each datum, we set a blackout
+    // period for the window of time it should occupy - e.g. if a datum has a time of 14:30 and
+    // a duration of 5 mins, then any other records occuring between 14:30 to 14:35 should NOT
+    // contribute to the CGM wear time
     for(let i = 0; i < cbgData.length; i++) {
       const currentRecord = cbgData[i];
 
-      if (i === 0) {
-        blackoutWindow = currentRecord.time + currentRecord.sampleInterval - 10_000;
-        count += 1;
-        continue;
-      }
+      // Discard the current record if within the blackout window
+      if (currentRecord.time < blackoutWindow) continue;
 
-      if (currentRecord.time <= blackoutWindow) continue;
+      // If the record is past the blackout window, add its duration to the total wear time.
+      duration += currentRecord.sampleInterval;
 
-      sensorUsageMs += currentRecord.sampleInterval;
-      count += 1;
+      // Then, define the next blackout window based on the current record's time window.
+      blackoutWindow = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
+      totalRecords += 1;
       lastRecord = currentRecord;
-      blackoutWindow = currentRecord.time + currentRecord.sampleInterval - 10_000;
     };
 
-    const potentialTotalMs = this.activeDays * MS_IN_DAY;
-    const totalMs = potentialTotalMs - (moment(lastRecord.time).endOf('hour').valueOf() - lastRecord.time)
+    // TODO: Comments
+    const potentialTotal = this.activeDays * MS_IN_DAY;
+    const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - lastRecord.time)
 
     return {
-      sensorUsage:    sensorUsageMs,
-      sensorUsageAGP: sensorUsageMs, // TODO: Add correction factor
-      total:          totalMs,
-      sampleInterval: lastRecord.sampleInterval,
-      count:          count,
+      sensorUsage:    duration,
+      sensorUsageAGP: duration, // TODO: Add correction
+      total:          realTotal,
+      sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
+      count:          totalRecords,
     };
   };
 
