@@ -329,9 +329,18 @@ export class StatUtil {
     const potentialTotal = this.activeDays * MS_IN_DAY;
     const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - lastRecord.time)
 
+    // AGP Calculations
+    const lastRecordTime = lastRecord.time;
+    const firstRecordTime = cbgData[0]?.time;
+    const sampleIntervalMinutes = Math.round(lastRecord?.sampleInterval / MS_IN_MIN);
+    const cgmMinutesPossible = Math.ceil(((lastRecordTime - firstRecordTime) / MS_IN_MIN) / sampleIntervalMinutes) + 1;
+    const sensorUsageAGP = (totalRecords / cgmMinutesPossible) * 100;
+
+    console.log('sensorUsageAGP', sensorUsageAGP);
+
     return {
       sensorUsage:    duration,
-      sensorUsageAGP: duration, // TODO: Add correction
+      sensorUsageAGP: sensorUsageAGP,
       total:          realTotal,
       sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
       count:          totalRecords,
