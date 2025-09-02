@@ -325,9 +325,9 @@ export class StatUtil {
       blackoutWindow = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
     };
 
-    // TODO: Comments
+    // To mimic backend logic, we slice off the time until the end of the hour for the last reading
     const potentialTotal = this.activeDays * MS_IN_DAY;
-    const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - lastRecord.time)
+    const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - (lastRecord.time + lastRecord.sampleInterval));
 
     const sensorUsageAGP = (
       (duration / MS_IN_MIN) /
