@@ -335,7 +335,7 @@ export class StatUtil {
 
     return {
       sensorUsage:    duration,
-      sensorUsageAGP: sensorUsageAGP,
+      sensorUsageAGP: sensorUsageAGP || 0,
       total:          total,
       sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
       count:          totalRecords,

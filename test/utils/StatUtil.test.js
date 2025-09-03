@@ -116,18 +116,21 @@ describe('StatUtil', () => {
       deviceId: 'Dexcom-XXX-XXXX',
       value: 190,
       deviceTime: '2018-02-01T00:45:00',
+      sampleInterval: 5 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'Dexcom-XXX-XXXX',
       value: 260,
       deviceTime: '2018-02-01T00:50:00',
+      sampleInterval: 5 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'Dexcom-XXX-XXXX',
       value: 260,
       deviceTime: '2018-02-02T00:00:00',
+      sampleInterval: 5 * MS_IN_MIN,
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -843,10 +846,7 @@ describe('StatUtil', () => {
       expect(result.total).to.equal(MS_IN_DAY);
       expect(result.sampleInterval).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
-      expect(result.sensorUsageAGP).to.equal((
-        expectedCount /
-        ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
-      ) * 100);
+      expect(result.sensorUsageAGP).to.equal(100);
 
       expectedCount = 6;
       expectedCGMMinutesWorn = 1440; // 1 full day between first and last datums
@@ -857,10 +857,7 @@ describe('StatUtil', () => {
       expect(result.total).to.equal(MS_IN_DAY * 14);
       expect(result.sampleInterval).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
-      expect(result.sensorUsageAGP).to.equal((
-        expectedCount /
-        ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
-      ) * 100);
+      expect(result.sensorUsageAGP).to.equal((3600000 / (1517529900000 - 1517443200000)) * 100); // ~ 4.15%
     });
   });
 
