@@ -325,14 +325,6 @@ export class StatUtil {
       blackoutWindow = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
     };
 
-    // To mimic backend logic, we slice off the time until the end of the hour for the last reading
-    const total = (() => {
-      const potentialTotal = this.activeDays * MS_IN_DAY;
-      const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - (lastRecord.time + lastRecord.sampleInterval));
-
-      return _.min([realTotal, potentialTotal]);
-    })();
-
     // AGP Calculations
     const end = lastRecord?.time + lastRecord?.sampleInterval;
     const start = cbgData[0]?.time;
