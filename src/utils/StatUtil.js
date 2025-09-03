@@ -333,10 +333,10 @@ export class StatUtil {
       return _.min([realTotal, potentialTotal]);
     })();
 
-    const sensorUsageAGP = (
-      (duration / MS_IN_MIN) /
-      (this.activeDays * 24 * 60)
-    ) * 100;
+    // AGP Calculations
+    const end = lastRecord?.time + lastRecord?.sampleInterval;
+    const start = cbgData[0]?.time;
+    const sensorUsageAGP = (duration / (end - start)) * 100;
 
     return {
       sensorUsage:    duration,
