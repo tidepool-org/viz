@@ -5,7 +5,7 @@ import moment from 'moment-timezone';
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
 import { classifyBgValue } from './bloodglucose';
-import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
@@ -306,16 +306,16 @@ export class StatUtil {
 
     const OVERLAP_TOLERANCE = 10_000;
 
-    let blackoutWindow = 0;               // End of current blackout window (unix timestamp)
-    let duration = 0;                     // running total of the duration of kept datums (milliseconds)
-    let totalRecords = 0;                 // running count of all kept datums
-    let lastRecord = cbgData[0] || null;  // the latest kept datum
+    let blackoutWindow = 0; // End of current blackout window (unix timestamp)
+    let duration = 0; // running total of the duration of kept datums (milliseconds)
+    let totalRecords = 0; // running count of all kept datums
+    let lastRecord = cbgData[0] || null; // the latest kept datum
 
-    for(let i = 0; i < cbgData.length; i++) {
+    for (let i = 0; i < cbgData.length; i++) {
       const currentRecord = cbgData[i];
 
       // If current record occured within the current blackout window, discard it
-      if (currentRecord.time < blackoutWindow) continue;
+      if (currentRecord.time < blackoutWindow) continue; // eslint-disable-line no-continue
 
       // If the record is past the blackout window, add its duration to the total wear time.
       duration += currentRecord.sampleInterval;
@@ -324,9 +324,9 @@ export class StatUtil {
 
       // Then, set a new blackout window based on the current record's time window.
       blackoutWindow = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
-    };
+    }
 
-    const total = this.activeDays * MS_IN_DAY;
+    const totalMs = this.activeDays * MS_IN_DAY;
 
     // AGP Calculations
     const end = lastRecord?.time + lastRecord?.sampleInterval;
@@ -334,11 +334,11 @@ export class StatUtil {
     const sensorUsageAGP = (duration / (end - start)) * 100;
 
     return {
-      sensorUsage:    duration,
+      sensorUsage: duration,
       sensorUsageAGP: sensorUsageAGP || 0,
-      total:          total,
+      total: totalMs,
       sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
-      count:          totalRecords,
+      count: totalRecords,
     };
   };
 
