@@ -295,6 +295,7 @@ export class StatUtil {
   };
 
   getSensorUsage = () => {
+    this.filterCBGDataByDefaultSampleInterval();
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
     const cbgData = this.dataUtil.sort.byTime(_.cloneDeep(rawCbgData));
 
