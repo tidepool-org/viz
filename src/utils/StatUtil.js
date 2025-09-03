@@ -295,7 +295,6 @@ export class StatUtil {
   };
 
   getSensorUsage = () => {
-    this.filterCBGDataByDefaultSampleInterval();
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
     const cbgData = this.dataUtil.sort.byTime(_.cloneDeep(rawCbgData));
 
@@ -326,6 +325,8 @@ export class StatUtil {
       blackoutWindow = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
     };
 
+    const total = this.activeDays * MS_IN_DAY;
+
     // AGP Calculations
     const end = lastRecord?.time + lastRecord?.sampleInterval;
     const start = cbgData[0]?.time;
@@ -333,7 +334,7 @@ export class StatUtil {
 
     return {
       sensorUsage:    duration,
-      sensorUsageAGP: sensorUsageAGP || 0,
+      sensorUsageAGP: sensorUsageAGP,
       total:          total,
       sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
       count:          totalRecords,
