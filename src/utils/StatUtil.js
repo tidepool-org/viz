@@ -326,8 +326,12 @@ export class StatUtil {
     };
 
     // To mimic backend logic, we slice off the time until the end of the hour for the last reading
-    const potentialTotal = this.activeDays * MS_IN_DAY;
-    const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - (lastRecord.time + lastRecord.sampleInterval));
+    const total = (() => {
+      const potentialTotal = this.activeDays * MS_IN_DAY;
+      const realTotal = potentialTotal - (moment(lastRecord.time).endOf('hour').valueOf() - (lastRecord.time + lastRecord.sampleInterval));
+
+      return _.min([realTotal, potentialTotal]);
+    })();
 
     const sensorUsageAGP = (
       (duration / MS_IN_MIN) /
@@ -337,7 +341,7 @@ export class StatUtil {
     return {
       sensorUsage:    duration,
       sensorUsageAGP: sensorUsageAGP,
-      total:          realTotal,
+      total:          total,
       sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
       count:          totalRecords,
     };
