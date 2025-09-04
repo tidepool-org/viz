@@ -199,6 +199,22 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isLibreViewAPI', () => {
+    it('should return `true` for a matching `origin.name`', () => {
+      const nonMatching = { origin: { name: 'org.tidepool.abbott.libreview.partner.api.other' } };
+      const matching = { origin: { name: 'org.tidepool.abbott.libreview.partner.api' } };
+      expect(device.isLibreViewAPI(matching)).to.be.true;
+      expect(device.isLibreViewAPI(nonMatching)).to.be.false;
+    });
+
+    it('should return `true` for a matching `client.name`', () => {
+      const nonMatching = { client: { name: 'org.tidepool.abbott.libreview.partner.api.other' } };
+      const matching = { client: { name: 'org.tidepool.abbott.libreview.partner.api' } };
+      expect(device.isLibreViewAPI(matching)).to.be.true;
+      expect(device.isLibreViewAPI(nonMatching)).to.be.false;
+    });
+  });
+
   describe('isLoop', () => {
     it('should return `true` for a matching pattern within `origin.name` for DIY Loop or Tidepool Loop', () => {
       const diyLoop = { origin: { name: 'com.loopkit.Loop' } };

@@ -888,6 +888,15 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(libreDatum);
         expect(libreDatum.sampleInterval).to.equal(15 * MS_IN_MIN);
 
+        const libreViewAPIDatum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+          origin: { name: 'org.tidepool.abbott.libreview.partner.api' },
+        };
+        dataUtil.normalizeDatumIn(libreViewAPIDatum);
+        expect(libreViewAPIDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+        expect(libreViewAPIDatum.annotations[0]).to.eql({ code: 'cbg/unknown-sample-interval' });
+
         const libre3Datum = {
           type: 'cbg',
           deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',

@@ -16,6 +16,7 @@ import {
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
+  isLibreViewAPI,
 } from './device';
 
 import {
@@ -104,6 +105,7 @@ export class DataUtil {
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
+    this.dataAnnotations = this.dataAnnotations || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
 
@@ -217,9 +219,12 @@ export class DataUtil {
       // we rely on it for stat calculations and data filtering from the frontend queries.
       let sampleInterval = this.defaultCgmSampleInterval;
 
-      // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
-      // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
-      if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+      if (isLibreViewAPI(d)) {
+        d.annotations = d.annotations || [];
+        d.annotations.push({ code: 'cbg/unknown-sample-interval' });
+      } else if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+        // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
+        // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
         sampleInterval = 15 * MS_IN_MIN;
       }
 
@@ -850,6 +855,13 @@ export class DataUtil {
       d.fillDate = moment.utc(localTime).toISOString().slice(0, 10);
       d.id = `fill_${normalTimeISO.replace(/[^\w\s]|_/g, '')}`;
     }
+
+    // Store a reference to the various data annotations in current query results
+    if (d.annotations) {
+      _.each(d.annotations, (annotation) => {
+        if (!this.dataAnnotations[annotation.code]) this.dataAnnotations[annotation.code] = annotation;
+      });
+    }
   };
 
   normalizeDatumOutTime = d => {
@@ -985,6 +997,7 @@ export class DataUtil {
       this.latestDatumByType = {};
       this.deviceUploadMap = {};
       this.clearMatchedDevices();
+      this.clearDataAnnotations();
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
@@ -1428,6 +1441,19 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  setDataAnnotations = () => {
+    this.startTimer('setDataAnnotations');
+    this.dataAnnotations = [];
+
+    _.each(this.devices, device => {
+      if (device.id.indexOf('AbbottFreeStyleLibre') === 0) {
+        this.dataAnnotations.push({ code: 'cbg/unknown-sample-interval' });
+      }
+    });
+
+    this.endTimer('setDataAnnotations');
+  };
+
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -1439,6 +1465,7 @@ export class DataUtil {
     this.setTypes();
     this.setUploadMap();
     this.setDevices();
+    this.setDataAnnotations();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.setLatestDiabetesDatumEnd();
@@ -1648,6 +1675,10 @@ export class DataUtil {
     this.matchedDevices = {};
   };
 
+  clearDataAnnotations = () => {
+    this.dataAnnotations = {};
+  };
+
   setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
     this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
   };
@@ -1681,7 +1712,7 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    // Clear matchedDevices metaData if the current endpoints change
+    // Clear matchedDevices and dataAnnotations metaData if the current endpoints change
     const activeDaysChanged = activeDays && !_.isEqual(activeDays, this.activeDays);
     const bgSourceChanged = bgSource !== this.bgSources?.current;
     const endpointsChanged = endpoints && !_.isEqual(endpoints, this.endpoints?.current?.range);
@@ -1689,6 +1720,7 @@ export class DataUtil {
 
     if (activeDaysChanged || bgSourceChanged || endpointsChanged || excludedDevicesChanged) {
       this.clearMatchedDevices();
+      this.clearDataAnnotations();
     }
 
     this.setReturnRawData(raw);
@@ -1897,6 +1929,7 @@ export class DataUtil {
       'devices',
       'excludedDevices',
       'matchedDevices',
+      'dataAnnotations',
       'queryDataCount',
     ];
 

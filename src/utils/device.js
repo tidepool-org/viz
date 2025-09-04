@@ -60,6 +60,13 @@ export function isControlIQ(datum = {}) {
 }
 
 /**
+ * Check to see if datum is from LibreView API
+ */
+export function isLibreViewAPI(datum = {}) {
+  return (datum?.client?.name || datum?.origin?.name) === 'org.tidepool.abbott.libreview.partner.api';
+}
+
+/**
  * Check to see if datum is from a known Loop device
  */
 export function isLoop(datum = {}) {
