@@ -1764,6 +1764,26 @@ describe('DataUtil', () => {
       expect(uploadWithoutSourceDatum.source).to.equal('Unspecified Data Source');
     });
 
+    it('should build a list of unique data annotations by code', () => {
+      const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
+      const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
+
+      dataUtil.dataAnnotations = {};
+
+      dataUtil.normalizeDatumOut(datum1);
+      expect(dataUtil.dataAnnotations).to.eql({
+        A: { code: 'A', value: 'A value' },
+        B: { code: 'B', value: 'B value' },
+      });
+
+      dataUtil.normalizeDatumOut(datum2);
+      expect(dataUtil.dataAnnotations).to.eql({
+        A: { code: 'A', value: 'A value' },
+        B: { code: 'B', value: 'B value' },
+        C: { code: 'C', value: 'C value' },
+      });
+    });
+
     context('returnRawData is `true`', () => {
       beforeEach(() => {
         dataUtil.returnRawData = true;
@@ -2694,6 +2714,12 @@ describe('DataUtil', () => {
         dataUtil.removeData();
         expect(dataUtil.matchedDevices).to.eql({});
       });
+
+      it('should clear the `dataAnnotations` metadata', () => {
+        dataUtil.dataAnnotations = { A: { code: 'A', value: 'A value' } };
+        dataUtil.removeData();
+        expect(dataUtil.dataAnnotations).to.eql({});
+      });
     });
   });
 
@@ -3617,6 +3643,14 @@ describe('DataUtil', () => {
           serialNumber: undefined
         },
       ]);
+    });
+  });
+
+  describe('clearDataAnnotations', () => {
+    it('should clear all data annotations', () => {
+      dataUtil.dataAnnotations = { A: { code: 'A', value: 'A value' }, B: { code: 'B', value: 'B value' } };
+      dataUtil.clearDataAnnotations();
+      expect(dataUtil.dataAnnotations).to.eql({});
     });
   });
 

@@ -1441,19 +1441,6 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
-  setDataAnnotations = () => {
-    this.startTimer('setDataAnnotations');
-    this.dataAnnotations = [];
-
-    _.each(this.devices, device => {
-      if (device.id.indexOf('AbbottFreeStyleLibre') === 0) {
-        this.dataAnnotations.push({ code: 'cbg/unknown-sample-interval' });
-      }
-    });
-
-    this.endTimer('setDataAnnotations');
-  };
-
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -1465,7 +1452,6 @@ export class DataUtil {
     this.setTypes();
     this.setUploadMap();
     this.setDevices();
-    this.setDataAnnotations();
     this.setLatestPumpUpload();
     this.setIncompleteSuspends();
     this.setLatestDiabetesDatumEnd();
