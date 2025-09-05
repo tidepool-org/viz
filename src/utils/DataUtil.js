@@ -54,7 +54,7 @@ import {
 
 import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
-import { statFetchMethods } from './stat';
+import { commonStats, statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
 
 const t = i18next.t.bind(i18next);
@@ -856,12 +856,7 @@ export class DataUtil {
       d.id = `fill_${normalTimeISO.replace(/[^\w\s]|_/g, '')}`;
     }
 
-    // Store a reference to the various data annotations in current query results
-    if (d.annotations) {
-      _.each(d.annotations, (annotation) => {
-        if (!this.dataAnnotations[annotation.code]) this.dataAnnotations[annotation.code] = annotation;
-      });
-    }
+    this.setDataAnnotations(d);
   };
 
   normalizeDatumOutTime = d => {
@@ -1441,6 +1436,15 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  setDataAnnotations = d => {
+    if (this.trackDataAnnotations && d.annotations?.length) {
+      // Set any new annotation by code to the dataAnnotations metaData map
+      _.each(d.annotations, (annotation) => {
+        if (!this.dataAnnotations[annotation.code]) this.dataAnnotations[annotation.code] = annotation;
+      });
+    }
+  };
+
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -1698,7 +1702,7 @@ export class DataUtil {
     // Clear all previous filters
     this.clearFilters();
 
-    // Clear matchedDevices and dataAnnotations metaData if the current endpoints change
+    // Clear matchedDevices metaData if the current endpoints change
     const activeDaysChanged = activeDays && !_.isEqual(activeDays, this.activeDays);
     const bgSourceChanged = bgSource !== this.bgSources?.current;
     const endpointsChanged = endpoints && !_.isEqual(endpoints, this.endpoints?.current?.range);
@@ -1706,7 +1710,6 @@ export class DataUtil {
 
     if (activeDaysChanged || bgSourceChanged || endpointsChanged || excludedDevicesChanged) {
       this.clearMatchedDevices();
-      this.clearDataAnnotations();
     }
 
     this.setReturnRawData(raw);
@@ -1727,6 +1730,7 @@ export class DataUtil {
       this.activeRange = rangeKey;
       this.activeEndpoints = rangeEndpoints;
       this.matchDevices = false;
+      this.trackDataAnnotations = false;
       data[rangeKey] = {};
 
       // Filter the data set by date range
@@ -1740,6 +1744,17 @@ export class DataUtil {
 
       if (rangeKey === 'current') {
         this.matchDevices = true;
+        const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
+        const dataAnnotationsRequested = _.includes(requestedMetaData, 'dataAnnotations');
+
+        // We generate annotations metaData only when typed data is requested, or certain stats are
+        // being requested that may be inaccurate when certain annotations are present in the data.
+        this.trackDataAnnotations = dataAnnotationsRequested && (
+          this.types.length || _.intersection(this.stats, [commonStats.sensorUsage, commonStats.timeInRange]).length
+        );
+
+        // Clear previous dataAnnotations metaData so we can track annotations for only the current data
+        if (this.trackDataAnnotations) this.clearDataAnnotations();
 
         // Generate the aggregations for current range
         if (aggregationsByDate) {
@@ -1787,9 +1802,10 @@ export class DataUtil {
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    // Always reset `returnRawData` and `matchDevices` to `false` after each query
+    // Always reset `returnRawData`, `matchDevices` and `trackDataAnnotations` to `false` after each query
     this.setReturnRawData(false);
     this.matchDevices = false;
+    this.trackDataAnnotations = false;
 
     this.log('Result', result);
 
