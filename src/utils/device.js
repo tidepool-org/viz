@@ -63,7 +63,8 @@ export function isControlIQ(datum = {}) {
  * Check to see if datum is from LibreView API
  */
 export function isLibreViewAPI(datum = {}) {
-  return (datum?.client?.name || datum?.origin?.name) === 'org.tidepool.abbott.libreview.partner.api';
+  const TARGET = 'org.tidepool.abbott.libreview.partner.api';
+  return datum?.client?.name === TARGET || datum?.origin?.name === TARGET;
 }
 
 /**
