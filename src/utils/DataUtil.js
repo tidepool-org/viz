@@ -47,12 +47,9 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE,
   ALARM,
-  ALARM_NO_DELIVERY,
-  ALARM_AUTO_OFF,
   ALARM_NO_INSULIN,
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
-  ALARM_OVER_LIMIT,
 } from './constants';
 
 import {
@@ -667,16 +664,6 @@ export class DataUtil {
     if (d.type === 'deviceEvent') {
       const isReservoirChange = d.subType === 'reservoirChange';
       const isPrime = d.subType === 'prime';
-      const isAlarm = d.subType === 'alarm';
-
-      const recognizedAlarmTypes = [
-        ALARM_NO_DELIVERY,
-        ALARM_AUTO_OFF,
-        ALARM_NO_INSULIN,
-        ALARM_NO_POWER,
-        ALARM_OCCLUSION,
-        ALARM_OVER_LIMIT,
-      ];
 
       d.tags = {
         automatedSuspend: (
@@ -690,14 +677,24 @@ export class DataUtil {
         [SITE_CHANGE_RESERVOIR]: isReservoirChange,
         [SITE_CHANGE_CANNULA]: isPrime && d.primeTarget === 'cannula',
         [SITE_CHANGE_TUBING]: isPrime && d.primeTarget === 'tubing',
-        [ALARM]: isAlarm && _.includes(recognizedAlarmTypes, d.alarmType),
-        [ALARM_NO_DELIVERY]: d.alarmType === ALARM_NO_DELIVERY,
-        [ALARM_AUTO_OFF]: d.alarmType === ALARM_AUTO_OFF,
-        [ALARM_NO_INSULIN]: d.alarmType === ALARM_NO_INSULIN,
-        [ALARM_NO_POWER]: d.alarmType === ALARM_NO_POWER,
-        [ALARM_OCCLUSION]: d.alarmType === ALARM_OCCLUSION,
-        [ALARM_OVER_LIMIT]: d.alarmType === ALARM_OVER_LIMIT,
       };
+
+      if (isTwiistLoop(d)) {
+        const recognizedAlarmTypes = [
+          ALARM_NO_INSULIN,
+          ALARM_NO_POWER,
+          ALARM_OCCLUSION,
+        ];
+
+        d.tags = {
+          ...d.tags,
+          [ALARM]: d.subType === 'alarm' && _.includes(recognizedAlarmTypes, d.alarmType),
+          ..._.reduce(recognizedAlarmTypes, (acc, type) => {
+            acc[type] = d.alarmType === type;
+            return acc;
+          }, {}),
+        };
+      }
     }
   };
 

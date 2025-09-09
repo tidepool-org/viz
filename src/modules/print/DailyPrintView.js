@@ -412,7 +412,7 @@ class DailyPrintView extends PrintView {
       .fontSize(this.smallFontSize)
       .fillColor(colors.gray50)
       .text(
-        t('1 - The Pump Alarm icon indicates that one of the following alarms occurred: Insulin Delivery Stopped, Pump Auto-Off, Reservoir Empty, Battery Empty, Occlusion Detected or Line Blocked, or Insulin Delivery Limit Exceeded. Please note that not all pump alarms are shown.'),
+        t('1 - The Pump Alarm icon indicates that one of the following alarms occurred: Reservoir Empty, Battery Empty, or Line Blocked. Please note that pump alarms are only shown for twiist devices and not all alarms are shown.'),
         this.leftEdge,
         this.chartFootnotesYPos
       );
