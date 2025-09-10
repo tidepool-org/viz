@@ -1001,6 +1001,35 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  deduplicate = (data = []) => {
+    const cbgData = this.sort.byTime(_.cloneDeep(data));
+
+    // Iterate through the time-ordered list of glucose data. For each datum, we set a blackout
+    // period for the window of time it should occupy - e.g. if a datum has a time of 14:30 and
+    // a duration of 5 mins, then any other records occuring between 14:30 to 14:35 should NOT
+    // contribute to the CGM wear time.
+
+    const OVERLAP_TOLERANCE = MS_IN_MIN / 6; // === 10 seconds
+
+    let blackoutUntil = 0; // end of current blackout window (unix timestamp)
+
+    const output = [];
+
+    for (let i = 0; i < cbgData.length; i++) {
+      const currentRecord = cbgData[i];
+
+      // If current record occured within the current blackout window, discard it
+      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line no-continue
+
+      // If the record is past the blackout window, add the datum, then set a new
+      // blackout window based on the current record's time window
+      output.push(currentRecord);
+      blackoutUntil = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
+    }
+
+    return output;
+  };
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {

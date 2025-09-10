@@ -297,47 +297,23 @@ export class StatUtil {
   getSensorUsage = () => {
     this.filterCBGDataByDefaultSampleInterval();
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    const cbgData = this.dataUtil.sort.byTime(_.cloneDeep(rawCbgData));
+    const cbgData = this.dataUtil.deduplicate(rawCbgData);
 
-    // Iterate through the time-ordered list of glucose data. For each datum, we set a blackout
-    // period for the window of time it should occupy - e.g. if a datum has a time of 14:30 and
-    // a duration of 5 mins, then any other records occuring between 14:30 to 14:35 should NOT
-    // contribute to the CGM wear time.
-
-    const OVERLAP_TOLERANCE = 10_000;
-
-    let blackoutWindow = 0; // End of current blackout window (unix timestamp)
-    let duration = 0; // running total of the duration of kept datums (milliseconds)
-    let totalRecords = 0; // running count of all kept datums
-    let lastRecord = cbgData[0] || null; // the latest kept datum
+    let duration = 0;
+    let totalRecords = 0;
 
     for (let i = 0; i < cbgData.length; i++) {
-      const currentRecord = cbgData[i];
-
-      // If current record occured within the current blackout window, discard it
-      if (currentRecord.time < blackoutWindow) continue; // eslint-disable-line no-continue
-
-      // If the record is past the blackout window, add its duration to the total wear time.
-      duration += currentRecord.sampleInterval;
+      duration += cbgData[i].sampleInterval;
       totalRecords += 1;
-      lastRecord = currentRecord;
-
-      // Then, set a new blackout window based on the current record's time window.
-      blackoutWindow = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
     }
 
     const totalMs = this.activeDays * MS_IN_DAY;
 
-    // AGP Calculations
-    const end = lastRecord?.time + lastRecord?.sampleInterval;
-    const start = cbgData[0]?.time;
-    const sensorUsageAGP = (duration / (end - start)) * 100;
-
     return {
       sensorUsage: duration,
-      sensorUsageAGP: sensorUsageAGP || 0,
+      sensorUsageAGP: 0, // TODO: fix
       total: totalMs,
-      sampleInterval: lastRecord?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
+      sampleInterval: _.last(cbgData)?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
       count: totalRecords,
     };
   };
