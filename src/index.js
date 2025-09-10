@@ -41,7 +41,14 @@ import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
 import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
 import { getTotalBasalFromEndpoints, getGroupDurations } from './utils/basal';
-import { DEFAULT_BG_BOUNDS } from './utils/constants';
+import {
+  DEFAULT_BG_BOUNDS,
+  ADA_STANDARD_BG_BOUNDS,
+  ADA_GESTATIONAL_T2_BG_BOUNDS,
+  ADA_OLDER_HIGH_RISK_BG_BOUNDS,
+  ADA_PREGNANCY_T1_BG_BOUNDS,
+  GLYCEMIC_RANGE,
+} from './utils/constants';
 
 import colors from './colors';
 
@@ -72,6 +79,7 @@ import { trendsText } from './utils/trends/data';
 import { agpCGMText } from './utils/agp/data';
 import TextUtil from './utils/text/TextUtil';
 import { generateAGPFigureDefinitions } from './utils/print/plotly';
+import AGPConstants from './modules/print/utils/AGPConstants';
 
 import {
   basicsText,
@@ -113,6 +121,7 @@ const containers = {
 
 const utils = {
   agp: {
+    AGPConstants,
     generateAGPFigureDefinitions,
   },
   basal: {
@@ -127,6 +136,11 @@ const utils = {
   },
   constants: {
     DEFAULT_BG_BOUNDS,
+    ADA_STANDARD_BG_BOUNDS,
+    ADA_OLDER_HIGH_RISK_BG_BOUNDS,
+    ADA_PREGNANCY_T1_BG_BOUNDS,
+    ADA_GESTATIONAL_T2_BG_BOUNDS,
+    GLYCEMIC_RANGE,
   },
   datetime: {
     findBasicsStart,

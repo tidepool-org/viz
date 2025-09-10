@@ -21,7 +21,15 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
-import { MGDL_UNITS, MS_IN_DAY, MS_IN_HOUR, BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
+import {
+  MGDL_UNITS,
+  MS_IN_DAY,
+  MS_IN_HOUR,
+  BGM_DATA_KEY,
+  CGM_DATA_KEY,
+  GLYCEMIC_RANGE,
+  ADA_STANDARD_BG_BOUNDS
+} from '../../../utils/constants';
 import moment from 'moment';
 
 export const boldText = textString => `<b>${String(textString)}</b>`;
@@ -156,6 +164,7 @@ export const generateChartSections = (data, bgSource) => {
   const dataSufficiency = bgSource === CGM_DATA_KEY
     ? calculateCGMDataSufficiency(data)
     : calculateBGMDataSufficiency(data);
+  const glycemicRanges = data.query?.glycemicRanges || GLYCEMIC_RANGE.ADA_STANDARD;
 
   sections.percentInRanges = {
     bgSource,
@@ -164,7 +173,10 @@ export const generateChartSections = (data, bgSource) => {
     width: DPI * 3.875,
     height: DPI * 3,
     bordered: true,
-    text: text.percentInRanges[bgSource],
+    text: {
+      title: text.percentInRanges.title[bgSource],
+      subtitle: text.percentInRanges.subtitle[glycemicRanges]
+    },
     sufficientData: dataSufficiency.percentInRanges,
   };
 
@@ -219,9 +231,15 @@ export const generateChartSections = (data, bgSource) => {
  * @param {*} section
  * @param {*} stat
  * @param {*} bgPrefs
+ * @param {*} glycemicRanges
  * @returns
  */
-export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
+export const generatePercentInRangesFigure = (
+  section,
+  stat,
+  bgPrefs,
+  glycemicRanges = GLYCEMIC_RANGE.ADA_STANDARD
+) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
   const chartAreaHeight = section.height - 2 - DPI * 0.25 - AGP_SECTION_BORDER_RADIUS;
@@ -235,17 +253,20 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
   const yScale = pixelsToChartScale.bind(null, paperHeight);
   const xScale = pixelsToChartScale.bind(null, paperWidth);
 
+  const hasVeryLow = _.isNumber(bgPrefs?.bgBounds?.veryLowThreshold);
+  const hasVeryHigh = _.isNumber(bgPrefs?.bgBounds?.veryHighThreshold);
+
   const statTotal = _.get(stat, 'data.raw.counts.total', 0);
   if (section.sufficientData) {
     const rawCounts = _.get(stat, 'data.raw.counts', {});
 
-    const statDatums = [
-      { id: 'veryLow', value: rawCounts.veryLow },
+    const statDatums = _.filter([
+      hasVeryLow && { id: 'veryLow', value: rawCounts.veryLow },
       { id: 'low', value: rawCounts.low },
       { id: 'target', value: rawCounts.target },
       { id: 'high', value: rawCounts.high },
-      { id: 'veryHigh', value: rawCounts.veryHigh },
-    ];
+      hasVeryHigh && { id: 'veryHigh', value: rawCounts.veryHigh },
+    ], Boolean);
 
     const chartData = _.reduce(statDatums, (res, datum, i) => {
       const value = _.toNumber(datum.value) / statTotal * 1;
@@ -278,31 +299,51 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       },
     }));
 
-    const bgTicks = _.map([
-      bgPrefs?.bgBounds?.veryLowThreshold,
-      bgPrefs?.bgBounds?.targetLowerBound,
-      bgPrefs?.bgBounds?.targetUpperBound,
-      bgPrefs?.bgBounds?.veryHighThreshold,
+    const tickYPos = (() => {
+      const ticks = [...chartData.ticks];
+
+      if (!hasVeryLow) ticks.unshift(0); // if no veryLow, low range stretches to the bottom
+
+      if (!hasVeryHigh) ticks.push(1); // if no veryHigh, high range to stretches to the top
+
+      return {
+        veryLowThreshold: ticks[0],
+        targetLowerBound: ticks[1],
+        targetUpperBound: ticks[2],
+        veryHighThreshold: ticks[3],
+        max: ticks[4]
+      };
+    })();
+
+    /* eslint-disable lodash/prefer-lodash-method */
+    const bgTicks = [
+      hasVeryLow && bgPrefs?.bgBounds?.veryLowThreshold,
+      bgPrefs.bgBounds.targetLowerBound,
+      bgPrefs.bgBounds.targetUpperBound,
+      hasVeryHigh && bgPrefs?.bgBounds?.veryHighThreshold,
       bgPrefs?.bgUnits,
-    ], (tick, index) => createAnnotation({
-      align: 'right',
-      font: {
-        size: fontSizes.percentInRanges.ticks,
-      },
-      text: index === 4 // bgUnits label
-        ? boldText(tick)
-        : boldText(formatBgValue(tick, bgPrefs, undefined, true)),
-      x: 0,
-      xanchor: 'right',
-      xshift: -2,
-      y: index === 4 // bgUnits label
-        ? chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2)
-        : chartData.ticks[index],
-      yanchor: 'middle',
-    }));
+    ]
+      .filter(Boolean)
+      .map((tick, index, arr) => createAnnotation({
+        align: 'right',
+        font: {
+          size: fontSizes.percentInRanges.ticks,
+        },
+        text: (index === arr.length - 1) // bgUnits label
+          ? boldText(tick)
+          : boldText(formatBgValue(tick, bgPrefs, undefined)),
+        x: 0,
+        xanchor: 'right',
+        xshift: -2,
+        y: (index === arr.length - 1) // bgUnits label
+          ? tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2)
+          : chartData.ticks[index],
+        yanchor: 'middle',
+      }));
+    /* eslint-enable lodash/prefer-lodash-method */
 
     /* eslint-disable no-param-reassign */
-    const getBracketPosValues = (posX, posX2, posY, posY2) => {
+    const getBracketPosValues = (name, posX, posX2, posY, posY2) => {
       const minBracketYOffSet = yScale(13);
 
       if (_.isNumber(posY2)) {
@@ -321,15 +362,21 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         };
       }
 
-      // Only a single Ypos is passed for the target bracket
-      // We need to ensure it's not too close to the range enxtents to avoid potential crowding
-      const targetBracketAllowedYRange = [
-        yScale(AGP_TIR_MIN_TARGET_HEIGHT),
-        1 - (yScale(AGP_TIR_MIN_TARGET_HEIGHT)),
-      ];
+      // If only a single Ypos is passed when:
+      // -- Target bracket
+      // -- Low bracket if veryLow range does not exist
+      // -- High bracket if veryHigh range does not exist
 
-      if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
-      if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
+      // If Target, we need to ensure it's not too close to the range extents to avoid potential crowding
+      if (name === 'TARGET') {
+        const targetBracketAllowedYRange = [
+          yScale(AGP_TIR_MIN_TARGET_HEIGHT),
+          1 - (yScale(AGP_TIR_MIN_TARGET_HEIGHT)),
+        ];
+
+        if (posY < targetBracketAllowedYRange[0]) posY = targetBracketAllowedYRange[0];
+        if (posY > targetBracketAllowedYRange[1]) posY = targetBracketAllowedYRange[1];
+      }
 
       return { posX, posX2, posY };
     };
@@ -367,25 +414,30 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       ].join(' ');
     };
 
-    const bracketYPos = [
-      // Low Brackets
-      chartData.ticks[0],
-      yScale(-11),
-
-      // Target Bracket
-      chartData.ticks[1] + ((chartData.ticks[2] - chartData.ticks[1]) / 2),
-
-      // High Brackets
-      chartData.ticks[4],
-      chartData.ticks[2] + ((chartData.ticks[3] - chartData.ticks[2]) / 2),
-    ];
+    const bracketYPos = {
+      veryLow: yScale(-11),
+      low: tickYPos.veryLowThreshold,
+      target: tickYPos.targetLowerBound + ((tickYPos.targetUpperBound - tickYPos.targetLowerBound) / 2),
+      high: tickYPos.targetUpperBound + ((tickYPos.veryHighThreshold - tickYPos.targetUpperBound) / 2),
+      veryHigh: tickYPos.max,
+    };
 
     const bracketXExtents = [xScale(barWidth + 5), xScale(paperWidth - barWidth)];
 
     const bracketPos = {
-      low: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(0, 2)),
-      target: getBracketPosValues(...bracketXExtents, bracketYPos[2]),
-      high: getBracketPosValues(...bracketXExtents, ...bracketYPos.slice(3)),
+      low: (
+        hasVeryLow
+          ? getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low, bracketYPos.veryLow)
+          : getBracketPosValues('LOW', ...bracketXExtents, bracketYPos.low)
+      ),
+
+      target: getBracketPosValues('TARGET', ...bracketXExtents, bracketYPos.target),
+
+      high: (
+        hasVeryHigh
+          ? getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.veryHigh, bracketYPos.high)
+          : getBracketPosValues('HIGH', ...bracketXExtents, bracketYPos.high)
+      ),
     };
 
     const brackets = _.map(_.values(bracketPos), pos => ({
@@ -420,12 +472,12 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
 
     const leaderXExtents = [xScale(barWidth / 2), xScale(barWidth + 2)];
 
-    const leaderPos = {
-      veryLow: [...leaderXExtents, ...leaderYPos.slice(0, 2)],
-      veryHigh: [...leaderXExtents, ...leaderYPos.slice(2)],
-    };
+    const leaderPos = _.filter([
+      (hasVeryLow && [...leaderXExtents, ...leaderYPos.slice(0, 2)]),
+      (hasVeryHigh && [...leaderXExtents, ...leaderYPos.slice(2)]),
+    ], Boolean);
 
-    const leaders = _.map(_.values(leaderPos), pos => ({
+    const leaders = _.map(leaderPos, pos => ({
       type: 'path',
       path: createLeaderSVG(...pos),
       line: { color: colors.black, width: 0.5 },
@@ -436,17 +488,17 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       veryLow: bracketPos.low.posY2,
       low: bracketPos.low.posY,
       target: bracketPos.target.posY,
-      high: bracketPos.high.posY2,
+      high: hasVeryHigh ? bracketPos.high.posY2 : bracketPos.high.posY,
       veryHigh: bracketPos.high.posY,
     };
 
-    const rangePosYOrderedKeys = [
-      'veryLow',
+    const rangePosYOrderedKeys = _.filter([
+      hasVeryLow && 'veryLow',
       'low',
       'target',
       'high',
-      'veryHigh',
-    ];
+      hasVeryHigh && 'veryHigh',
+    ], Boolean);
 
     const rangeLabels = _.map(rangePosYOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -463,12 +515,12 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       yshift: -1,
     }));
 
-    const rangeValuesOrderedKeys = [
-      'veryLow',
-      'low',
-      'high',
-      'veryHigh',
-    ];
+    const rangeValuesOrderedKeys = _.filter([
+      hasVeryLow && 'veryLow',
+      hasVeryLow && 'low',
+      hasVeryHigh && 'high',
+      hasVeryHigh && 'veryHigh',
+    ], Boolean);
 
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
@@ -486,15 +538,15 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
     }));
 
     const rangeSummaryPosY = {
-      low: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
+      low: hasVeryLow ? (bracketPos.low.posY2 + bracketPos.low.subBracketYOffset) : bracketPos.low.posY,
       target: bracketPos.target.posY,
-      high: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
+      high: hasVeryHigh ? (bracketPos.high.posY2 + bracketPos.high.subBracketYOffset) : bracketPos.high.posY,
     };
 
     const combinedRangeSummaryValues = {
-      low: chartData.rawById.veryLow + chartData.rawById.low,
+      low: (chartData.rawById.veryLow || 0) + chartData.rawById.low,
       target: chartData.rawById.target,
-      high: chartData.rawById.veryHigh + chartData.rawById.high,
+      high: (chartData.rawById.veryHigh || 0) + chartData.rawById.high,
     };
 
     const rangeSummaryOrderedKeys = [
@@ -529,22 +581,22 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       lowCombined: {
         x: bracketXExtents[1],
         xanchor: 'right',
-        xshift: 1,
-        y: bracketPos.low.posY2 + bracketPos.low.subBracketYOffset,
+        xshift: 5,
+        y: hasVeryLow ? (bracketPos.low.posY2 + bracketPos.low.subBracketYOffset) : bracketPos.low.posY,
         yshift: 0,
       },
       target: {
         x: bracketXExtents[1],
         xanchor: 'right',
-        xshift: 1,
+        xshift: 5,
         y: bracketPos.target.posY,
         yshift: 0,
       },
       highCombined: {
         x: bracketXExtents[1],
         xanchor: 'right',
-        xshift: 1,
-        y: bracketPos.high.posY2 + bracketPos.high.subBracketYOffset,
+        xshift: 5,
+        y: hasVeryHigh ? (bracketPos.high.posY2 + bracketPos.high.subBracketYOffset) : bracketPos.high.posY,
         yshift: 0,
       },
       veryHigh: {
@@ -556,13 +608,27 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
       },
     };
 
-    const goalsOrderedKeys = [
+    // User is viewing a PwD self-defined range if glycemicRanges is set to ADA Standard,
+    // but targetLowerBound or targetUpperBound do not match those of the ADA Standard
+    const isPwdSelfDefinedRange = (
+      glycemicRanges === GLYCEMIC_RANGE.ADA_STANDARD && (
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].veryLowThreshold !== bgPrefs.bgBounds?.veryLowThreshold ||
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetLowerBound !== bgPrefs.bgBounds?.targetLowerBound ||
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetUpperBound !== bgPrefs.bgBounds?.targetUpperBound ||
+        ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].veryHighThreshold !== bgPrefs.bgBounds?.veryHighThreshold
+      )
+    );
+
+    const goalGlycemicRangesKey = isPwdSelfDefinedRange ? 'PWD_SELF_DEFINED' : glycemicRanges;
+
+    // if PwD self-defined range, show goal for every stat; otherwise show only goals that exist
+    const goalsOrderedKeys = _.filter([
       'veryLow',
       'lowCombined',
       'target',
       'highCombined',
       'veryHigh',
-    ];
+    ], range => !!text.goals[goalGlycemicRangesKey][range]);
 
     const goals = _.map(goalsOrderedKeys, range => createAnnotation({
       align: 'left',
@@ -570,7 +636,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         color: colors.text.goals[range],
         size: fontSizes.percentInRanges.goals,
       },
-      text: text.goals[range],
+      text: text.goals[goalGlycemicRangesKey][range],
       yanchor: 'bottom',
       yref: 'paper',
       ...goalsPos[range],
@@ -590,7 +656,7 @@ export const generatePercentInRangesFigure = (section, stat, bgPrefs) => {
         xanchor: 'right',
         xref: 'paper',
         xshift: plotMarginX - 7,
-        y: bracketPos.low.posY2,
+        y: hasVeryLow ? bracketPos.low.posY2 : bracketPos.low.posY - 0.05,
         yshift: -12,
       },
     };
@@ -710,6 +776,9 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
   const paperWidth = chartAreaWidth - (plotMarginX * 2);
   const paperHeight = chartAreaHeight - (plotMarginY * 2);
 
+  const hasVeryHigh = _.isNumber(bgPrefs?.bgBounds?.veryHighThreshold);
+  const hasVeryLow = _.isNumber(bgPrefs?.bgBounds?.veryLowThreshold);
+
   if (section.sufficientData || bgSource === BGM_DATA_KEY) {
     const yClamp = bgPrefs?.bgUnits === MGDL_UNITS ? AGP_BG_CLAMP_MGDL : AGP_BG_CLAMP_MMOLL;
     const chartData = mungeBGDataBins(bgSource, ONE_HR, bgData, [AGP_LOWER_QUANTILE, AGP_UPPER_QUANTILE]);
@@ -789,25 +858,31 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       },
     });
 
-    const bgRangeKeys = [
-      'veryLow',
+    // Define ranges to show on AGP. Start with only Low, Target, and High.
+    // Add veryLow and veryHigh range if their respective thresholds exist.
+    const bgRangeKeys = _.filter([
+      hasVeryLow && 'veryLow',
       'low',
       'target',
       'high',
-      'veryHigh',
-    ];
+      hasVeryHigh && 'veryHigh',
+    ], Boolean);
 
-    const bgTicks = [
+    const bgTicks = _.filter([
       0,
-      bgPrefs?.bgBounds?.veryLowThreshold,
-      bgPrefs?.bgBounds?.targetLowerBound,
-      bgPrefs?.bgBounds?.targetUpperBound,
-      bgPrefs?.bgBounds?.veryHighThreshold,
+      hasVeryLow && bgPrefs.bgBounds.veryLowThreshold,
+      bgPrefs.bgBounds.targetLowerBound,
+      bgPrefs.bgBounds.targetUpperBound,
+      hasVeryHigh && bgPrefs.bgBounds.veryHighThreshold,
       yClamp,
-    ];
+    ], tick => _.isNumber(tick));
+
+    const targetStart = _.findIndex(bgRangeKeys, key => key === 'target');
+    const targetEnd = targetStart + 1;
 
     const bgTickAnnotations = _.map(bgTicks, (tick, index) => {
-      const isTarget = _.includes([2, 3], index);
+      const isTarget = _.includes([targetStart, targetEnd], index);
+
       let yshift = 0;
       if (index === 0) yshift = 4;
       if (index === 1) yshift = -2;
@@ -857,7 +932,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
       ].join(' ');
     };
 
-    const bgTargetMarkers = _.map(_.slice(bgTicks, 2, 4), tick => ({
+    const bgTargetMarkers = _.map(_.slice(bgTicks, targetStart, targetEnd + 1), tick => ({
       fillcolor: colors.line.range.target,
       line: {
         width: 0,
@@ -875,7 +950,7 @@ export const generateAmbulatoryGlucoseProfileFigure = (section, bgData, bgPrefs,
 
     const bgGridLines = _.map(bgTicks, (tick, index) => {
       const isClamp = index === 5;
-      const isTarget = _.includes([2, 3], index);
+      const isTarget = _.includes([targetStart, targetEnd], index);
       const isZero = index === 0;
 
       return {
