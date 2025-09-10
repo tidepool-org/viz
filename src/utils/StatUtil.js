@@ -63,7 +63,12 @@ export class StatUtil {
   getBgExtentsData = () => {
     if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
 
-    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+
+    if (this.bgSource === CGM_DATA_KEY) {
+      bgData = this.dataUtil.deduplicate(bgData);
+    }
+
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const rawBgData = this.dataUtil.sort.byTime(_.cloneDeep(bgData));
@@ -314,8 +319,7 @@ export class StatUtil {
 
     const totalMs = this.activeDays * MS_IN_DAY;
 
-    const oldestDatum = _.first(cbgData) || null;
-    const newestDatum = _.last(cbgData) || null;
+    const { newestDatum, oldestDatum } = this.getBgExtentsData();
     const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
