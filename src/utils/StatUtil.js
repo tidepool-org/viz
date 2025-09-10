@@ -423,7 +423,8 @@ export class StatUtil {
 
   getTimeInRangeData = () => {
     this.filterCBGDataByDefaultSampleInterval();
-    const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
+    const rawCbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
+    const cbgData = this.dataUtil.deduplicate(rawCbgData);
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const initialValue = {
