@@ -40,7 +40,12 @@ export class StatUtil {
   getAverageGlucoseData = (returnBgData = false) => {
     if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
 
-    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+
+    if (this.bgSource === CGM_DATA_KEY) {
+      bgData = this.dataUtil.deduplicate(bgData);
+    }
+
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const data = {
