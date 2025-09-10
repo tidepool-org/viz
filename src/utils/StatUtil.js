@@ -5,7 +5,7 @@ import moment from 'moment-timezone';
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
 import { getTotalBolus } from './bolus';
 import { classifyBgValue } from './bloodglucose';
-import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY } from './constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
@@ -309,9 +309,28 @@ export class StatUtil {
 
     const totalMs = this.activeDays * MS_IN_DAY;
 
+    const oldestDatum = _.first(cbgData) || null;
+    const newestDatum = _.last(cbgData) || null;
+    const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
+    if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
+    if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
+
+    let cgmMinutesWorn;
+
+    if (cbgData.length < 2) {
+      cgmMinutesWorn = cbgData.length === 1 ? sampleInterval : 0;
+    } else {
+      cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
+    }
+
+    const sensorUsageAGP = (
+      totalRecords /
+      ((cgmMinutesWorn / (sampleInterval / MS_IN_MIN)) + 1)
+    ) * 100;
+
     return {
       sensorUsage: duration,
-      sensorUsageAGP: 0, // TODO: fix
+      sensorUsageAGP: sensorUsageAGP,
       total: totalMs,
       sampleInterval: _.last(cbgData)?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
       count: totalRecords,
