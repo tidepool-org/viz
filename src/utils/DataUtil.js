@@ -1017,11 +1017,11 @@ export class DataUtil {
     for (let i = 0; i < cbgData.length; i++) {
       const currentRecord = cbgData[i];
 
-      // If current record occured within the current blackout window, discard the record
-      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line no-continue
+      // If current record occured within the current blackout window, discard the record.
+      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line
 
-      // Otherwise, if the record is past the blackout window, add the datum, then set a new
-      // blackout window based on the current record's time window
+      // Otherwise, if the record is past the blackout window, we include the record.
+      // Then, set a new blackout window based on the current record's time window
       output.push(currentRecord);
       blackoutUntil = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
     }
