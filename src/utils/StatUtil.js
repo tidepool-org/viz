@@ -43,7 +43,7 @@ export class StatUtil {
     let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
 
     if (this.bgSource === CGM_DATA_KEY) {
-      bgData = this.dataUtil.deduplicate(bgData);
+      bgData = this.dataUtil.deduplicateCBGData(bgData);
     }
 
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
@@ -66,7 +66,7 @@ export class StatUtil {
     let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
 
     if (this.bgSource === CGM_DATA_KEY) {
-      bgData = this.dataUtil.deduplicate(bgData);
+      bgData = this.dataUtil.deduplicateCBGData(bgData);
     }
 
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
@@ -307,17 +307,15 @@ export class StatUtil {
   getSensorUsage = () => {
     this.filterCBGDataByDefaultSampleInterval();
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    const cbgData = this.dataUtil.deduplicate(rawCbgData);
+    const cbgData = this.dataUtil.deduplicateCBGData(rawCbgData);
 
-    let duration = 0;
-    let totalRecords = 0;
-
+    let sensorUsage = 0;
     for (let i = 0; i < cbgData.length; i++) {
-      duration += cbgData[i].sampleInterval;
-      totalRecords += 1;
+      sensorUsage += cbgData[i].sampleInterval;
     }
 
-    const totalMs = this.activeDays * MS_IN_DAY;
+    const count = cbgData.length;
+    const total = this.activeDays * MS_IN_DAY;
 
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
     const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
@@ -333,16 +331,16 @@ export class StatUtil {
     }
 
     const sensorUsageAGP = (
-      totalRecords /
+      count /
       ((cgmMinutesWorn / (sampleInterval / MS_IN_MIN)) + 1)
     ) * 100;
 
     return {
-      sensorUsage: duration,
-      sensorUsageAGP: sensorUsageAGP,
-      total: totalMs,
-      sampleInterval: _.last(cbgData)?.sampleInterval || this.dataUtil.defaultCgmSampleInterval,
-      count: totalRecords,
+      sensorUsage,
+      sensorUsageAGP,
+      sampleInterval,
+      count,
+      total,
     };
   };
 
@@ -432,8 +430,8 @@ export class StatUtil {
 
   getTimeInRangeData = () => {
     this.filterCBGDataByDefaultSampleInterval();
-    const rawCbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
-    const cbgData = this.dataUtil.deduplicate(rawCbgData);
+    const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const cbgData = this.dataUtil.deduplicateCBGData(rawCbgData);
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const initialValue = {
