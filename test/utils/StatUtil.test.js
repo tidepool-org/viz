@@ -668,12 +668,12 @@ describe('StatUtil', () => {
         const sampleDatumTimeMs = moment(sampleDatum.time).valueOf();
         const times = [];
 
-        for(let i = 0; i <= requiredDexcomDatums; i++) {
+        for (let i = 0; i <= requiredDexcomDatums; i++) {
           const updatedTime = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
           const time = updatedTime.toISOString();
-          const deviceTime = updatedTime.format('YYYY-MM-DDTHH:mm:ss')
+          const deviceTime = updatedTime.format('YYYY-MM-DDTHH:mm:ss');
 
-          times.push({ time, deviceTime })
+          times.push({ time, deviceTime });
         }
 
         return times;
