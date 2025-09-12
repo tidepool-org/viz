@@ -117,21 +117,18 @@ describe('StatUtil', () => {
       deviceId: 'Dexcom-XXX-XXXX',
       value: 190,
       deviceTime: '2018-02-01T00:45:00',
-      sampleInterval: 5 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'Dexcom-XXX-XXXX',
       value: 260,
       deviceTime: '2018-02-01T00:50:00',
-      sampleInterval: 5 * MS_IN_MIN,
       ...useRawData,
     }),
     new Types.CBG({
       deviceId: 'Dexcom-XXX-XXXX',
       value: 260,
       deviceTime: '2018-02-02T00:00:00',
-      sampleInterval: 5 * MS_IN_MIN,
       ...useRawData,
     }),
   ], _.toPlainObject);
