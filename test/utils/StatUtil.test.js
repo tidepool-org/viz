@@ -1,4 +1,4 @@
-import _, { sample } from 'lodash';
+import _ from 'lodash';
 
 import moment from 'moment';
 import DataUtil from '../../src/utils/DataUtil';
@@ -691,8 +691,6 @@ describe('StatUtil', () => {
 
       statUtil = createStatUtil(sufficientData, defaultOpts);
       filterEndpoints(twoWeekEndpoints);
-
-      console.log(statUtil.getGlucoseManagementIndicatorData())
 
       expect(statUtil.getGlucoseManagementIndicatorData()).to.eql({
         glucoseManagementIndicator: 9.5292,
