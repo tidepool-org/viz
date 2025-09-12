@@ -1,5 +1,6 @@
-import _ from 'lodash';
+import _, { sample } from 'lodash';
 
+import moment from 'moment';
 import DataUtil from '../../src/utils/DataUtil';
 import StatUtil from '../../src/utils/StatUtil';
 import { types as Types, generateGUID } from '../../data/types';
@@ -659,13 +660,37 @@ describe('StatUtil', () => {
 
     it('should return the GMI data when viewing at least 14 days of data and 70% coverage', () => {
       const requiredDexcomDatums = 2823; // 288(total daily possible readings) * .7(%required) * 14(days)
+
+      const sampleDatum = cbgData[4];
+
+      // We are using a sample cbgDatum and cloning it 2,830 times for this test. However,
+      // since all of the cloned data will have the same timestamp, the Data Worker would
+      // deduplicate it until there is only one datum remaining. We need to create
+      // sequential timestamps in order to prevent the data from getting discarded.
+      const sampleDatumTimes = (() => {
+        const sampleDatumTimeMs = moment(sampleDatum.time).valueOf();
+        const timeArray = [];
+
+        for(let i = 0; i < requiredDexcomDatums; i++) {
+          const datumTimeObject = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
+          const time = datumTimeObject.toISOString();
+          const deviceTime = datumTimeObject.format('YYYY-MM-DDTHH:mm:ss')
+
+          timeArray.push({ time, deviceTime })
+        }
+
+        return timeArray;
+      })();
+
       const sufficientData = _.map(
-        _.fill(Array(requiredDexcomDatums), cbgData[4], 0, requiredDexcomDatums),
-        d => ({ ...d, id: generateGUID() })
+        _.fill(Array(requiredDexcomDatums), sampleDatum, 0, requiredDexcomDatums),
+        (d, i) => ({ ...d, id: generateGUID(), time: sampleDatumTimes[i].time, deviceTime: sampleDatumTimes[i].deviceTime })
       );
 
       statUtil = createStatUtil(sufficientData, defaultOpts);
       filterEndpoints(twoWeekEndpoints);
+
+      console.log(statUtil.getGlucoseManagementIndicatorData())
 
       expect(statUtil.getGlucoseManagementIndicatorData()).to.eql({
         glucoseManagementIndicator: 9.5292,
@@ -846,7 +871,10 @@ describe('StatUtil', () => {
       expect(result.total).to.equal(MS_IN_DAY);
       expect(result.sampleInterval).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
-      expect(result.sensorUsageAGP).to.equal(100);
+      expect(result.sensorUsageAGP).to.equal((
+        expectedCount /
+        ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
+      ) * 100);
 
       expectedCount = 6;
       expectedCGMMinutesWorn = 1440; // 1 full day between first and last datums
@@ -857,7 +885,10 @@ describe('StatUtil', () => {
       expect(result.total).to.equal(MS_IN_DAY * 14);
       expect(result.sampleInterval).to.equal(expectedSampleFrequency);
       expect(result.count).to.equal(expectedCount);
-      expect(result.sensorUsageAGP).to.equal((3600000 / (1517529900000 - 1517443200000)) * 100); // ~ 4.15%
+      expect(result.sensorUsageAGP).to.equal((
+        expectedCount /
+        ((expectedCGMMinutesWorn / (expectedSampleFrequency / MS_IN_MIN)) + 1)
+      ) * 100);
     });
   });
 
