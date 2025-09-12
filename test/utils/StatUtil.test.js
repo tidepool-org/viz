@@ -665,26 +665,31 @@ describe('StatUtil', () => {
 
       // We are using a sample cbgDatum and cloning it 2,830 times for this test. However,
       // since all of the cloned data will have the same timestamp, the Data Worker would
-      // deduplicate it until there is only one datum remaining. We need to create
-      // sequential timestamps in order to prevent the data from getting discarded.
+      // deduplicate it until there is only one datum remaining. We need to ensure that the
+      // data has sequential and well-spaced timestamps to preserve all the data.
       const sampleDatumTimes = (() => {
         const sampleDatumTimeMs = moment(sampleDatum.time).valueOf();
-        const timeArray = [];
+        const times = [];
 
-        for(let i = 0; i < requiredDexcomDatums; i++) {
-          const datumTimeObject = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
-          const time = datumTimeObject.toISOString();
-          const deviceTime = datumTimeObject.format('YYYY-MM-DDTHH:mm:ss')
+        for(let i = 0; i <= requiredDexcomDatums; i++) {
+          const updatedTime = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
+          const time = updatedTime.toISOString();
+          const deviceTime = updatedTime.format('YYYY-MM-DDTHH:mm:ss')
 
-          timeArray.push({ time, deviceTime })
+          times.push({ time, deviceTime })
         }
 
-        return timeArray;
+        return times;
       })();
 
       const sufficientData = _.map(
         _.fill(Array(requiredDexcomDatums), sampleDatum, 0, requiredDexcomDatums),
-        (d, i) => ({ ...d, id: generateGUID(), time: sampleDatumTimes[i].time, deviceTime: sampleDatumTimes[i].deviceTime })
+        (d, i) => ({
+          ...d,
+          id: generateGUID(),
+          time: sampleDatumTimes[i].time,
+          deviceTime: sampleDatumTimes[i].deviceTime
+        })
       );
 
       statUtil = createStatUtil(sufficientData, defaultOpts);
