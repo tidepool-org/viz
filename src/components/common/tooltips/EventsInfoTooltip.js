@@ -12,7 +12,7 @@ const EventsInfoTooltip = props => {
     sections: [
       {
         title: t('Pump Alarms Shown'),
-        note: t('Please note that pump alarms are only shown for twiist devices and not all alarms are shown.'),
+        note: t('Please note that pump alarms are only shown for the twiist AID system and not all alarms are shown.'),
         items: [
           t('Cassette Empty'),
           t('Battery Empty'),
