@@ -2616,7 +2616,7 @@ describe('DataUtil', () => {
     });
   });
 
-  describe('getDeduplicateCBGData', () => {
+  describe('getDeduplicatedCBGData', () => {
     it('sorts and deduplicates CBG data according to timestamp', () => {
       const data = _.cloneDeep(cbgData);
       const duplicatedData = _.shuffle(_.cloneDeep([...data, ...data, ...data]));
@@ -2624,7 +2624,7 @@ describe('DataUtil', () => {
       _.each(duplicatedData, dataUtil.normalizeDatumIn); // mimic data ingestion
       expect(duplicatedData.length).to.equal(15);
 
-      const result = dataUtil.getDeduplicateCBGData(duplicatedData);
+      const result = dataUtil.getDeduplicatedCBGData(duplicatedData);
 
       expect(result.length).to.equal(5);
       expect(result[0].time).to.equal(1517443200000);
@@ -2646,7 +2646,7 @@ describe('DataUtil', () => {
       data[0].time = 1_517_445_000_000;
       data[1].time = 1_517_445_000_000 + 300_000 - 12_000;
 
-      const result = dataUtil.getDeduplicateCBGData(data);
+      const result = dataUtil.getDeduplicatedCBGData(data);
 
       expect(result.length).to.equal(1); // should deduplicate
     });
@@ -2665,7 +2665,7 @@ describe('DataUtil', () => {
       data[0].time = 1_517_445_000_000;
       data[1].time = 1_517_445_000_000 + 300_000 - 7_000;
 
-      const result = dataUtil.getDeduplicateCBGData(data);
+      const result = dataUtil.getDeduplicatedCBGData(data);
 
       expect(result.length).to.equal(2); // should not deduplicate
     });

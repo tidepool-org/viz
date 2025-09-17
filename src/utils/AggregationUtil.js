@@ -551,7 +551,7 @@ export class AggregationUtil {
         this.dataUtil.filter.bySampleIntervalRange(...(this.dataUtil.cgmSampleIntervalRange || this.dataUtil.defaultCgmSampleIntervalRange));
 
         const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-        const cbgData = this.dataUtil.getDeduplicateCBGData(rawCbgData);
+        const cbgData = this.dataUtil.getDeduplicatedCBGData(rawCbgData);
         groupedData.cbg = cbgData;
 
         // Clear the previous byType and bySampleInterval filters so as to not affect the next aggregations
