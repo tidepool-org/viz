@@ -1029,6 +1029,12 @@ export class DataUtil {
     return output;
   };
 
+  // memoize getDeduplicateCBGData and only recompute if first/last ids change
+  getDeduplicateCBGData = _.memoize(
+    this.deduplicateCBGData,
+    data => `${_.first(data)?.id}_${_.last(data)?.id}`
+  );
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {

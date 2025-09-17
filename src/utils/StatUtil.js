@@ -43,7 +43,7 @@ export class StatUtil {
     let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
 
     if (this.bgSource === CGM_DATA_KEY) {
-      bgData = this.dataUtil.deduplicateCBGData(bgData);
+      bgData = this.dataUtil.getDeduplicateCBGData(bgData);
     }
 
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
@@ -66,7 +66,7 @@ export class StatUtil {
     let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
 
     if (this.bgSource === CGM_DATA_KEY) {
-      bgData = this.dataUtil.deduplicateCBGData(bgData);
+      bgData = this.dataUtil.getDeduplicateCBGData(bgData);
     }
 
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
@@ -307,7 +307,7 @@ export class StatUtil {
   getSensorUsage = () => {
     this.filterCBGDataByDefaultSampleInterval();
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    const cbgData = this.dataUtil.deduplicateCBGData(rawCbgData);
+    const cbgData = this.dataUtil.getDeduplicateCBGData(rawCbgData);
 
     let sensorUsage = 0;
     for (let i = 0; i < cbgData.length; i++) {
@@ -431,7 +431,7 @@ export class StatUtil {
   getTimeInRangeData = () => {
     this.filterCBGDataByDefaultSampleInterval();
     const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-    const cbgData = this.dataUtil.deduplicateCBGData(rawCbgData);
+    const cbgData = this.dataUtil.getDeduplicateCBGData(rawCbgData);
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const initialValue = {
