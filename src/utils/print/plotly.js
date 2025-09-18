@@ -49,7 +49,9 @@ export async function generateAGPFigureDefinitions(data) {
 
   // Generate dailyGlucoseProfiles figures
   if (sections.dailyGlucoseProfiles.sufficientData) {
-    const bgDataByDate = _.mapValues(data?.data?.current?.aggregationsByDate?.dataByDate, bgSource);
+    const dataKey = bgSource === 'cbg' ? 'cbgDeduplicated' : bgSource;
+    const bgDataByDate = _.mapValues(data?.data?.current?.aggregationsByDate?.dataByDate, dataKey);
+
     // Group daily data by week
     const { newestDatum } = stats.bgExtents?.data?.raw || {};
 

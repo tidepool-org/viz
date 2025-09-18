@@ -550,9 +550,11 @@ export class AggregationUtil {
         // Filter cgm data by the currently-set sample interval range.
         this.dataUtil.filter.bySampleIntervalRange(...(this.dataUtil.cgmSampleIntervalRange || this.dataUtil.defaultCgmSampleIntervalRange));
 
-        const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
-        const cbgData = this.dataUtil.getDeduplicatedCBGData(rawCbgData);
+        const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+        const deduplicatedCbgData = this.dataUtil.getDeduplicatedCBGData(cbgData);
+
         groupedData.cbg = cbgData;
+        groupedData.cbgDeduplicated = deduplicatedCbgData;
 
         // Clear the previous byType and bySampleInterval filters so as to not affect the next aggregations
         this.dataUtil.dimension.byType.filterAll();
