@@ -888,6 +888,15 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(libreDatum);
         expect(libreDatum.sampleInterval).to.equal(15 * MS_IN_MIN);
 
+        const libreViewAPIDatum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+          origin: { name: 'org.tidepool.abbott.libreview.partner.api' },
+        };
+        dataUtil.normalizeDatumIn(libreViewAPIDatum);
+        expect(libreViewAPIDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+        expect(libreViewAPIDatum.annotations[0]).to.eql({ code: 'cbg/unknown-sample-interval' });
+
         const libre3Datum = {
           type: 'cbg',
           deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
@@ -1796,6 +1805,13 @@ describe('DataUtil', () => {
 
       dataUtil.normalizeDatumOut(uploadWithoutSourceDatum);
       expect(uploadWithoutSourceDatum.source).to.equal('Unspecified Data Source');
+    });
+
+    it('should call setDataAnnotations with the datum', () => {
+      const datum = { type: 'foo' };
+      sinon.stub(dataUtil, 'setDataAnnotations');
+      dataUtil.normalizeDatumOut(datum);
+      sinon.assert.calledWith(dataUtil.setDataAnnotations, datum);
     });
 
     context('returnRawData is `true`', () => {
@@ -2728,6 +2744,12 @@ describe('DataUtil', () => {
         dataUtil.removeData();
         expect(dataUtil.matchedDevices).to.eql({});
       });
+
+      it('should clear the `dataAnnotations` metadata', () => {
+        dataUtil.dataAnnotations = { A: { code: 'A', value: 'A value' } };
+        dataUtil.removeData();
+        expect(dataUtil.dataAnnotations).to.eql({});
+      });
     });
   });
 
@@ -3651,6 +3673,49 @@ describe('DataUtil', () => {
           serialNumber: undefined
         },
       ]);
+    });
+  });
+
+  describe('setDataAnnotations', () => {
+    it('should set a list of unique data annotations by code if trackDataAnnotations is `true`', () => {
+      const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
+      const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
+
+      dataUtil.dataAnnotations = {};
+      dataUtil.trackDataAnnotations = true;
+
+      dataUtil.normalizeDatumOut(datum1);
+      expect(dataUtil.dataAnnotations).to.eql({
+        A: { code: 'A', value: 'A value' },
+        B: { code: 'B', value: 'B value' },
+      });
+
+      dataUtil.normalizeDatumOut(datum2);
+      expect(dataUtil.dataAnnotations).to.eql({
+        A: { code: 'A', value: 'A value' },
+        B: { code: 'B', value: 'B value' },
+        C: { code: 'C', value: 'C value' },
+      });
+    });
+
+    it('should not track unique data annotations by code if trackDataAnnotations is `false`', () => {
+      const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
+      const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
+
+      dataUtil.dataAnnotations = {};
+      dataUtil.trackDataAnnotations = false;
+
+      dataUtil.normalizeDatumOut(datum1);
+      dataUtil.normalizeDatumOut(datum2);
+      expect(dataUtil.dataAnnotations).to.eql({});
+    });
+  });
+
+  describe('clearDataAnnotations', () => {
+    it('should clear all data annotations', () => {
+      dataUtil.dataAnnotations = { A: { code: 'A', value: 'A value' }, B: { code: 'B', value: 'B value' } };
+      dataUtil.clearDataAnnotations();
+      expect(dataUtil.dataAnnotations).to.eql({});
     });
   });
 

@@ -772,6 +772,19 @@ describe('StatUtil', () => {
       spy.restore();
     });
 
+    it('should call setDataAnnotations with each datum', () => {
+      const spy = sinon.spy(statUtil.dataUtil, 'setDataAnnotations');
+      const normalizeStub = sinon.stub(statUtil.dataUtil, 'normalizeDatumOut'); // to avoid also calling setDataAnnotations from within normalizeDatumOut
+      filterEndpoints(twoWeekEndpoints); // use all the datums
+      statUtil.getSensorUsage();
+      sinon.assert.callCount(spy, cbgData.length);
+      _.each(cbgData, (d) => {
+        sinon.assert.calledWith(statUtil.dataUtil.setDataAnnotations, sinon.match({ id: d.id }));
+      });
+      spy.restore();
+      normalizeStub.restore();
+    });
+
     it('should return the duration of sensor usage and total duration of the endpoint range', () => {
       filterEndpoints(dayEndpoints);
       const expectedSampleFrequency = 300000;
@@ -932,6 +945,20 @@ describe('StatUtil', () => {
       statUtil.getTimeInRangeData();
       expect(spy.calledOnce).to.be.true;
       spy.restore();
+    });
+
+    it('should call setDataAnnotations with each datum', () => {
+      const spy = sinon.spy(statUtil.dataUtil, 'setDataAnnotations');
+      const normalizeStub = sinon.stub(statUtil.dataUtil, 'normalizeDatumOut'); // to avoid also calling setDataAnnotations from within normalizeDatumOut
+      filterEndpoints(twoWeekEndpoints); // use all the datums
+      statUtil.getTimeInRangeData();
+      sinon.assert.callCount(spy, cbgData.length);
+      _.each(cbgData, (d) => {
+        sinon.assert.calledWith(statUtil.dataUtil.setDataAnnotations, sinon.match({ id: d.id }));
+      });
+
+      spy.restore();
+      normalizeStub.restore();
     });
 
     it('should return the time in range data when viewing 1 day', () => {
