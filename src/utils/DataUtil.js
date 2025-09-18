@@ -54,6 +54,7 @@ import {
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
   ALARM_OVER_LIMIT,
+  EVENT,
   EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
@@ -701,14 +702,16 @@ export class DataUtil {
       };
     }
 
-    // Tandem events
-    if (isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' })) {
-      console.log('d pump-shutdown', d);
-      d.tags = {
-        ...d.tags || {},
-        [EVENT_PUMP_SHUTDOWN]: true,
-      };
-    }
+    // Events
+    const eventTags = {
+      [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+    };
+
+    d.tags = {
+      ...d.tags || {},
+      [EVENT]: _.some(_.values(eventTags)),
+      ...eventTags,
+    };
   };
 
   validateDatumIn = d => {

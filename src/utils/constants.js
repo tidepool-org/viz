@@ -143,6 +143,7 @@ export const ALARM_NO_POWER = 'no_power';
 export const ALARM_OCCLUSION = 'occlusion';
 export const ALARM_OVER_LIMIT = 'over_limit';
 
+export const EVENT = 'event';
 export const EVENT_PUMP_SHUTDOWN = 'pump_shutdown';
 
 export const AUTOMATED_BOLUS = 'automatedBolus';
