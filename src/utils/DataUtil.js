@@ -8,6 +8,7 @@ import sundial from 'sundial';
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
+  isControlIQ,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -53,6 +54,7 @@ import {
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
   ALARM_OVER_LIMIT,
+  EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
 import {
@@ -696,6 +698,15 @@ export class DataUtil {
         [ALARM_NO_POWER]: d.alarmType === ALARM_NO_POWER,
         [ALARM_OCCLUSION]: d.alarmType === ALARM_OCCLUSION,
         [ALARM_OVER_LIMIT]: d.alarmType === ALARM_OVER_LIMIT,
+      };
+    }
+
+    // Tandem events
+    if (isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' })) {
+      console.log('d pump-shutdown', d);
+      d.tags = {
+        ...d.tags || {},
+        [EVENT_PUMP_SHUTDOWN]: true,
       };
     }
   };
