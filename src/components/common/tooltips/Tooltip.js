@@ -276,7 +276,7 @@ class Tooltip extends PureComponent {
   }
 
   render() {
-    const { title, content, position, backgroundColor, borderColor, borderWidth } = this.props;
+    const { title, content, position, backgroundColor, borderColor, borderWidth, borderRadius, boxShadow } = this.props;
     const { offset } = this.state;
     const top = position.top + offset.top;
     const left = position.left + offset.left;
@@ -284,7 +284,7 @@ class Tooltip extends PureComponent {
     return (
       <div
         className={styles.tooltip}
-        style={{ top, left, backgroundColor, borderColor, borderWidth: `${borderWidth}px` }}
+        style={{ top, left, backgroundColor, borderColor, borderWidth: `${borderWidth}px`, borderRadius: `${borderRadius}px`, boxShadow }}
         ref={this.setElementRef}
       >
         {title && this.renderTitle(title)}
@@ -316,6 +316,7 @@ Tooltip.propTypes = {
   backgroundColor: PropTypes.string,
   borderColor: PropTypes.string.isRequired,
   borderWidth: PropTypes.number.isRequired,
+  borderRadius: PropTypes.number.isRequired,
 };
 
 Tooltip.defaultProps = {
@@ -325,6 +326,8 @@ Tooltip.defaultProps = {
   tailHeight: 8,
   borderColor: 'black',
   borderWidth: 2,
+  borderRadius: 4,
+  boxShadow: 'none',
   offset: { top: 0, left: 0 },
 };
 
