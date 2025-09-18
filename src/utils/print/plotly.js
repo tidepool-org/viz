@@ -49,6 +49,7 @@ export async function generateAGPFigureDefinitions(data) {
 
   // Generate dailyGlucoseProfiles figures
   if (sections.dailyGlucoseProfiles.sufficientData) {
+    // All CGM data passed into AGP should be deduplicated
     const dataKey = bgSource === 'cbg' ? 'cbgDeduplicated' : bgSource;
     const bgDataByDate = _.mapValues(data?.data?.current?.aggregationsByDate?.dataByDate, dataKey);
 
