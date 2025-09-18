@@ -22,7 +22,15 @@ import { mount, shallow } from 'enzyme';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
-import BolusTooltip from '../../../src/components/daily/bolustooltip/BolusTooltip';
+import BolusTooltip, {
+  isAnimasExtended,
+  animasExtendedAnnotationMessage,
+  isMedronicDeconvertedExchange,
+  medronicDeconvertedExchangeMessage,
+  getTarget,
+  getExtended,
+} from '../../../src/components/daily/bolustooltip/BolusTooltip';
+
 import styles from '../../../src/components/daily/bolustooltip/BolusTooltip.css';
 import { MGDL_UNITS, MS_IN_HOUR } from '../../../src/utils/constants';
 
@@ -700,77 +708,64 @@ describe('BolusTooltip', () => {
     const targetValue = `${formatClassesAsSelector(styles.target)} ${formatClassesAsSelector(styles.value)}`;
     it('should return a single div for Medtronic style target', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withMedtronicTarget} />);
-      expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
+      expect(shallow(getTarget(withMedtronicTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('60-180');
     });
     it('should return a single div and single value for Medtronic style same value target', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withMedtronicSameTarget} />);
-      expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
+      expect(shallow(getTarget(withMedtronicSameTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('100');
     });
     it('should return an array for Animas style target', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withAnimasTarget} />);
-      expect(_.isArray(wrapper.instance().getTarget())).to.be.true;
-      expect(wrapper.instance().getTarget().length).to.equal(2);
+      expect(_.isArray(getTarget(withAnimasTarget, props.bgPrefs, props.timePrefs))).to.be.true;
+      expect(getTarget(withAnimasTarget, props.bgPrefs, props.timePrefs).length).to.equal(2);
       expect(wrapper.find(targetValue).first().text()).to.equal('100');
       expect(wrapper.find(targetValue).last().text()).to.equal('40');
     });
     it('should return an array for Insulet style target', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withInsuletTarget} />);
-      expect(_.isArray(wrapper.instance().getTarget())).to.be.true;
-      expect(wrapper.instance().getTarget().length).to.equal(2);
+      expect(_.isArray(getTarget(withInsuletTarget, props.bgPrefs, props.timePrefs))).to.be.true;
+      expect(getTarget(withInsuletTarget, props.bgPrefs, props.timePrefs).length).to.equal(2);
       expect(wrapper.find(targetValue).first().text()).to.equal('100');
       expect(wrapper.find(targetValue).last().text()).to.equal('180');
     });
     it('should return a single div for Tandem style target', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withTandemTarget} />);
-      expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
+      expect(shallow(getTarget(withTandemTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('100');
     });
     it('should return a single div for Loop style target', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
-      expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
+      expect(shallow(getTarget(withLoopDosingDecision, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('155-165');
     });
     it('should return "Auto" for a bolus with an automated wizard annotation', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withAutoTarget} />);
-      expect(shallow(wrapper.instance().getTarget()).type()).to.equal('div');
+      expect(shallow(getTarget(withAutoTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('Auto');
     });
   });
 
   describe('isAnimasExtended', () => {
     it('should return true if annotations include Animas extended equal split', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimas} />);
-      expect(wrapper.instance().isAnimasExtended()).to.be.true;
+      expect(isAnimasExtended(extendedAnimas)).to.be.true;
     });
     it('should return false for non-annotated boluse', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
-      expect(wrapper.instance().isAnimasExtended()).to.be.false;
+      expect(isAnimasExtended(normal)).to.be.false;
     });
-    it('should return false for non-Animas annotated boluse', () => {
-      const wrapper = mount(<BolusTooltip
-        {...props}
-        bolus={
-          _.extend(
-            normal, { annotations: [{ code: 'some/awesome-annotation' }] }
-          )
-        }
-      />);
-      expect(wrapper.instance().isAnimasExtended()).to.be.false;
+    it('should return false for non-Animas annotated bolus', () => {
+      const bolus = _.extend(normal, { annotations: [{ code: 'some/awesome-annotation' }] });
+      expect(isAnimasExtended(bolus)).to.be.false;
     });
   });
 
   describe('isMedronicDeconvertedExchange', () => {
     it('should return true if annotations include Medtronic deconverted carb-to-exchange ratio', () => {
-      const wrapper = mount(
-        <BolusTooltip {...props} bolus={deconvertedCarbExchangeRatioMedtronic} />
-      );
-      expect(wrapper.instance().isMedronicDeconvertedExchange()).to.be.true;
+      expect(isMedronicDeconvertedExchange(deconvertedCarbExchangeRatioMedtronic)).to.be.true;
     });
     it('should return false for non-deconverted bolus', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
-      expect(wrapper.instance().isMedronicDeconvertedExchange()).to.be.false;
+      expect(isMedronicDeconvertedExchange(normal)).to.be.false;
     });
   });
 
@@ -780,48 +775,44 @@ describe('BolusTooltip', () => {
     const label = formatClassesAsSelector(styles.label);
     it('should return a single div for Animas extended', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimas} />);
-      expect(shallow(wrapper.instance().getExtended()).type()).to.equal('div');
+      expect(shallow(getExtended(extendedAnimas)).type()).to.equal('div');
       expect(wrapper.find(`${extendedStyle} ${label}`).text()).to.equal('Extended Over*');
     });
     it('should return an array for normal extended', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={extended} />);
-      expect(_.isArray(wrapper.instance().getExtended())).to.be.true;
-      expect(wrapper.instance().getExtended().length).to.equal(2);
-      expect(wrapper.instance().getExtended()[0]).to.be.false;
+      expect(_.isArray(getExtended(extended))).to.be.true;
+      expect(getExtended(extended).length).to.equal(2);
+      expect(getExtended(extended)[0]).to.be.false;
       expect(wrapper.find(`${extendedStyle} ${label}`).text()).to.equal('Over 1 hr ');
     });
     it('should return an array for combo extended', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={combo} />);
-      expect(_.isArray(wrapper.instance().getExtended())).to.be.true;
-      expect(wrapper.instance().getExtended().length).to.equal(2);
+      expect(_.isArray(getExtended(combo))).to.be.true;
+      expect(getExtended(combo).length).to.equal(2);
       expect(wrapper.find(`${normalStyle} ${label}`).text()).to.equal('Up Front (33%)');
       expect(wrapper.find(`${extendedStyle} ${label}`).text()).to.equal('Over 1 hr (67%)');
     });
     it('should return null for normal bolus', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
-      expect(wrapper.instance().getExtended()).to.be.null;
+      expect(getExtended(normal)).to.be.null;
     });
   });
 
   describe('animasExtendedAnnotationMessage', () => {
     it('should return a div for Animas extended', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimas} />);
-      expect(shallow(wrapper.instance().animasExtendedAnnotationMessage()).type()).to.equal('div');
+      expect(shallow(animasExtendedAnnotationMessage(extendedAnimas)).type()).to.equal('div');
     });
     it('should return null for normal bolus', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
-      expect(wrapper.instance().animasExtendedAnnotationMessage()).to.be.null;
+      expect(animasExtendedAnnotationMessage(normal)).to.be.null;
     });
   });
 
   describe('medronicDeconvertedExchangeMessage', () => {
     it('should return a div for Medtronic deconverted carb-to-exchange ratio', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={deconvertedCarbExchangeRatioMedtronic} />);
-      expect(shallow(wrapper.instance().medronicDeconvertedExchangeMessage()).type()).to.equal('div');
+      expect(shallow(medronicDeconvertedExchangeMessage(deconvertedCarbExchangeRatioMedtronic)).type()).to.equal('div');
     });
     it('should return null for normal bolus', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
-      expect(wrapper.instance().animasExtendedAnnotationMessage()).to.be.null;
+      expect(animasExtendedAnnotationMessage(normal)).to.be.null;
     });
   });
 });

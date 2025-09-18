@@ -16,7 +16,7 @@
  */
 
 import PropTypes from 'prop-types';
-import React, { PureComponent } from 'react';
+import React from 'react';
 import _ from 'lodash';
 import {
   classifyBgValue,
@@ -33,15 +33,15 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './SMBGTooltip.css';
 
-class SMBGTooltip extends PureComponent {
-  renderSMBG() {
-    const smbg = this.props.smbg;
+const SMBGTooltip = (props) => {
+  const renderSMBG = () => {
+    const smbg = props.smbg;
     const outOfRangeMessage = getOutOfRangeAnnotationMessage(smbg);
     const rows = [
       <div key={'bg'} className={styles.bg}>
         <div className={styles.label}>BG</div>
         <div className={styles.value}>
-          {`${formatBgValue(smbg.value, this.props.bgPrefs, getOutOfRangeThreshold(smbg))}`}
+          {`${formatBgValue(smbg.value, props.bgPrefs, getOutOfRangeThreshold(smbg))}`}
         </div>
       </div>,
     ];
@@ -68,9 +68,9 @@ class SMBGTooltip extends PureComponent {
 
     if (!_.isEmpty(outOfRangeMessage)) {
       const bgClass = classifyBgValue(
-        reshapeBgClassesToBgBounds(this.props.bgPrefs),
-        this.props.bgPrefs.bgUnits,
-        this.props.smbg.value,
+        reshapeBgClassesToBgBounds(props.bgPrefs),
+        props.bgPrefs.bgUnits,
+        props.smbg.value,
         'fiveWay'
       );
       rows.push(
@@ -88,31 +88,30 @@ class SMBGTooltip extends PureComponent {
     }
 
     return <div className={styles.container}>{rows}</div>;
-  }
+  };
 
-  render() {
-    const bgClass = classifyBgValue(
-      reshapeBgClassesToBgBounds(this.props.bgPrefs),
-      this.props.bgPrefs.bgUnits,
-      this.props.smbg.value,
-      'fiveWay'
-    );
-    const title = this.props.title ? this.props.title : (
-      <div className={styles.title}>
-        {formatLocalizedFromUTC(this.props.smbg.normalTime, this.props.timePrefs, 'h:mm a')}
-      </div>
-    );
-    return (
-      <Tooltip
-        {...this.props}
-        title={title}
-        content={this.renderSMBG()}
-        borderColor={colors[bgClass]}
-        tailColor={colors[bgClass]}
-      />
-    );
-  }
-}
+  const bgClass = classifyBgValue(
+    reshapeBgClassesToBgBounds(props.bgPrefs),
+    props.bgPrefs.bgUnits,
+    props.smbg.value,
+    'fiveWay'
+  );
+  const title = props.title ? props.title : (
+    <div className={styles.title}>
+      {formatLocalizedFromUTC(props.smbg.normalTime, props.timePrefs, 'h:mm a')}
+    </div>
+  );
+
+  return (
+    <Tooltip
+      {...props}
+      title={title}
+      content={renderSMBG()}
+      borderColor={colors[bgClass]}
+      tailColor={colors[bgClass]}
+    />
+  );
+};
 
 SMBGTooltip.propTypes = {
   position: PropTypes.shape({
@@ -148,8 +147,8 @@ SMBGTooltip.propTypes = {
 SMBGTooltip.defaultProps = {
   tail: true,
   side: 'right',
-  tailWidth: 9,
-  tailHeight: 17,
+  tailWidth: 8,
+  tailHeight: 16,
   tailColor: colors.bolus,
   borderColor: colors.bolus,
   borderWidth: 2,

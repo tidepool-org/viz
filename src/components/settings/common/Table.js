@@ -152,13 +152,13 @@ class Table extends PureComponent {
     } = this.table.getBoundingClientRect();
 
     const position = {
-      top: (top - parentTop) + height / 2,
+      top: ((top - parentTop) + height / 2) - parentHeight,
       left: (left - parentLeft) + width / 2,
     };
 
     const offset = {
       horizontal: width / 2,
-      top: -parentHeight,
+      top: 0,
     };
 
     const side = (_.get(document, 'body.clientWidth', 0) - left < 225) ? 'left' : 'right';

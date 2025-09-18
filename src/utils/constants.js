@@ -86,6 +86,14 @@ export const SITE_CHANGE_RESERVOIR = 'reservoirChange';
 export const SITE_CHANGE_TUBING = 'tubingPrime';
 export const SITE_CHANGE_CANNULA = 'cannulaPrime';
 
+export const ALARM = 'alarm';
+export const ALARM_NO_DELIVERY = 'no_delivery';
+export const ALARM_AUTO_OFF = 'auto_off';
+export const ALARM_NO_INSULIN = 'no_insulin';
+export const ALARM_NO_POWER = 'no_power';
+export const ALARM_OCCLUSION = 'occlusion';
+export const ALARM_OVER_LIMIT = 'over_limit';
+
 export const AUTOMATED_BOLUS = 'automatedBolus';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';
@@ -170,6 +178,8 @@ export const pumpVocabulary = {
     [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Maximum Basal Rate'),
+    [ALARM_NO_INSULIN]: t('Cassette Empty'),
+    [ALARM_OCCLUSION]: t('Line Blocked'),
   },
   [DIY_LOOP]: {
     [AUTOMATED_DELIVERY]: t('Automation'),
@@ -197,6 +207,12 @@ export const pumpVocabulary = {
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
     [ONE_BUTTON_BOLUS]: t('One-Button Bolus'),
+    [ALARM_NO_DELIVERY]: t('Insulin Delivery Stopped'),
+    [ALARM_AUTO_OFF]: t('Pump Auto-Off'),
+    [ALARM_NO_INSULIN]: t('Reservoir Empty'),
+    [ALARM_NO_POWER]: t('Battery Empty'),
+    [ALARM_OCCLUSION]: t('Occlusion Detected'),
+    [ALARM_OVER_LIMIT]: t('Insulin Delivery Limit Exceeded'),
   },
 };
 

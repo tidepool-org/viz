@@ -43,6 +43,14 @@ import {
   DIY_LOOP,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
+  SITE_CHANGE_RESERVOIR,
+  SITE_CHANGE_TUBING,
+  SITE_CHANGE_CANNULA,
+  SITE_CHANGE,
+  ALARM,
+  ALARM_NO_INSULIN,
+  ALARM_NO_POWER,
+  ALARM_OCCLUSION,
 } from './constants';
 
 import {
@@ -659,6 +667,9 @@ export class DataUtil {
     }
 
     if (d.type === 'deviceEvent') {
+      const isReservoirChange = d.subType === 'reservoirChange';
+      const isPrime = d.subType === 'prime';
+
       d.tags = {
         automatedSuspend: (
           d.subType === 'status'
@@ -667,10 +678,28 @@ export class DataUtil {
           && d.payload?.suspended?.reason === 'Auto suspend by PLGS'
         ),
         calibration: d.subType === 'calibration',
-        reservoirChange: d.subType === 'reservoirChange',
-        cannulaPrime: d.subType === 'prime' && d.primeTarget === 'cannula',
-        tubingPrime: d.subType === 'prime' && d.primeTarget === 'tubing',
+        [SITE_CHANGE]: isReservoirChange || isPrime,
+        [SITE_CHANGE_RESERVOIR]: isReservoirChange,
+        [SITE_CHANGE_CANNULA]: isPrime && d.primeTarget === 'cannula',
+        [SITE_CHANGE_TUBING]: isPrime && d.primeTarget === 'tubing',
       };
+
+      if (isTwiistLoop(d)) {
+        const recognizedAlarmTypes = [
+          ALARM_NO_INSULIN,
+          ALARM_NO_POWER,
+          ALARM_OCCLUSION,
+        ];
+
+        d.tags = {
+          ...d.tags,
+          [ALARM]: d.subType === 'alarm' && _.includes(recognizedAlarmTypes, d.alarmType),
+          ..._.reduce(recognizedAlarmTypes, (acc, type) => {
+            acc[type] = d.alarmType === type;
+            return acc;
+          }, {}),
+        };
+      }
     }
   };
 
