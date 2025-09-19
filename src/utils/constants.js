@@ -230,6 +230,7 @@ export const pumpVocabulary = {
     [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Maximum Basal Rate'),
+    [ALARM_NO_INSULIN]: t('Cassette Empty'),
     [ALARM_OCCLUSION]: t('Line Blocked'),
   },
   [DIY_LOOP]: {
