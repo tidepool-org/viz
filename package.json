@@ -102,7 +102,7 @@
     "@babel/polyfill": "7.12.1",
     "@babel/preset-env": "7.23.2",
     "@babel/preset-react": "7.22.15",
-    "@babel/runtime": "7.23.1",
+    "@babel/runtime": "7.26.10",
     "@hot-loader/react-dom": "16.11.0",
     "@storybook/addon-essentials": "7.5.0",
     "@storybook/addon-knobs": "7.0.2",
