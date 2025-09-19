@@ -43,7 +43,7 @@ const preprandial = {
 };
 
 const props = {
-  position: { top: 200, left: 200 },
+  position: { top: 205, left: 205 },
   timePrefs: { timezoneAware: false },
   bgPrefs: { bgUnits: MGDL_UNITS },
 };
@@ -58,8 +58,8 @@ const refDiv = (
       position: 'absolute',
       width: '10px',
       height: '10px',
-      top: '199px',
-      left: '199px',
+      top: '200px',
+      left: '200px',
       backgroundColor: 'FireBrick',
       opacity: 0.5,
       zIndex: '1',

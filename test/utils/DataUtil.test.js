@@ -1601,10 +1601,19 @@ describe('DataUtil', () => {
 
     context('deviceEvent', () => {
       const calibration = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'calibration', ...useRawData });
+
       const siteChange = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
       const cannulaPrime = { ...siteChange, subType: 'prime', primeTarget: 'cannula' };
       const reservoirChange = { ...siteChange, subType: 'reservoirChange' };
       const tubingPrime = { ...siteChange, deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing' };
+
+      const alarm = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'alarm', ...useRawData });
+      const twiistOrigin = { origin: { name: 'com.dekaresearch.twiist' } };
+      const alarmNoInsulin = { ...alarm, alarmType: 'no_insulin', ...twiistOrigin };
+      const alarmNo_power = { ...alarm, alarmType: 'no_power', ...twiistOrigin };
+      const alarmOcclusion = { ...alarm, alarmType: 'occlusion', ...twiistOrigin };
+      const nonTwiistAlarmOcclusion = { ...alarmOcclusion, origin: { name: 'non-twiist' } };
+      const alarmTypeUnrecognized = { ...alarm, alarmType: 'foo', ...twiistOrigin };
 
       const automatedSuspendBasal = new Types.DeviceEvent({
         deviceTime: '2018-02-01T01:00:00',
@@ -1655,6 +1664,40 @@ describe('DataUtil', () => {
         expect(automatedSuspendBasal.tags).to.be.undefined;
         dataUtil.tagDatum(automatedSuspendBasal);
         expect(automatedSuspendBasal.tags.automatedSuspend).to.be.true;
+      });
+
+      it('should tag a twiist alarm with alarmType of `no_insulin`', () => {
+        expect(alarmNoInsulin.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmNoInsulin);
+        expect(alarmNoInsulin.tags.alarm).to.equal(true);
+        expect(alarmNoInsulin.tags.no_insulin).to.equal(true);
+      });
+
+      it('should tag a twiist alarm with alarmType of `no_power`', () => {
+        expect(alarmNo_power.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmNo_power);
+        expect(alarmNo_power.tags.alarm).to.equal(true);
+        expect(alarmNo_power.tags.no_power).to.equal(true);
+      });
+
+      it('should tag a twiist alarm with alarmType of `occlusion`', () => {
+        expect(alarmOcclusion.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmOcclusion);
+        expect(alarmOcclusion.tags.alarm).to.equal(true);
+        expect(alarmOcclusion.tags.occlusion).to.equal(true);
+      });
+
+      it('should not tag a non-twiist alarm with alarmType of `occlusion`', () => {
+        expect(nonTwiistAlarmOcclusion.tags).to.be.undefined;
+        dataUtil.tagDatum(nonTwiistAlarmOcclusion);
+        expect(nonTwiistAlarmOcclusion.tags.alarm).to.be.undefined;
+        expect(nonTwiistAlarmOcclusion.tags.occlusion).to.be.undefined;
+      });
+
+      it('should tag a twiist alarm with an unrecognized alarmType as false', () => {
+        expect(alarmTypeUnrecognized.tags).to.be.undefined;
+        dataUtil.tagDatum(alarmTypeUnrecognized);
+        expect(alarmTypeUnrecognized.tags.alarm).to.equal(false);
       });
     });
   });
@@ -5347,7 +5390,14 @@ describe('DataUtil', () => {
       d.normalTime = d.deviceTime;
       d.normalEnd = d.normalTime + d.duration;
       d.displayOffset = 0;
-      d.tags = { automatedSuspend: false, calibration: false, reservoirChange: false, cannulaPrime: false, tubingPrime: false };
+      d.tags = {
+        automatedSuspend: false,
+        calibration: false,
+        siteChange: false,
+        reservoirChange: false,
+        cannulaPrime: false,
+        tubingPrime: false,
+      };
       return d;
     };
     /* eslint-enable no-param-reassign */
