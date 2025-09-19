@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+import moment from 'moment';
 import DataUtil from '../../src/utils/DataUtil';
 import StatUtil from '../../src/utils/StatUtil';
 import { types as Types, generateGUID } from '../../data/types';
@@ -656,9 +657,36 @@ describe('StatUtil', () => {
 
     it('should return the GMI data when viewing at least 14 days of data and 70% coverage', () => {
       const requiredDexcomDatums = 2823; // 288(total daily possible readings) * .7(%required) * 14(days)
+
+      const sampleDatum = cbgData[4];
+
+      // We are using a sample cbgDatum and cloning it 2,830 times for this test. However,
+      // since all of the cloned data will have the same timestamp, the Data Worker would
+      // deduplicate it until there is only one datum remaining. We need to ensure that the
+      // data has sequential and well-spaced timestamps to preserve all the data.
+      const sampleDatumTimes = (() => {
+        const sampleDatumTimeMs = moment(sampleDatum.time).valueOf();
+        const times = [];
+
+        for (let i = 0; i <= requiredDexcomDatums; i++) {
+          const updatedTime = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
+          const time = updatedTime.toISOString();
+          const deviceTime = updatedTime.format('YYYY-MM-DDTHH:mm:ss');
+
+          times.push({ time, deviceTime });
+        }
+
+        return times;
+      })();
+
       const sufficientData = _.map(
-        _.fill(Array(requiredDexcomDatums), cbgData[4], 0, requiredDexcomDatums),
-        d => ({ ...d, id: generateGUID() })
+        _.fill(Array(requiredDexcomDatums), sampleDatum, 0, requiredDexcomDatums),
+        (d, i) => ({
+          ...d,
+          id: generateGUID(),
+          time: sampleDatumTimes[i].time,
+          deviceTime: sampleDatumTimes[i].deviceTime
+        })
       );
 
       statUtil = createStatUtil(sufficientData, defaultOpts);
