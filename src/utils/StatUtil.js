@@ -311,7 +311,10 @@ export class StatUtil {
 
     let sensorUsage = 0;
     for (let i = 0; i < cbgData.length; i++) {
-      sensorUsage += cbgData[i].sampleInterval;
+      const datum = cbgData[i];
+      this.dataUtil.setDataAnnotations(datum);
+
+      sensorUsage += datum.sampleInterval;
     }
 
     const count = cbgData.length;
