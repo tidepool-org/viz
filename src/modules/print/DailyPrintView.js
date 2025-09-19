@@ -57,6 +57,7 @@ import {
 } from '../../utils/format';
 
 import {
+  ALARM,
   AUTOMATED_DELIVERY,
   MMOLL_UNITS,
   MS_IN_MIN,
@@ -73,7 +74,13 @@ import {
   processBasalSequencesForDate,
 } from '../../utils/print/data';
 
+import colors from '../../colors';
+
 const t = i18next.t.bind(i18next);
+
+const eventImages = {
+  [ALARM]: 'images/alarm.png',
+};
 
 class DailyPrintView extends PrintView {
   constructor(doc, data, opts) {
@@ -85,6 +92,11 @@ class DailyPrintView extends PrintView {
     this.hasCarbExchanges = _.some(
       _.get(data, 'data.current.data.wizard', []),
       { type: 'wizard', carbUnits: 'exchanges' }
+    );
+
+    this.hasAlarms = _.some(
+      _.get(data, 'data.current.data.deviceEvent', []),
+      d => !!d.tags?.alarm
     );
 
     const deviceLabels = getPumpVocabulary(this.manufacturer);
@@ -102,6 +114,7 @@ class DailyPrintView extends PrintView {
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
+    this.eventFontSize = 7.5;
 
     this.summaryHeaderFontSize = opts.summaryHeaderFontSize;
 
@@ -111,6 +124,7 @@ class DailyPrintView extends PrintView {
     // render options
     this.bolusWidth = 3;
     this.carbRadius = 4.25;
+    this.eventRadius = 5.5;
     this.cbgRadius = 1;
     this.markerRadius = 4.25;
     this.extendedLineThickness = 0.75;
@@ -377,6 +391,7 @@ class DailyPrintView extends PrintView {
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
         .renderYAxes(dateChart)
+        .renderDeviceEvents(dateChart)
         .renderCbgs(dateChart)
         .renderSmbgs(dateChart)
         .renderInsulinEvents(dateChart)
@@ -387,6 +402,20 @@ class DailyPrintView extends PrintView {
         .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
     });
+
+    if (this.hasAlarms) this.renderAlarmsFootnote();
+  }
+
+  renderAlarmsFootnote() {
+    this.resetText();
+    this.doc
+      .fontSize(this.smallFontSize)
+      .fillColor(colors.gray50)
+      .text(
+        t('1 - The Pump Alarm icon indicates that one of the following alarms occurred: Cassette Empty, Battery Empty, or Line Blocked. Please note that pump alarms are only shown for the twiist AID system and not all alarms are shown.'),
+        this.leftEdge,
+        this.chartFootnotesYPos
+      );
   }
 
   renderSummary({ date, topEdge }) {
@@ -842,7 +871,7 @@ class DailyPrintView extends PrintView {
   }
 
   renderFoodCarbs({ data: { food }, xScale, topEdge }) {
-    const circleOffset = 10;
+    const carbsY = topEdge + 15;
     const textOffset = 1.75;
 
     _.each(food, foodEvent => {
@@ -850,9 +879,10 @@ class DailyPrintView extends PrintView {
 
       if (carbs) {
         const carbsX = xScale(foodEvent.normalTime);
-        const carbsY = topEdge + (this.carbRadius + circleOffset);
+
         this.doc.circle(carbsX, carbsY, this.carbRadius)
           .fill(this.colors.carbs);
+
         this.doc.font(this.font)
           .fontSize(this.carbsFontSize)
           .fillColor('black')
@@ -863,6 +893,21 @@ class DailyPrintView extends PrintView {
             { align: 'center', width: this.carbRadius * 4 }
           );
       }
+    });
+
+    return this;
+  }
+
+  renderDeviceEvents({ data: { deviceEvent }, xScale, topEdge }) {
+    const eventY = topEdge + 15 - this.eventRadius;
+    const alarms = _.filter(deviceEvent, event => !!event.tags.alarm);
+
+    _.each(alarms, alarm => {
+      const alarmX = xScale(alarm.normalTime) - this.eventRadius;
+
+      this.doc.image(eventImages[ALARM], alarmX, eventY, {
+        width: this.eventRadius * 2,
+      });
     });
 
     return this;
@@ -1155,15 +1200,18 @@ class DailyPrintView extends PrintView {
     const isLastChartOnPage = bottomEdge + this.chartMinimums.total > this.chartArea.bottomEdge;
 
     const padding = (bottomEdge - bottomOfBasalChart) + this.chartMinimums.paddingBelow;
+    const yPos = bottomOfBasalChart + padding / 2;
 
     if (!isLastChartOnPage) {
-      const yPos = bottomOfBasalChart + padding / 2;
-
       this.doc
         .moveTo(this.leftEdge, yPos)
         .lineWidth(1)
         .lineTo(this.rightEdge, yPos)
         .stroke(this.colors.lightGrey);
+
+      this.chartFootnotesYPos = yPos + 10;
+    } else {
+      this.chartFootnotesYPos = yPos - 10;
     }
   }
 
@@ -1184,7 +1232,7 @@ class DailyPrintView extends PrintView {
 
     const legendVerticalMiddle = legendTop + lineHeight * 2;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
-    let legendItemLeftOffset = 9;
+    let legendItemLeftOffset = this.isAutomatedBasalDevice ? 8 : 9;
     let legendItemLabelOffset = 4.5;
 
     if (this.isAutomatedBolusDevice) {
@@ -1282,10 +1330,11 @@ class DailyPrintView extends PrintView {
       cursor += this.bolusWidth * 3 + legendItemLabelOffset;
       this.doc
         .fillColor('black')
-        .text(t('Bolus'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
-        .text(t('manual & automated'));
+        .text(t('Bolus'), cursor, legendTextMiddle - this.doc.currentLineHeight() * 1.25)
+        .text(t('manual &'))
+        .text(t('automated'));
 
-      cursor += this.doc.widthOfString(t('manual & automated')) + legendItemLeftOffset * 2;
+      cursor += this.doc.widthOfString(t('automated')) + legendItemLeftOffset * 2;
     } else {
       cursor += this.bolusWidth + legendItemLabelOffset;
       this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
@@ -1339,17 +1388,12 @@ class DailyPrintView extends PrintView {
 
     cursor += this.bolusWidth * 3 + legendItemLabelOffset;
 
-    if (this.isAutomatedBolusDevice) {
-      this.doc
-        .fillColor('black')
-        .text(t('Override'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
-        .text(t('up & down'));
+    this.doc
+      .fillColor('black')
+      .text(t('Override'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2)
+      .text(t('up & down'));
 
-      cursor += this.doc.widthOfString(t('up & down')) + legendItemLeftOffset * 2;
-    } else {
-      this.doc.fillColor('black').text(t('Override up & down'), cursor, legendTextMiddle);
-      cursor += this.doc.widthOfString(t('Override up & down')) + legendItemLeftOffset * 2;
-    }
+    cursor += this.doc.widthOfString(t('up & down')) + legendItemLeftOffset * 2;
 
     // interrupted bolus
     const interruptedBolusXScale = scaleLinear()
@@ -1467,74 +1511,109 @@ class DailyPrintView extends PrintView {
       .domain([0, 10])
       .range([cursor, cursor + 50]);
 
-    const dynamicBasalType = this.isAutomatedBasalDevice ? 'automated' : 'scheduled';
+    const dummy = {
+      subType: 'scheduled',
+      rate: 0,
+      duration: 0,
+      normalTime: 0,
+    };
 
-    const scheduled1 = {
-      subType: dynamicBasalType,
-      rate: 1.5,
+    const automated = {
+      subType: 'automated',
+      rate: 1,
       duration: 2,
       normalTime: 0,
     };
-    const negTemp = {
+
+    const scheduled = {
+      subType: 'scheduled',
+      rate: this.isAutomatedBasalDevice ? 1 : 1.5,
+      duration: 2,
+      normalTime: this.isAutomatedBasalDevice ? 2.25 : 0,
+    };
+
+    const temp = {
       subType: 'temp',
-      rate: 0.5,
-      duration: 2.5,
+      rate: 1,
+      duration: 2,
       normalTime: 2,
       suppressed: {
         rate: 1.5,
       },
     };
-    const scheduled2 = {
-      subType: 'scheduled',
-      rate: 1.75,
-      duration: 1.5,
-      normalTime: 4.5,
-    };
-    const posTemp = {
-      subType: 'temp',
-      rate: 2,
-      duration: 2,
-      normalTime: 6,
-      suppressed: {
-        rate: 1.75,
-      },
-    };
-    const suspend = {
-      subType: 'suspend',
-      rate: 0,
-      duration: 2,
-      normalTime: 8,
-      suppressed: {
-        subType: dynamicBasalType,
-        rate: dynamicBasalType === 'automated' ? 0 : 1.75,
-      },
-    };
-    const data = {
+
+    const data = this.isAutomatedBasalDevice ? {
       basal: [
-        scheduled1,
-        negTemp,
-        scheduled2,
-        posTemp,
-        suspend,
+        dummy,
+        automated,
+        scheduled,
       ],
       basalSequences: [
-        [scheduled1],
-        [negTemp],
-        [scheduled2],
-        [posTemp],
-        [suspend],
+        [dummy], // render a dummy basal first so that the automated flag is rendered
+        [automated, automated],
+        [scheduled],
+      ],
+    } : {
+      basal: [
+        scheduled,
+        temp,
+      ],
+      basalSequences: [
+        [scheduled],
+        [temp],
       ],
     };
+
     this.renderBasalPaths({
       basalScale: legendBasalYScale,
       data,
       xScale: legendBasalXScale,
     });
-    cursor += 50 + legendItemLabelOffset;
+
+    cursor += 23 + legendItemLabelOffset;
+
     this.doc
       .fontSize(this.smallFontSize)
       .fillColor('black')
-      .text(t('Basals'), cursor, legendTextMiddle);
+      .fillOpacity(1);
+
+    if (this.isAutomatedBasalDevice) {
+      this.doc
+        .text(t('Basals'), cursor, legendTextMiddle - this.doc.currentLineHeight() * 1.25)
+        .text(t('automated'))
+        .text(t('& manual'));
+
+      cursor += this.doc.widthOfString(t('automated')) + legendItemLeftOffset * 2;
+    } else {
+      this.doc
+        .text(t('Basals'), cursor, legendTextMiddle);
+
+      cursor += this.doc.widthOfString(t('Basals')) + legendItemLeftOffset * 2;
+    }
+
+    // alarms
+    this.doc.image(eventImages[ALARM], cursor, legendVerticalMiddle - this.eventRadius, {
+      width: this.eventRadius * 2,
+    });
+
+    cursor += this.eventRadius * 2 + legendItemLabelOffset;
+
+
+
+    this.doc
+      .fontSize(this.smallFontSize)
+      .fillColor('black')
+      .text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
+
+    if (this.hasAlarms) {
+      // Render the footnote indicator since we will render the alarms footnote on this report
+      this.doc
+        .text(t('Alarm'), { continued: true })
+        .fontSize(this.extraSmallFontSize)
+        .text('1', this.doc.x, this.doc.y - 1.5);
+    } else {
+      this.doc.text(t('Alarm'));
+    }
 
     return this;
   }
