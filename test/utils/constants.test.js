@@ -364,6 +364,7 @@ describe('constants', () => {
           [constants.PHYSICAL_ACTIVITY]: { label: 'Workout', marker: 'W' },
           [constants.MAX_BOLUS]: 'Maximum Bolus',
           [constants.MAX_BASAL]: 'Maximum Basal Rate',
+          [constants.ALARM_NO_INSULIN]: 'Cassette Empty',
           [constants.ALARM_OCCLUSION]: 'Line Blocked',
         },
         [constants.DIY_LOOP]: {

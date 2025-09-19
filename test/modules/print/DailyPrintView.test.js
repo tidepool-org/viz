@@ -320,6 +320,7 @@ describe('DailyPrintView', () => {
       sinon.stub(Renderer, 'renderSummary').returns(Renderer);
       sinon.stub(Renderer, 'renderXAxes').returns(Renderer);
       sinon.stub(Renderer, 'renderYAxes').returns(Renderer);
+      sinon.stub(Renderer, 'renderDeviceEvents').returns(Renderer);
       sinon.stub(Renderer, 'renderCbgs').returns(Renderer);
       sinon.stub(Renderer, 'renderSmbgs').returns(Renderer);
       sinon.stub(Renderer, 'renderInsulinEvents').returns(Renderer);
@@ -340,6 +341,7 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.renderSummary, numCharts);
       sinon.assert.callCount(Renderer.renderXAxes, numCharts);
       sinon.assert.callCount(Renderer.renderYAxes, numCharts);
+      sinon.assert.callCount(Renderer.renderDeviceEvents, numCharts);
       sinon.assert.callCount(Renderer.renderCbgs, numCharts);
       sinon.assert.callCount(Renderer.renderSmbgs, numCharts);
       sinon.assert.callCount(Renderer.renderInsulinEvents, numCharts);
@@ -821,13 +823,16 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'CGM');
       sinon.assert.calledWith(Renderer.doc.text, 'BGM');
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
-      sinon.assert.calledWith(Renderer.doc.text, 'Override up & down');
+      sinon.assert.calledWith(Renderer.doc.text, 'Override');
+      sinon.assert.calledWith(Renderer.doc.text, 'up & down');
       sinon.assert.calledWith(Renderer.doc.text, 'Interrupted');
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
       sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
+      sinon.assert.calledWith(Renderer.doc.text, 'Pump');
+      sinon.assert.calledWith(Renderer.doc.text, 'Alarm');
 
       // All of the bolus visual elements are called by renderEventPath
       // And the paths total 13
@@ -837,6 +842,8 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.doc.circle, 12);
 
       sinon.assert.callCount(Renderer.renderBasalPaths, 1);
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/alarm.png');
     });
 
     it('should render the legend with carb exchanges when present in dataset', () => {
@@ -867,7 +874,8 @@ describe('DailyPrintView', () => {
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
-      sinon.assert.calledWith(Renderer.doc.text, 'manual & automated');
+      sinon.assert.calledWith(Renderer.doc.text, 'manual &');
+      sinon.assert.calledWith(Renderer.doc.text, 'automated');
     });
   });
 });

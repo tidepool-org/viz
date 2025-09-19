@@ -303,6 +303,7 @@ export class StatUtil {
     const duration = _.reduce(
       cbgData,
       (result, datum) => {
+        this.dataUtil.setDataAnnotations(datum);
         result += datum.sampleInterval;
         return result;
       },
@@ -447,6 +448,7 @@ export class StatUtil {
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
+        this.dataUtil.setDataAnnotations(datum);
         const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         const duration = datum.sampleInterval;
         result.durations[classification] += duration;
