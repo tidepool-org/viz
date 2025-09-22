@@ -705,7 +705,9 @@ export class DataUtil {
       }
     }
 
-    // Events
+    // Events can appear on any datum type.
+    // We only display one event per datum, so we set the event tag to the highest priority event that applies.
+    // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
     const prioritizedEventTypes = [
       EVENT_PUMP_SHUTDOWN,
     ];
@@ -714,11 +716,14 @@ export class DataUtil {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
     };
 
+    const eventType = _.find(prioritizedEventTypes, type => events[type]);
 
-    d.tags = {
-      ...d.tags || {},
-      [EVENT]: _.find(prioritizedEventTypes, type => events[type]) || null,
-    };
+    if (eventType) {
+      d.tags = {
+        ...d.tags || {},
+        [EVENT]: eventType,
+      };
+    }
   };
 
   validateDatumIn = d => {

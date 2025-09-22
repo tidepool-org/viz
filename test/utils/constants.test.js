@@ -404,6 +404,7 @@ describe('constants', () => {
           [constants.ALARM_NO_POWER]: 'Battery Empty',
           [constants.ALARM_OCCLUSION]: 'Occlusion Detected',
           [constants.ALARM_OVER_LIMIT]: 'Insulin Delivery Limit Exceeded',
+          [constants.EVENT_PUMP_SHUTDOWN]: 'Pump Shutdown',
         },
       });
     });

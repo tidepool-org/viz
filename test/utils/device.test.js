@@ -372,6 +372,7 @@ describe('device utility functions', () => {
           'no_power',
           'occlusion',
           'over_limit',
+          'pump_shutdown',
         ]);
       });
 
