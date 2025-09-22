@@ -118,9 +118,9 @@ const basal = {
 // allow pump-shutdown-annotated basals, even if duration is zero, so we can display them.
 const basalPostShutdown = {
   ...basal,
-  annotations: {type: 'array', items: { type: 'object', props: { code: { type: 'string', value: 'pump-shutdown' } } } },
+  annotations: { type: 'array', items: { type: 'object', props: { code: { type: 'string', value: 'pump-shutdown' } } } },
   duration: { ...minZero, ...optional },
-  suppressed: { ...suppressed, props: {...suppressed.props, duration: { ...minZero, ...optional } } },
+  suppressed: { ...suppressed, props: { ...suppressed.props, duration: { ...minZero, ...optional } } },
 };
 
 const normalBolus = {
