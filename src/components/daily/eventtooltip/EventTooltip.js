@@ -21,7 +21,7 @@ const EventTooltip = (props) => {
   };
 
   const renderEvent = () => {
-    let { title, description, image } = content[props.event?.eventType] || {};
+    let { title, description, image } = content[props.event?.tags?.event] || {};
 
     return (
       <div className={styles.wrapper}>

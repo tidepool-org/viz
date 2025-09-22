@@ -706,14 +706,18 @@ export class DataUtil {
     }
 
     // Events
-    const eventTags = {
+    const prioritizedEventTypes = [
+      EVENT_PUMP_SHUTDOWN,
+    ];
+
+    const events = {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
     };
 
+
     d.tags = {
       ...d.tags || {},
-      [EVENT]: _.some(_.values(eventTags)),
-      ...eventTags,
+      [EVENT]: _.find(prioritizedEventTypes, type => events[type]) || null,
     };
   };
 
