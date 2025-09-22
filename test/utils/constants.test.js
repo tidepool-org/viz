@@ -194,6 +194,13 @@ describe('constants', () => {
     });
   });
 
+  describe('events', () => {
+    it('should export keys for `event` and all event types', () => {
+      expect(constants.EVENT).to.equal('event');
+      expect(constants.EVENT_PUMP_SHUTDOWN).to.equal('pump_shutdown');
+    });
+  });
+
   describe('AUTOMATED_BOLUS', () => {
     it('should be `automatedBolus`', () => {
       expect(constants.AUTOMATED_BOLUS).to.equal('automatedBolus');

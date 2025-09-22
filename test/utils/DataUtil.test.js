@@ -1700,6 +1700,22 @@ describe('DataUtil', () => {
         expect(alarmTypeUnrecognized.tags.alarm).to.equal(false);
       });
     });
+
+    context('events', () => {
+      it('should tag a ControlIQ datum with a pump-shutdown event', () => {
+        const controlIQDatum = { deviceId: 'tandemCIQ12345', annotations: [{ code: 'pump-shutdown' }] };
+        expect(controlIQDatum.tags).to.be.undefined;
+        dataUtil.tagDatum(controlIQDatum);
+        expect(controlIQDatum.tags.event).to.equal('pump_shutdown');
+      });
+
+      it('should not tag a ControlIQ datum with a non-recognized event', () => {
+        const controlIQDatum = { deviceId: 'tandemCIQ12345', annotations: [{ code: 'non-recognized' }] };
+        expect(controlIQDatum.tags).to.be.undefined;
+        dataUtil.tagDatum(controlIQDatum);
+        expect(controlIQDatum.tags?.event).to.be.undefined;
+      });
+    });
   });
 
   describe('validateDatumIn', () => {
