@@ -1006,6 +1006,40 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  deduplicateCBGData = (data = []) => {
+    const cbgData = this.sort.byTime(_.cloneDeep(data));
+
+    // Iterate through the time-ordered list of glucose data. For each datum, we set a blackout
+    // window for the time span it occupies - e.g. if a datum has a time of 14:30 and duration
+    // of 5 min, then any OTHER datums occuring between 14:30 to 14:35 should be discarded.
+
+    const OVERLAP_TOLERANCE = MS_IN_MIN / 6; // tolerate up to 10 seconds of overlap
+
+    let blackoutUntil = 0; // end of current blackout window (unix timestamp)
+
+    const output = [];
+
+    for (let i = 0; i < cbgData.length; i++) {
+      const currentRecord = cbgData[i];
+
+      // If current record occured within the current blackout window, discard the record.
+      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line
+
+      // Otherwise, if the record is past the blackout window, we include the record.
+      // Then, set a new blackout window based on the current record's time window
+      output.push(currentRecord);
+      blackoutUntil = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
+    }
+
+    return output;
+  };
+
+  // memoize deduplicateCBGData and only recompute if first/last ids change
+  getDeduplicatedCBGData = _.memoize(
+    this.deduplicateCBGData,
+    data => `${_.first(data)?.id}_${_.last(data)?.id}`
+  );
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {
