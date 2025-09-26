@@ -64,7 +64,9 @@ EventTooltip.propTypes = {
   borderRadius: PropTypes.number,
   showDividers: PropTypes.bool,
   event: PropTypes.shape({
-    eventType: PropTypes.string,
+    tags: PropTypes.shape({
+      event: PropTypes.string.isRequired,
+    }).isRequired,
     normalTime: PropTypes.number.isRequired,
   }).isRequired,
   timePrefs: PropTypes.object.isRequired,
