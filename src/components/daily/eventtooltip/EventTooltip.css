@@ -1,0 +1,32 @@
+.wrapper {
+  width: 255px;
+  padding: 8px 4px;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.row {
+  composes: smallSize from '../../../styles/typography.css';
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--blue50);
+  text-align: left;
+}
+
+.image img {
+  display: inline-block;
+  max-width: calc(100% - 8px);
+  height: auto;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.eventTitle {
+  composes: row;
+  font-weight: 900;
+  margin-bottom: 8px;
+}
+
+.eventDescription {
+  composes: row;
+}
