@@ -2675,6 +2675,61 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('getDeduplicatedCBGData', () => {
+    it('sorts and deduplicates CBG data according to timestamp', () => {
+      const data = _.cloneDeep(cbgData);
+      const duplicatedData = _.shuffle(_.cloneDeep([...data, ...data, ...data]));
+
+      _.each(duplicatedData, dataUtil.normalizeDatumIn); // mimic data ingestion
+      expect(duplicatedData.length).to.equal(15);
+
+      const result = dataUtil.getDeduplicatedCBGData(duplicatedData);
+
+      expect(result.length).to.equal(5);
+      expect(result[0].time).to.equal(1517443200000);
+      expect(result[2].time).to.equal(1517445000000);
+      expect(result[4].time).to.equal(1517446200000);
+    });
+
+    it('DOES deduplicate datums when next datum occurs before 10 second blackout window', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      const data = [datum1, datum2]; // two copies of same datum
+
+      _.each(data, dataUtil.normalizeDatumIn); // mimic data ingestion
+
+      expect(data[0].sampleInterval).to.equal(300_000);
+      expect(data[1].sampleInterval).to.equal(300_000);
+
+      // Second datum occurs 12 sec before it is expected to (based on 5 min sample interval)
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000 + 300_000 - 12_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(1); // should deduplicate
+    });
+
+    it('DOES NOT deduplicates datums when next datum is within 10 second blackout window', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      const data = [datum1, datum2]; // two copies of same datum
+
+      _.each(data, dataUtil.normalizeDatumIn); // mimic data ingestion
+
+      expect(data[0].sampleInterval).to.equal(300_000);
+      expect(data[1].sampleInterval).to.equal(300_000);
+
+      // Second datum occurs 7 sec before it is expected to (based on 5 min sample interval)
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000 + 300_000 - 7_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(2); // should not deduplicate
+    });
+  });
+
   describe('removeData', () => {
     context('predicate is provided', () => {
       it('should call the `clearFilters` method', () => {
