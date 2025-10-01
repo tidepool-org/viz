@@ -64,7 +64,7 @@ describe('AGPConstants', () => {
           'ADA standard': 'Goals for Type 1 and Type 2 Diabetes',
           'ADA older or high-risk': 'Goals for Older/High Risk (Type 1 and 2)',
           'ADA pregnancy type 1': 'Goals for Pregnancy (Type 1)',
-          'ADA pregnancy GDM or type 2': 'For Pregnancy (Gestational and Type 2)',
+          'ADA pregnancy GDM or type 2': 'Goals for Pregnancy (Gestational and Type 2)',
           PWD_SELF_DEFINED: '',
         }
       },
