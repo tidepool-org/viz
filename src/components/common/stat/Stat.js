@@ -226,10 +226,12 @@ class Stat extends PureComponent {
   };
 
   renderNonStandardTargetsWarning = () => {
+    console.log('@@@ this.props.id', this.props.id)
+
     const isRendered = (
       this.hasNonStandardTargets() &&
-      this.props.id === 'timeInRange' &&
-      this.state.isOpened
+      this.state.isOpened &&
+      _.includes(['timeInRange', 'readingsInRange'], this.props.id)
     );
 
     if (!isRendered) return null;
@@ -264,7 +266,10 @@ class Stat extends PureComponent {
   );
 
   renderStatHeader = () => {
-    const hasNonStandardTargetStyles = this.hasNonStandardTargets() && this.props.id === 'timeInRange';
+    const hasNonStandardTargetStyles = (
+      this.hasNonStandardTargets() &&
+      _.includes(['timeInRange', 'readingsInRange'], this.props.id)
+    );
 
     const containerStyles = hasNonStandardTargetStyles
       ? styles.statHeaderContainerNonStandardTargets
