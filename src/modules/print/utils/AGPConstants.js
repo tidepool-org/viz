@@ -35,13 +35,13 @@ export const text = {
   percentInRanges: {
     title: {
       [CGM_DATA_KEY]: t('Time in Ranges'),
-      [BGM_DATA_KEY]: t('Percent BGM Readings in Ranges'),
+      [BGM_DATA_KEY]: t('Percent BGM Readings'),
     },
     subtitle: {
       [GLYCEMIC_RANGE.ADA_STANDARD]: t('Goals for Type 1 and Type 2 Diabetes'),
-      [GLYCEMIC_RANGE.ADA_OLDER_HIGH_RISK]: t('Goals for Older/High Risk (Type 1 and 2)'),
-      [GLYCEMIC_RANGE.ADA_PREGNANCY_T1]: t('Goals for Pregnancy (Type 1)'),
-      [GLYCEMIC_RANGE.ADA_GESTATIONAL_T2]: t('For Pregnancy (Gestational and Type 2)'),
+      [GLYCEMIC_RANGE.ADA_OLDER_HIGH_RISK]: t('Goals for Older/High Risk (T1D and T2D)'),
+      [GLYCEMIC_RANGE.ADA_PREGNANCY_T1]: t('Goals for Pregnancy (T1D)'),
+      [GLYCEMIC_RANGE.ADA_GESTATIONAL_T2]: t('Goals for Pregnancy (Gestational and T2D)'),
       PWD_SELF_DEFINED: '', // No goals for PwD self-defined ranges
     },
   },
