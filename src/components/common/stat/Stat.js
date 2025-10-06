@@ -226,8 +226,6 @@ class Stat extends PureComponent {
   };
 
   renderNonStandardTargetsWarning = () => {
-    console.log('@@@ this.props.id', this.props.id)
-
     const isRendered = (
       this.hasNonStandardTargets() &&
       this.state.isOpened &&
