@@ -58,13 +58,13 @@ describe('AGPConstants', () => {
       percentInRanges: {
         title: {
           cbg: 'Time in Ranges',
-          smbg: 'Percent BGM Readings in Ranges',
+          smbg: 'Percent BGM Readings',
         },
         subtitle: {
           'ADA standard': 'Goals for Type 1 and Type 2 Diabetes',
-          'ADA older or high-risk': 'Goals for Older/High Risk (Type 1 and 2)',
-          'ADA pregnancy type 1': 'Goals for Pregnancy (Type 1)',
-          'ADA pregnancy GDM or type 2': 'For Pregnancy (Gestational and Type 2)',
+          'ADA older or high-risk': 'Goals for Older/High Risk (T1D and T2D)',
+          'ADA pregnancy type 1': 'Goals for Pregnancy (T1D)',
+          'ADA pregnancy GDM or type 2': 'Goals for Pregnancy (Gestational and T2D)',
           PWD_SELF_DEFINED: '',
         }
       },
