@@ -57,6 +57,7 @@ import {
   formatDateRange,
   formatTimeAgo,
   getLocalizedCeiling,
+  getLocalizedHourCeiling,
   getOffset,
   getTimezoneFromTimePrefs,
 } from './utils/datetime';
@@ -149,6 +150,7 @@ const utils = {
     formatDateRange,
     formatTimeAgo,
     getLocalizedCeiling,
+    getLocalizedHourCeiling,
     getOffset,
     getTimezoneFromTimePrefs,
   },

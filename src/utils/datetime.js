@@ -301,6 +301,29 @@ export function getLocalizedCeiling(utc, timePrefs) {
 }
 
 /**
+ * getLocalizedHourCeiling
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
+ *
+ * @return {Object} a JavaScript Date, the closest (future) hour according to timePrefs
+ */
+export function getLocalizedHourCeiling(utc, timePrefs) {
+  if (utc instanceof Date) {
+    throw new Error('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
+  }
+  const timezone = getTimezoneFromTimePrefs(timePrefs);
+  const startOfHour = moment.utc(utc)
+    .tz(timezone)
+    .startOf('hour');
+
+  const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
+  if (startOfHour.valueOf() === utcHammertime) {
+    return startOfHour.toDate();
+  }
+  return startOfHour.add(1, 'hour').toDate();
+}
+
+/**
  * formatTimeAgo
  *
  * @param {String|Date} utc - A moment-compatible date object or string
