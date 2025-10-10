@@ -28,8 +28,8 @@ export class AggregationUtil {
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
     this.rangeDates = [
-      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).format('YYYY-MM-DD'),
+      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).toISOString(),
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).toISOString(),
     ];
     this.excludedDevices = _.get(dataUtil, 'excludedDevices', []);
 
