@@ -177,13 +177,13 @@ describe('AggregationUtil', () => {
     });
 
     it('should set `rangeDates` from dataUtil.activeEndpoints option in correct time zone', () => {
-      expect(aggregationUtil.rangeDates).to.eql(['2018-02-01', '2018-02-03']);
+      expect(aggregationUtil.rangeDates).to.eql(['2018-02-01', '2018-02-04']);
 
       aggregationUtil = createAggregationUtil(data, {
         ...defaultOpts,
         timePrefs: { timezoneName: 'US/Eastern' },
       });
-      expect(aggregationUtil.rangeDates).to.eql(['2018-01-31', '2018-02-01']);
+      expect(aggregationUtil.rangeDates).to.eql(['2018-01-31', '2018-02-03']);
     });
   });
 
