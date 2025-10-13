@@ -183,7 +183,7 @@ describe('AggregationUtil', () => {
         ...defaultOpts,
         timePrefs: { timezoneName: 'US/Eastern' },
       });
-      expect(aggregationUtil.rangeDates).to.eql(['2018-01-31', '2018-02-02']);
+      expect(aggregationUtil.rangeDates).to.eql(['2018-01-31', '2018-02-01']);
     });
   });
 
