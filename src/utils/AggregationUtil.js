@@ -27,10 +27,6 @@ export class AggregationUtil {
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
-    this.rangeDates = [
-      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).add(1, 'day').format('YYYY-MM-DD'),
-    ];
     this.excludedDevices = _.get(dataUtil, 'excludedDevices', []);
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
@@ -636,10 +632,18 @@ export class AggregationUtil {
     return processedData;
   };
 
-  filterByActiveRange = results => _.filter(
-    _.cloneDeep(results),
-    result => result.key >= this.rangeDates[0] && result.key < this.rangeDates[1]
-  );
+  filterByActiveRange = results => {
+    const [start, end] = this.initialActiveEndpoints.range;
+
+    const startDate = moment.utc(start).tz(this.timezoneName).format('YYYY-MM-DD')
+    const endDate = moment.utc(end).tz(this.timezoneName).format('YYYY-MM-DD')
+
+    // Select all results that fall between start and end dates (inclusive)
+    return _.filter(
+      _.cloneDeep(results),
+      result => result.key >= startDate && result.key <= endDate,
+    );
+  };
 
   /* eslint-disable lodash/prefer-lodash-method */
   reduceByTag = (tag, type, reducer) => {
