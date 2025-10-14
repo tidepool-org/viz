@@ -635,14 +635,19 @@ export class AggregationUtil {
   filterByActiveRange = results => {
     const [start, end] = this.initialActiveEndpoints.range;
 
-    const startDate = moment.utc(start).tz(this.timezoneName).format('YYYY-MM-DD')
-    const endDate = moment.utc(end).tz(this.timezoneName).format('YYYY-MM-DD')
+    const startMoment = moment.utc(start).tz(this.timezoneName);
+    const endMoment = moment.utc(end).tz(this.timezoneName);
 
-    // Select all results that fall between start and end dates (inclusive)
-    return _.filter(
-      _.cloneDeep(results),
-      result => result.key >= startDate && result.key <= endDate,
-    );
+    // If query ends at midnight, we only want to include data up to the previous whole calendar day
+    if (endMoment.format('HH:mm') === '00:00') {
+      endMoment.subtract(1, 'day').endOf('day');
+    }
+
+    // Select all data that between the two specified calendar days (inclusive)
+    const startDate = startMoment.format('YYYY-MM-DD');
+    const endDate = endMoment.format('YYYY-MM-DD');
+
+    return _.filter(_.cloneDeep(results), result => result.key >= startDate && result.key <= endDate);
   };
 
   /* eslint-disable lodash/prefer-lodash-method */
