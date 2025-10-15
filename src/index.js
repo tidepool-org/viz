@@ -47,7 +47,8 @@ import {
   ADA_GESTATIONAL_T2_BG_BOUNDS,
   ADA_OLDER_HIGH_RISK_BG_BOUNDS,
   ADA_PREGNANCY_T1_BG_BOUNDS,
-  GLYCEMIC_RANGE,
+  GLYCEMIC_RANGES_PRESET,
+  GLYCEMIC_RANGES_TYPE
 } from './utils/constants';
 
 import colors from './colors';
@@ -140,7 +141,8 @@ const utils = {
     ADA_OLDER_HIGH_RISK_BG_BOUNDS,
     ADA_PREGNANCY_T1_BG_BOUNDS,
     ADA_GESTATIONAL_T2_BG_BOUNDS,
-    GLYCEMIC_RANGE,
+    GLYCEMIC_RANGES_PRESET,
+    GLYCEMIC_RANGES_TYPE,
   },
   datetime: {
     findBasicsStart,
