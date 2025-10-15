@@ -80,8 +80,36 @@ class BasicsPrintView extends PrintView {
     this.initLayout();
   }
 
+  getChartDateBoundDisplayFormat() {
+    const [start, end] = this.endpoints.range;
+    const startDate = moment.utc(start).tz(this.timePrefs.timezoneName);
+    const endDate = moment.utc(end).tz(this.timePrefs.timezoneName);
+
+    const isStartDateMidnight = (startDate?.hours() === 0 && startDate?.minutes() === 0) ||
+                                (startDate?.hours() === 23 && startDate?.minutes() >= 59);
+
+    const isEndDateMidnight = (endDate?.hours() === 0 && endDate?.minutes() === 0) ||
+                              (endDate?.hours() === 23 && endDate?.minutes() >= 59);
+
+    const isMatchingDateBounds = isStartDateMidnight && isEndDateMidnight;
+
+    if (!isMatchingDateBounds) {
+      return 'MMM D, YYYY (h:mm A)';
+    }
+
+    return 'MMM D, YYYY';
+  };
+
   newPage() {
-    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
+    const format = this.getChartDateBoundDisplayFormat();
+
+    const [start, end] = this.endpoints.range;
+    const startText = moment.utc(start).tz(this.timePrefs.timezoneName).format(format);
+    const endText = moment.utc(end).tz(this.timePrefs.timezoneName).format(format);
+
+    const dateRange = `${startText} - ${endText}`;
+
+    super.newPage(t('Date range: {{dateRange}}', { dateRange }));
   }
 
   initCalendar() {
