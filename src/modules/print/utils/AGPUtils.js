@@ -60,7 +60,7 @@ export const getGlycemicRangesPreset = glycemicRanges => {
       return glycemicRanges.preset;
     case GLYCEMIC_RANGES_TYPE.CUSTOM:
       // feature to be implemented in future revisions
-    default:
+    default: // eslint-disable-line no-fallthrough
       return GLYCEMIC_RANGES_PRESET.ADA_STANDARD;
   }
 };
@@ -254,7 +254,7 @@ export const generatePercentInRangesFigure = (
   section,
   stat,
   bgPrefs,
-  glycemicRanges,
+  glycemicRanges
 ) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;

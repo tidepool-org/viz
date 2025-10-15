@@ -55,7 +55,7 @@ export const GLYCEMIC_RANGES_PRESET = {
 export const GLYCEMIC_RANGES_TYPE = {
   PRESET: 'preset',
   CUSTOM: 'custom',
-}
+};
 
 export const DEFAULT_BG_BOUNDS = {
   [MGDL_UNITS]: {
