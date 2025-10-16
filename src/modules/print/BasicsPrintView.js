@@ -98,7 +98,7 @@ class BasicsPrintView extends PrintView {
     }
 
     return 'MMM D, YYYY';
-  };
+  }
 
   newPage() {
     const format = this.getChartDateBoundDisplayFormat();
