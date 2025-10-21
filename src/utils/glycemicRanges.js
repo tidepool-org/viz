@@ -1,4 +1,4 @@
-import { GLYCEMIC_RANGES_PRESET, GLYCEMIC_RANGES_TYPE } from "./constants";
+import { GLYCEMIC_RANGES_PRESET, GLYCEMIC_RANGES_TYPE } from './constants';
 
 /**
  * Extracts the glycemic ranges preset value from the glycemicRanges object of the
