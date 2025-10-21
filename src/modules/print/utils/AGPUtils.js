@@ -21,6 +21,7 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
+import { getGlycemicRangesPreset } from '../../../utils/glycemicRanges';
 import {
   MGDL_UNITS,
   MS_IN_DAY,
@@ -29,7 +30,6 @@ import {
   CGM_DATA_KEY,
   ADA_STANDARD_BG_BOUNDS,
   GLYCEMIC_RANGES_PRESET,
-  GLYCEMIC_RANGES_TYPE,
 } from '../../../utils/constants';
 import moment from 'moment';
 
@@ -49,20 +49,6 @@ export const createAnnotation = options => {
   });
 
   return annotation;
-};
-
-export const getGlycemicRangesPreset = glycemicRanges => {
-  // glycemicRanges field will not exist on older clinicPatient records
-  if (!glycemicRanges) return GLYCEMIC_RANGES_PRESET.ADA_STANDARD;
-
-  switch (glycemicRanges.type) {
-    case GLYCEMIC_RANGES_TYPE.PRESET:
-      return glycemicRanges.preset;
-    case GLYCEMIC_RANGES_TYPE.CUSTOM:
-      // feature to be implemented in future revisions
-    default: // eslint-disable-line no-fallthrough
-      return GLYCEMIC_RANGES_PRESET.ADA_STANDARD;
-  }
 };
 
 export const calculateCGMDataSufficiency = (data = {}) => {

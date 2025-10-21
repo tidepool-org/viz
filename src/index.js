@@ -75,6 +75,8 @@ import {
   statFetchMethods,
 } from './utils/stat';
 
+import { getGlycemicRangesPreset } from './utils/glycemicRanges';
+
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
 import { agpCGMText } from './utils/agp/data';
@@ -180,6 +182,9 @@ const utils = {
     bgLogText,
     agpCGMText,
   },
+  glycemicRanges: {
+    getGlycemicRangesPreset,
+  }
 };
 
 export {
