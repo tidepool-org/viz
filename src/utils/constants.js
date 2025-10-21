@@ -45,11 +45,16 @@ export const BG_DISPLAY_MINIMUM_INCREMENTS = {
   [MMOLL_UNITS]: 0.1,
 };
 
-export const GLYCEMIC_RANGE = {
-  ADA_STANDARD: 'ADA standard',
-  ADA_OLDER_HIGH_RISK: 'ADA older or high-risk',
-  ADA_PREGNANCY_T1: 'ADA pregnancy type 1',
-  ADA_GESTATIONAL_T2: 'ADA pregnancy GDM or type 2',
+export const GLYCEMIC_RANGES_PRESET = {
+  ADA_STANDARD: 'adaStandard',
+  ADA_OLDER_HIGH_RISK: 'adaHighRisk',
+  ADA_PREGNANCY_T1: 'adaPregnancyType1',
+  ADA_GESTATIONAL_T2: 'adaPregnancyType2',
+};
+
+export const GLYCEMIC_RANGES_TYPE = {
+  PRESET: 'preset',
+  CUSTOM: 'custom',
 };
 
 export const DEFAULT_BG_BOUNDS = {
