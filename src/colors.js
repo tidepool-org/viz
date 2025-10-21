@@ -20,7 +20,7 @@ export const system = {
 
   // Blues
   blue80: '#375178',
-  blue60: '#EEF3FF',
+  blue60: '#445F87',
   blue50: '#4F6A92',
   blue30: '#708FC2',
   blue05: '#E1EAF9',
