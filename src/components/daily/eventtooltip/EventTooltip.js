@@ -7,8 +7,8 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../colors';
 import detailedEventStyles from './DetailedEventTooltip.css';
 import standardEventStyles from './StandardEventTooltip.css';
-import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN } from '../../../utils/constants';
-import { formatClocktimeFromMsPer24, getMsPer24 } from '../../../utils/datetime';
+import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN, MS_IN_MIN } from '../../../utils/constants';
+import { formatClocktimeFromMsPer24, formatDuration, getMsPer24 } from '../../../utils/datetime';
 
 import tandemShutDownImage from './images/tandemShutDownImage.png';
 
@@ -29,7 +29,12 @@ const renderStandardEvent = (content = {}) => {
     <div>
       <div className={standardEventStyles.time}>{content.time}</div>
       <div className={standardEventStyles.title}>{content.title}</div>
-      <div className={standardEventStyles.description}>{content.description}</div>
+
+      <div className={standardEventStyles.description}>
+        <div className={standardEventStyles.label}>{content.label}</div>
+        <div className={standardEventStyles.value}>{content.value}</div>
+      </div>
+
       {content.notes && (
         <div className={standardEventStyles.notes}>
           {content.notes.map((note, index) => (
@@ -49,7 +54,7 @@ const getEventContent = (event, timePrefs) => {
     case EVENT_PUMP_SHUTDOWN:
       return {
         title: t('Prior to this time, the pump was shut down'),
-        description: t('Tidepool does not show data from before a pump is shut down. When the pump is turned off, its internal clock stops. This makes it hard to trust the timestamps on any data recorded right before shutdown. We can\'t verify that the device time was accurate at that point or correct for any clock drift that may have occurred.'),
+        label: t('Tidepool does not show data from before a pump is shut down. When the pump is turned off, its internal clock stops. This makes it hard to trust the timestamps on any data recorded right before shutdown. We can\'t verify that the device time was accurate at that point or correct for any clock drift that may have occurred.'),
         image: <img src={tandemShutDownImage} alt={t('Pump Shutdown')} />,
         renderer: renderDetailedEvent,
         tooltipOverrides: {
@@ -63,7 +68,7 @@ const getEventContent = (event, timePrefs) => {
       return {
         time,
         title: t('Health'),
-        description: capitalize(event.states?.[0]?.state),
+        label: capitalize(event.states?.[0]?.state),
         notes: event.notes,
         renderer: renderStandardEvent,
       };
@@ -71,13 +76,30 @@ const getEventContent = (event, timePrefs) => {
       return {
         time,
         title: null,
-        description: null,
+        label: null,
         notes: event.notes,
         renderer: renderStandardEvent,
       };
     case EVENT_PHYSICAL_ACTIVITY:
+      const durationUnitsMultiplier = {
+        seconds: MS_IN_MIN / 60,
+        minutes: MS_IN_MIN,
+        hours: MS_IN_MIN * 60,
+      };
+
+      const intensityLabels = {
+        low: t('Light'),
+        medium: t('Moderate'),
+        high: t('Intense'),
+      };
+
+      const hasDuration = event.duration?.value && event.duration?.units && durationUnitsMultiplier[event.duration?.units];
+
       return {
-        title: t('Physical Activity'),
+        time,
+        title: t('Exercise'),
+        label: intensityLabels[event.reportedIntensity] || null,
+        value: hasDuration ? formatDuration(event.duration?.value * durationUnitsMultiplier[event.duration?.units], { condensed: true }) : null,
         renderer: renderStandardEvent,
       };
     default:

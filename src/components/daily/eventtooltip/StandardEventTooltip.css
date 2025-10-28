@@ -25,6 +25,15 @@
 
 .description {
   composes: row;
+  display: flex;
+  justify-content: space-between;
+}
+
+.label {
+  font-weight: 700;
+}
+
+.value {
   font-weight: 700;
 }
 
