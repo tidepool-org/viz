@@ -1034,10 +1034,16 @@ export class DataUtil {
     return output;
   };
 
-  // memoize deduplicateCBGData and only recompute if first/last ids change
+  // memoize deduplicateCBGData and only recompute if first/last ids change or units change
   getDeduplicatedCBGData = _.memoize(
     this.deduplicateCBGData,
-    data => `${_.first(data)?.id}_${_.last(data)?.id}`
+    data => {
+      const firstDatumId = _.first(data)?.id;
+      const lastDatumId = _.last(data)?.id;
+      const units = this.bgPrefs?.bgUnits || 'unknown'
+
+      return `${firstDatumId}_${lastDatumId}_${units}`;
+    }
   );
 
   /* eslint-disable no-param-reassign */
