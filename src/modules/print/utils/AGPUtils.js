@@ -177,7 +177,7 @@ export const generateChartSections = (data, bgSource) => {
     bordered: true,
     text: {
       title: text.percentInRanges.title[bgSource],
-      subtitle: text.percentInRanges.subtitle[glycemicRangesPreset]
+      subtitle: text.percentInRanges.subtitle[bgSource][glycemicRangesPreset]
     },
     sufficientData: dataSufficiency.percentInRanges,
   };
