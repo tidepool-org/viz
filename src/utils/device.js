@@ -75,6 +75,14 @@ export function isLoop(datum = {}) {
 }
 
 /**
+ * Check to see if datum is from a Dexcom device
+ */
+export function isDexcom(datum = {}) {
+  const TARGET = 'org.tidepool.oauth.dexcom.fetch'
+  return datum.tags?.dexcom || datum.client?.name === TARGET || datum.origin?.name === TARGET || _.includes(datum.deviceManufacturers, 'Dexcom');
+}
+
+/**
  * Check if the provided datum was for an automated basal device
  * @param {String} manufacturer Manufacturer name
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
