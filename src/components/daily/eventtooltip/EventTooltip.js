@@ -98,7 +98,7 @@ const getEventContent = (event, timePrefs) => {
       return {
         time,
         title: t('Exercise'),
-        label: intensityLabels[event.reportedIntensity] || null,
+        label: intensityLabels[event.reportedIntensity] || t('Duration'),
         value: hasDuration ? formatDuration(event.duration?.value * durationUnitsMultiplier[event.duration?.units], { condensed: true }) : null,
         renderer: renderStandardEvent,
       };
