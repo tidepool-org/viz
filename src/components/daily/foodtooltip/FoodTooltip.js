@@ -23,7 +23,7 @@ import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { MS_IN_HOUR } from '../../../utils/constants';
-import { isLoop } from '../../../utils/device';
+import { isDexcom, isLoop } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './FoodTooltip.css';
@@ -49,6 +49,15 @@ const FoodTooltip = (props) => {
         <div className={styles.units}>g</div>
       </div>,
     ];
+
+    if (isDexcom(food)) rows.push(
+      <div key={'manual'} className={styles.row}>
+        <div className={styles.label}>{t('Source')}</div>
+        <div className={styles.value}>
+          {t('Manual')}
+        </div>
+      </div>
+    );
 
     if (isLoop(food)) {
       const absorptionTime = getAbsorptionTime(food);

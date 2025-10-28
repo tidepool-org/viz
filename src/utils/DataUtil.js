@@ -9,6 +9,7 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isControlIQ,
+  isDexcom,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -114,6 +115,7 @@ export class DataUtil {
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
     this.dataAnnotations = this.dataAnnotations || {};
@@ -213,9 +215,14 @@ export class DataUtil {
       }
     }
 
-    if (d.type === 'upload' && d.dataSetType === 'continuous') {
-      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
-      if (!d.time) d.time = moment.utc().toISOString();
+    if (d.type === 'upload') {
+      if (d.dataSetType === 'continuous') {
+        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
+        if (!d.time) d.time = moment.utc().toISOString();
+      } else {
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.uploadId] = d;
+      }
     }
 
     if (d.messagetext) {
@@ -666,6 +673,7 @@ export class DataUtil {
     if (d.type === 'food') {
       d.tags = {
         loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        dexcom: !!this.dexcomDataSetsByIdMap[d.uploadId],
       };
     }
 
@@ -1072,11 +1080,18 @@ export class DataUtil {
       this.data.remove(predicate);
     } else {
       this.log('Reinitializing');
-      this.bolusToWizardIdMap = {};
       this.bolusDatumsByIdMap = {};
-      this.wizardDatumsByIdMap = {};
-      this.latestDatumByType = {};
+      this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.latestDatumByType = {};
+      this.pumpSettingsDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.wizardToBolusIdMap = {};
+      this.loopDataSetsByIdMap = {};
+      this.dexcomDataSetsByIdMap = {};
+      this.bolusDosingDecisionDatumsByIdMap = {};
+      this.matchedDevices = {};
+      this.dataAnnotations = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;
