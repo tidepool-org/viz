@@ -1040,7 +1040,7 @@ export class DataUtil {
     data => {
       const firstDatumId = _.first(data)?.id;
       const lastDatumId = _.last(data)?.id;
-      const units = this.bgPrefs?.bgUnits || 'unknown'
+      const units = this.bgPrefs?.bgUnits || 'unknown';
 
       return `${firstDatumId}_${lastDatumId}_${units}`;
     }
