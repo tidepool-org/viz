@@ -4,7 +4,7 @@ import { storiesOf } from '@storybook/react';
 
 import EventTooltip from '../../../src/components/daily/eventtooltip/EventTooltip';
 import { getBrowserTimezone } from '../../../src/utils/datetime';
-import { EVENT_PUMP_SHUTDOWN } from '../../../src/utils/constants';
+import { EVENT_HEALTH, EVENT_NOTES, EVENT_PUMP_SHUTDOWN } from '../../../src/utils/constants';
 
 const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
@@ -29,11 +29,12 @@ const stories = storiesOf('EventTooltip', module);
 stories.addDecorator(BackgroundDecorator);
 
 const normalTime = Date.now();
-const source = 'twiist';
 
-const eventTypes = [
-  EVENT_PUMP_SHUTDOWN,
-];
+const events = [
+  { tags: { event: EVENT_PUMP_SHUTDOWN } },
+  { tags: { event: EVENT_HEALTH }, states: [{ state: 'stress' }] },
+  { tags: { event: EVENT_NOTES }, notes: ['Slept really poorly last night', 'Think I\'m coming down with something'] },
+].map(event => ({ ...event, normalTime }));
 
 const props = {
   position: { top: 105, left: 305 },
@@ -41,11 +42,11 @@ const props = {
   timePrefs: { timezoneName: getBrowserTimezone() },
 };
 
-_.each(eventTypes, (eventType, index) => {
-  stories.add(eventType, () => (
+_.each(events, (event, index) => {
+  stories.add(event.tags.event, () => (
     <div key={`eventType-${index}`} style={{ position: 'relative' }}>
       {refDiv}
-      <EventTooltip {...props} event={{ eventType, normalTime, source }} />
+      <EventTooltip {...props} event={event} />
     </div>
   ));
 });

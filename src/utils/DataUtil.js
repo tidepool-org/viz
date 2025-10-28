@@ -54,6 +54,9 @@ import {
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
   EVENT,
+  EVENT_HEALTH,
+  EVENT_NOTES,
+  EVENT_PHYSICAL_ACTIVITY,
   EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
@@ -721,10 +724,25 @@ export class DataUtil {
     // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
     const prioritizedEventTypes = [
       EVENT_PUMP_SHUTDOWN,
+      EVENT_PHYSICAL_ACTIVITY,
+      EVENT_HEALTH,
+      EVENT_NOTES,
     ];
+
+    const healthStates = [
+      'alcohol',
+      'cycle',
+      'hyperglycemiaSymptoms',
+      'hypoglycemiaSymptoms',
+      'illness',
+      'stress',
+    ]
 
     const events = {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+      [EVENT_PHYSICAL_ACTIVITY]: d.type === 'physicalActivity',
+      [EVENT_HEALTH]: d.type === 'reportedState' && _.includes(healthStates, d.states?.[0]?.state),
+      [EVENT_NOTES]: d.type === 'reportedState' && (!!d.states?.[0]?.stateOther || d.notes?.length),
     };
 
     const eventType = _.find(prioritizedEventTypes, type => events[type]);

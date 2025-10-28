@@ -1,42 +1,98 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import i18next from 'i18next';
+import { capitalize } from 'lodash';
 
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../colors';
-import styles from './EventTooltip.css';
-import { EVENT_PUMP_SHUTDOWN } from '../../../utils/constants';
+import detailedEventStyles from './DetailedEventTooltip.css';
+import standardEventStyles from './StandardEventTooltip.css';
+import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN } from '../../../utils/constants';
+import { formatClocktimeFromMsPer24, getMsPer24 } from '../../../utils/datetime';
 
 import tandemShutDownImage from './images/tandemShutDownImage.png';
 
 const t = i18next.t.bind(i18next);
 
+const renderDetailedEvent = (content = {}) => {
+  return (
+    <div className={detailedEventStyles.wrapper}>
+      <div className={detailedEventStyles.image}>{content.image}</div>
+      <div className={detailedEventStyles.eventTitle}>{content.title}</div>
+      <div className={detailedEventStyles.eventDescription}>{content.description}</div>
+    </div>
+  );
+};
+
+const renderStandardEvent = (content = {}) => {
+  return (
+    <div>
+      <div className={standardEventStyles.time}>{content.time}</div>
+      <div className={standardEventStyles.title}>{content.title}</div>
+      <div className={standardEventStyles.description}>{content.description}</div>
+      {content.notes && (
+        <div className={standardEventStyles.notes}>
+          {content.notes.map((note, index) => (
+            <div className={standardEventStyles.note} key={`note-${index}`}>{note}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const getEventContent = (event, timePrefs) => {
+  const msPer24 = getMsPer24(event?.normalTime, timePrefs?.timezoneName);
+  const time = formatClocktimeFromMsPer24(msPer24);
+
+  switch (event?.tags?.event) {
+    case EVENT_PUMP_SHUTDOWN:
+      return {
+        title: t('Prior to this time, the pump was shut down'),
+        description: t('Tidepool does not show data from before a pump is shut down. When the pump is turned off, its internal clock stops. This makes it hard to trust the timestamps on any data recorded right before shutdown. We can\'t verify that the device time was accurate at that point or correct for any clock drift that may have occurred.'),
+        image: <img src={tandemShutDownImage} alt={t('Pump Shutdown')} />,
+        renderer: renderDetailedEvent,
+        tooltipOverrides: {
+          boxShadow: '0px 4px 11px 0px rgba(0, 0, 0, 0.15)',
+          tail: false,
+          borderColor: colors.gray10,
+          borderWidth: 1,
+        },
+      };
+    case EVENT_HEALTH:
+      return {
+        time,
+        title: t('Health'),
+        description: capitalize(event.states?.[0]?.state),
+        notes: event.notes,
+        renderer: renderStandardEvent,
+      };
+    case EVENT_NOTES:
+      return {
+        time,
+        title: null,
+        description: null,
+        notes: event.notes,
+        renderer: renderStandardEvent,
+      };
+    case EVENT_PHYSICAL_ACTIVITY:
+      return {
+        title: t('Physical Activity'),
+        renderer: renderStandardEvent,
+      };
+    default:
+      return {};
+  };
+};
+
 const EventTooltip = (props) => {
-  const content = {
-    [EVENT_PUMP_SHUTDOWN]: {
-      title: t('Prior to this time, the pump was shut down'),
-      description: t('Tidepool does not show data from before a pump is shut down. When the pump is turned off, its internal clock stops. This makes it hard to trust the timestamps on any data recorded right before shutdown. We can\'t verify that the device time was accurate at that point or correct for any clock drift that may have occurred.'),
-      image: <img src={tandemShutDownImage} alt={t('Pump Shutdown')} />,
-    },
-  };
-
-  const renderEvent = () => {
-    const { title, description, image } = content[props.event?.tags?.event] || {};
-
-    return (
-      <div className={styles.wrapper}>
-        <div className={styles.image}>{image}</div>
-        <div className={styles.eventTitle}>{title}</div>
-        <div className={styles.eventDescription}>{description}</div>
-      </div>
-    );
-  };
+  const { renderer, tooltipOverrides = {}, ...renderProps } = getEventContent(props.event, props.timePrefs);
 
   return (
     <Tooltip
       {...props}
-      boxShadow="0px 4px 11px 0px rgba(0, 0, 0, 0.15)"
-      content={renderEvent()}
+      {...tooltipOverrides}
+      content={renderer(renderProps)}
     />
   );
 };
@@ -74,10 +130,13 @@ EventTooltip.propTypes = {
 
 EventTooltip.defaultProps = {
   annotations: [],
-  tail: false,
+  tail: true,
   side: 'bottom',
-  borderColor: colors.gray10,
-  borderWidth: 1,
+  tailWidth: 16,
+  tailHeight: 8,
+  tailColor: colors.gray30,
+  borderColor: colors.gray30,
+  borderWidth: 2,
 };
 
 export default EventTooltip;

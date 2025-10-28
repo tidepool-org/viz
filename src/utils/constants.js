@@ -144,6 +144,9 @@ export const ALARM_OCCLUSION = 'occlusion';
 export const ALARM_OVER_LIMIT = 'over_limit';
 
 export const EVENT = 'event';
+export const EVENT_HEALTH = 'health';
+export const EVENT_NOTES = 'notes';
+export const EVENT_PHYSICAL_ACTIVITY = 'physical_activity';
 export const EVENT_PUMP_SHUTDOWN = 'pump_shutdown';
 
 export const AUTOMATED_BOLUS = 'automatedBolus';
