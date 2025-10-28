@@ -630,6 +630,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
+    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
+
     if (d.type === 'basal') {
       d.tags = {
         suspend: d.deliveryType === 'suspend',
@@ -665,15 +668,15 @@ export class DataUtil {
 
     if (d.type === 'smbg') {
       d.tags = {
-        manual: d.subType === 'manual',
-        meter: d.subType !== 'manual',
+        manual: d.subType === 'manual' || isDexcomDatum,
+        meter: d.subType !== 'manual' && !isDexcomDatum,
       };
     }
 
     if (d.type === 'food') {
       d.tags = {
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
-        dexcom: !!this.dexcomDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        dexcom: isDexcomDatum,
       };
     }
 
