@@ -72,7 +72,7 @@ const getEventContent = (event, timePrefs) => {
         hypoglycemiaSymptoms: t('Hypoglycemia Symptoms'),
         illness: t('Illness'),
         stress: t('Stress'),
-        other: capitalize(event.states?.[0]?.stateOther || ''),
+        other: capitalize(event.states?.[0]?.stateOther || t('Other')),
       };
 
       return {
