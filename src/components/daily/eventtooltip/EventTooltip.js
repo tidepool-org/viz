@@ -54,7 +54,7 @@ const getEventContent = (event, timePrefs) => {
     case EVENT_PUMP_SHUTDOWN:
       return {
         title: t('Prior to this time, the pump was shut down'),
-        label: t('Tidepool does not show data from before a pump is shut down. When the pump is turned off, its internal clock stops. This makes it hard to trust the timestamps on any data recorded right before shutdown. We can\'t verify that the device time was accurate at that point or correct for any clock drift that may have occurred.'),
+        description: t('Tidepool does not show data from before a pump is shut down. When the pump is turned off, its internal clock stops. This makes it hard to trust the timestamps on any data recorded right before shutdown. We can\'t verify that the device time was accurate at that point or correct for any clock drift that may have occurred.'),
         image: <img src={tandemShutDownImage} alt={t('Pump Shutdown')} />,
         renderer: renderDetailedEvent,
         tooltipOverrides: {
@@ -65,10 +65,20 @@ const getEventContent = (event, timePrefs) => {
         },
       };
     case EVENT_HEALTH:
+      const healthLabels = {
+        alcohol: t('Alcohol'),
+        cycle: t('Cycle'),
+        hyperglycemiaSymptoms: t('Hyperglycemia Symptoms'),
+        hypoglycemiaSymptoms: t('Hypoglycemia Symptoms'),
+        illness: t('Illness'),
+        stress: t('Stress'),
+        other: capitalize(event.states?.[0]?.stateOther || ''),
+      };
+
       return {
         time,
         title: t('Health'),
-        label: capitalize(event.states?.[0]?.state),
+        label: healthLabels[event.states?.[0]?.state],
         notes: event.notes,
         renderer: renderStandardEvent,
       };

@@ -736,6 +736,7 @@ export class DataUtil {
       'hypoglycemiaSymptoms',
       'illness',
       'stress',
+      'other',
     ]
 
     const events = {
