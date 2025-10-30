@@ -309,6 +309,18 @@ stories.add('Query Generator', (opts, props) => {
       messageText: 'messageText',
       parentMessage: 'parentMessage',
     },
+    reportedState: {
+      ...commonFields,
+      ...computedFields,
+      states: 'states',
+      notes: 'notes',
+    },
+    physicalActivity: {
+      ...commonFields,
+      ...computedFields,
+      reportedIntensity: 'reportedIntensity',
+      duration: 'duration',
+    },
   };
 
   const types = {
@@ -328,6 +340,8 @@ stories.add('Query Generator', (opts, props) => {
     dosingDecision: 'dosingDecision',
     alert: 'alert',
     message: 'message',
+    reportedState: 'reportedState',
+    physicalActivity: 'physicalActivity',
   };
 
   const stringQueryFormat = { string: 'string' };
