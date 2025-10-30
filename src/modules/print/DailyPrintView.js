@@ -59,6 +59,9 @@ import {
 import {
   ALARM,
   AUTOMATED_DELIVERY,
+  EVENT_HEALTH,
+  EVENT_NOTES,
+  EVENT_PHYSICAL_ACTIVITY,
   MMOLL_UNITS,
   MS_IN_MIN,
   PHYSICAL_ACTIVITY,
@@ -80,6 +83,9 @@ const t = i18next.t.bind(i18next);
 
 const eventImages = {
   [ALARM]: 'images/alarm.png',
+  [EVENT_HEALTH]: 'images/event-health.png',
+  [EVENT_PHYSICAL_ACTIVITY]: 'images/event-physical_activity.png',
+  [EVENT_NOTES  ]: 'images/event-notes.png',
 };
 
 class DailyPrintView extends PrintView {
@@ -898,12 +904,28 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderDeviceEvents({ data: { deviceEvent }, xScale, topEdge }) {
+  renderDeviceEvents({ data: { deviceEvent, physicalActivity, reportedState }, xScale, topEdge }) {
     const eventY = topEdge + 15 - this.eventRadius;
     const alarms = _.filter(deviceEvent, event => !!event.tags.alarm);
+    const events = _.sortBy(_.filter([...physicalActivity, ...reportedState], event => !!event.tags.event), 'normalTime');
+
+    _.each(events, event => {
+      const eventX = xScale(event.normalTime) - this.eventRadius;
+      this.doc
+        .circle(eventX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + .75)
+        .fill('white');
+
+      this.doc.image(eventImages[event.tags.event], eventX, eventY, {
+        width: this.eventRadius * 2,
+      });
+    });
 
     _.each(alarms, alarm => {
       const alarmX = xScale(alarm.normalTime) - this.eventRadius;
+
+      this.doc
+        .circle(eventX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + .75)
+        .fill('white');
 
       this.doc.image(eventImages[ALARM], alarmX, eventY, {
         width: this.eventRadius * 2,
