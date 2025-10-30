@@ -61,11 +61,20 @@ describe('AGPConstants', () => {
           smbg: 'Percent BGM Readings in Ranges',
         },
         subtitle: {
-          adaStandard: 'Goals for Type 1 and Type 2 Diabetes',
-          adaHighRisk: 'Goals for Older/High Risk (Type 1 and 2)',
-          adaPregnancyType1: 'Goals for Pregnancy (Type 1)',
-          adaPregnancyType2: 'For Pregnancy (Gestational and Type 2)',
-          PWD_SELF_DEFINED: '',
+          cbg: {
+            adaStandard: 'Goals for Type 1 and Type 2 Diabetes',
+            adaHighRisk: 'Goals for Older/High Risk (Type 1 and 2)',
+            adaPregnancyType1: 'Goals for Pregnancy (Type 1)',
+            adaPregnancyType2: 'Goals for Pregnancy (Gestational and Type 2)',
+            PWD_SELF_DEFINED: '',
+          },
+          smbg: {
+            adaStandard: '',
+            adaHighRisk: 'Older/High Risk',
+            adaPregnancyType1: 'Pregnancy',
+            adaPregnancyType2: 'Pregnancy',
+            PWD_SELF_DEFINED: '',
+          }
         }
       },
       reportInfo: {

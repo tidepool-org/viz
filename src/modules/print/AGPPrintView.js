@@ -171,7 +171,7 @@ class AGPPrintView extends PrintView {
       this.doc.text(titleText, titleXPos, titleYPos);
 
       if (section.text?.subtitle) {
-        const subtitleXPos = titleXPos + this.doc.widthOfString(titleText) + (this.dpi * 0.4);
+        const subtitleXPos = titleXPos + this.doc.widthOfString(titleText) + (this.dpi * 0.5);
 
         this.setFill(colors.text.section.subtitle);
 

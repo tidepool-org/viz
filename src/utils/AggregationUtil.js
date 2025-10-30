@@ -119,6 +119,8 @@ export class AggregationUtil {
 
     const bgClasses = [
       'veryLow',
+      'low',
+      'high',
       'veryHigh',
     ];
 
@@ -483,6 +485,8 @@ export class AggregationUtil {
           meter,
           veryHigh,
           veryLow,
+          high,
+          low
         },
       } = dataForDay;
 
@@ -496,6 +500,8 @@ export class AggregationUtil {
             meter: meter.count,
             veryHigh: veryHigh.count,
             veryLow: veryLow.count,
+            high: high.count,
+            low: low.count,
           },
         };
       }
