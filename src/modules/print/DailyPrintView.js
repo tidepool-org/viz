@@ -904,7 +904,7 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderDeviceEvents({ data: { deviceEvent, physicalActivity, reportedState }, xScale, topEdge }) {
+  renderDeviceEvents({ data: { deviceEvent = [], physicalActivity = [], reportedState = [] }, xScale, topEdge }) {
     const eventY = topEdge + 15 - this.eventRadius;
     const alarms = _.filter(deviceEvent, event => !!event.tags.alarm);
     const events = _.sortBy(_.filter([...physicalActivity, ...reportedState], event => !!event.tags.event), 'normalTime');
@@ -912,7 +912,7 @@ class DailyPrintView extends PrintView {
     _.each(events, event => {
       const eventX = xScale(event.normalTime) - this.eventRadius;
       this.doc
-        .circle(eventX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + .75)
+        .circle(eventX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + 1)
         .fill('white');
 
       this.doc.image(eventImages[event.tags.event], eventX, eventY, {
@@ -924,7 +924,7 @@ class DailyPrintView extends PrintView {
       const alarmX = xScale(alarm.normalTime) - this.eventRadius;
 
       this.doc
-        .circle(eventX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + .75)
+        .circle(eventX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + 1)
         .fill('white');
 
       this.doc.image(eventImages[ALARM], alarmX, eventY, {
