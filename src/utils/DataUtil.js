@@ -660,6 +660,12 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'insulin') {
+      d.tags = {
+        manual: true,
+      };
+    }
+
     if (d.type === 'wizard') {
       d.tags = {
         extended: hasExtended(d),
