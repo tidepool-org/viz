@@ -101,15 +101,22 @@ class BasicsPrintView extends PrintView {
   }
 
   newPage() {
+    const [start, end] = this.endpoints.range;
     const format = this.getChartDateBoundDisplayFormat();
 
-    const [start, end] = this.endpoints.range;
-    const startText = moment.utc(start).tz(this.timePrefs.timezoneName).format(format);
-    const endText = moment.utc(end).tz(this.timePrefs.timezoneName).format(format);
+    // split days
+    if (format === 'MMM D, YYYY (h:mm A)') {
+      const startText = moment.utc(start).tz(this.timePrefs.timezoneName).format(format);
+      const endText = moment.utc(end).tz(this.timePrefs.timezoneName).format(format);
 
-    const dateRange = `${startText} - ${endText}`;
+      const dateRange = `${startText} - ${endText}`;
 
-    super.newPage(t('Date range: {{dateRange}}', { dateRange }));
+      super.newPage(t('Date range: {{dateRange}}', { dateRange }));
+
+    // whole days
+    } else {
+      super.newPage(this.getDateRange(start, end - 1, undefined, t('Date range: ')));
+    }
   }
 
   initCalendar() {
