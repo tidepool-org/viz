@@ -128,6 +128,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 5 },
           { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
           { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
+          { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3, hideEmpty: !pumpUpload.isAutomatedBolusDevice },
         ];
 
         if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
@@ -145,7 +146,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
 
         if (pumpUpload.isAutomatedBolusDevice) {
           dimensions.push(...[
-            { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3 },
             { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 7 },
           ]);
           perRow = 4;
