@@ -565,8 +565,8 @@ describe('AggregationUtil', () => {
 
     it('does NOT include data from the last date when endpoint range ends at midnight', () => {
       aggregationUtil.initialActiveEndpoints.range = [
-        1754366400000, // 2025-05-05 at 00:00 (midnight) in US/Eastern
-        1754625600000, // 2025-05-08 at 00:00 (midnight) in US/Eastern
+        1754366400000, // 2025-08-05 at 00:00 (midnight) in US/Eastern
+        1754625600000, // 2025-08-08 at 00:00 (midnight) in US/Eastern
       ];
 
       // Here, we should only return data that occurred on the 5th, 6th, and 7th
@@ -579,8 +579,8 @@ describe('AggregationUtil', () => {
 
     it('does NOT include data from the last date when endpoint range ends at midnight', () => {
       aggregationUtil.initialActiveEndpoints.range = [
-        1754380800000, // 2025-05-05 at 4:00 AM in US/Eastern
-        1754640000000, // 2025-05-08 at 4:00 AM in US/Eastern
+        1754380800000, // 2025-08-05 at 4:00 AM in US/Eastern
+        1754640000000, // 2025-08-08 at 4:00 AM in US/Eastern
       ];
 
       // Here, we should return data that occurred on the 5th, 6th, 7th, and 8th
