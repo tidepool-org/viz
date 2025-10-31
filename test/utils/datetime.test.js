@@ -502,25 +502,38 @@ describe('datetime', () => {
   describe('getLocalizedCeiling', () => {
     const timePrefs = { timezoneAware: true, timezoneName: 'US/Pacific' };
 
-    it('should error if passed a JavaScript Date for the `utc` param', () => {
-      const fn = () => { datetime.getLocalizedCeiling(new Date()); };
-      expect(fn)
+    describe('when period is days', () => {
+      it('should error if passed a JavaScript Date for the `utc` param', () => {
+        const fn = () => { datetime.getLocalizedCeiling(new Date()); };
+        expect(fn)
         .to.throw('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
-    });
+      });
 
-    it('should return the ceiling (= next midnight) for a datetime in a given timezone', () => {
-      const dt = '2016-03-15T14:25:00.000Z';
-      expect(datetime.getLocalizedCeiling(dt, timePrefs).toISOString())
+      it('should return the ceiling (= next midnight) for a datetime in a given timezone', () => {
+        const dt = '2016-03-15T14:25:00.000Z';
+        expect(datetime.getLocalizedCeiling(dt, timePrefs).toISOString())
         .to.equal('2016-03-16T07:00:00.000Z');
-      const asInteger = Date.parse(dt);
-      expect(datetime.getLocalizedCeiling(asInteger, timePrefs).toISOString())
+        const asInteger = Date.parse(dt);
+        expect(datetime.getLocalizedCeiling(asInteger, timePrefs).toISOString())
         .to.equal('2016-03-16T07:00:00.000Z');
-    });
+      });
 
-    it('should return the same datetime if it already is a midnight in given timezone', () => {
-      const dt = '2016-03-15T07:00:00.000Z';
-      expect(datetime.getLocalizedCeiling(dt, timePrefs).toISOString())
+      it('should return the same datetime if it already is a midnight in given timezone', () => {
+        const dt = '2016-03-15T07:00:00.000Z';
+        expect(datetime.getLocalizedCeiling(dt, timePrefs).toISOString())
         .to.equal(dt);
+      });
+    });
+
+    describe('when period is hours', () => {
+      it('should return the ceiling (= next hour) for a datetime in a given timezone', () => {
+        const dt = '2016-03-15T14:25:00.000Z';
+        expect(datetime.getLocalizedCeiling(dt, timePrefs, 'hour').toISOString())
+        .to.equal('2016-03-15T15:00:00.000Z');
+        const asInteger = Date.parse(dt);
+        expect(datetime.getLocalizedCeiling(asInteger, timePrefs, 'hour').toISOString())
+        .to.equal('2016-03-15T15:00:00.000Z');
+      });
     });
   });
 
