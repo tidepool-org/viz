@@ -111,7 +111,7 @@ describe('stat', () => {
         timeInAuto: 'getTimeInAutoData',
         timeInOverride: 'getTimeInOverrideData',
         timeInRange: 'getTimeInRangeData',
-        totalInsulin: 'getBasalBolusData',
+        totalInsulin: 'getInsulinData',
       });
     });
   });

@@ -3,7 +3,7 @@ import bows from 'bows';
 import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
-import { getTotalBolus } from './bolus';
+import { getTotalInsulin } from './bolus';
 import { classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
@@ -96,15 +96,17 @@ export class StatUtil {
     return data;
   };
 
-  getBasalBolusData = () => {
-    const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
+  getInsulinData = () => {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
+    const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
+    const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
     // Create a list of all dates for which we have at least one datum
     const uniqueDatumDates = new Set([
-      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
       ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
     ]);
 
     const activeDaysWithInsulinData = uniqueDatumDates.size;
@@ -113,12 +115,14 @@ export class StatUtil {
       basal: basalData.length
         ? parseFloat(getTotalBasalFromEndpoints(basalData, this.endpoints))
         : NaN,
-      bolus: bolusData.length ? getTotalBolus(bolusData) : NaN,
+      bolus: bolusData.length ? getTotalInsulin(bolusData) : NaN,
+      insulin: insulinData.length ? getTotalInsulin(insulinData) : NaN,
     };
 
     if (activeDaysWithInsulinData > 1) {
       basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
       basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
+      basalBolusData.insulin = basalBolusData.insulin / activeDaysWithInsulinData;
     }
 
     return basalBolusData;
@@ -475,9 +479,9 @@ export class StatUtil {
   };
 
   getTotalInsulinData = () => {
-    const { basal, bolus } = this.getBasalBolusData();
+    const { basal, bolus, insulin } = this.getInsulinData();
 
-    const totalInsulin = _.reduce([basal, bolus], (result, value) => {
+    const totalInsulin = _.reduce([basal, bolus, insulin], (result, value) => {
       const delivered = _.isNaN(value) ? 0 : value || 0;
       return result + delivered;
     }, 0);

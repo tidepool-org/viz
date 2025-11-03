@@ -900,17 +900,17 @@ describe('bolus utilities', () => {
     });
   });
 
-  describe('getTotalBolus', () => {
+  describe('getTotalInsulin', () => {
     it('should be a function', () => {
-      assert.isFunction(bolusUtils.getTotalBolus);
+      assert.isFunction(bolusUtils.getTotalInsulin);
     });
 
     it('should return 0 on an empty array', () => {
-      expect(bolusUtils.getTotalBolus([])).to.equal(0);
+      expect(bolusUtils.getTotalInsulin([])).to.equal(0);
     });
 
     it('should return the total actual delivered insulin on an assortment of boluses', () => {
-      expect(bolusUtils.getTotalBolus([
+      expect(bolusUtils.getTotalInsulin([
         cancelled, // 2,
         cancelledInExtendedCombo, // 1.5,
         extendedUnderride, // 3,

@@ -426,10 +426,10 @@ describe('StatUtil', () => {
     });
   });
 
-  describe('getBasalBolusData', () => {
+  describe('getInsulinData', () => {
     it('should return the total basal and bolus insulin delivery when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
-      expect(statUtil.getBasalBolusData()).to.eql({
+      expect(statUtil.getInsulinData()).to.eql({
         basal: 1.5,
         bolus: 15,
       });
@@ -437,7 +437,7 @@ describe('StatUtil', () => {
 
     it('should return the avg daily total basal and bolus insulin delivery when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
-      expect(statUtil.getBasalBolusData()).to.eql({
+      expect(statUtil.getInsulinData()).to.eql({
         basal: 0.75,
         bolus: 7.5,
       });
@@ -446,7 +446,7 @@ describe('StatUtil', () => {
     it('calculates insulin delivery using only data-populated days when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       statUtil.activeDays = 7; // data only exists for 2 days; this should not impact the calculation
-      expect(statUtil.getBasalBolusData()).to.eql({
+      expect(statUtil.getInsulinData()).to.eql({
         basal: 0.75,
         bolus: 7.5,
       });
@@ -456,7 +456,7 @@ describe('StatUtil', () => {
       it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
         filterEndpoints(dayEndpoints);
-        expect(statUtil.getBasalBolusData()).to.eql({
+        expect(statUtil.getInsulinData()).to.eql({
           basal: 2,
           bolus: 15,
         });
@@ -465,7 +465,7 @@ describe('StatUtil', () => {
       it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
         filterEndpoints(dayEndpoints);
-        expect(statUtil.getBasalBolusData()).to.eql({
+        expect(statUtil.getInsulinData()).to.eql({
           basal: 2.5,
           bolus: 15,
         });

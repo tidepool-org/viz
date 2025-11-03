@@ -96,7 +96,7 @@ export const statFetchMethods = {
   [commonStats.timeInAuto]: 'getTimeInAutoData',
   [commonStats.timeInOverride]: 'getTimeInOverrideData',
   [commonStats.timeInRange]: 'getTimeInRangeData',
-  [commonStats.totalInsulin]: 'getBasalBolusData',
+  [commonStats.totalInsulin]: 'getInsulinData',
 };
 
 export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
@@ -685,6 +685,16 @@ export const getStatData = (data, type, opts = {}) => {
 
     case commonStats.totalInsulin:
       statData.data = [
+        {
+          id: 'insulin',
+          pattern: {
+            id: 'diagonalStripes',
+            color: 'rgba(0,0,0,0.15)',
+          },
+          value: ensureNumeric(data.insulin),
+          title: t('Other Insulin'),
+          legendTitle: t('Other'),
+        },
         {
           id: 'bolus',
           value: ensureNumeric(data.bolus),
