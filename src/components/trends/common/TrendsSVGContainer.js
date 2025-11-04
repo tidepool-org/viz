@@ -336,10 +336,10 @@ TrendsSVGContainer.propTypes = {
   }).isRequired,
   bgPrefs: PropTypes.shape({
     bgBounds: PropTypes.shape({
-      veryHighThreshold: PropTypes.number.isRequired,
+      veryHighThreshold: PropTypes.number,
       targetUpperBound: PropTypes.number.isRequired,
       targetLowerBound: PropTypes.number.isRequired,
-      veryLowThreshold: PropTypes.number.isRequired,
+      veryLowThreshold: PropTypes.number,
     }).isRequired,
     bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
   }).isRequired,

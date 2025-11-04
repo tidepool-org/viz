@@ -3,7 +3,7 @@ import i18next from 'i18next';
 const t = i18next.t.bind(i18next);
 
 import { DPI } from './constants';
-import { BGM_DATA_KEY, CGM_DATA_KEY } from '../../../utils/constants';
+import { BGM_DATA_KEY, CGM_DATA_KEY, GLYCEMIC_RANGES_PRESET } from '../../../utils/constants';
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
   // Return key if no translation is present
@@ -33,12 +33,25 @@ export const text = {
   reportFooter: t('Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022'),
   reportInsuffienctData: t('Insufficient data to generate an AGP Report.'),
   percentInRanges: {
-    [CGM_DATA_KEY]: {
-      title: t('Time in Ranges'),
-      subtitle: t('Goals for Type 1 and Type 2 Diabetes'),
+    title: {
+      [CGM_DATA_KEY]: t('Time in Ranges'),
+      [BGM_DATA_KEY]: t('Percent BGM Readings in Ranges'),
     },
-    [BGM_DATA_KEY]: {
-      title: t('Percent BGM Readings in Ranges'),
+    subtitle: {
+      [CGM_DATA_KEY]: {
+        [GLYCEMIC_RANGES_PRESET.ADA_STANDARD]: t('Goals for Type 1 and Type 2 Diabetes'),
+        [GLYCEMIC_RANGES_PRESET.ADA_OLDER_HIGH_RISK]: t('Goals for Older/High Risk (Type 1 and 2)'),
+        [GLYCEMIC_RANGES_PRESET.ADA_PREGNANCY_T1]: t('Goals for Pregnancy (Type 1)'),
+        [GLYCEMIC_RANGES_PRESET.ADA_GESTATIONAL_T2]: t('Goals for Pregnancy (Gestational and Type 2)'),
+        PWD_SELF_DEFINED: '', // No goals for PwD self-defined ranges
+      },
+      [BGM_DATA_KEY]: {
+        [GLYCEMIC_RANGES_PRESET.ADA_STANDARD]: '',
+        [GLYCEMIC_RANGES_PRESET.ADA_OLDER_HIGH_RISK]: t('Older/High Risk'),
+        [GLYCEMIC_RANGES_PRESET.ADA_PREGNANCY_T1]: t('Pregnancy'),
+        [GLYCEMIC_RANGES_PRESET.ADA_GESTATIONAL_T2]: t('Pregnancy'),
+        PWD_SELF_DEFINED: '', // No goals for PwD self-defined ranges
+      }
     },
   },
   reportInfo: {
@@ -119,11 +132,41 @@ export const text = {
     veryLow: t('Very Low'),
   },
   goals: {
-    veryHigh: t('Goal: <5%'),
-    highCombined: t('Goal: <25%'),
-    target: t('Goal: >70%'),
-    lowCombined: t('Goal: <4%'),
-    veryLow: t('Goal: <1%'),
+    [GLYCEMIC_RANGES_PRESET.ADA_STANDARD]: {
+      veryHigh: t('Goal: <5%'),
+      highCombined: t('Goal: <25%'),
+      target: t('Goal: >70%'),
+      lowCombined: t('Goal: <4%'),
+      veryLow: t('Goal: <1%'),
+    },
+    [GLYCEMIC_RANGES_PRESET.ADA_OLDER_HIGH_RISK]: {
+      veryHigh: t('Goal: <10%'),
+      highCombined: t('Goal: <50%'),
+      target: t('Goal: >50%'),
+      lowCombined: t('Goal: <1%'),
+      // veryLow: undefined,
+    },
+    [GLYCEMIC_RANGES_PRESET.ADA_PREGNANCY_T1]: {
+      // veryHigh: undefined,
+      highCombined: t('Goal: <25%'),
+      target: t('Goal: >70%'),
+      lowCombined: t('Goal: <4%'),
+      veryLow: t('Goal: <1%'),
+    },
+    [GLYCEMIC_RANGES_PRESET.ADA_GESTATIONAL_T2]: {
+      // veryHigh: undefined,
+      highCombined: t('Goal: n/a'),
+      target: t('Goal: n/a'),
+      lowCombined: t('Goal: n/a'),
+      veryLow: t('Goal: n/a'),
+    },
+    PWD_SELF_DEFINED: {
+      veryHigh: t('Goal: n/a'),
+      highCombined: t('Goal: n/a'),
+      target: t('Goal: n/a'),
+      lowCombined: t('Goal: n/a'),
+      veryLow: t('Goal: n/a'),
+    }
   },
   subLabels: {
     TIRtarget: t('Each 5% increase is clinically beneficial'),
@@ -290,4 +333,9 @@ export const colors = {
       fill: '#FFD180',
     },
   },
+};
+
+export default {
+  text,
+  colors
 };

@@ -56,13 +56,26 @@ describe('AGPConstants', () => {
       reportFooter: 'Patent pending \u2013 HealthPartners Institute dba International Diabetes Center \u2013 All Rights Reserved. \u00A92022',
       reportInsuffienctData: 'Insufficient data to generate an AGP Report.',
       percentInRanges: {
-        cbg: {
-          title: 'Time in Ranges',
-          subtitle: 'Goals for Type 1 and Type 2 Diabetes',
+        title: {
+          cbg: 'Time in Ranges',
+          smbg: 'Percent BGM Readings in Ranges',
         },
-        smbg: {
-          title: 'Percent BGM Readings in Ranges',
-        },
+        subtitle: {
+          cbg: {
+            adaStandard: 'Goals for Type 1 and Type 2 Diabetes',
+            adaHighRisk: 'Goals for Older/High Risk (Type 1 and 2)',
+            adaPregnancyType1: 'Goals for Pregnancy (Type 1)',
+            adaPregnancyType2: 'Goals for Pregnancy (Gestational and Type 2)',
+            PWD_SELF_DEFINED: '',
+          },
+          smbg: {
+            adaStandard: '',
+            adaHighRisk: 'Older/High Risk',
+            adaPregnancyType1: 'Pregnancy',
+            adaPregnancyType2: 'Pregnancy',
+            PWD_SELF_DEFINED: '',
+          }
+        }
       },
       reportInfo: {
         dob: 'DOB:',
@@ -142,11 +155,38 @@ describe('AGPConstants', () => {
         veryLow: 'Very Low',
       },
       goals: {
-        veryHigh: 'Goal: <5%',
-        highCombined: 'Goal: <25%',
-        target: 'Goal: >70%',
-        lowCombined: 'Goal: <4%',
-        veryLow: 'Goal: <1%',
+        adaStandard: {
+          veryHigh: 'Goal: <5%',
+          highCombined: 'Goal: <25%',
+          target: 'Goal: >70%',
+          lowCombined: 'Goal: <4%',
+          veryLow: 'Goal: <1%',
+        },
+        adaHighRisk: {
+          veryHigh: 'Goal: <10%',
+          highCombined: 'Goal: <50%',
+          target: 'Goal: >50%',
+          lowCombined: 'Goal: <1%',
+        },
+        adaPregnancyType1: {
+          highCombined: 'Goal: <25%',
+          target: 'Goal: >70%',
+          lowCombined: 'Goal: <4%',
+          veryLow: 'Goal: <1%',
+        },
+        adaPregnancyType2: {
+          highCombined: 'Goal: n/a',
+          target: 'Goal: n/a',
+          lowCombined: 'Goal: n/a',
+          veryLow: 'Goal: n/a',
+        },
+        PWD_SELF_DEFINED: {
+          veryHigh: 'Goal: n/a',
+          highCombined: 'Goal: n/a',
+          target: 'Goal: n/a',
+          lowCombined: 'Goal: n/a',
+          veryLow: 'Goal: n/a',
+        }
       },
       subLabels: {
         TIRtarget: 'Each 5% increase is clinically beneficial',

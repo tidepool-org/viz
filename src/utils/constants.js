@@ -45,6 +45,18 @@ export const BG_DISPLAY_MINIMUM_INCREMENTS = {
   [MMOLL_UNITS]: 0.1,
 };
 
+export const GLYCEMIC_RANGES_PRESET = {
+  ADA_STANDARD: 'adaStandard',
+  ADA_OLDER_HIGH_RISK: 'adaHighRisk',
+  ADA_PREGNANCY_T1: 'adaPregnancyType1',
+  ADA_GESTATIONAL_T2: 'adaPregnancyType2',
+};
+
+export const GLYCEMIC_RANGES_TYPE = {
+  PRESET: 'preset',
+  CUSTOM: 'custom',
+};
+
 export const DEFAULT_BG_BOUNDS = {
   [MGDL_UNITS]: {
     veryLowThreshold: 54,
@@ -63,6 +75,48 @@ export const DEFAULT_BG_BOUNDS = {
     clampThreshold: 33.3,
   },
 };
+
+export const ADA_STANDARD_BG_BOUNDS = DEFAULT_BG_BOUNDS;
+
+export const ADA_OLDER_HIGH_RISK_BG_BOUNDS = {
+  [MGDL_UNITS]: {
+    veryLowThreshold: null,
+    targetLowerBound: 70,
+    targetUpperBound: 180,
+    veryHighThreshold: 250,
+    extremeHighThreshold: null,
+    clampThreshold: 600,
+  },
+  [MMOLL_UNITS]: {
+    veryLowThreshold: null,
+    targetLowerBound: 3.9,
+    targetUpperBound: 10.0,
+    veryHighThreshold: 13.9,
+    extremeHighThreshold: null,
+    clampThreshold: 33.3,
+  },
+};
+
+export const ADA_PREGNANCY_T1_BG_BOUNDS = {
+  [MGDL_UNITS]: {
+    veryLowThreshold: 54,
+    targetLowerBound: 63,
+    targetUpperBound: 140,
+    veryHighThreshold: null,
+    extremeHighThreshold: null,
+    clampThreshold: 600,
+  },
+  [MMOLL_UNITS]: {
+    veryLowThreshold: 3.0,
+    targetLowerBound: 3.5,
+    targetUpperBound: 7.8,
+    veryHighThreshold: null,
+    extremeHighThreshold: null,
+    clampThreshold: 33.3,
+  },
+};
+
+export const ADA_GESTATIONAL_T2_BG_BOUNDS = ADA_PREGNANCY_T1_BG_BOUNDS;
 
 export const LBS_PER_KG = 2.2046226218;
 

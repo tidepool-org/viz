@@ -38,7 +38,7 @@ export async function generateAGPFigureDefinitions(data) {
 
   // Generate percentInRanges figure
   if (sections.percentInRanges?.sufficientData) {
-    svgDataURLS.percentInRanges = generatePercentInRangesFigure(sections.percentInRanges, percentInRangesStat, data.bgPrefs);
+    svgDataURLS.percentInRanges = generatePercentInRangesFigure(sections.percentInRanges, percentInRangesStat, data.bgPrefs, data.query?.glycemicRanges);
   }
 
   // Generate ambulatoryGlucoseProfile figure
@@ -49,7 +49,10 @@ export async function generateAGPFigureDefinitions(data) {
 
   // Generate dailyGlucoseProfiles figures
   if (sections.dailyGlucoseProfiles.sufficientData) {
-    const bgDataByDate = _.mapValues(data?.data?.current?.aggregationsByDate?.dataByDate, bgSource);
+    // All CGM data passed into AGP should be deduplicated
+    const dataKey = bgSource === 'cbg' ? 'cbgDeduplicated' : bgSource;
+    const bgDataByDate = _.mapValues(data?.data?.current?.aggregationsByDate?.dataByDate, dataKey);
+
     // Group daily data by week
     const { newestDatum } = stats.bgExtents?.data?.raw || {};
 

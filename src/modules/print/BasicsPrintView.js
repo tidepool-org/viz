@@ -525,11 +525,11 @@ class BasicsPrintView extends PrintView {
       renderSectionHeading(headingMoveDown);
       this.renderEmptyText(emptyText);
     } else {
-      const isSiteChange = type === 'siteChange';
+      const isSiteChangeCalendarSection = type === 'siteChange';
       let priorToFirstSiteChange = false;
       const siteChangeSource = this.sections.siteChanges.source;
 
-      if (isSiteChange) {
+      if (isSiteChangeCalendarSection) {
         priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince[siteChangeSource]));
       }
 
@@ -539,9 +539,13 @@ class BasicsPrintView extends PrintView {
 
         let dayType = day.type;
 
-        if (isSiteChange) {
+        if (isSiteChangeCalendarSection) {
           if (dayType === 'inRange') {
-            dayType = data[day.date] ? SITE_CHANGE : NO_SITE_CHANGE;
+            // Only show a site change if the type of site change matches the report's config
+            // E.g. If report config'd for Cannula Fills, we don't render Cartridge Changes
+            const hasSiteChangesOfMatchingType = (data[day.date]?.subtotals?.[siteChangeSource] || 0) > 0;
+
+            dayType = hasSiteChangesOfMatchingType ? SITE_CHANGE : NO_SITE_CHANGE;
           }
 
           if (dayType === NO_SITE_CHANGE && priorToFirstSiteChange) {

@@ -119,6 +119,8 @@ export class AggregationUtil {
 
     const bgClasses = [
       'veryLow',
+      'low',
+      'high',
       'veryHigh',
     ];
 
@@ -483,6 +485,8 @@ export class AggregationUtil {
           meter,
           veryHigh,
           veryLow,
+          high,
+          low
         },
       } = dataForDay;
 
@@ -496,6 +500,8 @@ export class AggregationUtil {
             meter: meter.count,
             veryHigh: veryHigh.count,
             veryLow: veryLow.count,
+            high: high.count,
+            low: low.count,
           },
         };
       }
@@ -549,7 +555,12 @@ export class AggregationUtil {
 
         // Filter cgm data by the currently-set sample interval range.
         this.dataUtil.filter.bySampleIntervalRange(...(this.dataUtil.cgmSampleIntervalRange || this.dataUtil.defaultCgmSampleIntervalRange));
-        groupedData.cbg = this.dataUtil.filter.byType('cbg').top(Infinity);
+
+        const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+        const deduplicatedCbgData = this.dataUtil.getDeduplicatedCBGData(cbgData);
+
+        groupedData.cbg = cbgData;
+        groupedData.cbgDeduplicated = deduplicatedCbgData;
 
         // Clear the previous byType and bySampleInterval filters so as to not affect the next aggregations
         this.dataUtil.dimension.byType.filterAll();
