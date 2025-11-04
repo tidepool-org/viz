@@ -8,15 +8,19 @@
 }
 
 .StatLegendItem {
-  display: flex;
+  display: block;
   flex-wrap: nowrap;
   align-items: center;
   margin: 0 1em 0 0;
-  border-bottom: 2px solid;
 }
 
 .StatLegendTitle {
   letter-spacing: -.01em;
   white-space: nowrap;
   line-height: 16px;
+}
+
+.LegendPattern {
+  height: 2px;
+  width: 100%;
 }

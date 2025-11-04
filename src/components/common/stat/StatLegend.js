@@ -25,9 +25,31 @@ class StatLegend extends PureComponent {
         <span className={styles.StatLegendTitle}>
           {item.legendTitle}
         </span>
+
+        <div
+          className={styles.LegendPattern}
+          style={this.getLegendPatternStyle(item)}
+        />
       </li>
     ))
   );
+
+  getLegendPatternStyle = (item) => {
+    if (item.pattern?.id === 'diagonalStripes') {
+      return {
+        backgroundColor: colors[item.id],
+        backgroundImage: `repeating-linear-gradient(
+          -45deg,
+          ${item.pattern.color} 0px,
+          ${item.pattern.color} 2px,
+          transparent 2px,
+          transparent 5px
+        )`
+      };
+    }
+
+    return { backgroundColor: colors[item.id] };
+  };
 
   render() {
     return (

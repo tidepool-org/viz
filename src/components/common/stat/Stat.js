@@ -295,7 +295,7 @@ class Stat extends PureComponent {
   renderStatLegend = () => {
     const items = _.map(
       this.props.data.data,
-      datum => _.pick(datum, ['id', 'legendTitle'])
+      datum => _.pick(datum, ['id', 'legendTitle', 'pattern'])
     );
 
     if (!this.props.reverseLegendOrder) {
