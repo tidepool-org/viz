@@ -98,43 +98,43 @@ describe('schema validation', () => {
     const suppressedZeroDuration = { ...basal, suppressed: { ...basal, duration: 0 } };
 
     it('should validate a valid `basal` datum', () => {
-      expect(Validator.basal(basal)).to.be.true;
+      expect(Validator.basal.basal(basal)).to.be.true;
     });
 
     it('should validate common fields', () => {
-      validateCommon(basal);
+      validateCommon(basal, 'basal');
     });
 
     it('should return an error for a non-positive `duration`', () => {
-      expect(_.find(Validator.basal(negativeDuration), { field: 'duration' }).message).to.equal('The \'duration\' field must be a positive number!');
-      expect(_.find(Validator.basal(zeroDuration), { field: 'duration' }).message).to.equal('The \'duration\' field must be a positive number!');
+      expect(_.find(Validator.basal.basal(negativeDuration), { field: 'duration' }).message).to.equal('The \'duration\' field must be a positive number!');
+      expect(_.find(Validator.basal.basal(zeroDuration), { field: 'duration' }).message).to.equal('The \'duration\' field must be a positive number!');
     });
 
     it('should return an error for missing `rate`', () => {
-      expect(_.find(Validator.basal(missingRate), { field: 'rate' }).message).to.equal('The \'rate\' field is required!');
+      expect(_.find(Validator.basal.basal(missingRate), { field: 'rate' }).message).to.equal('The \'rate\' field is required!');
     });
 
     it('should return an error for a negative `rate`', () => {
-      expect(_.find(Validator.basal(negativeRate), { field: 'rate' }).message).to.equal('The \'rate\' field must be larger than or equal to 0!');
+      expect(_.find(Validator.basal.basal(negativeRate), { field: 'rate' }).message).to.equal('The \'rate\' field must be larger than or equal to 0!');
     });
 
     it('should return an error for an invalid `deliveryType`', () => {
-      const result = Validator.basal(invalidDeliveryType);
+      const result = Validator.basal.basal(invalidDeliveryType);
       expect(_.find(result, { field: 'deliveryType' }).message).to.equal('The \'deliveryType\' field does not match any of the allowed values!');
       expect(_.find(result, { field: 'deliveryType' }).expected).to.have.members(['scheduled', 'suspend', 'temp', 'automated']);
     });
 
     it('should validate the `suppressed` field if provided', () => {
-      expect(Validator.basal(suppressed)).to.be.true;
+      expect(Validator.basal.basal(suppressed)).to.be.true;
 
-      expect(_.find(Validator.basal(suppressedNegativeDuration), { field: 'suppressed.duration' }).message).to.equal('The \'suppressed.duration\' field must be a positive number!');
-      expect(_.find(Validator.basal(suppressedZeroDuration), { field: 'suppressed.duration' }).message).to.equal('The \'suppressed.duration\' field must be a positive number!');
+      expect(_.find(Validator.basal.basal(suppressedNegativeDuration), { field: 'suppressed.duration' }).message).to.equal('The \'suppressed.duration\' field must be a positive number!');
+      expect(_.find(Validator.basal.basal(suppressedZeroDuration), { field: 'suppressed.duration' }).message).to.equal('The \'suppressed.duration\' field must be a positive number!');
 
-      expect(_.find(Validator.basal(suppressedMissingRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field is required!');
+      expect(_.find(Validator.basal.basal(suppressedMissingRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field is required!');
 
-      expect(_.find(Validator.basal(suppressedNegativeRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field must be larger than or equal to 0!');
+      expect(_.find(Validator.basal.basal(suppressedNegativeRate), { field: 'suppressed.rate' }).message).to.equal('The \'suppressed.rate\' field must be larger than or equal to 0!');
 
-      const invalidDeliveryTypeResult = Validator.basal(suppressedInvalidDeliveryType);
+      const invalidDeliveryTypeResult = Validator.basal.basal(suppressedInvalidDeliveryType);
       expect(_.find(invalidDeliveryTypeResult, { field: 'suppressed.deliveryType' }).message).to.equal('The \'suppressed.deliveryType\' field does not match any of the allowed values!');
       expect(_.find(invalidDeliveryTypeResult, { field: 'suppressed.deliveryType' }).expected).to.have.members(['scheduled', 'suspend', 'temp', 'automated']);
     });

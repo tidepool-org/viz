@@ -2,17 +2,9 @@ import React from 'react';
 import _ from 'lodash';
 import { storiesOf } from '@storybook/react';
 
-import AlarmTooltip from '../../../src/components/daily/alarmtooltip/AlarmTooltip';
+import EventTooltip from '../../../src/components/daily/eventtooltip/EventTooltip';
 import { getBrowserTimezone } from '../../../src/utils/datetime';
-
-import {
-  ALARM_NO_DELIVERY,
-  ALARM_AUTO_OFF,
-  ALARM_NO_INSULIN,
-  ALARM_NO_POWER,
-  ALARM_OCCLUSION,
-  ALARM_OVER_LIMIT,
-} from '../../../src/utils/constants';
+import { EVENT_PUMP_SHUTDOWN } from '../../../src/utils/constants';
 
 const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
@@ -25,7 +17,7 @@ const refDiv = (
       width: '10px',
       height: '10px',
       top: '100px',
-      left: '100px',
+      left: '300px',
       backgroundColor: 'FireBrick',
       opacity: 0.5,
       zIndex: '1',
@@ -33,32 +25,27 @@ const refDiv = (
   />
 );
 
-const stories = storiesOf('AlarmTooltip', module);
+const stories = storiesOf('EventTooltip', module);
 stories.addDecorator(BackgroundDecorator);
 
 const normalTime = Date.now();
 const source = 'twiist';
 
-const alarmTypes = [
-  ALARM_NO_DELIVERY,
-  ALARM_AUTO_OFF,
-  ALARM_NO_INSULIN,
-  ALARM_NO_POWER,
-  ALARM_OCCLUSION,
-  ALARM_OVER_LIMIT,
+const eventTypes = [
+  EVENT_PUMP_SHUTDOWN,
 ];
 
 const props = {
-  position: { top: 105, left: 105 },
+  position: { top: 105, left: 305 },
   offset: { top: 0, left: 40 },
   timePrefs: { timezoneName: getBrowserTimezone() },
 };
 
-_.each(alarmTypes, (alarmType, index) => {
-  stories.add(alarmType, () => (
-    <div key={`alarmType-${index}`} style={{ position: 'relative' }}>
+_.each(eventTypes, (eventType, index) => {
+  stories.add(eventType, () => (
+    <div key={`eventType-${index}`} style={{ position: 'relative' }}>
       {refDiv}
-      <AlarmTooltip {...props} alarm={{ alarmType, normalTime, source }} />
+      <EventTooltip {...props} event={{ eventType, normalTime, source }} />
     </div>
   ));
 });

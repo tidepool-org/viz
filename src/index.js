@@ -37,6 +37,7 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import AlarmTooltip from './components/daily/alarmtooltip/AlarmTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
+import EventTooltip from './components/daily/eventtooltip/EventTooltip';
 
 import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
@@ -105,6 +106,7 @@ const components = {
   CgmSampleIntervalTooltip,
   ClipboardButton,
   EventsInfoTooltip,
+  EventTooltip,
   FocusedRangeLabels,
   FocusedSMBGPointLabel,
   FoodTooltip,

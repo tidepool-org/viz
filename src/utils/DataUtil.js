@@ -8,6 +8,7 @@ import sundial from 'sundial';
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
+  isControlIQ,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -51,6 +52,8 @@ import {
   ALARM_NO_INSULIN,
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
+  EVENT,
+  EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
 import {
@@ -700,6 +703,26 @@ export class DataUtil {
           }, {}),
         };
       }
+    }
+
+    // Events can appear on any datum type.
+    // We only display one event per datum, so we set the event tag to the highest priority event that applies.
+    // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
+    const prioritizedEventTypes = [
+      EVENT_PUMP_SHUTDOWN,
+    ];
+
+    const events = {
+      [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+    };
+
+    const eventType = _.find(prioritizedEventTypes, type => events[type]);
+
+    if (eventType) {
+      d.tags = {
+        ...d.tags || {},
+        [EVENT]: eventType,
+      };
     }
   };
 
