@@ -23,7 +23,7 @@ import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { MS_IN_HOUR } from '../../../utils/constants';
-import { isDexcom, isLoop } from '../../../utils/device';
+import { isLoop } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './FoodTooltip.css';
@@ -39,6 +39,7 @@ export const getName = (food) => _.get(food, 'name');
 const FoodTooltip = (props) => {
   const renderFood = () => {
     const food = props.food;
+    const isManual = food?.tags?.manual;
 
     const rows = [
       <div key={'carb'} className={styles.carb}>
@@ -50,7 +51,7 @@ const FoodTooltip = (props) => {
       </div>,
     ];
 
-    if (food?.tags?.manual) rows.push(
+    if (isManual) rows.push(
       <div key={'manual'} className={styles.row}>
         <div className={styles.label}>{t('Source')}</div>
         <div className={styles.value}>

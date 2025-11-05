@@ -375,7 +375,7 @@ const BolusTooltip = (props) => {
     const actingType = deviceLabels[bolus?.formulation?.simple?.actingType];
 
     const actingTypeLine = actingType && (
-      <div className={styles.actingType}>
+      <div className={styles.row}>
         <div className={styles.label}>{actingType}</div>
       </div>
     );
@@ -389,7 +389,7 @@ const BolusTooltip = (props) => {
     );
 
     const sourceLine = isManual && (
-      <div className={styles.source}>
+      <div className={styles.row}>
         <div className={styles.label}>{t('Source')}</div>
         <div className={styles.value}>{t('Manual')}</div>
       </div>

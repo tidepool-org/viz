@@ -34,7 +34,7 @@
 }
 
 .row:last-child {
-  line-height: normal;
+  margin-bottom: -2px;
 }
 
 .label {
@@ -120,14 +120,6 @@
 }
 
 .isf {
-  composes: row;
-}
-
-.source {
-  composes: row;
-}
-
-.actingType {
   composes: row;
 }
 
