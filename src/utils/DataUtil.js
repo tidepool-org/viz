@@ -686,6 +686,7 @@ export class DataUtil {
       d.tags = {
         loop: isLoopDatum,
         dexcom: isDexcomDatum,
+        manual: isDexcomDatum,
       };
     }
 

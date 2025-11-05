@@ -50,7 +50,7 @@ const loop = {
 
 const dexcom = {
   ...standard,
-  tags: { dexcom: true },
+  tags: { dexcom: true, manual: true },
 };
 
 const loopTimeOfEntry = {

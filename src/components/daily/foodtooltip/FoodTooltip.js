@@ -50,7 +50,7 @@ const FoodTooltip = (props) => {
       </div>,
     ];
 
-    if (isDexcom(food)) rows.push(
+    if (food?.tags?.manual) rows.push(
       <div key={'manual'} className={styles.row}>
         <div className={styles.label}>{t('Source')}</div>
         <div className={styles.value}>
