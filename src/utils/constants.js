@@ -162,6 +162,10 @@ export const MAX_BOLUS = 'maxBolus';
 export const MAX_BASAL = 'maxBasal';
 export const ONE_BUTTON_BOLUS = 'oneButtonBolus';
 export const INSULIN_DURATION = 'insulinDuration';
+export const INSULIN_ACTING_TYPE_INTERMEDIATE = 'intermediate';
+export const INSULIN_ACTING_TYPE_LONG = 'long';
+export const INSULIN_ACTING_TYPE_RAPID = 'rapid';
+export const INSULIN_ACTING_TYPE_SHORT = 'short';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
@@ -269,6 +273,10 @@ export const pumpVocabulary = {
     [ALARM_OCCLUSION]: t('Occlusion Detected'),
     [ALARM_OVER_LIMIT]: t('Insulin Delivery Limit Exceeded'),
     [EVENT_PUMP_SHUTDOWN]: t('Pump Shutdown'),
+    [INSULIN_ACTING_TYPE_INTERMEDIATE]: t('Intermediate-acting insulin'),
+    [INSULIN_ACTING_TYPE_LONG]: t('Long-acting insulin'),
+    [INSULIN_ACTING_TYPE_RAPID]: t('Short-acting insulin'),
+    [INSULIN_ACTING_TYPE_SHORT]: t('Short-acting insulin'),
   },
 };
 

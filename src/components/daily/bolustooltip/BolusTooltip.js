@@ -368,10 +368,49 @@ const BolusTooltip = (props) => {
     );
   };
 
+  const renderInsulin = () => {
+    const bolus = props.bolus;
+    const delivered = bolusUtils.getDelivered(bolus);
+    const isManual = bolus.tags?.manual;
+    const actingType = deviceLabels[bolus?.formulation?.simple?.actingType];
+
+    const actingTypeLine = actingType && (
+      <div className={styles.actingType}>
+        <div className={styles.label}>{actingType}</div>
+      </div>
+    );
+
+    const deliveredLine = _.isFinite(delivered) && (
+      <div className={styles.delivered}>
+        <div className={styles.label}>{t('Delivered')}</div>
+        <div className={styles.value}>{`${formatInsulin(delivered)}`}</div>
+        <div className={unitStyles}>U</div>
+      </div>
+    );
+
+    const sourceLine = isManual && (
+      <div className={styles.source}>
+        <div className={styles.label}>{t('Source')}</div>
+        <div className={styles.value}>{t('Manual')}</div>
+      </div>
+    );
+
+    return (
+      <div className={styles.container}>
+        {actingTypeLine}
+        {deliveredLine}
+        {isManual && <div className={styles.divider} />}
+        {sourceLine}
+      </div>
+    );
+  };
+
   const renderBolus = () => {
     let content;
     if (props.bolus.type === 'wizard' || props.bolus?.dosingDecision) {
       content = renderWizard();
+    } else if (props.bolus.type === 'insulin') {
+      content = renderInsulin();
     } else {
       content = renderNormal();
     }
