@@ -27,7 +27,7 @@
 .statHeaderContainerNonStandardTargets {
   border-radius: 8px;
   background: #F0F5FF;
-  display: grid; /* Allows the background to fill the container without padding workarounds */
+  display: grid; /* Grid layout ensures the background fills the container */
 }
 
 .Stat.isOpen .statHeaderContainerNonStandardTargets {
