@@ -296,11 +296,7 @@ export class AggregationUtil {
       }
     });
 
-    const days = this.dataUtil.excludeDaysWithoutBolus
-      ? _.keys(processedData).length
-      : this.dataUtil.activeEndpoints.activeDays;
-
-    return this.summarizeProcessedData(processedData, days);
+    return this.summarizeProcessedData(processedData);
   };
 
   /**

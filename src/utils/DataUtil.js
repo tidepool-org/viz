@@ -1738,10 +1738,6 @@ export class DataUtil {
     this.dataAnnotations = {};
   };
 
-  setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
-    this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
-  };
-
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -1753,7 +1749,6 @@ export class DataUtil {
       bgSource,
       cgmSampleIntervalRange,
       endpoints,
-      excludeDaysWithoutBolus,
       excludedDevices,
       fillData,
       metaData,
@@ -1791,7 +1786,6 @@ export class DataUtil {
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
-    this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
 
     const data = {};
 
@@ -1828,17 +1822,6 @@ export class DataUtil {
         // Generate the aggregations for current range
         if (aggregationsByDate) {
           data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
-        }
-
-        if (this.excludeDaysWithoutBolus) {
-          // Determine count of days with boluses for current range
-          const bolusesByDate = _.get(
-            data,
-            [rangeKey, 'aggregationsByDate'],
-            this.getAggregationsByDate('boluses')
-          ).boluses.byDate;
-
-          this.activeEndpoints.bolusDays = _.keys(bolusesByDate).length;
         }
 
         // Generate the stats for current range
