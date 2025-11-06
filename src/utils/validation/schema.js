@@ -123,6 +123,11 @@ const basalPostShutdown = {
   suppressed: { ...suppressed, props: { ...suppressed.props, duration: { ...minZero, ...optional } } },
 };
 
+const insulin = {
+  ...common,
+  // dose: minZero, // TODO: define dose and formulation schemas
+};
+
 const normalBolus = {
   ...common,
   normal: minZero,
@@ -416,6 +421,7 @@ export default {
   cbg: v.compile(cbg),
   common: v.compile(common),
   deviceEvent: v.compile(deviceEvent),
+  insulin: v.compile(insulin),
   message: v.compile(message),
   pumpSettings: {
     animas: v.compile(pumpSettingsAnimas),
