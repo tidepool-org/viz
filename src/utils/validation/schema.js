@@ -107,10 +107,20 @@ const basalCommon = {
   rate: minZero,
 };
 
+const suppressed = { type: 'object', props: basalCommon, ...optional };
+
 const basal = {
   ...common,
   ...basalCommon,
-  suppressed: { type: 'object', props: basalCommon, ...optional },
+  suppressed,
+};
+
+// allow pump-shutdown-annotated basals, even if duration is zero, so we can display them.
+const basalPostShutdown = {
+  ...basal,
+  annotations: { type: 'array', items: { type: 'object', props: { code: { type: 'string', value: 'pump-shutdown' } } } },
+  duration: { ...minZero, ...optional },
+  suppressed: { ...suppressed, props: { ...suppressed.props, duration: { ...minZero, ...optional } } },
 };
 
 const normalBolus = {
@@ -394,7 +404,10 @@ const wizard = {
 };
 
 export default {
-  basal: v.compile(basal),
+  basal: {
+    basal: v.compile(basal),
+    postShutdown: v.compile(basalPostShutdown),
+  },
   bolus: {
     normal: v.compile(normalBolus),
     extended: v.compile(extendedBolus),

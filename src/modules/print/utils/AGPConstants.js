@@ -35,7 +35,7 @@ export const text = {
   percentInRanges: {
     title: {
       [CGM_DATA_KEY]: t('Time in Ranges'),
-      [BGM_DATA_KEY]: t('Percent BGM Readings in Ranges'),
+      [BGM_DATA_KEY]: t('Percent BGM Readings'),
     },
     subtitle: {
       [CGM_DATA_KEY]: {

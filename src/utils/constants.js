@@ -148,6 +148,9 @@ export const ALARM_NO_POWER = 'no_power';
 export const ALARM_OCCLUSION = 'occlusion';
 export const ALARM_OVER_LIMIT = 'over_limit';
 
+export const EVENT = 'event';
+export const EVENT_PUMP_SHUTDOWN = 'pump_shutdown';
+
 export const AUTOMATED_BOLUS = 'automatedBolus';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';
@@ -267,6 +270,7 @@ export const pumpVocabulary = {
     [ALARM_NO_POWER]: t('Battery Empty'),
     [ALARM_OCCLUSION]: t('Occlusion Detected'),
     [ALARM_OVER_LIMIT]: t('Insulin Delivery Limit Exceeded'),
+    [EVENT_PUMP_SHUTDOWN]: t('Pump Shutdown'),
   },
 };
 
