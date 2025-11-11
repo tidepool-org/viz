@@ -119,7 +119,7 @@ export class StatUtil {
       insulin: insulinData.length ? getTotalInsulin(insulinData) : NaN,
     };
 
-    if (activeDaysWithInsulinData > 1) {
+    if (this.activeDays > 1 && activeDaysWithInsulinData > 1) {
       basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
       basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
       basalBolusData.insulin = basalBolusData.insulin / activeDaysWithInsulinData;
@@ -171,7 +171,7 @@ export class StatUtil {
       exchanges: wizardCarbs.exchanges,
     };
 
-    if (activeDaysWithCarbData > 1) {
+    if (this.activeDays > 1 && activeDaysWithCarbData > 1) {
       carbs = {
         grams: carbs.grams / activeDaysWithCarbData,
         exchanges: carbs.exchanges / activeDaysWithCarbData,
