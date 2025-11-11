@@ -59,7 +59,7 @@ const Results = ({ manufacturer, results, showData, showStats }) => {
 
   const renderStats = (stats, bgPrefs) => (_.map(stats, stat => (
     <div style={statStyles} id={`Stat--${stat.id}`} key={stat.id}>
-      <Stat bgPrefs={bgPrefs} {...stat} />
+      <Stat bgPrefs={bgPrefs} {...stat} collapsible />
     </div>
   )));
 

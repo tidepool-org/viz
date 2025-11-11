@@ -21,14 +21,15 @@ import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
+import { getGlycemicRangesPreset } from '../../../utils/glycemicRanges';
 import {
   MGDL_UNITS,
   MS_IN_DAY,
   MS_IN_HOUR,
   BGM_DATA_KEY,
   CGM_DATA_KEY,
-  GLYCEMIC_RANGE,
-  ADA_STANDARD_BG_BOUNDS
+  ADA_STANDARD_BG_BOUNDS,
+  GLYCEMIC_RANGES_PRESET,
 } from '../../../utils/constants';
 import moment from 'moment';
 
@@ -164,7 +165,8 @@ export const generateChartSections = (data, bgSource) => {
   const dataSufficiency = bgSource === CGM_DATA_KEY
     ? calculateCGMDataSufficiency(data)
     : calculateBGMDataSufficiency(data);
-  const glycemicRanges = data.query?.glycemicRanges || GLYCEMIC_RANGE.ADA_STANDARD;
+
+  const glycemicRangesPreset = getGlycemicRangesPreset(data.query?.glycemicRanges);
 
   sections.percentInRanges = {
     bgSource,
@@ -175,7 +177,7 @@ export const generateChartSections = (data, bgSource) => {
     bordered: true,
     text: {
       title: text.percentInRanges.title[bgSource],
-      subtitle: text.percentInRanges.subtitle[glycemicRanges]
+      subtitle: text.percentInRanges.subtitle[bgSource][glycemicRangesPreset]
     },
     sufficientData: dataSufficiency.percentInRanges,
   };
@@ -238,7 +240,7 @@ export const generatePercentInRangesFigure = (
   section,
   stat,
   bgPrefs,
-  glycemicRanges = GLYCEMIC_RANGE.ADA_STANDARD
+  glycemicRanges
 ) => {
   // Set chart plot within section borders
   const chartAreaWidth = section.width - 2;
@@ -608,10 +610,12 @@ export const generatePercentInRangesFigure = (
       },
     };
 
+    const glycemicRangesPreset = getGlycemicRangesPreset(glycemicRanges);
+
     // User is viewing a PwD self-defined range if glycemicRanges is set to ADA Standard,
     // but targetLowerBound or targetUpperBound do not match those of the ADA Standard
     const isPwdSelfDefinedRange = (
-      glycemicRanges === GLYCEMIC_RANGE.ADA_STANDARD && (
+      glycemicRangesPreset === GLYCEMIC_RANGES_PRESET.ADA_STANDARD && (
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].veryLowThreshold !== bgPrefs.bgBounds?.veryLowThreshold ||
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetLowerBound !== bgPrefs.bgBounds?.targetLowerBound ||
         ADA_STANDARD_BG_BOUNDS[(bgPrefs.bgUnits || MGDL_UNITS)].targetUpperBound !== bgPrefs.bgBounds?.targetUpperBound ||
@@ -619,7 +623,7 @@ export const generatePercentInRangesFigure = (
       )
     );
 
-    const goalGlycemicRangesKey = isPwdSelfDefinedRange ? 'PWD_SELF_DEFINED' : glycemicRanges;
+    const goalGlycemicRangesKey = isPwdSelfDefinedRange ? 'PWD_SELF_DEFINED' : glycemicRangesPreset;
 
     // if PwD self-defined range, show goal for every stat; otherwise show only goals that exist
     const goalsOrderedKeys = _.filter([
