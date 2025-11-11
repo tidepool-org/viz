@@ -514,7 +514,7 @@ class Stat extends PureComponent {
     let padding;
     let total;
 
-    const chartData = _.cloneDeep(data.data);
+    const chartData = _.reject(_.cloneDeep(data.data), d => (d.hideIfEmpty && d.value === -1));
 
     const chartProps = this.getDefaultChartProps(props);
 
