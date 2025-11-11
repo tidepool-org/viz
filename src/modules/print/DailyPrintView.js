@@ -467,8 +467,8 @@ class DailyPrintView extends PrintView {
     const totalCbgDuration = _.get(stats, 'timeInRange.data.total.value', {});
     const { averageGlucose } = _.get(stats, 'averageGlucose.data.raw', {});
     const { carbs } = _.get(stats, 'carbs.data.raw', {});
-    const { basal: totalBasal, bolus: totalBolus } = _.get(stats, 'totalInsulin.data.raw', {});
-    const totalInsulin = (totalBasal || 0) + (totalBolus || 0);
+    const { basal: totalBasal, bolus: totalBolus, insulin: totalOther } = _.get(stats, 'totalInsulin.data.raw', {});
+    const totalInsulin = (totalBasal || 0) + (totalBolus || 0) + (totalOther || 0);
 
     this.doc.fillColor('black')
       .fillOpacity(1)
@@ -558,16 +558,20 @@ class DailyPrintView extends PrintView {
 
       const ratio = this.isAutomatedBasalDevice
         ? ['manual', 'automated']
-        : ['basal', 'bolus'];
+        : ['basal', 'bolus', 'other'];
+
+      const showRatioOther = !this.isAutomatedBasalDevice && _.isFinite(totalOther);
 
       const percentages = {
         basal: formatPercentage(totalBasal / totalInsulin),
         bolus: formatPercentage(totalBolus / totalInsulin),
+        other: formatPercentage(totalOther / totalInsulin),
       };
 
       const labels = {
         basal: t('Basal'),
         bolus: t('Bolus'),
+        other: t('Other'),
       };
 
       if (this.isAutomatedBasalDevice) {
@@ -589,6 +593,11 @@ class DailyPrintView extends PrintView {
         [ratio[0]]: this.isAutomatedBasalDevice ? '' : `, ${formatDecimalNumber(totalBasal, 1)} U`,
         [ratio[1]]: this.isAutomatedBasalDevice ? '' : `, ${formatDecimalNumber(totalBolus, 1)} U`,
       };
+
+      if (showRatioOther) {
+        primary[ratio[2]] = percentages[ratio[2]];
+        secondary[ratio[2]] = `, ${formatDecimalNumber(totalOther, 1)} U`;
+      }
 
       this.doc.font(this.font)
         .text(
@@ -613,6 +622,20 @@ class DailyPrintView extends PrintView {
         );
 
       yPos.update();
+
+      if (showRatioOther) {
+        this.doc.font(this.font)
+          .text(
+            labels[ratio[2]],
+            { indent: statsIndent, continued: true, width: widthWithoutIndent }
+          )
+          .text(
+            `${primary[ratio[2]]}${secondary[ratio[2]]}`,
+            { align: 'right' }
+          );
+
+        yPos.update();
+      }
     }
 
     if (averageGlucose) {
