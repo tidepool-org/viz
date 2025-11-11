@@ -145,6 +145,7 @@ class DailyPrintView extends PrintView {
       bolus: {
         automated: '#B2B2B2',
         delivered: 'black',
+        other: 'black',
         extendedPath: 'black',
         extendedExpectationPath: undelivered,
         extendedTriangle: 'black',
@@ -155,6 +156,9 @@ class DailyPrintView extends PrintView {
         undelivered,
         underride: undelivered,
         underrideTriangle: 'white',
+      },
+      pattern: {
+        other: '#BFBFBF',
       },
       carbs: '#F8D48E',
       carbExchanges: '#FFB686',
@@ -374,20 +378,35 @@ class DailyPrintView extends PrintView {
   }
 
   renderEventPath(path) {
+    const fillColor = this.colors.bolus[path.type];
+
     if (path.type === 'programmed') {
       if (path.subType === 'automated') {
         this.doc.path(path.d)
           .lineWidth(0.5)
-          .stroke(this.colors.bolus[path.type]);
+          .stroke(fillColor);
       } else {
         this.doc.path(path.d)
           .lineWidth(0.5)
           .dash(0.5, { space: 1 })
-          .stroke(this.colors.bolus[path.type]);
+          .stroke(fillColor);
       }
     } else {
       this.doc.path(path.d)
-        .fill(_.get(this.colors.bolus, path.subType, this.colors.bolus[path.type]));
+        .fill(_.get(this.colors.bolus, path.subType, fillColor));
+
+      if (path.pattern) {
+
+        this.doc.save();
+        this.doc.path(path.d).clip();
+
+        this.doc.path(path.pattern)
+          .lineWidth(1)
+          .stroke(this.colors.pattern[path.subType]);
+
+        this.doc.path(path.d).lineWidth(0.5).stroke(fillColor);
+        this.doc.restore();
+      }
     }
   }
 
@@ -840,7 +859,12 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderInsulinEvents({ bolusScale, data: { bolus: insulinEvents }, xScale }) {
+  renderInsulinEvents({ bolusScale, data, xScale }) {
+    const insulinEvents = [
+      ...data?.insulin || [],
+      ...data?.bolus || [],
+    ];
+
     _.each(insulinEvents, (insulinEvent) => {
       const paths = getBolusPaths(insulinEvent, xScale, bolusScale, {
         bolusWidth: this.bolusWidth,

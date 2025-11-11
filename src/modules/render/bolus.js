@@ -58,6 +58,36 @@ export function getBolusEdges(bolusWidth, bolusCenter, bolusBottom, bolusHeight)
   };
 }
 
+export function getBolusPattern(edges, pattern) {
+  const { left, right, top, bottom } = edges;
+
+  switch (pattern) {
+    case 'diagonalLines':
+      const spacing = 4; // spacing between diagonal lines
+      const extend = 2; // extend pattern beyond edges by 2px
+      let patternPath = '';
+
+      // Create evenly-spaced diagonal lines from bottom-left to top-right
+      const width = right - left;
+      const height = bottom - top;
+
+      for (let i = -(height + extend); i <= width + extend; i += spacing) {
+        // Calculate start and end points for 45-degree lines going up-right
+        const startX = left + i - extend;
+        const startY = bottom + extend;
+        const endX = left + i + height + extend;
+        const endY = top - extend;
+
+        // Draw lines that extend beyond the rectangle bounds so they get clipped cleanly
+        patternPath += `M ${startX} ${startY} L ${endX} ${endY} `;
+      }
+
+      return patternPath;
+    default:
+      return null;
+  }
+}
+
 /**
  * getBolusPaths
  * @param {Object} insulinEvent - a Tidepool wizard (with embedded bolus) or bolus datum
@@ -137,15 +167,16 @@ export default function getBolusPaths(insulinEvent, xScale, yScale, {
   // this is a port of tideline's js/plot/util/drawbolus.js: bolus
   if (bolusUtils.getDelivered(insulinEvent) || bolusUtils.getProgrammed((insulinEvent))) {
     const maxY = yScale(bolusUtils.getDelivered(insulinEvent));
-    const path = formatBolusRectPath(
-      getBolusEdges(bolusWidth, bolusCenter, bolusBottom, maxY)
-    );
+    const bolusEdges = getBolusEdges(bolusWidth, bolusCenter, bolusBottom, maxY);
+    const path = formatBolusRectPath(bolusEdges);
+    const isInsulinEvent = insulinEvent.type === 'insulin';
 
     paths.push({
       d: path,
       key: `delivered-${bolus.id}`,
       type: 'delivered',
-      subType: insulinEvent.subType,
+      subType: isInsulinEvent ? 'other' : insulinEvent.subType,
+      pattern: isInsulinEvent ? getBolusPattern(bolusEdges, 'diagonalLines') : null,
     });
 
     const deliveredY = yScale(bolusUtils.getDelivered(insulinEvent));
