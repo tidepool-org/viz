@@ -58,7 +58,7 @@ describe('AGPConstants', () => {
       percentInRanges: {
         title: {
           cbg: 'Time in Ranges',
-          smbg: 'Percent BGM Readings in Ranges',
+          smbg: 'Percent BGM Readings',
         },
         subtitle: {
           cbg: {
