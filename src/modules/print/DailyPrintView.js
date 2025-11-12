@@ -1394,11 +1394,11 @@ class DailyPrintView extends PrintView {
       }
     });
 
-    const baseHeight = lineHeight * 2.5;
-    const additionalHeight = maxRows > 1 ? lineHeight * (maxRows - 1) * 1.5 : 0;
+    const baseHeight = lineHeight * 4; // Base height accommodates 2 rows
+    const additionalHeight = maxRows > 2 ? lineHeight * (maxRows - 2) * 1.5 : 0;
     const legendHeight = baseHeight + additionalHeight;
 
-    const legendTop = this.bottomEdge - lineHeight * 2.5 - additionalHeight - lineHeight;
+    const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
 
     this.doc.fillColor('black').fillOpacity(1)
       .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
@@ -1711,7 +1711,7 @@ class DailyPrintView extends PrintView {
         this.doc.image(eventImages[type], cursor, eventY - this.eventRadius, {
           width: this.eventRadius * 2,
         });
-        this.doc.fontSize(this.smallFontSize).fillColor('black').text(label, cursor + this.eventRadius * 2 + 4, eventY - 2);
+        this.doc.fontSize(this.smallFontSize).fillColor('black').text(label, cursor + this.eventRadius * 2 + 4, eventY - this.doc.currentLineHeight() / 2);
         eventY += this.eventRadius * 2 + eventGap;
         eventLabelWidths.push(this.eventRadius * 2 + 4 + this.doc.widthOfString(label));
         });
