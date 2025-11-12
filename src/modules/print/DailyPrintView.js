@@ -120,70 +120,96 @@ class DailyPrintView extends PrintView {
 
     const legendItems = [
       {
-        type: 'cbg',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.cbg?.length > 0),
+      type: 'cbg',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.cbg?.length > 0),
       },
       {
-        type: 'smbg',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.smbg?.length > 0),
+      type: 'smbg',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.smbg?.length > 0),
       },
       {
-        type: 'bolus',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => (dateData.bolus?.length > 0 || dateData.insulin?.length > 0)),
+      type: 'bolus',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => (dateData.bolus?.length > 0 || dateData.insulin?.length > 0)),
       },
       {
-        type: 'override',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
-          const wizard = getWizardFromInsulinEvent(event);
-          return wizard && wizard.recommended;
-        })),
+      type: 'override',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        const wizard = getWizardFromInsulinEvent(event);
+        return wizard && wizard.recommended;
+      })),
       },
       {
-        type: 'interrupted',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
-          const bolus = getBolusFromInsulinEvent(event);
-          return bolus.expectedNormal && bolus.expectedNormal !== bolus.normal;
-        })),
+      type: 'interrupted',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        const bolus = getBolusFromInsulinEvent(event);
+        return bolus.expectedNormal && bolus.expectedNormal !== bolus.normal;
+      })),
       },
       {
-        type: 'extended',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
-          const bolus = getBolusFromInsulinEvent(event);
-          return bolus.extended || bolus.expectedExtended;
-        })),
+      type: 'extended',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        const bolus = getBolusFromInsulinEvent(event);
+        return bolus.extended || bolus.expectedExtended;
+      })),
       },
       {
-        type: 'carbs',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
-          _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
-        ),
+      type: 'carbs',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
+        _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
+      ),
       },
       {
-        type: 'basals',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
+      type: 'basals',
+      show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
       },
       {
-        type: 'exercise',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
-        ),
+      type: 'events',
+      eventTypes: (() => {
+        const eventTypes = [];
+
+        // Check for exercise/physical activity events
+        if (_.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
+        )) {
+        eventTypes.push({ type: EVENT_PHYSICAL_ACTIVITY, label: t('Exercise') });
+        }
+
+        // Check for notes events
+        if (_.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
+        )) {
+        eventTypes.push({ type: EVENT_NOTES, label: t('Notes') });
+        }
+
+        // Check for health events
+        if (_.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
+        )) {
+        eventTypes.push({ type: EVENT_HEALTH, label: t('Health') });
+        }
+
+        return eventTypes;
+      })(),
+      show: (() => {
+        // Show events if any event types are present
+        const hasExercise = _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
+        );
+        const hasNotes = _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
+        );
+        const hasHealth = _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
+        );
+
+        return hasExercise || hasNotes || hasHealth;
+      })(),
       },
       {
-        type: 'notes',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
-        ),
-      },
-      {
-        type: 'health',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
-        ),
-      },
-      {
-        type: 'alarms',
-        show: this.hasAlarms,
+      type: 'alarms',
+      show: true,
+      // show: this.hasAlarms,
       },
     ];
 
@@ -1358,11 +1384,24 @@ class DailyPrintView extends PrintView {
   renderLegend() {
     this.doc.fontSize(9);
     const lineHeight = this.doc.currentLineHeight();
-    this.doc.fillColor('black').fillOpacity(1)
-      .text(t('Legend'), this.margins.left, this.bottomEdge - lineHeight * 7.5);
 
-    const legendHeight = lineHeight * 4;
-    const legendTop = this.bottomEdge - lineHeight * 6;
+    // Calculate legend height based on content
+    let maxRows = 1;
+    _.each(this.legendItemsToShow, (item) => {
+      if (item.type === 'events' && item.eventTypes) {
+      const rows = item.eventTypes.length;
+      maxRows = Math.max(maxRows, rows);
+      }
+    });
+
+    const baseHeight = lineHeight * 2.5;
+    const additionalHeight = maxRows > 1 ? lineHeight * (maxRows - 1) * 1.5 : 0;
+    const legendHeight = baseHeight + additionalHeight;
+
+    const legendTop = this.bottomEdge - lineHeight * 2.5 - additionalHeight - lineHeight;
+
+    this.doc.fillColor('black').fillOpacity(1)
+      .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
 
     this.doc.lineWidth(1)
       .rect(this.margins.left, legendTop, this.width, legendHeight)
@@ -1370,7 +1409,7 @@ class DailyPrintView extends PrintView {
 
     this.doc.fontSize(this.smallFontSize);
 
-    const legendVerticalMiddle = legendTop + lineHeight * 2;
+    const legendVerticalMiddle = legendTop + legendHeight * 0.5;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
     const itemGap = 15; // Fixed 15px gap between legend items
 
@@ -1382,324 +1421,323 @@ class DailyPrintView extends PrintView {
       console.log('item.type', item.type);
       const startCursor = cursor; // Remember start position for this item
       switch (item.type) {
-        case 'cbg':
-          // cbg
-          const vertOffsetAdjustments = [2.25, 1, 0.25, 0, 0, -0.25, -1, -2.25];
-          _.each(_.map(range(0, 16, 2), (d) => ([d, d - 7])), (pair) => {
-            const [horizOffset, vertOffset] = pair;
-            const adjustedVertOffset = vertOffset + vertOffsetAdjustments[horizOffset / 2];
-            let fill;
+      case 'cbg':
+        // cbg
+        const vertOffsetAdjustments = [2.25, 1, 0.25, 0, 0, -0.25, -1, -2.25];
+        _.each(_.map(range(0, 16, 2), (d) => ([d, d - 7])), (pair) => {
+        const [horizOffset, vertOffset] = pair;
+        const adjustedVertOffset = vertOffset + vertOffsetAdjustments[horizOffset / 2];
+        let fill;
 
-            if (horizOffset < 4) {
-              fill = 'high';
-            } else if (horizOffset < 12) {
-              fill = 'target';
-            } else {
-              fill = 'low';
-            }
+        if (horizOffset < 4) {
+          fill = 'high';
+        } else if (horizOffset < 12) {
+          fill = 'target';
+        } else {
+          fill = 'low';
+        }
 
-            this.doc
-              .circle(cursor + horizOffset, legendVerticalMiddle + adjustedVertOffset, this.cbgRadius)
-              .fill(this.colors[fill]);
-          });
-          cursor += 16 + 4;
-          this.doc.fillColor('black').text(t('CGM'), cursor, legendTextMiddle);
-          cursor += this.doc.widthOfString(t('CGM'));
-          break;
+        this.doc
+          .circle(cursor + horizOffset, legendVerticalMiddle + adjustedVertOffset, this.cbgRadius)
+          .fill(this.colors[fill]);
+        });
+        cursor += 16 + 4;
+        this.doc.fillColor('black').text(t('CGM'), cursor, legendTextMiddle);
+        cursor += this.doc.widthOfString(t('CGM'));
+        break;
 
-        case 'smbg':
-          console.log('cursor, legendVerticalMiddle', cursor, legendVerticalMiddle);
-          // smbg
-          this.doc.circle(cursor, legendVerticalMiddle, this.smbgRadius)
-            .fill(this.colors.target);
-          this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle - this.smbgRadius * 2, this.smbgRadius)
-            .fill(this.colors.high);
-          this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle + this.smbgRadius * 2, this.smbgRadius)
-            .fill(this.colors.low);
-          cursor += this.smbgRadius * 3 + 4;
-          this.doc.fillColor('black').text(t('BGM'), cursor, legendTextMiddle);
-          cursor += this.doc.widthOfString(t('BGM'));
-          break;
+      case 'smbg':
+        console.log('cursor, legendVerticalMiddle', cursor, legendVerticalMiddle);
+        // smbg
+        this.doc.circle(cursor, legendVerticalMiddle, this.smbgRadius)
+        .fill(this.colors.target);
+        this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle - this.smbgRadius * 2, this.smbgRadius)
+        .fill(this.colors.high);
+        this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle + this.smbgRadius * 2, this.smbgRadius)
+        .fill(this.colors.low);
+        cursor += this.smbgRadius * 3 + 4;
+        this.doc.fillColor('black').text(t('BGM'), cursor, legendTextMiddle);
+        cursor += this.doc.widthOfString(t('BGM'));
+        break;
 
-        case 'bolus':
-          const bolusOpts = {
-            bolusWidth: this.bolusWidth,
-            extendedLineThickness: this.extendedLineThickness,
-            interruptedLineThickness: this.interruptedLineThickness,
-            triangleHeight: this.triangleHeight,
-          };
-          const legendBolusYScale = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
+      case 'bolus':
+        const bolusOpts = {
+        bolusWidth: this.bolusWidth,
+        extendedLineThickness: this.extendedLineThickness,
+        interruptedLineThickness: this.interruptedLineThickness,
+        triangleHeight: this.triangleHeight,
+        };
+        const legendBolusYScale = scaleLinear()
+        .domain([0, 10])
+        .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
 
-          const normalBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
-          const normalPaths = getBolusPaths(
-            { normal: 10, normalTime: 0 },
-            normalBolusXScale,
-            legendBolusYScale,
-            bolusOpts
-          );
-          _.each(normalPaths, (path) => {
-            this.renderEventPath(path);
-          });
+        const normalBolusXScale = scaleLinear()
+        .domain([0, 10])
+        .range([cursor, cursor + 10]);
+        const normalPaths = getBolusPaths(
+        { normal: 10, normalTime: 0 },
+        normalBolusXScale,
+        legendBolusYScale,
+        bolusOpts
+        );
+        _.each(normalPaths, (path) => {
+        this.renderEventPath(path);
+        });
 
-          if (this.isAutomatedBolusDevice) {
-            const automatedPaths = getBolusPaths(
-              { normal: 6, normalTime: 5, subType: 'automated' },
-              normalBolusXScale,
-              legendBolusYScale,
-              bolusOpts
-            );
-            _.each(automatedPaths, (path) => {
-              this.renderEventPath(path);
-            });
-            cursor += this.bolusWidth * 3 + 4;
-            const textY = legendTextMiddle - this.doc.currentLineHeight() * 1.25;
-            this.doc.fillColor('black').text(t('Bolus'), cursor, textY);
-            this.doc.text(t('manual &'), cursor, textY + this.doc.currentLineHeight());
-            this.doc.text(t('automated'), cursor, textY + this.doc.currentLineHeight() * 2);
-            cursor += this.doc.widthOfString(t('automated'));
-          } else {
-            cursor += this.bolusWidth + 4;
-            this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
-            cursor += this.doc.widthOfString(t('Bolus'));
-          }
-          break;
+        if (this.isAutomatedBolusDevice) {
+        const automatedPaths = getBolusPaths(
+          { normal: 6, normalTime: 5, subType: 'automated' },
+          normalBolusXScale,
+          legendBolusYScale,
+          bolusOpts
+        );
+        _.each(automatedPaths, (path) => {
+          this.renderEventPath(path);
+        });
+        cursor += this.bolusWidth * 3 + 4;
+        const textY = legendTextMiddle - this.doc.currentLineHeight() * 1.25;
+        this.doc.fillColor('black').text(t('Bolus'), cursor, textY);
+        this.doc.text(t('manual &'), cursor, textY + this.doc.currentLineHeight());
+        this.doc.text(t('automated'), cursor, textY + this.doc.currentLineHeight() * 2);
+        cursor += this.doc.widthOfString(t('automated'));
+        } else {
+        cursor += this.bolusWidth + 4;
+        this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle);
+        cursor += this.doc.widthOfString(t('Bolus'));
+        }
+        break;
 
-        case 'override':
-          const rideBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
-          const legendBolusYScaleForRide = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
+      case 'override':
+        const rideBolusXScale = scaleLinear()
+        .domain([0, 10])
+        .range([cursor, cursor + 10]);
+        const legendBolusYScaleForRide = scaleLinear()
+        .domain([0, 10])
+        .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
 
-          const overridePaths = getBolusPaths({
-            type: 'wizard',
-            recommended: { net: 8, carb: 8, correction: 0 },
-            bolus: { normal: 10, normalTime: 0 },
-          }, rideBolusXScale, legendBolusYScaleForRide, {
-            bolusWidth: this.bolusWidth,
-            extendedLineThickness: this.extendedLineThickness,
-            interruptedLineThickness: this.interruptedLineThickness,
-            triangleHeight: this.triangleHeight,
-          });
-          _.each(overridePaths, (path) => {
-            this.renderEventPath(path);
-          });
+        const overridePaths = getBolusPaths({
+        type: 'wizard',
+        recommended: { net: 8, carb: 8, correction: 0 },
+        bolus: { normal: 10, normalTime: 0 },
+        }, rideBolusXScale, legendBolusYScaleForRide, {
+        bolusWidth: this.bolusWidth,
+        extendedLineThickness: this.extendedLineThickness,
+        interruptedLineThickness: this.interruptedLineThickness,
+        triangleHeight: this.triangleHeight,
+        });
+        _.each(overridePaths, (path) => {
+        this.renderEventPath(path);
+        });
 
-          const underridePaths = getBolusPaths({
-            type: 'wizard',
-            recommended: { net: 10, carb: 8, correction: 2 },
-            bolus: { normal: 5, normalTime: 5 },
-          }, rideBolusXScale, legendBolusYScaleForRide, {
-            bolusWidth: this.bolusWidth,
-            extendedLineThickness: this.extendedLineThickness,
-            interruptedLineThickness: this.interruptedLineThickness,
-            triangleHeight: this.triangleHeight,
-          });
-          _.each(underridePaths, (path) => {
-            this.renderEventPath(path);
-          });
+        const underridePaths = getBolusPaths({
+        type: 'wizard',
+        recommended: { net: 10, carb: 8, correction: 2 },
+        bolus: { normal: 5, normalTime: 5 },
+        }, rideBolusXScale, legendBolusYScaleForRide, {
+        bolusWidth: this.bolusWidth,
+        extendedLineThickness: this.extendedLineThickness,
+        interruptedLineThickness: this.interruptedLineThickness,
+        triangleHeight: this.triangleHeight,
+        });
+        _.each(underridePaths, (path) => {
+        this.renderEventPath(path);
+        });
 
-          cursor += this.bolusWidth * 3 + 4;
-          const overrideTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
-          this.doc.fillColor('black').text(t('Override'), cursor, overrideTextY);
-          this.doc.text(t('up & down'), cursor, overrideTextY + this.doc.currentLineHeight());
-          cursor += this.doc.widthOfString(t('up & down'));
-          break;
+        cursor += this.bolusWidth * 3 + 4;
+        const overrideTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
+        this.doc.fillColor('black').text(t('Override'), cursor, overrideTextY);
+        this.doc.text(t('up & down'), cursor, overrideTextY + this.doc.currentLineHeight());
+        cursor += this.doc.widthOfString(t('up & down'));
+        break;
 
-        case 'interrupted':
-          const interruptedBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
-          const legendBolusYScaleForInterrupted = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
+      case 'interrupted':
+        const interruptedBolusXScale = scaleLinear()
+        .domain([0, 10])
+        .range([cursor, cursor + 10]);
+        const legendBolusYScaleForInterrupted = scaleLinear()
+        .domain([0, 10])
+        .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
 
-          const interruptedPaths = getBolusPaths({
-            normal: 6,
-            expectedNormal: 10,
-            normalTime: 0,
-          }, interruptedBolusXScale, legendBolusYScaleForInterrupted, {
-            bolusWidth: this.bolusWidth,
-            extendedLineThickness: this.extendedLineThickness,
-            interruptedLineThickness: this.interruptedLineThickness,
-            triangleHeight: this.triangleHeight,
-          });
-          _.each(interruptedPaths, (path) => {
-            this.renderEventPath(path);
-          });
-          cursor += this.bolusWidth + 4;
-          this.doc.fillColor('black').text(t('Interrupted'), cursor, legendTextMiddle);
-          cursor += this.doc.widthOfString(t('Interrupted'));
-          break;
+        const interruptedPaths = getBolusPaths({
+        normal: 6,
+        expectedNormal: 10,
+        normalTime: 0,
+        }, interruptedBolusXScale, legendBolusYScaleForInterrupted, {
+        bolusWidth: this.bolusWidth,
+        extendedLineThickness: this.extendedLineThickness,
+        interruptedLineThickness: this.interruptedLineThickness,
+        triangleHeight: this.triangleHeight,
+        });
+        _.each(interruptedPaths, (path) => {
+        this.renderEventPath(path);
+        });
+        cursor += this.bolusWidth + 4;
+        this.doc.fillColor('black').text(t('Interrupted'), cursor, legendTextMiddle);
+        cursor += this.doc.widthOfString(t('Interrupted'));
+        break;
 
-        case 'extended':
-          const extendedBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
-          const legendBolusYScaleForExtended = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
+      case 'extended':
+        const extendedBolusXScale = scaleLinear()
+        .domain([0, 10])
+        .range([cursor, cursor + 10]);
+        const legendBolusYScaleForExtended = scaleLinear()
+        .domain([0, 10])
+        .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
 
-          const extendedPaths = getBolusPaths({
-            normal: 5,
-            extended: 5,
-            duration: 10,
-            normalTime: 0,
-          }, extendedBolusXScale, legendBolusYScaleForExtended, {
-            bolusWidth: this.bolusWidth,
-            extendedLineThickness: this.extendedLineThickness,
-            interruptedLineThickness: this.interruptedLineThickness,
-            triangleHeight: this.triangleHeight,
-          });
-          _.each(extendedPaths, (path) => {
-            this.renderEventPath(path);
-          });
-          cursor += this.bolusWidth / 2 + 10 + 4;
-          const extendedTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
-          this.doc.fillColor('black').text(t('Combo /'), cursor, extendedTextY);
-          this.doc.text(t('Extended'), cursor, extendedTextY + this.doc.currentLineHeight());
-          cursor += this.doc.widthOfString(t('Extended'));
-          break;
+        const extendedPaths = getBolusPaths({
+        normal: 5,
+        extended: 5,
+        duration: 10,
+        normalTime: 0,
+        }, extendedBolusXScale, legendBolusYScaleForExtended, {
+        bolusWidth: this.bolusWidth,
+        extendedLineThickness: this.extendedLineThickness,
+        interruptedLineThickness: this.interruptedLineThickness,
+        triangleHeight: this.triangleHeight,
+        });
+        _.each(extendedPaths, (path) => {
+        this.renderEventPath(path);
+        });
+        cursor += this.bolusWidth / 2 + 10 + 4;
+        const extendedTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
+        this.doc.fillColor('black').text(t('Combo /'), cursor, extendedTextY);
+        this.doc.text(t('Extended'), cursor, extendedTextY + this.doc.currentLineHeight());
+        cursor += this.doc.widthOfString(t('Extended'));
+        break;
 
-        case 'carbs':
-          const carbsYPos = {
-            circle: legendVerticalMiddle,
-            carbs: legendVerticalMiddle - this.carbRadius / 2,
-            label: legendTextMiddle,
-          };
+      case 'carbs':
+        const carbsYPos = {
+        circle: legendVerticalMiddle,
+        carbs: legendVerticalMiddle - this.carbRadius / 2,
+        label: legendTextMiddle,
+        };
 
-          if (this.hasCarbExchanges) {
-            carbsYPos.circle -= this.doc.currentLineHeight() / 2 + 1;
-            carbsYPos.carbs -= this.doc.currentLineHeight() / 2 + 1;
-            carbsYPos.label -= this.doc.currentLineHeight() / 2;
-          }
+        if (this.hasCarbExchanges) {
+        carbsYPos.circle -= this.doc.currentLineHeight() / 2 + 1;
+        carbsYPos.carbs -= this.doc.currentLineHeight() / 2 + 1;
+        carbsYPos.label -= this.doc.currentLineHeight() / 2;
+        }
 
-          this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
+        this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
 
-          if (this.hasCarbExchanges) {
-            const exchangesYPos = {
-              circle: carbsYPos.circle + this.doc.currentLineHeight() / 2 + 1.5,
-              carbs: carbsYPos.carbs + this.doc.currentLineHeight() / 2 + 1.5,
-            };
-            this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
-            this.doc.fillColor('black').fontSize(this.carbsFontSize)
-              .text('2', cursor - this.carbRadius, exchangesYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
-          }
+        if (this.hasCarbExchanges) {
+        const exchangesYPos = {
+          circle: carbsYPos.circle + this.doc.currentLineHeight() / 2 + 1.5,
+          carbs: carbsYPos.carbs + this.doc.currentLineHeight() / 2 + 1.5,
+        };
+        this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
+        this.doc.fillColor('black').fontSize(this.carbsFontSize)
+          .text('2', cursor - this.carbRadius, exchangesYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+        }
 
-          this.doc.fillColor('black').fontSize(this.carbsFontSize)
-            .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+        this.doc.fillColor('black').fontSize(this.carbsFontSize)
+        .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
 
-          this.doc.fontSize(this.smallFontSize);
-          cursor += this.carbRadius + 4;
-          this.doc.fillColor('black').text(t('Carbs (g)'), cursor, carbsYPos.label);
-          if (this.hasCarbExchanges) {
-            this.doc.text(t('Carb exch'), cursor, carbsYPos.label + this.doc.currentLineHeight());
-          }
-          cursor += this.doc.widthOfString(t('Carbs (g)'));
-          break;
+        this.doc.fontSize(this.smallFontSize);
+        cursor += this.carbRadius + 4;
+        this.doc.fillColor('black').text(t('Carbs (g)'), cursor, carbsYPos.label);
+        if (this.hasCarbExchanges) {
+        this.doc.text(t('Carb exch'), cursor, carbsYPos.label + this.doc.currentLineHeight());
+        }
+        cursor += this.doc.widthOfString(t('Carbs (g)'));
+        break;
 
-        case 'basals':
-          const legendBasalYScale = scaleLinear()
-            .domain([0, 2.5])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4.5]);
+      case 'basals':
+        const legendBasalYScale = scaleLinear()
+        .domain([0, 2.5])
+        .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4.5]);
 
-          const legendBasalXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 50]);
+        const legendBasalXScale = scaleLinear()
+        .domain([0, 10])
+        .range([cursor, cursor + 50]);
 
-          const basalData = this.isAutomatedBasalDevice ? {
-            basal: [
-              { subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 },
-              { subType: 'automated', rate: 1, duration: 2, normalTime: 0 },
-              { subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 },
-            ],
-            basalSequences: [
-              [{ subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 }],
-              [{ subType: 'automated', rate: 1, duration: 2, normalTime: 0 }],
-              [{ subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 }],
-            ],
-          } : {
-            basal: [
-              { subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 },
-              { subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } },
-            ],
-            basalSequences: [
-              [{ subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 }],
-              [{ subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } }],
-            ],
-          };
+        const basalData = this.isAutomatedBasalDevice ? {
+        basal: [
+          { subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 },
+          { subType: 'automated', rate: 1, duration: 2, normalTime: 0 },
+          { subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 },
+        ],
+        basalSequences: [
+          [{ subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 }],
+          [{ subType: 'automated', rate: 1, duration: 2, normalTime: 0 }],
+          [{ subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 }],
+        ],
+        } : {
+        basal: [
+          { subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 },
+          { subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } },
+        ],
+        basalSequences: [
+          [{ subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 }],
+          [{ subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } }],
+        ],
+        };
 
-          this.renderBasalPaths({
-            basalScale: legendBasalYScale,
-            data: basalData,
-            xScale: legendBasalXScale,
-          });
+        this.renderBasalPaths({
+        basalScale: legendBasalYScale,
+        data: basalData,
+        xScale: legendBasalXScale,
+        });
 
-          cursor += 23 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black').fillOpacity(1);
+        cursor += 23 + 4;
+        this.doc.fontSize(this.smallFontSize).fillColor('black').fillOpacity(1);
 
-          if (this.isAutomatedBasalDevice) {
-            const basalTextY = legendTextMiddle - this.doc.currentLineHeight() * 1.25;
-            this.doc.text(t('Basals'), cursor, basalTextY);
-            this.doc.text(t('automated'), cursor, basalTextY + this.doc.currentLineHeight());
-            this.doc.text(t('& manual'), cursor, basalTextY + this.doc.currentLineHeight() * 2);
-            cursor += this.doc.widthOfString(t('automated'));
-          } else {
-            this.doc.text(t('Basals'), cursor, legendTextMiddle);
-            cursor += this.doc.widthOfString(t('Basals'));
-          }
-          break;
+        if (this.isAutomatedBasalDevice) {
+        const basalTextY = legendTextMiddle - this.doc.currentLineHeight() * 1.25;
+        this.doc.text(t('Basals'), cursor, basalTextY);
+        this.doc.text(t('automated'), cursor, basalTextY + this.doc.currentLineHeight());
+        this.doc.text(t('& manual'), cursor, basalTextY + this.doc.currentLineHeight() * 2);
+        cursor += this.doc.widthOfString(t('automated'));
+        } else {
+        this.doc.text(t('Basals'), cursor, legendTextMiddle);
+        cursor += this.doc.widthOfString(t('Basals'));
+        }
+        break;
 
-        case 'exercise':
-          this.doc.image(eventImages[EVENT_PHYSICAL_ACTIVITY], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-          cursor += this.eventRadius * 2 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black').text(t('Exercise'), cursor, legendTextMiddle);
-          cursor += this.doc.widthOfString(t('Exercise'));
-          break;
+      case 'events':
+        // Get the event types that should be shown
+        const eventTypes = item.eventTypes; // Array of event types to show
+        const eventGap = 4;
+        const totalEventHeight = (eventTypes.length * this.eventRadius * 2) + ((eventTypes.length - 1) * eventGap);
 
-        case 'notes':
-          this.doc.image(eventImages[EVENT_NOTES], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-          cursor += this.eventRadius * 2 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black').text(t('Notes'), cursor, legendTextMiddle);
-          cursor += this.doc.widthOfString(t('Notes'));
-          break;
+        // Calculate starting Y position to center the group
+        const groupStartY = legendVerticalMiddle - (totalEventHeight / 2);
 
-        case 'health':
-          this.doc.image(eventImages[EVENT_HEALTH], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-          cursor += this.eventRadius * 2 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black').text(t('Health'), cursor, legendTextMiddle);
-          cursor += this.doc.widthOfString(t('Health'));
-          break;
+        const eventLabelWidths = [];
 
-        case 'alarms':
-          this.doc.image(eventImages[ALARM], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-          cursor += this.eventRadius * 2 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black');
+        // Render each event type
+        let eventY = groupStartY + this.eventRadius;
+        _.each(eventTypes, ({ type, label }) => {
+        this.doc.image(eventImages[type], cursor, eventY - this.eventRadius, {
+          width: this.eventRadius * 2,
+        });
+        this.doc.fontSize(this.smallFontSize).fillColor('black').text(label, cursor + this.eventRadius * 2 + 4, eventY - 2);
+        eventY += this.eventRadius * 2 + eventGap;
+        eventLabelWidths.push(this.eventRadius * 2 + 4 + this.doc.widthOfString(label));
+        });
 
-          if (this.hasAlarms) {
-            this.doc.text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
-            this.doc.text(t('Alarm'), { continued: true })
-              .fontSize(this.extraSmallFontSize)
-              .text('1', this.doc.x, this.doc.y - 1.5);
-          } else {
-            this.doc.text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
-            this.doc.text(t('Alarm'));
-          }
-          cursor += this.doc.widthOfString(t('Pump Alarm'));
-          break;
+        console.log('eventLabelWidths', eventLabelWidths);
+        cursor += _.max(eventLabelWidths);
+        break;
+
+      case 'alarms':
+        this.doc.image(eventImages[ALARM], cursor, legendVerticalMiddle - this.eventRadius, {
+        width: this.eventRadius * 2,
+        });
+        cursor += this.eventRadius * 2 + 4;
+        this.doc.fontSize(this.smallFontSize).fillColor('black');
+
+        if (this.hasAlarms) {
+        this.doc.text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
+        this.doc.text(t('Alarm'), { continued: true })
+          .fontSize(this.extraSmallFontSize)
+          .text('1', this.doc.x, this.doc.y - 1.5);
+        } else {
+        this.doc.text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2);
+        this.doc.text(t('Alarm'));
+        }
+        cursor += this.doc.widthOfString(t('Pump Alarm'));
+        break;
       }
 
       // Add fixed gap between items
@@ -1707,7 +1745,7 @@ class DailyPrintView extends PrintView {
     });
 
     return this;
-  }
+    }
 }
 
 export default DailyPrintView;
