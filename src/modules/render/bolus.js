@@ -58,6 +58,13 @@ export function getBolusEdges(bolusWidth, bolusCenter, bolusBottom, bolusHeight)
   };
 }
 
+/**
+ * getBolusPattern
+ * @param {Object} edges the bolus boundary edge positions
+ * @param {string} pattern the pattern type to generate
+ *
+ * @returns SVG path data string defining a bolus fill pattern
+ */
 export function getBolusPattern(edges, pattern) {
   const { left, right, top, bottom } = edges;
 
