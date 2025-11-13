@@ -78,6 +78,7 @@ import {
 } from '../../utils/print/data';
 
 import colors from '../../colors';
+import { text } from 'pdfkit';
 
 const t = i18next.t.bind(i18next);
 
@@ -228,6 +229,7 @@ class DailyPrintView extends PrintView {
     this.hasAlarms = true;
     this.isAutomatedBasalDevice = true;
     this.isAutomatedBolusDevice = true;
+    this.hasCarbExchanges = true;
     this.legendItemsToShow = [...legendItems];
 
     this.bgAxisFontSize = 5;
@@ -1401,6 +1403,7 @@ class DailyPrintView extends PrintView {
   renderLegend() {
     this.doc.fontSize(9);
     const lineHeight = this.doc.currentLineHeight();
+    const paddedLineHeight = lineHeight * 1.125;
 
     // Calculate legend height based on content
     let maxRows = 1;
@@ -1411,11 +1414,11 @@ class DailyPrintView extends PrintView {
       }
     });
 
-    const baseHeight = lineHeight * 4; // Base height accommodates 2 rows
+    const baseHeight = lineHeight * 4;
     const additionalHeight = maxRows > 2 ? lineHeight * (maxRows - 2) * 1.5 : 0;
     const legendHeight = baseHeight + additionalHeight;
-
     const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
+    const legendVerticalMiddle = legendTop + legendHeight * 0.5;
 
     this.doc.fillColor('black').fillOpacity(1)
       .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
@@ -1425,9 +1428,6 @@ class DailyPrintView extends PrintView {
       .stroke('black');
 
     this.doc.fontSize(this.smallFontSize);
-
-    const legendVerticalMiddle = legendTop + legendHeight * 0.5;
-    const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
 
     const minGap=8;
     const maxGap=20;
@@ -1504,6 +1504,18 @@ class DailyPrintView extends PrintView {
 
     let cursor = this.margins.left + 8; // Start with small margin
 
+    // Set up consistent y-positions for legend text based on number of rows
+    const singleLineTextYPos = legendVerticalMiddle - (lineHeight / 2);
+    const textYPos = {
+      single: singleLineTextYPos,
+      double: [singleLineTextYPos - paddedLineHeight / 2, singleLineTextYPos + paddedLineHeight / 2],
+      triple: [
+        singleLineTextYPos - paddedLineHeight,
+        singleLineTextYPos,
+        singleLineTextYPos + paddedLineHeight,
+      ],
+    };
+
     // Render only the legend items that should be shown
     _.each(this.legendItemsToShow, item => {
       switch (item.type) {
@@ -1529,7 +1541,7 @@ class DailyPrintView extends PrintView {
           });
 
           cursor += 16 + 4;
-          this.doc.fillColor('black').text(t('CGM'), cursor, legendTextMiddle, labelOptions);
+          this.doc.fillColor('black').text(t('CGM'), cursor, textYPos.single, labelOptions);
           cursor += this.doc.widthOfString(t('CGM'));
           break;
 
@@ -1544,7 +1556,7 @@ class DailyPrintView extends PrintView {
             .fill(this.colors.low);
 
           cursor += this.smbgRadius * 3 + 4;
-          this.doc.fillColor('black').text(t('BGM'), cursor, legendTextMiddle, labelOptions);
+          this.doc.fillColor('black').text(t('BGM'), cursor, textYPos.single, labelOptions);
           cursor += this.doc.widthOfString(t('BGM'));
           break;
 
@@ -1588,14 +1600,13 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += this.bolusWidth * 3 + 4;
-            const textY = legendTextMiddle - this.doc.currentLineHeight() * 1.25;
-            this.doc.fillColor('black').text(t('Bolus'), cursor, textY, labelOptions);
-            this.doc.text(t('manual &'), cursor, textY + this.doc.currentLineHeight(), labelOptions);
-            this.doc.text(t('automated'), cursor, textY + this.doc.currentLineHeight() * 2, labelOptions);
+            this.doc.fillColor('black').text(t('Bolus'), cursor, textYPos.triple[0], labelOptions);
+            this.doc.text(t('manual &'), cursor, textYPos.triple[1], labelOptions);
+            this.doc.text(t('automated'), cursor, textYPos.triple[2], labelOptions);
             cursor += this.doc.widthOfString(t('automated'));
           } else {
             cursor += this.bolusWidth + 4;
-            this.doc.fillColor('black').text(t('Bolus'), cursor, legendTextMiddle, labelOptions);
+            this.doc.fillColor('black').text(t('Bolus'), cursor, textYPos.single, labelOptions);
             cursor += this.doc.widthOfString(t('Bolus'));
           }
           break;
@@ -1650,9 +1661,8 @@ class DailyPrintView extends PrintView {
           });
 
           cursor += this.bolusWidth * 3 + 4;
-          const overrideTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
-          this.doc.fillColor('black').text(t('Override'), cursor, overrideTextY, labelOptions);
-          this.doc.text(t('up & down'), cursor, overrideTextY + this.doc.currentLineHeight(), labelOptions);
+          this.doc.fillColor('black').text(t('Override'), cursor, textYPos.double[0], labelOptions);
+          this.doc.text(t('up & down'), cursor, textYPos.double[1], labelOptions);
           cursor += this.doc.widthOfString(t('up & down'));
           break;
 
@@ -1686,7 +1696,7 @@ class DailyPrintView extends PrintView {
           });
 
           cursor += this.bolusWidth + 4;
-          this.doc.fillColor('black').text(t('Interrupted'), cursor, legendTextMiddle, labelOptions);
+          this.doc.fillColor('black').text(t('Interrupted'), cursor, textYPos.single, labelOptions);
           cursor += this.doc.widthOfString(t('Interrupted'));
           break;
 
@@ -1721,9 +1731,8 @@ class DailyPrintView extends PrintView {
           });
 
           cursor += this.bolusWidth / 2 + 10 + 4;
-          const extendedTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
-          this.doc.fillColor('black').text(t('Combo /'), cursor, extendedTextY, labelOptions);
-          this.doc.text(t('Extended'), cursor, extendedTextY + this.doc.currentLineHeight(), labelOptions);
+          this.doc.fillColor('black').text(t('Combo /'), cursor, textYPos.double[0], labelOptions);
+          this.doc.text(t('Extended'), cursor, textYPos.double[1], labelOptions);
           cursor += this.doc.widthOfString(t('Extended'));
           break;
 
@@ -1731,21 +1740,24 @@ class DailyPrintView extends PrintView {
           const carbsYPos = {
             circle: legendVerticalMiddle,
             carbs: legendVerticalMiddle - this.carbRadius / 2,
-            label: legendTextMiddle,
+            label: textYPos.single,
           };
 
           if (this.hasCarbExchanges) {
-            carbsYPos.circle -= this.doc.currentLineHeight() / 2 + 1;
-            carbsYPos.carbs -= this.doc.currentLineHeight() / 2 + 1;
-            carbsYPos.label -= this.doc.currentLineHeight() / 2;
+            carbsYPos.circle -= (paddedLineHeight / 2 + 1);
+            carbsYPos.carbs -= (paddedLineHeight / 2 + 1);
+            carbsYPos.label = textYPos.double[0];
           }
 
           this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
 
+          let exchangesYPos;
+
           if (this.hasCarbExchanges) {
-            const exchangesYPos = {
-              circle: carbsYPos.circle + this.doc.currentLineHeight() / 2 + 1.5,
-              carbs: carbsYPos.carbs + this.doc.currentLineHeight() / 2 + 1.5,
+            exchangesYPos = {
+              circle: carbsYPos.circle + paddedLineHeight,
+              carbs: carbsYPos.carbs + paddedLineHeight,
+              label: textYPos.double[1],
             };
 
             this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
@@ -1762,7 +1774,7 @@ class DailyPrintView extends PrintView {
           this.doc.fillColor('black').text(t('Carbs (g)'), cursor, carbsYPos.label, labelOptions);
 
           if (this.hasCarbExchanges) {
-            this.doc.text(t('Carb exch'), cursor, carbsYPos.label + this.doc.currentLineHeight(), labelOptions);
+            this.doc.text(t('Carb exch'), cursor, exchangesYPos.label, labelOptions);
           }
 
           cursor += this.doc.widthOfString(t('Carbs (g)'));
@@ -1809,13 +1821,12 @@ class DailyPrintView extends PrintView {
           this.doc.fontSize(this.smallFontSize).fillColor('black').fillOpacity(1);
 
           if (this.isAutomatedBasalDevice) {
-            const basalTextY = legendTextMiddle - this.doc.currentLineHeight() * 1.25;
-            this.doc.text(t('Basals'), cursor, basalTextY, labelOptions);
-            this.doc.text(t('automated'), cursor, basalTextY + this.doc.currentLineHeight(), labelOptions);
-            this.doc.text(t('& manual'), cursor, basalTextY + this.doc.currentLineHeight() * 2, labelOptions);
+            this.doc.text(t('Basals'), cursor, textYPos.triple[0], labelOptions);
+            this.doc.text(t('automated'), cursor, textYPos.triple[1], labelOptions);
+            this.doc.text(t('& manual'), cursor, textYPos.triple[2], labelOptions);
             cursor += this.doc.widthOfString(t('automated'));
           } else {
-            this.doc.text(t('Basals'), cursor, legendTextMiddle, labelOptions);
+            this.doc.text(t('Basals'), cursor, textYPos.single, labelOptions);
             cursor += this.doc.widthOfString(t('Basals'));
           }
           break;
@@ -1838,7 +1849,7 @@ class DailyPrintView extends PrintView {
               width: this.eventRadius * 2,
             });
 
-            this.doc.fontSize(this.smallFontSize).fillColor('black').text(label, cursor + this.eventRadius * 2 + 4, eventY - this.doc.currentLineHeight() / 2, labelOptions);
+            this.doc.fontSize(this.smallFontSize).fillColor('black').text(label, cursor + this.eventRadius * 2 + 4, eventY - paddedLineHeight / 2, labelOptions);
             eventY += this.eventRadius * 2 + eventGap;
             eventLabelWidths.push(this.eventRadius * 2 + 4 + this.doc.widthOfString(label));
           });
@@ -1851,19 +1862,18 @@ class DailyPrintView extends PrintView {
             width: this.eventRadius * 2,
           });
 
-          const alarmTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
           cursor += this.eventRadius * 2 + 4;
           this.doc.fontSize(this.smallFontSize).fillColor('black');
 
           if (this.hasAlarms) {
-            this.doc.text(t('Pump'), cursor, alarmTextY, labelOptions);
+            this.doc.text(t('Pump'), cursor, textYPos.double[0], labelOptions);
 
-            this.doc.text(t('Alarm'), cursor, alarmTextY + this.doc.currentLineHeight(), { ...labelOptions, continued: true })
+            this.doc.text(t('Alarm'), cursor, textYPos.double[1], { ...labelOptions, continued: true })
               .fontSize(this.extraSmallFontSize)
               .text('1', this.doc.x, this.doc.y - 1.5, labelOptions);
           } else {
-            this.doc.text(t('Pump'), cursor, alarmTextY, labelOptions);
-            this.doc.text(t('Alarm'), cursor, alarmTextY + this.doc.currentLineHeight(), labelOptions);
+            this.doc.text(t('Pump'), cursor, textYPos.double[0], labelOptions);
+            this.doc.text(t('Alarm'), cursor, textYPos.double[1], labelOptions);
           }
 
           cursor += this.doc.widthOfString(t('Alarm'));
