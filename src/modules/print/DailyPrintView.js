@@ -119,10 +119,10 @@ class DailyPrintView extends PrintView {
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
-    // this.hasAlarms = true;
-    // this.isAutomatedBasalDevice = true;
-    // this.isAutomatedBolusDevice = true;
-    // this.hasCarbExchanges = true;
+    this.hasAlarms = true;
+    this.isAutomatedBasalDevice = true;
+    this.isAutomatedBolusDevice = true;
+    this.hasCarbExchanges = true;
 
     const legendItems = [
       {
@@ -1388,19 +1388,20 @@ class DailyPrintView extends PrintView {
   renderLegend() {
     this.doc.fontSize(9);
     const lineHeight = this.doc.currentLineHeight();
-    const paddedLineHeight = lineHeight * 1.125;
+    const lineYpadding = 0.5;
+    const paddedLineHeight = lineHeight + (lineYpadding * 2);
+    const legendYPadding = 6;
 
     // Calculate legend height based on content
-    let maxRows = 1;
+    let maxLines = 2;
     _.each(this.legendItemsToShow, (item) => {
-      if (item.type === 'events' && item.eventTypes) {
-        const rows = item.eventTypes.length;
-        maxRows = Math.max(maxRows, rows);
+      if (item.labels.length > maxLines) {
+        maxLines = item.labels.length;
       }
     });
 
-    const baseHeight = lineHeight * 4;
-    const additionalHeight = maxRows > 2 ? lineHeight * (maxRows - 2) * 1.5 : 0;
+    const baseHeight = (paddedLineHeight * 2) + (legendYPadding * 2);
+    const additionalHeight = maxLines > 2 ? (lineHeight + lineYpadding)  * (maxLines - 2) : 0;
     const legendHeight = baseHeight + additionalHeight;
     const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
     const legendVerticalMiddle = legendTop + legendHeight * 0.5;
