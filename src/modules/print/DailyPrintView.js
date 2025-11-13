@@ -119,103 +119,96 @@ class DailyPrintView extends PrintView {
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
+    // this.hasAlarms = true;
+    // this.isAutomatedBasalDevice = true;
+    // this.isAutomatedBolusDevice = true;
+    // this.hasCarbExchanges = true;
+
     const legendItems = [
       {
         type: 'cbg',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.cbg?.length > 0),
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.cbg?.length > 0),
+        labels: [t('CGM')],
       },
       {
         type: 'smbg',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.smbg?.length > 0),
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.smbg?.length > 0),
+        labels: [t('BGM')],
       },
       {
         type: 'bolus',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => (dateData.bolus?.length > 0 || dateData.insulin?.length > 0)),
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => (dateData.bolus?.length > 0 || dateData.insulin?.length > 0)),
+        labels: this.isAutomatedBolusDevice ? [t('Bolus'), t('manual &'), t('automated')] : [t('Bolus')],
       },
       {
         type: 'override',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
           const wizard = getWizardFromInsulinEvent(event);
           return wizard && wizard.recommended;
         })),
+        labels: [t('Override'), t('up & down')],
       },
       {
         type: 'interrupted',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
           const bolus = getBolusFromInsulinEvent(event);
           return bolus.expectedNormal && bolus.expectedNormal !== bolus.normal;
         })),
+        labels: [t('Interrupted')],
       },
       {
         type: 'extended',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
           const bolus = getBolusFromInsulinEvent(event);
           return bolus.extended || bolus.expectedExtended;
         })),
+        labels: [t('Combo /'), t('Extended')],
       },
       {
         type: 'carbs',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
           _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
           _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
         ),
+        labels: this.hasCarbExchanges ? [t('Carbs'), t('Carb exch.')] : [t('Carbs')],
       },
       {
         type: 'basals',
-        show: _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
+        show: _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
+        labels: this.isAutomatedBasalDevice ? [t('Basals'), t('automated &'), t('manual')] : [t('Basals')],
       },
       {
-        type: 'events',
-        eventTypes: (() => {
-          const eventTypes = [];
-
-          // Check for exercise/physical activity events
-          if (_.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
-          )) {
-            eventTypes.push({ type: EVENT_PHYSICAL_ACTIVITY, label: t('Exercise') });
-          }
-
-          // Check for notes events
-          if (_.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
-          )) {
-            eventTypes.push({ type: EVENT_NOTES, label: t('Notes') });
-          }
-
-          // Check for health events
-          if (_.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
-          )) {
-            eventTypes.push({ type: EVENT_HEALTH, label: t('Health') });
-          }
-
-          return eventTypes;
-        })(),
-        show: (() => {
-          // Show events if any event types are present
-          const hasExercise = _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
-          );
-
-          const hasNotes = _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
-          );
-
-          const hasHealth = _.get(this.aggregationsByDate, 'dataByDate', {}) && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
-          );
-
-          return hasExercise || hasNotes || hasHealth;
-        })(),
+        type: EVENT_PHYSICAL_ACTIVITY,
+        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
+          _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
+        ),
+        labels: [t('Exercise'), t('event')],
+      },
+      {
+        type: EVENT_HEALTH,
+        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
+          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
+        ),
+        labels: [t('Health'), t('event')],
+      },
+      {
+        type: EVENT_NOTES,
+        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
+          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
+        ),
+        labels: [t('Note')],
       },
       {
         type: 'alarms',
         show: this.hasAlarms,
+        labels: [t('Pump'), t('Alarm')],
+        footNoteReference: 1,
       },
     ];
 
-    // this.legendItemsToShow = _.filter(legendItems, 'show');
+    this.legendItemsToShow = _.filter(legendItems, 'show');
+    // this.legendItemsToShow = [...legendItems];
+
     // const minItems = 1;
     // const maxItems = legendItems.length;
     // const numItemsToShow = Math.floor(Math.random() * (maxItems - minItems + 1)) + minItems;
@@ -223,14 +216,6 @@ class DailyPrintView extends PrintView {
     // // Shuffle the array and take the first numItemsToShow items
     // const shuffled = [...legendItems].sort(() => 0.5 - Math.random());
     // this.legendItemsToShow = shuffled.slice(0, numItemsToShow);
-
-
-
-    this.hasAlarms = true;
-    this.isAutomatedBasalDevice = true;
-    this.isAutomatedBolusDevice = true;
-    this.hasCarbExchanges = true;
-    this.legendItemsToShow = [...legendItems];
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
@@ -1504,25 +1489,50 @@ class DailyPrintView extends PrintView {
 
     let cursor = this.margins.left + 8; // Start with small margin
 
-    // Set up consistent y-positions for legend text based on number of rows
-    const singleLineTextYPos = legendVerticalMiddle - (lineHeight / 2);
-    const textYPos = {
-      single: singleLineTextYPos,
-      double: [singleLineTextYPos - paddedLineHeight / 2, singleLineTextYPos + paddedLineHeight / 2],
-      triple: [
-        singleLineTextYPos - paddedLineHeight,
-        singleLineTextYPos,
-        singleLineTextYPos + paddedLineHeight,
-      ],
+    const renderLabels = (labels, cursor) => {
+      // Set up consistent y-positions for legend text based on number of rows
+      const singleLineTextYPos = legendVerticalMiddle - (lineHeight / 2);
+
+      const textYPos = {
+        single: [singleLineTextYPos],
+        double: [singleLineTextYPos - paddedLineHeight / 2, singleLineTextYPos + paddedLineHeight / 2],
+        triple: [
+          singleLineTextYPos - paddedLineHeight,
+          singleLineTextYPos,
+          singleLineTextYPos + paddedLineHeight,
+        ],
+      };
+
+      cursor += 4; // Small gap between symbol and label
+      const labelWidths = [];
+
+      let labelRows = 'single';
+      if (labels.length === 2) {
+        labelRows = 'double';
+      } else if (labels.length === 3) {
+        labelRows = 'triple';
+      }
+
+      this.doc.fontSize(this.smallFontSize);
+      this.setFill('black');
+
+      _.each(labels, (label, index) => {
+        this.doc.text(label, cursor, textYPos[labelRows][index], labelOptions);
+        labelWidths.push(this.doc.widthOfString(label));
+      });
+
+      cursor += _.max(labelWidths);
+      return cursor;
     };
 
     // Render only the legend items that should be shown
     _.each(this.legendItemsToShow, item => {
       switch (item.type) {
-        case 'cbg':
+        case 'cbg': {
+          const traceWidth = 16;
           const vertOffsetAdjustments = [2.25, 1, 0.25, 0, 0, -0.25, -1, -2.25];
 
-          _.each(_.map(range(0, 16, 2), (d) => ([d, d - 7])), (pair) => {
+          _.each(_.map(range(0, traceWidth, 2), (d) => ([d, d - 7])), (pair) => {
             const [horizOffset, vertOffset] = pair;
             const adjustedVertOffset = vertOffset + vertOffsetAdjustments[horizOffset / 2];
             let fill;
@@ -1540,12 +1550,12 @@ class DailyPrintView extends PrintView {
               .fill(this.colors[fill]);
           });
 
-          cursor += 16 + 4;
-          this.doc.fillColor('black').text(t('CGM'), cursor, textYPos.single, labelOptions);
-          cursor += this.doc.widthOfString(t('CGM'));
+          cursor += traceWidth;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'smbg':
+        case 'smbg': {
           this.doc.circle(cursor, legendVerticalMiddle, this.smbgRadius)
             .fill(this.colors.target);
 
@@ -1555,12 +1565,12 @@ class DailyPrintView extends PrintView {
           this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle + this.smbgRadius * 2, this.smbgRadius)
             .fill(this.colors.low);
 
-          cursor += this.smbgRadius * 3 + 4;
-          this.doc.fillColor('black').text(t('BGM'), cursor, textYPos.single, labelOptions);
-          cursor += this.doc.widthOfString(t('BGM'));
+          cursor += this.smbgRadius * 3;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'bolus':
+        case 'bolus': {
           const bolusOpts = {
             bolusWidth: this.bolusWidth,
             extendedLineThickness: this.extendedLineThickness,
@@ -1568,13 +1578,16 @@ class DailyPrintView extends PrintView {
             triangleHeight: this.triangleHeight,
           };
 
+          const bolusGap = 2;
+          const bolusXScaleWidth = this.isAutomatedBolusDevice ? this.bolusWidth * 2 + bolusGap : this.bolusWidth;
+
           const legendBolusYScale = scaleLinear()
             .domain([0, 10])
             .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
 
           const normalBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
+            .domain([0, bolusXScaleWidth])
+            .range([cursor, cursor + bolusXScaleWidth]);
 
           const normalPaths = getBolusPaths(
             { normal: 10, normalTime: 0 },
@@ -1589,7 +1602,7 @@ class DailyPrintView extends PrintView {
 
           if (this.isAutomatedBolusDevice) {
             const automatedPaths = getBolusPaths(
-              { normal: 6, normalTime: 5, subType: 'automated' },
+              { normal: 7, normalTime: this.bolusWidth + bolusGap, subType: 'automated' },
               normalBolusXScale,
               legendBolusYScale,
               bolusOpts
@@ -1598,23 +1611,20 @@ class DailyPrintView extends PrintView {
             _.each(automatedPaths, (path) => {
               this.renderEventPath(path);
             });
-
-            cursor += this.bolusWidth * 3 + 4;
-            this.doc.fillColor('black').text(t('Bolus'), cursor, textYPos.triple[0], labelOptions);
-            this.doc.text(t('manual &'), cursor, textYPos.triple[1], labelOptions);
-            this.doc.text(t('automated'), cursor, textYPos.triple[2], labelOptions);
-            cursor += this.doc.widthOfString(t('automated'));
-          } else {
-            cursor += this.bolusWidth + 4;
-            this.doc.fillColor('black').text(t('Bolus'), cursor, textYPos.single, labelOptions);
-            cursor += this.doc.widthOfString(t('Bolus'));
           }
-          break;
 
-        case 'override':
+          cursor += bolusXScaleWidth;
+          cursor = renderLabels(item.labels, cursor);
+          break;
+        }
+
+        case 'override':{
+          const bolusGap = 2;
+          const bolusXScaleWidth = this.bolusWidth * 2 + bolusGap;
+
           const rideBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
+            .domain([0, bolusXScaleWidth])
+            .range([cursor, cursor + bolusXScaleWidth]);
 
           const legendBolusYScaleForRide = scaleLinear()
             .domain([0, 10])
@@ -1644,7 +1654,7 @@ class DailyPrintView extends PrintView {
             {
               type: 'wizard',
               recommended: { net: 10, carb: 8, correction: 2 },
-              bolus: { normal: 5, normalTime: 5 },
+              bolus: { normal: 5, normalTime: this.bolusWidth + bolusGap },
             },
             rideBolusXScale,
             legendBolusYScaleForRide,
@@ -1660,16 +1670,17 @@ class DailyPrintView extends PrintView {
             this.renderEventPath(path);
           });
 
-          cursor += this.bolusWidth * 3 + 4;
-          this.doc.fillColor('black').text(t('Override'), cursor, textYPos.double[0], labelOptions);
-          this.doc.text(t('up & down'), cursor, textYPos.double[1], labelOptions);
-          cursor += this.doc.widthOfString(t('up & down'));
+          cursor += bolusXScaleWidth;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'interrupted':
+        case 'interrupted': {
+          const bolusXScaleWidth = this.bolusWidth;
+
           const interruptedBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
+            .domain([0, bolusXScaleWidth])
+            .range([cursor, cursor + bolusXScaleWidth]);
 
           const legendBolusYScaleForInterrupted = scaleLinear()
             .domain([0, 10])
@@ -1695,15 +1706,18 @@ class DailyPrintView extends PrintView {
             this.renderEventPath(path);
           });
 
-          cursor += this.bolusWidth + 4;
-          this.doc.fillColor('black').text(t('Interrupted'), cursor, textYPos.single, labelOptions);
-          cursor += this.doc.widthOfString(t('Interrupted'));
+          cursor += bolusXScaleWidth;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'extended':
+        case 'extended': {
+          const bolusXScaleWidth = this.bolusWidth;
+          const extendedDuration = 10;
+
           const extendedBolusXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 10]);
+            .domain([0, bolusXScaleWidth])
+            .range([cursor, cursor + bolusXScaleWidth]);
 
           const legendBolusYScaleForExtended = scaleLinear()
             .domain([0, 10])
@@ -1713,7 +1727,7 @@ class DailyPrintView extends PrintView {
             {
               normal: 5,
               extended: 5,
-              duration: 10,
+              duration: extendedDuration,
               normalTime: 0,
             },
             extendedBolusXScale,
@@ -1730,34 +1744,31 @@ class DailyPrintView extends PrintView {
             this.renderEventPath(path);
           });
 
-          cursor += this.bolusWidth / 2 + 10 + 4;
-          this.doc.fillColor('black').text(t('Combo /'), cursor, textYPos.double[0], labelOptions);
-          this.doc.text(t('Extended'), cursor, textYPos.double[1], labelOptions);
-          cursor += this.doc.widthOfString(t('Extended'));
+          cursor += extendedDuration;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'carbs':
+        case 'carbs': {
           const carbsYPos = {
             circle: legendVerticalMiddle,
             carbs: legendVerticalMiddle - this.carbRadius / 2,
-            label: textYPos.single,
           };
 
           if (this.hasCarbExchanges) {
             carbsYPos.circle -= (paddedLineHeight / 2 + 1);
             carbsYPos.carbs -= (paddedLineHeight / 2 + 1);
-            carbsYPos.label = textYPos.double[0];
           }
 
           this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
 
-          let exchangesYPos;
+          this.doc.fillColor('black').fontSize(this.carbsFontSize)
+            .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
 
           if (this.hasCarbExchanges) {
-            exchangesYPos = {
+            const exchangesYPos = {
               circle: carbsYPos.circle + paddedLineHeight,
               carbs: carbsYPos.carbs + paddedLineHeight,
-              label: textYPos.double[1],
             };
 
             this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
@@ -1766,28 +1777,19 @@ class DailyPrintView extends PrintView {
               .text('2', cursor - this.carbRadius, exchangesYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
           }
 
-          this.doc.fillColor('black').fontSize(this.carbsFontSize)
-            .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
-
-          this.doc.fontSize(this.smallFontSize);
-          cursor += this.carbRadius + 4;
-          this.doc.fillColor('black').text(t('Carbs (g)'), cursor, carbsYPos.label, labelOptions);
-
-          if (this.hasCarbExchanges) {
-            this.doc.text(t('Carb exch'), cursor, exchangesYPos.label, labelOptions);
-          }
-
-          cursor += this.doc.widthOfString(t('Carbs (g)'));
+          cursor += this.carbRadius;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'basals':
-          const legendBasalYScale = scaleLinear()
-            .domain([0, 2.5])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4.5]);
-
+        case 'basals': {
           const legendBasalXScale = scaleLinear()
             .domain([0, 10])
             .range([cursor, cursor + 50]);
+
+          const legendBasalYScale = scaleLinear()
+            .domain([0, 2.5])
+            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4.5]);
 
           const basalData = this.isAutomatedBasalDevice ? {
             basal: [
@@ -1817,67 +1819,50 @@ class DailyPrintView extends PrintView {
             xScale: legendBasalXScale,
           });
 
-          cursor += 23 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black').fillOpacity(1);
-
-          if (this.isAutomatedBasalDevice) {
-            this.doc.text(t('Basals'), cursor, textYPos.triple[0], labelOptions);
-            this.doc.text(t('automated'), cursor, textYPos.triple[1], labelOptions);
-            this.doc.text(t('& manual'), cursor, textYPos.triple[2], labelOptions);
-            cursor += this.doc.widthOfString(t('automated'));
-          } else {
-            this.doc.text(t('Basals'), cursor, textYPos.single, labelOptions);
-            cursor += this.doc.widthOfString(t('Basals'));
-          }
+          cursor += 22;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'events':
-          // Get the event types that should be shown
-          const eventTypes = item.eventTypes; // Array of event types to show
-          const eventLabelWidths = [];
-          const eventGap = 4;
-          const totalEventHeight = (eventTypes.length * this.eventRadius * 2) + ((eventTypes.length - 1) * eventGap);
-
-          // Calculate starting Y position to center the group
-          const groupStartY = legendVerticalMiddle - (totalEventHeight / 2);
-
-          // Render each event type
-          let eventY = groupStartY + this.eventRadius;
-
-          _.each(eventTypes, ({ type, label }) => {
-            this.doc.image(eventImages[type], cursor, eventY - this.eventRadius, {
-              width: this.eventRadius * 2,
-            });
-
-            this.doc.fontSize(this.smallFontSize).fillColor('black').text(label, cursor + this.eventRadius * 2 + 4, eventY - paddedLineHeight / 2, labelOptions);
-            eventY += this.eventRadius * 2 + eventGap;
-            eventLabelWidths.push(this.eventRadius * 2 + 4 + this.doc.widthOfString(label));
+        case EVENT_PHYSICAL_ACTIVITY: {
+          this.doc.image(eventImages[EVENT_PHYSICAL_ACTIVITY], cursor, legendVerticalMiddle - this.eventRadius, {
+            width: this.eventRadius * 2,
           });
 
-          cursor += _.max(eventLabelWidths);
+          cursor += this.eventRadius * 2;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
 
-        case 'alarms':
+        case EVENT_NOTES: {
+          this.doc.image(eventImages[EVENT_NOTES], cursor, legendVerticalMiddle - this.eventRadius, {
+            width: this.eventRadius * 2,
+          });
+
+          cursor += this.eventRadius * 2;
+          cursor = renderLabels(item.labels, cursor);
+          break;
+        }
+
+        case EVENT_HEALTH: {
+          this.doc.image(eventImages[EVENT_HEALTH], cursor, legendVerticalMiddle - this.eventRadius, {
+            width: this.eventRadius * 2,
+          });
+
+          cursor += this.eventRadius * 2;
+          cursor = renderLabels(item.labels, cursor);
+          break;
+        }
+
+        case 'alarms': {
           this.doc.image(eventImages[ALARM], cursor, legendVerticalMiddle - this.eventRadius, {
             width: this.eventRadius * 2,
           });
 
-          cursor += this.eventRadius * 2 + 4;
-          this.doc.fontSize(this.smallFontSize).fillColor('black');
-
-          if (this.hasAlarms) {
-            this.doc.text(t('Pump'), cursor, textYPos.double[0], labelOptions);
-
-            this.doc.text(t('Alarm'), cursor, textYPos.double[1], { ...labelOptions, continued: true })
-              .fontSize(this.extraSmallFontSize)
-              .text('1', this.doc.x, this.doc.y - 1.5, labelOptions);
-          } else {
-            this.doc.text(t('Pump'), cursor, textYPos.double[0], labelOptions);
-            this.doc.text(t('Alarm'), cursor, textYPos.double[1], labelOptions);
-          }
-
-          cursor += this.doc.widthOfString(t('Alarm'));
+          cursor += this.eventRadius * 2;
+          cursor = renderLabels(item.labels, cursor);
           break;
+        }
       }
 
       // Add fixed gap between items
