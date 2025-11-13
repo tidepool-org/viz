@@ -215,7 +215,20 @@ class DailyPrintView extends PrintView {
     ];
 
     // this.legendItemsToShow = _.filter(legendItems, 'show');
-    this.legendItemsToShow = [...legendItems]; // TODO: delete
+    // const minItems = 1;
+    // const maxItems = legendItems.length;
+    // const numItemsToShow = Math.floor(Math.random() * (maxItems - minItems + 1)) + minItems;
+
+    // // Shuffle the array and take the first numItemsToShow items
+    // const shuffled = [...legendItems].sort(() => 0.5 - Math.random());
+    // this.legendItemsToShow = shuffled.slice(0, numItemsToShow);
+
+
+
+    this.hasAlarms = true;
+    this.isAutomatedBasalDevice = true;
+    this.isAutomatedBolusDevice = true;
+    this.legendItemsToShow = [...legendItems];
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
@@ -1415,13 +1428,84 @@ class DailyPrintView extends PrintView {
 
     const legendVerticalMiddle = legendTop + legendHeight * 0.5;
     const legendTextMiddle = legendVerticalMiddle - this.doc.currentLineHeight() / 2;
-    const itemGap = 15; // Fixed 15px gap between legend items
+
+    const minGap=8;
+    const maxGap=20;
+
+    // Calculate available width for legend items
+    const availableWidth = this.width - (this.margins.left * 2) - 16; // Account for legend box margins
+
+    // Calculate total width needed for all items (without gaps)
+    let totalItemsWidth = 0;
+    _.each(this.legendItemsToShow, item => {
+      switch (item.type) {
+        case 'cbg':
+          totalItemsWidth += 16 + this.doc.widthOfString(t('CGM'));
+          break;
+        case 'smbg':
+          totalItemsWidth += (this.smbgRadius * 3) + this.doc.widthOfString(t('BGM'));
+          break;
+        case 'bolus':
+          if (this.isAutomatedBolusDevice) {
+            totalItemsWidth += (this.bolusWidth * 3) + this.doc.widthOfString(t('automated'));
+          } else {
+            totalItemsWidth += this.bolusWidth + this.doc.widthOfString(t('Bolus'));
+          }
+          break;
+        case 'override':
+          totalItemsWidth += (this.bolusWidth * 3) + this.doc.widthOfString(t('up & down'));
+          break;
+        case 'interrupted':
+          totalItemsWidth += this.bolusWidth + this.doc.widthOfString(t('Interrupted'));
+          break;
+        case 'extended':
+          totalItemsWidth += (this.bolusWidth / 2) + 10 + this.doc.widthOfString(t('Extended'));
+          break;
+        case 'carbs':
+          totalItemsWidth += this.carbRadius + this.doc.widthOfString(t('Carbs (g)'));
+          break;
+        case 'basals':
+          if (this.isAutomatedBasalDevice) {
+            totalItemsWidth += 23 + this.doc.widthOfString(t('automated'));
+          } else {
+            totalItemsWidth += 23 + this.doc.widthOfString(t('Basals'));
+          }
+          break;
+        case 'events':
+          const maxEventLabelWidth = _.max(_.map(item.eventTypes, ({ label }) =>
+            (this.eventRadius * 2) + 4 + this.doc.widthOfString(label)
+          )) || 0;
+          totalItemsWidth += maxEventLabelWidth;
+          break;
+        case 'alarms':
+          totalItemsWidth += (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
+          break;
+      }
+    });
+
+    // Calculate ideal gap
+    const numItems = this.legendItemsToShow.length;
+    const numGaps = numItems - 1;
+    const remainingWidth = availableWidth - totalItemsWidth;
+    let itemGap = numGaps > 0 ? remainingWidth / numGaps : 0;
+
+    // Apply constraints: minimum gap and reduce gap as items increase
+    if (numItems <= 6) {
+      itemGap = Math.min(itemGap, maxGap);
+    } else {
+      // Reduce gap for more than 6 items, but maintain minimum
+      const reductionFactor = Math.max(0.5, 1 - ((numItems - 6) * 0.1));
+      itemGap = Math.min(itemGap, maxGap * reductionFactor);
+    }
+
+    itemGap = Math.max(itemGap, minGap);
+
     const labelOptions = { lineBreak: false }; // Prevent line breaks in legend labels from overflowing and forcing a new page
 
     let cursor = this.margins.left + 8; // Start with small margin
 
     // Render only the legend items that should be shown
-    _.each(this.legendItemsToShow, (item, index) => {
+    _.each(this.legendItemsToShow, item => {
       switch (item.type) {
         case 'cbg':
           const vertOffsetAdjustments = [2.25, 1, 0.25, 0, 0, -0.25, -1, -2.25];
@@ -1767,18 +1851,19 @@ class DailyPrintView extends PrintView {
             width: this.eventRadius * 2,
           });
 
+          const alarmTextY = legendTextMiddle - this.doc.currentLineHeight() / 2;
           cursor += this.eventRadius * 2 + 4;
           this.doc.fontSize(this.smallFontSize).fillColor('black');
 
           if (this.hasAlarms) {
-            this.doc.text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2, labelOptions);
+            this.doc.text(t('Pump'), cursor, alarmTextY, labelOptions);
 
-            this.doc.text(t('Alarm'), { ...labelOptions, continued: true })
+            this.doc.text(t('Alarm'), cursor, alarmTextY + this.doc.currentLineHeight(), { ...labelOptions, continued: true })
               .fontSize(this.extraSmallFontSize)
               .text('1', this.doc.x, this.doc.y - 1.5, labelOptions);
           } else {
-            this.doc.text(t('Pump'), cursor, legendTextMiddle - this.doc.currentLineHeight() / 2, labelOptions);
-            this.doc.text(t('Alarm'), labelOptions);
+            this.doc.text(t('Pump'), cursor, alarmTextY, labelOptions);
+            this.doc.text(t('Alarm'), cursor, alarmTextY + this.doc.currentLineHeight(), labelOptions);
           }
 
           cursor += this.doc.widthOfString(t('Alarm'));
