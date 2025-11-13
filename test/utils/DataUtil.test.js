@@ -5226,6 +5226,8 @@ describe('DataUtil', () => {
       const upload = {
         ...uploadData[2],
         uploadId: 'upload-settings',
+        deviceTime: '2018-02-05T00:00:00',
+        time: '2018-02-05T00:00:00.000Z',
       };
 
       const pumpSettings = {
@@ -5233,6 +5235,8 @@ describe('DataUtil', () => {
         type: 'pumpSettings',
         uploadId: 'upload-settings',
         id: 'ps-latest',
+        deviceTime: '2018-02-04T00:00:00',
+        time: '2018-02-04T00:00:00.000Z',
       };
 
       initDataUtil([

@@ -1330,11 +1330,20 @@ export class DataUtil {
         ps => ps.uploadId === latestPumpUpload.uploadId
       );
 
-      // If latestPumpData is known, ignore settings that occur after that pump data
-      if (latestPumpData) {
+      const isContinuous = latestPumpUpload.dataSetType === 'continuous';
+
+      // For continuous datasets, ignore settings after the latest pump data.
+      // For non-continuous datasets, settings are written after pump data but before upload,
+      // so only require settings.time <= latestPumpUpload.time.
+      if (latestPumpData && isContinuous) {
         pumpSettingsForUpload = _.filter(
           pumpSettingsForUpload,
           ps => ps.time <= latestPumpData.time
+        );
+      } else {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpUpload.time
         );
       }
 
@@ -1346,8 +1355,12 @@ export class DataUtil {
 
         // Only consider candidate if it exists and has a matching uploadId
         if (candidate && candidate.uploadId === latestPumpUpload.uploadId) {
-          // Verify the time constraint if latestPumpData is available
-          if (!latestPumpData || candidate.time == null || candidate.time <= latestPumpData.time) {
+          // For continuous datasets, respect latestPumpData constraint when available.
+          // For non-continuous datasets, only require candidate.time <= latestPumpUpload.time.
+          if (
+            (isContinuous && (!latestPumpData || candidate.time == null || candidate.time <= latestPumpData.time)) ||
+            (!isContinuous && (candidate.time == null || candidate.time <= latestPumpUpload.time))
+          ) {
             latestPumpSettings = candidate;
           }
         }
