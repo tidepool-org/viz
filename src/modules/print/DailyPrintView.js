@@ -1398,10 +1398,14 @@ class DailyPrintView extends PrintView {
     this.doc.fontSize(9);
 
     const itemGap = 14;
-    const legendPadding = 8;
+    const legendXPadding = 7;
+    const legendYPadding = 4;
+    const lineYpadding = 0.5;
+    const lineHeight = this.doc.currentLineHeight();
+    const paddedLineHeight = lineHeight + (lineYpadding * 2);
 
     // Calculate available width for legend items
-    const availableWidth = this.width - (legendPadding * 2);
+    const availableWidth = this.width - (legendXPadding * 2);
 
     // Function to calculate item width
     const getItemWidth = (item) => {
@@ -1481,11 +1485,6 @@ class DailyPrintView extends PrintView {
     }
 
     // Calculate legend height based on content
-    const lineHeight = this.doc.currentLineHeight();
-    const lineYpadding = 0.5;
-    const paddedLineHeight = lineHeight + (lineYpadding * 2);
-    const legendYPadding = 6;
-
     let maxLines = 2;
     _.each(legendRows[0], (item) => {
       if (item.labels.length > maxLines) {
@@ -1500,14 +1499,14 @@ class DailyPrintView extends PrintView {
     const legendHeight = firstRowHeight + (subsequentRowHeight + legendYPadding) * (legendRows.length - 1);
     const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
 
-    let rowHeights = _.map(legendRows, (row, rowIndex) => rowIndex === 0
-        ? firstRowHeight
-        : subsequentRowHeight,
+    let rowHeights = _.map(legendRows, (_, rowIndex) => rowIndex === 0
+      ? firstRowHeight
+      : subsequentRowHeight,
     );
 
-    let rowVerticalMiddles = _.map(legendRows, (row, rowIndex) => rowIndex === 0
-        ? legendTop + firstRowHeight * 0.5
-        : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
+    let rowVerticalMiddles = _.map(legendRows, (_, rowIndex) => rowIndex === 0
+      ? legendTop + firstRowHeight * 0.5
+      : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
     );
 
     this.doc.fillColor('black').fillOpacity(1)
@@ -1537,8 +1536,8 @@ class DailyPrintView extends PrintView {
 
       cursor += 4; // Small gap between symbol and label
       const labelWidths = [];
-
       let labelRows = 'single';
+
       if (labels.length === 2) {
         labelRows = 'double';
       } else if (labels.length === 3) {
@@ -1557,9 +1556,9 @@ class DailyPrintView extends PrintView {
       return cursor;
     };
 
-    // Render only the legend items that should be shown
+    // Render the legend items for the current row
     const renderRow = (items, rowIndex) => {
-      let cursor = this.margins.left + legendPadding;
+      let cursor = this.margins.left + legendXPadding;
       const rowHeight = rowHeights[rowIndex];
       const rowVerticalMiddle = rowVerticalMiddles[rowIndex];
 
@@ -1623,13 +1622,13 @@ class DailyPrintView extends PrintView {
             const bolusGap = 2;
             const bolusXScaleWidth = this.isAutomatedBolusDevice ? this.bolusWidth * 2 + bolusGap : this.bolusWidth;
 
-            const legendBolusYScale = scaleLinear()
-              .domain([0, 10])
-              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
-
             const normalBolusXScale = scaleLinear()
               .domain([0, bolusXScaleWidth])
               .range([cursor, cursor + bolusXScaleWidth]);
+
+            const legendBolusYScale = scaleLinear()
+              .domain([0, 10])
+              .range([rowVerticalMiddle + (rowHeight / 4), rowVerticalMiddle - (rowHeight / 4)]);
 
             const normalPaths = getBolusPaths(
               { normal: 10, normalTime: 0 },
@@ -1670,7 +1669,7 @@ class DailyPrintView extends PrintView {
 
             const legendBolusYScaleForRide = scaleLinear()
               .domain([0, 10])
-              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
+              .range([rowVerticalMiddle + (rowHeight / 4), rowVerticalMiddle - (rowHeight / 4)]);
 
             const overridePaths = getBolusPaths(
               {
@@ -1726,7 +1725,7 @@ class DailyPrintView extends PrintView {
 
             const legendBolusYScaleForInterrupted = scaleLinear()
               .domain([0, 10])
-              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
+              .range([rowVerticalMiddle + (rowHeight / 4), rowVerticalMiddle - (rowHeight / 4)]);
 
             const interruptedPaths = getBolusPaths(
               {
@@ -1763,7 +1762,7 @@ class DailyPrintView extends PrintView {
 
             const legendBolusYScaleForExtended = scaleLinear()
               .domain([0, 10])
-              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
+              .range([rowVerticalMiddle + (rowHeight / 4), rowVerticalMiddle - (rowHeight / 4)]);
 
             const extendedPaths = getBolusPaths(
               {
@@ -1831,7 +1830,7 @@ class DailyPrintView extends PrintView {
 
             const legendBasalYScale = scaleLinear()
               .domain([0, 2.5])
-              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4.5]);
+              .range([rowVerticalMiddle + (rowHeight / 4), rowVerticalMiddle - (rowHeight / 3)]);
 
             const basalData = this.isAutomatedBasalDevice ? {
               basal: [
@@ -1846,12 +1845,12 @@ class DailyPrintView extends PrintView {
               ],
             } : {
               basal: [
-                { subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 },
-                { subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } },
+                { subType: 'scheduled', rate: 2, duration: 2, normalTime: 0 },
+                { subType: 'temp', rate: 1.5, duration: 2, normalTime: 2, suppressed: { rate: 2 } },
               ],
               basalSequences: [
-                [{ subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 }],
-                [{ subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } }],
+                [{ subType: 'scheduled', rate: 2, duration: 2, normalTime: 0 }],
+                [{ subType: 'temp', rate: 1.5, duration: 2, normalTime: 2, suppressed: { rate: 2 } }],
               ],
             };
 
