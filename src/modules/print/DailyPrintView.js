@@ -119,6 +119,15 @@ class DailyPrintView extends PrintView {
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
+    // this.randomizeBooleans = () => {
+    //   this.hasAlarms = Math.random() > 0.5;
+    //   this.isAutomatedBasalDevice = Math.random() > 0.5;
+    //   this.isAutomatedBolusDevice = Math.random() > 0.5;
+    //   this.hasCarbExchanges = Math.random() > 0.5;
+    // };
+
+    // this.randomizeBooleans();
+
     this.hasAlarms = true;
     this.isAutomatedBasalDevice = true;
     this.isAutomatedBolusDevice = true;
@@ -206,8 +215,8 @@ class DailyPrintView extends PrintView {
       },
     ];
 
-    this.legendItemsToShow = _.filter(legendItems, 'show');
-    // this.legendItemsToShow = [...legendItems];
+    // this.legendItemsToShow = _.filter(legendItems, 'show');
+    this.legendItemsToShow = [...legendItems];
 
     // const minItems = 1;
     // const maxItems = legendItems.length;
@@ -1387,24 +1396,118 @@ class DailyPrintView extends PrintView {
 
   renderLegend() {
     this.doc.fontSize(9);
+
+    const itemGap = 14;
+    const legendPadding = 8;
+
+    // Calculate available width for legend items
+    const availableWidth = this.width - (legendPadding * 2);
+
+    // Function to calculate item width
+    const getItemWidth = (item) => {
+      let itemWidth = 0;
+      switch (item.type) {
+      case 'cbg':
+        itemWidth = 16 + 4 + this.doc.widthOfString(t('CGM'));
+        break;
+      case 'smbg':
+        itemWidth = (this.smbgRadius * 3) + 4 + this.doc.widthOfString(t('BGM'));
+        break;
+      case 'bolus':
+        if (this.isAutomatedBolusDevice) {
+        itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
+        } else {
+        itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
+        }
+        break;
+      case 'override':
+        itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('up & down'));
+        break;
+      case 'interrupted':
+        itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Interrupted'));
+        break;
+      case 'extended':
+        itemWidth = (this.bolusWidth / 2) + 10 + 4 + this.doc.widthOfString(t('Extended'));
+        break;
+      case 'carbs':
+        itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
+        break;
+      case 'basals':
+        if (this.isAutomatedBasalDevice) {
+        itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
+        } else {
+        itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
+        }
+        break;
+      case EVENT_PHYSICAL_ACTIVITY:
+        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
+        break;
+      case EVENT_NOTES:
+        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Note'));
+        break;
+      case EVENT_HEALTH:
+        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Health'));
+        break;
+      case 'alarms':
+        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
+        break;
+      }
+      return itemWidth;
+    };
+
+    // Chunk items into rows based on available width
+    const legendRows = [];
+    let currentRow = [];
+    let currentRowWidth = 0;
+
+    _.each(this.legendItemsToShow, item => {
+      const itemWidth = getItemWidth(item);
+      const nextItemWidth = currentRowWidth + (currentRow.length > 0 ? itemGap : 0) + itemWidth;
+
+      if (currentRow.length === 0 || nextItemWidth <= availableWidth) {
+        currentRow.push(item);
+        currentRowWidth = nextItemWidth;
+      } else {
+        // Start new row
+        legendRows.push(currentRow);
+        currentRow = [item];
+        currentRowWidth = itemWidth;
+      }
+    });
+
+    // Add the last row if it has items
+    if (currentRow.length > 0) {
+      legendRows.push(currentRow);
+    }
+
+    // Calculate legend height based on content
     const lineHeight = this.doc.currentLineHeight();
     const lineYpadding = 0.5;
     const paddedLineHeight = lineHeight + (lineYpadding * 2);
     const legendYPadding = 6;
 
-    // Calculate legend height based on content
     let maxLines = 2;
-    _.each(this.legendItemsToShow, (item) => {
+    _.each(legendRows[0], (item) => {
       if (item.labels.length > maxLines) {
         maxLines = item.labels.length;
       }
     });
 
-    const baseHeight = (paddedLineHeight * 2) + (legendYPadding * 2);
+    const baseHeight = (paddedLineHeight * 2);
     const additionalHeight = maxLines > 2 ? (lineHeight + lineYpadding)  * (maxLines - 2) : 0;
-    const legendHeight = baseHeight + additionalHeight;
+    const firstRowHeight = (baseHeight + additionalHeight) + (legendYPadding * 2);
+    const legendHeight = firstRowHeight + (baseHeight * (legendRows.length - 1));
     const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
-    const legendVerticalMiddle = legendTop + legendHeight * 0.5;
+
+    let rowHeights = _.map(legendRows, (row, rowIndex) => rowIndex === 0
+        ? firstRowHeight
+        : baseHeight,
+    );
+
+    let rowVerticalMiddles = _.map(legendRows, (row, rowIndex) => rowIndex === 0
+        ? legendTop + firstRowHeight * 0.5
+        : legendTop + firstRowHeight + ((rowIndex - 1) * baseHeight) + (baseHeight * 0.5)
+    );
 
     this.doc.fillColor('black').fillOpacity(1)
       .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
@@ -1415,84 +1518,11 @@ class DailyPrintView extends PrintView {
 
     this.doc.fontSize(this.smallFontSize);
 
-    const minGap=8;
-    const maxGap=20;
-
-    // Calculate available width for legend items
-    const availableWidth = this.width - (this.margins.left * 2) - 16; // Account for legend box margins
-
-    // Calculate total width needed for all items (without gaps)
-    let totalItemsWidth = 0;
-    _.each(this.legendItemsToShow, item => {
-      switch (item.type) {
-        case 'cbg':
-          totalItemsWidth += 16 + this.doc.widthOfString(t('CGM'));
-          break;
-        case 'smbg':
-          totalItemsWidth += (this.smbgRadius * 3) + this.doc.widthOfString(t('BGM'));
-          break;
-        case 'bolus':
-          if (this.isAutomatedBolusDevice) {
-            totalItemsWidth += (this.bolusWidth * 3) + this.doc.widthOfString(t('automated'));
-          } else {
-            totalItemsWidth += this.bolusWidth + this.doc.widthOfString(t('Bolus'));
-          }
-          break;
-        case 'override':
-          totalItemsWidth += (this.bolusWidth * 3) + this.doc.widthOfString(t('up & down'));
-          break;
-        case 'interrupted':
-          totalItemsWidth += this.bolusWidth + this.doc.widthOfString(t('Interrupted'));
-          break;
-        case 'extended':
-          totalItemsWidth += (this.bolusWidth / 2) + 10 + this.doc.widthOfString(t('Extended'));
-          break;
-        case 'carbs':
-          totalItemsWidth += this.carbRadius + this.doc.widthOfString(t('Carbs (g)'));
-          break;
-        case 'basals':
-          if (this.isAutomatedBasalDevice) {
-            totalItemsWidth += 23 + this.doc.widthOfString(t('automated'));
-          } else {
-            totalItemsWidth += 23 + this.doc.widthOfString(t('Basals'));
-          }
-          break;
-        case 'events':
-          const maxEventLabelWidth = _.max(_.map(item.eventTypes, ({ label }) =>
-            (this.eventRadius * 2) + 4 + this.doc.widthOfString(label)
-          )) || 0;
-          totalItemsWidth += maxEventLabelWidth;
-          break;
-        case 'alarms':
-          totalItemsWidth += (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
-          break;
-      }
-    });
-
-    // Calculate ideal gap
-    const numItems = this.legendItemsToShow.length;
-    const numGaps = numItems - 1;
-    const remainingWidth = availableWidth - totalItemsWidth;
-    let itemGap = numGaps > 0 ? remainingWidth / numGaps : 0;
-
-    // Apply constraints: minimum gap and reduce gap as items increase
-    if (numItems <= 6) {
-      itemGap = Math.min(itemGap, maxGap);
-    } else {
-      // Reduce gap for more than 6 items, but maintain minimum
-      const reductionFactor = Math.max(0.5, 1 - ((numItems - 6) * 0.1));
-      itemGap = Math.min(itemGap, maxGap * reductionFactor);
-    }
-
-    itemGap = Math.max(itemGap, minGap);
-
     const labelOptions = { lineBreak: false }; // Prevent line breaks in legend labels from overflowing and forcing a new page
 
-    let cursor = this.margins.left + 8; // Start with small margin
-
-    const renderLabels = (labels, cursor) => {
+    const renderLabels = (labels, cursor, rowIndex) => {
       // Set up consistent y-positions for legend text based on number of rows
-      const singleLineTextYPos = legendVerticalMiddle - (lineHeight / 2);
+      const singleLineTextYPos = rowVerticalMiddles[rowIndex] - (lineHeight / 2);
 
       const textYPos = {
         single: [singleLineTextYPos],
@@ -1527,351 +1557,364 @@ class DailyPrintView extends PrintView {
     };
 
     // Render only the legend items that should be shown
-    _.each(this.legendItemsToShow, item => {
-      switch (item.type) {
-        case 'cbg': {
-          const traceWidth = 16;
-          const vertOffsetAdjustments = [2.25, 1, 0.25, 0, 0, -0.25, -1, -2.25];
+    const renderRow = (items, rowIndex) => {
+      let cursor = this.margins.left + legendPadding;
+      const rowHeight = rowHeights[rowIndex];
+      const rowVerticalMiddle = rowVerticalMiddles[rowIndex];
 
-          _.each(_.map(range(0, traceWidth, 2), (d) => ([d, d - 7])), (pair) => {
-            const [horizOffset, vertOffset] = pair;
-            const adjustedVertOffset = vertOffset + vertOffsetAdjustments[horizOffset / 2];
-            let fill;
-
-            if (horizOffset < 4) {
-              fill = 'high';
-            } else if (horizOffset < 12) {
-              fill = 'target';
-            } else {
-              fill = 'low';
-            }
-
-            this.doc
-              .circle(cursor + horizOffset, legendVerticalMiddle + adjustedVertOffset, this.cbgRadius)
-              .fill(this.colors[fill]);
-          });
-
-          cursor += traceWidth;
-          cursor = renderLabels(item.labels, cursor);
-          break;
+      _.each(items, item => {
+        if (rowIndex > 0) {
+          // Render all second row item labels in single line to save vertical space
+          item.labels = [item.labels.join(' ')];
         }
 
-        case 'smbg': {
-          this.doc.circle(cursor, legendVerticalMiddle, this.smbgRadius)
-            .fill(this.colors.target);
+        switch (item.type) {
+          case 'cbg': {
+            const traceWidth = 16;
+            const vertOffsetAdjustments = [2.25, 1, 0.25, 0, 0, -0.25, -1, -2.25];
 
-          this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle - this.smbgRadius * 2, this.smbgRadius)
-            .fill(this.colors.high);
+            _.each(_.map(range(0, traceWidth, 2), (d) => ([d, d - 7])), (pair) => {
+              const [horizOffset, vertOffset] = pair;
+              const adjustedVertOffset = vertOffset + vertOffsetAdjustments[horizOffset / 2];
+              let fill;
 
-          this.doc.circle(cursor + this.smbgRadius * 2, legendVerticalMiddle + this.smbgRadius * 2, this.smbgRadius)
-            .fill(this.colors.low);
+              if (horizOffset < 4) {
+                fill = 'high';
+              } else if (horizOffset < 12) {
+                fill = 'target';
+              } else {
+                fill = 'low';
+              }
 
-          cursor += this.smbgRadius * 3;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
+              this.doc
+                .circle(cursor + horizOffset, rowVerticalMiddle + adjustedVertOffset, this.cbgRadius)
+                .fill(this.colors[fill]);
+            });
 
-        case 'bolus': {
-          const bolusOpts = {
-            bolusWidth: this.bolusWidth,
-            extendedLineThickness: this.extendedLineThickness,
-            interruptedLineThickness: this.interruptedLineThickness,
-            triangleHeight: this.triangleHeight,
-          };
+            cursor += traceWidth;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
 
-          const bolusGap = 2;
-          const bolusXScaleWidth = this.isAutomatedBolusDevice ? this.bolusWidth * 2 + bolusGap : this.bolusWidth;
+          case 'smbg': {
+            this.doc.circle(cursor, rowVerticalMiddle, this.smbgRadius)
+              .fill(this.colors.target);
 
-          const legendBolusYScale = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
+            this.doc.circle(cursor + this.smbgRadius * 2, rowVerticalMiddle - this.smbgRadius * 2, this.smbgRadius)
+              .fill(this.colors.high);
 
-          const normalBolusXScale = scaleLinear()
-            .domain([0, bolusXScaleWidth])
-            .range([cursor, cursor + bolusXScaleWidth]);
+            this.doc.circle(cursor + this.smbgRadius * 2, rowVerticalMiddle + this.smbgRadius * 2, this.smbgRadius)
+              .fill(this.colors.low);
 
-          const normalPaths = getBolusPaths(
-            { normal: 10, normalTime: 0 },
-            normalBolusXScale,
-            legendBolusYScale,
-            bolusOpts
-          );
+            cursor += this.smbgRadius * 3;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
 
-          _.each(normalPaths, (path) => {
-            this.renderEventPath(path);
-          });
+          case 'bolus': {
+            const bolusOpts = {
+              bolusWidth: this.bolusWidth,
+              extendedLineThickness: this.extendedLineThickness,
+              interruptedLineThickness: this.interruptedLineThickness,
+              triangleHeight: this.triangleHeight,
+            };
 
-          if (this.isAutomatedBolusDevice) {
-            const automatedPaths = getBolusPaths(
-              { normal: 7, normalTime: this.bolusWidth + bolusGap, subType: 'automated' },
+            const bolusGap = 2;
+            const bolusXScaleWidth = this.isAutomatedBolusDevice ? this.bolusWidth * 2 + bolusGap : this.bolusWidth;
+
+            const legendBolusYScale = scaleLinear()
+              .domain([0, 10])
+              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
+
+            const normalBolusXScale = scaleLinear()
+              .domain([0, bolusXScaleWidth])
+              .range([cursor, cursor + bolusXScaleWidth]);
+
+            const normalPaths = getBolusPaths(
+              { normal: 10, normalTime: 0 },
               normalBolusXScale,
               legendBolusYScale,
               bolusOpts
             );
 
-            _.each(automatedPaths, (path) => {
+            _.each(normalPaths, (path) => {
               this.renderEventPath(path);
             });
+
+            if (this.isAutomatedBolusDevice) {
+              const automatedPaths = getBolusPaths(
+                { normal: 7, normalTime: this.bolusWidth + bolusGap, subType: 'automated' },
+                normalBolusXScale,
+                legendBolusYScale,
+                bolusOpts
+              );
+
+              _.each(automatedPaths, (path) => {
+                this.renderEventPath(path);
+              });
+            }
+
+            cursor += bolusXScaleWidth;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
           }
 
-          cursor += bolusXScaleWidth;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
+          case 'override':{
+            const bolusGap = 2;
+            const bolusXScaleWidth = this.bolusWidth * 2 + bolusGap;
 
-        case 'override':{
-          const bolusGap = 2;
-          const bolusXScaleWidth = this.bolusWidth * 2 + bolusGap;
+            const rideBolusXScale = scaleLinear()
+              .domain([0, bolusXScaleWidth])
+              .range([cursor, cursor + bolusXScaleWidth]);
 
-          const rideBolusXScale = scaleLinear()
-            .domain([0, bolusXScaleWidth])
-            .range([cursor, cursor + bolusXScaleWidth]);
+            const legendBolusYScaleForRide = scaleLinear()
+              .domain([0, 10])
+              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
 
-          const legendBolusYScaleForRide = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
+            const overridePaths = getBolusPaths(
+              {
+                type: 'wizard',
+                recommended: { net: 8, carb: 8, correction: 0 },
+                bolus: { normal: 10, normalTime: 0 },
+              },
+              rideBolusXScale,
+              legendBolusYScaleForRide,
+              {
+                bolusWidth: this.bolusWidth,
+                extendedLineThickness: this.extendedLineThickness,
+                interruptedLineThickness: this.interruptedLineThickness,
+                triangleHeight: this.triangleHeight,
+              }
+            );
 
-          const overridePaths = getBolusPaths(
-            {
-              type: 'wizard',
-              recommended: { net: 8, carb: 8, correction: 0 },
-              bolus: { normal: 10, normalTime: 0 },
-            },
-            rideBolusXScale,
-            legendBolusYScaleForRide,
-            {
-              bolusWidth: this.bolusWidth,
-              extendedLineThickness: this.extendedLineThickness,
-              interruptedLineThickness: this.interruptedLineThickness,
-              triangleHeight: this.triangleHeight,
-            }
-          );
+            _.each(overridePaths, (path) => {
+              this.renderEventPath(path);
+            });
 
-          _.each(overridePaths, (path) => {
-            this.renderEventPath(path);
-          });
+            const underridePaths = getBolusPaths(
+              {
+                type: 'wizard',
+                recommended: { net: 10, carb: 8, correction: 2 },
+                bolus: { normal: 5, normalTime: this.bolusWidth + bolusGap },
+              },
+              rideBolusXScale,
+              legendBolusYScaleForRide,
+              {
+                bolusWidth: this.bolusWidth,
+                extendedLineThickness: this.extendedLineThickness,
+                interruptedLineThickness: this.interruptedLineThickness,
+                triangleHeight: this.triangleHeight,
+              }
+            );
 
-          const underridePaths = getBolusPaths(
-            {
-              type: 'wizard',
-              recommended: { net: 10, carb: 8, correction: 2 },
-              bolus: { normal: 5, normalTime: this.bolusWidth + bolusGap },
-            },
-            rideBolusXScale,
-            legendBolusYScaleForRide,
-            {
-              bolusWidth: this.bolusWidth,
-              extendedLineThickness: this.extendedLineThickness,
-              interruptedLineThickness: this.interruptedLineThickness,
-              triangleHeight: this.triangleHeight,
-            }
-          );
+            _.each(underridePaths, (path) => {
+              this.renderEventPath(path);
+            });
 
-          _.each(underridePaths, (path) => {
-            this.renderEventPath(path);
-          });
-
-          cursor += bolusXScaleWidth;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case 'interrupted': {
-          const bolusXScaleWidth = this.bolusWidth;
-
-          const interruptedBolusXScale = scaleLinear()
-            .domain([0, bolusXScaleWidth])
-            .range([cursor, cursor + bolusXScaleWidth]);
-
-          const legendBolusYScaleForInterrupted = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
-
-          const interruptedPaths = getBolusPaths(
-            {
-              normal: 6,
-              expectedNormal: 10,
-              normalTime: 0,
-            },
-            interruptedBolusXScale,
-            legendBolusYScaleForInterrupted,
-            {
-              bolusWidth: this.bolusWidth,
-              extendedLineThickness: this.extendedLineThickness,
-              interruptedLineThickness: this.interruptedLineThickness,
-              triangleHeight: this.triangleHeight,
-            }
-          );
-
-          _.each(interruptedPaths, (path) => {
-            this.renderEventPath(path);
-          });
-
-          cursor += bolusXScaleWidth;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case 'extended': {
-          const bolusXScaleWidth = this.bolusWidth;
-          const extendedDuration = 10;
-
-          const extendedBolusXScale = scaleLinear()
-            .domain([0, bolusXScaleWidth])
-            .range([cursor, cursor + bolusXScaleWidth]);
-
-          const legendBolusYScaleForExtended = scaleLinear()
-            .domain([0, 10])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4]);
-
-          const extendedPaths = getBolusPaths(
-            {
-              normal: 5,
-              extended: 5,
-              duration: extendedDuration,
-              normalTime: 0,
-            },
-            extendedBolusXScale,
-            legendBolusYScaleForExtended,
-            {
-              bolusWidth: this.bolusWidth,
-              extendedLineThickness: this.extendedLineThickness,
-              interruptedLineThickness: this.interruptedLineThickness,
-              triangleHeight: this.triangleHeight,
-            }
-          );
-
-          _.each(extendedPaths, (path) => {
-            this.renderEventPath(path);
-          });
-
-          cursor += extendedDuration;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case 'carbs': {
-          const carbsYPos = {
-            circle: legendVerticalMiddle,
-            carbs: legendVerticalMiddle - this.carbRadius / 2,
-          };
-
-          if (this.hasCarbExchanges) {
-            carbsYPos.circle -= (paddedLineHeight / 2 + 1);
-            carbsYPos.carbs -= (paddedLineHeight / 2 + 1);
+            cursor += bolusXScaleWidth;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
           }
 
-          this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
+          case 'interrupted': {
+            const bolusXScaleWidth = this.bolusWidth;
 
-          this.doc.fillColor('black').fontSize(this.carbsFontSize)
-            .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+            const interruptedBolusXScale = scaleLinear()
+              .domain([0, bolusXScaleWidth])
+              .range([cursor, cursor + bolusXScaleWidth]);
 
-          if (this.hasCarbExchanges) {
-            const exchangesYPos = {
-              circle: carbsYPos.circle + paddedLineHeight,
-              carbs: carbsYPos.carbs + paddedLineHeight,
+            const legendBolusYScaleForInterrupted = scaleLinear()
+              .domain([0, 10])
+              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
+
+            const interruptedPaths = getBolusPaths(
+              {
+                normal: 6,
+                expectedNormal: 10,
+                normalTime: 0,
+              },
+              interruptedBolusXScale,
+              legendBolusYScaleForInterrupted,
+              {
+                bolusWidth: this.bolusWidth,
+                extendedLineThickness: this.extendedLineThickness,
+                interruptedLineThickness: this.interruptedLineThickness,
+                triangleHeight: this.triangleHeight,
+              }
+            );
+
+            _.each(interruptedPaths, (path) => {
+              this.renderEventPath(path);
+            });
+
+            cursor += bolusXScaleWidth;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
+
+          case 'extended': {
+            const bolusXScaleWidth = this.bolusWidth;
+            const extendedDuration = 10;
+
+            const extendedBolusXScale = scaleLinear()
+              .domain([0, bolusXScaleWidth])
+              .range([cursor, cursor + bolusXScaleWidth]);
+
+            const legendBolusYScaleForExtended = scaleLinear()
+              .domain([0, 10])
+              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4]);
+
+            const extendedPaths = getBolusPaths(
+              {
+                normal: 5,
+                extended: 5,
+                duration: extendedDuration,
+                normalTime: 0,
+              },
+              extendedBolusXScale,
+              legendBolusYScaleForExtended,
+              {
+                bolusWidth: this.bolusWidth,
+                extendedLineThickness: this.extendedLineThickness,
+                interruptedLineThickness: this.interruptedLineThickness,
+                triangleHeight: this.triangleHeight,
+              }
+            );
+
+            _.each(extendedPaths, (path) => {
+              this.renderEventPath(path);
+            });
+
+            cursor += extendedDuration;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
+
+          case 'carbs': {
+            const carbsYPos = {
+              circle: rowVerticalMiddle,
+              carbs: rowVerticalMiddle - this.carbRadius / 2,
             };
 
-            this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
+            if (this.hasCarbExchanges) {
+              carbsYPos.circle -= (paddedLineHeight / 2 + 1);
+              carbsYPos.carbs -= (paddedLineHeight / 2 + 1);
+            }
+
+            this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
 
             this.doc.fillColor('black').fontSize(this.carbsFontSize)
-              .text('2', cursor - this.carbRadius, exchangesYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+              .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+
+            if (this.hasCarbExchanges) {
+              const exchangesYPos = {
+                circle: carbsYPos.circle + paddedLineHeight,
+                carbs: carbsYPos.carbs + paddedLineHeight,
+              };
+
+              this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
+
+              this.doc.fillColor('black').fontSize(this.carbsFontSize)
+                .text('2', cursor - this.carbRadius, exchangesYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+            }
+
+            cursor += this.carbRadius;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
           }
 
-          cursor += this.carbRadius;
-          cursor = renderLabels(item.labels, cursor);
-          break;
+          case 'basals': {
+            const legendBasalXScale = scaleLinear()
+              .domain([0, 10])
+              .range([cursor, cursor + 50]);
+
+            const legendBasalYScale = scaleLinear()
+              .domain([0, 2.5])
+              .range([legendTop + rowHeight - rowHeight / 4, legendTop + rowHeight / 4.5]);
+
+            const basalData = this.isAutomatedBasalDevice ? {
+              basal: [
+                { subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 },
+                { subType: 'automated', rate: 1, duration: 2, normalTime: 0 },
+                { subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 },
+              ],
+              basalSequences: [
+                [{ subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 }],
+                [{ subType: 'automated', rate: 1, duration: 2, normalTime: 0 }],
+                [{ subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 }],
+              ],
+            } : {
+              basal: [
+                { subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 },
+                { subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } },
+              ],
+              basalSequences: [
+                [{ subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 }],
+                [{ subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } }],
+              ],
+            };
+
+            this.renderBasalPaths({
+              basalScale: legendBasalYScale,
+              data: basalData,
+              xScale: legendBasalXScale,
+            });
+
+            cursor += 22;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
+
+          case EVENT_PHYSICAL_ACTIVITY: {
+            this.doc.image(eventImages[EVENT_PHYSICAL_ACTIVITY], cursor, rowVerticalMiddle - this.eventRadius, {
+              width: this.eventRadius * 2,
+            });
+
+            cursor += this.eventRadius * 2;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
+
+          case EVENT_NOTES: {
+            this.doc.image(eventImages[EVENT_NOTES], cursor, rowVerticalMiddle - this.eventRadius, {
+              width: this.eventRadius * 2,
+            });
+
+            cursor += this.eventRadius * 2;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
+
+          case EVENT_HEALTH: {
+            this.doc.image(eventImages[EVENT_HEALTH], cursor, rowVerticalMiddle - this.eventRadius, {
+              width: this.eventRadius * 2,
+            });
+
+            cursor += this.eventRadius * 2;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
+
+          case 'alarms': {
+            this.doc.image(eventImages[ALARM], cursor, rowVerticalMiddle - this.eventRadius, {
+              width: this.eventRadius * 2,
+            });
+
+            cursor += this.eventRadius * 2;
+            cursor = renderLabels(item.labels, cursor, rowIndex);
+            break;
+          }
         }
 
-        case 'basals': {
-          const legendBasalXScale = scaleLinear()
-            .domain([0, 10])
-            .range([cursor, cursor + 50]);
+        // Add fixed gap between items
+        cursor += itemGap;
+      });
+    };
 
-          const legendBasalYScale = scaleLinear()
-            .domain([0, 2.5])
-            .range([legendTop + legendHeight - legendHeight / 4, legendTop + legendHeight / 4.5]);
-
-          const basalData = this.isAutomatedBasalDevice ? {
-            basal: [
-              { subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 },
-              { subType: 'automated', rate: 1, duration: 2, normalTime: 0 },
-              { subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 },
-            ],
-            basalSequences: [
-              [{ subType: 'scheduled', rate: 0, duration: 0, normalTime: 0 }],
-              [{ subType: 'automated', rate: 1, duration: 2, normalTime: 0 }],
-              [{ subType: 'scheduled', rate: 1, duration: 2, normalTime: 2.25 }],
-            ],
-          } : {
-            basal: [
-              { subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 },
-              { subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } },
-            ],
-            basalSequences: [
-              [{ subType: 'scheduled', rate: 1.5, duration: 2, normalTime: 0 }],
-              [{ subType: 'temp', rate: 1, duration: 2, normalTime: 2, suppressed: { rate: 1.5 } }],
-            ],
-          };
-
-          this.renderBasalPaths({
-            basalScale: legendBasalYScale,
-            data: basalData,
-            xScale: legendBasalXScale,
-          });
-
-          cursor += 22;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case EVENT_PHYSICAL_ACTIVITY: {
-          this.doc.image(eventImages[EVENT_PHYSICAL_ACTIVITY], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-
-          cursor += this.eventRadius * 2;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case EVENT_NOTES: {
-          this.doc.image(eventImages[EVENT_NOTES], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-
-          cursor += this.eventRadius * 2;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case EVENT_HEALTH: {
-          this.doc.image(eventImages[EVENT_HEALTH], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-
-          cursor += this.eventRadius * 2;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-
-        case 'alarms': {
-          this.doc.image(eventImages[ALARM], cursor, legendVerticalMiddle - this.eventRadius, {
-            width: this.eventRadius * 2,
-          });
-
-          cursor += this.eventRadius * 2;
-          cursor = renderLabels(item.labels, cursor);
-          break;
-        }
-      }
-
-      // Add fixed gap between items
-      cursor += itemGap;
-    });
+    _.each(legendRows, renderRow);
 
     return this;
-    }
+  }
 }
 
 export default DailyPrintView;
