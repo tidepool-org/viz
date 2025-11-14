@@ -128,10 +128,10 @@ class DailyPrintView extends PrintView {
 
     // this.randomizeBooleans();
 
-    this.hasAlarms = true;
-    this.isAutomatedBasalDevice = true;
-    this.isAutomatedBolusDevice = true;
-    this.hasCarbExchanges = true;
+    // this.hasAlarms = true;
+    // this.isAutomatedBasalDevice = true;
+    // this.isAutomatedBolusDevice = true;
+    // this.hasCarbExchanges = true;
 
     const legendItems = [
       {
@@ -215,8 +215,8 @@ class DailyPrintView extends PrintView {
       },
     ];
 
-    // this.legendItemsToShow = _.filter(legendItems, 'show');
-    this.legendItemsToShow = [...legendItems];
+    this.legendItemsToShow = _.filter(legendItems, 'show');
+    // this.legendItemsToShow = [...legendItems];
 
     // const minItems = 1;
     // const maxItems = legendItems.length;
@@ -300,8 +300,8 @@ class DailyPrintView extends PrintView {
     const dates = _.keys(this.aggregationsByDate.dataByDate);
     dates.sort();
 
-    const numDays = _.min([this.numDays, dates.length]) - 1; // TODO: delete this line - just removing a date for debugging
-    // const numDays = _.min([this.numDays, dates.length]);
+    // const numDays = _.min([this.numDays, dates.length]) - 1; // TODO: delete this line - just removing a date for debugging
+    const numDays = _.min([this.numDays, dates.length]);
     const selectedDates = _.slice(dates, -Math.abs(numDays));
 
     this.chartsByDate = {};
@@ -1511,8 +1511,8 @@ class DailyPrintView extends PrintView {
     );
 
     // TODO: Confirm it's acceptable to remove the Legend title
-    // this.doc.fillColor('black').fillOpacity(1)
-    //   .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
+    this.doc.fillColor('black').fillOpacity(1)
+      .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
 
     this.doc.lineWidth(1)
       .rect(this.margins.left, legendTop, this.width, legendHeight)
