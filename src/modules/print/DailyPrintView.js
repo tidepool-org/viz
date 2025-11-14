@@ -1496,17 +1496,18 @@ class DailyPrintView extends PrintView {
     const baseHeight = (paddedLineHeight * 2);
     const additionalHeight = maxLines > 2 ? (lineHeight + lineYpadding)  * (maxLines - 2) : 0;
     const firstRowHeight = (baseHeight + additionalHeight) + (legendYPadding * 2);
-    const legendHeight = firstRowHeight + (baseHeight * (legendRows.length - 1));
+    const subsequentRowHeight = paddedLineHeight;
+    const legendHeight = firstRowHeight + (subsequentRowHeight + legendYPadding) * (legendRows.length - 1);
     const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
 
     let rowHeights = _.map(legendRows, (row, rowIndex) => rowIndex === 0
         ? firstRowHeight
-        : baseHeight,
+        : subsequentRowHeight,
     );
 
     let rowVerticalMiddles = _.map(legendRows, (row, rowIndex) => rowIndex === 0
         ? legendTop + firstRowHeight * 0.5
-        : legendTop + firstRowHeight + ((rowIndex - 1) * baseHeight) + (baseHeight * 0.5)
+        : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
     );
 
     this.doc.fillColor('black').fillOpacity(1)
