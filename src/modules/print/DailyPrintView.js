@@ -300,7 +300,8 @@ class DailyPrintView extends PrintView {
     const dates = _.keys(this.aggregationsByDate.dataByDate);
     dates.sort();
 
-    const numDays = _.min([this.numDays, dates.length]);
+    const numDays = _.min([this.numDays, dates.length]) - 1; // TODO: delete this line - just removing a date for debugging
+    // const numDays = _.min([this.numDays, dates.length]);
     const selectedDates = _.slice(dates, -Math.abs(numDays));
 
     this.chartsByDate = {};
@@ -1509,8 +1510,9 @@ class DailyPrintView extends PrintView {
       : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
     );
 
-    this.doc.fillColor('black').fillOpacity(1)
-      .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
+    // TODO: Confirm it's acceptable to remove the Legend title
+    // this.doc.fillColor('black').fillOpacity(1)
+    //   .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
 
     this.doc.lineWidth(1)
       .rect(this.margins.left, legendTop, this.width, legendHeight)
@@ -1520,7 +1522,9 @@ class DailyPrintView extends PrintView {
 
     const labelOptions = { lineBreak: false }; // Prevent line breaks in legend labels from overflowing and forcing a new page
 
-    const renderLabels = (labels, cursor, rowIndex) => {
+    const renderLabels = (item, cursor, rowIndex) => {
+      const { labels } = item;
+
       // Set up consistent y-positions for legend text based on number of rows
       const singleLineTextYPos = rowVerticalMiddles[rowIndex] - (lineHeight / 2);
 
@@ -1548,7 +1552,14 @@ class DailyPrintView extends PrintView {
       this.setFill('black');
 
       _.each(labels, (label, index) => {
-        this.doc.text(label, cursor, textYPos[labelRows][index], labelOptions);
+        const renderFootnoteReference = item.footNoteReference && index === labels.length - 1;
+        this.doc.text(label, cursor, textYPos[labelRows][index], { ...labelOptions, continued: renderFootnoteReference });
+
+        if (renderFootnoteReference) {
+          this.doc.fontSize(this.smallFontSize - 2);
+          this.doc.text(item.footNoteReference, this.doc.x, this.doc.y - 2);
+        }
+
         labelWidths.push(this.doc.widthOfString(label));
       });
 
@@ -1592,7 +1603,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += traceWidth;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1607,7 +1618,7 @@ class DailyPrintView extends PrintView {
               .fill(this.colors.low);
 
             cursor += this.smbgRadius * 3;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1655,7 +1666,7 @@ class DailyPrintView extends PrintView {
             }
 
             cursor += bolusXScaleWidth;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1712,7 +1723,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += bolusXScaleWidth;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1748,7 +1759,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += bolusXScaleWidth;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1786,7 +1797,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += extendedDuration;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1819,7 +1830,7 @@ class DailyPrintView extends PrintView {
             }
 
             cursor += this.carbRadius;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1861,7 +1872,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += 22;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1871,7 +1882,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += this.eventRadius * 2;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1881,7 +1892,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += this.eventRadius * 2;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1891,7 +1902,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += this.eventRadius * 2;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
 
@@ -1901,7 +1912,7 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += this.eventRadius * 2;
-            cursor = renderLabels(item.labels, cursor, rowIndex);
+            cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
         }
