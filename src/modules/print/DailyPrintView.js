@@ -119,20 +119,6 @@ class DailyPrintView extends PrintView {
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
-    // this.randomizeBooleans = () => {
-    //   this.hasAlarms = Math.random() > 0.5;
-    //   this.isAutomatedBasalDevice = Math.random() > 0.5;
-    //   this.isAutomatedBolusDevice = Math.random() > 0.5;
-    //   this.hasCarbExchanges = Math.random() > 0.5;
-    // };
-
-    // this.randomizeBooleans();
-
-    // this.hasAlarms = true;
-    // this.isAutomatedBasalDevice = true;
-    // this.isAutomatedBolusDevice = true;
-    // this.hasCarbExchanges = true;
-
     const legendItems = [
       {
         type: 'cbg',
@@ -221,15 +207,6 @@ class DailyPrintView extends PrintView {
     ];
 
     this.legendItemsToShow = _.filter(legendItems, 'show');
-    // this.legendItemsToShow = [...legendItems];
-
-    // const minItems = 1;
-    // const maxItems = legendItems.length;
-    // const numItemsToShow = Math.floor(Math.random() * (maxItems - minItems + 1)) + minItems;
-
-    // // Shuffle the array and take the first numItemsToShow items
-    // const shuffled = [...legendItems].sort(() => 0.5 - Math.random());
-    // this.legendItemsToShow = shuffled.slice(0, numItemsToShow);
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
@@ -305,7 +282,6 @@ class DailyPrintView extends PrintView {
     const dates = _.keys(this.aggregationsByDate.dataByDate);
     dates.sort();
 
-    // const numDays = _.min([this.numDays, dates.length]) - 1; // TODO: delete this line - just removing a date for debugging
     const numDays = _.min([this.numDays, dates.length]);
     const selectedDates = _.slice(dates, -Math.abs(numDays));
 
@@ -1518,7 +1494,6 @@ class DailyPrintView extends PrintView {
       : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
     );
 
-    // TODO: Confirm it's acceptable to remove the Legend title
     this.doc.fillColor('black').fillOpacity(1)
       .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
 
