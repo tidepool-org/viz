@@ -146,12 +146,12 @@ class DailyPrintView extends PrintView {
       },
       {
         type: 'bolus',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => (dateData.bolus?.length > 0 || dateData.insulin?.length > 0)),
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.bolus?.length > 0),
         labels: this.isAutomatedBolusDevice ? [t('Bolus'), t('manual &'), t('automated')] : [t('Bolus')],
       },
       {
         type: 'override',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
           const wizard = getWizardFromInsulinEvent(event);
           return wizard && wizard.recommended;
         })),
@@ -159,7 +159,7 @@ class DailyPrintView extends PrintView {
       },
       {
         type: 'interrupted',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
           const bolus = getBolusFromInsulinEvent(event);
           return bolus.expectedNormal && bolus.expectedNormal !== bolus.normal;
         })),
@@ -167,11 +167,16 @@ class DailyPrintView extends PrintView {
       },
       {
         type: 'extended',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => {
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
           const bolus = getBolusFromInsulinEvent(event);
           return bolus.extended || bolus.expectedExtended;
         })),
         labels: [t('Combo /'), t('Extended')],
+      },
+      {
+        type: 'insulin',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.insulin?.length > 0),
+        labels: [t('Insulin, other')],
       },
       {
         type: 'carbs',
@@ -994,10 +999,10 @@ class DailyPrintView extends PrintView {
   }
 
   renderInsulinEvents({ bolusScale, data, xScale }) {
-    const insulinEvents = [
+    const insulinEvents = _.orderBy([
       ...data?.insulin || [],
       ...data?.bolus || [],
-    ];
+    ], ['type', 'normalTime'], ['desc', 'asc']);
 
     _.each(insulinEvents, (insulinEvent) => {
       const paths = getBolusPaths(insulinEvent, xScale, bolusScale, {
