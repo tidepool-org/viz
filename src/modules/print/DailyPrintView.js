@@ -128,10 +128,10 @@ class DailyPrintView extends PrintView {
 
     // this.randomizeBooleans();
 
-    // this.hasAlarms = true;
-    // this.isAutomatedBasalDevice = true;
-    // this.isAutomatedBolusDevice = true;
-    // this.hasCarbExchanges = true;
+    this.hasAlarms = true;
+    this.isAutomatedBasalDevice = true;
+    this.isAutomatedBolusDevice = true;
+    this.hasCarbExchanges = true;
 
     const legendItems = [
       {
@@ -179,17 +179,17 @@ class DailyPrintView extends PrintView {
         labels: [t('Insulin, other')],
       },
       {
+        type: 'basals',
+        show: _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
+        labels: this.isAutomatedBasalDevice ? [t('Basals'), t('automated &'), t('manual')] : [t('Basals')],
+      },
+      {
         type: 'carbs',
         show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
           _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
           _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
         ),
         labels: this.hasCarbExchanges ? [t('Carbs'), t('Carb exch.')] : [t('Carbs')],
-      },
-      {
-        type: 'basals',
-        show: _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
-        labels: this.isAutomatedBasalDevice ? [t('Basals'), t('automated &'), t('manual')] : [t('Basals')],
       },
       {
         type: EVENT_PHYSICAL_ACTIVITY,
@@ -220,8 +220,8 @@ class DailyPrintView extends PrintView {
       },
     ];
 
-    this.legendItemsToShow = _.filter(legendItems, 'show');
-    // this.legendItemsToShow = [...legendItems];
+    // this.legendItemsToShow = _.filter(legendItems, 'show');
+    this.legendItemsToShow = [...legendItems];
 
     // const minItems = 1;
     // const maxItems = legendItems.length;
@@ -509,10 +509,10 @@ class DailyPrintView extends PrintView {
       }
     } else {
       this.doc.path(path.d)
+        .undash()
         .fill(_.get(this.colors.bolus, path.subType, fillColor));
 
       if (path.pattern) {
-
         this.doc.save();
         this.doc.path(path.d).clip();
 
@@ -1425,9 +1425,9 @@ class DailyPrintView extends PrintView {
         break;
       case 'bolus':
         if (this.isAutomatedBolusDevice) {
-        itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
+          itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
         } else {
-        itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
+          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
         }
         break;
       case 'override':
@@ -1439,15 +1439,18 @@ class DailyPrintView extends PrintView {
       case 'extended':
         itemWidth = (this.bolusWidth / 2) + 10 + 4 + this.doc.widthOfString(t('Extended'));
         break;
-      case 'carbs':
-        itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
+      case 'insulin':
+        itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Insulin, other'));
         break;
       case 'basals':
         if (this.isAutomatedBasalDevice) {
-        itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
+          itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
         } else {
-        itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
+          itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
         }
+        break;
+      case 'carbs':
+        itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
         break;
       case EVENT_PHYSICAL_ACTIVITY:
         itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
@@ -1802,6 +1805,40 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += extendedDuration;
+            cursor = renderLabels(item, cursor, rowIndex);
+            break;
+          }
+
+          case 'insulin': {
+            const bolusOpts = {
+              bolusWidth: this.bolusWidth,
+              extendedLineThickness: this.extendedLineThickness,
+              interruptedLineThickness: this.interruptedLineThickness,
+              triangleHeight: this.triangleHeight,
+            };
+
+            const bolusXScaleWidth = this.bolusWidth;
+
+            const normalBolusXScale = scaleLinear()
+              .domain([0, bolusXScaleWidth])
+              .range([cursor, cursor + bolusXScaleWidth]);
+
+            const legendBolusYScale = scaleLinear()
+              .domain([0, 10])
+              .range([rowVerticalMiddle + (rowHeight / 4), rowVerticalMiddle - (rowHeight / 4)]);
+
+            const normalPaths = getBolusPaths(
+              { dose: { total: 10 }, normalTime: 0, type: 'insulin' },
+              normalBolusXScale,
+              legendBolusYScale,
+              bolusOpts
+            );
+
+            _.each(normalPaths, (path) => {
+              this.renderEventPath(path);
+            });
+
+            cursor += bolusXScaleWidth;
             cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
