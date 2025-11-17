@@ -1,6 +1,7 @@
 import Validator from 'fastest-validator';
 import _ from 'lodash';
 import { MGDL_UNITS, MMOLL_UNITS, MS_IN_DAY } from '../constants.js';
+import { object } from 'prop-types';
 
 
 const v = new Validator({
@@ -125,7 +126,13 @@ const basalPostShutdown = {
 
 const insulin = {
   ...common,
-  // dose: minZero, // TODO: define dose and formulation schemas
+  dose: { type: 'object', props: {
+    total: minZero,
+  } },
+  formulation: { type: 'object', props: {
+    simple: { type: 'object', props: {
+      actingType: { type: 'string', enum: ['rapid', 'short', 'intermediate', 'long'] },
+  } } }, ...optional },
 };
 
 const normalBolus = {
