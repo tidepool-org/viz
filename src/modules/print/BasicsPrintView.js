@@ -486,6 +486,7 @@ class BasicsPrintView extends PrintView {
           },
           _fillStripe: {
             color,
+            patternOverlay: id === 'insulin' ? 'diagonalStripes' : null,
             opacity: opts.fillOpacity,
             width: (columnWidth - (2 * stripePadding)) * (_.toNumber(datum.value) / statTotal),
             background: true,

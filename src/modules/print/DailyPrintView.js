@@ -128,10 +128,10 @@ class DailyPrintView extends PrintView {
 
     // this.randomizeBooleans();
 
-    this.hasAlarms = true;
-    this.isAutomatedBasalDevice = true;
-    this.isAutomatedBolusDevice = true;
-    this.hasCarbExchanges = true;
+    // this.hasAlarms = true;
+    // this.isAutomatedBasalDevice = true;
+    // this.isAutomatedBolusDevice = true;
+    // this.hasCarbExchanges = true;
 
     const legendItems = [
       {
@@ -220,8 +220,8 @@ class DailyPrintView extends PrintView {
       },
     ];
 
-    // this.legendItemsToShow = _.filter(legendItems, 'show');
-    this.legendItemsToShow = [...legendItems];
+    this.legendItemsToShow = _.filter(legendItems, 'show');
+    // this.legendItemsToShow = [...legendItems];
 
     // const minItems = 1;
     // const maxItems = legendItems.length;
