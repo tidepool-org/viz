@@ -52,7 +52,9 @@ const SMBGTooltip = (props) => {
 
     let source = 'Meter';
     if (smbg.tags?.manual) {
-      source = smbg.subType === 'linked' ? t('Linked') : t('Manual');
+      source = t('Manual');
+    } else if (smbg.subType) {
+      source = _.upperFirst(smbg.subType);
     }
 
     rows.push(

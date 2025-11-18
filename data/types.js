@@ -475,6 +475,32 @@ export class Food extends Common {
   }
 }
 
+export class Insulin extends Common {
+  constructor(opts = {}) {
+    super(opts);
+
+    _.defaults(opts, {
+      deviceTime: this.makeDeviceTime(),
+      dose: {
+        total: 1.0,
+      },
+      formulation: {
+        simple: {
+          actingType: 'rapid',
+        },
+      },
+    });
+
+    this.type = 'insulin';
+    this.deviceTime = opts.deviceTime;
+    this.dose = opts.dose;
+
+    this.time = this.makeTime();
+    this.timezoneOffset = this.makeTimezoneOffset();
+    if (!opts.raw) this.normalTime = this.makeNormalTime();
+  }
+}
+
 export const types = {
   Basal,
   Bolus,
@@ -482,6 +508,7 @@ export const types = {
   DeviceEvent,
   DosingDecision,
   Food,
+  Insulin,
   Message,
   Settings,
   SMBG,

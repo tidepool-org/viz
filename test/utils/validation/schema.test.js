@@ -403,6 +403,30 @@ describe('schema validation', () => {
     });
   });
 
+  describe('insulin', () => {
+    const insulin = new Types.Insulin({ raw: true });
+    const negativeTotalDose = { ...insulin, dose: { total: -1 } };
+    const invalidActingType = { ...insulin, formulation: { simple: { actingType: 'foo' } } };
+
+    it('should validate a valid `insulin` datum', () => {
+      expect(Validator.insulin(insulin)).to.be.true;
+    });
+
+    it('should validate common fields', () => {
+      validateCommon(insulin);
+    });
+
+    it('should return an error for a negative `dose.total`', () => {
+      expect(_.find(Validator.insulin(negativeTotalDose), { field: 'dose.total' }).message).to.equal('The \'dose.total\' field must be larger than or equal to 0!');
+    });
+
+    it('should return an error for an invalid `formulation.simple.actingType`', () => {
+      const result = Validator.insulin(invalidActingType);
+      expect(_.find(result, { field: 'formulation.simple.actingType' }).message).to.equal('The \'formulation.simple.actingType\' field does not match any of the allowed values!');
+      expect(_.find(result, { field: 'formulation.simple.actingType' }).expected).to.have.members(['rapid', 'short', 'intermediate', 'long']);
+    });
+  });
+
   describe('cbg', () => {
     const cbg = new Types.CBG({ raw: true });
     const negativeValue = { ...cbg, value: -1 };

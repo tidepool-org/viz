@@ -817,9 +817,9 @@ describe('DailyPrintView', () => {
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
 
+      Renderer.hasAlarms = true;
       Renderer.renderLegend();
 
-      sinon.assert.calledWith(Renderer.doc.text, 'Legend');
       sinon.assert.calledWith(Renderer.doc.text, 'CGM');
       sinon.assert.calledWith(Renderer.doc.text, 'BGM');
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
@@ -828,11 +828,9 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Interrupted');
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
-      sinon.assert.calledWith(Renderer.doc.text, 'Pump');
-      sinon.assert.calledWith(Renderer.doc.text, 'Alarm');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
+      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch.');
 
       // All of the bolus visual elements are called by renderEventPath
       // And the paths total 13
@@ -842,8 +840,6 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.doc.circle, 12);
 
       sinon.assert.callCount(Renderer.renderBasalPaths, 1);
-
-      sinon.assert.calledWith(Renderer.doc.image, 'images/alarm.png');
     });
 
     it('should render the legend with carb exchanges when present in dataset', () => {
@@ -859,23 +855,47 @@ describe('DailyPrintView', () => {
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch.');
 
-      // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
-      sinon.assert.callCount(Renderer.doc.circle, 13);
+      //one for carbs + 1 for carb exchanges
+      sinon.assert.callCount(Renderer.doc.circle, 2);
     });
 
     it('should render the legend with automated boluses when pump is an automated bolus device', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        metaData: {
+          ...data.metaData,
+          latestPumpUpload: { isAutomatedBolusDevice: true },
+        },
+      }, opts);
+
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
-
-      Renderer.isAutomatedBolusDevice = true;
 
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
       sinon.assert.calledWith(Renderer.doc.text, 'manual &');
       sinon.assert.calledWith(Renderer.doc.text, 'automated');
+    });
+
+    it('should render the legend with pump alarms when present in dataset', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        data: { current: { data: { deviceEvent: [{ type: 'deviceEvent', tags: { alarm: true } }] } } },
+      }, opts);
+
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Pump');
+      sinon.assert.calledWith(Renderer.doc.text, 'Alarm');
+      sinon.assert.calledWith(Renderer.doc.image, 'images/alarm.png');
     });
   });
 });

@@ -214,6 +214,14 @@ describe('StatUtil', () => {
     }),
   ], _.toPlainObject);
 
+  const insulinData = _.map([
+    new Types.Insulin({
+      deviceTime: '2018-02-01T05:00:00',
+      dose: { total: 3 },
+      ...useRawData,
+    }),
+  ], _.toPlainObject);
+
   const smbgData = _.map([
     new Types.SMBG({
       value: 60,
@@ -292,6 +300,7 @@ describe('StatUtil', () => {
     ...cbgData,
     ...deviceEventData,
     ...foodData,
+    ...insulinData,
     ...smbgData,
     ...uploadData,
     ...wizardData,
@@ -432,6 +441,7 @@ describe('StatUtil', () => {
       expect(statUtil.getInsulinData()).to.eql({
         basal: 1.5,
         bolus: 15,
+        insulin: 3,
       });
     });
 
@@ -440,6 +450,7 @@ describe('StatUtil', () => {
       expect(statUtil.getInsulinData()).to.eql({
         basal: 0.75,
         bolus: 7.5,
+        insulin: 1.5,
       });
     });
 
@@ -449,6 +460,7 @@ describe('StatUtil', () => {
       expect(statUtil.getInsulinData()).to.eql({
         basal: 0.75,
         bolus: 7.5,
+        insulin: 1.5,
       });
     });
 
@@ -459,6 +471,7 @@ describe('StatUtil', () => {
         expect(statUtil.getInsulinData()).to.eql({
           basal: 2,
           bolus: 15,
+          insulin: 3,
         });
       });
 
@@ -468,6 +481,7 @@ describe('StatUtil', () => {
         expect(statUtil.getInsulinData()).to.eql({
           basal: 2.5,
           bolus: 15,
+          insulin: 3,
         });
       });
     });
@@ -1196,14 +1210,14 @@ describe('StatUtil', () => {
     it('should return the total basal and bolus insulin delivery when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
       expect(statUtil.getTotalInsulinData()).to.eql({
-        totalInsulin: 16.5,
+        totalInsulin: 19.5,
       });
     });
 
     it('should return the avg daily total basal and bolus insulin delivery when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       expect(statUtil.getTotalInsulinData()).to.eql({
-        totalInsulin: 8.25,
+        totalInsulin: 9.75,
       });
     });
 
@@ -1212,7 +1226,7 @@ describe('StatUtil', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
         filterEndpoints(dayEndpoints);
         expect(statUtil.getTotalInsulinData()).to.eql({
-          totalInsulin: 17,
+          totalInsulin: 20,
         });
       });
 
@@ -1220,7 +1234,7 @@ describe('StatUtil', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
         filterEndpoints(dayEndpoints);
         expect(statUtil.getTotalInsulinData()).to.eql({
-          totalInsulin: 17.5,
+          totalInsulin: 20.5,
         });
       });
     });

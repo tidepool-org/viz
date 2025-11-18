@@ -198,6 +198,9 @@ describe('constants', () => {
     it('should export keys for `event` and all event types', () => {
       expect(constants.EVENT).to.equal('event');
       expect(constants.EVENT_PUMP_SHUTDOWN).to.equal('pump_shutdown');
+      expect(constants.EVENT_HEALTH).to.equal('health');
+      expect(constants.EVENT_NOTES).to.equal('notes');
+      expect(constants.EVENT_PHYSICAL_ACTIVITY).to.equal('physical_activity');
     });
   });
 
@@ -264,6 +267,15 @@ describe('constants', () => {
   describe('INSULIN_DURATION', () => {
     it('should be `insulinDuration`', () => {
       expect(constants.INSULIN_DURATION).to.equal('insulinDuration');
+    });
+  });
+
+  describe('events', () => {
+    it('should export keys for `event` and all insulin types', () => {
+      expect(constants.INSULIN_ACTING_TYPE_INTERMEDIATE).to.equal('intermediate');
+      expect(constants.INSULIN_ACTING_TYPE_LONG).to.equal('long');
+      expect(constants.INSULIN_ACTING_TYPE_RAPID).to.equal('rapid');
+      expect(constants.INSULIN_ACTING_TYPE_SHORT).to.equal('short');
     });
   });
 
@@ -412,6 +424,10 @@ describe('constants', () => {
           [constants.ALARM_OCCLUSION]: 'Occlusion Detected',
           [constants.ALARM_OVER_LIMIT]: 'Insulin Delivery Limit Exceeded',
           [constants.EVENT_PUMP_SHUTDOWN]: 'Pump Shutdown',
+          [constants.INSULIN_ACTING_TYPE_INTERMEDIATE]: 'Intermediate-acting insulin',
+          [constants.INSULIN_ACTING_TYPE_LONG]: 'Long-acting insulin',
+          [constants.INSULIN_ACTING_TYPE_RAPID]: 'Short-acting insulin',
+          [constants.INSULIN_ACTING_TYPE_SHORT]: 'Short-acting insulin',
         },
       });
     });

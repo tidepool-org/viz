@@ -174,8 +174,8 @@ class DailyPrintView extends PrintView {
         show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
           _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
           _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
-        ),
-        labels: this.hasCarbExchanges ? [t('Carbs'), t('Carb exch.')] : [t('Carbs')],
+        ) || this.hasCarbExchanges,
+        labels: this.hasCarbExchanges ? [t('Carbs (g)'), t('Carb exch.')] : [t('Carbs (g)')],
       },
       {
         type: EVENT_PHYSICAL_ACTIVITY,
@@ -207,6 +207,7 @@ class DailyPrintView extends PrintView {
     ];
 
     this.legendItemsToShow = _.filter(legendItems, 'show');
+    console.log('this.legendItemsToShow', this.legendItemsToShow);
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;

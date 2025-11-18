@@ -4,7 +4,7 @@ import { mount } from 'enzyme';
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
 import EventTooltip from '../../../src/components/daily/eventtooltip/EventTooltip';
-import styles from '../../../src/components/daily/eventtooltip/EventTooltip.css';
+import styles from '../../../src/components/daily/eventtooltip/DetailedEventTooltip.css';
 
 const event = {
   tags: { event: 'pump_shutdown' },
