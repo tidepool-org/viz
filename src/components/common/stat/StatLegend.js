@@ -7,6 +7,8 @@ import styles from './StatLegend.css';
 import InfoIcon from './assets/info-outline-24-px.png';
 import StatTooltip from '../tooltips/StatTooltip';
 
+/* global document */
+
 class StatLegend extends PureComponent {
   constructor(props) {
     super(props);

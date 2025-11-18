@@ -1562,7 +1562,7 @@ class DailyPrintView extends PrintView {
       _.each(items, item => {
         if (rowIndex > 0) {
           // Render all second row item labels in single line to save vertical space
-          item.labels = [item.labels.join(' ')];
+          item.labels = [item.labels.join(' ')]; // eslint-disable-line no-param-reassign
         }
 
         switch (item.type) {

@@ -125,6 +125,7 @@ export class AggregationUtil {
       if (_.isNumber(objValue) && _.isNumber(srcValue)) {
         return objValue + srcValue;
       }
+      return srcValue;
     });
 
     return combined;

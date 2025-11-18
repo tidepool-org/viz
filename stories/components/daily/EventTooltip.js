@@ -30,7 +30,7 @@ stories.addDecorator(BackgroundDecorator);
 
 const normalTime = Date.now();
 
-const events = [
+const events = _.map([
   { label: 'Pump Shutdown', tags: { event: EVENT_PUMP_SHUTDOWN } },
   { label: 'Health (stress)', tags: { event: EVENT_HEALTH }, states: [{ state: 'stress' }] },
   { label: 'Health (other with notes)', tags: { event: EVENT_HEALTH }, states: [{ state: 'other', stateOther: 'dizzy' }], notes: ['Slept really poorly last night', 'Think I\'m coming down with something'] },
@@ -38,7 +38,7 @@ const events = [
   { label: 'Physical Activity (low)', tags: { event: EVENT_PHYSICAL_ACTIVITY }, duration: { value: 90, units: 'minutes' }, reportedIntensity: 'low' },
   { label: 'Physical Activity (medium)', tags: { event: EVENT_PHYSICAL_ACTIVITY }, duration: { value: 90, units: 'minutes' }, reportedIntensity: 'medium' },
   { label: 'Physical Activity (high)', tags: { event: EVENT_PHYSICAL_ACTIVITY }, duration: { value: 90, units: 'minutes' }, reportedIntensity: 'high' },
-].map(event => ({ ...event, normalTime }));
+], event => ({ ...event, normalTime }));
 
 const props = {
   position: { top: 105, left: 305 },

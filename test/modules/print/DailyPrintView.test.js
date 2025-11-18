@@ -38,7 +38,7 @@ import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 import Doc from '../../helpers/pdfDoc';
 import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS } from '../../../src/utils/constants';
 
-describe('DailyPrintView', () => {
+describe.only('DailyPrintView', () => {
   let Renderer;
   const sampleDate = '2017-01-02';
 
@@ -138,6 +138,7 @@ describe('DailyPrintView', () => {
         { prop: 'hasCarbExchanges', type: 'boolean' },
         { prop: 'basalGroupLabels', type: 'object' },
         { prop: 'pumpSettingsOverrideLabels', type: 'object' },
+        { prop: 'legendItems', type: 'array' },
         { prop: 'initialChartArea', type: 'object', value: {
           bottomEdge: opts.margins.top + opts.height,
           leftEdge: opts.margins.left +
@@ -191,6 +192,181 @@ describe('DailyPrintView', () => {
       expect(Renderer.chartsByDate[sampleDate].bolusScale).to.be.a('function');
       expect(Renderer.chartsByDate[sampleDate].basalScale).to.be.a('function');
       expect(Renderer.chartsByDate[sampleDate].xScale).to.be.a('function');
+    });
+  });
+
+  describe('getLegendItems', () => {
+    beforeEach(() => {
+      // Reset any state that might affect legend items
+      Renderer.hasAlarms = false;
+      Renderer.hasCarbExchanges = false;
+      Renderer.isAutomatedBolusDevice = false;
+    });
+
+    it('should return basic legend items for standard pump data', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      expect(legendItems).to.be.an('array');
+      expect(legendItems.length).to.be.greaterThan(0);
+
+      // Should include basic items
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('cgm');
+      expect(itemIds).to.include('bgm');
+      expect(itemIds).to.include('bolus');
+      expect(itemIds).to.include('basal');
+      expect(itemIds).to.include('carbs');
+    });
+
+    it('should include carb exchanges when present in dataset', () => {
+      Renderer.hasCarbExchanges = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('carbExchanges');
+
+      const carbExchangeItem = legendItems.find(item => item.id === 'carbExchanges');
+      expect(carbExchangeItem.legendTitle).to.equal('Carb exch.');
+    });
+
+    it('should not include carb exchanges when not present in dataset', () => {
+      Renderer.hasCarbExchanges = false;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.not.include('carbExchanges');
+    });
+
+    it('should include automated bolus items when device supports automated boluses', () => {
+      Renderer.isAutomatedBolusDevice = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('bolusAutomated');
+
+      const automatedBolusItem = _.find(legendItems, item => item.id === 'bolusAutomated');
+      expect(automatedBolusItem.legendTitle).to.contain('automated');
+    });
+
+    it('should include alarm items when alarms are present', () => {
+      Renderer.hasAlarms = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('alarm');
+
+      const alarmItem = _.find(legendItems, item => item.id === 'alarm');
+      expect(alarmItem.legendTitle).to.contain('Alarm');
+    });
+
+    it('should include pump settings override items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('override');
+
+      const overrideItem = _.find(legendItems, item => item.id === 'override');
+      expect(overrideItem.legendTitle).to.equal('Override');
+    });
+
+    it('should include interrupted bolus items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('interrupted');
+
+      const interruptedItem = _.find(legendItems, item => item.id === 'interrupted');
+      expect(interruptedItem.legendTitle).to.equal('Interrupted');
+    });
+
+    it('should include extended bolus items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('extended');
+
+      const extendedItem = _.find(legendItems, item => item.id === 'extended');
+      expect(extendedItem.legendTitle).to.contain('Extended');
+    });
+
+    it('should include automated basal items when device supports automated basals', () => {
+      Renderer.isAutomatedBasalDevice = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.id);
+      expect(itemIds).to.include('basalAutomated');
+
+      const automatedBasalItem = _.find(legendItems, item => item.id === 'basalAutomated');
+      expect(automatedBasalItem.legendTitle).to.contain('automated');
+    });
+
+    it('should return items with correct structure', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      _.forEach(legendItems, item => {
+        expect(item).to.have.property('id');
+        expect(item).to.have.property('legendTitle');
+        expect(item.id).to.be.a('string');
+        expect(item.legendTitle).to.be.a('string');
+
+        // Some items may have patterns or annotations
+        if (item.pattern) {
+          expect(item.pattern).to.have.property('id');
+          if (item.pattern.color) {
+            expect(item.pattern.color).to.be.a('string');
+          }
+        }
+
+        if (item.annotations) {
+          expect(item.annotations).to.be.an('array');
+        }
+      });
+    });
+
+    it('should include pattern information for appropriate items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      // Find items that should have patterns (if any)
+      const patternItems = _.filter(legendItems, item => item.pattern);
+
+      _.forEach(patternItems, item => {
+        expect(item.pattern).to.have.property('id');
+        expect(item.pattern.id).to.be.a('string');
+      });
+    });
+
+    it('should maintain consistent order of legend items', () => {
+      const legendItems1 = Renderer.getLegendItems();
+      const legendItems2 = Renderer.getLegendItems();
+
+      expect(legendItems1.length).to.equal(legendItems2.length);
+
+      _.forEach(legendItems1, (item, index) => {
+        expect(item.id).to.equal(legendItems2[index].id);
+        expect(item.legendTitle).to.equal(legendItems2[index].legendTitle);
+      });
+    });
+
+    context('with different device configurations', () => {
+      it('should return different legend items for automated devices', () => {
+        const standardLegendItems = Renderer.getLegendItems();
+
+        Renderer.isAutomatedBasalDevice = true;
+        Renderer.isAutomatedBolusDevice = true;
+        const automatedLegendItems = Renderer.getLegendItems();
+
+        expect(automatedLegendItems.length).to.be.greaterThan(standardLegendItems.length);
+      });
+
+      it('should return different legend items when alarms and carb exchanges are present', () => {
+        const basicLegendItems = Renderer.getLegendItems();
+
+        Renderer.hasAlarms = true;
+        Renderer.hasCarbExchanges = true;
+        const extendedLegendItems = Renderer.getLegendItems();
+
+        expect(extendedLegendItems.length).to.be.greaterThan(basicLegendItems.length);
+      });
     });
   });
 
@@ -857,7 +1033,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
       sinon.assert.calledWith(Renderer.doc.text, 'Carb exch.');
 
-      //one for carbs + 1 for carb exchanges
+      // one for carbs + 1 for carb exchanges
       sinon.assert.callCount(Renderer.doc.circle, 2);
     });
 

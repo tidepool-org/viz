@@ -1,7 +1,7 @@
 import React from 'react';
 import PropTypes from 'prop-types';
 import i18next from 'i18next';
-import { capitalize } from 'lodash';
+import { capitalize, map } from 'lodash';
 
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../colors';
@@ -34,8 +34,8 @@ const renderStandardEvent = (content = {}) => (
 
     {content.notes && (
     <div className={standardEventStyles.notes}>
-      {content.notes.map((note, index) => (
-        <div className={standardEventStyles.note} key={`note-${index}`}>{note}</div>
+      {map(content.notes, (note, index) => (
+        <div className={standardEventStyles.note} key={`note-${index}`}>{note}</div> // eslint-disable-line react/no-array-index-key
       ))}
     </div>
     )}
@@ -60,7 +60,7 @@ const getEventContent = (event, timePrefs) => {
           borderWidth: 1,
         },
       };
-    case EVENT_HEALTH:
+    case EVENT_HEALTH: {
       const healthLabels = {
         alcohol: t('Alcohol'),
         cycle: t('Cycle'),
@@ -78,6 +78,7 @@ const getEventContent = (event, timePrefs) => {
         notes: event.notes,
         renderer: renderStandardEvent,
       };
+    }
     case EVENT_NOTES:
       return {
         time,
@@ -86,7 +87,7 @@ const getEventContent = (event, timePrefs) => {
         notes: event.notes,
         renderer: renderStandardEvent,
       };
-    case EVENT_PHYSICAL_ACTIVITY:
+    case EVENT_PHYSICAL_ACTIVITY: {
       const durationUnitsMultiplier = {
         seconds: MS_IN_MIN / 60,
         minutes: MS_IN_MIN,
@@ -108,6 +109,7 @@ const getEventContent = (event, timePrefs) => {
         value: hasDuration ? formatDuration(event.duration?.value * durationUnitsMultiplier[event.duration?.units], { condensed: true }) : null,
         renderer: renderStandardEvent,
       };
+    }
     default:
       return {};
   }
