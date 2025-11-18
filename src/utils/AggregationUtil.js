@@ -121,12 +121,24 @@ export class AggregationUtil {
 
     result.insulin = group.post().postProcessInsulinAggregations()();
 
-    const combined = _.mergeWith({}, result.bolus, result.insulin, (objValue, srcValue) => {
+    console.log('result.insulin', result.insulin);
+
+    /* eslint-disable consistent-return */
+    const combined = _.mergeWith({}, result.bolus, result.insulin, (objValue, srcValue, key, object, source) => {
       if (_.isNumber(objValue) && _.isNumber(srcValue)) {
+        if (key === 'percentage') {
+          // For percentage, recalculate based on combined count and total
+          if (object.count && source.count) {
+            const combinedCount = object.count + source.count;
+            const matchingBolusCount = object.count * object.percentage;
+            const matchingInsulinCount = source.count * source.percentage;
+            return (matchingBolusCount + matchingInsulinCount) / combinedCount;
+          }
+        }
         return objValue + srcValue;
       }
-      return srcValue;
     });
+    /* eslint-enable consistent-return */
 
     return combined;
   };
