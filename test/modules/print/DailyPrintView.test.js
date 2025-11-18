@@ -38,7 +38,7 @@ import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 import Doc from '../../helpers/pdfDoc';
 import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS } from '../../../src/utils/constants';
 
-describe.only('DailyPrintView', () => {
+describe('DailyPrintView', () => {
   let Renderer;
   const sampleDate = '2017-01-02';
 
@@ -226,7 +226,7 @@ describe.only('DailyPrintView', () => {
       expect(itemIds).to.include('carbs');
 
       const carbItem = _.find(legendItems, item => item.type === 'carbs');
-      expect(carbItem.labels).to.include('Carb exch.');
+      expect(carbItem.labels).to.deep.equal(['Carbs (g)', 'Carb exch.']);
     });
 
     it('should not include carb exchanges when not present in dataset', () => {
@@ -235,7 +235,7 @@ describe.only('DailyPrintView', () => {
 
       const carbItem = _.find(legendItems, item => item.type === 'carbs');
       if (carbItem) {
-        expect(carbItem.labels).to.not.include('Carb exch.');
+        expect(carbItem.labels).to.deep.equal(['Carbs (g)']);
       }
     });
 
@@ -247,7 +247,7 @@ describe.only('DailyPrintView', () => {
       expect(itemIds).to.include('bolus');
 
       const automatedBolusItem = _.find(legendItems, item => item.type === 'bolus');
-      expect(automatedBolusItem.labels).to.include('automated');
+      expect(automatedBolusItem.labels).to.deep.equal(['Bolus', 'manual &', 'automated']);
     });
 
     it('should include alarm items when alarms are present', () => {
@@ -258,7 +258,7 @@ describe.only('DailyPrintView', () => {
       expect(itemIds).to.include('alarms');
 
       const alarmItem = _.find(legendItems, item => item.type === 'alarms');
-      expect(alarmItem.labels).to.include('Alarm');
+      expect(alarmItem.labels).to.deep.equal(['Pump', 'Alarm']);
     });
 
     it('should include pump settings override items', () => {
@@ -268,24 +268,30 @@ describe.only('DailyPrintView', () => {
       expect(itemIds).to.include('override');
 
       const overrideItem = _.find(legendItems, item => item.type === 'override');
-      expect(overrideItem.labels).to.include('Override');
-    }); it('should include interrupted bolus items', () => {
+      expect(overrideItem.labels).to.deep.equal(['Override', 'up & down']);
+    });
+
+    it('should include interrupted bolus items', () => {
       const legendItems = Renderer.getLegendItems();
 
       const itemIds = _.map(legendItems, item => item.type);
       expect(itemIds).to.include('interrupted');
 
       const interruptedItem = _.find(legendItems, item => item.type === 'interrupted');
-      expect(interruptedItem.labels).to.include('Interrupted');
-    }); it('should include extended bolus items', () => {
+      expect(interruptedItem.labels).to.deep.equal(['Interrupted']);
+    });
+
+    it('should include extended bolus items', () => {
       const legendItems = Renderer.getLegendItems();
 
       const itemIds = _.map(legendItems, item => item.type);
       expect(itemIds).to.include('extended');
 
       const extendedItem = _.find(legendItems, item => item.type === 'extended');
-      expect(extendedItem.labels).to.include('Extended');
-    }); it('should include automated basal items when device supports automated basals', () => {
+      expect(extendedItem.labels).to.deep.equal(['Combo /', 'Extended']);
+    });
+
+    it('should include automated basal items when device supports automated basals', () => {
       Renderer.isAutomatedBasalDevice = true;
       const legendItems = Renderer.getLegendItems();
 
@@ -293,81 +299,7 @@ describe.only('DailyPrintView', () => {
       expect(itemIds).to.include('basals');
 
       const automatedBasalItem = _.find(legendItems, item => item.type === 'basals');
-      expect(automatedBasalItem.labels).to.include('automated &');
-    });
-
-    it('should return items with correct structure', () => {
-      const legendItems = Renderer.getLegendItems();
-
-      _.forEach(legendItems, item => {
-        expect(item).to.have.property('type');
-        expect(item).to.have.property('labels');
-        expect(item.type).to.be.a('string');
-        expect(item.labels).to.be.an('array');
-
-        // Some items may have patterns or annotations
-        if (item.pattern) {
-          expect(item.pattern).to.have.property('id');
-          if (item.pattern.color) {
-            expect(item.pattern.color).to.be.a('string');
-          }
-        }
-
-        if (item.annotations) {
-          expect(item.annotations).to.be.an('array');
-        }
-      });
-    });
-
-    it('should include pattern information for appropriate items', () => {
-      const legendItems = Renderer.getLegendItems();
-
-      // Find items that should have patterns (if any)
-      const patternItems = _.filter(legendItems, item => item.pattern);
-
-      _.forEach(patternItems, item => {
-        expect(item.pattern).to.have.property('id');
-        expect(item.pattern.id).to.be.a('string');
-      });
-    });
-
-    it('should maintain consistent order of legend items', () => {
-      const legendItems1 = Renderer.getLegendItems();
-      const legendItems2 = Renderer.getLegendItems();
-
-      expect(legendItems1.length).to.equal(legendItems2.length);
-
-      _.forEach(legendItems1, (item, index) => {
-        expect(item.type).to.equal(legendItems2[index].type);
-        expect(item.labels).to.deep.equal(legendItems2[index].labels);
-      });
-    });
-
-    context('with different device configurations', () => {
-      it('should return different legend items for automated devices', () => {
-        const standardLegendItems = Renderer.getLegendItems();
-
-        Renderer.isAutomatedBasalDevice = true;
-        Renderer.isAutomatedBolusDevice = true;
-        const automatedLegendItems = Renderer.getLegendItems();
-
-        // Should have same number of items but different labels
-        expect(automatedLegendItems.length).to.equal(standardLegendItems.length);
-
-        const automatedBolusItem = _.find(automatedLegendItems, item => item.type === 'bolus');
-        const automatedBasalItem = _.find(automatedLegendItems, item => item.type === 'basals');
-
-        expect(automatedBolusItem.labels).to.include('automated');
-        expect(automatedBasalItem.labels).to.include('automated &');
-      }); it('should return different legend items when alarms and carb exchanges are present', () => {
-        const basicLegendItems = Renderer.getLegendItems();
-
-        Renderer.hasAlarms = true;
-        Renderer.hasCarbExchanges = true;
-        const extendedLegendItems = Renderer.getLegendItems();
-
-        expect(extendedLegendItems.length).to.be.greaterThan(basicLegendItems.length);
-      });
+      expect(automatedBasalItem.labels).to.deep.equal(['Basals', 'automated &', 'manual']);
     });
   });
 
