@@ -1494,9 +1494,6 @@ class DailyPrintView extends PrintView {
       : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
     );
 
-    this.doc.fillColor('black').fillOpacity(1)
-      .text(t('Legend'), this.margins.left, legendTop - lineHeight * 1.5);
-
     this.doc.lineWidth(1)
       .rect(this.margins.left, legendTop, this.width, legendHeight)
       .stroke('black');
