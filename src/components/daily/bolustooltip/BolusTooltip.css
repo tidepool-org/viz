@@ -131,6 +131,14 @@
   composes: row;
 }
 
+.source {
+  composes: row;
+}
+
+.actingType {
+  composes: row;
+}
+
 .divider {
   background-color: var(--bolus);
   height: 3px;
