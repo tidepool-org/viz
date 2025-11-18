@@ -13,7 +13,6 @@ const props = {
 };
 
 describe('EventTooltip', () => {
-
   context('pump_shutdown event', () => {
     const event = {
       tags: { event: 'pump_shutdown' },
@@ -73,8 +72,8 @@ describe('EventTooltip', () => {
     it('should render the event notes', () => {
       const wrapper = mount(<EventTooltip {...props} event={event} />);
       expect(wrapper.find(formatClassesAsSelector(styles.notes))).to.have.length(1);
-      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).includes('Felt dizzy');
-      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).includes('Had two drinks');
+      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).to.contain('Felt dizzy');
+      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).to.contain('Had two drinks');
     });
   });
 
@@ -121,8 +120,8 @@ describe('EventTooltip', () => {
     it('should render the event notes', () => {
       const wrapper = mount(<EventTooltip {...props} event={event} />);
       expect(wrapper.find(formatClassesAsSelector(styles.notes))).to.have.length(1);
-      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).includes('Felt dizzy');
-      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).includes('Had two drinks');
+      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).to.contain('Felt dizzy');
+      expect(wrapper.find(formatClassesAsSelector(styles.notes)).text()).to.contain('Had two drinks');
     });
   });
 });
