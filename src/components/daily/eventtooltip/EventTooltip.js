@@ -14,37 +14,33 @@ import tandemShutDownImage from './images/tandemShutDownImage.png';
 
 const t = i18next.t.bind(i18next);
 
-const renderDetailedEvent = (content = {}) => {
-  return (
-    <div className={detailedEventStyles.wrapper}>
-      <div className={detailedEventStyles.image}>{content.image}</div>
-      <div className={detailedEventStyles.eventTitle}>{content.title}</div>
-      <div className={detailedEventStyles.eventDescription}>{content.description}</div>
+const renderDetailedEvent = (content = {}) => (
+  <div className={detailedEventStyles.wrapper}>
+    <div className={detailedEventStyles.image}>{content.image}</div>
+    <div className={detailedEventStyles.eventTitle}>{content.title}</div>
+    <div className={detailedEventStyles.eventDescription}>{content.description}</div>
+  </div>
+);
+
+const renderStandardEvent = (content = {}) => (
+  <div>
+    <div className={standardEventStyles.time}>{content.time}</div>
+    <div className={standardEventStyles.title}>{content.title}</div>
+
+    <div className={standardEventStyles.description}>
+      <div className={standardEventStyles.label}>{content.label}</div>
+      <div className={standardEventStyles.value}>{content.value}</div>
     </div>
-  );
-};
 
-const renderStandardEvent = (content = {}) => {
-  return (
-    <div>
-      <div className={standardEventStyles.time}>{content.time}</div>
-      <div className={standardEventStyles.title}>{content.title}</div>
-
-      <div className={standardEventStyles.description}>
-        <div className={standardEventStyles.label}>{content.label}</div>
-        <div className={standardEventStyles.value}>{content.value}</div>
-      </div>
-
-      {content.notes && (
-        <div className={standardEventStyles.notes}>
-          {content.notes.map((note, index) => (
-            <div className={standardEventStyles.note} key={`note-${index}`}>{note}</div>
-          ))}
-        </div>
-      )}
+    {content.notes && (
+    <div className={standardEventStyles.notes}>
+      {content.notes.map((note, index) => (
+        <div className={standardEventStyles.note} key={`note-${index}`}>{note}</div>
+      ))}
     </div>
-  );
-};
+    )}
+  </div>
+);
 
 const getEventContent = (event, timePrefs) => {
   const msPer24 = getMsPer24(event?.normalTime, timePrefs?.timezoneName);
@@ -114,7 +110,7 @@ const getEventContent = (event, timePrefs) => {
       };
     default:
       return {};
-  };
+  }
 };
 
 const EventTooltip = (props) => {

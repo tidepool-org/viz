@@ -51,14 +51,16 @@ const FoodTooltip = (props) => {
       </div>,
     ];
 
-    if (isManual) rows.push(
-      <div key={'manual'} className={styles.row}>
-        <div className={styles.label}>{t('Source')}</div>
-        <div className={styles.value}>
-          {t('Manual')}
+    if (isManual) {
+      rows.push(
+        <div key={'manual'} className={styles.row}>
+          <div className={styles.label}>{t('Source')}</div>
+          <div className={styles.value}>
+            {t('Manual')}
+          </div>
         </div>
-      </div>
-    );
+      );
+    }
 
     if (isLoop(food)) {
       const absorptionTime = getAbsorptionTime(food);

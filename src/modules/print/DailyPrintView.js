@@ -78,7 +78,6 @@ import {
 } from '../../utils/print/data';
 
 import colors from '../../colors';
-import { text } from 'pdfkit';
 
 const t = i18next.t.bind(i18next);
 
@@ -86,7 +85,7 @@ const eventImages = {
   [ALARM]: 'images/alarm.png',
   [EVENT_HEALTH]: 'images/event-health.png',
   [EVENT_PHYSICAL_ACTIVITY]: 'images/event-physical_activity.png',
-  [EVENT_NOTES  ]: 'images/event-notes.png',
+  [EVENT_NOTES]: 'images/event-notes.png',
 };
 
 class DailyPrintView extends PrintView {
@@ -119,95 +118,7 @@ class DailyPrintView extends PrintView {
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
-    const legendItems = [
-      {
-        type: 'cbg',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.cbg?.length > 0),
-        labels: [t('CGM')],
-      },
-      {
-        type: 'smbg',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.smbg?.length > 0),
-        labels: [t('BGM')],
-      },
-      {
-        type: 'bolus',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.bolus?.length > 0),
-        labels: this.isAutomatedBolusDevice ? [t('Bolus'), t('manual &'), t('automated')] : [t('Bolus')],
-      },
-      {
-        type: 'override',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
-          const wizard = getWizardFromInsulinEvent(event);
-          return wizard && wizard.recommended;
-        })),
-        labels: [t('Override'), t('up & down')],
-      },
-      {
-        type: 'interrupted',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
-          const bolus = getBolusFromInsulinEvent(event);
-          return bolus.expectedNormal && bolus.expectedNormal !== bolus.normal;
-        })),
-        labels: [t('Interrupted')],
-      },
-      {
-        type: 'extended',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
-          const bolus = getBolusFromInsulinEvent(event);
-          return bolus.extended || bolus.expectedExtended;
-        })),
-        labels: [t('Combo /'), t('Extended')],
-      },
-      {
-        type: 'insulin',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.insulin?.length > 0),
-        labels: [t('Insulin, other')],
-      },
-      {
-        type: 'basals',
-        show: _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
-        labels: this.isAutomatedBasalDevice ? [t('Basals'), t('automated &'), t('manual')] : [t('Basals')],
-      },
-      {
-        type: 'carbs',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
-          _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
-          _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
-        ) || this.hasCarbExchanges,
-        labels: this.hasCarbExchanges ? [t('Carbs (g)'), t('Carb exch.')] : [t('Carbs (g)')],
-      },
-      {
-        type: EVENT_PHYSICAL_ACTIVITY,
-        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
-        ),
-        labels: [t('Exercise'), t('event')],
-      },
-      {
-        type: EVENT_HEALTH,
-        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
-        ),
-        labels: [t('Health'), t('event')],
-      },
-      {
-        type: EVENT_NOTES,
-        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
-          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
-        ),
-        labels: [t('Note')],
-      },
-      {
-        type: 'alarms',
-        show: this.hasAlarms,
-        labels: [t('Pump'), t('Alarm')],
-        footNoteReference: 1,
-      },
-    ];
-
-    this.legendItemsToShow = _.filter(legendItems, 'show');
-    console.log('this.legendItemsToShow', this.legendItemsToShow);
+    this.legendItems = this.getLegendItems();
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
@@ -337,6 +248,97 @@ class DailyPrintView extends PrintView {
       super.newPage(this.getDateRange(start, end, 'YYYY-MM-DD', t('Date range: ')));
       this.renderLegend();
     }
+  }
+
+  getLegendItems() {
+    const legendItems = [
+      {
+        type: 'cbg',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.cbg?.length > 0),
+        labels: [t('CGM')],
+      },
+      {
+        type: 'smbg',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.smbg?.length > 0),
+        labels: [t('BGM')],
+      },
+      {
+        type: 'bolus',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.bolus?.length > 0),
+        labels: this.isAutomatedBolusDevice ? [t('Bolus'), t('manual &'), t('automated')] : [t('Bolus')],
+      },
+      {
+        type: 'override',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
+          const wizard = getWizardFromInsulinEvent(event);
+          return wizard && wizard.recommended;
+        })),
+        labels: [t('Override'), t('up & down')],
+      },
+      {
+        type: 'interrupted',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
+          const bolus = getBolusFromInsulinEvent(event);
+          return bolus.expectedNormal && bolus.expectedNormal !== bolus.normal;
+        })),
+        labels: [t('Interrupted')],
+      },
+      {
+        type: 'extended',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
+          const bolus = getBolusFromInsulinEvent(event);
+          return bolus.extended || bolus.expectedExtended;
+        })),
+        labels: [t('Combo /'), t('Extended')],
+      },
+      {
+        type: 'insulin',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData => dateData.insulin?.length > 0),
+        labels: [t('Insulin, other')],
+      },
+      {
+        type: 'basals',
+        show: _.some(this.aggregationsByDate.dataByDate, dateData => dateData.basal?.length > 0),
+        labels: this.isAutomatedBasalDevice ? [t('Basals'), t('automated &'), t('manual')] : [t('Basals')],
+      },
+      {
+        type: 'carbs',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
+          _.some([...(dateData.bolus || []), ...(dateData.insulin || [])], event => getCarbs(event)) ||
+          _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
+        ) || this.hasCarbExchanges,
+        labels: this.hasCarbExchanges ? [t('Carbs (g)'), t('Carb exch.')] : [t('Carbs (g)')],
+      },
+      {
+        type: EVENT_PHYSICAL_ACTIVITY,
+        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
+          _.some(dateData.physicalActivity || [], event => !!event.tags?.event)
+        ),
+        labels: [t('Exercise'), t('event')],
+      },
+      {
+        type: EVENT_HEALTH,
+        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
+          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_HEALTH)
+        ),
+        labels: [t('Health'), t('event')],
+      },
+      {
+        type: EVENT_NOTES,
+        show: _.some(this.aggregationsByDate.dataByDate, dateData =>
+          _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
+        ),
+        labels: [t('Note')],
+      },
+      {
+        type: 'alarms',
+        show: this.hasAlarms,
+        labels: [t('Pump'), t('Alarm')],
+        footNoteReference: 1,
+      },
+    ];
+
+    return _.filter(legendItems, 'show');
   }
 
   calculateChartMinimums(chartArea) {
@@ -1394,53 +1396,56 @@ class DailyPrintView extends PrintView {
     const getItemWidth = (item) => {
       let itemWidth = 0;
       switch (item.type) {
-      case 'cbg':
-        itemWidth = 16 + 4 + this.doc.widthOfString(t('CGM'));
-        break;
-      case 'smbg':
-        itemWidth = (this.smbgRadius * 3) + 4 + this.doc.widthOfString(t('BGM'));
-        break;
-      case 'bolus':
-        if (this.isAutomatedBolusDevice) {
-          itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
-        } else {
-          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
-        }
-        break;
-      case 'override':
-        itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('up & down'));
-        break;
-      case 'interrupted':
-        itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Interrupted'));
-        break;
-      case 'extended':
-        itemWidth = (this.bolusWidth / 2) + 10 + 4 + this.doc.widthOfString(t('Extended'));
-        break;
-      case 'insulin':
-        itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Insulin, other'));
-        break;
-      case 'basals':
-        if (this.isAutomatedBasalDevice) {
-          itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
-        } else {
-          itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
-        }
-        break;
-      case 'carbs':
-        itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
-        break;
-      case EVENT_PHYSICAL_ACTIVITY:
-        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
-        break;
-      case EVENT_NOTES:
-        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Note'));
-        break;
-      case EVENT_HEALTH:
-        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Health'));
-        break;
-      case 'alarms':
-        itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
-        break;
+        case 'cbg':
+          itemWidth = 16 + 4 + this.doc.widthOfString(t('CGM'));
+          break;
+        case 'smbg':
+          itemWidth = (this.smbgRadius * 3) + 4 + this.doc.widthOfString(t('BGM'));
+          break;
+        case 'bolus':
+          if (this.isAutomatedBolusDevice) {
+            itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
+          } else {
+            itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
+          }
+          break;
+        case 'override':
+          itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('up & down'));
+          break;
+        case 'interrupted':
+          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Interrupted'));
+          break;
+        case 'extended':
+          itemWidth = (this.bolusWidth / 2) + 10 + 4 + this.doc.widthOfString(t('Extended'));
+          break;
+        case 'insulin':
+          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Insulin, other'));
+          break;
+        case 'basals':
+          if (this.isAutomatedBasalDevice) {
+            itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
+          } else {
+            itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
+          }
+          break;
+        case 'carbs':
+          itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
+          break;
+        case EVENT_PHYSICAL_ACTIVITY:
+          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
+          break;
+        case EVENT_NOTES:
+          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Note'));
+          break;
+        case EVENT_HEALTH:
+          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Health'));
+          break;
+        case 'alarms':
+          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
+          break;
+        default:
+          itemWidth = 0;
+          break;
       }
       return itemWidth;
     };
@@ -1450,7 +1455,7 @@ class DailyPrintView extends PrintView {
     let currentRow = [];
     let currentRowWidth = 0;
 
-    _.each(this.legendItemsToShow, item => {
+    _.each(this.legendItems, item => {
       const itemWidth = getItemWidth(item);
       const nextItemWidth = currentRowWidth + (currentRow.length > 0 ? itemGap : 0) + itemWidth;
 
@@ -1479,21 +1484,19 @@ class DailyPrintView extends PrintView {
     });
 
     const baseHeight = (paddedLineHeight * 2);
-    const additionalHeight = maxLines > 2 ? (lineHeight + lineYpadding)  * (maxLines - 2) : 0;
+    const additionalHeight = maxLines > 2 ? (lineHeight + lineYpadding) * (maxLines - 2) : 0;
     const firstRowHeight = (baseHeight + additionalHeight) + (legendYPadding * 2);
     const subsequentRowHeight = paddedLineHeight;
     const legendHeight = firstRowHeight + (subsequentRowHeight + legendYPadding) * (legendRows.length - 1);
     const legendTop = this.bottomEdge - lineHeight * 2 - legendHeight;
 
-    let rowHeights = _.map(legendRows, (_, rowIndex) => rowIndex === 0
+    const rowHeights = _.map(legendRows, (row, rowIndex) => (rowIndex === 0
       ? firstRowHeight
-      : subsequentRowHeight,
-    );
+      : subsequentRowHeight));
 
-    let rowVerticalMiddles = _.map(legendRows, (_, rowIndex) => rowIndex === 0
+    const rowVerticalMiddles = _.map(legendRows, (row, rowIndex) => (rowIndex === 0
       ? legendTop + firstRowHeight * 0.5
-      : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)
-    );
+      : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)));
 
     this.doc.lineWidth(1)
       .rect(this.margins.left, legendTop, this.width, legendHeight)
@@ -1504,6 +1507,7 @@ class DailyPrintView extends PrintView {
     const labelOptions = { lineBreak: false }; // Prevent line breaks in legend labels from overflowing and forcing a new page
 
     const renderLabels = (item, cursor, rowIndex) => {
+      /* eslint-disable no-param-reassign */
       const { labels } = item;
 
       // Set up consistent y-positions for legend text based on number of rows
@@ -1546,6 +1550,7 @@ class DailyPrintView extends PrintView {
 
       cursor += _.max(labelWidths);
       return cursor;
+      /* eslint-enable no-param-reassign */
     };
 
     // Render the legend items for the current row
@@ -1651,7 +1656,7 @@ class DailyPrintView extends PrintView {
             break;
           }
 
-          case 'override':{
+          case 'override': {
             const bolusGap = 2;
             const bolusXScaleWidth = this.bolusWidth * 2 + bolusGap;
 
@@ -1930,6 +1935,8 @@ class DailyPrintView extends PrintView {
             cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
+          default:
+            break;
         }
 
         // Add fixed gap between items

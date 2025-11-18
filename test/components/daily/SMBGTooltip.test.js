@@ -87,7 +87,7 @@ const manual = {
   units: 'mg/dL',
   value: 100,
   subType: 'manual',
-  tags: { manual: true}
+  tags: { manual: true }
 };
 
 const linked = {

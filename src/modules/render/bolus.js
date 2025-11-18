@@ -69,7 +69,7 @@ export function getBolusPattern(edges, pattern) {
   const { left, right, top, bottom } = edges;
 
   switch (pattern) {
-    case 'diagonalLines':
+    case 'diagonalLines': {
       const spacing = 4; // spacing between diagonal lines
       const extend = 2; // extend pattern beyond edges by 2px
       let patternPath = '';
@@ -90,6 +90,7 @@ export function getBolusPattern(edges, pattern) {
       }
 
       return patternPath;
+    }
     default:
       return null;
   }

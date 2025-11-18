@@ -744,7 +744,7 @@ export class DataUtil {
       'illness',
       'stress',
       'other',
-    ]
+    ];
 
     const events = {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),

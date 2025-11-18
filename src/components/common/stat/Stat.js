@@ -767,7 +767,7 @@ class Stat extends PureComponent {
 
     if (isDisabled || isMuted) {
       color = isDisabled ? colors.statDisabled : colors.muted;
-    } else  if (usePattern && datum?.pattern?.id) {
+    } else if (usePattern && datum?.pattern?.id) {
       return `url(#${datum.pattern.id})`;
     }
 

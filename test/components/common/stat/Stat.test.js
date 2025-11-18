@@ -1939,11 +1939,11 @@ describe('Stat', () => {
     });
 
     it('should return the pattern id url when `usePattern` arg is `true`', () => {
-      expect(instance.getDatumFill({ id: 'bolus', pattern: { id: "myPattern"} }, true)).to.equal('url(#myPattern)');
+      expect(instance.getDatumFill({ id: 'bolus', pattern: { id: 'myPattern' } }, true)).to.equal('url(#myPattern)');
     });
 
     it('should return the fill color when `usePattern` arg is `false`', () => {
-      expect(instance.getDatumFill({ id: 'bolus', pattern: { id: "myPattern"} }, false)).to.equal(colors.bolus);
+      expect(instance.getDatumFill({ id: 'bolus', pattern: { id: 'myPattern' } }, false)).to.equal(colors.bolus);
     });
   });
 
