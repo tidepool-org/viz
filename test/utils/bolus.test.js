@@ -579,7 +579,7 @@ describe('bolus utilities', () => {
     });
   });
 
-  describe('getDelivered', () => {
+  describe.only('getDelivered', () => {
     it('should be a function', () => {
       assert.isFunction(bolusUtils.getDelivered);
     });
@@ -655,6 +655,10 @@ describe('bolus utilities', () => {
         immediatelyCancelledExtendedWizard.bolus.extended +
         immediatelyCancelledExtendedWizard.bolus.normal
       );
+    });
+
+    it('should return the value of a manual `insulin` bolus', () => {
+      expect(bolusUtils.getDelivered({ type: 'insulin', dose: { total: 10 } })).to.equal(10);
     });
   });
 
