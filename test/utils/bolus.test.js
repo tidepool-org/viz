@@ -579,7 +579,7 @@ describe('bolus utilities', () => {
     });
   });
 
-  describe.only('getDelivered', () => {
+  describe('getDelivered', () => {
     it('should be a function', () => {
       assert.isFunction(bolusUtils.getDelivered);
     });
