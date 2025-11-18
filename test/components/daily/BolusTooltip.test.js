@@ -508,7 +508,7 @@ const props = {
   bgPrefs: { bgUnits: MGDL_UNITS }
 };
 
-describe.only('BolusTooltip', () => {
+describe('BolusTooltip', () => {
   it('should render without issue when all properties provided', () => {
     const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
     expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
