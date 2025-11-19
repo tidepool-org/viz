@@ -494,6 +494,7 @@ export class Insulin extends Common {
     this.type = 'insulin';
     this.deviceTime = opts.deviceTime;
     this.dose = opts.dose;
+    this.formulation = opts.formulation;
 
     this.time = this.makeTime();
     this.timezoneOffset = this.makeTimezoneOffset();
