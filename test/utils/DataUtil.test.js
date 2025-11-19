@@ -2839,15 +2839,27 @@ describe('DataUtil', () => {
       });
 
       it('should reset the id maps and latestDatumByType', () => {
-        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
         dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
-        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
+        dataUtil.deviceUploadMap = { foo: 'bar' };
         dataUtil.latestDatumByType = { foo: 'bar' };
+        dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardToBolusIdMap = { foo: 'bar' };
+        dataUtil.loopDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.dexcomDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.bolusDosingDecisionDatumsByIdMap = { foo: 'bar' };
         dataUtil.removeData();
-        expect(dataUtil.bolusToWizardIdMap).to.eql({});
         expect(dataUtil.bolusDatumsByIdMap).to.eql({});
-        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.bolusToWizardIdMap).to.eql({});
+        expect(dataUtil.deviceUploadMap).to.eql({});
         expect(dataUtil.latestDatumByType).to.eql({});
+        expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardToBolusIdMap).to.eql({});
+        expect(dataUtil.loopDataSetsByIdMap).to.eql({});
+        expect(dataUtil.dexcomDataSetsByIdMap).to.eql({});
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.eql({});
       });
 
       it('should delete the `bgSources` metadata', () => {
