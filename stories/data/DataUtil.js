@@ -187,6 +187,13 @@ stories.add('Query Generator', (opts, props) => {
       units: 'units',
       wizard: 'wizard',
     },
+    insulin: {
+      ...commonFields,
+      ...computedFields,
+      dose: 'dose',
+      formulation: 'formulation',
+      site: 'site',
+    },
     food: {
       ...commonFields,
       ...computedFields,
@@ -309,6 +316,18 @@ stories.add('Query Generator', (opts, props) => {
       messageText: 'messageText',
       parentMessage: 'parentMessage',
     },
+    reportedState: {
+      ...commonFields,
+      ...computedFields,
+      states: 'states',
+      notes: 'notes',
+    },
+    physicalActivity: {
+      ...commonFields,
+      ...computedFields,
+      reportedIntensity: 'reportedIntensity',
+      duration: 'duration',
+    },
   };
 
   const types = {
@@ -316,6 +335,7 @@ stories.add('Query Generator', (opts, props) => {
     cbg: 'cbg',
     basal: 'basal',
     bolus: 'bolus',
+    insulin: 'insulin',
     food: 'food',
     wizard: 'wizard',
     upload: 'upload',
@@ -328,6 +348,8 @@ stories.add('Query Generator', (opts, props) => {
     dosingDecision: 'dosingDecision',
     alert: 'alert',
     message: 'message',
+    reportedState: 'reportedState',
+    physicalActivity: 'physicalActivity',
   };
 
   const stringQueryFormat = { string: 'string' };

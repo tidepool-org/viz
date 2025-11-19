@@ -614,6 +614,7 @@ export const dailyData = {
                 type: 'bolus',
                 subType: 'normal',
                 normal: 0.925,
+                expectedNormal: 1.0,
                 utc: 1483313400000,
                 threeHrBin: 21,
               },

@@ -9,6 +9,7 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isControlIQ,
+  isDexcom,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -53,6 +54,9 @@ import {
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
   EVENT,
+  EVENT_HEALTH,
+  EVENT_NOTES,
+  EVENT_PHYSICAL_ACTIVITY,
   EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
@@ -114,6 +118,7 @@ export class DataUtil {
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
     this.dataAnnotations = this.dataAnnotations || {};
@@ -213,9 +218,14 @@ export class DataUtil {
       }
     }
 
-    if (d.type === 'upload' && d.dataSetType === 'continuous') {
-      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
-      if (!d.time) d.time = moment.utc().toISOString();
+    if (d.type === 'upload') {
+      if (d.dataSetType === 'continuous') {
+        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
+        if (!d.time) d.time = moment.utc().toISOString();
+      } else {
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.uploadId] = d;
+      }
     }
 
     if (d.messagetext) {
@@ -623,6 +633,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
+    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
+
     if (d.type === 'basal') {
       d.tags = {
         suspend: d.deliveryType === 'suspend',
@@ -647,6 +660,12 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'insulin') {
+      d.tags = {
+        manual: true,
+      };
+    }
+
     if (d.type === 'wizard') {
       d.tags = {
         extended: hasExtended(d),
@@ -658,14 +677,16 @@ export class DataUtil {
 
     if (d.type === 'smbg') {
       d.tags = {
-        manual: d.subType === 'manual',
-        meter: d.subType !== 'manual',
+        manual: d.subType === 'manual' || isDexcomDatum,
+        meter: d.subType !== 'manual' && !isDexcomDatum,
       };
     }
 
     if (d.type === 'food') {
       d.tags = {
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        dexcom: isDexcomDatum,
+        manual: isDexcomDatum,
       };
     }
 
@@ -710,10 +731,26 @@ export class DataUtil {
     // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
     const prioritizedEventTypes = [
       EVENT_PUMP_SHUTDOWN,
+      EVENT_PHYSICAL_ACTIVITY,
+      EVENT_HEALTH,
+      EVENT_NOTES,
+    ];
+
+    const healthStates = [
+      'alcohol',
+      'cycle',
+      'hyperglycemiaSymptoms',
+      'hypoglycemiaSymptoms',
+      'illness',
+      'stress',
+      'other',
     ];
 
     const events = {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+      [EVENT_PHYSICAL_ACTIVITY]: d.type === 'physicalActivity',
+      [EVENT_HEALTH]: d.type === 'reportedState' && _.includes(healthStates, d.states?.[0]?.state),
+      [EVENT_NOTES]: d.type === 'reportedState' && (!!d.states?.[0]?.stateOther || d.notes?.length),
     };
 
     const eventType = _.find(prioritizedEventTypes, type => events[type]);
@@ -1078,11 +1115,16 @@ export class DataUtil {
       this.data.remove(predicate);
     } else {
       this.log('Reinitializing');
-      this.bolusToWizardIdMap = {};
       this.bolusDatumsByIdMap = {};
-      this.wizardDatumsByIdMap = {};
-      this.latestDatumByType = {};
+      this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.latestDatumByType = {};
+      this.pumpSettingsDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.wizardToBolusIdMap = {};
+      this.loopDataSetsByIdMap = {};
+      this.dexcomDataSetsByIdMap = {};
+      this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;
