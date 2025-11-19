@@ -118,7 +118,6 @@ class StatLegend extends PureComponent {
   renderTooltip = () => {
     const { hoveredItem } = this.state;
 
-
     if (!hoveredItem || !hoveredItem.annotations) {
       return null;
     }
