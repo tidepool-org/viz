@@ -1125,8 +1125,6 @@ export class DataUtil {
       this.loopDataSetsByIdMap = {};
       this.dexcomDataSetsByIdMap = {};
       this.bolusDosingDecisionDatumsByIdMap = {};
-      this.matchedDevices = {};
-      this.dataAnnotations = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;

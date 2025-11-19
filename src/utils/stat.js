@@ -694,7 +694,7 @@ export const getStatData = (data, type, opts = {}) => {
           value: ensureNumeric(data.insulin),
           title: t('Other Insulin'),
           legendTitle: t('Other'),
-          annotations: [t('**Other Insulin:** Insulin coming from other sources such as manual entry via Dexcom or Apple Health.')],
+          annotations: [t('**Other:** Insulin logged from a source outside of a connected pump — for example, a manual injection or inhaled dose.')],
           hideEmpty: true,
         },
         {
