@@ -63,11 +63,9 @@ describe('StatLegend', () => {
       const tooltipIcons = mountedWrapper.find(formatClassesAsSelector(styles.tooltipIcon));
       expect(tooltipIcons).to.have.length(2); // Only insulin and bolus have annotations
 
-
       const insulinItem = mountedWrapper.find(formatClassesAsSelector(styles.StatLegendItemWrapper)).at(0);
       const basalItem = mountedWrapper.find(formatClassesAsSelector(styles.StatLegendItemWrapper)).at(1);
       const bolusItem = mountedWrapper.find(formatClassesAsSelector(styles.StatLegendItemWrapper)).at(2);
-      console.log(insulinItem.debug());
 
       expect(insulinItem.find(formatClassesAsSelector(styles.tooltipIcon))).to.have.length(1);
       expect(basalItem.find(formatClassesAsSelector(styles.tooltipIcon))).to.have.length(0);
