@@ -121,7 +121,6 @@ export class AggregationUtil {
 
     result.insulin = group.post().postProcessInsulinAggregations()();
 
-    console.log('result.insulin', result.insulin);
 
     /* eslint-disable consistent-return */
     const combined = _.mergeWith({}, result.bolus, result.insulin, (objValue, srcValue, key, object, source) => {
