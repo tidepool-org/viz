@@ -1711,7 +1711,7 @@ describe('stat', () => {
           value: 3,
           title: 'Other Insulin',
           legendTitle: 'Other',
-          annotations: ['**Other Insulin:** Insulin coming from other sources such as manual entry via Dexcom or Apple Health.'],
+          annotations: ['**Other:** Insulin logged from a source outside of a connected pump - for example, a manual injection or inhaled dose.'],
           hideEmpty: true,
         },
         {
