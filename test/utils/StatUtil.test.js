@@ -540,10 +540,22 @@ describe('StatUtil', () => {
 
   describe('getCoefficientOfVariationData', () => {
     it('should return the coefficient of variation for cbg data', () => {
-      statUtil.bgSource = 'cbg';
+      const mockData = _.times(
+        32,
+        i => new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      );
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg' }));
+
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
-        coefficientOfVariation: 68.47579720288888,
-        total: 5,
+        coefficientOfVariation: 8.121932051642304,
+        total: 32
       });
     });
 
