@@ -350,7 +350,8 @@ export class StatUtil {
   getStandardDevData = () => {
     const { averageGlucose, bgData, total } = this.getAverageGlucoseData(true);
 
-    if (bgData.length < 3) {
+    // Minimum 30 data points to report stdev per BGM AGP Spec, which we also apply to TDP
+    if (bgData.length < 30) {
       return {
         averageGlucose,
         insufficientData: true,
