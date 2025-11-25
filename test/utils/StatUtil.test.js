@@ -580,12 +580,25 @@ describe('StatUtil', () => {
       });
     });
 
-    it('should return `NaN` when less than 3 datums available', () => {
-      statUtil = createStatUtil(smbgData.slice(0, 2), opts({ bgSource: 'smbg' }));
+    it('should return NaN when there are fewer than 30 datums', () => {
+      const mockData = _.times(
+        28,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        })),
+      );
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
+
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
         coefficientOfVariation: NaN,
+        total: 28,
         insufficientData: true,
-        total: 2,
       });
     });
   });
@@ -991,13 +1004,25 @@ describe('StatUtil', () => {
       });
     });
 
-    it('should return `NaN` when less than 3 datums available', () => {
-      statUtil = createStatUtil(smbgData.slice(0, 2), opts({ bgSource: 'smbg' }));
-      expect(statUtil.getStandardDevData()).to.eql({
-        averageGlucose: 65,
-        standardDeviation: NaN,
+    it('should return NaN when there are fewer than 30 datums', () => {
+      const mockData = _.times(
+        28,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
+
+      expect(statUtil.getCoefficientOfVariationData()).to.eql({
+        coefficientOfVariation: NaN,
+        total: 28,
         insufficientData: true,
-        total: 2,
       });
     });
   });
