@@ -542,16 +542,17 @@ describe('StatUtil', () => {
     it('should return the coefficient of variation for cbg data', () => {
       const mockData = _.times(
         32,
-        i => new Types.CBG({
+        i => _.toPlainObject(new Types.CBG({
           deviceId: 'Dexcom-XXX-XXXX',
           sampleInterval: 15 * MS_IN_MIN,
           value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
           deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
           ...useRawData,
-        }),
+        })),
       );
 
-      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg' }));
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
 
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
         coefficientOfVariation: 8.121932051642304,
@@ -559,11 +560,23 @@ describe('StatUtil', () => {
       });
     });
 
-    it('should return the coefficient of variation for cbg data', () => {
+    it('should return the coefficient of variation for smbg data', () => {
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.SMBG({
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'smbg' }));
       statUtil.bgSource = 'smbg';
+
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
-        coefficientOfVariation: 69.0941762401971,
-        total: 5,
+        coefficientOfVariation: 8.121932051642304,
+        total: 32,
       });
     });
 
@@ -935,20 +948,46 @@ describe('StatUtil', () => {
     });
 
     it('should return the average glucose and standard deviation for cbg data', () => {
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg' }));
       statUtil.bgSource = 'cbg';
+
       expect(statUtil.getStandardDevData()).to.eql({
-        averageGlucose: 132,
-        standardDeviation: 90.38805230781334,
-        total: 5,
+        averageGlucose: 115.5,
+        standardDeviation: 9.380831519646861,
+        total: 32,
       });
     });
 
     it('should return the average glucose and standard deviation for smbg data', () => {
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.SMBG({
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'smbg' }));
       statUtil.bgSource = 'smbg';
+
       expect(statUtil.getStandardDevData()).to.eql({
-        averageGlucose: 136,
-        standardDeviation: 93.96807968666806,
-        total: 5,
+        averageGlucose: 115.5,
+        standardDeviation: 9.380831519646861,
+        total: 32,
       });
     });
 
