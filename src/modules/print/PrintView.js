@@ -837,6 +837,8 @@ class PrintView {
   }
 
   renderDateText(dateText = '') {
+    const MAX_CHARS_PER_LINE = 45;
+    const TOP_PADDING = 2.5;
     const lineHeight = this.doc.fontSize(14).currentLineHeight();
 
     // Calculate the remaining available width so we can
@@ -853,15 +855,51 @@ class PrintView {
     const xOffset = (
       this.margins.left + this.patientInfoBox.width + this.dividerWidth + this.titleWidth
     );
+
     const yOffset = (
       this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2))
     );
 
+    const shouldSplitLines = dateText.length > MAX_CHARS_PER_LINE && dateText.includes(' - ');
+
+    if (!shouldSplitLines) {
+      this.doc
+        .fontSize(10)
+        .text(dateText, xOffset, yOffset + TOP_PADDING, {
+          width: availableWidth,
+          align: 'center',
+        });
+
+      return;
+    }
+
+    // Date is too long to render on one line, we need to render on 2 lines
+    const [
+      yOffsetLine1,
+      yOffsetLine2
+    ] = [
+      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - lineHeight),
+      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2)
+    ];
+
+    const lines = dateText.split(' - ');
+    const dateTextLine1 = lines[0].concat(' - ');
+    const dateTextLine2 = lines[1] || '';
+
+    const RIGHT_PADDING = 20;
+
     this.doc
       .fontSize(10)
-      .text(dateText, xOffset, yOffset + 2.5, {
+      .text(dateTextLine1, xOffset - RIGHT_PADDING, yOffsetLine1 + TOP_PADDING, {
         width: availableWidth,
-        align: 'center',
+        align: 'right',
+      });
+
+    this.doc
+      .fontSize(10)
+      .text(dateTextLine2, xOffset - RIGHT_PADDING, yOffsetLine2 + TOP_PADDING, {
+        width: availableWidth,
+        align: 'right',
       });
   }
 

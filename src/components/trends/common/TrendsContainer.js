@@ -288,14 +288,7 @@ export class TrendsContainer extends PureComponent {
     const { extentSize, initialDatetimeLocation, timePrefs } = props;
     const timezone = datetime.getTimezoneFromTimePrefs(timePrefs);
 
-    const mostRecentCeiling = datetime.getLocalizedCeiling(
-      mostRecentDatetimeLocation,
-      timePrefs
-    ).toISOString();
-
-    const end = initialDatetimeLocation
-      ? datetime.getLocalizedCeiling(initialDatetimeLocation, timePrefs).toISOString()
-      : mostRecentCeiling;
+    const end = initialDatetimeLocation || mostRecentDatetimeLocation;
 
     const start = moment(end).tz(timezone).subtract(extentSize, 'days').toISOString();
     const dateDomain = [start, end];
@@ -305,7 +298,7 @@ export class TrendsContainer extends PureComponent {
       currentCbgData,
       currentSmbgData,
       dateDomain: { start: dateDomain[0], end: dateDomain[1] },
-      mostRecent: mostRecentCeiling,
+      mostRecent: mostRecentDatetimeLocation,
       xScale: scaleLinear().domain([0, 864e5]),
       yScale,
     };

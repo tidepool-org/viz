@@ -236,7 +236,7 @@ describe('TrendsContainer', () => {
         [MGDL_UNITS]: 300,
         [MMOLL_UNITS]: 25,
       },
-      mostRecentDatetimeLocation: '2019-12-01T20:00:00.000Z',
+      mostRecentDatetimeLocation: '2019-12-01T11:40:00.000Z',
       onDatetimeLocationChange,
       onSelectDate: sinon.stub(),
       onSwitchBgDataSource,
@@ -308,17 +308,17 @@ describe('TrendsContainer', () => {
 
       it('should set dateDomain to `mostRecentDateTimeLocation` prop ceiling if no initialDatetimeLocation', () => {
         const { dateDomain } = minimalData.state();
-        expect(dateDomain.end).to.equal('2019-12-02T00:00:00.000Z');
+        expect(dateDomain.end).to.equal('2019-12-01T11:40:00.000Z');
       });
 
       it('should set dateDomain based on initialDatetimeLocation if provided', () => {
         const { dateDomain } = withInitialDatetimeLocation.state();
-        expect(dateDomain.end).to.equal('2016-03-16T00:00:00.000Z');
+        expect(dateDomain.end).to.equal('2016-03-15T19:00:00.000Z');
       });
 
       it('should set dateDomain.start based on initialDatetimeLocation and extentSize', () => {
         const { dateDomain } = withInitialDatetimeLocation.state();
-        expect(dateDomain.start).to.equal('2016-03-09T00:00:00.000Z');
+        expect(dateDomain.start).to.equal('2016-03-08T19:00:00.000Z');
       });
 
       it('should mark trends viewed as `touched` if not already touched', () => {
@@ -675,7 +675,7 @@ describe('TrendsContainer', () => {
 
             expect(setExtentSpy.callCount).to.equal(1);
             expect(onDatetimeLocationChange.callCount).to.equal(1);
-            sinon.assert.calledWith(onDatetimeLocationChange, ['2019-11-18T00:00:00.000Z', '2019-11-25T00:00:00.000Z']);
+            sinon.assert.calledWith(onDatetimeLocationChange, ['2019-11-17T11:40:00.000Z', '2019-11-24T11:40:00.000Z']);
 
             instance.setExtent.restore();
           });
@@ -691,8 +691,8 @@ describe('TrendsContainer', () => {
             const setExtentSpy = sinon.spy(instance, 'setExtent');
 
             const expectedDomain = [
-              '2019-12-02T00:00:00.000Z',
-              '2019-12-09T00:00:00.000Z',
+              '2019-12-01T11:40:00.000Z',
+              '2019-12-08T11:40:00.000Z',
             ];
 
             expect(setExtentSpy.callCount).to.equal(0);
