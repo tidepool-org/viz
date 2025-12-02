@@ -577,7 +577,7 @@ describe('AggregationUtil', () => {
       ]);
     });
 
-    it('does NOT include data from the last date when endpoint range ends at midnight', () => {
+    it('includes data from the last date when endpoint range does NOT end at midnight', () => {
       aggregationUtil.initialActiveEndpoints.range = [
         1754380800000, // 2025-08-05 at 4:00 AM in US/Eastern
         1754640000000, // 2025-08-08 at 4:00 AM in US/Eastern
