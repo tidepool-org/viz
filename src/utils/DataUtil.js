@@ -1057,10 +1057,16 @@ export class DataUtil {
     return output;
   };
 
-  // memoize deduplicateCBGData and only recompute if first/last ids change
+  // memoize deduplicateCBGData and only recompute if first/last ids change or units change
   getDeduplicatedCBGData = _.memoize(
     this.deduplicateCBGData,
-    data => `${_.first(data)?.id}_${_.last(data)?.id}`
+    data => {
+      const firstDatumId = _.first(data)?.id;
+      const lastDatumId = _.last(data)?.id;
+      const units = this.bgPrefs?.bgUnits || 'unknown';
+
+      return `${firstDatumId}_${lastDatumId}_${units}`;
+    }
   );
 
   /* eslint-disable no-param-reassign */
@@ -1755,10 +1761,6 @@ export class DataUtil {
     this.dataAnnotations = {};
   };
 
-  setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
-    this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
-  };
-
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -1770,7 +1772,6 @@ export class DataUtil {
       bgSource,
       cgmSampleIntervalRange,
       endpoints,
-      excludeDaysWithoutBolus,
       excludedDevices,
       fillData,
       metaData,
@@ -1808,7 +1809,6 @@ export class DataUtil {
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
-    this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
 
     const data = {};
 
@@ -1845,17 +1845,6 @@ export class DataUtil {
         // Generate the aggregations for current range
         if (aggregationsByDate) {
           data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
-        }
-
-        if (this.excludeDaysWithoutBolus) {
-          // Determine count of days with boluses for current range
-          const bolusesByDate = _.get(
-            data,
-            [rangeKey, 'aggregationsByDate'],
-            this.getAggregationsByDate('boluses')
-          ).boluses.byDate;
-
-          this.activeEndpoints.bolusDays = _.keys(bolusesByDate).length;
         }
 
         // Generate the stats for current range

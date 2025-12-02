@@ -115,6 +115,8 @@ export class AggregationUtil {
 
     const bgClasses = [
       'veryLow',
+      'low',
+      'high',
       'veryHigh',
     ];
 
@@ -290,11 +292,7 @@ export class AggregationUtil {
       }
     });
 
-    const days = this.dataUtil.excludeDaysWithoutBolus
-      ? _.keys(processedData).length
-      : this.dataUtil.activeEndpoints.activeDays;
-
-    return this.summarizeProcessedData(processedData, days);
+    return this.summarizeProcessedData(processedData);
   };
 
   /**
@@ -479,6 +477,8 @@ export class AggregationUtil {
           meter,
           veryHigh,
           veryLow,
+          high,
+          low
         },
       } = dataForDay;
 
@@ -492,6 +492,8 @@ export class AggregationUtil {
             meter: meter.count,
             veryHigh: veryHigh.count,
             veryLow: veryLow.count,
+            high: high.count,
+            low: low.count,
           },
         };
       }
