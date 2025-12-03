@@ -292,28 +292,38 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
 
 /**
  * reconcileTIRPercentages
+ * @param {Object} timeInRanges - the percent TIR values for each range in decimal form
+ * - e.g. { veryLow: 0.012, low: 0.056, target: 0.612, high: 0.294, veryHigh: 0.021 }
  *
- * TODO: Add jsdoc
- *
+ * @returns {Object} an object with values corrected to sum up to 100%
+ * - if the values do not sum up to 100%, the 'high' range is adjusted to compensate
  */
 export const reconcileTIRPercentages = (timeInRanges) => {
+  const DECIMAL_PRECISION = 2;
 
-  // TODO: Add comments
-
+  // Round each TIR value to whole integers for percentages (e.g. 0.21428 -> 0.21)
   const modifiedTimeInRanges = _.cloneDeep(timeInRanges);
   const rangeKeys = _.keys(modifiedTimeInRanges);
-  const rangeValues = _.values(modifiedTimeInRanges);
 
   _.forEach(rangeKeys, key => {
-    modifiedTimeInRanges[key] = bankersRound(modifiedTimeInRanges[key], 2);
+    modifiedTimeInRanges[key] = bankersRound(modifiedTimeInRanges[key], DECIMAL_PRECISION);
   });
 
+  // Calculate the sum of all TIR values. It should be close to 1 (or 100%)
+  const rangeValues = _.values(modifiedTimeInRanges);
   const sum = _.reduce(rangeValues, (acc, cur) => acc + cur, 0);
 
+  // Error Case: If the discrepancy from 100% is >2%, there is something wrong with
+  // the incoming data. Performing additional calculations on TIR would compound the
+  // error. Instead, we'll return the data in its original state.
   if (sum < 0.98 || sum > 1.02) return timeInRanges;
 
+  // Calculate the difference from 100% and dump the discrepancy into the 'high' range.
+  // e.g. if sum === 0.99 and high === 0.21, we increase high to 0.22 so that all TIR
+  // values add up to 1 (or 100%).
   const diff = 1 - sum;
-  modifiedTimeInRanges.high += diff;
+  const newHigh = bankersRound(modifiedTimeInRanges.high + diff, DECIMAL_PRECISION);
+  modifiedTimeInRanges.high = newHigh;
 
   return modifiedTimeInRanges;
 };
