@@ -280,24 +280,30 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
  * getLocalizedCeiling
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
+ * @param {String} period - the period to round the timestamp to the ceiling of
  *
- * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
+ * @return {Object} a JavaScript Date, the start of the next closes period according timePrefs;
+ *                  If period is 'day', this fn returns the closest future midnight
+ *                  If period is 'hour', this fn returns the start of the closest future hour
  *                  if utc is already local midnight, returns utc
  */
-export function getLocalizedCeiling(utc, timePrefs) {
+export function getLocalizedCeiling(utc, timePrefs, period = 'day') {
   if (utc instanceof Date) {
     throw new Error('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
   }
+  if (!_.includes(['day', 'hour'], period)) {
+    throw new Error('`period` must be either "day" or "hour"');
+  }
   const timezone = getTimezoneFromTimePrefs(timePrefs);
-  const startOfDay = moment.utc(utc)
+  const startOfPeriod = moment.utc(utc)
     .tz(timezone)
-    .startOf('day');
+    .startOf(period);
 
   const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
-  if (startOfDay.valueOf() === utcHammertime) {
-    return startOfDay.toDate();
+  if (startOfPeriod.valueOf() === utcHammertime) {
+    return startOfPeriod.toDate();
   }
-  return startOfDay.add(1, 'day').toDate();
+  return startOfPeriod.add(1, period).toDate();
 }
 
 /**
