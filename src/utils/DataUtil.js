@@ -8,6 +8,7 @@ import sundial from 'sundial';
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
+  isControlIQ,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -16,6 +17,7 @@ import {
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
+  isLibreViewAPI,
 } from './device';
 
 import {
@@ -47,12 +49,11 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE,
   ALARM,
-  ALARM_NO_DELIVERY,
-  ALARM_AUTO_OFF,
   ALARM_NO_INSULIN,
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
-  ALARM_OVER_LIMIT,
+  EVENT,
+  EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
 import {
@@ -64,7 +65,7 @@ import {
 
 import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
-import { statFetchMethods } from './stat';
+import { commonStats, statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
 
 const t = i18next.t.bind(i18next);
@@ -115,6 +116,7 @@ export class DataUtil {
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
+    this.dataAnnotations = this.dataAnnotations || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
 
@@ -228,9 +230,12 @@ export class DataUtil {
       // we rely on it for stat calculations and data filtering from the frontend queries.
       let sampleInterval = this.defaultCgmSampleInterval;
 
-      // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
-      // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
-      if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+      if (isLibreViewAPI(d)) {
+        d.annotations = d.annotations || [];
+        d.annotations.push({ code: 'cbg/unknown-sample-interval' });
+      } else if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+        // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
+        // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
         sampleInterval = 15 * MS_IN_MIN;
       }
 
@@ -391,7 +396,8 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+        d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
+              d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
@@ -666,16 +672,6 @@ export class DataUtil {
     if (d.type === 'deviceEvent') {
       const isReservoirChange = d.subType === 'reservoirChange';
       const isPrime = d.subType === 'prime';
-      const isAlarm = d.subType === 'alarm';
-
-      const recognizedAlarmTypes = [
-        ALARM_NO_DELIVERY,
-        ALARM_AUTO_OFF,
-        ALARM_NO_INSULIN,
-        ALARM_NO_POWER,
-        ALARM_OCCLUSION,
-        ALARM_OVER_LIMIT,
-      ];
 
       d.tags = {
         automatedSuspend: (
@@ -689,13 +685,43 @@ export class DataUtil {
         [SITE_CHANGE_RESERVOIR]: isReservoirChange,
         [SITE_CHANGE_CANNULA]: isPrime && d.primeTarget === 'cannula',
         [SITE_CHANGE_TUBING]: isPrime && d.primeTarget === 'tubing',
-        [ALARM]: isAlarm && _.includes(recognizedAlarmTypes, d.alarmType),
-        [ALARM_NO_DELIVERY]: d.alarmType === ALARM_NO_DELIVERY,
-        [ALARM_AUTO_OFF]: d.alarmType === ALARM_AUTO_OFF,
-        [ALARM_NO_INSULIN]: d.alarmType === ALARM_NO_INSULIN,
-        [ALARM_NO_POWER]: d.alarmType === ALARM_NO_POWER,
-        [ALARM_OCCLUSION]: d.alarmType === ALARM_OCCLUSION,
-        [ALARM_OVER_LIMIT]: d.alarmType === ALARM_OVER_LIMIT,
+      };
+
+      if (isTwiistLoop(d)) {
+        const recognizedAlarmTypes = [
+          ALARM_NO_INSULIN,
+          ALARM_NO_POWER,
+          ALARM_OCCLUSION,
+        ];
+
+        d.tags = {
+          ...d.tags,
+          [ALARM]: d.subType === 'alarm' && _.includes(recognizedAlarmTypes, d.alarmType),
+          ..._.reduce(recognizedAlarmTypes, (acc, type) => {
+            acc[type] = d.alarmType === type;
+            return acc;
+          }, {}),
+        };
+      }
+    }
+
+    // Events can appear on any datum type.
+    // We only display one event per datum, so we set the event tag to the highest priority event that applies.
+    // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
+    const prioritizedEventTypes = [
+      EVENT_PUMP_SHUTDOWN,
+    ];
+
+    const events = {
+      [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+    };
+
+    const eventType = _.find(prioritizedEventTypes, type => events[type]);
+
+    if (eventType) {
+      d.tags = {
+        ...d.tags || {},
+        [EVENT]: eventType,
       };
     }
   };
@@ -881,6 +907,8 @@ export class DataUtil {
       d.fillDate = moment.utc(localTime).toISOString().slice(0, 10);
       d.id = `fill_${normalTimeISO.replace(/[^\w\s]|_/g, '')}`;
     }
+
+    this.setDataAnnotations(d);
   };
 
   normalizeDatumOutTime = d => {
@@ -1001,6 +1029,46 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  deduplicateCBGData = (data = []) => {
+    const cbgData = this.sort.byTime(_.cloneDeep(data));
+
+    // Iterate through the time-ordered list of glucose data. For each datum, we set a blackout
+    // window for the time span it occupies - e.g. if a datum has a time of 14:30 and duration
+    // of 5 min, then any OTHER datums occuring between 14:30 to 14:35 should be discarded.
+
+    const OVERLAP_TOLERANCE = MS_IN_MIN / 6; // tolerate up to 10 seconds of overlap
+
+    let blackoutUntil = 0; // end of current blackout window (unix timestamp)
+
+    const output = [];
+
+    for (let i = 0; i < cbgData.length; i++) {
+      const currentRecord = cbgData[i];
+
+      // If current record occured within the current blackout window, discard the record.
+      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line
+
+      // Otherwise, if the record is past the blackout window, we include the record.
+      // Then, set a new blackout window based on the current record's time window
+      output.push(currentRecord);
+      blackoutUntil = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
+    }
+
+    return output;
+  };
+
+  // memoize deduplicateCBGData and only recompute if first/last ids change or units change
+  getDeduplicatedCBGData = _.memoize(
+    this.deduplicateCBGData,
+    data => {
+      const firstDatumId = _.first(data)?.id;
+      const lastDatumId = _.last(data)?.id;
+      const units = this.bgPrefs?.bgUnits || 'unknown';
+
+      return `${firstDatumId}_${lastDatumId}_${units}`;
+    }
+  );
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {
@@ -1016,6 +1084,7 @@ export class DataUtil {
       this.latestDatumByType = {};
       this.deviceUploadMap = {};
       this.clearMatchedDevices();
+      this.clearDataAnnotations();
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
@@ -1459,6 +1528,15 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  setDataAnnotations = d => {
+    if (this.trackDataAnnotations && d.annotations?.length) {
+      // Set any new annotation by code to the dataAnnotations metaData map
+      _.each(d.annotations, (annotation) => {
+        if (!this.dataAnnotations[annotation.code]) this.dataAnnotations[annotation.code] = annotation;
+      });
+    }
+  };
+
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -1679,8 +1757,8 @@ export class DataUtil {
     this.matchedDevices = {};
   };
 
-  setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
-    this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
+  clearDataAnnotations = () => {
+    this.dataAnnotations = {};
   };
 
   query = (query = {}) => {
@@ -1694,7 +1772,6 @@ export class DataUtil {
       bgSource,
       cgmSampleIntervalRange,
       endpoints,
-      excludeDaysWithoutBolus,
       excludedDevices,
       fillData,
       metaData,
@@ -1732,7 +1809,6 @@ export class DataUtil {
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
-    this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
 
     const data = {};
 
@@ -1740,6 +1816,7 @@ export class DataUtil {
       this.activeRange = rangeKey;
       this.activeEndpoints = rangeEndpoints;
       this.matchDevices = false;
+      this.trackDataAnnotations = false;
       data[rangeKey] = {};
 
       // Filter the data set by date range
@@ -1753,21 +1830,21 @@ export class DataUtil {
 
       if (rangeKey === 'current') {
         this.matchDevices = true;
+        const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
+        const dataAnnotationsRequested = _.includes(requestedMetaData, 'dataAnnotations');
+
+        // We generate annotations metaData only when typed data is requested, or certain stats are
+        // being requested that may be inaccurate when certain annotations are present in the data.
+        this.trackDataAnnotations = dataAnnotationsRequested && (
+          this.types.length || _.intersection(this.stats, [commonStats.sensorUsage, commonStats.timeInRange]).length
+        );
+
+        // Clear previous dataAnnotations metaData so we can track annotations for only the current data
+        if (this.trackDataAnnotations) this.clearDataAnnotations();
 
         // Generate the aggregations for current range
         if (aggregationsByDate) {
           data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
-        }
-
-        if (this.excludeDaysWithoutBolus) {
-          // Determine count of days with boluses for current range
-          const bolusesByDate = _.get(
-            data,
-            [rangeKey, 'aggregationsByDate'],
-            this.getAggregationsByDate('boluses')
-          ).boluses.byDate;
-
-          this.activeEndpoints.bolusDays = _.keys(bolusesByDate).length;
         }
 
         // Generate the stats for current range
@@ -1800,9 +1877,10 @@ export class DataUtil {
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    // Always reset `returnRawData` and `matchDevices` to `false` after each query
+    // Always reset `returnRawData`, `matchDevices` and `trackDataAnnotations` to `false` after each query
     this.setReturnRawData(false);
     this.matchDevices = false;
+    this.trackDataAnnotations = false;
 
     this.log('Result', result);
 
@@ -1928,6 +2006,7 @@ export class DataUtil {
       'devices',
       'excludedDevices',
       'matchedDevices',
+      'dataAnnotations',
       'queryDataCount',
     ];
 

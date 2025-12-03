@@ -40,7 +40,12 @@ export class StatUtil {
   getAverageGlucoseData = (returnBgData = false) => {
     if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
 
-    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+
+    if (this.bgSource === CGM_DATA_KEY) {
+      bgData = this.dataUtil.getDeduplicatedCBGData(bgData);
+    }
+
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const data = {
@@ -58,7 +63,12 @@ export class StatUtil {
   getBgExtentsData = () => {
     if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
 
-    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+
+    if (this.bgSource === CGM_DATA_KEY) {
+      bgData = this.dataUtil.getDeduplicatedCBGData(bgData);
+    }
+
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const rawBgData = this.dataUtil.sort.byTime(_.cloneDeep(bgData));
@@ -106,7 +116,7 @@ export class StatUtil {
       bolus: bolusData.length ? getTotalBolus(bolusData) : NaN,
     };
 
-    if (activeDaysWithInsulinData > 1) {
+    if (this.activeDays > 1 && activeDaysWithInsulinData > 1) {
       basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
       basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
     }
@@ -157,7 +167,7 @@ export class StatUtil {
       exchanges: wizardCarbs.exchanges,
     };
 
-    if (activeDaysWithCarbData > 1) {
+    if (this.activeDays > 1 && activeDaysWithCarbData > 1) {
       carbs = {
         grams: carbs.grams / activeDaysWithCarbData,
         exchanges: carbs.exchanges / activeDaysWithCarbData,
@@ -296,23 +306,20 @@ export class StatUtil {
 
   getSensorUsage = () => {
     this.filterCBGDataByDefaultSampleInterval();
-    const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const cbgData = this.dataUtil.getDeduplicatedCBGData(rawCbgData);
+
+    let sensorUsage = 0;
+    for (let i = 0; i < cbgData.length; i++) {
+      const datum = cbgData[i];
+      this.dataUtil.setDataAnnotations(datum);
+
+      sensorUsage += datum.sampleInterval;
+    }
+
     const count = cbgData.length;
-
-    // Data for Tidepool sensor usage stat
-    const duration = _.reduce(
-      cbgData,
-      (result, datum) => {
-        result += datum.sampleInterval;
-        return result;
-      },
-      0
-    );
-
     const total = this.activeDays * MS_IN_DAY;
 
-    // Data for AGP sensor usage stat
-    const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
     const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
@@ -320,8 +327,8 @@ export class StatUtil {
 
     let cgmMinutesWorn;
 
-    if (rawCbgData.length < 2) {
-      cgmMinutesWorn = rawCbgData.length === 1 ? sampleInterval : 0;
+    if (cbgData.length < 2) {
+      cgmMinutesWorn = cbgData.length === 1 ? sampleInterval : 0;
     } else {
       cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
     }
@@ -332,11 +339,11 @@ export class StatUtil {
     ) * 100;
 
     return {
-      sensorUsage: duration,
+      sensorUsage,
       sensorUsageAGP,
-      total,
       sampleInterval,
       count,
+      total,
     };
   };
 
@@ -426,7 +433,8 @@ export class StatUtil {
 
   getTimeInRangeData = () => {
     this.filterCBGDataByDefaultSampleInterval();
-    const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
+    const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const cbgData = this.dataUtil.getDeduplicatedCBGData(rawCbgData);
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const initialValue = {
@@ -447,6 +455,7 @@ export class StatUtil {
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
+        this.dataUtil.setDataAnnotations(datum);
         const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         const duration = datum.sampleInterval;
         result.durations[classification] += duration;

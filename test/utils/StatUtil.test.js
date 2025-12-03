@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+import moment from 'moment';
 import DataUtil from '../../src/utils/DataUtil';
 import StatUtil from '../../src/utils/StatUtil';
 import { types as Types, generateGUID } from '../../data/types';
@@ -656,9 +657,36 @@ describe('StatUtil', () => {
 
     it('should return the GMI data when viewing at least 14 days of data and 70% coverage', () => {
       const requiredDexcomDatums = 2823; // 288(total daily possible readings) * .7(%required) * 14(days)
+
+      const sampleDatum = cbgData[4];
+
+      // We are using a sample cbgDatum and cloning it 2,830 times for this test. However,
+      // since all of the cloned data will have the same timestamp, the Data Worker would
+      // deduplicate it until there is only one datum remaining. We need to ensure that the
+      // data has sequential and well-spaced timestamps to preserve all the data.
+      const sampleDatumTimes = (() => {
+        const sampleDatumTimeMs = moment(sampleDatum.time).valueOf();
+        const times = [];
+
+        for (let i = 0; i <= requiredDexcomDatums; i++) {
+          const updatedTime = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
+          const time = updatedTime.toISOString();
+          const deviceTime = updatedTime.format('YYYY-MM-DDTHH:mm:ss');
+
+          times.push({ time, deviceTime });
+        }
+
+        return times;
+      })();
+
       const sufficientData = _.map(
-        _.fill(Array(requiredDexcomDatums), cbgData[4], 0, requiredDexcomDatums),
-        d => ({ ...d, id: generateGUID() })
+        _.fill(Array(requiredDexcomDatums), sampleDatum, 0, requiredDexcomDatums),
+        (d, i) => ({
+          ...d,
+          id: generateGUID(),
+          time: sampleDatumTimes[i].time,
+          deviceTime: sampleDatumTimes[i].deviceTime
+        })
       );
 
       statUtil = createStatUtil(sufficientData, defaultOpts);
@@ -832,6 +860,19 @@ describe('StatUtil', () => {
       spy.restore();
     });
 
+    it('should call setDataAnnotations with each datum', () => {
+      const spy = sinon.spy(statUtil.dataUtil, 'setDataAnnotations');
+      const normalizeStub = sinon.stub(statUtil.dataUtil, 'normalizeDatumOut'); // to avoid also calling setDataAnnotations from within normalizeDatumOut
+      filterEndpoints(twoWeekEndpoints); // use all the datums
+      statUtil.getSensorUsage();
+      sinon.assert.callCount(spy, cbgData.length);
+      _.each(cbgData, (d) => {
+        sinon.assert.calledWith(statUtil.dataUtil.setDataAnnotations, sinon.match({ id: d.id }));
+      });
+      spy.restore();
+      normalizeStub.restore();
+    });
+
     it('should return the duration of sensor usage and total duration of the endpoint range', () => {
       filterEndpoints(dayEndpoints);
       const expectedSampleFrequency = 300000;
@@ -987,6 +1028,40 @@ describe('StatUtil', () => {
   });
 
   describe('getTimeInRangeData', () => {
+    it('should call filterCBGDataByDefaultSampleInterval', () => {
+      const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+      statUtil.getTimeInRangeData();
+      expect(spy.calledOnce).to.be.true;
+      spy.restore();
+    });
+
+    it('should call setDataAnnotations with each datum', () => {
+      const spy = sinon.spy(statUtil.dataUtil, 'setDataAnnotations');
+      const normalizeStub = sinon.stub(statUtil.dataUtil, 'normalizeDatumOut'); // to avoid also calling setDataAnnotations from within normalizeDatumOut
+      filterEndpoints(twoWeekEndpoints); // use all the datums
+      statUtil.getTimeInRangeData();
+      sinon.assert.callCount(spy, cbgData.length);
+      _.each(cbgData, (d) => {
+        sinon.assert.calledWith(statUtil.dataUtil.setDataAnnotations, sinon.match({ id: d.id }));
+      });
+
+      spy.restore();
+      normalizeStub.restore();
+    });
+
+    it('should return the time in range data when viewing 1 day', () => {
+      filterEndpoints(dayEndpoints);
+
+      expect(statUtil.getTimeInRangeData().durations).to.eql({
+        veryLow: MS_IN_MIN * 15,
+        low: MS_IN_MIN * 15,
+        target: MS_IN_MIN * 15,
+        high: MS_IN_MIN * 5,
+        veryHigh: MS_IN_MIN * 5,
+        total: MS_IN_MIN * 55,
+      });
+    });
+
     describe('when using default glycemic ranges', () => {
       it('should call filterCBGDataByDefaultSampleInterval', () => {
         const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');

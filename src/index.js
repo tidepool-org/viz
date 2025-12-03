@@ -37,6 +37,7 @@ import Stat from './components/common/stat/Stat';
 import CBGTooltip from './components/daily/cbgtooltip/CBGTooltip';
 import AlarmTooltip from './components/daily/alarmtooltip/AlarmTooltip';
 import FoodTooltip from './components/daily/foodtooltip/FoodTooltip';
+import EventTooltip from './components/daily/eventtooltip/EventTooltip';
 
 import { formatBgValue, formatPercentage, formatStatsPercentage, bankersRound } from './utils/format';
 import { generateBgRangeLabels, isCustomBgRange, reshapeBgClassesToBgBounds } from './utils/bloodglucose';
@@ -47,7 +48,8 @@ import {
   ADA_GESTATIONAL_T2_BG_BOUNDS,
   ADA_OLDER_HIGH_RISK_BG_BOUNDS,
   ADA_PREGNANCY_T1_BG_BOUNDS,
-  GLYCEMIC_RANGE,
+  GLYCEMIC_RANGES_PRESET,
+  GLYCEMIC_RANGES_TYPE
 } from './utils/constants';
 
 import colors from './colors';
@@ -73,6 +75,8 @@ import {
   statBgSourceLabels,
   statFetchMethods,
 } from './utils/stat';
+
+import { getGlycemicRangesPreset } from './utils/glycemicRanges';
 
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
@@ -102,6 +106,7 @@ const components = {
   CgmSampleIntervalTooltip,
   ClipboardButton,
   EventsInfoTooltip,
+  EventTooltip,
   FocusedRangeLabels,
   FocusedSMBGPointLabel,
   FoodTooltip,
@@ -140,7 +145,8 @@ const utils = {
     ADA_OLDER_HIGH_RISK_BG_BOUNDS,
     ADA_PREGNANCY_T1_BG_BOUNDS,
     ADA_GESTATIONAL_T2_BG_BOUNDS,
-    GLYCEMIC_RANGE,
+    GLYCEMIC_RANGES_PRESET,
+    GLYCEMIC_RANGES_TYPE,
   },
   datetime: {
     findBasicsStart,
@@ -178,6 +184,9 @@ const utils = {
     bgLogText,
     agpCGMText,
   },
+  glycemicRanges: {
+    getGlycemicRangesPreset,
+  }
 };
 
 export {

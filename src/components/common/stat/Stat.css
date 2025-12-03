@@ -7,7 +7,6 @@
   background-color: var(--bkgrnd-white);
   border-radius: 8px;
   border: 1px solid var(--stat--border);
-  overflow: hidden;
 }
 
 .Stat tspan {
@@ -26,11 +25,16 @@
 }
 
 .statHeaderContainerNonStandardTargets {
+  border-radius: 8px;
   background: #F0F5FF;
-  margin-top: -0.25em;
+  display: grid; /* Grid layout ensures the background fills the container */
+}
+
+.Stat.isOpen .statHeaderContainerNonStandardTargets {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
   margin-bottom: 0.75em;
-  padding-top: 0.25em;
-  padding-bottom: 0.5em;
+  padding-bottom: 0.25em;
 }
 
 .statHeaderNonStandardWarning {

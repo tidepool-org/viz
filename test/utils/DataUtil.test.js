@@ -888,6 +888,15 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(libreDatum);
         expect(libreDatum.sampleInterval).to.equal(15 * MS_IN_MIN);
 
+        const libreViewAPIDatum = {
+          type: 'cbg',
+          deviceId: 'AbbottFreeStyleLibre_XXXXXXX',
+          origin: { name: 'org.tidepool.abbott.libreview.partner.api' },
+        };
+        dataUtil.normalizeDatumIn(libreViewAPIDatum);
+        expect(libreViewAPIDatum.sampleInterval).to.equal(5 * MS_IN_MIN);
+        expect(libreViewAPIDatum.annotations[0]).to.eql({ code: 'cbg/unknown-sample-interval' });
+
         const libre3Datum = {
           type: 'cbg',
           deviceId: 'AbbottFreeStyleLibre3_XXXXXXX',
@@ -1254,6 +1263,48 @@ describe('DataUtil', () => {
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.dosingDecision).to.be.undefined;
     });
+
+    it('should use originalFood.nutrition.carbohydrate.net when present, and fall back to food.nutrition.carbohydrate.net otherwise, preserving the original carbs associated with the bolus', () => {
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus1',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+      };
+
+      const base = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+        associations: [],
+        requestedBolus: { normal: 12 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+      };
+
+      dataUtil.loopDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.Loop' } },
+      };
+
+      // originalFood = 42 → overrides food
+      const dd1 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 42 } } } };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd1 };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(42);
+
+      // originalFood = null → falls back to food
+      const dd2 = { ...base, originalFood: null };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd2 };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(30);
+
+      // originalFood = 0 → explicit zero honored
+      const dd3 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 0 } } } };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd3 };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(0);
+    });
   });
 
   describe('needsCarbToExchangeConversion', () => {
@@ -1557,13 +1608,12 @@ describe('DataUtil', () => {
       const tubingPrime = { ...siteChange, deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing' };
 
       const alarm = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'alarm', ...useRawData });
-      const alarmNoDelivery = { ...alarm, alarmType: 'no_delivery' };
-      const alarmAutoOff = { ...alarm, alarmType: 'auto_off' };
-      const alarmNoInsulin = { ...alarm, alarmType: 'no_insulin' };
-      const alarmNo_power = { ...alarm, alarmType: 'no_power' };
-      const alarmOcclusion = { ...alarm, alarmType: 'occlusion' };
-      const alarmOverLimit = { ...alarm, alarmType: 'over_limit' };
-      const alarmTypeUnrecognized = { ...alarm, alarmType: 'foo' };
+      const twiistOrigin = { origin: { name: 'com.dekaresearch.twiist' } };
+      const alarmNoInsulin = { ...alarm, alarmType: 'no_insulin', ...twiistOrigin };
+      const alarmNo_power = { ...alarm, alarmType: 'no_power', ...twiistOrigin };
+      const alarmOcclusion = { ...alarm, alarmType: 'occlusion', ...twiistOrigin };
+      const nonTwiistAlarmOcclusion = { ...alarmOcclusion, origin: { name: 'non-twiist' } };
+      const alarmTypeUnrecognized = { ...alarm, alarmType: 'foo', ...twiistOrigin };
 
       const automatedSuspendBasal = new Types.DeviceEvent({
         deviceTime: '2018-02-01T01:00:00',
@@ -1616,52 +1666,54 @@ describe('DataUtil', () => {
         expect(automatedSuspendBasal.tags.automatedSuspend).to.be.true;
       });
 
-      it('should tag an alarm with alarmType of `no_delivery`', () => {
-        expect(alarmNoDelivery.tags).to.be.undefined;
-        dataUtil.tagDatum(alarmNoDelivery);
-        expect(alarmNoDelivery.tags.alarm).to.equal(true);
-        expect(alarmNoDelivery.tags.no_delivery).to.equal(true);
-      });
-
-      it('should tag an alarm with alarmType of `auto_off`', () => {
-        expect(alarmAutoOff.tags).to.be.undefined;
-        dataUtil.tagDatum(alarmAutoOff);
-        expect(alarmAutoOff.tags.alarm).to.equal(true);
-        expect(alarmAutoOff.tags.auto_off).to.equal(true);
-      });
-
-      it('should tag an alarm with alarmType of `no_insulin`', () => {
+      it('should tag a twiist alarm with alarmType of `no_insulin`', () => {
         expect(alarmNoInsulin.tags).to.be.undefined;
         dataUtil.tagDatum(alarmNoInsulin);
         expect(alarmNoInsulin.tags.alarm).to.equal(true);
         expect(alarmNoInsulin.tags.no_insulin).to.equal(true);
       });
 
-      it('should tag an alarm with alarmType of `no_power`', () => {
+      it('should tag a twiist alarm with alarmType of `no_power`', () => {
         expect(alarmNo_power.tags).to.be.undefined;
         dataUtil.tagDatum(alarmNo_power);
         expect(alarmNo_power.tags.alarm).to.equal(true);
         expect(alarmNo_power.tags.no_power).to.equal(true);
       });
 
-      it('should tag an alarm with alarmType of `occlusion`', () => {
+      it('should tag a twiist alarm with alarmType of `occlusion`', () => {
         expect(alarmOcclusion.tags).to.be.undefined;
         dataUtil.tagDatum(alarmOcclusion);
         expect(alarmOcclusion.tags.alarm).to.equal(true);
         expect(alarmOcclusion.tags.occlusion).to.equal(true);
       });
 
-      it('should tag an alarm with alarmType of `over_limit`', () => {
-        expect(alarmOverLimit.tags).to.be.undefined;
-        dataUtil.tagDatum(alarmOverLimit);
-        expect(alarmOverLimit.tags.alarm).to.equal(true);
-        expect(alarmOverLimit.tags.over_limit).to.equal(true);
+      it('should not tag a non-twiist alarm with alarmType of `occlusion`', () => {
+        expect(nonTwiistAlarmOcclusion.tags).to.be.undefined;
+        dataUtil.tagDatum(nonTwiistAlarmOcclusion);
+        expect(nonTwiistAlarmOcclusion.tags.alarm).to.be.undefined;
+        expect(nonTwiistAlarmOcclusion.tags.occlusion).to.be.undefined;
       });
 
-      it('should not tag an alarm with an unrecognized alarmType', () => {
+      it('should tag a twiist alarm with an unrecognized alarmType as false', () => {
         expect(alarmTypeUnrecognized.tags).to.be.undefined;
         dataUtil.tagDatum(alarmTypeUnrecognized);
         expect(alarmTypeUnrecognized.tags.alarm).to.equal(false);
+      });
+    });
+
+    context('events', () => {
+      it('should tag a ControlIQ datum with a pump-shutdown event', () => {
+        const controlIQDatum = { deviceId: 'tandemCIQ12345', annotations: [{ code: 'pump-shutdown' }] };
+        expect(controlIQDatum.tags).to.be.undefined;
+        dataUtil.tagDatum(controlIQDatum);
+        expect(controlIQDatum.tags.event).to.equal('pump_shutdown');
+      });
+
+      it('should not tag a ControlIQ datum with a non-recognized event', () => {
+        const controlIQDatum = { deviceId: 'tandemCIQ12345', annotations: [{ code: 'non-recognized' }] };
+        expect(controlIQDatum.tags).to.be.undefined;
+        dataUtil.tagDatum(controlIQDatum);
+        expect(controlIQDatum.tags?.event).to.be.undefined;
       });
     });
   });
@@ -1769,6 +1821,13 @@ describe('DataUtil', () => {
 
       dataUtil.normalizeDatumOut(uploadWithoutSourceDatum);
       expect(uploadWithoutSourceDatum.source).to.equal('Unspecified Data Source');
+    });
+
+    it('should call setDataAnnotations with the datum', () => {
+      const datum = { type: 'foo' };
+      sinon.stub(dataUtil, 'setDataAnnotations');
+      dataUtil.normalizeDatumOut(datum);
+      sinon.assert.calledWith(dataUtil.setDataAnnotations, datum);
     });
 
     context('returnRawData is `true`', () => {
@@ -2616,6 +2675,61 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('getDeduplicatedCBGData', () => {
+    it('sorts and deduplicates CBG data according to timestamp', () => {
+      const data = _.cloneDeep(cbgData);
+      const duplicatedData = _.shuffle(_.cloneDeep([...data, ...data, ...data]));
+
+      _.each(duplicatedData, dataUtil.normalizeDatumIn); // mimic data ingestion
+      expect(duplicatedData.length).to.equal(15);
+
+      const result = dataUtil.getDeduplicatedCBGData(duplicatedData);
+
+      expect(result.length).to.equal(5);
+      expect(result[0].time).to.equal(1517443200000);
+      expect(result[2].time).to.equal(1517445000000);
+      expect(result[4].time).to.equal(1517446200000);
+    });
+
+    it('DOES deduplicate datums when next datum occurs before 10 second blackout window', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      const data = [datum1, datum2]; // two copies of same datum
+
+      _.each(data, dataUtil.normalizeDatumIn); // mimic data ingestion
+
+      expect(data[0].sampleInterval).to.equal(300_000);
+      expect(data[1].sampleInterval).to.equal(300_000);
+
+      // Second datum occurs 12 sec before it is expected to (based on 5 min sample interval)
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000 + 300_000 - 12_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(1); // should deduplicate
+    });
+
+    it('DOES NOT deduplicates datums when next datum is within 10 second blackout window', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      const data = [datum1, datum2]; // two copies of same datum
+
+      _.each(data, dataUtil.normalizeDatumIn); // mimic data ingestion
+
+      expect(data[0].sampleInterval).to.equal(300_000);
+      expect(data[1].sampleInterval).to.equal(300_000);
+
+      // Second datum occurs 7 sec before it is expected to (based on 5 min sample interval)
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000 + 300_000 - 7_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(2); // should not deduplicate
+    });
+  });
+
   describe('removeData', () => {
     context('predicate is provided', () => {
       it('should call the `clearFilters` method', () => {
@@ -2700,6 +2814,12 @@ describe('DataUtil', () => {
         dataUtil.matchedDevices = { foo: true, bar: true };
         dataUtil.removeData();
         expect(dataUtil.matchedDevices).to.eql({});
+      });
+
+      it('should clear the `dataAnnotations` metadata', () => {
+        dataUtil.dataAnnotations = { A: { code: 'A', value: 'A value' } };
+        dataUtil.removeData();
+        expect(dataUtil.dataAnnotations).to.eql({});
       });
     });
   });
@@ -3624,6 +3744,49 @@ describe('DataUtil', () => {
           serialNumber: undefined
         },
       ]);
+    });
+  });
+
+  describe('setDataAnnotations', () => {
+    it('should set a list of unique data annotations by code if trackDataAnnotations is `true`', () => {
+      const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
+      const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
+
+      dataUtil.dataAnnotations = {};
+      dataUtil.trackDataAnnotations = true;
+
+      dataUtil.normalizeDatumOut(datum1);
+      expect(dataUtil.dataAnnotations).to.eql({
+        A: { code: 'A', value: 'A value' },
+        B: { code: 'B', value: 'B value' },
+      });
+
+      dataUtil.normalizeDatumOut(datum2);
+      expect(dataUtil.dataAnnotations).to.eql({
+        A: { code: 'A', value: 'A value' },
+        B: { code: 'B', value: 'B value' },
+        C: { code: 'C', value: 'C value' },
+      });
+    });
+
+    it('should not track unique data annotations by code if trackDataAnnotations is `false`', () => {
+      const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
+      const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
+
+      dataUtil.dataAnnotations = {};
+      dataUtil.trackDataAnnotations = false;
+
+      dataUtil.normalizeDatumOut(datum1);
+      dataUtil.normalizeDatumOut(datum2);
+      expect(dataUtil.dataAnnotations).to.eql({});
+    });
+  });
+
+  describe('clearDataAnnotations', () => {
+    it('should clear all data annotations', () => {
+      dataUtil.dataAnnotations = { A: { code: 'A', value: 'A value' }, B: { code: 'B', value: 'B value' } };
+      dataUtil.clearDataAnnotations();
+      expect(dataUtil.dataAnnotations).to.eql({});
     });
   });
 
@@ -5305,13 +5468,6 @@ describe('DataUtil', () => {
         reservoirChange: false,
         cannulaPrime: false,
         tubingPrime: false,
-        alarm: false,
-        no_delivery: false,
-        auto_off: false,
-        no_insulin: false,
-        no_power: false,
-        occlusion: false,
-        over_limit: false,
       };
       return d;
     };

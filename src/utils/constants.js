@@ -45,11 +45,16 @@ export const BG_DISPLAY_MINIMUM_INCREMENTS = {
   [MMOLL_UNITS]: 0.1,
 };
 
-export const GLYCEMIC_RANGE = {
-  ADA_STANDARD: 'ADA standard',
-  ADA_OLDER_HIGH_RISK: 'ADA older or high-risk',
-  ADA_PREGNANCY_T1: 'ADA pregnancy type 1',
-  ADA_GESTATIONAL_T2: 'ADA pregnancy GDM or type 2',
+export const GLYCEMIC_RANGES_PRESET = {
+  ADA_STANDARD: 'adaStandard',
+  ADA_OLDER_HIGH_RISK: 'adaHighRisk',
+  ADA_PREGNANCY_T1: 'adaPregnancyType1',
+  ADA_GESTATIONAL_T2: 'adaPregnancyType2',
+};
+
+export const GLYCEMIC_RANGES_TYPE = {
+  PRESET: 'preset',
+  CUSTOM: 'custom',
 };
 
 export const DEFAULT_BG_BOUNDS = {
@@ -143,6 +148,9 @@ export const ALARM_NO_POWER = 'no_power';
 export const ALARM_OCCLUSION = 'occlusion';
 export const ALARM_OVER_LIMIT = 'over_limit';
 
+export const EVENT = 'event';
+export const EVENT_PUMP_SHUTDOWN = 'pump_shutdown';
+
 export const AUTOMATED_BOLUS = 'automatedBolus';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';
@@ -227,6 +235,7 @@ export const pumpVocabulary = {
     [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Maximum Basal Rate'),
+    [ALARM_NO_INSULIN]: t('Cassette Empty'),
     [ALARM_OCCLUSION]: t('Line Blocked'),
   },
   [DIY_LOOP]: {
@@ -261,6 +270,7 @@ export const pumpVocabulary = {
     [ALARM_NO_POWER]: t('Battery Empty'),
     [ALARM_OCCLUSION]: t('Occlusion Detected'),
     [ALARM_OVER_LIMIT]: t('Insulin Delivery Limit Exceeded'),
+    [EVENT_PUMP_SHUTDOWN]: t('Pump Shutdown'),
   },
 };
 

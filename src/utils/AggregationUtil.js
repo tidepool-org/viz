@@ -27,10 +27,6 @@ export class AggregationUtil {
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
-    this.rangeDates = [
-      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).format('YYYY-MM-DD'),
-    ];
     this.excludedDevices = _.get(dataUtil, 'excludedDevices', []);
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
@@ -119,6 +115,8 @@ export class AggregationUtil {
 
     const bgClasses = [
       'veryLow',
+      'low',
+      'high',
       'veryHigh',
     ];
 
@@ -294,11 +292,7 @@ export class AggregationUtil {
       }
     });
 
-    const days = this.dataUtil.excludeDaysWithoutBolus
-      ? _.keys(processedData).length
-      : this.dataUtil.activeEndpoints.activeDays;
-
-    return this.summarizeProcessedData(processedData, days);
+    return this.summarizeProcessedData(processedData);
   };
 
   /**
@@ -483,6 +477,8 @@ export class AggregationUtil {
           meter,
           veryHigh,
           veryLow,
+          high,
+          low
         },
       } = dataForDay;
 
@@ -496,6 +492,8 @@ export class AggregationUtil {
             meter: meter.count,
             veryHigh: veryHigh.count,
             veryLow: veryLow.count,
+            high: high.count,
+            low: low.count,
           },
         };
       }
@@ -549,7 +547,12 @@ export class AggregationUtil {
 
         // Filter cgm data by the currently-set sample interval range.
         this.dataUtil.filter.bySampleIntervalRange(...(this.dataUtil.cgmSampleIntervalRange || this.dataUtil.defaultCgmSampleIntervalRange));
-        groupedData.cbg = this.dataUtil.filter.byType('cbg').top(Infinity);
+
+        const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+        const deduplicatedCbgData = this.dataUtil.getDeduplicatedCBGData(cbgData);
+
+        groupedData.cbg = cbgData;
+        groupedData.cbgDeduplicated = deduplicatedCbgData;
 
         // Clear the previous byType and bySampleInterval filters so as to not affect the next aggregations
         this.dataUtil.dimension.byType.filterAll();
@@ -631,10 +634,23 @@ export class AggregationUtil {
     return processedData;
   };
 
-  filterByActiveRange = results => _.filter(
-    _.cloneDeep(results),
-    result => result.key >= this.rangeDates[0] && result.key < this.rangeDates[1]
-  );
+  filterByActiveRange = results => {
+    const [start, end] = this.initialActiveEndpoints.range;
+
+    const startMoment = moment.utc(start).tz(this.timezoneName);
+    const endMoment = moment.utc(end).tz(this.timezoneName);
+
+    // If query ends at midnight, we only want to include data up to the previous whole calendar day
+    if (endMoment.format('HH:mm') === '00:00') {
+      endMoment.subtract(1, 'day').endOf('day');
+    }
+
+    // Select all data that between the two specified calendar days (inclusive)
+    const startDate = startMoment.format('YYYY-MM-DD');
+    const endDate = endMoment.format('YYYY-MM-DD');
+
+    return _.filter(_.cloneDeep(results), result => result.key >= startDate && result.key <= endDate);
+  };
 
   /* eslint-disable lodash/prefer-lodash-method */
   reduceByTag = (tag, type, reducer) => {
