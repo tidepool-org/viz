@@ -22,6 +22,7 @@ import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/fo
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
 import { getGlycemicRangesPreset } from '../../../utils/glycemicRanges';
+import { reconcileTIRPercentages } from '../../../utils/stat';
 import {
   MGDL_UNITS,
   MS_IN_DAY,
@@ -524,33 +525,14 @@ export const generatePercentInRangesFigure = (
       hasVeryHigh && 'veryHigh',
     ], Boolean);
 
-    const normalizeTIRStats = (stats) => {
-      const tirStats = _.cloneDeep(stats);
-
-      Object.keys(tirStats).forEach(key => {
-        tirStats[key] = bankersRound(tirStats[key], 2);
-      });
-
-      const sum = Object.values(tirStats).reduce((acc, cur) => acc + cur, 0);
-
-      if (sum < 0.98 || sum > 1.02) {
-        return stats;
-      }
-
-      const diff = 1 - sum;
-      tirStats['high'] += diff;
-
-      return tirStats;
-    }
-
-    const processedStats = normalizeTIRStats(chartData.rawById);
+    const timeInRanges = reconcileTIRPercentages(chartData.rawById);
 
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
       font: {
         size: fontSizes.percentInRanges.values,
       },
-      text: boldText(formatPercentage(processedStats[range], 0, true)),
+      text: boldText(formatPercentage(timeInRanges[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'right',
       xshift: -4,
@@ -567,9 +549,9 @@ export const generatePercentInRangesFigure = (
     };
 
     const combinedRangeSummaryValues = {
-      low: (processedStats.veryLow || 0) + processedStats.low,
-      target: processedStats.target,
-      high: (processedStats.veryHigh || 0) + processedStats.high,
+      low: (timeInRanges.veryLow || 0) + timeInRanges.low,
+      target: timeInRanges.target,
+      high: (timeInRanges.veryHigh || 0) + timeInRanges.high,
     };
 
     const rangeSummaryOrderedKeys = [

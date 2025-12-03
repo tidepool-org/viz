@@ -290,6 +290,34 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
   };
 };
 
+/**
+ * reconcileTIRPercentages
+ *
+ * TODO: Add jsdoc
+ *
+ */
+export const reconcileTIRPercentages = (timeInRanges) => {
+
+  // TODO: Add comments
+
+  const modifiedTimeInRanges = _.cloneDeep(timeInRanges);
+  const rangeKeys = _.keys(modifiedTimeInRanges);
+  const rangeValues = _.values(modifiedTimeInRanges);
+
+  _.forEach(rangeKeys, key => {
+    modifiedTimeInRanges[key] = bankersRound(modifiedTimeInRanges[key], 2);
+  });
+
+  const sum = _.reduce(rangeValues, (acc, cur) => acc + cur, 0);
+
+  if (sum < 0.98 || sum > 1.02) return timeInRanges;
+
+  const diff = 1 - sum;
+  modifiedTimeInRanges.high += diff;
+
+  return modifiedTimeInRanges;
+};
+
 export const getStatAnnotations = (data, type, opts = {}) => {
   const { bgSource, days, manufacturer } = opts;
   const vocabulary = getPumpVocabulary(manufacturer);
