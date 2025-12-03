@@ -322,7 +322,7 @@ export const reconcileTIRPercentages = (timeInRanges) => {
   // e.g. if sum === 0.99 and high === 0.21, we increase high to 0.22 so that all TIR
   // values add up to 1 (or 100%).
   const diff = 1 - sum;
-  const newHigh = bankersRound(modifiedTimeInRanges.high + diff, DECIMAL_PRECISION);
+  const newHigh = bankersRound((modifiedTimeInRanges.high || 0) + diff, DECIMAL_PRECISION);
   modifiedTimeInRanges.high = newHigh;
 
   return modifiedTimeInRanges;
