@@ -524,12 +524,33 @@ export const generatePercentInRangesFigure = (
       hasVeryHigh && 'veryHigh',
     ], Boolean);
 
+    const normalizeTIRStats = (stats) => {
+      const tirStats = _.cloneDeep(stats);
+
+      Object.keys(tirStats).forEach(key => {
+        tirStats[key] = bankersRound(tirStats[key], 2);
+      });
+
+      const sum = Object.values(tirStats).reduce((acc, cur) => acc + cur, 0);
+
+      if (sum < 0.98 || sum > 1.02) {
+        return stats;
+      }
+
+      const diff = 1 - sum;
+      tirStats['high'] += diff;
+
+      return tirStats;
+    }
+
+    const processedStats = normalizeTIRStats(chartData.rawById);
+
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
       font: {
         size: fontSizes.percentInRanges.values,
       },
-      text: boldText(formatPercentage(chartData.rawById[range], 0, true)),
+      text: boldText(formatPercentage(processedStats[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'right',
       xshift: -4,
@@ -546,9 +567,9 @@ export const generatePercentInRangesFigure = (
     };
 
     const combinedRangeSummaryValues = {
-      low: (chartData.rawById.veryLow || 0) + chartData.rawById.low,
-      target: chartData.rawById.target,
-      high: (chartData.rawById.veryHigh || 0) + chartData.rawById.high,
+      low: (processedStats.veryLow || 0) + processedStats.low,
+      target: processedStats.target,
+      high: (processedStats.veryHigh || 0) + processedStats.high,
     };
 
     const rangeSummaryOrderedKeys = [
