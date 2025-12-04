@@ -694,7 +694,7 @@ describe('DailyPrintView', () => {
 
     it('should graph only the bolus if the carb input was generated from food data', () => {
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbInputGeneratedFromFoodData = true;
-      assert(Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput === 80);
+      expect(Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput).to.equal(80);
 
       const bolusCount = Renderer.chartsByDate[sampleDate].data.bolus.length;
 
