@@ -398,6 +398,11 @@ export class DataUtil {
         // Translate relevant dosing decision data onto expected bolus fields
         d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
               d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
+
+        if (isFinite(d.carbInput)) {
+          d.carbInputGeneratedFromFoodData = true;
+        }
+
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
