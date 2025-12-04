@@ -834,7 +834,7 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
-  renderInsulinEvents({ bolusScale, data: { bolus: insulinEvents }, xScale }) {
+  renderInsulinEvents({ bolusScale, data: { bolus: insulinEvents, food }, xScale }) {
     _.each(insulinEvents, (insulinEvent) => {
       const paths = getBolusPaths(insulinEvent, xScale, bolusScale, {
         bolusWidth: this.bolusWidth,
@@ -845,12 +845,19 @@ class DailyPrintView extends PrintView {
       _.each(paths, (path) => {
         this.renderEventPath(path);
       });
+
       const carbs = getCarbs(insulinEvent);
-      const circleOffset = 1;
-      const textOffset = 1.75;
-      const carbUnits = _.get(getWizardFromInsulinEvent(insulinEvent), 'carbUnits');
-      const carbFillColor = (carbUnits === 'exchanges') ? this.colors.carbExchanges : this.colors.carbs;
-      if (carbs) {
+
+      // determine if there is a matching food event associated with this insulin event to avoid rendering it twice
+      const foodIds = _.map(food, 'id');
+      const dosingDecisionAssociatedIds = _.map(insulinEvent.dosingDecision?.associations, 'id');
+      const hasMatchingFoodEvent = _.intersection(foodIds, dosingDecisionAssociatedIds).length > 0;
+
+      if (carbs && !hasMatchingFoodEvent) {
+        const circleOffset = 1;
+        const textOffset = 1.75;
+        const carbUnits = _.get(getWizardFromInsulinEvent(insulinEvent), 'carbUnits');
+        const carbFillColor = (carbUnits === 'exchanges') ? this.colors.carbExchanges : this.colors.carbs;
         const carbsX = xScale(getBolusFromInsulinEvent(insulinEvent).normalTime);
         const carbsY = bolusScale(getMaxValue(insulinEvent)) - this.carbRadius - circleOffset;
         this.doc.circle(carbsX, carbsY, this.carbRadius)
