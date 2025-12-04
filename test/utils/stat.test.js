@@ -2080,9 +2080,19 @@ describe('stat', () => {
       dataFormat: { summary: 'myFormat' },
     };
 
+    const tirStat = {
+      title: 'Avg Daily Time In Range',
+      data: {
+        data: [{ value: 5, id: 'high' }],
+        dataPaths: { summary: 'data.0' },
+        total: { value: 5 }
+      },
+      dataFormat: { summary: 'myFormat' },
+    };
+
     // Stats formatted as tables
-    const timeInRange = { ...defaultStat, id: 'timeInRange', title: 'timeInRange' };
-    const readingsInRange = { ...defaultStat, id: 'readingsInRange', title: 'readingsInRange' };
+    const timeInRange = { ...tirStat, id: 'timeInRange', title: 'timeInRange' };
+    const readingsInRange = { ...tirStat, id: 'readingsInRange', title: 'readingsInRange' };
     const totalInsulin = { ...defaultStat, id: 'totalInsulin', title: 'totalInsulin' };
     const timeInAuto = { ...defaultStat, id: 'timeInAuto', title: 'timeInAuto' };
     const timeInOverride = { ...defaultStat, id: 'timeInOverride', title: 'timeInOverride' };
