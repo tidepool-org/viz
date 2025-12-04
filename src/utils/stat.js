@@ -343,7 +343,7 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
   const total = statTIRDatum.data?.total?.value || NaN;
 
   _.forEach(statTIRDatum.data.data, datum => {
-    if (['veryLow', 'low', 'target', 'high', 'veryHigh'].includes(datum.id)) {
+    if (_.includes(['veryLow', 'low', 'target', 'high', 'veryHigh'], datum.id)) {
       ranges[datum.id] = datum.value / total;
     }
   });
@@ -359,7 +359,7 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
 
   const rangeKeys = _.keys(reconciledTimeInRanges);
   _.forEach(rangeKeys, key => {
-    const datum = _.find(modifiedStatTIRDatum.data.data, datum => datum.id === key);
+    const datum = _.find(modifiedStatTIRDatum.data.data, d => d.id === key);
     datum.value = bankersRound(reconciledTimeInRanges[key] * 100, 2);
   });
 
@@ -1031,7 +1031,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
       statTitle += t(' from {{count}} readings', { count: statArg.data.raw.total });
     }
 
-    const isTIRStat = ['timeInRange', 'readingsInRange'].includes(statArg.id);
+    const isTIRStat = _.includes(['timeInRange', 'readingsInRange'], statArg.id);
     const stat = isTIRStat ? reconcileTIRDatumValues(statArg) : statArg;
 
     const renderTable = _.includes([
