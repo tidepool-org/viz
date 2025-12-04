@@ -827,6 +827,44 @@ describe('stat', () => {
     });
   });
 
+  describe('reconcileTIRPercentages', () => {
+    describe('correctly rounds and adjusts the high value so the sum equals 100%', () => {
+      it('when using standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.025456,
+          low: 0.076484,
+          target: 0.58571,
+          high: 0.28177,
+          veryHigh: 0.03058,
+        };
+
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.03,
+          low: 0.08,
+          target: 0.59,
+          high: 0.27, // value decreased to ensure sum is 100%
+          veryHigh: 0.03,
+        })
+      });
+
+      it('when using non-standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.024156,
+          low: 0.104184,
+          target: 0.58171,
+          high: 0.28995,
+        };
+
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.02,
+          low: 0.10,
+          target: 0.58,
+          high: 0.30, // value increased to ensure sum is 100%
+        })
+      });
+    });
+  });
+
   describe('getStatAnnotations', () => {
     const defaultOpts = {
       manufacturer: 'medtronic',
