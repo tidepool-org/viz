@@ -399,7 +399,7 @@ export class DataUtil {
         d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
               d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
 
-        if (isFinite(d.carbInput)) {
+        if (_.isFinite(d.carbInput)) {
           d.carbInputGeneratedFromFoodData = true;
         }
 
