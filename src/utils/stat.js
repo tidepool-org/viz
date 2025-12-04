@@ -331,7 +331,9 @@ export const reconcileTIRPercentages = (timeInRanges) => {
 /**
  * reconcileTIRDatumValues
  * @param {Object} statTIRDatum - the stat TIR datum
- * - data.data should contain an array of TIR values for each range
+ * - Should contain the following subfields:
+ * - data.data - an array of TIR datums for all of the ranges
+ * - data.total.value - a number representing the total time duration
  *
  * @returns {Object} a modified stat TIR datum so the percentages add to 100%
  */
@@ -352,7 +354,7 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
   // Return a modified stat TIR datum where the total is 100 and each individual
   // range datum has its integer percentage as the value
   // e.g. Original Datum: total === 86400000, 'low' datum value === 11814321
-  //      Return Datum:   total === 100,        'low' datum value === 14
+  //      Return Datum:   total ->  100,      'low' datum value ->  14
   const modifiedStatTIRDatum = _.cloneDeep(statTIRDatum);
 
   const rangeKeys = _.keys(reconciledTimeInRanges);
