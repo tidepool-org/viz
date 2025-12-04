@@ -692,6 +692,22 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 80);
     });
 
+    it('should graph only the bolus if the carb input was generated from food data', () => {
+      Renderer.chartsByDate[sampleDate].data.bolus[2].carbInputGeneratedFromFoodData = true;
+      assert(Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput === 80);
+
+      const bolusCount = Renderer.chartsByDate[sampleDate].data.bolus.length;
+
+      sinon.stub(Renderer, 'renderEventPath');
+      Renderer.renderInsulinEvents(Renderer.chartsByDate[sampleDate]);
+
+      expect(Renderer.renderEventPath.callCount >= bolusCount).to.be.true;
+      sinon.assert.notCalled(Renderer.doc.circle);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbExchanges);
+      sinon.assert.neverCalledWith(Renderer.doc.text, 80);
+    });
+
     it('should graph carb exchange events', () => {
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbUnits = 'exchanges';
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput = 3;
