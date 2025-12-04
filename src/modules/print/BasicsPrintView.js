@@ -30,7 +30,7 @@ import {
   findBasicsDays,
 } from '../../utils/basics/data';
 
-import { formatDatum, statBgSourceLabels } from '../../utils/stat';
+import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
 import { getPumpVocabulary } from '../../utils/device';
 
 import {
@@ -390,7 +390,9 @@ class BasicsPrintView extends PrintView {
     this.setFill();
   }
 
-  renderHorizontalBarStat(stat, opts = {}) {
+  renderHorizontalBarStat(statArg, opts = {}) {
+    let stat = _.cloneDeep(statArg);
+
     _.defaults(opts, {
       heading: {
         text: stat.title,
@@ -431,6 +433,9 @@ class BasicsPrintView extends PrintView {
     this.doc.fontSize(this.smallFontSize);
 
     if (statHasData) {
+      const isTIRStat = ['timeInRange', 'readingsInRange'].includes(stat.id);
+      stat = isTIRStat ? reconcileTIRDatumValues(stat) : stat;
+
       const statDatums = _.get(stat, 'data.data', []);
       const statTotal = _.get(stat, 'data.total.value', 1);
 
