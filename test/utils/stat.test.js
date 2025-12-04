@@ -865,6 +865,72 @@ describe('stat', () => {
     });
   });
 
+  describe('reconcileTIRDatumValues', () => {
+    describe('modifies the datum to be integer percentage values with a total of 100', () => {
+      it('when using standard range', () => {
+        const statTIRDatum = {
+          id: "timeInRange",
+          title: "Avg. Daily Time In Range",
+          data: {
+            data: [
+              { id: "veryLow", value: 900000 },
+              { id: "low", value: 900000 },
+              { id: "target", value: 51000000 },
+              { id: "high", value: 2400000 },
+              { id: "veryHigh", value: 3600000 },
+            ],
+            total: { value: 58800000 },
+          },
+        }
+
+        expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
+          id: "timeInRange",
+          title: "Avg. Daily Time In Range",
+          data: {
+            data: [
+              { id: "veryLow", value: 2 },
+              { id: "low", value: 2 },
+              { id: "target", value: 87 },
+              { id: "high", value: 3 },
+              { id: "veryHigh", value: 6 },
+            ],
+            total: { value: 100 },
+          },
+        });
+      });
+
+      it('when using non-standard range', () => {
+        const statTIRDatum = {
+          id: "timeInRange",
+          title: "Avg. Daily Time In Range",
+          "data": {
+            "data": [
+              { id: "veryLow", value: 630218.8259812435 },
+              { id: "low", value: 1230427.2316776658 },
+              { id: "target", value: 46546161.861757554 },
+              { id: "high", value: 37993192.080583535  }
+            ],
+            "total": { value: 86400000 },
+          },
+        }
+
+        expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
+          id: "timeInRange",
+          title: "Avg. Daily Time In Range",
+          data: {
+            data: [
+              { id: "veryLow", value: 1 },
+              { id: "low", value: 1 },
+              { id: "target", value: 54 },
+              { id: "high", value: 44 },
+            ],
+            total: { value: 100 },
+          },
+        });
+      });
+    });
+  });
+
   describe('getStatAnnotations', () => {
     const defaultOpts = {
       manufacturer: 'medtronic',
