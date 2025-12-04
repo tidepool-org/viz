@@ -328,6 +328,44 @@ export const reconcileTIRPercentages = (timeInRanges) => {
   return modifiedTimeInRanges;
 };
 
+/**
+ * reconcileTIRDatumValues
+ * @param {Object} statTIRDatum - the stat TIR datum
+ * - data.data should contain an array of TIR values for each range
+ *
+ * @returns {Object} a modified stat TIR datum so the percentages add to 100%
+ */
+export const reconcileTIRDatumValues = (statTIRDatum) => {
+  // For each of the individual range datums, calculate its percentage of the total
+  const ranges = {};
+  const total = statTIRDatum.data?.total?.value || NaN;
+
+  _.forEach(statTIRDatum.data.data, datum => {
+    if (['veryLow', 'low', 'target', 'high', 'veryHigh'].includes(datum.id)) {
+      ranges[datum.id] = datum.value / total;
+    }
+  });
+
+  // Reconcile the values to ensure the values sum up to 1 (or 100%)
+  const reconciledTimeInRanges = reconcileTIRPercentages(ranges);
+
+  // Return a modified stat TIR datum where the total is 100 and each individual
+  // range datum has its integer percentage as the value
+  // e.g. Original Datum: total === 86400000, 'low' datum value === 11814321
+  //      Return Datum:   total === 100,        'low' datum value === 14
+  const modifiedStatTIRDatum = _.cloneDeep(statTIRDatum);
+
+  const rangeKeys = _.keys(reconciledTimeInRanges);
+  _.forEach(rangeKeys, key => {
+    const datum = _.find(modifiedStatTIRDatum.data.data, datum => datum.id === key);
+    datum.value = bankersRound(reconciledTimeInRanges[key] * 100, 2);
+  });
+
+  modifiedStatTIRDatum.data.total.value = 100;
+
+  return modifiedStatTIRDatum;
+};
+
 export const getStatAnnotations = (data, type, opts = {}) => {
   const { bgSource, days, manufacturer } = opts;
   const vocabulary = getPumpVocabulary(manufacturer);
@@ -984,7 +1022,16 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
   let statsString = '';
 
-  _.each(stats, stat => {
+  _.each(stats, statArg => {
+    let statTitle = `${statArg.title}${statArg.units ? ` (${statArg.units})` : ''}`;
+
+    if (statArg.id === 'readingsInRange' && statArg.data?.raw?.total > 0) {
+      statTitle += t(' from {{count}} readings', { count: statArg.data.raw.total });
+    }
+
+    const isTIRStat = ['timeInRange', 'readingsInRange'].includes(statArg.id);
+    const stat = isTIRStat ? reconcileTIRDatumValues(statArg) : statArg;
+
     const renderTable = _.includes([
       commonStats.timeInRange,
       commonStats.readingsInRange,
@@ -1002,11 +1049,6 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
-    let statTitle = `${stat.title}${stat.units ? ` (${stat.units})` : ''}`;
-
-    if (stat.id === 'readingsInRange' && stat.data?.raw?.total > 0) {
-      statTitle += t(' from {{count}} readings', { count: stat.data.raw.total });
-    }
 
     if (renderTable) {
       statsString += textUtil.buildTextTable(
