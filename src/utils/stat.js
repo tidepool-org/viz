@@ -343,9 +343,7 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
   const total = statTIRDatum.data?.total?.value || NaN;
 
   _.forEach(statTIRDatum.data.data, datum => {
-    if (_.includes(['veryLow', 'low', 'target', 'high', 'veryHigh'], datum.id)) {
-      ranges[datum.id] = datum.value / total;
-    }
+    ranges[datum.id] = datum.value / total;
   });
 
   // Reconcile the values to ensure the values sum up to 1 (or 100%)
