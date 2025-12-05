@@ -1019,10 +1019,11 @@ describe('StatUtil', () => {
 
       statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
 
-      expect(statUtil.getCoefficientOfVariationData()).to.eql({
-        coefficientOfVariation: NaN,
-        total: 28,
+      expect(statUtil.getStandardDevData()).to.eql({
+        averageGlucose: 113.5,
         insufficientData: true,
+        standardDeviation: NaN,
+        total: 28
       });
     });
   });
