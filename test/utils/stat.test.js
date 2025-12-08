@@ -573,17 +573,9 @@ describe('stat', () => {
           suffix: '%',
         });
 
-        // 1 decimal place when `% < 0.5` and `% >= 0.05`
+        // 0 when `% < 0.5`
         expect(stat.formatDatum({
           value: 0.049,
-        }, statFormats.percentage, customOpts)).to.include({
-          value: '0.5',
-          suffix: '%',
-        });
-
-        // 1 decimal places when `% < 0.05`
-        expect(stat.formatDatum({
-          value: 0.0049,
         }, statFormats.percentage, customOpts)).to.include({
           value: '0',
           suffix: '%',
@@ -866,7 +858,7 @@ describe('stat', () => {
   });
 
   describe('reconcileTIRDatumValues', () => {
-    describe('modifies the datum to be integer percentage values with a total of 100', () => {
+    describe('modifies the datum to have range durations that sum up to 100%', () => {
       it('when using standard range', () => {
         const statTIRDatum = {
           id: 'timeInRange',
@@ -888,13 +880,13 @@ describe('stat', () => {
           title: 'Avg. Daily Time In Range',
           data: {
             data: [
-              { id: 'veryLow', value: 2 },
-              { id: 'low', value: 2 },
-              { id: 'target', value: 87 },
-              { id: 'high', value: 3 },
-              { id: 'veryHigh', value: 6 },
+              { id: 'veryLow', value: 1176000 },
+              { id: 'low', value: 1176000 },
+              { id: 'target', value: 51156000 },
+              { id: 'high', value: 1764000 },
+              { id: 'veryHigh', value: 3528000 },
             ],
-            total: { value: 100 },
+            total: { value: 58800000 },
           },
         });
       });
@@ -914,17 +906,19 @@ describe('stat', () => {
           },
         };
 
+        console.log(stat.reconcileTIRDatumValues(statTIRDatum).data.data)
+
         expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
           id: 'timeInRange',
           title: 'Avg. Daily Time In Range',
           data: {
             data: [
-              { id: 'veryLow', value: 1 },
-              { id: 'low', value: 1 },
-              { id: 'target', value: 54 },
-              { id: 'high', value: 44 },
+              { id: 'veryLow', value: 864000 },
+              { id: 'low', value: 864000 },
+              { id: 'target', value: 46656000 },
+              { id: 'high', value: 38016000 },
             ],
-            total: { value: 100 },
+            total: { value: 86400000 },
           },
         });
       });

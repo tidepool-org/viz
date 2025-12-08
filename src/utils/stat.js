@@ -340,7 +340,7 @@ export const reconcileTIRPercentages = (timeInRanges) => {
 export const reconcileTIRDatumValues = (statTIRDatum) => {
   // For each of the individual range datums, calculate its percentage of the total
   const ranges = {};
-  const total = statTIRDatum.data?.total?.value || NaN;
+  const total = statTIRDatum.data?.total?.value;
 
   _.forEach(statTIRDatum.data.data, datum => {
     ranges[datum.id] = datum.value / total;
@@ -349,19 +349,15 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
   // Reconcile the values to ensure the values sum up to 1 (or 100%)
   const reconciledTimeInRanges = reconcileTIRPercentages(ranges);
 
-  // Return a modified stat TIR datum where the total is 100 and each individual
-  // range datum has its integer percentage as the value
-  // e.g. Original Datum: total === 86400000, 'low' datum value === 11814321
-  //      Return Datum:   total ->  100,      'low' datum value ->  14
+  // Multiply the reconciled percentages with the total to get the reconciled datum
+  // values. We return a modified stat TIR datum with these reconciled values.
   const modifiedStatTIRDatum = _.cloneDeep(statTIRDatum);
 
   const rangeKeys = _.keys(reconciledTimeInRanges);
   _.forEach(rangeKeys, key => {
     const datum = _.find(modifiedStatTIRDatum.data.data, d => d.id === key);
-    datum.value = bankersRound(reconciledTimeInRanges[key] * 100, 2);
+    datum.value = reconciledTimeInRanges[key] * total;
   });
-
-  modifiedStatTIRDatum.data.total.value = 100;
 
   return modifiedStatTIRDatum;
 };
