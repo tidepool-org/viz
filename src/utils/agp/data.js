@@ -22,6 +22,7 @@ import moment from 'moment';
 import TextUtil from '../text/TextUtil';
 import { formatPercentage, bankersRound } from '../format';
 import { formatDatum } from '../../utils/stat';
+import { BG_DISPLAY_MINIMUM_INCREMENTS } from '../constants';
 
 import {
   getOffset,
@@ -86,11 +87,14 @@ export function agpCGMText(patient, data) {
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
     : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
 
-  // TODO: fix range labels - should not be contiguous
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+  const highLowerBound = targetUpperBound + minimumIncrement;
+  const lowUpperBound = targetLowerBound - minimumIncrement;
+
   const veryHighRange = `>${veryHighThreshold}`;
-  const highRange = `${veryLowThreshold}-${veryHighThreshold}`;
+  const highRange = `${highLowerBound}-${veryHighThreshold}`;
   const targetRange = `${targetLowerBound}-${targetUpperBound}`;
-  const lowRange = `${veryLowThreshold}-${targetLowerBound}`;
+  const lowRange = `${veryLowThreshold}-${lowUpperBound}`;
   const veryLowRange = `<${veryLowThreshold}`;
 
   const percentInVeryHigh = formatPercentage(counts.veryHigh / counts.total, 0, true);
