@@ -24,6 +24,7 @@ import {
   deviceName,
   getDeviceMeta,
   insulinSettings,
+  presetSettings,
   startTimeAndValue,
 } from '../../utils/settings/data';
 
@@ -236,11 +237,12 @@ class SettingsPrintView extends PrintView {
 
     this.setLayoutColumns({
       width: this.chartArea.width,
-      count: 3,
+      count: 2,
       gutter: 14,
     });
 
     this.renderInsulinSettings(this.latestPumpUpload.settings);
+    this.renderPresetSettings(this.latestPumpUpload.settings);
     this.doc.moveDown();
   }
 
@@ -285,7 +287,57 @@ class SettingsPrintView extends PrintView {
     this.resetText();
   }
 
+  renderPresetSettings(settings) {
+    const { rows, columns } = presetSettings(settings, this.manufacturer);
+
+    // Only render if there are presets
+    if (!rows.length) return;
+
+    // Position in the second column (beside Insulin Settings)
+    this.goToLayoutColumnPosition(1);
+
+    const columnWidth = this.getActiveColumnWidth();
+    const valueWidth = columnWidth * 0.6;
+
+    const tableColumns = _.map(columns, (column, index) => ({
+      id: column.key,
+      header: column.label,
+      align: index === 0 ? 'left' : 'right',
+      width: index === 0 ? columnWidth - valueWidth : valueWidth,
+    }));
+
+    const heading = {
+      text: t('Presets'),
+    };
+
+    this.renderTableHeading(heading, {
+      columnDefaults: {
+        fill: {
+          color: '#F4F5FF',
+          opacity: 1,
+        },
+        width: columnWidth,
+      },
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+
+    this.renderTable(tableColumns, rows, {
+      bottomMargin: 14,
+      columnDefaults: {
+        zebra: true,
+        headerFill: true,
+      },
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+  }
+
   renderBasalSchedules() {
+    this.doc.x = this.chartArea.leftEdge;
+    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
+    this.doc.moveDown();
+
     this.renderSectionHeading(t('Basal Rates'));
 
     this.setLayoutColumns({

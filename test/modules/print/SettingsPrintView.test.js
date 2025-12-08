@@ -28,6 +28,7 @@ import medtronicAutomated from '../../../data/pumpSettings/medtronic/automated.j
 import omnipodMultirate from '../../../data/pumpSettings/omnipod/multirate.json';
 import tandemMultirate from '../../../data/pumpSettings/tandem/multirate.json';
 import equilMultirate from '../../../data/pumpSettings/equil/multirate.json';
+import loopMultirate from '../../../data/pumpSettings/loop/multirate.json';
 
 import {
   ratio,
@@ -59,6 +60,7 @@ const data = {
   medtronicAutomated,
   omnipodMultirate,
   equilMultirate,
+  loopMultirate,
 };
 
 describe('SettingsPrintView', () => {
@@ -409,8 +411,75 @@ describe('SettingsPrintView', () => {
 
     it('should call `renderInsulinSettings` with the pump settings', () => {
       sinon.stub(Renderer, 'renderInsulinSettings');
+      sinon.stub(Renderer, 'renderPresetSettings');
       Renderer.renderPumpSettings();
       sinon.assert.calledWith(Renderer.renderInsulinSettings, data.omnipodMultirate);
+    });
+
+    it('should call `renderPresetSettings` with the pump settings', () => {
+      sinon.stub(Renderer, 'renderInsulinSettings');
+      sinon.stub(Renderer, 'renderPresetSettings');
+      Renderer.renderPumpSettings();
+      sinon.assert.calledWith(Renderer.renderPresetSettings, data.omnipodMultirate);
+    });
+
+    it('should set a 2 column layout', () => {
+      sinon.spy(Renderer, 'setLayoutColumns');
+      Renderer.renderPumpSettings();
+      sinon.assert.calledWithMatch(Renderer.setLayoutColumns, { count: 2 });
+    });
+  });
+
+  describe('renderPresetSettings', () => {
+    it('should render a heading and table when presets exist', () => {
+      Renderer = createRenderer(data.loopMultirate);
+      Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'renderTable');
+      sinon.stub(Renderer, 'updateLayoutColumnPosition');
+      sinon.stub(Renderer, 'getActiveColumnWidth').returns(300);
+
+      Renderer.renderPresetSettings(data.loopMultirate);
+
+      sinon.assert.calledWith(Renderer.renderTableHeading, { text: 'Presets' });
+      sinon.assert.calledOnce(Renderer.renderTable);
+    });
+
+    it('should render presets with correct columns and rows for Loop devices', () => {
+      Renderer = createRenderer(data.loopMultirate);
+      Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'renderTable');
+      sinon.stub(Renderer, 'updateLayoutColumnPosition');
+      sinon.stub(Renderer, 'getActiveColumnWidth').returns(300);
+
+      Renderer.renderPresetSettings(data.loopMultirate);
+
+      const tableCall = Renderer.renderTable.getCall(0);
+      const columns = tableCall.args[0];
+      const rows = tableCall.args[1];
+
+      expect(columns).to.have.length(2);
+      expect(columns[0].id).to.equal('name');
+      expect(columns[1].id).to.equal('value');
+
+      expect(rows).to.have.length(2);
+      expect(rows[0].name).to.equal('Pre-Meal');
+      expect(rows[1].name).to.equal('Workout');
+    });
+
+    it('should not render anything when there are no presets', () => {
+      Renderer = createRenderer(data.omnipodMultirate);
+      Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'renderTable');
+      sinon.stub(Renderer, 'updateLayoutColumnPosition');
+      sinon.stub(Renderer, 'getActiveColumnWidth').returns(300);
+
+      Renderer.renderPresetSettings(data.omnipodMultirate);
+
+      sinon.assert.notCalled(Renderer.renderTableHeading);
+      sinon.assert.notCalled(Renderer.renderTable);
     });
   });
 
