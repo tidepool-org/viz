@@ -906,8 +906,6 @@ describe('stat', () => {
           },
         };
 
-        console.log(stat.reconcileTIRDatumValues(statTIRDatum).data.data)
-
         expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
           id: 'timeInRange',
           title: 'Avg. Daily Time In Range',
