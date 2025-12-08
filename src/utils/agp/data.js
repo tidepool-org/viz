@@ -20,7 +20,7 @@ import i18next from 'i18next';
 import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
-import { formatPercentage } from '../format';
+import { formatPercentage, bankersRound } from '../format';
 import { formatDatum } from '../../utils/stat';
 
 import {
@@ -68,6 +68,8 @@ export function agpCGMText(patient, data) {
           bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
           averageGlucose: { averageGlucose },
           timeInRange: { counts, durations },
+          glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
+          sensorUsage: { sensorUsageAGP }
         },
       },
     },
@@ -83,7 +85,6 @@ export function agpCGMText(patient, data) {
   const reportDaysText = bgDaysWorn === 1
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
     : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
-
 
   // TODO: fix range labels - should not be contiguous
   const veryHighRange = `>${veryHighThreshold}`;
@@ -105,6 +106,8 @@ export function agpCGMText(patient, data) {
   const durationInVeryLow = formatDuration(durations.veryLow, { condensed: true });
 
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
+  const gmi = formatDatum({ value: glucoseManagementIndicatorAGP }, 'gmi', { bgPrefs, useAGPFormat: true })?.value;
+  const cgmActive  = bankersRound(sensorUsageAGP, 1);
 
   const textUtil = new TextUtil();
   let clipboardText = '';
@@ -123,6 +126,8 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}   ({{ durationInVeryLow }})', { veryLowRange, percentInVeryLow, durationInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
+  clipboardText += textUtil.buildTextLine(t('Sensor Usage: {{cgmActive}}%', { cgmActive }));
+  clipboardText += textUtil.buildTextLine(t('GMI (CGM): {{gmi}}%', { gmi }));
 
   return clipboardText;
 }
