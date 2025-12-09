@@ -19,3 +19,12 @@
 - Utils: Use named exports, not `export default`
 - Utils must use `moment.utc()` (enforced by eslint-plugin-moment-utc)
 - Trailing commas: multiline arrays/objects only, never in function params
+
+## Code Reuse Guidelines
+When implementing new features or adding device-specific logic:
+- **Prefer extending existing methods** over creating new device-specific methods
+- Add optional parameters (e.g., `opts = {}`) to existing functions to customize behavior
+- Use patterns like `columnIndex`, `heading`, `rowTransform`, or `fillColor` options to adapt generic methods for specific use cases
+- Only create new methods when the logic is fundamentally different, not just when parameters vary
+- This reduces duplication, simplifies testing, and makes the codebase easier to maintain
+- Example: Instead of `renderLoopBasalRates()`, extend `renderBasalSchedule(opts)` with a `columnIndex` option
