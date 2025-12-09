@@ -293,7 +293,7 @@ class SettingsPrintView extends PrintView {
       },
     });
 
-    // Row 3: Presets (if any)
+    // Row 3: Presets (if any) - use 2-column width to match row 2
     this.doc.x = this.chartArea.leftEdge;
     this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
 
@@ -301,13 +301,12 @@ class SettingsPrintView extends PrintView {
     if (presetRows.length) {
       this.setLayoutColumns({
         width: this.chartArea.width,
-        count: 3,
+        count: 2,
         gutter: 14,
       });
 
       this.renderPresetSettings(settings, {
         columnIndex: 0,
-        fillColor: { color: this.colors.basal, opacity: 0.15 },
       });
     }
 
@@ -321,13 +320,6 @@ class SettingsPrintView extends PrintView {
     const settings = this.latestPumpUpload.settings;
     const device = deviceName(this.manufacturer) || t('Unknown');
 
-    // Position footnotes at the bottom
-    this.doc.x = this.chartArea.leftEdge;
-    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
-    this.doc.moveDown(2);
-
-    this.setFill(this.colors.grey);
-
     const footnotes = [
       t('1 - Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device }),
       t('2 - {{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device }),
@@ -338,13 +330,39 @@ class SettingsPrintView extends PrintView {
       }),
     ];
 
+    // Calculate the height needed for footnotes
+    this.doc.fontSize(this.extraSmallFontSize);
+    const lineHeight = this.doc.currentLineHeight();
+    const lineGap = 2;
+    const paragraphGap = lineHeight * 0.5;
+
+    this.doc.fontSize(this.smallFontSize);
+
+    // Estimate height for each footnote (may wrap to multiple lines)
+    let totalFootnoteHeight = 0;
+    _.each(footnotes, (footnote, index) => {
+      const textHeight = this.doc.heightOfString(footnote, {
+        width: this.chartArea.width,
+        lineGap,
+      });
+      totalFootnoteHeight += textHeight;
+      if (index < footnotes.length - 1) {
+        totalFootnoteHeight += paragraphGap;
+      }
+    });
+
+    // Position footnotes at the bottom of the page, just above the footer
+    this.doc.x = this.chartArea.leftEdge;
+    this.doc.y = this.chartArea.bottomEdge - totalFootnoteHeight;
+
+    this.setFill(this.colors.grey);
+
     _.each(footnotes, (footnote, index) => {
       this.doc
         .font(this.font)
-        .fontSize(this.extraSmallFontSize)
         .text(footnote, {
           width: this.chartArea.width,
-          lineGap: 2,
+          lineGap,
         });
 
       if (index < footnotes.length - 1) {
@@ -456,7 +474,7 @@ class SettingsPrintView extends PrintView {
       text: t('Presets'),
     };
 
-    const defaultFillColor = { color: '#F4F5FF', opacity: 1 };
+    const defaultFillColor = { color: this.colors.presets, opacity: 1 };
 
     this.renderTableHeading(heading, {
       columnDefaults: {

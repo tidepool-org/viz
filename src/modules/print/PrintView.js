@@ -117,6 +117,7 @@ class PrintView {
       preprandial: '#4457D9',
       bolus: '#7CD0F0',
       bolusAutomated: '#00B2C3',
+      presets: '#F4F5FF',
       smbg: '#6480FB',
       siteChange: '#FCD144',
       basalHeader: '#DCF1F9',
