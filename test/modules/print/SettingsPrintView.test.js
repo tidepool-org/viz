@@ -292,6 +292,18 @@ describe('SettingsPrintView', () => {
       sinon.assert.calledOnce(Renderer.renderDeviceMeta);
       sinon.assert.calledOnce(Renderer.renderTandemProfiles);
     });
+
+    it('should call renderLoopSettings for Loop devices', () => {
+      Renderer = createRenderer(data.loopMultirate);
+
+      sinon.stub(Renderer, 'renderDeviceMeta');
+      sinon.stub(Renderer, 'renderLoopSettings');
+
+      Renderer.render();
+
+      sinon.assert.calledOnce(Renderer.renderDeviceMeta);
+      sinon.assert.calledOnce(Renderer.renderLoopSettings);
+    });
   });
 
   describe('renderDeviceMeta', () => {
@@ -398,6 +410,160 @@ describe('SettingsPrintView', () => {
     });
   });
 
+  describe('renderLoopSettings', () => {
+    beforeEach(() => {
+      Renderer = createRenderer(data.loopMultirate);
+    });
+
+    it('should render a section heading with active date', () => {
+      sinon.stub(Renderer, 'renderSectionHeading');
+      sinon.stub(Renderer, 'renderBasalSchedule');
+      sinon.stub(Renderer, 'renderTarget');
+      sinon.stub(Renderer, 'renderRatio');
+      sinon.stub(Renderer, 'renderSensitivity');
+      sinon.stub(Renderer, 'renderInsulinSettings');
+      sinon.stub(Renderer, 'renderPresetSettings');
+      sinon.stub(Renderer, 'renderLoopFootnotes');
+
+      Renderer.renderLoopSettings();
+
+      sinon.assert.calledWithMatch(Renderer.renderSectionHeading, {
+        text: 'Therapy Settings',
+        subText: sinon.match(/- Active at upload on/),
+      });
+    });
+
+    it('should call all the appropriate render methods for Loop settings', () => {
+      sinon.stub(Renderer, 'renderSectionHeading');
+      sinon.stub(Renderer, 'renderBasalSchedule');
+      sinon.stub(Renderer, 'renderTarget');
+      sinon.stub(Renderer, 'renderRatio');
+      sinon.stub(Renderer, 'renderSensitivity');
+      sinon.stub(Renderer, 'renderInsulinSettings');
+      sinon.stub(Renderer, 'renderPresetSettings');
+      sinon.stub(Renderer, 'renderLoopFootnotes');
+
+      Renderer.renderLoopSettings();
+
+      sinon.assert.calledOnce(Renderer.renderBasalSchedule);
+      sinon.assert.calledOnce(Renderer.renderTarget);
+      sinon.assert.calledOnce(Renderer.renderRatio);
+      sinon.assert.calledOnce(Renderer.renderSensitivity);
+      sinon.assert.calledOnce(Renderer.renderInsulinSettings);
+      sinon.assert.calledOnce(Renderer.renderPresetSettings);
+      sinon.assert.calledOnce(Renderer.renderLoopFootnotes);
+    });
+
+    it('should set 3 column layout for first row of tables', () => {
+      sinon.spy(Renderer, 'setLayoutColumns');
+      sinon.stub(Renderer, 'renderLoopFootnotes');
+
+      Renderer.renderLoopSettings();
+
+      sinon.assert.calledWithMatch(Renderer.setLayoutColumns, { count: 3 });
+    });
+
+    it('should set 2 column layout for second row of tables', () => {
+      sinon.spy(Renderer, 'setLayoutColumns');
+      sinon.stub(Renderer, 'renderLoopFootnotes');
+
+      Renderer.renderLoopSettings();
+
+      sinon.assert.calledWithMatch(Renderer.setLayoutColumns, { count: 2 });
+    });
+
+    it('should pass columnIndex and custom heading to renderTarget for Correction Range', () => {
+      sinon.stub(Renderer, 'renderSectionHeading');
+      sinon.stub(Renderer, 'renderBasalSchedule');
+      sinon.stub(Renderer, 'renderTarget');
+      sinon.stub(Renderer, 'renderRatio');
+      sinon.stub(Renderer, 'renderSensitivity');
+      sinon.stub(Renderer, 'renderInsulinSettings');
+      sinon.stub(Renderer, 'renderPresetSettings');
+      sinon.stub(Renderer, 'renderLoopFootnotes');
+
+      Renderer.renderLoopSettings();
+
+      sinon.assert.calledWithMatch(Renderer.renderTarget, {
+        columnIndex: 1,
+        heading: sinon.match({
+          text: 'Correction Range',
+        }),
+      });
+    });
+
+    it('should pass rowTransform to renderInsulinSettings for footnote superscripts', () => {
+      sinon.stub(Renderer, 'renderSectionHeading');
+      sinon.stub(Renderer, 'renderBasalSchedule');
+      sinon.stub(Renderer, 'renderTarget');
+      sinon.stub(Renderer, 'renderRatio');
+      sinon.stub(Renderer, 'renderSensitivity');
+      sinon.stub(Renderer, 'renderInsulinSettings');
+      sinon.stub(Renderer, 'renderPresetSettings');
+      sinon.stub(Renderer, 'renderLoopFootnotes');
+
+      Renderer.renderLoopSettings();
+
+      const insulinSettingsCall = Renderer.renderInsulinSettings.getCall(0);
+      expect(insulinSettingsCall.args[2]).to.have.property('rowTransform');
+      expect(insulinSettingsCall.args[2]).to.have.property('columnIndex', 1);
+    });
+  });
+
+  describe('renderBasalSchedule', () => {
+    beforeEach(() => {
+      Renderer = createRenderer(data.loopMultirate);
+      Renderer.setLayoutColumns({ count: 3 });
+    });
+
+    it('should render a table heading with units', () => {
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'renderTable');
+
+      Renderer.renderBasalSchedule({ columnIndex: 0 });
+
+      sinon.assert.calledWithMatch(Renderer.renderTableHeading, {
+        text: 'Basal Rates',
+        subText: ' U/hr',
+      });
+    });
+
+    it('should render basal rates table', () => {
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'renderTable');
+
+      Renderer.renderBasalSchedule({ columnIndex: 0 });
+
+      sinon.assert.calledOnce(Renderer.renderTable);
+    });
+
+    it('should position in the specified column', () => {
+      sinon.stub(Renderer, 'goToLayoutColumnPosition');
+      sinon.stub(Renderer, 'renderTableHeading');
+      sinon.stub(Renderer, 'renderTable');
+
+      Renderer.renderBasalSchedule({ columnIndex: 2 });
+
+      sinon.assert.calledWith(Renderer.goToLayoutColumnPosition, 2);
+    });
+  });
+
+  describe('renderLoopFootnotes', () => {
+    beforeEach(() => {
+      Renderer = createRenderer(data.loopMultirate);
+      Renderer.setLayoutColumns({ count: 2 });
+    });
+
+    it('should render footnotes text', () => {
+      Renderer.renderLoopFootnotes();
+
+      // Check that footnotes are rendered
+      sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match(/Correction Range/));
+      sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match(/deliver basal/));
+      sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match(/assumes that the insulin/));
+    });
+  });
+
   describe('renderPumpSettings', () => {
     beforeEach(() => {
       Renderer = createRenderer(data.omnipodMultirate);
@@ -434,6 +600,7 @@ describe('SettingsPrintView', () => {
     it('should render a heading and table when presets exist', () => {
       Renderer = createRenderer(data.loopMultirate);
       Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'goToLayoutColumnPosition');
       sinon.stub(Renderer, 'renderTableHeading');
       sinon.stub(Renderer, 'renderTable');
       sinon.stub(Renderer, 'updateLayoutColumnPosition');
@@ -448,6 +615,7 @@ describe('SettingsPrintView', () => {
     it('should render presets with correct columns and rows for Loop devices', () => {
       Renderer = createRenderer(data.loopMultirate);
       Renderer.layoutColumns = { activeIndex: 0 };
+      sinon.stub(Renderer, 'goToLayoutColumnPosition');
       sinon.stub(Renderer, 'renderTableHeading');
       sinon.stub(Renderer, 'renderTable');
       sinon.stub(Renderer, 'updateLayoutColumnPosition');

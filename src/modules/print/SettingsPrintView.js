@@ -36,7 +36,7 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
-import { getPumpVocabulary, isControlIQ } from '../../utils/device';
+import { getPumpVocabulary, isControlIQ, isLoop } from '../../utils/device';
 
 import {
   basalSchedules as profileSchedules,
@@ -65,6 +65,8 @@ class SettingsPrintView extends PrintView {
 
     if (this.isTandem) {
       this.renderTandemProfiles();
+    } else if (isLoop(this.latestPumpUpload.settings)) {
+      this.renderLoopSettings();
     } else {
       if (this.manufacturer !== 'animas') this.renderPumpSettings();
       this.renderBasalSchedules();
@@ -246,10 +248,149 @@ class SettingsPrintView extends PrintView {
     this.doc.moveDown();
   }
 
-  renderInsulinSettings(settings, scheduleName) {
+  renderLoopSettings() {
+    const settings = this.latestPumpUpload.settings;
+
+    // Render section heading with active date
+    const sectionHeading = {
+      text: t('Therapy Settings'),
+      subText: t(' - Active at upload on {{date}}', { date: this.deviceMeta.uploaded }),
+    };
+    this.renderSectionHeading(sectionHeading);
+
+    // Row 1: Basal Rates, Correction Range, Carb Ratios (3 columns)
+    this.setLayoutColumns({
+      width: this.chartArea.width,
+      count: 3,
+      gutter: 14,
+    });
+
+    this.renderBasalSchedule({ columnIndex: 0 });
+    this.renderTarget({ columnIndex: 1, heading: { text: t('Correction Range'), subText: ` ${this.bgUnits}\u00B9` } });
+    this.renderRatio({ columnIndex: 2 });
+
+    // Row 2: Insulin Sensitivities, Insulin Settings (2 columns)
+    this.doc.x = this.chartArea.leftEdge;
+    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
+
+    this.setLayoutColumns({
+      width: this.chartArea.width,
+      count: 2,
+      gutter: 14,
+    });
+
+    this.renderSensitivity({ columnIndex: 0 });
+    this.renderInsulinSettings(settings, null, {
+      columnIndex: 1,
+      rowTransform: row => {
+        const newRow = { ...row };
+        if (row.setting === t('Glucose Safety Limit')) {
+          newRow.setting = `${row.setting} \u00B2`;
+        } else if (row.setting === t('Insulin Model')) {
+          newRow.setting = `${row.setting} \u00B3`;
+        }
+        return newRow;
+      },
+    });
+
+    // Row 3: Presets (if any)
+    this.doc.x = this.chartArea.leftEdge;
+    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
+
+    const { rows: presetRows } = presetSettings(settings, this.manufacturer);
+    if (presetRows.length) {
+      this.setLayoutColumns({
+        width: this.chartArea.width,
+        count: 3,
+        gutter: 14,
+      });
+
+      this.renderPresetSettings(settings, {
+        columnIndex: 0,
+        fillColor: { color: this.colors.basal, opacity: 0.15 },
+      });
+    }
+
+    // Render footnotes
+    this.renderLoopFootnotes();
+
+    this.resetText();
+  }
+
+  renderLoopFootnotes() {
+    const settings = this.latestPumpUpload.settings;
+    const device = deviceName(this.manufacturer) || t('Unknown');
+
+    // Position footnotes at the bottom
+    this.doc.x = this.chartArea.leftEdge;
+    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
+    this.doc.moveDown(2);
+
+    this.setFill(this.colors.grey);
+
+    const footnotes = [
+      t('1 - Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device }),
+      t('2 - {{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device }),
+      t('3 - {{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed. The {{insulinModel}} model assumes peak activity at {{peakMinutes}} minutes.', {
+        device,
+        insulinModel: this.getInsulinModelLabel(settings),
+        peakMinutes: this.getInsulinModelPeakMinutes(settings),
+      }),
+    ];
+
+    _.each(footnotes, (footnote, index) => {
+      this.doc
+        .font(this.font)
+        .fontSize(this.extraSmallFontSize)
+        .text(footnote, {
+          width: this.chartArea.width,
+          lineGap: 2,
+        });
+
+      if (index < footnotes.length - 1) {
+        this.doc.moveDown(0.5);
+      }
+    });
+
+    this.setFill();
+  }
+
+  getInsulinModelLabel(settings) {
+    const insulinModelLabels = {
+      rapidAdult: t('Rapid-Acting - Adults'),
+      rapidChild: t('Rapid Acting - Children'),
+      fiasp: t('Fiasp'),
+      lyumjev: t('Lyumjev'),
+      afrezza: t('Afrezza'),
+    };
+
+    return insulinModelLabels[settings?.insulinModel?.modelType]
+      || settings?.insulinModel?.modelType
+      || t('Unknown');
+  }
+
+  getInsulinModelPeakMinutes(settings) {
+    return _.isFinite(settings?.insulinModel?.actionPeakOffset)
+      ? settings.insulinModel.actionPeakOffset / 60
+      : t('Unknown');
+  }
+
+  renderInsulinSettings(settings, scheduleName, opts = {}) {
+    const { columnIndex, rowTransform } = opts;
+
+    if (_.isFinite(columnIndex)) {
+      this.goToLayoutColumnPosition(columnIndex);
+    }
+
     const columnWidth = this.getActiveColumnWidth();
     const valueWidth = columnWidth / 3;
-    const { rows: tableRows, columns } = insulinSettings(settings, this.manufacturer, scheduleName);
+    const insulinSettingsData = insulinSettings(settings, this.manufacturer, scheduleName);
+    const { columns } = insulinSettingsData;
+    let tableRows = insulinSettingsData.rows;
+
+    if (rowTransform) {
+      tableRows = _.map(tableRows, rowTransform);
+    }
 
     const tableColumns = _.map(columns, (column, index) => ({
       id: column.key,
@@ -287,14 +428,19 @@ class SettingsPrintView extends PrintView {
     this.resetText();
   }
 
-  renderPresetSettings(settings) {
+  renderPresetSettings(settings, opts = {}) {
+    const { columnIndex, fillColor } = opts;
     const { rows, columns } = presetSettings(settings, this.manufacturer);
 
     // Only render if there are presets
     if (!rows.length) return;
 
-    // Position in the second column (beside Insulin Settings)
-    this.goToLayoutColumnPosition(1);
+    // Position in the specified column or default to column 1
+    if (_.isFinite(columnIndex)) {
+      this.goToLayoutColumnPosition(columnIndex);
+    } else {
+      this.goToLayoutColumnPosition(1);
+    }
 
     const columnWidth = this.getActiveColumnWidth();
     const valueWidth = columnWidth * 0.6;
@@ -310,12 +456,11 @@ class SettingsPrintView extends PrintView {
       text: t('Presets'),
     };
 
+    const defaultFillColor = { color: '#F4F5FF', opacity: 1 };
+
     this.renderTableHeading(heading, {
       columnDefaults: {
-        fill: {
-          color: '#F4F5FF',
-          opacity: 1,
-        },
+        fill: fillColor || defaultFillColor,
         width: columnWidth,
       },
     });
@@ -328,6 +473,76 @@ class SettingsPrintView extends PrintView {
         zebra: true,
         headerFill: true,
       },
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+  }
+
+  renderBasalSchedule(opts = {}) {
+    const { columnIndex } = opts;
+    const settings = this.latestPumpUpload.settings;
+
+    if (_.isFinite(columnIndex)) {
+      this.goToLayoutColumnPosition(columnIndex);
+    }
+
+    const columnWidth = this.getActiveColumnWidth();
+
+    const {
+      activeSchedule,
+      basalSchedules,
+    } = settings;
+
+    // Get the active schedule
+    const activeBasalSchedule = _.find(basalSchedules, { name: activeSchedule })
+      || basalSchedules[0];
+    const scheduleIndex = _.findIndex(basalSchedules, { name: activeBasalSchedule.name });
+    const scheduleData = basal(scheduleIndex, settings, this.manufacturer);
+
+    const tableColumns = _.map(startTimeAndValue('rate'), (column, index) => {
+      const isValue = index === 1;
+      const valueWidth = columnWidth / 3;
+
+      return {
+        id: column.key,
+        header: column.label,
+        align: isValue ? 'right' : 'left',
+        width: isValue ? valueWidth : columnWidth - valueWidth,
+      };
+    });
+
+    const heading = {
+      text: t('Basal Rates'),
+      subText: ' U/hr',
+    };
+
+    this.renderTableHeading(heading, {
+      columnDefaults: {
+        fill: {
+          color: this.colors.basal,
+          opacity: 0.15,
+        },
+        width: columnWidth,
+      },
+    });
+
+    this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
+
+    const rows = _.map(scheduleData.rows, (row, rowIndex) => {
+      const isLast = rowIndex === scheduleData.rows.length - 1;
+      if (isLast) {
+        // eslint-disable-next-line no-underscore-dangle, no-param-reassign
+        row._bold = true;
+      }
+      return row;
+    });
+
+    this.renderTable(tableColumns, rows, {
+      columnDefaults: {
+        zebra: true,
+        headerFill: true,
+      },
+      bottomMargin: 14,
     });
 
     this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
@@ -467,8 +682,14 @@ class SettingsPrintView extends PrintView {
     this.resetText();
   }
 
-  renderWizardSetting(settings, units = '') {
-    this.goToLayoutColumnPosition(this.getShortestLayoutColumn());
+  renderWizardSetting(settings, units = '', opts = {}) {
+    const { columnIndex, heading: customHeading } = opts;
+
+    if (_.isFinite(columnIndex)) {
+      this.goToLayoutColumnPosition(columnIndex);
+    } else {
+      this.goToLayoutColumnPosition(this.getShortestLayoutColumn());
+    }
 
     const columnWidth = this.getActiveColumnWidth();
 
@@ -484,7 +705,7 @@ class SettingsPrintView extends PrintView {
       };
     });
 
-    const heading = {
+    const heading = customHeading || {
       text: settings.title,
       subText: ` ${units}`,
     };
@@ -511,27 +732,30 @@ class SettingsPrintView extends PrintView {
     this.updateLayoutColumnPosition(this.layoutColumns.activeIndex);
   }
 
-  renderSensitivity() {
+  renderSensitivity(opts = {}) {
     const units = `${this.bgUnits}/U`;
     this.renderWizardSetting(
       sensitivity(this.latestPumpUpload.settings, this.manufacturer, this.bgUnits),
-      units
+      units,
+      opts
     );
   }
 
-  renderTarget() {
+  renderTarget(opts = {}) {
     const units = this.bgUnits;
     this.renderWizardSetting(
       target(this.latestPumpUpload.settings, this.manufacturer),
-      units
+      units,
+      opts
     );
   }
 
-  renderRatio() {
+  renderRatio(opts = {}) {
     const units = _.get(this, 'latestPumpUpload.settings.units.carb') === 'exchanges' ? 'U/exch' : 'g/U';
     this.renderWizardSetting(
       ratio(this.latestPumpUpload.settings, this.manufacturer),
-      units
+      units,
+      opts
     );
   }
 }
