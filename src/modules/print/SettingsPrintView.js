@@ -333,8 +333,8 @@ class SettingsPrintView extends PrintView {
     // Calculate the height needed for footnotes
     this.doc.fontSize(this.extraSmallFontSize);
     const lineHeight = this.doc.currentLineHeight();
-    const lineGap = 2;
-    const paragraphGap = lineHeight * 0.5;
+    const lineGap = 1.25;
+    const bottomMargin = lineHeight * 3;
 
     this.doc.fontSize(this.smallFontSize);
 
@@ -346,8 +346,9 @@ class SettingsPrintView extends PrintView {
         lineGap,
       });
       totalFootnoteHeight += textHeight;
-      if (index < footnotes.length - 1) {
-        totalFootnoteHeight += paragraphGap;
+
+      if (index === footnotes.length - 1) {
+        totalFootnoteHeight += bottomMargin;
       }
     });
 
@@ -357,17 +358,13 @@ class SettingsPrintView extends PrintView {
 
     this.setFill(this.colors.grey);
 
-    _.each(footnotes, (footnote, index) => {
+    _.each(footnotes, (footnote) => {
       this.doc
         .font(this.font)
         .text(footnote, {
           width: this.chartArea.width,
           lineGap,
         });
-
-      if (index < footnotes.length - 1) {
-        this.doc.moveDown(0.5);
-      }
     });
 
     this.setFill();
