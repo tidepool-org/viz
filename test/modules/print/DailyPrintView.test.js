@@ -727,6 +727,50 @@ describe('DailyPrintView', () => {
 
       sinon.assert.callCount(Renderer.doc.text, expectedTextCallCount);
     });
+
+    it('should truncate bolus details to 50 lines and add an ellipsis as the 51st entry', () => {
+      // 25 extended boluses (2 lines each, 3 text() calls each) = 50 lines, 75 text() calls
+      const boluses = _.times(25, i => ({ normalTime: i * 1000, threeHrBin: 0, extended: 1 }));
+      // Add 1 more normal bolus, which should not be rendered
+      boluses.push({ normalTime: 99999, threeHrBin: 0 });
+      const chart = {
+        bolusDetailPositions: [0],
+        bolusDetailWidths: [100],
+        bolusScale: { range: () => [0, 100] },
+        data: { bolus: boluses },
+        timePrefs: {},
+      };
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      sinon.stub(RendererLocal, 'timePrefs').value({});
+      RendererLocal.renderBolusDetails(chart);
+      // 25 extended boluses * 3 text calls = 75, plus 1 ellipsis
+      const expectedMinCalls = 75 + 1;
+      sinon.assert.callCount(RendererLocal.doc.text, expectedMinCalls);
+      sinon.assert.calledWith(RendererLocal.doc.text, '…');
+    });
+
+    it('should not add an ellipsis if 50 or fewer lines', () => {
+      // 24 extended boluses (2 lines each) = 48 lines, 2 normal boluses = 2 lines, total 50
+      const boluses = [
+        ..._.times(24, i => ({ normalTime: i * 1000, threeHrBin: 0, extended: 1 })),
+        { normalTime: 99998, threeHrBin: 0 },
+        { normalTime: 99999, threeHrBin: 0 },
+      ];
+      const chart = {
+        bolusDetailPositions: [0],
+        bolusDetailWidths: [100],
+        bolusScale: { range: () => [0, 100] },
+        data: { bolus: boluses },
+        timePrefs: {},
+      };
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      sinon.stub(RendererLocal, 'timePrefs').value({});
+      RendererLocal.renderBolusDetails(chart);
+      // 24*3 + 2*2 = 76 calls
+      const expectedMinCalls = 76;
+      sinon.assert.callCount(RendererLocal.doc.text, expectedMinCalls);
+      sinon.assert.neverCalledWith(RendererLocal.doc.text, '…');
+    });
   });
 
   describe('renderBasalPaths', () => {
@@ -876,6 +920,52 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
       sinon.assert.calledWith(Renderer.doc.text, 'manual &');
       sinon.assert.calledWith(Renderer.doc.text, 'automated');
+    });
+  });
+
+  describe('countBolusLinesWithLimit', () => {
+    it('should count lines for normal boluses only', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      const boluses = _.times(10, i => ({ normalTime: i * 1000 }));
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(10);
+      expect(result.bolusesToRender.length).to.equal(10);
+      expect(result.needsEllipsis).to.be.false;
+    });
+
+    it('should count lines for extended boluses', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      const boluses = _.times(5, i => ({ normalTime: i * 1000, extended: 1 }));
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(10);
+      expect(result.bolusesToRender.length).to.equal(5);
+      expect(result.needsEllipsis).to.be.false;
+    });
+
+    it('should count lines for mixed boluses', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      const boluses = [
+        { normalTime: 0 },
+        { normalTime: 1, extended: 1 },
+        { normalTime: 2 },
+        { normalTime: 3, expectedExtended: 1 },
+      ];
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(6);
+      expect(result.bolusesToRender.length).to.equal(4);
+      expect(result.needsEllipsis).to.be.false;
+    });
+
+    it('should stop at maxLines and set needsEllipsis if exceeded', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      // 25 extended boluses (2 lines each) = 50 lines
+      const boluses = _.times(25, i => ({ normalTime: i * 1000, extended: 1 }));
+      // Add 1 more normal bolus, which should not be rendered
+      boluses.push({ normalTime: 99999 });
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(50);
+      expect(result.bolusesToRender.length).to.equal(25);
+      expect(result.needsEllipsis).to.be.true;
     });
   });
 });

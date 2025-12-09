@@ -255,6 +255,35 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
+  /**
+   * Counts the number of lines needed to render bolus entries, respecting a maximum line limit.
+   * Determines which boluses can be rendered within the limit and whether an ellipsis is needed.
+   *
+   * @param {Array<Object>} boluses - Array of bolus objects to be rendered.
+   * @param {number} [maxLines=50] - Maximum number of lines allowed for rendering.
+   * @returns {{ count: number, bolusesToRender: Array<Object>, needsEllipsis: boolean }}
+   *   An object containing:
+   *     - count: Total number of lines used.
+   *     - bolusesToRender: Array of bolus objects that fit within the line limit.
+   *     - needsEllipsis: Whether additional boluses exist beyond the limit.
+   */
+  countBolusLinesWithLimit(boluses, maxLines = 50) {
+    let lineCount = 0;
+    let needsEllipsis = false;
+    const bolusesToRender = [];
+    for (let i = 0; i < boluses.length; ++i) {
+      const bolus = boluses[i];
+      const linesForBolus = (bolus.extended != null || bolus.expectedExtended != null) ? 2 : 1;
+      if (lineCount + linesForBolus > maxLines) {
+        needsEllipsis = true;
+        break;
+      }
+      bolusesToRender.push(bolus);
+      lineCount += linesForBolus;
+    }
+    return { count: lineCount, bolusesToRender, needsEllipsis };
+  }
+
   calculateDateChartHeight({ data, date }) {
     this.doc.fontSize(this.smallFontSize);
     const lineHeight = this.doc.currentLineHeight() * 1.25;
@@ -266,14 +295,8 @@ class DailyPrintView extends PrintView {
     const maxBolusStack = _.max(_.map(
       _.keys(threeHrBinnedBoluses),
       (key) => {
-        const totalLines = _.reduce(threeHrBinnedBoluses[key], (lines, insulinEvent) => {
-          const bolus = getBolusFromInsulinEvent(insulinEvent);
-          if (bolus.extended || bolus.expectedExtended) {
-            return lines + 2;
-          }
-          return lines + 1;
-        }, 0);
-        return totalLines;
+        const boluses = _.sortBy(threeHrBinnedBoluses[key].map(getBolusFromInsulinEvent), 'normalTime');
+        return this.countBolusLinesWithLimit(boluses, 50).count;
       }
     ));
 
@@ -943,7 +966,9 @@ class DailyPrintView extends PrintView {
           },
         };
       }(this.doc));
-      _.each(_.sortBy(binOfBoluses, 'normalTime'), (bolus) => {
+      const sortedBoluses = _.sortBy(binOfBoluses, 'normalTime');
+      const { bolusesToRender, needsEllipsis } = this.countBolusLinesWithLimit(sortedBoluses, 50);
+      _.each(bolusesToRender, (bolus) => {
         const displayTime = formatLocalizedFromUTC(bolus.normalTime, this.timePrefs, 'h:mma')
           .slice(0, -1);
         this.doc.text(
@@ -956,7 +981,7 @@ class DailyPrintView extends PrintView {
           { align: 'right' }
         );
 
-        if (bolus.extended != null) {
+        if (bolus.extended != null || bolus.expectedExtended != null) {
           const normalPercentage = getNormalPercentage(bolus);
           const extendedPercentage = getExtendedPercentage(bolus);
           const durationOpts = { ascii: true };
@@ -972,6 +997,15 @@ class DailyPrintView extends PrintView {
         }
         yPos.update();
       });
+      if (needsEllipsis) {
+        this.doc.text(
+          '…',
+          groupXPos,
+          yPos.current(),
+          { indent: 2, width: groupWidth }
+        );
+        yPos.update();
+      }
     });
 
     return this;
