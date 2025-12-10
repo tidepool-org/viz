@@ -5,7 +5,7 @@
 - **Build**: `yarn build` (production) or `yarn build-dev` (development)
 - **Lint**: `yarn lint`
 - **Test all**: `yarn test` (runs lint first via pretest)
-- **Test single file**: Create `local/mocha.opts.json` with `{"grep": "pattern"}` then run `yarn test`
+- **Test single file**: Create `local/mocha.opts.json` with `{"grep": "pattern"}` then run `yarn test`. **IMPORTANT**: Delete or empty this file (`echo '{}' > local/mocha.opts.json`) when done to restore full test suite execution.
 - **Test watch**: `yarn test-watch`
 - **Storybook**: `yarn stories` (port 8083)
 

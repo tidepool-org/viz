@@ -259,7 +259,7 @@ export const pumpVocabulary = {
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
-    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
+    [PREPRANDIAL]: { label: t('Pre-Meal'), marker: t('P') },
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
