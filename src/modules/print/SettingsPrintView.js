@@ -352,6 +352,22 @@ class SettingsPrintView extends PrintView {
       }
     });
 
+    // Get the current content position (bottom of the longest column)
+    const currentContentY = _.get(
+      this.layoutColumns,
+      ['columns', this.getLongestLayoutColumn(), 'y'],
+      this.doc.y
+    );
+
+    // Calculate where footnotes would need to start
+    const footnotesStartY = this.chartArea.bottomEdge - totalFootnoteHeight;
+
+    // Check if there's enough room on the current page for footnotes
+    // If content overlaps with where footnotes need to go, add a new page
+    if (currentContentY > footnotesStartY) {
+      this.doc.addPage();
+    }
+
     // Position footnotes at the bottom of the page, just above the footer
     this.doc.x = this.chartArea.leftEdge;
     this.doc.y = this.chartArea.bottomEdge - totalFootnoteHeight;

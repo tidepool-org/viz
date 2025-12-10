@@ -562,6 +562,32 @@ describe('SettingsPrintView', () => {
       sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match(/deliver basal/));
       sinon.assert.calledWithMatch(Renderer.doc.text, sinon.match(/assumes that the insulin/));
     });
+
+    it('should add a new page if content overlaps with footnotes area', () => {
+      // Reset the addPage call count from constructor
+      Renderer.doc.addPage.resetHistory();
+
+      // Simulate content extending past where footnotes would start
+      Renderer.layoutColumns.columns[0].y = Renderer.chartArea.bottomEdge - 10;
+      Renderer.layoutColumns.columns[1].y = Renderer.chartArea.bottomEdge - 10;
+
+      Renderer.renderLoopFootnotes();
+
+      sinon.assert.calledOnce(Renderer.doc.addPage);
+    });
+
+    it('should not add a new page if there is enough room for footnotes', () => {
+      // Reset the addPage call count from constructor
+      Renderer.doc.addPage.resetHistory();
+
+      // Simulate content ending early on the page
+      Renderer.layoutColumns.columns[0].y = Renderer.chartArea.topEdge + 100;
+      Renderer.layoutColumns.columns[1].y = Renderer.chartArea.topEdge + 100;
+
+      Renderer.renderLoopFootnotes();
+
+      sinon.assert.notCalled(Renderer.doc.addPage);
+    });
   });
 
   describe('renderPumpSettings', () => {
