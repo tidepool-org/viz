@@ -320,3 +320,11 @@ export const BG_COLORS = {
   high: '#BB9AE7',
   veryHigh: '#8C65D6',
 };
+
+export const INSULIN_MODEL_LABELS = {
+  rapidAdult: t('Rapid-Acting - Adults'),
+  rapidChild: t('Rapid-Acting - Children'),
+  fiasp: t('Fiasp'),
+  lyumjev: t('Lyumjev'),
+  afrezza: t('Afrezza'),
+};

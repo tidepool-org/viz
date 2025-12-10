@@ -37,6 +37,7 @@ import {
 } from '../../utils/settings/nonTandemData';
 
 import { getPumpVocabulary, isControlIQ, isLoop } from '../../utils/device';
+import { INSULIN_MODEL_LABELS } from '../../utils/constants';
 
 import {
   basalSchedules as profileSchedules,
@@ -387,15 +388,7 @@ class SettingsPrintView extends PrintView {
   }
 
   getInsulinModelLabel(settings) {
-    const insulinModelLabels = {
-      rapidAdult: t('Rapid-Acting - Adults'),
-      rapidChild: t('Rapid Acting - Children'),
-      fiasp: t('Fiasp'),
-      lyumjev: t('Lyumjev'),
-      afrezza: t('Afrezza'),
-    };
-
-    return insulinModelLabels[settings?.insulinModel?.modelType]
+    return INSULIN_MODEL_LABELS[settings?.insulinModel?.modelType]
       || settings?.insulinModel?.modelType
       || t('Unknown');
   }
