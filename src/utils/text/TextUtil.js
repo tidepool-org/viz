@@ -18,21 +18,40 @@ import { getPatientFullName } from '../misc';
 const t = i18next.t.bind(i18next);
 
 export class TextUtil {
-  constructor(patient, endpoints, timePrefs) {
+  constructor(patient, endpoints, timePrefs, copyAsTextMetadata) {
     this.patient = patient;
     this.endpoints = endpoints;
     this.timePrefs = timePrefs;
+    this.copyAsTextMetadata = copyAsTextMetadata || {};
   }
 
   buildDocumentHeader = (source) => {
+    const { patientTags = [], sites = [] } = this.copyAsTextMetadata;
+
     const fullname = this.buildTextLine(getPatientFullName(this.patient));
     const bday = this.buildTextLine({ label: t('Date of birth'), value: formatBirthdate(this.patient) });
     const diagnosis = formatDiagnosisDate(this.patient);
     const diagnosisText = diagnosis ? this.buildTextLine({ label: t('Date of diagnosis'), value: diagnosis }) : '';
     const mrn = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
     const mrnText = mrn ? this.buildTextLine({ label: t('MRN'), value: mrn }) : '';
+
+    const tagNames = _.map(patientTags, tag => tag.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
+    const siteNames = _.map(sites, site => site.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
+
+    const tagsText = tagNames.length ? this.buildTextLine({ label: t('Patient Tags'), value: tagNames }) : '';
+    const sitesText = siteNames.length ? this.buildTextLine({ label: t('Clinic Sites'), value: siteNames }) : '';
+
     const exported = this.buildTextLine({ label: `${t('Exported from Tidepool')}${source ? ` ${source}` : ''}`, value: formatCurrentDate() });
-    return `${fullname}${bday}${diagnosisText}${mrnText}${exported}`;
+
+    return (
+      fullname +
+      bday +
+      diagnosisText +
+      mrnText +
+      tagsText +
+      sitesText +
+      exported
+    );
   };
 
   buildDocumentDates = () => {

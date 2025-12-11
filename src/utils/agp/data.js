@@ -22,7 +22,7 @@ import moment from 'moment';
 import TextUtil from '../text/TextUtil';
 import { formatPercentage, bankersRound } from '../format';
 import { formatDatum } from '../../utils/stat';
-import { BG_DISPLAY_MINIMUM_INCREMENTS } from '../constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 import {
   getOffset,
@@ -31,8 +31,6 @@ import {
   formatDateRange,
   formatDuration,
 } from '../datetime';
-
-import { MS_IN_MIN } from '../constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -111,7 +109,7 @@ export function agpCGMText(patient, data) {
 
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
   const gmi = formatDatum({ value: glucoseManagementIndicatorAGP }, 'gmi', { bgPrefs, useAGPFormat: true })?.value;
-  const cgmActive  = bankersRound(sensorUsageAGP, 1);
+  const cgmActive = bankersRound(sensorUsageAGP, 1);
 
   const textUtil = new TextUtil();
   let clipboardText = '';
@@ -120,7 +118,7 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('Date of birth: {{birthDate}}', { birthDate }));
   clipboardText += textUtil.buildTextLine(t('Exported from Tidepool TIDE: {{currentDate}}', { currentDate }));
   clipboardText += textUtil.buildTextLine(t('Date range of CGM data: {{reportDaysText}}', { reportDaysText }));
-  clipboardText += textUtil.buildTextLine(t('CGM Wear Time: {{ cgmActive }}', { cgmActive }));
+  clipboardText += textUtil.buildTextLine(t('CGM Wear Time: {{ cgmActive }}%', { cgmActive }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
   clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}   ({{ durationInVeryHigh }})', { veryHighRange, percentInVeryHigh, durationInVeryHigh }));

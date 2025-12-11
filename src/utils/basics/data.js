@@ -388,7 +388,7 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
  *
  * @return {String} Basics data as a formatted string
  */
-export function basicsText(patient, data, stats, aggregations) {
+export function basicsText(patient, data, stats, aggregations, copyAsTextMetadata) {
   const {
     bgPrefs,
     data: {
@@ -401,7 +401,7 @@ export function basicsText(patient, data, stats, aggregations) {
     timePrefs,
   } = data;
 
-  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
 
   let basicsString = textUtil.buildDocumentHeader('Basics');
   basicsString += textUtil.buildDocumentDates();

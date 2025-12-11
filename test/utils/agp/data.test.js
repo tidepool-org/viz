@@ -54,7 +54,7 @@ const data = {
         },
         sensorUsage: {
           sensorUsage: 2532600000,
-          sensorUsageAGP: 99.95264030310206,
+          sensorUsageAGP: 99.84264030310206,
           total: 2592000000,
           sampleInterval: 300000,
           count: 8442,
@@ -151,15 +151,18 @@ const expectedOutput = (
 `Terence Crawford
 Date of birth: 2001-01-01
 Exported from Tidepool TIDE: ${formatCurrentDate()}
-
-Reporting Period: December 15, 2024 - January 13, 2025
+Date range of CGM data: December 15, 2024 - January 13, 2025
+CGM Wear Time: 99.8%
 
 Avg. Daily Time In Range (mg/dL)
+>250   4%   (58m)
+181-250   16%   (3h 54m)
 70-180   76%   (18h 20m)
-54-70   3%   (42m)
+54-69   3%   (42m)
 <54   0%   (6m)
 
 Avg. Glucose (CGM): 121 mg/dL
+GMI (CGM): 6.2%
 `);
 
 describe('[agp] data utils', () => {
