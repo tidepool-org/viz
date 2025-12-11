@@ -119,8 +119,8 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(fullName);
   clipboardText += textUtil.buildTextLine(t('Date of birth: {{birthDate}}', { birthDate }));
   clipboardText += textUtil.buildTextLine(t('Exported from Tidepool TIDE: {{currentDate}}', { currentDate }));
-  clipboardText += textUtil.buildTextLine('');
-  clipboardText += textUtil.buildTextLine(t('Reporting Period: {{reportDaysText}}', { reportDaysText }));
+  clipboardText += textUtil.buildTextLine(t('Date range of CGM data: {{reportDaysText}}', { reportDaysText }));
+  clipboardText += textUtil.buildTextLine(t('CGM Wear Time: {{ cgmActive }}', { cgmActive }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
   clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}   ({{ durationInVeryHigh }})', { veryHighRange, percentInVeryHigh, durationInVeryHigh }));
@@ -130,8 +130,7 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}   ({{ durationInVeryLow }})', { veryLowRange, percentInVeryLow, durationInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
-  clipboardText += textUtil.buildTextLine(t('Sensor Usage: {{cgmActive}}%', { cgmActive }));
-  clipboardText += textUtil.buildTextLine(t('GMI (CGM): {{gmi}}%', { gmi }));
+  clipboardText += textUtil.buildTextLine(t('GMI (CGM): {{ gmi }}%', { gmi }));
 
   return clipboardText;
 }
