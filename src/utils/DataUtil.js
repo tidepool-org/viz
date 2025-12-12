@@ -1292,14 +1292,82 @@ export class DataUtil {
     this.clearFilters();
 
     const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
-    const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+
+    // Find the latest pump-related data to determine the most relevant upload
+    const pumpDataTypes = ['basal', 'bolus'];
+    let latestPumpData = null;
+    let latestPumpDataTime = 0;
+
+    _.each(pumpDataTypes, dataType => {
+      const datum = this.latestDatumByType[dataType];
+      if (datum && datum.time > latestPumpDataTime) {
+        latestPumpData = datum;
+        latestPumpDataTime = datum.time;
+      }
+    });
+
+    let latestPumpUpload;
+    if (latestPumpData && latestPumpData.uploadId) {
+      // Use the uploadId from the latest pump-related data
+      latestPumpUpload = _.find(uploadData, { uploadId: latestPumpData.uploadId });
+    }
+
+    // Fall back to the original logic if no pump data found or no matching upload
+    if (!latestPumpUpload) {
+      latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+    } else {
+      latestPumpUpload = _.cloneDeep(latestPumpUpload);
+    }
 
     if (latestPumpUpload) {
       const latestUploadSource = _.get(this.uploadMap[latestPumpUpload.uploadId], 'source', '').toLowerCase();
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
-      const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
+      // Prefer the most recent pumpSettings associated with the selected latestPumpUpload
+      let pumpSettingsForUpload = _.filter(
+        this.pumpSettingsDatumsByIdMap,
+        ps => ps.uploadId === latestPumpUpload.uploadId
+      );
+
+      const isContinuous = latestPumpUpload.dataSetType === 'continuous';
+
+      // For continuous datasets, ignore settings after the latest pump data.
+      // For non-continuous datasets, settings are written after pump data but before upload,
+      // so only require settings.time <= latestPumpUpload.time.
+      if (latestPumpData && isContinuous) {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpData.time
+        );
+      } else {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpUpload.time
+        );
+      }
+
+      let latestPumpSettings = _.maxBy(pumpSettingsForUpload, 'time');
+
+      // If none match by uploadId (and time, if constrained above), fall back to latestDatumByType.pumpSettings
+      if (!latestPumpSettings) {
+        const candidate = this.latestDatumByType.pumpSettings;
+
+        // Only consider candidate if it exists and has a matching uploadId
+        if (candidate && candidate.uploadId === latestPumpUpload.uploadId) {
+          // For continuous datasets, respect latestPumpData constraint when available.
+          // For non-continuous datasets, only require candidate.time <= latestPumpUpload.time.
+          if (
+            (isContinuous && (!latestPumpData || candidate.time == null || candidate.time <= latestPumpData.time)) ||
+            (!isContinuous && (candidate.time == null || candidate.time <= latestPumpUpload.time))
+          ) {
+            latestPumpSettings = candidate;
+          }
+        }
+      }
+
+      latestPumpSettings = _.cloneDeep(latestPumpSettings);
+
       const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
       const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);
