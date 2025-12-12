@@ -26,7 +26,11 @@ export class TextUtil {
   }
 
   buildDocumentHeader = (source) => {
-    const { patientTags = [], sites = [] } = this.copyAsTextMetadata;
+    const {
+      isClinicianAccount = false,
+      patientTags = [],
+      sites = []
+    } = this.copyAsTextMetadata;
 
     const fullname = this.buildTextLine(getPatientFullName(this.patient));
     const bday = this.buildTextLine({ label: t('Date of birth'), value: formatBirthdate(this.patient) });
@@ -38,8 +42,8 @@ export class TextUtil {
     const tagNames = _.map(patientTags, tag => tag.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
     const siteNames = _.map(sites, site => site.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
 
-    const tagsText = tagNames.length ? this.buildTextLine({ label: t('Patient Tags'), value: tagNames }) : '';
-    const sitesText = siteNames.length ? this.buildTextLine({ label: t('Clinic Sites'), value: siteNames }) : '';
+    const tagsText = isClinicianAccount && patientTags.length ? this.buildTextLine({ label: t('Patient Tags'), value: tagNames }) : '';
+    const sitesText = isClinicianAccount && sites.length ? this.buildTextLine({ label: t('Clinic Sites'), value: siteNames }) : '';
 
     const exported = this.buildTextLine({ label: `${t('Exported from Tidepool')}${source ? ` ${source}` : ''}`, value: formatCurrentDate() });
 
