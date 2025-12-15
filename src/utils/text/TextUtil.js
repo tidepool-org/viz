@@ -27,7 +27,6 @@ export class TextUtil {
 
   buildDocumentHeader = (source) => {
     const {
-      isClinicianAccount = false,
       diagnosisTypeLabel = null,
       patientTags = [],
       sites = []
@@ -44,8 +43,8 @@ export class TextUtil {
     const tagNames = _.map(patientTags, tag => tag.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
     const siteNames = _.map(sites, site => site.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
 
-    const tagsText = isClinicianAccount && patientTags.length ? this.buildTextLine({ label: t('Patient Tags'), value: tagNames }) : '';
-    const sitesText = isClinicianAccount && sites.length ? this.buildTextLine({ label: t('Clinic Sites'), value: siteNames }) : '';
+    const tagsText = patientTags.length ? this.buildTextLine({ label: t('Patient Tags'), value: tagNames }) : '';
+    const sitesText = sites.length ? this.buildTextLine({ label: t('Clinic Sites'), value: siteNames }) : '';
 
     const exported = this.buildTextLine({ label: `${t('Exported from Tidepool')}${source ? ` ${source}` : ''}`, value: formatCurrentDate() });
 
