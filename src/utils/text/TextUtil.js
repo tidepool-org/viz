@@ -28,14 +28,16 @@ export class TextUtil {
   buildDocumentHeader = (source) => {
     const {
       isClinicianAccount = false,
+      diagnosisTypeLabel = null,
       patientTags = [],
       sites = []
     } = this.copyAsTextMetadata;
 
     const fullname = this.buildTextLine(getPatientFullName(this.patient));
     const bday = this.buildTextLine({ label: t('Date of birth'), value: formatBirthdate(this.patient) });
-    const diagnosis = formatDiagnosisDate(this.patient);
-    const diagnosisText = diagnosis ? this.buildTextLine({ label: t('Date of diagnosis'), value: diagnosis }) : '';
+    const diagnosisTypeText = diagnosisTypeLabel ? this.buildTextLine({ label: t('Diabetes Type'), value: diagnosisTypeLabel }) : '';
+    const diagnosisDate = formatDiagnosisDate(this.patient);
+    const diagnosisDateText = diagnosisDate ? this.buildTextLine({ label: t('Date of diagnosis'), value: diagnosisDate }) : '';
     const mrn = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
     const mrnText = mrn ? this.buildTextLine({ label: t('MRN'), value: mrn }) : '';
 
@@ -50,7 +52,8 @@ export class TextUtil {
     return (
       fullname +
       bday +
-      diagnosisText +
+      diagnosisTypeText +
+      diagnosisDateText +
       mrnText +
       tagsText +
       sitesText +
