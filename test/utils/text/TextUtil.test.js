@@ -20,6 +20,7 @@ describe('TextUtil', () => {
   const timePrefs = { timezoneName: 'US/Eastern', timezoneAware: true };
 
   const copyAsTextMetadata = {
+    isClinicianAccount: true,
     patientTags: [{ id: '5', name: 'Yankee' }, { id: '6', name: 'Zulu' }],
     sites: [{ id: '2', name: 'Bravo' }, { id: '1', name: 'Alpha' }],
   };

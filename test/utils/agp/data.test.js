@@ -151,8 +151,8 @@ const expectedOutput = (
 `Terence Crawford
 Date of birth: 2001-01-01
 Exported from Tidepool TIDE: ${formatCurrentDate()}
-Date range of CGM data: December 15, 2024 - January 13, 2025
-CGM Wear Time: 99.8%
+
+Reporting Period: December 15, 2024 - January 13, 2025
 
 Avg. Daily Time In Range (mg/dL)
 >250   4%   (58m)
@@ -162,6 +162,7 @@ Avg. Daily Time In Range (mg/dL)
 <54   0%   (6m)
 
 Avg. Glucose (CGM): 121 mg/dL
+Sensor Usage: 99.8%
 GMI (CGM): 6.2%
 `);
 
