@@ -21,6 +21,7 @@ describe('TextUtil', () => {
 
   const copyAsTextMetadata = {
     isClinicianAccount: true,
+    diagnosisTypeLabel: 'Type 3c',
     patientTags: [{ id: '5', name: 'Yankee' }, { id: '6', name: 'Zulu' }],
     sites: [{ id: '2', name: 'Bravo' }, { id: '1', name: 'Alpha' }],
   };
@@ -58,6 +59,13 @@ describe('TextUtil', () => {
       const result = textUtil.buildDocumentHeader();
       sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Date of birth', value: 'Jan 1, 2000' });
       expect(result).to.include('Date of birth: Jan 1, 2000');
+    });
+
+    it('should print the patient\'s diabetes type', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Diabetes Type', value: 'Type 3c' });
+      expect(result).to.include('Diabetes Type: Type 3c');
     });
 
     it('should print the patient\'s diagnosis date', () => {
