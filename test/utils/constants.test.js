@@ -400,7 +400,7 @@ describe('constants', () => {
           [constants.SETTINGS_OVERRIDE]: 'Settings Override',
           [constants.SLEEP]: { label: 'Sleep', marker: 'Z' },
           [constants.PHYSICAL_ACTIVITY]: { label: 'Exercise', marker: 'E' },
-          [constants.PREPRANDIAL]: { label: 'Premeal', marker: 'P' },
+          [constants.PREPRANDIAL]: { label: 'Pre-Meal', marker: 'P' },
           [constants.MAX_BOLUS]: 'Max Bolus',
           [constants.MAX_BASAL]: 'Max Basal',
           [constants.INSULIN_DURATION]: 'Insulin Duration',
