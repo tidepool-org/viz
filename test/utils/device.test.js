@@ -270,6 +270,42 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isDexcom', () => {
+    it('should return `true` for a datum tagged as "dexcom"', () => {
+      const dexcomTaggedDatum = { tags: { dexcom: true } };
+      expect(device.isDexcom(dexcomTaggedDatum)).to.be.true;
+    });
+
+    it('should return `true` for a matching `origin.name`', () => {
+      const matching = { origin: { name: 'org.tidepool.oauth.dexcom.fetch' } };
+      expect(device.isDexcom(matching)).to.be.true;
+    });
+
+    it('should return `true` for a matching `client.name`', () => {
+      const matching = { client: { name: 'org.tidepool.oauth.dexcom.fetch' } };
+      expect(device.isDexcom(matching)).to.be.true;
+    });
+
+    it('should return `true` for a datum with Dexcom as manufacturer', () => {
+      const matching = { deviceManufacturers: ['Dexcom'] };
+      expect(device.isDexcom(matching)).to.be.true;
+    });
+
+    it('should return `false` for a non-matching `origin.name`', () => {
+      const nonMatching = { origin: { name: 'org.tidepool.oauth.dexcom.fetcher' } };
+      expect(device.isDexcom(nonMatching)).to.be.false;
+    });
+
+    it('should return `false` for a non-matching `client.name`', () => {
+      const nonMatching = { client: { name: 'org.tidepool.oauth.dexcom.fetcher' } };
+      expect(device.isDexcom(nonMatching)).to.be.false;
+    });
+
+    it('should return `false` for a datum without Dexcom as manufacturer', () => {
+      const nonMatching = { deviceManufacturers: ['NotDexcom'] };
+      expect(device.isDexcom(nonMatching)).to.be.false;
+    });
+  });
 
   describe('isAutomatedBasalDevice', () => {
     it('should return `true` for an upload record for a pump with automated basal delivery capabilities', () => {
@@ -373,6 +409,10 @@ describe('device utility functions', () => {
           'occlusion',
           'over_limit',
           'pump_shutdown',
+          'intermediate',
+          'long',
+          'rapid',
+          'short',
         ]);
       });
 

@@ -5,6 +5,28 @@ import _ from 'lodash';
 
 import colors from '../../../styles/colors.css';
 
+const definePattern = (datum) => {
+  switch (datum?.pattern?.id) {
+    case 'diagonalStripes':
+      return (
+        <defs>
+          <pattern
+            id="diagonalStripes"
+            patternUnits="userSpaceOnUse"
+            width="5"
+            height="5"
+            patternTransform="rotate(45)"
+          >
+            <rect width="5" height="5" fill={colors[datum?.id]} />
+            <rect x="0" y="0" width="2" height="5" fill={datum?.pattern?.color} />
+          </pattern>
+        </defs>
+      );
+    default:
+      return null;
+  }
+};
+
 export const HoverBar = props => {
   const {
     barSpacing,
@@ -59,6 +81,7 @@ export const HoverBar = props => {
         />
       </g>
       <g pointerEvents="none">
+        {definePattern(props.datum)}
         <Bar
           {...props}
           width={scale.y(domain.x[1]) - chartLabelWidth}

@@ -31,6 +31,7 @@ export class AggregationUtil {
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
     reductio.registerPostProcessor('postProcessBolusAggregations', this.postProcessBolusAggregations);
+    reductio.registerPostProcessor('postProcessInsulinAggregations', this.postProcessInsulinAggregations);
     reductio.registerPostProcessor('postProcessCalibrationAggregations', this.postProcessCalibrationAggregations);
     reductio.registerPostProcessor('postProcessAutoSuspendAggregations', this.postProcessAutoSuspendAggregations);
     reductio.registerPostProcessor('postProcessSiteChangeAggregations', this.postProcessSiteChangeAggregations);
@@ -78,10 +79,10 @@ export class AggregationUtil {
   aggregateBoluses = group => {
     this.dataUtil.filter.byType('bolus');
 
-    const reducer = reductio();
+    let reducer = reductio();
     reducer.dataList(true);
 
-    const tags = [
+    let tags = [
       'automated',
       'correction',
       'extended',
@@ -97,7 +98,44 @@ export class AggregationUtil {
 
     reducer(group);
 
-    return group.post().postProcessBolusAggregations()();
+    const result = {
+      bolus: group.post().postProcessBolusAggregations()(),
+    };
+
+    this.dataUtil.filter.byType('insulin');
+
+    reducer = reductio();
+    reducer.dataList(true);
+
+    tags = [
+      'manual',
+    ];
+
+    _.each(tags, tag => this.reduceByTag(tag, 'insulin', reducer));
+
+    reducer(group);
+
+    result.insulin = group.post().postProcessInsulinAggregations()();
+
+
+    /* eslint-disable consistent-return */
+    const combined = _.mergeWith({}, result.bolus, result.insulin, (objValue, srcValue, key, object, source) => {
+      if (_.isNumber(objValue) && _.isNumber(srcValue)) {
+        if (key === 'percentage') {
+          // For percentage, recalculate based on combined count and total
+          if (object.count && source.count) {
+            const combinedCount = object.count + source.count;
+            const matchingBolusCount = object.count * object.percentage;
+            const matchingInsulinCount = source.count * source.percentage;
+            return (matchingBolusCount + matchingInsulinCount) / combinedCount;
+          }
+        }
+        return objValue + srcValue;
+      }
+    });
+    /* eslint-enable consistent-return */
+
+    return combined;
   };
 
   aggregateFingersticks = group => {
@@ -293,6 +331,45 @@ export class AggregationUtil {
     });
 
     return this.summarizeProcessedData(processedData);
+  };
+
+  /**
+   * postProcessInsulinAggregations
+   *
+   * Post processor for crossfilter reductio bolus aggregations
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} formatted total and subtotal data for bolus aggregations
+   */
+  postProcessInsulinAggregations = priorResults => () => {
+    const data = this.filterByActiveRange(priorResults());
+    const processedData = {};
+
+    _.each(data, dataForDay => {
+      const {
+        value: {
+          dataList,
+          manual,
+        },
+      } = dataForDay;
+
+      const total = dataList.length;
+
+      if (total) {
+        processedData[dataForDay.key] = {
+          total,
+          subtotals: {
+            manual: manual.count,
+          },
+        };
+      }
+    });
+
+    const days = this.dataUtil.excludeDaysWithoutBolus
+      ? _.keys(processedData).length
+      : this.dataUtil.activeEndpoints.activeDays;
+
+    return this.summarizeProcessedData(processedData, days);
   };
 
   /**
