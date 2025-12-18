@@ -266,7 +266,7 @@ export const pumpVocabulary = {
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
-    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
+    [PREPRANDIAL]: { label: t('Pre-Meal'), marker: t('P') },
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
@@ -330,4 +330,12 @@ export const BG_COLORS = {
   target: '#76D3A6',
   high: '#BB9AE7',
   veryHigh: '#8C65D6',
+};
+
+export const INSULIN_MODEL_LABELS = {
+  rapidAdult: t('Rapid-Acting - Adults'),
+  rapidChild: t('Rapid-Acting - Children'),
+  fiasp: t('Fiasp'),
+  lyumjev: t('Lyumjev'),
+  afrezza: t('Afrezza'),
 };

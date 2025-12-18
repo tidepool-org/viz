@@ -1573,8 +1573,8 @@ describe('stat', () => {
         {
           id: 'preprandial',
           value: 0,
-          title: 'Time In Premeal',
-          legendTitle: 'Premeal',
+          title: 'Time In Pre-Meal',
+          legendTitle: 'Pre-Meal',
         },
       ]);
 

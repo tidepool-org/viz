@@ -244,7 +244,7 @@ class Stat extends PureComponent {
     return (
       <div className={styles.statHeaderNonStandardWarning}>
         {this.props.t(
-          `Using non-standard targets (${lowerTarget}-${upperTarget} ${bgUnits})`,
+          `Alternate range in use (${lowerTarget}-${upperTarget} ${bgUnits})`,
           { lowerTarget, upperTarget, bgUnits: this.props.bgPrefs?.bgUnits }
         )}
       </div>
