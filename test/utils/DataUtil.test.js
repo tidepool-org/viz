@@ -1292,18 +1292,21 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd1 };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(42);
+      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
 
       // originalFood = null → falls back to food
       const dd2 = { ...base, originalFood: null };
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd2 };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(30);
+      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
 
       // originalFood = 0 → explicit zero honored
       const dd3 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 0 } } } };
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd3 };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(0);
+      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
     });
   });
 
