@@ -30,7 +30,7 @@ import {
   findBasicsDays,
 } from '../../utils/basics/data';
 
-import { formatDatum, statBgSourceLabels } from '../../utils/stat';
+import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
 import { getPumpVocabulary } from '../../utils/device';
 
 import {
@@ -80,8 +80,43 @@ class BasicsPrintView extends PrintView {
     this.initLayout();
   }
 
+  getChartDateBoundDisplayFormat() {
+    const [start, end] = this.endpoints.range;
+    const startDate = moment.utc(start).tz(this.timePrefs.timezoneName);
+    const endDate = moment.utc(end).tz(this.timePrefs.timezoneName);
+
+    const isStartDateMidnight = (startDate?.hours() === 0 && startDate?.minutes() === 0) ||
+                                (startDate?.hours() === 23 && startDate?.minutes() >= 59);
+
+    const isEndDateMidnight = (endDate?.hours() === 0 && endDate?.minutes() === 0) ||
+                              (endDate?.hours() === 23 && endDate?.minutes() >= 59);
+
+    const isMatchingDateBounds = isStartDateMidnight && isEndDateMidnight;
+
+    if (!isMatchingDateBounds) {
+      return 'MMM D, YYYY (h:mm A)';
+    }
+
+    return 'MMM D, YYYY';
+  }
+
   newPage() {
-    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
+    const [start, end] = this.endpoints.range;
+    const format = this.getChartDateBoundDisplayFormat();
+
+    // split days
+    if (format === 'MMM D, YYYY (h:mm A)') {
+      const startText = moment.utc(start).tz(this.timePrefs.timezoneName).format(format);
+      const endText = moment.utc(end).tz(this.timePrefs.timezoneName).format(format);
+
+      const dateRange = `${startText} - ${endText}`;
+
+      super.newPage(t('Date range: {{dateRange}}', { dateRange }));
+
+    // whole days
+    } else {
+      super.newPage(this.getDateRange(start, end - 1, undefined, t('Date range: ')));
+    }
   }
 
   initCalendar() {
@@ -390,7 +425,9 @@ class BasicsPrintView extends PrintView {
     this.setFill();
   }
 
-  renderHorizontalBarStat(stat, opts = {}) {
+  renderHorizontalBarStat(statArg, opts = {}) {
+    let stat = _.cloneDeep(statArg);
+
     _.defaults(opts, {
       heading: {
         text: stat.title,
@@ -431,6 +468,9 @@ class BasicsPrintView extends PrintView {
     this.doc.fontSize(this.smallFontSize);
 
     if (statHasData) {
+      const isTIRStat = ['timeInRange', 'readingsInRange'].includes(stat.id);
+      stat = isTIRStat ? reconcileTIRDatumValues(stat) : stat;
+
       const statDatums = _.get(stat, 'data.data', []);
       const statTotal = _.get(stat, 'data.total.value', 1);
 

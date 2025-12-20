@@ -290,6 +290,78 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
   };
 };
 
+/**
+ * reconcileTIRPercentages
+ * @param {Object} timeInRanges - the percent TIR values for each range in decimal form
+ * - e.g. { veryLow: 0.012, low: 0.056, target: 0.612, high: 0.294, veryHigh: 0.021 }
+ *
+ * @returns {Object} an object with values corrected to sum up to 100%
+ * - if the values do not sum up to 100%, the 'high' range is adjusted to compensate
+ */
+export const reconcileTIRPercentages = (timeInRanges) => {
+  const DECIMAL_PRECISION = 2;
+
+  // Round each TIR value to whole integers for percentages (e.g. 0.21428 -> 0.21)
+  const modifiedTimeInRanges = _.cloneDeep(timeInRanges);
+  const rangeKeys = _.keys(modifiedTimeInRanges);
+
+  _.forEach(rangeKeys, key => {
+    modifiedTimeInRanges[key] = bankersRound(modifiedTimeInRanges[key], DECIMAL_PRECISION);
+  });
+
+  // Calculate the sum of all TIR values. It should be close to 1 (or 100%)
+  const rangeValues = _.values(modifiedTimeInRanges);
+  const sum = _.reduce(rangeValues, (acc, cur) => acc + cur, 0);
+
+  // Error Case: If the discrepancy from 100% is >2%, there is something wrong with
+  // the incoming data. Performing additional calculations on TIR would compound the
+  // error. Instead, we'll return the data in its original state.
+  if (sum < 0.98 || sum > 1.02) return timeInRanges;
+
+  // Calculate the difference from 100% and dump the discrepancy into the 'high' range.
+  // e.g. if sum === 0.99 and high === 0.21, we increase high to 0.22 so that all TIR
+  // values add up to 1 (or 100%).
+  const diff = 1 - sum;
+  const newHigh = bankersRound((modifiedTimeInRanges.high || 0) + diff, DECIMAL_PRECISION);
+  modifiedTimeInRanges.high = newHigh;
+
+  return modifiedTimeInRanges;
+};
+
+/**
+ * reconcileTIRDatumValues
+ * @param {Object} statTIRDatum - the stat TIR datum
+ * - Should contain the following subfields:
+ * - data.data - an array of TIR datums for all of the ranges
+ * - data.total.value - a number representing the total time duration
+ *
+ * @returns {Object} a modified stat TIR datum so the percentages add to 100%
+ */
+export const reconcileTIRDatumValues = (statTIRDatum) => {
+  // For each of the individual range datums, calculate its percentage of the total
+  const ranges = {};
+  const total = statTIRDatum.data?.total?.value;
+
+  _.forEach(statTIRDatum.data.data, datum => {
+    ranges[datum.id] = datum.value / total;
+  });
+
+  // Reconcile the values to ensure the values sum up to 1 (or 100%)
+  const reconciledTimeInRanges = reconcileTIRPercentages(ranges);
+
+  // Multiply the reconciled percentages with the total to get the reconciled datum
+  // values. We return a modified stat TIR datum with these reconciled values.
+  const modifiedStatTIRDatum = _.cloneDeep(statTIRDatum);
+
+  const rangeKeys = _.keys(reconciledTimeInRanges);
+  _.forEach(rangeKeys, key => {
+    const datum = _.find(modifiedStatTIRDatum.data.data, d => d.id === key);
+    datum.value = reconciledTimeInRanges[key] * total;
+  });
+
+  return modifiedStatTIRDatum;
+};
+
 export const getStatAnnotations = (data, type, opts = {}) => {
   const { bgSource, days, manufacturer } = opts;
   const vocabulary = getPumpVocabulary(manufacturer);
@@ -946,7 +1018,16 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
   let statsString = '';
 
-  _.each(stats, stat => {
+  _.each(stats, statArg => {
+    let statTitle = `${statArg.title}${statArg.units ? ` (${statArg.units})` : ''}`;
+
+    if (statArg.id === 'readingsInRange' && statArg.data?.raw?.total > 0) {
+      statTitle += t(' from {{count}} readings', { count: statArg.data.raw.total });
+    }
+
+    const isTIRStat = _.includes(['timeInRange', 'readingsInRange'], statArg.id);
+    const stat = isTIRStat ? reconcileTIRDatumValues(statArg) : statArg;
+
     const renderTable = _.includes([
       commonStats.timeInRange,
       commonStats.readingsInRange,
@@ -964,11 +1045,6 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
-    let statTitle = `${stat.title}${stat.units ? ` (${stat.units})` : ''}`;
-
-    if (stat.id === 'readingsInRange' && stat.data?.raw?.total > 0) {
-      statTitle += t(' from {{count}} readings', { count: stat.data.raw.total });
-    }
 
     if (renderTable) {
       statsString += textUtil.buildTextTable(
