@@ -28,3 +28,6 @@ When implementing new features or adding device-specific logic:
 - Only create new methods when the logic is fundamentally different, not just when parameters vary
 - This reduces duplication, simplifies testing, and makes the codebase easier to maintain
 - Example: Instead of `renderLoopBasalRates()`, extend `renderBasalSchedule(opts)` with a `columnIndex` option
+
+## Git Commit Messages
+After implementing a feature or fix, suggest a commit message in imperative mood (e.g., "Add feature X to support Y").
