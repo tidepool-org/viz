@@ -1041,10 +1041,8 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
     ], stat.id);
 
     const renderSecondaryValue = _.includes([
-      commonStats.readingsInRange,
       commonStats.timeInAuto,
       commonStats.timeInOverride,
-      commonStats.timeInRange,
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
@@ -1061,7 +1059,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
           let formattedText = `${formatted.value}${formatted.suffix || ''}`;
 
-          if (renderSecondaryValue) {
+          if (renderSecondaryValue && !stat.hasSyntheticDuration) {
             const secondary = formatFn(
               datum,
               stat.dataFormat.tooltip,
