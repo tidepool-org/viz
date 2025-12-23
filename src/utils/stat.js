@@ -359,6 +359,9 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
     datum.value = reconciledTimeInRanges[key] * total;
   });
 
+  // Add an indicator that these time values are synthetic
+  modifiedStatTIRDatum.hasSyntheticDuration = true;
+
   return modifiedStatTIRDatum;
 };
 
