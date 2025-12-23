@@ -92,10 +92,6 @@ export function agpCGMText(patient, data) {
   const percentInLow = formatPercentage(counts.low / counts.total, 0, true);
   const percentInVeryLow = formatPercentage(counts.veryLow / counts.total, 0, true);
 
-  const durationInTarget = formatDuration(durations.target, { condensed: true });
-  const durationInLow = formatDuration(durations.low, { condensed: true });
-  const durationInVeryLow = formatDuration(durations.veryLow, { condensed: true });
-
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
 
   const textUtil = new TextUtil();
@@ -108,9 +104,9 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('Reporting Period: {{reportDaysText}}', { reportDaysText }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
-  clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}   ({{ durationInTarget }})', { targetRange, percentInTarget, durationInTarget }));
-  clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}   ({{ durationInLow }})', { lowRange, percentInLow, durationInLow }));
-  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}   ({{ durationInVeryLow }})', { veryLowRange, percentInVeryLow, durationInVeryLow }));
+  clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}', { targetRange, percentInTarget }));
+  clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}', { lowRange, percentInLow }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
 
