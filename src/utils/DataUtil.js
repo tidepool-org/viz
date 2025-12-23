@@ -98,6 +98,7 @@ export class DataUtil {
     this.queryDataCount = 0;
     this.defaultCgmSampleInterval = 5 * MS_IN_MIN;
     this.defaultCgmSampleIntervalRange = [this.defaultCgmSampleInterval, Infinity];
+    this.duplicateCBGDeviceIds = [];
     this.setCgmSampleIntervalRange();
 
     this.buildDimensions();
@@ -1076,20 +1077,35 @@ export class DataUtil {
     const OVERLAP_TOLERANCE = MS_IN_MIN / 6; // tolerate up to 10 seconds of overlap
 
     let blackoutUntil = 0; // end of current blackout window (unix timestamp)
+    let blackoutDeviceId = null; // deviceId of the record that set the current blackout window
 
     const output = [];
+    const duplicateDeviceIds = new Set();
 
     for (let i = 0; i < cbgData.length; i++) {
       const currentRecord = cbgData[i];
 
       // If current record occured within the current blackout window, discard the record.
-      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line
+      if (currentRecord.time < blackoutUntil) {
+        // Track both the kept and discarded deviceIds when they differ
+        if (blackoutDeviceId && currentRecord.deviceId) {
+          if (blackoutDeviceId !== currentRecord.deviceId) {
+            duplicateDeviceIds.add(blackoutDeviceId);
+            duplicateDeviceIds.add(currentRecord.deviceId);
+          }
+        }
+        continue; // eslint-disable-line
+      }
 
       // Otherwise, if the record is past the blackout window, we include the record.
       // Then, set a new blackout window based on the current record's time window
       output.push(currentRecord);
       blackoutUntil = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
+      blackoutDeviceId = currentRecord.deviceId;
     }
+
+    // Store the duplicate device IDs for external access
+    this.duplicateCBGDeviceIds = Array.from(duplicateDeviceIds);
 
     return output;
   };
@@ -1127,6 +1143,7 @@ export class DataUtil {
       this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
+      this.clearDuplicateCBGDeviceIds();
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
@@ -1799,6 +1816,10 @@ export class DataUtil {
     this.matchedDevices = {};
   };
 
+  clearDuplicateCBGDeviceIds = () => {
+    this.duplicateCBGDeviceIds = [];
+  };
+
   clearDataAnnotations = () => {
     this.dataAnnotations = {};
   };
@@ -2049,6 +2070,7 @@ export class DataUtil {
       'excludedDevices',
       'matchedDevices',
       'dataAnnotations',
+      'duplicateCBGDeviceIds',
       'queryDataCount',
     ];
 

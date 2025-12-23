@@ -2804,6 +2804,69 @@ describe('DataUtil', () => {
 
       expect(result.length).to.equal(2); // should not deduplicate
     });
+
+    it('tracks deviceIds of duplicate records from different devices', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      datum1.deviceId = 'Device-A';
+      datum2.deviceId = 'Device-B';
+
+      const data = [datum1, datum2];
+
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      // Both datums have same time, so datum2 should be discarded
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(1);
+      expect(dataUtil.duplicateCBGDeviceIds).to.have.members(['Device-A', 'Device-B']);
+    });
+
+    it('does not track deviceIds when duplicates are from the same device', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      datum1.deviceId = 'Device-A';
+      datum2.deviceId = 'Device-A';
+
+      const data = [datum1, datum2];
+
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      // Both datums have same time, so datum2 should be discarded
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(1);
+      expect(dataUtil.duplicateCBGDeviceIds).to.eql([]);
+    });
+
+    it('tracks multiple conflicting deviceIds correctly', () => {
+      const datum1 = _.cloneDeep(cbgData[0]);
+      const datum2 = _.cloneDeep(cbgData[0]);
+      const datum3 = _.cloneDeep(cbgData[0]);
+      datum1.deviceId = 'Device-A';
+      datum2.deviceId = 'Device-B';
+      datum3.deviceId = 'Device-C';
+
+      const data = [datum1, datum2, datum3];
+
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      // All datums have same time
+      data[0].time = 1_517_445_000_000;
+      data[1].time = 1_517_445_000_000;
+      data[2].time = 1_517_445_000_000;
+
+      const result = dataUtil.getDeduplicatedCBGData(data);
+
+      expect(result.length).to.equal(1);
+      expect(dataUtil.duplicateCBGDeviceIds).to.have.members(['Device-A', 'Device-B', 'Device-C']);
+    });
   });
 
   describe('removeData', () => {
@@ -4389,6 +4452,14 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('clearDuplicateCBGDeviceIds', () => {
+    it('should set `duplicateCBGDeviceIds` to an empty array', () => {
+      dataUtil.duplicateCBGDeviceIds = ['Device-A', 'Device-B'];
+      dataUtil.clearDuplicateCBGDeviceIds();
+      expect(dataUtil.duplicateCBGDeviceIds).to.eql([]);
+    });
+  });
+
   describe('query', () => {
     beforeEach(() => {
       initDataUtil(defaultData);
@@ -5172,6 +5243,18 @@ describe('DataUtil', () => {
       ]);
 
       expect(result.bgSources).to.eql(dataUtil.bgSources);
+    });
+
+    it('should return `duplicateCBGDeviceIds` when requested', () => {
+      initDataUtil(defaultData);
+
+      dataUtil.duplicateCBGDeviceIds = ['Device-A', 'Device-B'];
+
+      const metaData = ['duplicateCBGDeviceIds'];
+
+      const result = dataUtil.getMetaData(metaData);
+
+      expect(result.duplicateCBGDeviceIds).to.eql(['Device-A', 'Device-B']);
     });
   });
 
