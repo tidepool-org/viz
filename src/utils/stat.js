@@ -12,7 +12,10 @@ import {
 import {
   AUTOMATED_DELIVERY,
   BG_COLORS,
+  BG_DISPLAY_MINIMUM_INCREMENTS,
+  DEFAULT_BG_BOUNDS,
   LBS_PER_KG,
+  MGDL_UNITS,
   MS_IN_DAY,
   SCHEDULED_DELIVERY,
   SETTINGS_OVERRIDE,
@@ -366,7 +369,18 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
 };
 
 export const getStatAnnotations = (data, type, opts = {}) => {
-  const { bgSource, days, manufacturer } = opts;
+  const { bgSource, days, manufacturer, bgPrefs } = opts;
+
+  const bgUnits = bgPrefs?.bgUnits || MGDL_UNITS;
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+
+  const {
+    targetUpperBound = DEFAULT_BG_BOUNDS[bgUnits],
+    veryHighThreshold = DEFAULT_BG_BOUNDS[bgUnits],
+  } = bgPrefs?.bgBounds || {};
+
+  const highLowerBound = targetUpperBound + minimumIncrement;
+
   const vocabulary = getPumpVocabulary(manufacturer);
   const labels = { overrideLabel: vocabulary[SETTINGS_OVERRIDE], overrideLabelLowerCase: _.lowerCase(vocabulary[SETTINGS_OVERRIDE]) };
 
@@ -444,12 +458,12 @@ export const getStatAnnotations = (data, type, opts = {}) => {
       break;
 
     case commonStats.timeInRange:
-      if (days > 1) {
-        annotations.push(t('**Time In Range:** Daily average of the time spent in range, based on {{cbgLabel}} readings.', { cbgLabel: statBgSourceLabels.cbg }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is 24 hours multiplied by % in range.'));
+      if (!!veryHighThreshold) {
+        annotations.push(t('**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.'));
+        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High ({{ highLowerBound }}-{{ veryHighThreshold }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { veryHighThreshold, highLowerBound, bgUnits}));
       } else {
-        annotations.push(t('**Time In Range:** Time spent in range, based on {{cbgLabel}} readings.', { cbgLabel: statBgSourceLabels.cbg }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is number of readings in range multiplied by the {{cbgLabel}} sample frequency.', { cbgLabel: statBgSourceLabels.cbg }));
+        annotations.push(t('**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.'));
+        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (>{{ targetUpperBound }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { targetUpperBound, bgUnits}));
       }
       break;
 
