@@ -21,7 +21,7 @@ import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
 import { formatPercentage } from '../format';
-import { formatDatum } from '../../utils/stat';
+import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
 
 import {
   getOffset,
@@ -30,7 +30,6 @@ import {
   formatDateRange,
 } from '../datetime';
 
-import { reconcileTIRPercentages } from '../../utils/stat';
 import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 const t = i18next.t.bind(i18next);
@@ -101,7 +100,7 @@ export function agpCGMText(patient, data) {
     target: counts.target / counts.total,
     low: counts.low / counts.total,
     veryLow: counts.veryLow / counts.total,
-  }
+  };
 
   const timeInRanges = reconcileTIRPercentages(timeInRangeProportions);
 
