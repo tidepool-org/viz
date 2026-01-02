@@ -30,6 +30,7 @@ import {
   formatDateRange,
 } from '../datetime';
 
+import { reconcileTIRPercentages } from '../../utils/stat';
 import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 const t = i18next.t.bind(i18next);
@@ -94,11 +95,21 @@ export function agpCGMText(patient, data) {
   const lowRange = `${veryLowThreshold}-${lowUpperBound}`;
   const veryLowRange = `<${veryLowThreshold}`;
 
-  const percentInVeryHigh = formatPercentage(counts.veryHigh / counts.total, 0, true);
-  const percentInHigh = formatPercentage(counts.high / counts.total, 0, true);
-  const percentInTarget = formatPercentage(counts.target / counts.total, 0, true);
-  const percentInLow = formatPercentage(counts.low / counts.total, 0, true);
-  const percentInVeryLow = formatPercentage(counts.veryLow / counts.total, 0, true);
+  const timeInRangeProportions = {
+    veryHigh: counts.veryHigh / counts.total,
+    high: counts.high / counts.total,
+    target: counts.target / counts.total,
+    low: counts.low / counts.total,
+    veryLow: counts.veryLow / counts.total,
+  }
+
+  const timeInRanges = reconcileTIRPercentages(timeInRangeProportions);
+
+  const percentInVeryHigh = formatPercentage(timeInRanges.veryHigh, 0, true);
+  const percentInHigh = formatPercentage(timeInRanges.high, 0, true);
+  const percentInTarget = formatPercentage(timeInRanges.target, 0, true);
+  const percentInLow = formatPercentage(timeInRanges.low, 0, true);
+  const percentInVeryLow = formatPercentage(timeInRanges.veryLow, 0, true);
 
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
 
