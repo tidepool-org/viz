@@ -30,7 +30,7 @@ import {
   formatDateRange,
 } from '../datetime';
 
-import { MS_IN_MIN } from '../constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -73,7 +73,7 @@ export function agpCGMText(patient, data) {
   } = data;
 
   const { bgUnits, bgBounds } = bgPrefs || {};
-  const { targetUpperBound, targetLowerBound, veryLowThreshold } = bgBounds || {};
+  const { targetUpperBound, targetLowerBound, veryLowThreshold, veryHighThreshold } = bgBounds || {};
 
   const timezone = getTimezoneFromTimePrefs(timePrefs);
 
@@ -83,10 +83,19 @@ export function agpCGMText(patient, data) {
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
     : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
 
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+
+  const highLowerBound = targetUpperBound + minimumIncrement;
+  const lowUpperBound = targetLowerBound - minimumIncrement;
+
+  const veryHighRange = `>${veryHighThreshold}`;
+  const highRange = `${highLowerBound}-${veryHighThreshold}`;
   const targetRange = `${targetLowerBound}-${targetUpperBound}`;
-  const lowRange = `${veryLowThreshold}-${targetLowerBound}`;
+  const lowRange = `${veryLowThreshold}-${lowUpperBound}`;
   const veryLowRange = `<${veryLowThreshold}`;
 
+  const percentInVeryHigh = formatPercentage(counts.veryHigh / counts.total, 0, true);
+  const percentInHigh = formatPercentage(counts.high / counts.total, 0, true);
   const percentInTarget = formatPercentage(counts.target / counts.total, 0, true);
   const percentInLow = formatPercentage(counts.low / counts.total, 0, true);
   const percentInVeryLow = formatPercentage(counts.veryLow / counts.total, 0, true);
@@ -103,6 +112,8 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('Reporting Period: {{reportDaysText}}', { reportDaysText }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}', { veryHighRange, percentInVeryHigh }));
+  clipboardText += textUtil.buildTextLine(t('{{highRange}}   {{percentInHigh}}', { highRange, percentInHigh }));
   clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}', { targetRange, percentInTarget }));
   clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}', { lowRange, percentInLow }));
   clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));

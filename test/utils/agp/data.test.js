@@ -155,8 +155,10 @@ Exported from Tidepool TIDE: ${formatCurrentDate()}
 Reporting Period: December 15, 2024 - January 13, 2025
 
 Avg. Daily Time In Range (mg/dL)
+>250   4%
+181-250   16%
 70-180   76%
-54-70   3%
+54-69   3%
 <54   0%
 
 Avg. Glucose (CGM): 121 mg/dL
