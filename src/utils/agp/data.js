@@ -28,7 +28,6 @@ import {
   getTimezoneFromTimePrefs,
   formatCurrentDate,
   formatDateRange,
-  formatDuration,
 } from '../datetime';
 
 import { MS_IN_MIN } from '../constants';
@@ -67,7 +66,7 @@ export function agpCGMText(patient, data) {
         stats: {
           bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
           averageGlucose: { averageGlucose },
-          timeInRange: { counts, durations },
+          timeInRange: { counts },
         },
       },
     },

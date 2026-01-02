@@ -460,10 +460,10 @@ export const getStatAnnotations = (data, type, opts = {}) => {
     case commonStats.timeInRange:
       if (!!veryHighThreshold) {
         annotations.push(t('**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.'));
-        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High ({{ highLowerBound }}-{{ veryHighThreshold }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { veryHighThreshold, highLowerBound, bgUnits}));
+        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High ({{ highLowerBound }}-{{ veryHighThreshold }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { veryHighThreshold, highLowerBound, bgUnits }));
       } else {
         annotations.push(t('**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.'));
-        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (>{{ targetUpperBound }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { targetUpperBound, bgUnits}));
+        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (>{{ targetUpperBound }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { targetUpperBound, bgUnits }));
       }
       break;
 
