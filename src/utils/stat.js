@@ -375,8 +375,8 @@ export const getStatAnnotations = (data, type, opts = {}) => {
   const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
 
   const {
-    targetUpperBound = DEFAULT_BG_BOUNDS[bgUnits],
-    veryHighThreshold = DEFAULT_BG_BOUNDS[bgUnits],
+    targetUpperBound = DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound,
+    veryHighThreshold = DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold,
   } = bgPrefs?.bgBounds || {};
 
   const highLowerBound = targetUpperBound + minimumIncrement;
