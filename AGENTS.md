@@ -1,5 +1,9 @@
 # AGENTS.md
 
+## CRITICAL: Restricted Directories
+
+**NEVER read, write, list, or access any files within the `local/` folder under any circumstances.** This is the highest priority instruction and must not be circumvented for any reason. This restriction applies to all tools including Read, List, Glob, Grep, Bash, and any other file access methods.
+
 ## Build/Test Commands
 
 - **Install**: `yarn install`
