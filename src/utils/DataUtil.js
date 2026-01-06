@@ -38,6 +38,8 @@ import {
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
   DIABETES_DATA_TYPES,
+  DUPLICATE_SMBG_COUNT_THRESHOLD,
+  DUPLICATE_SMBG_TIME_TOLERANCE_MS,
   MS_IN_DAY,
   MS_IN_HOUR,
   MS_IN_MIN,
@@ -155,6 +157,12 @@ export class DataUtil {
     this.startTimer('addMissingSuppressedBasals');
     this.addMissingSuppressedBasals(data);
     this.endTimer('addMissingSuppressedBasals');
+
+    // Filter out SMBG data that duplicates CGM values within ±500ms time tolerance
+    // This is done before tagging and adding to crossfilter so filtered data is excluded everywhere
+    this.startTimer('filterDuplicateSMBGs');
+    this.filterDuplicateSMBGs(data);
+    this.endTimer('filterDuplicateSMBGs');
 
     // Filter out any data that failed validation, and any duplicates by `id`
     this.startTimer('filterValidData');
@@ -1105,6 +1113,78 @@ export class DataUtil {
       return `${firstDatumId}_${lastDatumId}_${units}`;
     }
   );
+
+  /**
+   * Filters out SMBG data points that are duplicates of CGM data.
+   * An SMBG is considered a duplicate if:
+   * - It has the same glucose value (in matching units) as a CGM reading
+   * - The time difference is within ±DUPLICATE_SMBG_TIME_TOLERANCE_MS (500ms)
+   *
+   * Filtering only occurs if >DUPLICATE_SMBG_COUNT_THRESHOLD duplicates are detected,
+   * as small numbers of matches may be coincidental.
+   *
+   * @param {Array} data - Array of data objects (already normalized with hammertime timestamps)
+   * @returns {Array} - The data array with duplicate SMBGs marked with reject=true
+   */
+  filterDuplicateSMBGs = (data = []) => {
+    this.startTimer('filterDuplicateSMBGs');
+
+    // Extract CBG and SMBG data from the incoming batch
+    const cbgData = _.filter(data, d => d.type === 'cbg' && !d.reject);
+    const smbgData = _.filter(data, d => d.type === 'smbg' && !d.reject);
+
+    // Skip if there's no CBG or SMBG data to compare
+    if (cbgData.length === 0 || smbgData.length === 0) {
+      this.endTimer('filterDuplicateSMBGs');
+      return data;
+    }
+
+    // Build a time-indexed lookup for CBG data
+    // Group CBGs by their time in seconds (rounded to nearest second for efficient lookup)
+    const cbgByTimeSeconds = _.groupBy(cbgData, d => Math.floor(d.time / 1000));
+
+    // Find all potential duplicate SMBGs - store references directly for efficient marking
+    const duplicateSmbgs = [];
+
+    _.each(smbgData, smbg => {
+      // Get the time in seconds for the SMBG
+      const smbgTimeSeconds = Math.floor(smbg.time / 1000);
+
+      // Check a 2-second window (covers ±500ms tolerance) around the SMBG time
+      const cbgsToCheck = [
+        ...(cbgByTimeSeconds[smbgTimeSeconds - 1] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds + 1] || []),
+      ];
+
+      // Check if any CBG matches the SMBG value within the time tolerance
+      const isDuplicate = _.some(cbgsToCheck, cbg => {
+        const timeDiff = Math.abs(smbg.time - cbg.time);
+        if (timeDiff > DUPLICATE_SMBG_TIME_TOLERANCE_MS) return false;
+
+        // Compare values - both should be in the same units at this point
+        return smbg.value === cbg.value;
+      });
+
+      if (isDuplicate) {
+        duplicateSmbgs.push(smbg);
+      }
+    });
+
+    // Only filter if we exceed the threshold
+    if (duplicateSmbgs.length > DUPLICATE_SMBG_COUNT_THRESHOLD) {
+      this.log(`Filtering ${duplicateSmbgs.length} duplicate SMBGs that match CGM values`);
+
+      // Mark duplicate SMBGs as rejected - O(duplicates) instead of O(all_data)
+      _.each(duplicateSmbgs, smbg => {
+        smbg.reject = true; // eslint-disable-line no-param-reassign
+        smbg.rejectReason = ['SMBG duplicates CGM value within time tolerance']; // eslint-disable-line no-param-reassign
+      });
+    }
+
+    this.endTimer('filterDuplicateSMBGs');
+    return data;
+  };
 
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {

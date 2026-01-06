@@ -3,7 +3,15 @@ import moment from 'moment';
 import DataUtil from '../../src/utils/DataUtil';
 
 import { types as Types, generateGUID } from '../../data/types';
-import { MGDL_UNITS, MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../src/utils/constants';
+import {
+  MGDL_UNITS,
+  MS_IN_HOUR,
+  MS_IN_MIN,
+  MMOLL_UNITS,
+  DEFAULT_BG_BOUNDS,
+  DUPLICATE_SMBG_COUNT_THRESHOLD,
+  DUPLICATE_SMBG_TIME_TOLERANCE_MS,
+} from '../../src/utils/constants';
 
 import medtronicMultirate from '../../data/pumpSettings/medtronic/multirate.raw.json';
 import omnipodMultirate from '../../data/pumpSettings/omnipod/multirate.raw.json';
@@ -2803,6 +2811,283 @@ describe('DataUtil', () => {
       const result = dataUtil.getDeduplicatedCBGData(data);
 
       expect(result.length).to.equal(2); // should not deduplicate
+    });
+  });
+
+  describe('filterDuplicateSMBGs', () => {
+    const useRawDataOpts = { raw: true };
+
+    // Helper to create CBG data with specific time and value
+    const createCBG = (deviceTime, value) => _.toPlainObject(new Types.CBG({
+      deviceId: 'Dexcom-XXX-XXXX',
+      value,
+      deviceTime,
+      ...useRawDataOpts,
+    }));
+
+    // Helper to create SMBG data with specific time and value
+    const createSMBG = (deviceTime, value) => _.toPlainObject(new Types.SMBG({
+      deviceId: 'OneTouch-XXX-XXXX',
+      value,
+      deviceTime,
+      ...useRawDataOpts,
+    }));
+
+    // Helper to generate time string for device time
+    const makeDeviceTime = (hour, minute) => `2018-02-01T${_.padStart(hour, 2, '0')}:${_.padStart(minute, 2, '0')}:00`;
+
+    it('should return data unchanged when there is no CBG data', () => {
+      const smbgs = [
+        createSMBG('2018-02-01T00:00:00', 100),
+        createSMBG('2018-02-01T00:15:00', 120),
+      ];
+
+      const data = _.cloneDeep(smbgs);
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const rejectedSmbgs = _.filter(data, d => d.type === 'smbg' && d.reject);
+      expect(rejectedSmbgs.length).to.equal(0);
+    });
+
+    it('should return data unchanged when there is no SMBG data', () => {
+      const cbgs = [
+        createCBG('2018-02-01T00:00:00', 100),
+        createCBG('2018-02-01T00:05:00', 110),
+      ];
+
+      const data = _.cloneDeep(cbgs);
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const rejectedData = _.filter(data, d => d.reject);
+      expect(rejectedData.length).to.equal(0);
+    });
+
+    it('should NOT filter SMBGs when duplicates count is <= 10 (threshold)', () => {
+      // Create 10 matching SMBG/CBG pairs (exactly at threshold)
+      const data = [];
+      for (let i = 0; i < 10; i++) {
+        const time = makeDeviceTime(0, i * 5);
+        const value = 100 + i;
+        data.push(createCBG(time, value));
+        // SMBG with same time and value should be considered duplicate
+        data.push(createSMBG(time, value));
+      }
+
+      _.each(data, dataUtil.normalizeDatumIn);
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const rejectedSmbgs = _.filter(data, d => d.type === 'smbg' && d.reject);
+      expect(rejectedSmbgs.length).to.equal(0);
+    });
+
+    it('should filter SMBGs when duplicates count is > 10 (threshold)', () => {
+      // Create 11 matching SMBG/CBG pairs (exceeds threshold)
+      const data = [];
+      for (let i = 0; i < 11; i++) {
+        const time = makeDeviceTime(0, i * 5);
+        const value = 100 + i;
+        data.push(createCBG(time, value));
+        // SMBG with same time and value should be considered duplicate
+        data.push(createSMBG(time, value));
+      }
+
+      _.each(data, dataUtil.normalizeDatumIn);
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const rejectedSmbgs = _.filter(data, d => d.type === 'smbg' && d.reject);
+      expect(rejectedSmbgs.length).to.equal(11);
+
+      _.each(rejectedSmbgs, smbg => {
+        expect(smbg.rejectReason).to.deep.equal(['SMBG duplicates CGM value within time tolerance']);
+      });
+    });
+
+    it('should filter SMBGs that match CGM values within 500ms time tolerance', () => {
+      // Create data with SMBGs at the boundary of the 500ms tolerance
+      const cbgs = [];
+      const smbgs = [];
+
+      // Create 15 CGM readings (more than threshold)
+      for (let i = 0; i < 15; i++) {
+        cbgs.push(createCBG(makeDeviceTime(0, i * 3), 100 + i));
+      }
+
+      // Create matching SMBGs with slight time offsets within 500ms tolerance
+      for (let i = 0; i < 15; i++) {
+        const smbg = createSMBG(makeDeviceTime(0, i * 3), 100 + i);
+        smbgs.push(smbg);
+      }
+
+      const data = [...cbgs, ...smbgs];
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      // Adjust SMBG times to test boundary conditions (exactly 500ms or 1ms under)
+      const filteredSmbgData = _.filter(data, d => d.type === 'smbg');
+      _.each(filteredSmbgData, (smbg, i) => {
+        // Alternate between -500ms (exactly at tolerance), +500ms, and -499ms (1ms under)
+        let offset = 0;
+        if (i % 3 === 0) {
+          offset = -500; // Exactly at tolerance
+        } else if (i % 3 === 1) {
+          offset = 500; // Exactly at tolerance
+        } else {
+          offset = -499; // 1ms under tolerance
+        }
+        smbg.time = smbg.time + offset; // eslint-disable-line no-param-reassign
+      });
+
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const rejectedSmbgs = _.filter(data, d => d.type === 'smbg' && d.reject);
+      expect(rejectedSmbgs.length).to.equal(15);
+    });
+
+    it('should NOT filter SMBGs that are > 500ms away from CGM readings', () => {
+      // Create data with SMBGs just beyond 500ms tolerance (501ms)
+      const cbgs = [];
+      const smbgs = [];
+
+      for (let i = 0; i < 15; i++) {
+        cbgs.push(createCBG(makeDeviceTime(0, i * 3), 100 + i));
+      }
+
+      // Create SMBGs with same values
+      for (let i = 0; i < 15; i++) {
+        smbgs.push(createSMBG(makeDeviceTime(0, i * 3), 100 + i));
+      }
+
+      const data = [...cbgs, ...smbgs];
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      // Adjust SMBG times to be 501ms away (1ms beyond tolerance)
+      const filteredSmbgData = _.filter(data, d => d.type === 'smbg');
+      _.each(filteredSmbgData, (smbg, i) => {
+        // Alternate between +501ms and -501ms (both just beyond tolerance)
+        const offset = i % 2 === 0 ? 501 : -501;
+        smbg.time = smbg.time + offset; // eslint-disable-line no-param-reassign
+      });
+
+      dataUtil.filterDuplicateSMBGs(data);
+
+      // No SMBGs should be filtered because they're > 500ms away
+      const rejectedSmbgs = _.filter(data, d => d.type === 'smbg' && d.reject);
+      expect(rejectedSmbgs.length).to.equal(0);
+    });
+
+    it('should NOT filter SMBGs with different values even at same time', () => {
+      const data = [];
+
+      // Create 15 pairs with same time but different values
+      for (let i = 0; i < 15; i++) {
+        const time = makeDeviceTime(0, i * 3);
+        data.push(createCBG(time, 100 + i));
+        data.push(createSMBG(time, 200 + i)); // Different value
+      }
+
+      _.each(data, dataUtil.normalizeDatumIn);
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const rejectedSmbgs = _.filter(data, d => d.type === 'smbg' && d.reject);
+      expect(rejectedSmbgs.length).to.equal(0);
+    });
+
+    it('should only filter duplicate SMBGs, leaving non-duplicates intact', () => {
+      const data = [];
+
+      // Create 12 duplicate pairs (matching time and value) to exceed threshold of 10
+      for (let i = 0; i < 12; i++) {
+        const time = makeDeviceTime(0, i * 5);
+        data.push(createCBG(time, 100 + i));
+        data.push(createSMBG(time, 100 + i)); // Duplicate
+      }
+
+      // Add 3 non-duplicate SMBGs (different values from nearby CGMs)
+      data.push(createSMBG('2018-02-01T02:00:00', 250));
+      data.push(createSMBG('2018-02-01T02:15:00', 260));
+      data.push(createSMBG('2018-02-01T02:30:00', 270));
+
+      _.each(data, dataUtil.normalizeDatumIn);
+      dataUtil.filterDuplicateSMBGs(data);
+
+      const allSmbgs = _.filter(data, d => d.type === 'smbg');
+      const rejectedSmbgs = _.filter(allSmbgs, d => d.reject);
+      const keptSmbgs = _.filter(allSmbgs, d => !d.reject);
+
+      expect(allSmbgs.length).to.equal(15);
+      expect(rejectedSmbgs.length).to.equal(12); // 12 duplicates
+      expect(keptSmbgs.length).to.equal(3); // 3 non-duplicates
+    });
+
+    it('should handle already-rejected SMBGs gracefully', () => {
+      const data = [];
+
+      // Create 12 duplicate pairs
+      for (let i = 0; i < 12; i++) {
+        const time = makeDeviceTime(0, i * 5);
+        data.push(createCBG(time, 100 + i));
+        data.push(createSMBG(time, 100 + i));
+      }
+
+      _.each(data, dataUtil.normalizeDatumIn);
+
+      // Pre-reject one SMBG
+      const firstSmbg = _.find(data, d => d.type === 'smbg');
+      firstSmbg.reject = true;
+      firstSmbg.rejectReason = ['Pre-existing rejection'];
+
+      dataUtil.filterDuplicateSMBGs(data);
+
+      // The pre-rejected SMBG should still have its original reject reason
+      expect(firstSmbg.rejectReason).to.deep.equal(['Pre-existing rejection']);
+
+      // Other duplicate SMBGs should be rejected (11 remaining)
+      const newlyRejectedSmbgs = _.filter(data, d => (
+        d.type === 'smbg' &&
+        d.reject &&
+        d.rejectReason[0] === 'SMBG duplicates CGM value within time tolerance'
+      ));
+      expect(newlyRejectedSmbgs.length).to.equal(11);
+    });
+
+    it('should handle empty data array', () => {
+      const data = [];
+      dataUtil.filterDuplicateSMBGs(data);
+      expect(data.length).to.equal(0);
+    });
+
+    it('should be called during addData and filter duplicates', () => {
+      // Create data with > 10 duplicate SMBG/CGM pairs
+      const testData = [];
+
+      for (let i = 0; i < 12; i++) {
+        const time = makeDeviceTime(0, i * 5);
+        testData.push(createCBG(time, 100 + i));
+        testData.push(createSMBG(time, 100 + i));
+      }
+
+      // Add upload data for completeness
+      testData.push(_.toPlainObject(new Types.Upload({
+        deviceTags: ['cgm'],
+        source: 'Dexcom',
+        deviceTime: '2018-02-01T00:00:00',
+        uploadId: 'test-upload',
+        ...useRawDataOpts,
+      })));
+
+      initDataUtil(testData);
+
+      // Query SMBG data
+      const result = dataUtil.query({
+        ...defaultQuery,
+        types: { smbg: { select: '*' } },
+      });
+
+      // Should have no SMBG data because all were filtered as duplicates
+      expect(result.data.current.data.smbg.length).to.equal(0);
     });
   });
 
