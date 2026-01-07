@@ -113,7 +113,7 @@ describe('BasicsPrintView', () => {
 
     it('should call the newPage method of the parent class with a date range string', () => {
       Renderer.newPage();
-      sinon.assert.calledWith(PrintView.prototype.newPage, 'Date range: Sep 18 - Oct 7, 2017');
+      sinon.assert.calledWith(PrintView.prototype.newPage, 'Date range: Sep 18, 2017 (12:00 AM) - Oct 7, 2017 (2:55 PM)');
     });
   });
 

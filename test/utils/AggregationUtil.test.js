@@ -175,16 +175,6 @@ describe('AggregationUtil', () => {
     it('should set `initialActiveEndpoints` as clone of dataUtil.activeEndpoints', () => {
       expect(aggregationUtil.initialActiveEndpoints).to.eql(aggregationUtil.dataUtil.activeEndpoints);
     });
-
-    it('should set `rangeDates` from dataUtil.activeEndpoints option in correct time zone', () => {
-      expect(aggregationUtil.rangeDates).to.eql(['2018-02-01', '2018-02-03']);
-
-      aggregationUtil = createAggregationUtil(data, {
-        ...defaultOpts,
-        timePrefs: { timezoneName: 'US/Eastern' },
-      });
-      expect(aggregationUtil.rangeDates).to.eql(['2018-01-31', '2018-02-02']);
-    });
   });
 
   describe('aggregateBasals', () => {
@@ -553,6 +543,53 @@ describe('AggregationUtil', () => {
     it('should reset `dataUtil.activeEndpoints` to initial values after processing', () => {
       aggregationUtil.aggregateStatsByDate(groupByDate);
       expect(aggregationUtil.dataUtil.activeEndpoints).to.eql(aggregationUtil.initialActiveEndpoints);
+    });
+  });
+
+  describe('filterByActiveRange', () => {
+    const mockResultsArg = [
+      { key: '2025-08-04', value: { dataList: [] } },
+      { key: '2025-08-05', value: { dataList: [] } },
+      { key: '2025-08-06', value: { dataList: [] } },
+      { key: '2025-08-07', value: { dataList: [] } },
+      { key: '2025-08-08', value: { dataList: [] } },
+      { key: '2025-08-09', value: { dataList: [] } },
+    ];
+
+    beforeEach(() => {
+      aggregationUtil = createAggregationUtil(data, {
+        ...defaultOpts,
+        timePrefs: { timezoneName: 'US/Eastern' },
+      });
+    });
+
+    it('does NOT include data from the last date when endpoint range ends at midnight', () => {
+      aggregationUtil.initialActiveEndpoints.range = [
+        1754366400000, // 2025-08-05 at 00:00 (midnight) in US/Eastern
+        1754625600000, // 2025-08-08 at 00:00 (midnight) in US/Eastern
+      ];
+
+      // Here, we should only return data that occurred on the 5th, 6th, and 7th
+      expect(aggregationUtil.filterByActiveRange(mockResultsArg)).to.deep.equal([
+        { key: '2025-08-05', value: { dataList: [] } },
+        { key: '2025-08-06', value: { dataList: [] } },
+        { key: '2025-08-07', value: { dataList: [] } },
+      ]);
+    });
+
+    it('includes data from the last date when endpoint range does NOT end at midnight', () => {
+      aggregationUtil.initialActiveEndpoints.range = [
+        1754380800000, // 2025-08-05 at 4:00 AM in US/Eastern
+        1754640000000, // 2025-08-08 at 4:00 AM in US/Eastern
+      ];
+
+      // Here, we should return data that occurred on the 5th, 6th, 7th, and 8th
+      expect(aggregationUtil.filterByActiveRange(mockResultsArg)).to.deep.equal([
+        { key: '2025-08-05', value: { dataList: [] } },
+        { key: '2025-08-06', value: { dataList: [] } },
+        { key: '2025-08-07', value: { dataList: [] } },
+        { key: '2025-08-08', value: { dataList: [] } },
+      ]);
     });
   });
 });

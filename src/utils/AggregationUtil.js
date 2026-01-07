@@ -27,10 +27,6 @@ export class AggregationUtil {
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
-    this.rangeDates = [
-      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).format('YYYY-MM-DD'),
-    ];
     this.excludedDevices = _.get(dataUtil, 'excludedDevices', []);
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
@@ -638,10 +634,23 @@ export class AggregationUtil {
     return processedData;
   };
 
-  filterByActiveRange = results => _.filter(
-    _.cloneDeep(results),
-    result => result.key >= this.rangeDates[0] && result.key < this.rangeDates[1]
-  );
+  filterByActiveRange = results => {
+    const [start, end] = this.initialActiveEndpoints.range;
+
+    const startMoment = moment.utc(start).tz(this.timezoneName);
+    const endMoment = moment.utc(end).tz(this.timezoneName);
+
+    // If query ends at midnight, we only want to include data up to the previous whole calendar day
+    if (endMoment.format('HH:mm') === '00:00') {
+      endMoment.subtract(1, 'day').endOf('day');
+    }
+
+    // Select all data that between the two specified calendar days (inclusive)
+    const startDate = startMoment.format('YYYY-MM-DD');
+    const endDate = endMoment.format('YYYY-MM-DD');
+
+    return _.filter(_.cloneDeep(results), result => result.key >= startDate && result.key <= endDate);
+  };
 
   /* eslint-disable lodash/prefer-lodash-method */
   reduceByTag = (tag, type, reducer) => {
