@@ -888,7 +888,7 @@ describe('stat', () => {
             ],
             total: { value: 58800000 },
           },
-          hasSyntheticDuration: true,
+          hasSyntheticReadings: true,
         });
       });
 
@@ -919,7 +919,7 @@ describe('stat', () => {
             ],
             total: { value: 86400000 },
           },
-          hasSyntheticDuration: true,
+          hasSyntheticReadings: true,
         });
       });
     });

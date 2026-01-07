@@ -507,7 +507,7 @@ class Stat extends PureComponent {
       type,
       data,
       bgPrefs: { bgUnits },
-      hasSyntheticDuration = false,
+      hasSyntheticReadings = false,
     } = props;
 
     let barWidth;
@@ -698,7 +698,7 @@ class Stat extends PureComponent {
                 return [value, suffix];
               }}
               tooltipText={(datum = {}) => {
-                if (hasSyntheticDuration) return '';
+                if (hasSyntheticReadings) return '';
 
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),

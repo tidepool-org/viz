@@ -362,8 +362,8 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
     datum.value = reconciledTimeInRanges[key] * total;
   });
 
-  // Add an indicator that these time values are synthetic
-  modifiedStatTIRDatum.hasSyntheticDuration = true;
+  // Add an indicator that these values are synthetic
+  modifiedStatTIRDatum.hasSyntheticReadings = true;
 
   return modifiedStatTIRDatum;
 };
@@ -1073,7 +1073,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
           let formattedText = `${formatted.value}${formatted.suffix || ''}`;
 
-          if (renderSecondaryValue && !stat.hasSyntheticDuration) {
+          if (renderSecondaryValue && !stat.hasSyntheticReadings) {
             const secondary = formatFn(
               datum,
               stat.dataFormat.tooltip,
