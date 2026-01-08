@@ -312,6 +312,12 @@ export class TrendsContainer extends PureComponent {
     return getLocalizedNoonBeforeUTC(end, this.props.timePrefs).toISOString();
   }
 
+  getCurrentChartTime() {
+    const { dateDomain: { end } } = this.state;
+    const timezone = datetime.getTimezoneFromTimePrefs(this.props.timePrefs);
+    return moment.utc(end).tz(timezone).toDate();
+  }
+
   setExtent(newDomain) {
     this.props.onDatetimeLocationChange(newDomain);
   }

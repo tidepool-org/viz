@@ -181,10 +181,7 @@ export function formatStatsPercentage(value) {
   if (Number.isNaN(value)) return '--';
 
   const percentage = value * 100;
-
-  // Round to one decimal place if below 1, and zero decimal places if above 1;
-  const precision = percentage >= 1 ? 0 : 1;
-  const roundedValue = bankersRound(percentage, precision);
+  const roundedValue = bankersRound(percentage, 0);
 
   return _.toString(roundedValue);
 }
