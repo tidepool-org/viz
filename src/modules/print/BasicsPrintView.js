@@ -266,7 +266,6 @@ class BasicsPrintView extends PrintView {
             text: 'Time in Range',
             note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -282,7 +281,6 @@ class BasicsPrintView extends PrintView {
               count: readingsInRange.data?.raw?.counts?.total,
             }),
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     }
