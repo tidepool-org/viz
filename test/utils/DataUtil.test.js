@@ -844,6 +844,20 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(uploadWithoutTime);
         expect(uploadWithoutTime.time).to.be.a('number');
       });
+
+      it('should add a loop datum to `loopDataSetsByIdMap`', () => {
+        const loopUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.tidepool.Loop' }, ...useRawData }), id: 'foo' };
+        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.undefined;
+        dataUtil.normalizeDatumIn(loopUpload);
+        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.an('object').and.have.property('id', loopUpload.id);
+      });
+
+      it('should add a dexcom datum to `dexcomDataSetsByIdMap`', () => {
+        const dexcomUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.tidepool.oauth.dexcom.fetch' }, ...useRawData }), id: 'foo' };
+        expect(dataUtil.dexcomDataSetsByIdMap[dexcomUpload.id]).to.be.undefined;
+        dataUtil.normalizeDatumIn(dexcomUpload);
+        expect(dataUtil.dexcomDataSetsByIdMap[dexcomUpload.id]).to.be.an('object').and.have.property('id', dexcomUpload.id);
+      });
     });
 
     context('message', () => {
@@ -1292,18 +1306,21 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd1 };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(42);
+      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
 
       // originalFood = null → falls back to food
       const dd2 = { ...base, originalFood: null };
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd2 };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(30);
+      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
 
       // originalFood = 0 → explicit zero honored
       const dd3 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 0 } } } };
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd3 };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(0);
+      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
     });
   });
 
@@ -1530,6 +1547,16 @@ describe('DataUtil', () => {
       });
     });
 
+    context('insulin', () => {
+      const insulin = new Types.Insulin({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+
+      it('should tag an insulin datum with `manual`', () => {
+        expect(insulin.tags).to.be.undefined;
+        dataUtil.tagDatum(insulin);
+        expect(insulin.tags.manual).to.be.true;
+      });
+    });
+
     context('wizard', () => {
       const wizard = new Types.Wizard({ deviceTime: '2018-02-01T01:00:00', carbInput: 10, ...useRawData });
       const extendedWizard = { ...wizard, bolus: { extended: 1, duration: 1 } };
@@ -1578,6 +1605,18 @@ describe('DataUtil', () => {
         expect(manualSMBG.tags.meter).to.be.false;
       });
 
+      it('should tag a dexcom smbg with `manual`', () => {
+        const dexcomUploadId = 'upload1';
+        const dexcomUpload = { type: 'upload', id: dexcomUploadId, dataSetType: 'continuous', uploadId: dexcomUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.oauth.dexcom.fetch' } };
+        dataUtil.dexcomDataSetsByIdMap = { [dexcomUploadId]: dexcomUpload };
+        const dexcomSMBG = new Types.SMBG({ deviceTime: '2018-02-01T01:00:00', uploadId: dexcomUploadId, ...useRawData });
+
+        expect(dexcomSMBG.tags).to.be.undefined;
+        dataUtil.tagDatum(dexcomSMBG);
+        expect(dexcomSMBG.tags.manual).to.be.true;
+        expect(dexcomSMBG.tags.meter).to.be.false;
+      });
+
       it('should tag a meter smbg with `meter`', () => {
         expect(meterSMBG.tags).to.be.undefined;
         dataUtil.tagDatum(meterSMBG);
@@ -1596,6 +1635,18 @@ describe('DataUtil', () => {
         expect(loopFood.tags).to.be.undefined;
         dataUtil.tagDatum(loopFood);
         expect(loopFood.tags.loop).to.be.true;
+      });
+
+      it('should tag a dexcom food datum with `dexcom` and `manual`', () => {
+        const dexcomUploadId = 'upload1';
+        const dexcomUpload = { type: 'upload', id: dexcomUploadId, dataSetType: 'continuous', uploadId: dexcomUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.oauth.dexcom.fetch' } };
+        dataUtil.dexcomDataSetsByIdMap = { [dexcomUploadId]: dexcomUpload };
+        const dexcomFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: dexcomUploadId, ...useRawData });
+
+        expect(dexcomFood.tags).to.be.undefined;
+        dataUtil.tagDatum(dexcomFood);
+        expect(dexcomFood.tags.dexcom).to.be.true;
+        expect(dexcomFood.tags.manual).to.be.true;
       });
     });
 
@@ -1714,6 +1765,34 @@ describe('DataUtil', () => {
         expect(controlIQDatum.tags).to.be.undefined;
         dataUtil.tagDatum(controlIQDatum);
         expect(controlIQDatum.tags?.event).to.be.undefined;
+      });
+
+      it('should tag a physicalActivity event', () => {
+        const event = { type: 'physicalActivity' };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('physical_activity');
+      });
+
+      it('should tag a health event', () => {
+        const event = { type: 'reportedState', states: [{ state: 'alcohol' }] };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('health');
+      });
+
+      it('should tag a notes event with a stateOther state property', () => {
+        const event = { type: 'reportedState', states: [{ stateOther: 'something' }] };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('notes');
+      });
+
+      it('should tag a notes event with a notes property', () => {
+        const event = { type: 'reportedState', notes: ['something'] };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('notes');
       });
     });
   });
@@ -2763,15 +2842,27 @@ describe('DataUtil', () => {
       });
 
       it('should reset the id maps and latestDatumByType', () => {
-        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
         dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
-        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
+        dataUtil.deviceUploadMap = { foo: 'bar' };
         dataUtil.latestDatumByType = { foo: 'bar' };
+        dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardToBolusIdMap = { foo: 'bar' };
+        dataUtil.loopDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.dexcomDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.bolusDosingDecisionDatumsByIdMap = { foo: 'bar' };
         dataUtil.removeData();
-        expect(dataUtil.bolusToWizardIdMap).to.eql({});
         expect(dataUtil.bolusDatumsByIdMap).to.eql({});
-        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.bolusToWizardIdMap).to.eql({});
+        expect(dataUtil.deviceUploadMap).to.eql({});
         expect(dataUtil.latestDatumByType).to.eql({});
+        expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardToBolusIdMap).to.eql({});
+        expect(dataUtil.loopDataSetsByIdMap).to.eql({});
+        expect(dataUtil.dexcomDataSetsByIdMap).to.eql({});
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.eql({});
       });
 
       it('should delete the `bgSources` metadata', () => {
@@ -3210,9 +3301,53 @@ describe('DataUtil', () => {
       sinon.assert.callOrder(dataUtil.filter.byType, dataUtil.sort.byTime);
     });
 
-    it('should return the make, model, latest settings, and automated delivery and settings override capabilities of the latest pump uploaded', () => {
-      let latestPumpSettings = { type: 'pumpSettings' };
+    it('should not use pumpSettings from a different dataset when latest pump data comes from a continuous dataset', () => {
+      const continuousUpload = uploadData[3];
+      const discreteUpload = uploadData[4];
+
+      dataUtil.latestDatumByType.basal = {
+        type: 'basal',
+        time: Date.parse(continuousUpload.deviceTime) + 10,
+        uploadId: continuousUpload.uploadId,
+      };
+
+      // latest pumpSettings belong to a different (discrete) dataset B
+      const discretePumpSettings = {
+        type: 'pumpSettings',
+        uploadId: discreteUpload.uploadId,
+        time: Date.parse(discreteUpload.deviceTime),
+      };
+
+      dataUtil.latestDatumByType.pumpSettings = discretePumpSettings;
+
+      // Ensure there is no matching pumpSettings for the continuous upload, so any attached
+      // settings here would necessarily be from the wrong dataset
+      dataUtil.pumpSettingsDatumsByIdMap = {};
+
+      dataUtil.setLatestPumpUpload();
+
+      // We should select upload A based on latest basal, and NOT attach settings from upload B
+      expect(dataUtil.latestPumpUpload).to.include({
+        manufacturer: _.toLower(dataUtil.uploadMap[continuousUpload.uploadId].source),
+      });
+
+      // Conflicting pumpSettings from dataset B must not be attached
+      expect(dataUtil.latestPumpUpload.settings).to.be.undefined;
+    });
+
+    it('should return the make, model, latest settings, and automated delivery and settings override capabilities using latest pump data when available, else fallback to latest upload', () => {
+      // 1) Use latest pump data and matching pumpSettings for uploadData[2]
+      let latestPumpSettings = {
+        type: 'pumpSettings',
+        uploadId: uploadData[2].uploadId,
+        time: Date.parse(uploadData[2].deviceTime),
+      };
       dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
+      dataUtil.latestDatumByType.basal = {
+        type: 'basal',
+        time: Date.parse(uploadData[2].deviceTime),
+        uploadId: uploadData[2].uploadId,
+      };
 
       dataUtil.setLatestPumpUpload();
 
@@ -3225,7 +3360,19 @@ describe('DataUtil', () => {
         settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
       });
 
+      // 2) Remove that upload and fall back to latest upload with aligned pumpSettings (uploadData[1])
       dataUtil.removeData({ id: uploadData[2].id });
+      latestPumpSettings = {
+        type: 'pumpSettings',
+        uploadId: uploadData[1].uploadId,
+        time: Date.parse(uploadData[1].deviceTime),
+      };
+      dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
+      dataUtil.latestDatumByType.basal = {
+        type: 'basal',
+        time: Date.parse(uploadData[1].deviceTime),
+        uploadId: uploadData[1].uploadId,
+      };
 
       dataUtil.setLatestPumpUpload();
 
@@ -3238,9 +3385,19 @@ describe('DataUtil', () => {
         settings: { ...latestPumpSettings },
       });
 
+      // 3) Remove again and fall back to uploadData[0] with aligned pumpSettings
       dataUtil.removeData({ id: uploadData[1].id });
-      latestPumpSettings = { type: 'pumpSettings', deviceId: 'tandemCIQ123456' };
+      latestPumpSettings = {
+        type: 'pumpSettings',
+        uploadId: uploadData[0].uploadId,
+        deviceId: 'tandemCIQ123456',
+      };
       dataUtil.latestDatumByType.pumpSettings = latestPumpSettings;
+      dataUtil.latestDatumByType.basal = {
+        type: 'basal',
+        time: Date.parse(uploadData[0].deviceTime),
+        uploadId: uploadData[0].uploadId,
+      };
 
       dataUtil.setLatestPumpUpload();
 
@@ -3252,6 +3409,115 @@ describe('DataUtil', () => {
         isSettingsOverrideDevice: true,
         settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
       });
+    });
+
+    it('should not attach pumpSettings from a different uploadId than the selected latestPumpUpload', () => {
+      const uploadA = { ...uploadData[0], uploadId: 'upload-A' };
+      const uploadB = { ...uploadData[1], uploadId: 'upload-B' };
+
+      const pumpSettingsA = {
+        type: 'pumpSettings',
+        uploadId: uploadA.uploadId,
+        time: Date.parse(uploadA.deviceTime),
+        id: 'ps-A',
+      };
+
+      const pumpSettingsB = {
+        type: 'pumpSettings',
+        uploadId: uploadB.uploadId,
+        time: Date.parse(uploadB.deviceTime) + 1000, // later, but wrong uploadId
+        id: 'ps-B',
+      };
+
+      initDataUtil([
+        uploadA,
+        uploadB,
+        pumpSettingsA,
+        pumpSettingsB,
+      ]);
+
+      dataUtil.pumpSettingsDatumsByIdMap = {
+        [pumpSettingsA.id]: pumpSettingsA,
+        [pumpSettingsB.id]: pumpSettingsB,
+      };
+
+      dataUtil.latestDatumByType = {
+        ...dataUtil.latestDatumByType,
+        basal: {
+          type: 'basal',
+          time: Date.parse(uploadA.deviceTime),
+          uploadId: uploadA.uploadId,
+        },
+        pumpSettings: pumpSettingsB,
+      };
+
+      dataUtil.setLatestPumpUpload();
+
+      expect(dataUtil.latestPumpUpload).to.be.an('object');
+
+      // Must attach only matching pumpSettingsA
+      expect(dataUtil.latestPumpUpload.settings).to.be.an('object');
+      expect(dataUtil.latestPumpUpload.settings.id).to.equal('ps-A');
+      expect(dataUtil.latestPumpUpload.settings.uploadId).to.equal('upload-A');
+    });
+
+    it('should not select pumpSettings more recent than the latest pump data used to determine the upload', () => {
+      const uploadA = { ...uploadData[0], uploadId: 'upload-A' };
+
+      const basal = {
+        type: 'basal',
+        time: Date.parse(uploadA.deviceTime) + 1000,
+        uploadId: 'upload-A',
+      };
+
+      const pumpSettingsOld = {
+        type: 'pumpSettings',
+        uploadId: 'upload-A',
+        time: basal.time - 1000,
+        id: 'ps-old',
+      };
+
+      const pumpSettingsNew = {
+        type: 'pumpSettings',
+        uploadId: 'upload-A',
+        time: basal.time + 1000, // newer than basal
+        id: 'ps-new',
+      };
+
+      initDataUtil([
+        uploadA,
+        basal,
+        pumpSettingsOld,
+        pumpSettingsNew,
+      ]);
+
+      dataUtil.pumpSettingsDatumsByIdMap = {
+        [pumpSettingsOld.id]: pumpSettingsOld,
+        [pumpSettingsNew.id]: pumpSettingsNew,
+      };
+
+      dataUtil.latestDatumByType = {
+        ...dataUtil.latestDatumByType,
+        basal,
+      };
+
+      dataUtil.setLatestPumpUpload();
+
+      expect(dataUtil.latestPumpUpload).to.be.an('object');
+      expect(dataUtil.latestPumpUpload.settings).to.be.an('object');
+      expect(dataUtil.latestPumpUpload.settings.id).to.equal('ps-old');
+    });
+
+    it('should fall back to traditional pump upload logic when no pumpSettings data is available', () => {
+      // Clear any existing pumpSettings data
+      delete dataUtil.latestDatumByType.pumpSettings;
+
+      dataUtil.setLatestPumpUpload();
+
+      // Should fall back to the traditional logic and select the latest upload with insulin-pump tags
+      expect(dataUtil.latestPumpUpload).to.be.an('object');
+      expect(dataUtil.latestPumpUpload.manufacturer).to.equal('medtronic');
+      expect(dataUtil.latestPumpUpload.deviceModel).to.equal('1780');
     });
   });
 
@@ -4962,7 +5228,7 @@ describe('DataUtil', () => {
       expect(result).to.be.an('object').and.have.keys(metaData);
       expect(result.bgSources).to.eql(dataUtil.bgSources);
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
-      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
+      expect(result.latestPumpUpload.settings).to.eql(dataUtil.latestPumpUpload.settings);
       expect(result.patientId).to.equal(defaultPatientId);
       expect(result.size).to.equal(37);
 
@@ -4997,7 +5263,7 @@ describe('DataUtil', () => {
       expect(result).to.be.an('object').and.have.keys(metaData);
       expect(result.bgSources).to.eql(dataUtil.bgSources);
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
-      expect(result.latestPumpUpload.settings.id).to.equal(dataUtil.latestPumpUpload.settings.id);
+      expect(result.latestPumpUpload.settings).to.eql(dataUtil.latestPumpUpload.settings);
       expect(result.patientId).to.equal(defaultPatientId);
       expect(result.size).to.equal(37);
 
@@ -5046,14 +5312,32 @@ describe('DataUtil', () => {
       sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: wizardData[wizardData.length - 1].id }));
     });
 
-    it('should normalize `latestPumpSettings.settings`', () => {
-      initDataUtil(defaultData);
+    it('should normalize `latestPumpUpload.settings` when present', () => {
+      // Controlled scenario guaranteeing latestPumpUpload has settings
+      const upload = {
+        ...uploadData[2],
+        uploadId: 'upload-settings',
+        deviceTime: '2018-02-05T00:00:00',
+        time: '2018-02-05T00:00:00.000Z',
+      };
+
+      const pumpSettings = {
+        ...pumpSettingsData[pumpSettingsData.length - 1],
+        type: 'pumpSettings',
+        uploadId: 'upload-settings',
+        id: 'ps-latest',
+        deviceTime: '2018-02-04T00:00:00',
+        time: '2018-02-04T00:00:00.000Z',
+      };
+
+      initDataUtil([
+        upload,
+        pumpSettings,
+      ]);
 
       sinon.spy(dataUtil, 'normalizeDatumOut');
-      const metaData = [
-        'latestPumpUpload',
-      ];
 
+      const metaData = ['latestPumpUpload'];
       const result = dataUtil.getMetaData(metaData);
 
       expect(result.latestPumpUpload).to.be.an('object').and.have.keys([
@@ -5065,7 +5349,8 @@ describe('DataUtil', () => {
         'settings',
       ]);
 
-      sinon.assert.calledWith(dataUtil.normalizeDatumOut, sinon.match({ id: pumpSettingsData[pumpSettingsData.length - 1].id }));
+      expect(result.latestPumpUpload.settings).to.be.an('object');
+      sinon.assert.calledWith(dataUtil.normalizeDatumOut, result.latestPumpUpload.settings);
     });
 
     it('should return the bgSources data as set in the dataUtil', () => {

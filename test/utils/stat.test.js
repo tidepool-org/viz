@@ -111,7 +111,7 @@ describe('stat', () => {
         timeInAuto: 'getTimeInAutoData',
         timeInOverride: 'getTimeInOverrideData',
         timeInRange: 'getTimeInRangeData',
-        totalInsulin: 'getBasalBolusData',
+        totalInsulin: 'getInsulinData',
       });
     });
   });
@@ -573,17 +573,9 @@ describe('stat', () => {
           suffix: '%',
         });
 
-        // 1 decimal place when `% < 0.5` and `% >= 0.05`
+        // 0 when `% < 0.5`
         expect(stat.formatDatum({
           value: 0.049,
-        }, statFormats.percentage, customOpts)).to.include({
-          value: '0.5',
-          suffix: '%',
-        });
-
-        // 1 decimal places when `% < 0.05`
-        expect(stat.formatDatum({
-          value: 0.0049,
         }, statFormats.percentage, customOpts)).to.include({
           value: '0',
           suffix: '%',
@@ -822,6 +814,110 @@ describe('stat', () => {
         }, statFormats.unitsPerKg)).to.include({
           id: 'statDisabled',
           value: '--',
+        });
+      });
+    });
+  });
+
+  describe('reconcileTIRPercentages', () => {
+    describe('correctly rounds and adjusts the high value so the sum equals 100%', () => {
+      it('when using standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.025456,
+          low: 0.076484,
+          target: 0.58571,
+          high: 0.28177,
+          veryHigh: 0.03058,
+        };
+
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.03,
+          low: 0.08,
+          target: 0.59,
+          high: 0.27, // value decreased to ensure sum is 100%
+          veryHigh: 0.03,
+        });
+      });
+
+      it('when using non-standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.024156,
+          low: 0.104184,
+          target: 0.58171,
+          high: 0.28995,
+        };
+
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.02,
+          low: 0.10,
+          target: 0.58,
+          high: 0.30, // value increased to ensure sum is 100%
+        });
+      });
+    });
+  });
+
+  describe('reconcileTIRDatumValues', () => {
+    describe('modifies the datum to have range durations that sum up to 100%', () => {
+      it('when using standard range', () => {
+        const statTIRDatum = {
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 900000 },
+              { id: 'low', value: 900000 },
+              { id: 'target', value: 51000000 },
+              { id: 'high', value: 2400000 },
+              { id: 'veryHigh', value: 3600000 },
+            ],
+            total: { value: 58800000 },
+          },
+        };
+
+        expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 1176000 },
+              { id: 'low', value: 1176000 },
+              { id: 'target', value: 51156000 },
+              { id: 'high', value: 1764000 },
+              { id: 'veryHigh', value: 3528000 },
+            ],
+            total: { value: 58800000 },
+          },
+        });
+      });
+
+      it('when using non-standard range', () => {
+        const statTIRDatum = {
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 630218.8259812435 },
+              { id: 'low', value: 1230427.2316776658 },
+              { id: 'target', value: 46546161.861757554 },
+              { id: 'high', value: 37993192.080583535 }
+            ],
+            total: { value: 86400000 },
+          },
+        };
+
+        expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 864000 },
+              { id: 'low', value: 864000 },
+              { id: 'target', value: 46656000 },
+              { id: 'high', value: 38016000 },
+            ],
+            total: { value: 86400000 },
+          },
         });
       });
     });
@@ -1573,8 +1669,8 @@ describe('stat', () => {
         {
           id: 'preprandial',
           value: 0,
-          title: 'Time In Premeal',
-          legendTitle: 'Premeal',
+          title: 'Time In Pre-Meal',
+          legendTitle: 'Pre-Meal',
         },
       ]);
 
@@ -1696,11 +1792,24 @@ describe('stat', () => {
       const data = {
         bolus: 9,
         basal: 6,
+        insulin: 3,
       };
 
       const statData = stat.getStatData(data, commonStats.totalInsulin, opts);
 
       expect(statData.data).to.eql([
+        {
+          id: 'insulin',
+          pattern: {
+            id: 'diagonalStripes',
+            color: 'rgba(0,0,0,0.15)',
+          },
+          value: 3,
+          title: 'Other Insulin',
+          legendTitle: 'Other',
+          annotations: ['**Other:** Insulin logged from a source outside of a connected pump - for example, a manual injection or inhaled dose.'],
+          hideEmpty: true,
+        },
         {
           id: 'bolus',
           value: 9,
@@ -1715,7 +1824,7 @@ describe('stat', () => {
         },
       ]);
 
-      expect(statData.total).to.eql({ id: 'insulin', value: 15 });
+      expect(statData.total).to.eql({ id: 'insulin', value: 18 });
 
       expect(statData.dataPaths).to.eql({
         summary: 'total',
@@ -2080,9 +2189,19 @@ describe('stat', () => {
       dataFormat: { summary: 'myFormat' },
     };
 
+    const tirStat = {
+      title: 'Avg Daily Time In Range',
+      data: {
+        data: [{ value: 5, id: 'high' }],
+        dataPaths: { summary: 'data.0' },
+        total: { value: 5 }
+      },
+      dataFormat: { summary: 'myFormat' },
+    };
+
     // Stats formatted as tables
-    const timeInRange = { ...defaultStat, id: 'timeInRange', title: 'timeInRange' };
-    const readingsInRange = { ...defaultStat, id: 'readingsInRange', title: 'readingsInRange' };
+    const timeInRange = { ...tirStat, id: 'timeInRange', title: 'timeInRange' };
+    const readingsInRange = { ...tirStat, id: 'readingsInRange', title: 'readingsInRange' };
     const totalInsulin = { ...defaultStat, id: 'totalInsulin', title: 'totalInsulin' };
     const timeInAuto = { ...defaultStat, id: 'timeInAuto', title: 'timeInAuto' };
     const timeInOverride = { ...defaultStat, id: 'timeInOverride', title: 'timeInOverride' };

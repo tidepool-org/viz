@@ -138,6 +138,7 @@ describe('DailyPrintView', () => {
         { prop: 'hasCarbExchanges', type: 'boolean' },
         { prop: 'basalGroupLabels', type: 'object' },
         { prop: 'pumpSettingsOverrideLabels', type: 'object' },
+        { prop: 'legendItems', type: 'array' },
         { prop: 'initialChartArea', type: 'object', value: {
           bottomEdge: opts.margins.top + opts.height,
           leftEdge: opts.margins.left +
@@ -191,6 +192,114 @@ describe('DailyPrintView', () => {
       expect(Renderer.chartsByDate[sampleDate].bolusScale).to.be.a('function');
       expect(Renderer.chartsByDate[sampleDate].basalScale).to.be.a('function');
       expect(Renderer.chartsByDate[sampleDate].xScale).to.be.a('function');
+    });
+  });
+
+  describe('getLegendItems', () => {
+    beforeEach(() => {
+      // Reset any state that might affect legend items
+      Renderer.hasAlarms = false;
+      Renderer.hasCarbExchanges = false;
+      Renderer.isAutomatedBolusDevice = false;
+    });
+
+    it('should return basic legend items for standard pump data', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      expect(legendItems).to.be.an('array');
+      expect(legendItems.length).to.be.greaterThan(0);
+
+      // Should include basic items
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('cbg');
+      expect(itemIds).to.include('smbg');
+      expect(itemIds).to.include('bolus');
+      expect(itemIds).to.include('basals');
+      expect(itemIds).to.include('carbs');
+    });
+
+    it('should include carb exchanges when present in dataset', () => {
+      Renderer.hasCarbExchanges = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('carbs');
+
+      const carbItem = _.find(legendItems, item => item.type === 'carbs');
+      expect(carbItem.labels).to.deep.equal(['Carbs (g)', 'Carb exch.']);
+    });
+
+    it('should not include carb exchanges when not present in dataset', () => {
+      Renderer.hasCarbExchanges = false;
+      const legendItems = Renderer.getLegendItems();
+
+      const carbItem = _.find(legendItems, item => item.type === 'carbs');
+      if (carbItem) {
+        expect(carbItem.labels).to.deep.equal(['Carbs (g)']);
+      }
+    });
+
+    it('should include automated bolus items when device supports automated boluses', () => {
+      Renderer.isAutomatedBolusDevice = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('bolus');
+
+      const automatedBolusItem = _.find(legendItems, item => item.type === 'bolus');
+      expect(automatedBolusItem.labels).to.deep.equal(['Bolus', 'manual &', 'automated']);
+    });
+
+    it('should include alarm items when alarms are present', () => {
+      Renderer.hasAlarms = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('alarms');
+
+      const alarmItem = _.find(legendItems, item => item.type === 'alarms');
+      expect(alarmItem.labels).to.deep.equal(['Pump', 'Alarm']);
+    });
+
+    it('should include pump settings override items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('override');
+
+      const overrideItem = _.find(legendItems, item => item.type === 'override');
+      expect(overrideItem.labels).to.deep.equal(['Override', 'up & down']);
+    });
+
+    it('should include interrupted bolus items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('interrupted');
+
+      const interruptedItem = _.find(legendItems, item => item.type === 'interrupted');
+      expect(interruptedItem.labels).to.deep.equal(['Interrupted']);
+    });
+
+    it('should include extended bolus items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('extended');
+
+      const extendedItem = _.find(legendItems, item => item.type === 'extended');
+      expect(extendedItem.labels).to.deep.equal(['Combo /', 'Extended']);
+    });
+
+    it('should include automated basal items when device supports automated basals', () => {
+      Renderer.isAutomatedBasalDevice = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('basals');
+
+      const automatedBasalItem = _.find(legendItems, item => item.type === 'basals');
+      expect(automatedBasalItem.labels).to.deep.equal(['Basals', 'automated &', 'manual']);
     });
   });
 
@@ -692,6 +801,22 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 80);
     });
 
+    it('should graph only the bolus if the carb input was generated from food data', () => {
+      Renderer.chartsByDate[sampleDate].data.bolus[2].carbInputGeneratedFromFoodData = true;
+      expect(Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput).to.equal(80);
+
+      const bolusCount = Renderer.chartsByDate[sampleDate].data.bolus.length;
+
+      sinon.stub(Renderer, 'renderEventPath');
+      Renderer.renderInsulinEvents(Renderer.chartsByDate[sampleDate]);
+
+      expect(Renderer.renderEventPath.callCount >= bolusCount).to.be.true;
+      sinon.assert.notCalled(Renderer.doc.circle);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbExchanges);
+      sinon.assert.neverCalledWith(Renderer.doc.text, 80);
+    });
+
     it('should graph carb exchange events', () => {
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbUnits = 'exchanges';
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput = 3;
@@ -861,9 +986,9 @@ describe('DailyPrintView', () => {
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
 
+      Renderer.hasAlarms = true;
       Renderer.renderLegend();
 
-      sinon.assert.calledWith(Renderer.doc.text, 'Legend');
       sinon.assert.calledWith(Renderer.doc.text, 'CGM');
       sinon.assert.calledWith(Renderer.doc.text, 'BGM');
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
@@ -872,11 +997,9 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Interrupted');
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
-      sinon.assert.calledWith(Renderer.doc.text, 'Pump');
-      sinon.assert.calledWith(Renderer.doc.text, 'Alarm');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
+      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch.');
 
       // All of the bolus visual elements are called by renderEventPath
       // And the paths total 13
@@ -886,8 +1009,6 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.doc.circle, 12);
 
       sinon.assert.callCount(Renderer.renderBasalPaths, 1);
-
-      sinon.assert.calledWith(Renderer.doc.image, 'images/alarm.png');
     });
 
     it('should render the legend with carb exchanges when present in dataset', () => {
@@ -903,23 +1024,47 @@ describe('DailyPrintView', () => {
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch.');
 
-      // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
-      sinon.assert.callCount(Renderer.doc.circle, 13);
+      // one for carbs + 1 for carb exchanges
+      sinon.assert.callCount(Renderer.doc.circle, 2);
     });
 
     it('should render the legend with automated boluses when pump is an automated bolus device', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        metaData: {
+          ...data.metaData,
+          latestPumpUpload: { isAutomatedBolusDevice: true },
+        },
+      }, opts);
+
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
-
-      Renderer.isAutomatedBolusDevice = true;
 
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
       sinon.assert.calledWith(Renderer.doc.text, 'manual &');
       sinon.assert.calledWith(Renderer.doc.text, 'automated');
+    });
+
+    it('should render the legend with pump alarms when present in dataset', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        data: { current: { data: { deviceEvent: [{ type: 'deviceEvent', tags: { alarm: true } }] } } },
+      }, opts);
+
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Pump');
+      sinon.assert.calledWith(Renderer.doc.text, 'Alarm');
+      sinon.assert.calledWith(Renderer.doc.image, 'images/alarm.png');
     });
   });
 
