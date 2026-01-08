@@ -844,6 +844,20 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(uploadWithoutTime);
         expect(uploadWithoutTime.time).to.be.a('number');
       });
+
+      it('should add a loop datum to `loopDataSetsByIdMap`', () => {
+        const loopUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.tidepool.Loop' }, ...useRawData }), id: 'foo' };
+        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.undefined;
+        dataUtil.normalizeDatumIn(loopUpload);
+        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.an('object').and.have.property('id', loopUpload.id);
+      });
+
+      it('should add a dexcom datum to `dexcomDataSetsByIdMap`', () => {
+        const dexcomUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.tidepool.oauth.dexcom.fetch' }, ...useRawData }), id: 'foo' };
+        expect(dataUtil.dexcomDataSetsByIdMap[dexcomUpload.id]).to.be.undefined;
+        dataUtil.normalizeDatumIn(dexcomUpload);
+        expect(dataUtil.dexcomDataSetsByIdMap[dexcomUpload.id]).to.be.an('object').and.have.property('id', dexcomUpload.id);
+      });
     });
 
     context('message', () => {
@@ -1533,6 +1547,16 @@ describe('DataUtil', () => {
       });
     });
 
+    context('insulin', () => {
+      const insulin = new Types.Insulin({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+
+      it('should tag an insulin datum with `manual`', () => {
+        expect(insulin.tags).to.be.undefined;
+        dataUtil.tagDatum(insulin);
+        expect(insulin.tags.manual).to.be.true;
+      });
+    });
+
     context('wizard', () => {
       const wizard = new Types.Wizard({ deviceTime: '2018-02-01T01:00:00', carbInput: 10, ...useRawData });
       const extendedWizard = { ...wizard, bolus: { extended: 1, duration: 1 } };
@@ -1581,6 +1605,18 @@ describe('DataUtil', () => {
         expect(manualSMBG.tags.meter).to.be.false;
       });
 
+      it('should tag a dexcom smbg with `manual`', () => {
+        const dexcomUploadId = 'upload1';
+        const dexcomUpload = { type: 'upload', id: dexcomUploadId, dataSetType: 'continuous', uploadId: dexcomUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.oauth.dexcom.fetch' } };
+        dataUtil.dexcomDataSetsByIdMap = { [dexcomUploadId]: dexcomUpload };
+        const dexcomSMBG = new Types.SMBG({ deviceTime: '2018-02-01T01:00:00', uploadId: dexcomUploadId, ...useRawData });
+
+        expect(dexcomSMBG.tags).to.be.undefined;
+        dataUtil.tagDatum(dexcomSMBG);
+        expect(dexcomSMBG.tags.manual).to.be.true;
+        expect(dexcomSMBG.tags.meter).to.be.false;
+      });
+
       it('should tag a meter smbg with `meter`', () => {
         expect(meterSMBG.tags).to.be.undefined;
         dataUtil.tagDatum(meterSMBG);
@@ -1599,6 +1635,18 @@ describe('DataUtil', () => {
         expect(loopFood.tags).to.be.undefined;
         dataUtil.tagDatum(loopFood);
         expect(loopFood.tags.loop).to.be.true;
+      });
+
+      it('should tag a dexcom food datum with `dexcom` and `manual`', () => {
+        const dexcomUploadId = 'upload1';
+        const dexcomUpload = { type: 'upload', id: dexcomUploadId, dataSetType: 'continuous', uploadId: dexcomUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.oauth.dexcom.fetch' } };
+        dataUtil.dexcomDataSetsByIdMap = { [dexcomUploadId]: dexcomUpload };
+        const dexcomFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: dexcomUploadId, ...useRawData });
+
+        expect(dexcomFood.tags).to.be.undefined;
+        dataUtil.tagDatum(dexcomFood);
+        expect(dexcomFood.tags.dexcom).to.be.true;
+        expect(dexcomFood.tags.manual).to.be.true;
       });
     });
 
@@ -1717,6 +1765,34 @@ describe('DataUtil', () => {
         expect(controlIQDatum.tags).to.be.undefined;
         dataUtil.tagDatum(controlIQDatum);
         expect(controlIQDatum.tags?.event).to.be.undefined;
+      });
+
+      it('should tag a physicalActivity event', () => {
+        const event = { type: 'physicalActivity' };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('physical_activity');
+      });
+
+      it('should tag a health event', () => {
+        const event = { type: 'reportedState', states: [{ state: 'alcohol' }] };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('health');
+      });
+
+      it('should tag a notes event with a stateOther state property', () => {
+        const event = { type: 'reportedState', states: [{ stateOther: 'something' }] };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('notes');
+      });
+
+      it('should tag a notes event with a notes property', () => {
+        const event = { type: 'reportedState', notes: ['something'] };
+        expect(event.tags).to.be.undefined;
+        dataUtil.tagDatum(event);
+        expect(event.tags.event).to.equal('notes');
       });
     });
   });
@@ -2766,15 +2842,27 @@ describe('DataUtil', () => {
       });
 
       it('should reset the id maps and latestDatumByType', () => {
-        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
         dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
-        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.bolusToWizardIdMap = { foo: 'bar' };
+        dataUtil.deviceUploadMap = { foo: 'bar' };
         dataUtil.latestDatumByType = { foo: 'bar' };
+        dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
+        dataUtil.wizardToBolusIdMap = { foo: 'bar' };
+        dataUtil.loopDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.dexcomDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.bolusDosingDecisionDatumsByIdMap = { foo: 'bar' };
         dataUtil.removeData();
-        expect(dataUtil.bolusToWizardIdMap).to.eql({});
         expect(dataUtil.bolusDatumsByIdMap).to.eql({});
-        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.bolusToWizardIdMap).to.eql({});
+        expect(dataUtil.deviceUploadMap).to.eql({});
         expect(dataUtil.latestDatumByType).to.eql({});
+        expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardDatumsByIdMap).to.eql({});
+        expect(dataUtil.wizardToBolusIdMap).to.eql({});
+        expect(dataUtil.loopDataSetsByIdMap).to.eql({});
+        expect(dataUtil.dexcomDataSetsByIdMap).to.eql({});
+        expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.eql({});
       });
 
       it('should delete the `bgSources` metadata', () => {
