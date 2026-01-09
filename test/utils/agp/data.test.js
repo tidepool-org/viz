@@ -162,7 +162,7 @@ Avg. Daily Time In Range (mg/dL)
 <54   0%   (6m)
 
 Avg. Glucose (CGM): 121 mg/dL
-Sensor Usage: 99.8%
+% Time CGM Active: 99.8%
 GMI (CGM): 6.2%
 `);
 
