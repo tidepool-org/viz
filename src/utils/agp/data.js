@@ -20,8 +20,9 @@ import i18next from 'i18next';
 import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
-import { formatPercentage } from '../format';
+import { formatPercentage, bankersRound } from '../format';
 import { formatDatum } from '../../utils/stat';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 import {
   getOffset,
@@ -30,8 +31,6 @@ import {
   formatDateRange,
   formatDuration,
 } from '../datetime';
-
-import { MS_IN_MIN } from '../constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -68,13 +67,15 @@ export function agpCGMText(patient, data) {
           bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
           averageGlucose: { averageGlucose },
           timeInRange: { counts, durations },
+          glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
+          sensorUsage: { sensorUsageAGP }
         },
       },
     },
   } = data;
 
   const { bgUnits, bgBounds } = bgPrefs || {};
-  const { targetUpperBound, targetLowerBound, veryLowThreshold } = bgBounds || {};
+  const { veryHighThreshold, targetUpperBound, targetLowerBound, veryLowThreshold } = bgBounds || {};
 
   const timezone = getTimezoneFromTimePrefs(timePrefs);
 
@@ -84,19 +85,31 @@ export function agpCGMText(patient, data) {
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
     : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
 
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+  const highLowerBound = targetUpperBound + minimumIncrement;
+  const lowUpperBound = targetLowerBound - minimumIncrement;
+
+  const veryHighRange = `>${veryHighThreshold}`;
+  const highRange = `${highLowerBound}-${veryHighThreshold}`;
   const targetRange = `${targetLowerBound}-${targetUpperBound}`;
-  const lowRange = `${veryLowThreshold}-${targetLowerBound}`;
+  const lowRange = `${veryLowThreshold}-${lowUpperBound}`;
   const veryLowRange = `<${veryLowThreshold}`;
 
+  const percentInVeryHigh = formatPercentage(counts.veryHigh / counts.total, 0, true);
+  const percentInHigh = formatPercentage(counts.high / counts.total, 0, true);
   const percentInTarget = formatPercentage(counts.target / counts.total, 0, true);
   const percentInLow = formatPercentage(counts.low / counts.total, 0, true);
   const percentInVeryLow = formatPercentage(counts.veryLow / counts.total, 0, true);
 
+  const durationInVeryHigh = formatDuration(durations.veryHigh, { condensed: true });
+  const durationInHigh = formatDuration(durations.high, { condensed: true });
   const durationInTarget = formatDuration(durations.target, { condensed: true });
   const durationInLow = formatDuration(durations.low, { condensed: true });
   const durationInVeryLow = formatDuration(durations.veryLow, { condensed: true });
 
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
+  const gmi = formatDatum({ value: glucoseManagementIndicatorAGP }, 'gmi', { bgPrefs, useAGPFormat: true })?.value;
+  const cgmActive = bankersRound(sensorUsageAGP, 1);
 
   const textUtil = new TextUtil();
   let clipboardText = '';
@@ -108,11 +121,15 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('Reporting Period: {{reportDaysText}}', { reportDaysText }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}   ({{ durationInVeryHigh }})', { veryHighRange, percentInVeryHigh, durationInVeryHigh }));
+  clipboardText += textUtil.buildTextLine(t('{{highRange}}   {{percentInHigh}}   ({{ durationInHigh }})', { highRange, percentInHigh, durationInHigh }));
   clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}   ({{ durationInTarget }})', { targetRange, percentInTarget, durationInTarget }));
   clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}   ({{ durationInLow }})', { lowRange, percentInLow, durationInLow }));
   clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}   ({{ durationInVeryLow }})', { veryLowRange, percentInVeryLow, durationInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
+  clipboardText += textUtil.buildTextLine(t('Sensor Usage: {{ cgmActive }}%', { cgmActive }));
+  clipboardText += textUtil.buildTextLine(t('GMI (CGM): {{ gmi }}%', { gmi }));
 
   return clipboardText;
 }
