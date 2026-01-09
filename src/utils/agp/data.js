@@ -43,7 +43,7 @@ const t = i18next.t.bind(i18next);
  */
 export function agpCGMText(patient, data, opts = {}) {
   _.defaults(opts, {
-    showCPT95251: false
+    showCpt95251: false
   });
 
   if (!data || !patient) return '';
@@ -122,7 +122,7 @@ export function agpCGMText(patient, data, opts = {}) {
   const hoursOfCGMData = (sensorUsageCount * sensorUsageSampleInterval) / MS_IN_HOUR;
   const formattedDurationOfCGMData = formatDatum(sensorUsageCount * sensorUsageSampleInterval, statFormats.duration)?.value;
   const has72HoursOfData = hoursOfCGMData >= 72;
-  const { showCPT95251 } = opts;
+  const { showCpt95251 } = opts;
 
   const textUtil = new TextUtil();
   let clipboardText = '';
@@ -133,10 +133,10 @@ export function agpCGMText(patient, data, opts = {}) {
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Reporting Period: {{reportDaysText}}', { reportDaysText }));
 
-  if (showCPT95251 && has72HoursOfData) {
+  if (showCpt95251 && has72HoursOfData) {
     clipboardText += textUtil.buildTextLine('');
     clipboardText += textUtil.buildTextLine(t('Total CGM data recorded: {{ duration }} — Meets ≥72-hour requirement for CPT 95251', { duration: formattedDurationOfCGMData }));
-  } else if (showCPT95251) {
+  } else if (showCpt95251) {
     clipboardText += textUtil.buildTextLine('');
     clipboardText += textUtil.buildTextLine(t('Total CGM data recorded: {{ duration }}', { duration: formattedDurationOfCGMData }));
   }
