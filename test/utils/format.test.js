@@ -208,15 +208,13 @@ describe('format', () => {
       expect(format.formatStatsPercentage(NaN)).to.equal('--');
     });
 
-    it('should format to 1 decimal place using bankers round when value < 1%', () => {
-      expect(format.formatStatsPercentage(0.003)).to.equal('0.3');
-      expect(format.formatStatsPercentage(0.0035)).to.equal('0.4');
-      expect(format.formatStatsPercentage(0.008)).to.equal('0.8');
-      expect(format.formatStatsPercentage(0.0085)).to.equal('0.8');
-      expect(format.formatStatsPercentage(0.0092)).to.equal('0.9');
+    it('should format to 0 when value < 1%', () => {
+      expect(format.formatStatsPercentage(0.003)).to.equal('0');
+      expect(format.formatStatsPercentage(0.005)).to.equal('0');
     });
 
     it('should format to whole number if bankers round would round to 1', () => {
+      expect(format.formatStatsPercentage(0.00501)).to.equal('1');
       expect(format.formatStatsPercentage(0.0095)).to.equal('1');
       expect(format.formatStatsPercentage(0.00956)).to.equal('1');
       expect(format.formatStatsPercentage(0.0099)).to.equal('1');
