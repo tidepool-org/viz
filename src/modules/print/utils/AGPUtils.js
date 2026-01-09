@@ -22,6 +22,7 @@ import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/fo
 import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
 import { getGlycemicRangesPreset } from '../../../utils/glycemicRanges';
+import { reconcileTIRPercentages } from '../../../utils/stat';
 import {
   MGDL_UNITS,
   MS_IN_DAY,
@@ -524,12 +525,14 @@ export const generatePercentInRangesFigure = (
       hasVeryHigh && 'veryHigh',
     ], Boolean);
 
+    const timeInRanges = reconcileTIRPercentages(chartData.rawById);
+
     const rangeValues = _.map(rangeValuesOrderedKeys, range => createAnnotation({
       align: 'right',
       font: {
         size: fontSizes.percentInRanges.values,
       },
-      text: boldText(formatPercentage(chartData.rawById[range], 0, true)),
+      text: boldText(formatPercentage(timeInRanges[range], 0, true)),
       x: bracketXExtents[0] + (bracketXExtents[1] - bracketXExtents[0]) / 2,
       xanchor: 'right',
       xshift: -4,
@@ -546,9 +549,9 @@ export const generatePercentInRangesFigure = (
     };
 
     const combinedRangeSummaryValues = {
-      low: (chartData.rawById.veryLow || 0) + chartData.rawById.low,
-      target: chartData.rawById.target,
-      high: (chartData.rawById.veryHigh || 0) + chartData.rawById.high,
+      low: (timeInRanges.veryLow || 0) + timeInRanges.low,
+      target: timeInRanges.target,
+      high: (timeInRanges.veryHigh || 0) + timeInRanges.high,
     };
 
     const rangeSummaryOrderedKeys = [

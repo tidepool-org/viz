@@ -41,8 +41,8 @@
 <dt><a href="#getNormalPercentage">getNormalPercentage(insulinEvent)</a> ⇒ <code>String</code></dt>
 <dd><p>getNormalPercentage</p>
 </dd>
-<dt><a href="#getTotalBolus">getTotalBolus(insulinEvents)</a> ⇒ <code>Number</code></dt>
-<dd><p>getTotalBolus</p>
+<dt><a href="#getTotalInsulin">getTotalInsulin(insulinEvents)</a> ⇒ <code>Number</code></dt>
+<dd><p>getTotalInsulin</p>
 </dd>
 <dt><a href="#hasExtended">hasExtended(insulinEvent)</a> ⇒ <code>Boolean</code></dt>
 <dd><p>hasExtended</p>
@@ -203,10 +203,10 @@ getNormalPercentage
 | --- | --- | --- |
 | insulinEvent | <code>Object</code> | a Tidepool bolus or wizard object |
 
-<a name="getTotalBolus"></a>
+<a name="getTotalInsulin"></a>
 
-## getTotalBolus(insulinEvents) ⇒ <code>Number</code>
-getTotalBolus
+## getTotalInsulin(insulinEvents) ⇒ <code>Number</code>
+getTotalInsulin
 
 **Kind**: global function
 **Returns**: <code>Number</code> - total bolus insulin in units

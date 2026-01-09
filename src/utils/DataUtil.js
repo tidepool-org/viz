@@ -9,6 +9,7 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isControlIQ,
+  isDexcom,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -53,6 +54,9 @@ import {
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
   EVENT,
+  EVENT_HEALTH,
+  EVENT_NOTES,
+  EVENT_PHYSICAL_ACTIVITY,
   EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
@@ -114,6 +118,7 @@ export class DataUtil {
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
     this.dataAnnotations = this.dataAnnotations || {};
@@ -213,9 +218,14 @@ export class DataUtil {
       }
     }
 
-    if (d.type === 'upload' && d.dataSetType === 'continuous') {
-      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
-      if (!d.time) d.time = moment.utc().toISOString();
+    if (d.type === 'upload') {
+      if (d.dataSetType === 'continuous') {
+        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
+        if (!d.time) d.time = moment.utc().toISOString();
+      } else {
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.uploadId] = d;
+      }
     }
 
     if (d.messagetext) {
@@ -398,6 +408,11 @@ export class DataUtil {
         // Translate relevant dosing decision data onto expected bolus fields
         d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
               d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
+
+        if (_.isFinite(d.carbInput)) {
+          d.carbInputGeneratedFromFoodData = true;
+        }
+
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
@@ -623,6 +638,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
+    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
+
     if (d.type === 'basal') {
       d.tags = {
         suspend: d.deliveryType === 'suspend',
@@ -647,6 +665,12 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'insulin') {
+      d.tags = {
+        manual: true,
+      };
+    }
+
     if (d.type === 'wizard') {
       d.tags = {
         extended: hasExtended(d),
@@ -658,14 +682,16 @@ export class DataUtil {
 
     if (d.type === 'smbg') {
       d.tags = {
-        manual: d.subType === 'manual',
-        meter: d.subType !== 'manual',
+        manual: d.subType === 'manual' || isDexcomDatum,
+        meter: d.subType !== 'manual' && !isDexcomDatum,
       };
     }
 
     if (d.type === 'food') {
       d.tags = {
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        dexcom: isDexcomDatum,
+        manual: isDexcomDatum,
       };
     }
 
@@ -710,10 +736,26 @@ export class DataUtil {
     // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
     const prioritizedEventTypes = [
       EVENT_PUMP_SHUTDOWN,
+      EVENT_PHYSICAL_ACTIVITY,
+      EVENT_HEALTH,
+      EVENT_NOTES,
+    ];
+
+    const healthStates = [
+      'alcohol',
+      'cycle',
+      'hyperglycemiaSymptoms',
+      'hypoglycemiaSymptoms',
+      'illness',
+      'stress',
+      'other',
     ];
 
     const events = {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+      [EVENT_PHYSICAL_ACTIVITY]: d.type === 'physicalActivity',
+      [EVENT_HEALTH]: d.type === 'reportedState' && _.includes(healthStates, d.states?.[0]?.state),
+      [EVENT_NOTES]: d.type === 'reportedState' && (!!d.states?.[0]?.stateOther || d.notes?.length),
     };
 
     const eventType = _.find(prioritizedEventTypes, type => events[type]);
@@ -1078,11 +1120,16 @@ export class DataUtil {
       this.data.remove(predicate);
     } else {
       this.log('Reinitializing');
-      this.bolusToWizardIdMap = {};
       this.bolusDatumsByIdMap = {};
-      this.wizardDatumsByIdMap = {};
-      this.latestDatumByType = {};
+      this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.latestDatumByType = {};
+      this.pumpSettingsDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.wizardToBolusIdMap = {};
+      this.loopDataSetsByIdMap = {};
+      this.dexcomDataSetsByIdMap = {};
+      this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;
@@ -1292,14 +1339,82 @@ export class DataUtil {
     this.clearFilters();
 
     const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
-    const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+
+    // Find the latest pump-related data to determine the most relevant upload
+    const pumpDataTypes = ['basal', 'bolus'];
+    let latestPumpData = null;
+    let latestPumpDataTime = 0;
+
+    _.each(pumpDataTypes, dataType => {
+      const datum = this.latestDatumByType[dataType];
+      if (datum && datum.time > latestPumpDataTime) {
+        latestPumpData = datum;
+        latestPumpDataTime = datum.time;
+      }
+    });
+
+    let latestPumpUpload;
+    if (latestPumpData && latestPumpData.uploadId) {
+      // Use the uploadId from the latest pump-related data
+      latestPumpUpload = _.find(uploadData, { uploadId: latestPumpData.uploadId });
+    }
+
+    // Fall back to the original logic if no pump data found or no matching upload
+    if (!latestPumpUpload) {
+      latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+    } else {
+      latestPumpUpload = _.cloneDeep(latestPumpUpload);
+    }
 
     if (latestPumpUpload) {
       const latestUploadSource = _.get(this.uploadMap[latestPumpUpload.uploadId], 'source', '').toLowerCase();
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
-      const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
+      // Prefer the most recent pumpSettings associated with the selected latestPumpUpload
+      let pumpSettingsForUpload = _.filter(
+        this.pumpSettingsDatumsByIdMap,
+        ps => ps.uploadId === latestPumpUpload.uploadId
+      );
+
+      const isContinuous = latestPumpUpload.dataSetType === 'continuous';
+
+      // For continuous datasets, ignore settings after the latest pump data.
+      // For non-continuous datasets, settings are written after pump data but before upload,
+      // so only require settings.time <= latestPumpUpload.time.
+      if (latestPumpData && isContinuous) {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpData.time
+        );
+      } else {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpUpload.time
+        );
+      }
+
+      let latestPumpSettings = _.maxBy(pumpSettingsForUpload, 'time');
+
+      // If none match by uploadId (and time, if constrained above), fall back to latestDatumByType.pumpSettings
+      if (!latestPumpSettings) {
+        const candidate = this.latestDatumByType.pumpSettings;
+
+        // Only consider candidate if it exists and has a matching uploadId
+        if (candidate && candidate.uploadId === latestPumpUpload.uploadId) {
+          // For continuous datasets, respect latestPumpData constraint when available.
+          // For non-continuous datasets, only require candidate.time <= latestPumpUpload.time.
+          if (
+            (isContinuous && (!latestPumpData || candidate.time == null || candidate.time <= latestPumpData.time)) ||
+            (!isContinuous && (candidate.time == null || candidate.time <= latestPumpUpload.time))
+          ) {
+            latestPumpSettings = candidate;
+          }
+        }
+      }
+
+      latestPumpSettings = _.cloneDeep(latestPumpSettings);
+
       const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
       const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);
