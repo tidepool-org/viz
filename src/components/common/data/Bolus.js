@@ -36,7 +36,7 @@ const Bolus = (props) => {
   // truthiness is exactly the logic desired here
   // because it excludes: NaN, null, and 0
   if (carbs) {
-    const carbsX = xScale(bolus.utc);
+    const carbsX = xScale(bolus.utc || bolus.normalTime);
     const carbsY = yScale(getMaxValue(insulinEvent)) - carbCircleOffset - carbCircleRadius;
     toRender.push(
       <circle
