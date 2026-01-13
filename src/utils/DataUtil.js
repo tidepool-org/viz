@@ -38,6 +38,8 @@ import {
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
   DIABETES_DATA_TYPES,
+  DUPLICATE_SMBG_COUNT_THRESHOLD,
+  DUPLICATE_SMBG_TIME_TOLERANCE_MS,
   MS_IN_DAY,
   MS_IN_HOUR,
   MS_IN_MIN,
@@ -155,6 +157,12 @@ export class DataUtil {
     this.startTimer('addMissingSuppressedBasals');
     this.addMissingSuppressedBasals(data);
     this.endTimer('addMissingSuppressedBasals');
+
+    // Filter out SMBG data that duplicates CGM values within ±500ms time tolerance
+    // This is done before tagging and adding to crossfilter so filtered data is excluded everywhere
+    this.startTimer('filterDuplicateSMBGs');
+    this.filterDuplicateSMBGs(data);
+    this.endTimer('filterDuplicateSMBGs');
 
     // Filter out any data that failed validation, and any duplicates by `id`
     this.startTimer('filterValidData');
@@ -408,6 +416,11 @@ export class DataUtil {
         // Translate relevant dosing decision data onto expected bolus fields
         d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
               d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
+
+        if (_.isFinite(d.carbInput)) {
+          d.carbInputGeneratedFromFoodData = true;
+        }
+
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
@@ -1106,6 +1119,78 @@ export class DataUtil {
     }
   );
 
+  /**
+   * Filters out SMBG data points that are duplicates of CGM data.
+   * An SMBG is considered a duplicate if:
+   * - It has the same glucose value (in matching units) as a CGM reading
+   * - The time difference is within ±DUPLICATE_SMBG_TIME_TOLERANCE_MS (500ms)
+   *
+   * Filtering only occurs if >DUPLICATE_SMBG_COUNT_THRESHOLD duplicates are detected,
+   * as small numbers of matches may be coincidental.
+   *
+   * @param {Array} data - Array of data objects (already normalized with hammertime timestamps)
+   * @returns {Array} - The data array with duplicate SMBGs marked with reject=true
+   */
+  filterDuplicateSMBGs = (data = []) => {
+    this.startTimer('filterDuplicateSMBGs');
+
+    // Extract CBG and SMBG data from the incoming batch
+    const cbgData = _.filter(data, d => d.type === 'cbg' && !d.reject);
+    const smbgData = _.filter(data, d => d.type === 'smbg' && !d.reject);
+
+    // Skip if there's no CBG or SMBG data to compare
+    if (cbgData.length === 0 || smbgData.length === 0) {
+      this.endTimer('filterDuplicateSMBGs');
+      return data;
+    }
+
+    // Build a time-indexed lookup for CBG data
+    // Group CBGs by their time in seconds (rounded to nearest second for efficient lookup)
+    const cbgByTimeSeconds = _.groupBy(cbgData, d => Math.floor(d.time / 1000));
+
+    // Find all potential duplicate SMBGs - store references directly for efficient marking
+    const duplicateSmbgs = [];
+
+    _.each(smbgData, smbg => {
+      // Get the time in seconds for the SMBG
+      const smbgTimeSeconds = Math.floor(smbg.time / 1000);
+
+      // Check a 2-second window (covers ±500ms tolerance) around the SMBG time
+      const cbgsToCheck = [
+        ...(cbgByTimeSeconds[smbgTimeSeconds - 1] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds + 1] || []),
+      ];
+
+      // Check if any CBG matches the SMBG value within the time tolerance
+      const isDuplicate = _.some(cbgsToCheck, cbg => {
+        const timeDiff = Math.abs(smbg.time - cbg.time);
+        if (timeDiff > DUPLICATE_SMBG_TIME_TOLERANCE_MS) return false;
+
+        // Compare values - both should be in the same units at this point
+        return smbg.value === cbg.value;
+      });
+
+      if (isDuplicate) {
+        duplicateSmbgs.push(smbg);
+      }
+    });
+
+    // Only filter if we exceed the threshold
+    if (duplicateSmbgs.length > DUPLICATE_SMBG_COUNT_THRESHOLD) {
+      this.log(`Filtering ${duplicateSmbgs.length} duplicate SMBGs that match CGM values`);
+
+      // Mark duplicate SMBGs as rejected - O(duplicates) instead of O(all_data)
+      _.each(duplicateSmbgs, smbg => {
+        smbg.reject = true; // eslint-disable-line no-param-reassign
+        smbg.rejectReason = ['SMBG duplicates CGM value within time tolerance']; // eslint-disable-line no-param-reassign
+      });
+    }
+
+    this.endTimer('filterDuplicateSMBGs');
+    return data;
+  };
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {
@@ -1334,14 +1419,82 @@ export class DataUtil {
     this.clearFilters();
 
     const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
-    const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+
+    // Find the latest pump-related data to determine the most relevant upload
+    const pumpDataTypes = ['basal', 'bolus'];
+    let latestPumpData = null;
+    let latestPumpDataTime = 0;
+
+    _.each(pumpDataTypes, dataType => {
+      const datum = this.latestDatumByType[dataType];
+      if (datum && datum.time > latestPumpDataTime) {
+        latestPumpData = datum;
+        latestPumpDataTime = datum.time;
+      }
+    });
+
+    let latestPumpUpload;
+    if (latestPumpData && latestPumpData.uploadId) {
+      // Use the uploadId from the latest pump-related data
+      latestPumpUpload = _.find(uploadData, { uploadId: latestPumpData.uploadId });
+    }
+
+    // Fall back to the original logic if no pump data found or no matching upload
+    if (!latestPumpUpload) {
+      latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+    } else {
+      latestPumpUpload = _.cloneDeep(latestPumpUpload);
+    }
 
     if (latestPumpUpload) {
       const latestUploadSource = _.get(this.uploadMap[latestPumpUpload.uploadId], 'source', '').toLowerCase();
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
-      const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
+      // Prefer the most recent pumpSettings associated with the selected latestPumpUpload
+      let pumpSettingsForUpload = _.filter(
+        this.pumpSettingsDatumsByIdMap,
+        ps => ps.uploadId === latestPumpUpload.uploadId
+      );
+
+      const isContinuous = latestPumpUpload.dataSetType === 'continuous';
+
+      // For continuous datasets, ignore settings after the latest pump data.
+      // For non-continuous datasets, settings are written after pump data but before upload,
+      // so only require settings.time <= latestPumpUpload.time.
+      if (latestPumpData && isContinuous) {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpData.time
+        );
+      } else {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpUpload.time
+        );
+      }
+
+      let latestPumpSettings = _.maxBy(pumpSettingsForUpload, 'time');
+
+      // If none match by uploadId (and time, if constrained above), fall back to latestDatumByType.pumpSettings
+      if (!latestPumpSettings) {
+        const candidate = this.latestDatumByType.pumpSettings;
+
+        // Only consider candidate if it exists and has a matching uploadId
+        if (candidate && candidate.uploadId === latestPumpUpload.uploadId) {
+          // For continuous datasets, respect latestPumpData constraint when available.
+          // For non-continuous datasets, only require candidate.time <= latestPumpUpload.time.
+          if (
+            (isContinuous && (!latestPumpData || candidate.time == null || candidate.time <= latestPumpData.time)) ||
+            (!isContinuous && (candidate.time == null || candidate.time <= latestPumpUpload.time))
+          ) {
+            latestPumpSettings = candidate;
+          }
+        }
+      }
+
+      latestPumpSettings = _.cloneDeep(latestPumpSettings);
+
       const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
       const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);

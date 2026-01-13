@@ -1,6 +1,11 @@
 # AGENTS.md
 
+## CRITICAL: Restricted Directories
+
+**NEVER read, write, list, or access any files within the `local/` folder under any circumstances.** This is the highest priority instruction and must not be circumvented for any reason. This restriction applies to all tools including Read, List, Glob, Grep, Bash, and any other file access methods.
+
 ## Build/Test Commands
+
 - **Install**: `yarn install`
 - **Build**: `yarn build` (production) or `yarn build-dev` (development)
 - **Lint**: `yarn lint`
@@ -10,6 +15,7 @@
 - **Storybook**: `yarn stories` (port 8083)
 
 ## Code Style (AirBnb ESLint + lodash plugin)
+
 - Use ES6: `const`/`let` over `var`, arrow functions, destructuring
 - Prefer lodash methods (`_.map`) over native (`Array.map`)
 - React: Use functional components unless lifecycle/state needed; define PropTypes
@@ -21,10 +27,21 @@
 - Trailing commas: multiline arrays/objects only, never in function params
 
 ## Code Reuse Guidelines
+
 When implementing new features or adding device-specific logic:
+
 - **Prefer extending existing methods** over creating new device-specific methods
 - Add optional parameters (e.g., `opts = {}`) to existing functions to customize behavior
 - Use patterns like `columnIndex`, `heading`, `rowTransform`, or `fillColor` options to adapt generic methods for specific use cases
 - Only create new methods when the logic is fundamentally different, not just when parameters vary
 - This reduces duplication, simplifies testing, and makes the codebase easier to maintain
 - Example: Instead of `renderLoopBasalRates()`, extend `renderBasalSchedule(opts)` with a `columnIndex` option
+
+## Git Commit Messages
+
+After implementing a feature or fix, suggest a commit message in imperative mood (e.g., "Add feature X to support Y").
+
+## Git Command Restrictions
+
+- **Only use read-only git commands** such as `git status`, `git log`, `git diff`, `git show`, `git branch -l`, `git remote -v`
+- **Never run git commands that write or modify the git tree** such as `git commit`, `git push`, `git pull`, `git merge`, `git rebase`, `git checkout`, `git reset`, `git add`, `git rm`, `git stash`, `git cherry-pick`, `git revert`

@@ -134,6 +134,9 @@ export const CGM_READINGS_ONE_DAY = 288;
 export const CGM_DATA_KEY = 'cbg';
 export const BGM_DATA_KEY = 'smbg';
 
+export const DUPLICATE_SMBG_COUNT_THRESHOLD = 10;
+export const DUPLICATE_SMBG_TIME_TOLERANCE_MS = 500;
+
 export const NO_SITE_CHANGE = 'noSiteChange';
 export const SITE_CHANGE = 'siteChange';
 export const SITE_CHANGE_RESERVOIR = 'reservoirChange';
