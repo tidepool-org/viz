@@ -139,6 +139,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         }
 
         if (isTwiistLoop(pumpUpload.settings)) {
+          dimensions[1].label = t('Meal');
           dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 6 });
           dimensions[6].selectorIndex = 3; // Move the 'Underride' filter next to the 'Override'
           perRow = 4;
