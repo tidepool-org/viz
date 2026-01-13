@@ -1062,15 +1062,27 @@ export class DataUtil {
     return output;
   };
 
-  // memoize deduplicateCBGData and only recompute if first/last ids change or units change
+  // memoize deduplicateCBGData and only recompute if filters or data change
   getDeduplicatedCBGData = _.memoize(
     this.deduplicateCBGData,
     data => {
       const firstDatumId = _.first(data)?.id;
       const lastDatumId = _.last(data)?.id;
       const units = this.bgPrefs?.bgUnits || 'unknown';
+      const endpoints = this.activeEndpoints?.range?.join(',') || '';
+      const activeDays = this.activeDays?.join('') || '';
+      const excludedDevices = this.excludedDevices?.join(',') || '';
+      const sampleIntervalRange = this.cgmSampleIntervalRange?.join('-') || '';
 
-      return `${firstDatumId}_${lastDatumId}_${units}`;
+      return (
+        `${firstDatumId}_` +
+        `${lastDatumId}_` +
+        `${units}_` +
+        `[${endpoints}]_` +
+        `${activeDays}_` +
+        `[${excludedDevices}]_` +
+        `${sampleIntervalRange}_`
+      );
     }
   );
 
