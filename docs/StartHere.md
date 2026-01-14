@@ -7,22 +7,30 @@ You can view (some of) the components in this library via two Storybooks publish
 1. [components rendering data types in the Tidepool data model](http://developer.tidepool.io/viz/diabetes-data-stories/ 'Storybook for Tidepool diabetes data model renderers')
 1. [all other components](http://developer.tidepool.io/viz/stories/ 'Storybook for all non-diabetes data @tidepool/viz components')
 
-As you're getting ready to develop code in this repository, we recommend starting with the following documents:
+## Quick Links
 
-- [project background](./Background.md)
-- [overview of features](./FeatureOverview.md)
-- [planned architecture](./Architecture.md)
-- [app & directory structure](./DirectoryStructure.md)
-- [code style](./CodeStyle.md)
-- [dependencies](./deps/README.md)
-- [use of React Storybook](./Storybook.md)
+**New to the codebase? Start here:**
+- [Getting Started](./GettingStarted.md) - Setup, development workflows, and key concepts
+
+**Understanding the system:**
+- [Architecture](./Architecture.md) - Design decisions and system overview
+- [Feature Overview](./FeatureOverview.md) - Overview of data visualization views
+
+**Reference:**
+- [Code Style](./CodeStyle.md) - Coding conventions
+- [Directory Structure](./DirectoryStructure.md) - Code organization
+- [Storybook Guide](./Storybook.md) - Working with component stories
+
+**Core utilities (see JSDoc in source):**
+- `src/utils/DataUtil.js` - Central data management
+- `src/utils/StatUtil.js` - Statistical calculations
 
 The root-level [README](../README.md) contains the nuts & bolts of installing, configuring, and commands to accomplish various tasks.
 
 The [per-view documentation](./views/README.md) is the place to look for details on the implementation of each major data "view" implemented in this repository for inclusion in blip.
 
-Finally, there are some miscellaneous docs on *miscellaneous* topics:
+Additional topics:
 
-- [Common props](./misc/CommonProps.md) documents and provides a quick reference to a few very common props you will see used and passed around many viz components.
-- [Working on docs](./misc/Docs.md) contains guidance on getting set up to add to this documentation.
-- [Time rendering modes](./misc/TimeRenderingModes.md) documents the difference between the "timezone-aware" (default) and "timezone-naïve" rendering modes.
+- [Common props](./misc/CommonProps.md) - Reference for common props used across viz components
+- [Working on docs](./misc/Docs.md) - Guidance on contributing to documentation
+- [Time rendering modes](./misc/TimeRenderingModes.md) - Timezone-aware vs timezone-naïve rendering
