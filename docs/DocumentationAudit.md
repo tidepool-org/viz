@@ -68,8 +68,8 @@ docs/
 
 ### 1.3 What's Missing from `/docs`
 
-- **DataUtil documentation** - Core data processing class undocumented
-- **StatUtil documentation** - Statistical calculations undocumented  
+- ~~**DataUtil documentation** - Core data processing class undocumented~~ ✅ JSDoc added
+- ~~**StatUtil documentation** - Statistical calculations undocumented~~ ✅ JSDoc added
 - **Print/PDF system** - No documentation for PDF generation
 - **AGP reports** - Ambulatory Glucose Profile implementation undocumented
 - **Component API reference** - No component documentation
@@ -99,10 +99,10 @@ docs/
 
 | File | JSDoc Quality | Notes |
 |------|---------------|-------|
+| DataUtil.js | **Excellent** | ✅ Comprehensive JSDoc added (Jan 2026) |
+| StatUtil.js | **Excellent** | ✅ Comprehensive JSDoc added (Jan 2026) |
 | AggregationUtil.js | **Good** | Best documented utility |
 | stat.js | Fair | 3 documented functions of ~20 |
-| StatUtil.js | Poor | Only constructor documented |
-| DataUtil.js | Poor | 2 functions documented of ~50 |
 | PrintView.js | None | 1000+ lines, no JSDoc |
 | FoodTooltip.js | None | PropTypes serve as partial docs |
 
@@ -288,8 +288,8 @@ __screenshots__/
 
 | Gap | Priority | Complexity | Notes |
 |-----|----------|------------|-------|
-| DataUtil guide | High | High | Central to entire system |
-| StatUtil guide | High | Medium | Clinical metrics need context |
+| ~~DataUtil guide~~ | ~~High~~ | ~~High~~ | ✅ JSDoc completed (Jan 2026) |
+| ~~StatUtil guide~~ | ~~High~~ | ~~Medium~~ | ✅ JSDoc completed (Jan 2026) |
 | PrintView/PDF guide | High | High | Complex system, no docs |
 | Component API reference | Medium | Medium | PropTypes exist but undocumented |
 | Integration guide | Medium | Low | How to use in blip |
@@ -350,7 +350,7 @@ docs/
 
 ### 9.2 Prioritized Task Order
 
-**Phase 1: JSDoc Foundation**
+**Phase 1: JSDoc Foundation** ✅ COMPLETE
 
 Before writing high-level documentation, improve JSDoc coverage in core files. This foundational work:
 - Forces deep understanding of the code before documenting it
@@ -358,15 +358,19 @@ Before writing high-level documentation, improve JSDoc coverage in core files. T
 - Enables IDE tooltips and autocomplete for developers
 - Produces auto-generated API reference docs
 
+**Completed (January 2026):**
+- DataUtil.js: 459 lines of JSDoc added covering all public methods and key internals
+- StatUtil.js: 260 lines of JSDoc added covering all statistical calculation methods
+
 Priority files for JSDoc improvement:
 
-| File | Lines | Current JSDoc | Priority |
-|------|-------|---------------|----------|
-| DataUtil.js | 2444 | Poor | Critical |
-| StatUtil.js | 497 | Poor | Critical |
-| stat.js | 1117 | Fair | High |
-| AggregationUtil.js | 781 | Good | Low (already decent) |
-| PrintView.js | 1089 | None | Low (internal implementation) |
+| File | Lines | Current JSDoc | Priority | Status |
+|------|-------|---------------|----------|--------|
+| DataUtil.js | 2444 | **Excellent** | Critical | ✅ Complete |
+| StatUtil.js | 497 | **Excellent** | Critical | ✅ Complete |
+| stat.js | 1117 | Fair | High | Pending |
+| AggregationUtil.js | 781 | Good | Low (already decent) | - |
+| PrintView.js | 1089 | None | Low (internal implementation) | - |
 
 JSDoc should include:
 - `@description` - What the function/method does
@@ -376,13 +380,13 @@ JSDoc should include:
 - `@see` - Links to related functions/documentation
 
 **Phase 2: Core Documentation**
-1. JSDoc for DataUtil.js core methods
+1. ~~JSDoc for DataUtil.js core methods~~ ✅ Complete
 2. Getting Started guide
 3. Architecture overview update
 4. DataUtil conceptual documentation
 
 **Phase 3: Components & Visualization**
-5. JSDoc for StatUtil.js + statistical formulas
+5. ~~JSDoc for StatUtil.js~~ ✅ Complete + statistical formulas
 6. Component documentation with screenshots
    - Tooltips (rich screenshot coverage exists)
    - Stats display components
@@ -412,8 +416,8 @@ PrintView internals are lower priority - client documentation will focus on *wha
 
 | File | Lines | JSDoc | Inline | Self-Doc | Overall |
 |------|-------|-------|--------|----------|---------|
-| DataUtil.js | 2444 | Poor | Fair | Good | 4/10 |
-| StatUtil.js | 497 | Poor | Minimal | Good | 3/10 |
+| DataUtil.js | 2444 | **Excellent** | Fair | Good | 9/10 |
+| StatUtil.js | 497 | **Excellent** | Minimal | Good | 9/10 |
 | stat.js | 1117 | Fair | Poor | Good | 5/10 |
 | AggregationUtil.js | 781 | Good | Fair | Good | 7/10 |
 | PrintView.js | 1089 | None | Minimal | Good | 2/10 |
@@ -474,9 +478,9 @@ The `PDFWorker` class handles PDF generation with special handling for:
 ### Documentation TODO
 
 When documenting DataUtil:
-- [ ] Review `DataWorker.js` to understand the full public API surface
-- [ ] Review `data.js` reducer to understand how query results are consumed
-- [ ] Document the query format expected by `dataUtil.query()`
+- [x] Review `DataWorker.js` to understand the full public API surface
+- [x] Review `data.js` reducer to understand how query results are consumed
+- [x] Document the query format expected by `dataUtil.query()`
 
 When documenting PDF generation:
 - [ ] Review `PDFWorker.js` to understand report generation flow

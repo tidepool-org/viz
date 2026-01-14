@@ -78,9 +78,36 @@ const t = i18next.t.bind(i18next);
 
 /* global __DEV__ */
 
+/**
+ * DataUtil is the core data management class for Tidepool diabetes data visualization.
+ *
+ * It provides a centralized interface for:
+ * - Ingesting and validating raw Tidepool diabetes device data
+ * - Efficiently querying data using crossfilter-based indexing
+ * - Computing statistics (time-in-range, average glucose, etc.)
+ * - Generating date-based aggregations for calendar views
+ *
+ * DataUtil is designed to run in a Web Worker (via blip's DataWorker) to avoid
+ * blocking the main thread during expensive data operations.
+ *
+ * @example
+ * // Basic usage (typically done via DataWorker in blip)
+ * const dataUtil = new DataUtil();
+ * dataUtil.addData(rawTidepoolData, patientId);
+ * const result = dataUtil.query({
+ *   endpoints: [startTime, endTime],
+ *   types: { cbg: {}, smbg: {}, bolus: {} },
+ *   stats: ['timeInRange', 'averageGlucose'],
+ * });
+ *
+ * @see {@link https://github.com/tidepool-org/blip/blob/develop/app/worker/DataWorker.js|DataWorker}
+ */
 export class DataUtil {
   /**
-   * @param {Array} data Raw Tidepool data
+   * Creates a new DataUtil instance.
+   *
+   * @param {Object} [Validator=SchemaValidator] - Validator class for datum validation.
+   *   Defaults to SchemaValidator which validates against Tidepool data model schemas.
    */
   constructor(Validator = SchemaValidator) {
     this.log = bows('DataUtil');
@@ -94,6 +121,15 @@ export class DataUtil {
     this.init();
   }
 
+  /**
+   * Initializes or reinitializes the DataUtil instance.
+   *
+   * Sets up the crossfilter instance, builds dimensions for efficient querying,
+   * and configures filters and sorting functions. Called automatically by the
+   * constructor and by removeData() when clearing all data.
+   *
+   * @private
+   */
   init = () => {
     this.startTimer('init total');
     this.data = crossfilter([]);
@@ -109,6 +145,42 @@ export class DataUtil {
     this.endTimer('init total');
   };
 
+  /**
+   * Ingests raw Tidepool diabetes device data into the DataUtil instance.
+   *
+   * This is the primary method for loading patient data. It performs the following:
+   * 1. Clears existing data if a different patient's data is already loaded
+   * 2. Normalizes each datum (converts timestamps, adds computed fields)
+   * 3. Joins related datums (wizard↔bolus, bolus↔dosingDecision)
+   * 4. Validates data against Tidepool schemas
+   * 5. Filters out invalid/duplicate data
+   * 6. Tags data with metadata for filtering (e.g., site changes, calibrations)
+   * 7. Adds valid data to the crossfilter index
+   * 8. Computes metadata (latest pump upload, BG sources, devices, etc.)
+   *
+   * @param {Array<Object>} [rawData=[]] - Array of raw Tidepool datum objects.
+   *   Each datum should conform to the Tidepool data model (basal, bolus, cbg, smbg, etc.).
+   * @param {string} patientId - Unique identifier for the patient.
+   *   Used to ensure data from different patients is never mixed.
+   * @param {boolean} [returnData=false] - If true, includes normalized valid data in the result.
+   *   Useful for debugging but increases memory usage.
+   *
+   * @returns {Object} Result object containing:
+   * @returns {Object} result.metaData - Metadata about the loaded data including:
+   *   - `bgSources` - Available BG data sources (cbg, smbg)
+   *   - `latestDatumByType` - Most recent datum of each type
+   *   - `latestPumpUpload` - Info about the most recent pump upload
+   *   - `latestTimeZone` - Detected timezone from the data
+   *   - `patientId` - The patient ID
+   *   - `size` - Total number of datums in the crossfilter
+   *   - `queryDataCount` - Number of queries that have returned typed data
+   * @returns {Array<Object>} [result.data] - Normalized valid data (only if returnData=true)
+   *
+   * @example
+   * const result = dataUtil.addData(tidepoolData, 'patient-123');
+   * console.log(result.metaData.size); // Number of valid datums loaded
+   * console.log(result.metaData.bgSources); // { cbg: true, smbg: true, current: 'cbg' }
+   */
   addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
 
@@ -205,6 +277,22 @@ export class DataUtil {
     return result;
   };
 
+  /**
+   * Normalizes a datum during ingestion (before adding to crossfilter).
+   *
+   * Performs type-specific preprocessing including:
+   * - Converting ISO 8601 timestamps to hammertimes (ms since epoch) for efficient filtering
+   * - Normalizing basal data (handling suspends, suppressed basals, unknown durations)
+   * - Handling legacy message format conversion
+   * - Converting BG values to mg/dL for consistent internal storage
+   * - Tracking latest datum by type and device-upload mappings
+   * - Validating the datum against Tidepool schemas
+   *
+   * Mutates the datum in place for performance.
+   *
+   * @private
+   * @param {Object} d - The datum to normalize. Modified in place.
+   */
   /* eslint-disable no-param-reassign */
   normalizeDatumIn = d => {
     // Pre-process datums by type
@@ -776,6 +864,15 @@ export class DataUtil {
     }
   };
 
+  /**
+   * Validates a datum against Tidepool data model schemas.
+   *
+   * Runs type-specific validators (or common validator if no type-specific one exists).
+   * If validation fails, marks the datum with `reject: true` and `rejectReason`.
+   *
+   * @private
+   * @param {Object} d - The datum to validate. Modified in place if validation fails.
+   */
   validateDatumIn = d => {
     let validator = this.validator[d.type] || this.validator.common;
     if (_.isFunction(validator)) validator = { validator };
@@ -796,6 +893,23 @@ export class DataUtil {
     }
   };
 
+  /**
+   * Normalizes a datum for output (when returning query results).
+   *
+   * Performs type-specific post-processing including:
+   * - Converting hammertimes back to ISO 8601 strings (if raw mode)
+   * - Computing timezone-aware display times (normalTime, msPer24, localDate)
+   * - Converting BG values to the user's preferred units
+   * - Adding device serial number and source metadata
+   * - Processing nested data (suppressed basals, wizard→bolus links)
+   *
+   * Mutates the datum in place for performance.
+   *
+   * @private
+   * @param {Object} d - The datum to normalize. Modified in place.
+   * @param {Array<string>|string} [fields=[]] - Fields to normalize.
+   *   Pass '*' to normalize all fields, or an array of specific field names.
+   */
   normalizeDatumOut = (d, fields = []) => {
     if (this.returnRawData) {
       /* eslint-disable no-underscore-dangle */
@@ -1191,6 +1305,29 @@ export class DataUtil {
     return data;
   };
 
+  /**
+   * Removes data from the DataUtil instance.
+   *
+   * Can either remove specific data matching a predicate, or completely
+   * reinitialize the instance (clearing all data and metadata).
+   *
+   * @param {Object|Function|null} [predicate=null] - Filter for data to remove.
+   *   - If `null`: Completely reinitializes the instance, clearing all data and metadata.
+   *   - If `Object`: Removes datums matching the object properties (uses lodash _.matches).
+   *   - If `Function`: Removes datums for which the function returns true.
+   *
+   * @example
+   * // Remove all data and reinitialize
+   * dataUtil.removeData();
+   *
+   * @example
+   * // Remove all bolus data
+   * dataUtil.removeData({ type: 'bolus' });
+   *
+   * @example
+   * // Remove data matching a custom predicate
+   * dataUtil.removeData(d => d.type === 'cbg' && d.value < 40);
+   */
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {
@@ -1223,6 +1360,27 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  /**
+   * Updates an existing datum in the DataUtil instance.
+   *
+   * Finds the datum by ID, normalizes the update, validates it, and merges
+   * the changes into the existing datum. The byTime dimension is rebuilt
+   * in case the time field was modified.
+   *
+   * @param {Object} updatedDatum - The datum with updated fields.
+   *   Must include an `id` field matching an existing datum.
+   *
+   * @returns {Object} Result object containing:
+   * @returns {Object} result.datum - The updated datum after normalization,
+   *   or undefined if no matching datum was found or validation failed.
+   *
+   * @example
+   * // Update a note's message text
+   * const result = dataUtil.updateDatum({
+   *   id: 'message-123',
+   *   messageText: 'Updated note content',
+   * });
+   */
   updateDatum = updatedDatum => {
     this.log('Updating Datum', updatedDatum);
     this.clearFilters();
@@ -1248,42 +1406,86 @@ export class DataUtil {
     };
   };
 
+  /**
+   * Builds the day-of-week dimension for filtering by specific days.
+   * @private
+   */
   buildByDayOfWeekDimension = () => {
     this.dimension.byDayOfWeek = this.data.dimension(
       d => moment.utc(d[this.activeTimeField || 'time']).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day()
     );
   };
 
+  /**
+   * Builds the date dimension for grouping data by calendar date.
+   * @private
+   */
   buildByDateDimension = () => {
     this.dimension.byDate = this.data.dimension(
       d => moment.utc(d[this.activeTimeField || 'time']).tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).format('YYYY-MM-DD')
     );
   };
 
+  /**
+   * Builds the ID dimension for looking up specific datums.
+   * @private
+   */
   buildByIdDimension = () => {
     this.dimension.byId = this.data.dimension(d => d.id);
   };
 
+  /**
+   * Builds the subType dimension for filtering by datum subtype.
+   * @private
+   */
   buildBySubTypeDimension = () => {
     this.dimension.bySubType = this.data.dimension(d => d.subType || '');
   };
 
+  /**
+   * Builds the time dimension for filtering by time range.
+   * @private
+   */
   buildByTimeDimension = () => {
     this.dimension.byTime = this.data.dimension(d => d[this.activeTimeField || 'time']);
   };
 
+  /**
+   * Builds the type dimension for filtering by datum type.
+   * @private
+   */
   buildByTypeDimension = () => {
     this.dimension.byType = this.data.dimension(d => d.type);
   };
 
+  /**
+   * Builds the device ID dimension for filtering by device.
+   * @private
+   */
   buildByDeviceIdDimension = () => {
     this.dimension.byDeviceId = this.data.dimension(d => d.deviceId || '');
   };
 
+  /**
+   * Builds the sample interval dimension for filtering CGM data by sample rate.
+   * @private
+   */
   buildBySampleIntervalDimension = () => {
     this.dimension.bySampleInterval = this.data.dimension(d => d.sampleInterval || '');
   };
 
+  /**
+   * Builds all crossfilter dimensions used for efficient data filtering.
+   *
+   * Crossfilter dimensions enable O(1) filtering on indexed fields. This method
+   * creates dimensions for: day-of-week, date, ID, subType, time, type, deviceId,
+   * and sampleInterval.
+   *
+   * Note: Crossfilter has performance overhead when exceeding 8 dimensions.
+   * Currently at 8 dimensions - consider consolidating if more are needed.
+   *
+   * @private
+   */
   // N.B. May need to become smarter about creating and removing dimensions if we get above 8,
   // which would introduce additional performance overhead as per crossfilter docs.
   buildDimensions = () => {
@@ -1300,6 +1502,21 @@ export class DataUtil {
     this.endTimer('buildDimensions');
   };
 
+  /**
+   * Builds filter functions that apply criteria to crossfilter dimensions.
+   *
+   * Creates the following filters:
+   * - `byActiveDays(days)` - Filter to specific days of week
+   * - `byEndpoints([start, end])` - Filter to a time range
+   * - `byDeviceIds(excludedIds)` - Exclude specific devices
+   * - `byId(id)` - Filter to a specific datum ID
+   * - `bySampleIntervalRange(min, max)` - Filter CGM by sample interval
+   * - `bySubType(subType)` - Filter to a specific subType
+   * - `byType(type)` - Filter to a specific type
+   * - `byTypes(types)` - Filter to multiple types
+   *
+   * @private
+   */
   buildFilters = () => {
     this.startTimer('buildFilters');
     this.filter = {};
@@ -1337,6 +1554,13 @@ export class DataUtil {
     this.endTimer('buildFilters');
   };
 
+  /**
+   * Builds sorting functions for ordering query results.
+   *
+   * Currently provides byTime sorting that respects the timezoneAware preference.
+   *
+   * @private
+   */
   buildSorts = () => {
     this.startTimer('buildSorts');
     this.sort = {};
@@ -1347,6 +1571,14 @@ export class DataUtil {
     this.endTimer('buildSorts');
   };
 
+  /**
+   * Initializes a handler for crossfilter filter change events.
+   *
+   * Used to track which devices have data matching the current filter criteria,
+   * enabling the matchedDevices metadata feature.
+   *
+   * @private
+   */
   initFilterChangeHandler = () => {
     this.data.onChange(eventType => {
       if (eventType === 'filtered' && this.matchDevices) {
@@ -1956,6 +2188,118 @@ export class DataUtil {
     this.dataAnnotations = {};
   };
 
+  /**
+   * Queries the loaded data with filters, returning typed data, statistics, and aggregations.
+   *
+   * This is the primary method for retrieving processed data from DataUtil. It supports:
+   * - Time-range filtering via endpoints
+   * - Day-of-week filtering via activeDays
+   * - Device filtering via excludedDevices
+   * - Data type selection and field projection
+   * - Statistical calculations (time-in-range, average glucose, etc.)
+   * - Date-based aggregations for calendar views
+   *
+   * @param {Object} [query={}] - Query configuration object.
+   *
+   * @param {Array<number>} [query.activeDays] - Days of week to include (0=Sunday, 6=Saturday).
+   *   Defaults to all days [0,1,2,3,4,5,6].
+   *   @example activeDays: [1,2,3,4,5] // Weekdays only
+   *
+   * @param {string|Array<string>} [query.aggregationsByDate] - Aggregations to compute.
+   *   Available: 'basals', 'boluses', 'fingersticks', 'siteChanges', 'dataByDate', 'statsByDate'.
+   *   @example aggregationsByDate: 'basals,boluses,fingersticks,siteChanges'
+   *
+   * @param {Object} [query.bgPrefs] - Blood glucose display preferences.
+   * @param {Object} [query.bgPrefs.bgBounds] - Thresholds for BG ranges.
+   * @param {string} [query.bgPrefs.bgUnits] - Display units ('mg/dL' or 'mmol/L').
+   *
+   * @param {string} [query.bgSource] - Primary BG source to use ('cbg' or 'smbg').
+   *
+   * @param {Array<number>} [query.cgmSampleIntervalRange] - CGM sample interval filter [min, max] in ms.
+   *   Default filters to standard 5-minute CGM data.
+   *
+   * @param {Array<number>} [query.endpoints] - Time range as [startTime, endTime] in ms since epoch.
+   *   @example endpoints: [Date.parse('2023-01-01'), Date.parse('2023-01-15')]
+   *
+   * @param {Array<string>} [query.excludedDevices] - Device IDs to exclude from results.
+   *
+   * @param {Object|boolean} [query.fillData] - Options for generating fill data (background bands).
+   *   @example fillData: { adjustForDSTChanges: true }
+   *
+   * @param {string|Array<string>} [query.metaData] - Metadata fields to include in response.
+   *   Available: 'bgSources', 'latestDatumByType', 'latestPumpUpload', 'latestTimeZone',
+   *   'patientId', 'size', 'devices', 'excludedDevices', 'matchedDevices', 'dataAnnotations', 'queryDataCount'.
+   *   @example metaData: 'bgSources,latestPumpUpload,devices'
+   *
+   * @param {number} [query.nextDays] - Days to fetch after the current endpoint range.
+   *
+   * @param {number} [query.prevDays] - Days to fetch before the current endpoint range.
+   *
+   * @param {boolean} [query.raw] - If true, return data in raw format (original timestamps).
+   *
+   * @param {Array<string>} [query.stats] - Statistics to calculate.
+   *   Available: 'averageGlucose', 'bgExtents', 'carbs', 'coefficientOfVariation',
+   *   'glucoseManagementIndicator', 'readingsInRange', 'sensorUsage', 'standardDev',
+   *   'timeInAuto', 'timeInOverride', 'timeInRange', 'totalInsulin', 'averageDailyDose'.
+   *   @example stats: ['timeInRange', 'averageGlucose', 'sensorUsage']
+   *
+   * @param {Object} [query.timePrefs] - Timezone display preferences.
+   * @param {boolean} [query.timePrefs.timezoneAware] - If true, display times in specified timezone.
+   * @param {string} [query.timePrefs.timezoneName] - IANA timezone name (e.g., 'US/Pacific').
+   *
+   * @param {Object|Array|string} [query.types] - Data types to retrieve.
+   *   - As Object: Keys are type names, values are options (select, sort).
+   *   - As Array: List of type config objects.
+   *   - As '*': Return all types.
+   *   @example types: { cbg: {}, smbg: {}, bolus: { select: 'id,type,normal,time' } }
+   *
+   * @returns {Object} Query result object.
+   * @returns {Object} result.data - Data organized by range (current, prev, next).
+   * @returns {Object} result.data.current - Data for the primary endpoint range.
+   * @returns {Object} result.data.current.data - Retrieved datums by type.
+   * @returns {Object} result.data.current.stats - Calculated statistics.
+   * @returns {Object} result.data.current.aggregationsByDate - Date-based aggregations.
+   * @returns {Object} result.data.current.endpoints - The endpoint range used.
+   * @returns {Object} [result.data.prev] - Data for the previous range (if prevDays specified).
+   * @returns {Object} [result.data.next] - Data for the next range (if nextDays specified).
+   * @returns {Object} result.timePrefs - Active time preferences.
+   * @returns {Object} result.bgPrefs - Active BG preferences.
+   * @returns {Object} result.query - Echo of the query that was executed.
+   * @returns {Object} [result.metaData] - Requested metadata (if metaData specified).
+   *
+   * @example
+   * // Query for daily view
+   * const result = dataUtil.query({
+   *   endpoints: [startTime, endTime],
+   *   types: {
+   *     basal: {},
+   *     bolus: {},
+   *     cbg: {},
+   *     smbg: {},
+   *     wizard: {},
+   *   },
+   *   timePrefs: { timezoneAware: true, timezoneName: 'US/Pacific' },
+   *   bgPrefs: { bgUnits: 'mg/dL' },
+   * });
+   *
+   * @example
+   * // Query for basics view with aggregations
+   * const result = dataUtil.query({
+   *   endpoints: [startTime, endTime],
+   *   aggregationsByDate: 'basals,boluses,fingersticks,siteChanges',
+   *   stats: ['timeInRange', 'averageGlucose', 'totalInsulin'],
+   *   metaData: 'bgSources,latestPumpUpload',
+   * });
+   *
+   * @example
+   * // Query for trends view with day-of-week filtering
+   * const result = dataUtil.query({
+   *   endpoints: [startTime, endTime],
+   *   activeDays: [1, 2, 3, 4, 5], // Weekdays only
+   *   types: { cbg: {} },
+   *   stats: ['timeInRange', 'averageGlucose', 'standardDev'],
+   * });
+   */
   query = (query = {}) => {
     this.log('Query', query);
 
@@ -2082,6 +2426,37 @@ export class DataUtil {
     return result;
   };
 
+  /**
+   * Computes diabetes statistics for the currently filtered data.
+   *
+   * This method creates a StatUtil instance and iterates through the requested
+   * statistics, calling the appropriate calculation method for each. The byType
+   * and bySampleInterval filters are reset before each stat calculation to ensure
+   * stats that need specific filtering can do so internally.
+   *
+   * @private
+   * @param {Array<string>} stats - Array of stat identifiers to compute.
+   *   Valid values are defined in `commonStats`:
+   *   - `'averageGlucose'` - Mean blood glucose value
+   *   - `'averageDailyDose'` - Average daily insulin dose (basal + bolus)
+   *   - `'bgExtents'` - Min and max blood glucose values
+   *   - `'carbs'` - Average daily carbohydrate intake
+   *   - `'coefficientOfVariation'` - CV% of blood glucose (std dev / mean × 100)
+   *   - `'glucoseManagementIndicator'` - GMI (estimated A1C from CGM data)
+   *   - `'readingsInRange'` - Distribution of SMBG readings across ranges
+   *   - `'sensorUsage'` - Percentage of time with CGM data
+   *   - `'standardDev'` - Standard deviation of blood glucose
+   *   - `'timeInAuto'` - Time spent in automated basal delivery mode
+   *   - `'timeInOverride'` - Time spent in temporary override modes
+   *   - `'timeInRange'` - Distribution of CGM time across glucose ranges
+   *   - `'totalInsulin'` - Basal vs bolus insulin breakdown
+   *
+   * @returns {Object} Object keyed by stat identifier, each containing the computed
+   *   stat data structure (varies by stat type, see StatUtil for details).
+   *
+   * @see {@link StatUtil} for individual stat calculation implementations
+   * @see {@link module:stat.commonStats} for stat identifier constants
+   */
   getStats = stats => {
     this.startTimer('generate stats');
     const generatedStats = {};
@@ -2105,6 +2480,33 @@ export class DataUtil {
     return generatedStats;
   };
 
+  /**
+   * Generates date-based data aggregations for calendar and summary views.
+   *
+   * This method creates an AggregationUtil instance and computes the requested
+   * aggregation types using a crossfilter group by date. Aggregations are used
+   * primarily by the Basics view to show daily summaries in calendar format.
+   *
+   * @private
+   * @param {Array<string>|string} aggregationsByDate - Aggregation types to compute.
+   *   Can be an array or comma-separated string. Valid values:
+   *   - `'basals'` - Daily basal data aggregated by schedule/automated mode
+   *   - `'boluses'` - Daily bolus counts and types (normal, extended, combo)
+   *   - `'fingersticks'` - Daily SMBG readings grouped by calibration status
+   *   - `'siteChanges'` - Daily infusion site change events
+   *   - `'dataByDate'` - Raw data grouped by date for custom processing
+   *   - `'statsByDate'` - Daily statistics (time-in-range, etc.) by date
+   *
+   * @returns {Object} Object keyed by aggregation type, each containing:
+   *   - For `basals`: Object with dates as keys, each containing basal schedule info
+   *   - For `boluses`: Object with dates as keys, each containing bolus counts
+   *   - For `fingersticks`: Object with dates as keys, calibration and meter readings
+   *   - For `siteChanges`: Object with dates as keys, site change event details
+   *   - For `dataByDate`: Object with dates as keys, arrays of datums
+   *   - For `statsByDate`: Object with dates as keys, daily stat calculations
+   *
+   * @see {@link AggregationUtil} for individual aggregation implementations
+   */
   getAggregationsByDate = aggregationsByDate => {
     this.startTimer('generate aggregationsByDate');
     const selectedAggregationsByDate = _.isString(aggregationsByDate) ? _.map(aggregationsByDate.split(','), _.trim) : aggregationsByDate;
@@ -2139,6 +2541,30 @@ export class DataUtil {
     return generatedAggregationsByDate;
   };
 
+  /**
+   * Generates fill (background) data for the Daily view timeline.
+   *
+   * Creates synthetic "fill" datums that provide the background structure for
+   * the daily timeline visualization. Fills are 3-hour blocks that span the
+   * entire date range, used for rendering alternating background bands and
+   * providing click targets for navigation.
+   *
+   * @private
+   * @param {Array<number>} endpoints - Two-element array [startTime, endTime] as
+   *   UTC timestamps defining the date range to generate fills for.
+   * @param {Object} [opts={}] - Options for fill generation.
+   * @param {boolean} [opts.adjustForDSTChanges=false] - If true, adjusts fill
+   *   boundaries to account for Daylight Saving Time transitions (Spring Forward
+   *   and Fall Back), ensuring fills don't overlap or leave gaps.
+   *
+   * @returns {Array<Object>} Array of fill datums, each containing:
+   *   - `duration` - Duration in ms (3 hours)
+   *   - `time` - Start timestamp (UTC ms)
+   *   - `type` - Always 'fill'
+   *   - `normalTime` - ISO string of start time in display timezone
+   *   - `normalEnd` - ISO string of end time in display timezone
+   *   - `hourOfDay` - Hour (0-23) in the display timezone
+   */
   getFillData = (endpoints, opts = {}) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
@@ -2189,6 +2615,37 @@ export class DataUtil {
     return fillData;
   };
 
+  /**
+   * Retrieves metadata about the loaded patient data.
+   *
+   * Returns a subset of DataUtil's internal metadata based on the requested
+   * fields. This is used to provide context about the data to the UI without
+   * exposing the full internal state.
+   *
+   * @private
+   * @param {Array<string>|string} metaData - Metadata fields to retrieve.
+   *   Can be an array or comma-separated string. Valid values:
+   *   - `'bgSources'` - Available BG data sources with current selection
+   *     ```js
+   *     { cbg: true, smbg: true, current: 'cbg' }
+   *     ```
+   *   - `'latestDatumByType'` - Most recent datum for each data type
+   *   - `'latestPumpUpload'` - Info about the most recent pump upload including:
+   *     - `manufacturer`, `deviceModel`, `isAutomatedBasalDevice`, etc.
+   *     - `settings` - The pump settings datum (normalized for output)
+   *   - `'latestTimeZone'` - The timezone detected from the most recent data
+   *   - `'patientId'` - The current patient's unique identifier
+   *   - `'size'` - Total number of datums in the crossfilter
+   *   - `'devices'` - Map of device IDs to device info
+   *   - `'excludedDevices'` - Devices excluded from queries
+   *   - `'matchedDevices'` - Devices matched during data processing
+   *   - `'dataAnnotations'` - Annotations/notes attached to data
+   *   - `'queryDataCount'` - Number of queries that have returned typed data
+   *
+   * @returns {Object} Object containing only the requested metadata fields.
+   *   Datums in `latestDatumByType` and `latestPumpUpload.settings` are
+   *   normalized for output (timezone-aware display times added).
+   */
   getMetaData = metaData => {
     this.startTimer('generate metaData');
     const allowedMetaData = [
