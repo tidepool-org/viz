@@ -157,6 +157,6 @@ For a detailed architecture overview including data flow diagrams, see [Architec
 ## Further Reading
 
 - [Architecture](./Architecture.md) - Design decisions and rationale
-- [Feature Overview](./FeatureOverview.md) - Data views explained
+- [Components](./Components.md) - Visual component catalog
 - [Code Style](./CodeStyle.md) - Coding conventions
 - [Storybook Guide](./Storybook.md) - Working with Storybook

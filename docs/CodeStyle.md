@@ -12,7 +12,18 @@ To summarize in general the constraints that the AirBnb ESLint configuration imp
 
 We have also added an additional plug-in for enforcing a preference for [lodash](https://lodash.com/docs/4.16.6 'Lodash utility library') utility methods over their native implementations (e.g., lodash `_.map` instead of JavaScript `Array.map`).
 
-Also see the documentation on [directory structure](./DirectoryStructure.md) for our conventions around file naming, placement, and in particular our semantic division between "containers" and "components."
+### File Naming Conventions
+
+- **Components**: PascalCase (e.g., `BGSlice.js`, `BolusTooltip.js`)
+- **Utilities**: camelCase (e.g., `datetime.js`, `bloodglucose.js`)
+- **Tests**: Mirror source with `.test.js` suffix (e.g., `datetime.test.js`)
+- **CSS Modules**: Same name as component with `.css` extension
+
+### Container vs Component
+
+"Container" components handle data/logic, "pure" components handle rendering:
+- **Containers**: ES6 classes, minimal styling, render other components
+- **Pure components**: Stateless functional components, render HTML/SVG
 
 * * * * *
 

@@ -1,6 +1,6 @@
 ## Common props in Tidepool data visualization code
 
-Several of the pieces of [the state common to most, if not all, of Tidepool's data visualization views](../FeatureOverview.md#shared-state) are most often encountered in the code as props passed to React components. This page provides a quick reference describing the canonical forms of these pieces of state since they occur and are used (for example: as a parameter in a utility function) **very** frequently.
+Several pieces of shared state are commonly passed as props to React components throughout the visualization code. This page provides a quick reference for these frequently-used props.
 
 - [`bgPrefs`](#bgPrefs)
 - [`timePrefs`](#timePrefs)

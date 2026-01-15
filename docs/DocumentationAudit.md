@@ -30,10 +30,9 @@ The @tidepool/viz repository has **fragmented, outdated documentation** dating p
 ```
 docs/
 ├── StartHere.md          # Entry point, links to other docs
-├── Background.md         # Historical context (tideline migration)
+├── GettingStarted.md     # Developer onboarding guide
 ├── Architecture.md       # Architectural decisions and rationale
-├── FeatureOverview.md    # Overview of five data views
-├── DirectoryStructure.md # Code organization guide
+├── Components.md         # Visual component catalog with screenshots
 ├── CodeStyle.md          # Coding conventions
 ├── Storybook.md          # Storybook usage guide
 ├── deps/                 # Dependency documentation
@@ -58,21 +57,20 @@ docs/
 
 | Document | Lines | Last Relevant | Assessment |
 |----------|-------|---------------|------------|
-| StartHere.md | 29 | 2016 | Valid as entry point, links work |
-| Background.md | ~50 | 2016 | Historical context, still relevant |
-| Architecture.md | 112 | Nov 2016 | **Valuable** - explains design decisions |
-| FeatureOverview.md | 108 | Nov 2016 | Outdated views list, tech debt notes |
-| DirectoryStructure.md | 138 | May 2017 | **Severely outdated** - tree is stale |
-| CodeStyle.md | ~100 | 2017 | Mostly valid, some outdated practices |
+| StartHere.md | ~30 | Jan 2026 | Updated entry point |
+| GettingStarted.md | ~160 | Jan 2026 | **New** - developer onboarding |
+| Architecture.md | ~150 | Jan 2026 | Updated with Mermaid diagram |
+| Components.md | ~500 | Jan 2026 | **New** - visual component catalog |
+| CodeStyle.md | ~25 | Jan 2026 | Updated, valid |
 | Storybook.md | ~50 | 2017 | Valid but incomplete |
 
 ### 1.3 What's Missing from `/docs`
 
 - ~~**DataUtil documentation** - Core data processing class undocumented~~ ✅ JSDoc added
 - ~~**StatUtil documentation** - Statistical calculations undocumented~~ ✅ JSDoc added
+- ~~**Component API reference** - No component documentation~~ ✅ Components.md added
 - **Print/PDF system** - No documentation for PDF generation
 - **AGP reports** - Ambulatory Glucose Profile implementation undocumented
-- **Component API reference** - No component documentation
 - **Integration guide** - How to use @tidepool/viz in blip
 - **Data model reference** - Tidepool data types handled
 
@@ -81,15 +79,10 @@ docs/
 1. **Architecture.md** - Explains rationale for:
    - Redux for state management
    - Crossfilter for data filtering
-   - Web Worker plans (partially implemented)
+   - Web Worker implementation
    - Modularity goals
 
-2. **FeatureOverview.md** - Documents:
-   - Shared state across views
-   - Tech debt markers (still relevant)
-   - Navigation patterns
-
-3. **deps/** folder - Explains why specific libraries were chosen
+2. **deps/** folder - Explains why specific libraries were chosen
 
 ---
 
@@ -295,21 +288,22 @@ __screenshots__/
 | Integration guide | Medium | Low | How to use in blip |
 | Data model reference | Medium | Medium | Link to Tidepool data model |
 
-### 8.2 Outdated Documentation Requiring Updates
+### 8.2 Outdated Documentation ~~Requiring Updates~~ Updated
 
-| Document | Effort | Notes |
+| Document | Status | Notes |
 |----------|--------|-------|
-| DirectoryStructure.md | Low | Regenerate tree, update descriptions |
-| FeatureOverview.md | Medium | Add new views, update tech debt |
-| Architecture.md | Medium | Add realized vs. planned architecture |
+| ~~DirectoryStructure.md~~ | Deleted | Covered in GettingStarted.md |
+| ~~FeatureOverview.md~~ | Deleted | View docs belong in blip |
+| Architecture.md | ✅ Updated | Mermaid diagram, streamlined |
 
-### 8.3 New Documentation Needed
+### 8.3 New Documentation ~~Needed~~ Added
 
-1. **Getting Started Guide** - Quick setup for new developers
-2. **Statistical Calculations Reference** - Formulas with clinical context
-3. **PDF Generation Guide** - PrintView system documentation
-4. **AGP Implementation** - Ambulatory Glucose Profile specifics
-5. **Device Support Matrix** - Which pumps/CGMs are supported
+1. ~~**Getting Started Guide** - Quick setup for new developers~~ ✅ GettingStarted.md
+2. ~~**Component Visual Reference** - Screenshots with descriptions~~ ✅ Components.md
+3. **Statistical Calculations Reference** - Formulas with clinical context (deferred)
+4. **PDF Generation Guide** - PrintView system documentation (deferred)
+5. **AGP Implementation** - Ambulatory Glucose Profile specifics (deferred)
+6. **Device Support Matrix** - Which pumps/CGMs are supported (deferred)
 
 ---
 
@@ -385,13 +379,15 @@ JSDoc should include:
 3. Architecture overview update
 4. DataUtil conceptual documentation
 
-**Phase 3: Components & Visualization**
+**Phase 3: Components & Visualization** ✅ COMPLETE
 5. ~~JSDoc for StatUtil.js~~ ✅ Complete + statistical formulas
-6. Component documentation with screenshots
+6. ~~Component documentation with screenshots~~ ✅ Components.md created
    - Tooltips (rich screenshot coverage exists)
    - Stats display components
    - Device settings views
-7. Data views overview - what each view shows clinically
+   - Data renderers (Basal, Bolus, Suspend)
+   - PDF report examples
+7. Data views overview - deferred (view docs belong in blip)
 
 **Deferred: PDF Generation**
 PrintView internals are lower priority - client documentation will focus on *what* is visualized, not *how* PDFs are generated. The existing screenshot assets in `/__screenshots__/Combined Views PDF/` can illustrate PDF outputs without requiring internal documentation.
