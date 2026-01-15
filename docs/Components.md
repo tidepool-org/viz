@@ -358,50 +358,6 @@ Displays annotations and additional context for statistics.
 
 ---
 
-## Controls
-
-### Clipboard Button
-
-**Source**: `src/components/common/controls/ClipboardButton.js`
-
-Copies formatted data to clipboard for sharing/export.
-
-#### Default & Custom States
-
-| Default | Custom Text | OnSuccess Callback |
-|---------|-------------|-------------------|
-| ![default](screenshots/ClipboardButton/Default.png) | ![custom](screenshots/ClipboardButton/Custom%20Text.png) | ![success](screenshots/ClipboardButton/OnSuccess%20callback.png) |
-
-#### Data Export Variants
-
-| Basics Data | BG Log Data | Trends Data |
-|-------------|-------------|-------------|
-| ![basics](screenshots/ClipboardButton/Basics%20Data.png) | ![bg log](screenshots/ClipboardButton/BG%20Log%20Data.png) | ![trends](screenshots/ClipboardButton/Trends%20Data.png) |
-
-#### Pump Settings Export by Manufacturer
-
-| Animas Flat | Animas Multi | Medtronic Flat |
-|-------------|--------------|----------------|
-| ![animas flat](screenshots/ClipboardButton/Animas%20Flat%20Rate.png) | ![animas multi](screenshots/ClipboardButton/Animas%20Multi%20Rate.png) | ![medtronic flat](screenshots/ClipboardButton/Medtronic%20Flat%20Rate.png) |
-
-| Medtronic Multi | Medtronic Automated | Tandem Flat |
-|-----------------|---------------------|-------------|
-| ![medtronic multi](screenshots/ClipboardButton/Medtronic%20Multi%20Rate.png) | ![medtronic auto](screenshots/ClipboardButton/Medtronic%20Automated%20Rate.png) | ![tandem flat](screenshots/ClipboardButton/Tandem%20Flat%20Rate.png) |
-
-| Tandem Multi | OmniPod Flat | OmniPod Multi |
-|--------------|--------------|---------------|
-| ![tandem multi](screenshots/ClipboardButton/Tandem%20Multi%20Rate.png) | ![omnipod flat](screenshots/ClipboardButton/OmniPod%20Flat%20Rate.png) | ![omnipod multi](screenshots/ClipboardButton/OmniPod%20Multi%20Rate.png) |
-
-| Loop Flat | Loop Multi | Equil Flat |
-|-----------|------------|------------|
-| ![loop flat](screenshots/ClipboardButton/Loop%20Flat%20Rate.png) | ![loop multi](screenshots/ClipboardButton/Loop%20Multi%20Rate.png) | ![equil flat](screenshots/ClipboardButton/Equil%20Flat%20Rate.png) |
-
-| Equil Multi |
-|-------------|
-| ![equil multi](screenshots/ClipboardButton/Equil%20Multi%20Rate.png) |
-
----
-
 ## Device Settings
 
 Tabular display of insulin pump settings by manufacturer.
