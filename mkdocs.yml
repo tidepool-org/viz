@@ -57,7 +57,6 @@ nav:
   - Architecture: Architecture.md
   - Components: Components.md
   - Code Style: CodeStyle.md
-  - Storybook: Storybook.md
   - Views:
     - Trends: views/Trends.md
   - Reference:
@@ -66,6 +65,5 @@ nav:
   - Dependencies:
     - Overview: deps/README.md
     - D3: deps/D3.md
-    - Moment: deps/Moment.md
     - React: deps/React.md
     - React Motion: deps/ReactMotion.md

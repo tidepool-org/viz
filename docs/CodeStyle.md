@@ -27,4 +27,4 @@ We have also added an additional plug-in for enforcing a preference for [lodash]
 
 * * * * *
 
-[^a]: And you don't even have to Google! Here's where to get started for [Sublime Text](http://www.sublimelinter.com/en/latest/ 'SublimeLinter 3') and [Atom](https://atom.io/packages/linter 'Linter').
+[^a]: Most modern editors (VS Code, WebStorm, etc.) have built-in or easily installable ESLint support. Run `yarn lint` to check for issues manually.
