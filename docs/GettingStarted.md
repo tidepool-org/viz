@@ -159,4 +159,23 @@ For a detailed architecture overview including data flow diagrams, see [Architec
 - [Architecture](./Architecture.md) - Design decisions and rationale
 - [Components](./Components.md) - Visual component catalog
 - [Code Style](./CodeStyle.md) - Coding conventions
-- [Storybook Guide](./Storybook.md) - Working with Storybook
+
+---
+
+## Documentation
+
+The documentation site is built with [MkDocs Material](https://squidfunk.github.io/mkdocs-material/) and auto-deployed to GitHub Pages via GitHub Actions when changes are pushed to the `develop` branch.
+
+### Local Preview
+
+To preview documentation changes locally:
+
+```bash
+# Install MkDocs and plugins (one-time)
+pip install mkdocs-material mkdocs-glightbox
+
+# Start local server
+mkdocs serve
+```
+
+Visit http://localhost:8000 to preview docs with live reload.

@@ -15,8 +15,6 @@
     "browser-tests": "NODE_ENV=test yarn karma start --browsers Chrome",
     "build": "NODE_ENV=production npm run clean && NODE_ENV=production yarn webpack --config package.config.js",
     "build-dev": "npm run clean && NODE_ENV=development  yarn webpack --config package.config.js --progress",
-    "build-docs": "./update-gh-pages.sh",
-    "build-storybooks": "yarn build-storybook -c storybook -o web/stories && yarn build-storybook -c storybookDatatypes -o web/diabetes-data-stories",
     "clean": "NODE_ENV=production yarn rimraf ./dist/*",
     "lint": "NODE_ENV=test yarn eslint src/ stories/ storiesDatatypes/ test/ *.js",
     "prepublishOnly": "NODE_ENV=production yarn rimraf ./node_modules && yarn install --immutable && npm test && NODE_ENV=production npm run build",

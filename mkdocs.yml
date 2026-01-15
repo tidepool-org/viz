@@ -2,9 +2,21 @@ site_name: Tidepool Viz Documentation
 site_description: Documentation for Tidepool Viz
 docs_dir: docs
 
+plugins:
+  - search
+  - glightbox:
+      touchNavigation: true
+      loop: false
+      slide_effect: slide
+      width: 100%
+      height: auto
+      zoomable: true
+      draggable: true
+
 theme:
   name: material
   features:
+    - navigation.instant
     - navigation.sections
     - navigation.expand
     - navigation.top
