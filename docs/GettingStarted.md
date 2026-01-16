@@ -28,7 +28,7 @@ yarn install
 yarn stories
 ```
 
-Storybook will open at http://localhost:8083 with interactive component examples.
+Storybook will open at <http://localhost:8083> with interactive component examples.
 
 ## Development Workflows
 
@@ -178,4 +178,4 @@ pip install mkdocs-material mkdocs-glightbox
 mkdocs serve
 ```
 
-Visit http://localhost:8000 to preview docs with live reload.
+Visit [http://localhost:8000](http://localhost:8000) to preview docs with live reload.

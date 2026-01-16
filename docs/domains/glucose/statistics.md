@@ -74,6 +74,10 @@ getAverageGlucoseData = () => {
 | `averageGlucose` | number | Mean BG in current units |
 | `total` | number | Number of readings |
 
+### Screenshot
+
+![Average Glucose](./screenshots/Average%20Glucose.png)
+
 ---
 
 ## Standard Deviation
@@ -120,6 +124,10 @@ getStandardDevData = () => {
 | `averageGlucose` | number | Mean used in calculation |
 | `insufficientData` | boolean | True if < 30 readings |
 
+### Screenshot
+
+![Standard Deviation](./screenshots/Standard%20Deviation.png)
+
 ---
 
 ## Coefficient of Variation (CV)
@@ -157,6 +165,10 @@ getCoefficientOfVariationData = () => {
 |-----|----------------|
 | < 36% | Stable glycemic control |
 | ≥ 36% | Unstable / high variability |
+
+### Screenshot
+
+![Coefficient of Variation](./screenshots/Coefficient%20of%20Variation.png)
 
 ---
 
@@ -222,6 +234,10 @@ getGlucoseManagementIndicatorData = () => {
 ### Clinical Note
 
 GMI and laboratory HbA1c may differ due to red blood cell lifespan variations between individuals. GMI reflects recent glucose control, while HbA1c reflects ~3 months.
+
+### Screenshot
+
+![Glucose Management Indicator](./screenshots/Glucose%20Management%20Indicator.png)
 
 ---
 
@@ -292,6 +308,10 @@ getTimeInRangeData = () => {
 | Time Above Range (> 180) | < 25% |
 | Time Very High (> 250) | < 5% |
 
+### Screenshot
+
+![Time In Range](./cbg/screenshots/Time%20In%20Range.png)
+
 ---
 
 ## Readings in Range (SMBG)
@@ -330,6 +350,10 @@ getReadingsInRangeData = () => {
   return readingsInRangeData;
 };
 ```
+
+### Screenshot
+
+![Readings In Range](./smbg/screenshots/ReadingsInRange.png)
 
 ---
 
@@ -384,6 +408,10 @@ getSensorUsage = () => {
   return { sensorUsage, sensorUsageAGP, sampleInterval, count, total };
 };
 ```
+
+### Screenshot
+
+![Sensor Usage](./cbg/screenshots/Sensor%20Usage.png)
 
 ---
 
