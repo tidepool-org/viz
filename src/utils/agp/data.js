@@ -20,6 +20,7 @@ import i18next from 'i18next';
 import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
+import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
 import { formatPercentage, bankersRound } from '../format';
 import { formatDatum, statFormats } from '../../utils/stat';
 import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_HOUR, MS_IN_MIN } from '../constants';
@@ -29,7 +30,6 @@ import {
   getTimezoneFromTimePrefs,
   formatCurrentDate,
   formatDateRange,
-  formatDuration,
 } from '../datetime';
 
 const t = i18next.t.bind(i18next);
@@ -70,7 +70,7 @@ export function agpCGMText(patient, data, opts = {}) {
         stats: {
           bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
           averageGlucose: { averageGlucose },
-          timeInRange: { counts, durations },
+          timeInRange: { counts },
           glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
           sensorUsage: {
             sensorUsageAGP,
@@ -83,7 +83,7 @@ export function agpCGMText(patient, data, opts = {}) {
   } = data;
 
   const { bgUnits, bgBounds } = bgPrefs || {};
-  const { veryHighThreshold, targetUpperBound, targetLowerBound, veryLowThreshold } = bgBounds || {};
+  const { targetUpperBound, targetLowerBound, veryLowThreshold, veryHighThreshold } = bgBounds || {};
 
   const timezone = getTimezoneFromTimePrefs(timePrefs);
 
@@ -103,17 +103,21 @@ export function agpCGMText(patient, data, opts = {}) {
   const lowRange = `${veryLowThreshold}-${lowUpperBound}`;
   const veryLowRange = `<${veryLowThreshold}`;
 
-  const percentInVeryHigh = formatPercentage(counts.veryHigh / counts.total, 0, true);
-  const percentInHigh = formatPercentage(counts.high / counts.total, 0, true);
-  const percentInTarget = formatPercentage(counts.target / counts.total, 0, true);
-  const percentInLow = formatPercentage(counts.low / counts.total, 0, true);
-  const percentInVeryLow = formatPercentage(counts.veryLow / counts.total, 0, true);
+  const timeInRangeProportions = {
+    veryHigh: counts.veryHigh / counts.total,
+    high: counts.high / counts.total,
+    target: counts.target / counts.total,
+    low: counts.low / counts.total,
+    veryLow: counts.veryLow / counts.total,
+  };
 
-  const durationInVeryHigh = formatDuration(durations.veryHigh, { condensed: true });
-  const durationInHigh = formatDuration(durations.high, { condensed: true });
-  const durationInTarget = formatDuration(durations.target, { condensed: true });
-  const durationInLow = formatDuration(durations.low, { condensed: true });
-  const durationInVeryLow = formatDuration(durations.veryLow, { condensed: true });
+  const timeInRanges = reconcileTIRPercentages(timeInRangeProportions);
+
+  const percentInVeryHigh = formatPercentage(timeInRanges.veryHigh, 0, true);
+  const percentInHigh = formatPercentage(timeInRanges.high, 0, true);
+  const percentInTarget = formatPercentage(timeInRanges.target, 0, true);
+  const percentInLow = formatPercentage(timeInRanges.low, 0, true);
+  const percentInVeryLow = formatPercentage(timeInRanges.veryLow, 0, true);
 
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
   const gmi = formatDatum({ value: glucoseManagementIndicatorAGP }, 'gmi', { bgPrefs, useAGPFormat: true })?.value;
@@ -143,11 +147,11 @@ export function agpCGMText(patient, data, opts = {}) {
 
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
-  clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}   ({{ durationInVeryHigh }})', { veryHighRange, percentInVeryHigh, durationInVeryHigh }));
-  clipboardText += textUtil.buildTextLine(t('{{highRange}}   {{percentInHigh}}   ({{ durationInHigh }})', { highRange, percentInHigh, durationInHigh }));
-  clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}   ({{ durationInTarget }})', { targetRange, percentInTarget, durationInTarget }));
-  clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}   ({{ durationInLow }})', { lowRange, percentInLow, durationInLow }));
-  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}   ({{ durationInVeryLow }})', { veryLowRange, percentInVeryLow, durationInVeryLow }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}', { veryHighRange, percentInVeryHigh }));
+  clipboardText += textUtil.buildTextLine(t('{{highRange}}   {{percentInHigh}}', { highRange, percentInHigh }));
+  clipboardText += textUtil.buildTextLine(t('{{targetRange}}   {{percentInTarget}}', { targetRange, percentInTarget }));
+  clipboardText += textUtil.buildTextLine(t('{{lowRange}}   {{percentInLow}}', { lowRange, percentInLow }));
+  clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
   clipboardText += textUtil.buildTextLine(t('% Time CGM Active: {{ cgmActive }}%', { cgmActive }));

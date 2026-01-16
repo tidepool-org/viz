@@ -503,7 +503,12 @@ class Stat extends PureComponent {
   };
 
   getChartPropsByType = props => {
-    const { type, data, bgPrefs: { bgUnits } } = props;
+    const {
+      type,
+      data,
+      bgPrefs: { bgUnits },
+      hasSyntheticReadings = false,
+    } = props;
 
     let barWidth;
     let barSpacing;
@@ -693,6 +698,8 @@ class Stat extends PureComponent {
                 return [value, suffix];
               }}
               tooltipText={(datum = {}) => {
+                if (hasSyntheticReadings) return '';
+
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
