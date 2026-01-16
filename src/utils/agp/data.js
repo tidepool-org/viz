@@ -22,8 +22,7 @@ import moment from 'moment';
 import TextUtil from '../text/TextUtil';
 import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
 import { formatPercentage, bankersRound } from '../format';
-import { formatDatum, statFormats } from '../../utils/stat';
-import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_HOUR, MS_IN_MIN } from '../constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 import {
   getOffset,
