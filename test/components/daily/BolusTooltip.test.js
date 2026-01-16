@@ -491,6 +491,17 @@ const withTwiistLoopDosingDecision = {
   origin: { name: 'com.dekaresearch.twiist' },
 };
 
+const insulin = {
+  type: 'insulin',
+  dose: { total: 5 },
+  tags: { manual: true },
+};
+
+const insulinRapidActing = {
+  ...insulin,
+  formulation: { simple: { actingType: 'rapid' } },
+};
+
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
@@ -701,6 +712,15 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
     expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
+  it('should render appropriate fields for a manual insulin delivery', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={insulinRapidActing} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.actingType))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.actingType)).text()).contains('Short-acting insulin');
+    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.source)).text()).contains('Manual');
   });
 
   describe('getTarget', () => {

@@ -465,7 +465,7 @@ describe('Stat', () => {
 
     it('should render the legendTitle text for each item passed to the `StatLegend` component', () => {
       expect(statLegend()).to.have.length(1);
-      const items = () => statLegend().find('li > span');
+      const items = () => statLegend().find('li > div > span');
       expect(items()).to.have.length(2);
       expect(items().at(0).text()).to.equal('Bolus');
       expect(items().at(1).text()).to.equal('Basal');
@@ -477,7 +477,7 @@ describe('Stat', () => {
       }));
 
       expect(statLegend()).to.have.length(1);
-      const items = () => statLegend().find('li > span');
+      const items = () => statLegend().find('li > div > span');
       expect(items()).to.have.length(2);
       expect(items().at(0).text()).to.equal('Basal');
       expect(items().at(1).text()).to.equal('Bolus');
@@ -1900,42 +1900,50 @@ describe('Stat', () => {
     });
   });
 
-  describe('getDatumColor', () => {
+  describe('getDatumFill', () => {
     it('should return a color based on `datum.id`', () => {
-      expect(instance.getDatumColor({ id: 'basal' })).to.equal(colors.basal);
-      expect(instance.getDatumColor({ id: 'bolus' })).to.equal(colors.bolus);
-      expect(instance.getDatumColor({ id: 'target' })).to.equal(colors.target);
+      expect(instance.getDatumFill({ id: 'basal' })).to.equal(colors.basal);
+      expect(instance.getDatumFill({ id: 'bolus' })).to.equal(colors.bolus);
+      expect(instance.getDatumFill({ id: 'target' })).to.equal(colors.target);
     });
 
     it('should return a default color when not given `datum.id`', () => {
-      expect(instance.getDatumColor({ foo: 'bar' })).to.equal(colors.statDefault);
+      expect(instance.getDatumFill({ foo: 'bar' })).to.equal(colors.statDefault);
     });
 
     it('should return a default color when `datum.id` doesn\'t map to an available color', () => {
-      expect(instance.getDatumColor({ id: 'foo' })).to.equal(colors.statDefault);
+      expect(instance.getDatumFill({ id: 'foo' })).to.equal(colors.statDefault);
     });
 
     it('should return the disabled color when `isDisabled` state is true', () => {
       wrapper.setState({ isDisabled: true });
-      expect(instance.getDatumColor({ id: 'basal' })).to.equal(colors.statDisabled);
+      expect(instance.getDatumFill({ id: 'basal' })).to.equal(colors.statDisabled);
     });
 
     it('should return the muted color when another datum is being hovered and `muteOthersOnHover` prop is `true`', () => {
       wrapper.setState({ hoveredDatumIndex: 2 });
       wrapper.setProps(props({ muteOthersOnHover: true }));
-      expect(instance.getDatumColor({ id: 'basal', index: 1 })).to.equal(colors.muted);
+      expect(instance.getDatumFill({ id: 'basal', index: 1 })).to.equal(colors.muted);
     });
 
     it('should return the standard color when another datum is being hovered and `muteOthersOnHover` prop is `false`', () => {
       wrapper.setState({ hoveredDatumIndex: 2 });
       wrapper.setProps(props({ muteOthersOnHover: false }));
-      expect(instance.getDatumColor({ id: 'basal', index: 1 })).to.equal(colors.basal);
+      expect(instance.getDatumFill({ id: 'basal', index: 1 })).to.equal(colors.basal);
     });
 
     it('should return the standard color when the datum passed in is being hovered', () => {
       wrapper.setState({ hoveredDatumIndex: 1 });
       wrapper.setProps(props({ muteOthersOnHover: true }));
-      expect(instance.getDatumColor({ id: 'basal', index: 1 })).to.equal(colors.basal);
+      expect(instance.getDatumFill({ id: 'basal', index: 1 })).to.equal(colors.basal);
+    });
+
+    it('should return the pattern id url when `usePattern` arg is `true`', () => {
+      expect(instance.getDatumFill({ id: 'bolus', pattern: { id: 'myPattern' } }, true)).to.equal('url(#myPattern)');
+    });
+
+    it('should return the fill color when `usePattern` arg is `false`', () => {
+      expect(instance.getDatumFill({ id: 'bolus', pattern: { id: 'myPattern' } }, false)).to.equal(colors.bolus);
     });
   });
 

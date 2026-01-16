@@ -56,7 +56,7 @@ const patterns = {
   id: /^[A-Za-z0-9\-_]+$/,
   ISODate: /^(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))$/,
   ISODateSince2008: /^((200[89]|20[1-9]\d)-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|((200[89]|20[1-9]\d)-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|((200[89]|20[1-9]\d)-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))$/,
-  deviceTime: /^(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)$/,
+  deviceTime: /^(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)Z?$/,
   rejectBadDeviceStatus: /^(?!status\/unknown-previous).*$/,
 };
 
@@ -121,6 +121,21 @@ const basalPostShutdown = {
   annotations: { type: 'array', items: { type: 'object', props: { code: { type: 'string', value: 'pump-shutdown' } } } },
   duration: { ...minZero, ...optional },
   suppressed: { ...suppressed, props: { ...suppressed.props, duration: { ...minZero, ...optional } } },
+};
+
+const insulin = {
+  ...common,
+  dose: { type: 'object',
+    props: {
+      total: minZero,
+    } },
+  formulation: { type: 'object',
+    props: {
+      simple: { type: 'object',
+        props: {
+          actingType: { type: 'string', enum: ['rapid', 'short', 'intermediate', 'long'] },
+        } } },
+    ...optional },
 };
 
 const normalBolus = {
@@ -416,6 +431,7 @@ export default {
   cbg: v.compile(cbg),
   common: v.compile(common),
   deviceEvent: v.compile(deviceEvent),
+  insulin: v.compile(insulin),
   message: v.compile(message),
   pumpSettings: {
     animas: v.compile(pumpSettingsAnimas),

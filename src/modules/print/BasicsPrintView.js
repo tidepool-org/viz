@@ -266,7 +266,6 @@ class BasicsPrintView extends PrintView {
             text: 'Time in Range',
             note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -282,7 +281,6 @@ class BasicsPrintView extends PrintView {
               count: readingsInRange.data?.raw?.counts?.total,
             }),
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -471,7 +469,7 @@ class BasicsPrintView extends PrintView {
       const isTIRStat = ['timeInRange', 'readingsInRange'].includes(stat.id);
       stat = isTIRStat ? reconcileTIRDatumValues(stat) : stat;
 
-      const statDatums = _.get(stat, 'data.data', []);
+      const statDatums = _.reject(_.get(stat, 'data.data', []), datum => datum.hideEmpty && _.toNumber(datum.value) <= 0);
       const statTotal = _.get(stat, 'data.total.value', 1);
 
       const tableColumns = [
@@ -526,6 +524,7 @@ class BasicsPrintView extends PrintView {
           },
           _fillStripe: {
             color,
+            patternOverlay: id === 'insulin' ? 'diagonalStripes' : null,
             opacity: opts.fillOpacity,
             width: (columnWidth - (2 * stripePadding)) * (_.toNumber(datum.value) / statTotal),
             background: true,
