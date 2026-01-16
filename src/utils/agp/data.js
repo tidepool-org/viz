@@ -20,9 +20,9 @@ import i18next from 'i18next';
 import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
-import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
+import { formatDatum, reconcileTIRPercentages, statFormats } from '../../utils/stat';
 import { formatPercentage, bankersRound } from '../format';
-import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN, MS_IN_HOUR } from '../constants';
 
 import {
   getOffset,
@@ -40,7 +40,11 @@ const t = i18next.t.bind(i18next);
  *
  * @return {String}  agpCGM data as a formatted string
  */
-export function agpCGMText(patient, data) {
+export function agpCGMText(patient, data, opts = {}) {
+  _.defaults(opts, {
+    showCpt95251: false
+  });
+
   if (!data || !patient) return '';
 
   const getDateRange = (startDate, endDate, dateParseFormat, _prefix, monthFormat, timezone) => {
@@ -67,7 +71,11 @@ export function agpCGMText(patient, data) {
           averageGlucose: { averageGlucose },
           timeInRange: { counts },
           glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
-          sensorUsage: { sensorUsageAGP }
+          sensorUsage: {
+            sensorUsageAGP,
+            count: sensorUsageCount,
+            sampleInterval: sensorUsageSampleInterval,
+          },
         },
       },
     },
@@ -114,6 +122,11 @@ export function agpCGMText(patient, data) {
   const gmi = formatDatum({ value: glucoseManagementIndicatorAGP }, 'gmi', { bgPrefs, useAGPFormat: true })?.value;
   const cgmActive = bankersRound(sensorUsageAGP, 1);
 
+  const hoursOfCGMData = (sensorUsageCount * sensorUsageSampleInterval) / MS_IN_HOUR;
+  const formattedDurationOfCGMData = formatDatum(sensorUsageCount * sensorUsageSampleInterval, statFormats.duration)?.value;
+  const has72HoursOfData = hoursOfCGMData >= 72;
+  const { showCpt95251 } = opts;
+
   const textUtil = new TextUtil();
   let clipboardText = '';
 
@@ -122,6 +135,15 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('Exported from Tidepool TIDE: {{currentDate}}', { currentDate }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Reporting Period: {{reportDaysText}}', { reportDaysText }));
+
+  if (showCpt95251 && has72HoursOfData) {
+    clipboardText += textUtil.buildTextLine('');
+    clipboardText += textUtil.buildTextLine(t('Total CGM data recorded: {{ duration }} — Meets ≥72-hour requirement for CPT 95251', { duration: formattedDurationOfCGMData }));
+  } else if (showCpt95251) {
+    clipboardText += textUtil.buildTextLine('');
+    clipboardText += textUtil.buildTextLine(t('Total CGM data recorded: {{ duration }}', { duration: formattedDurationOfCGMData }));
+  }
+
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Daily Time In Range ({{- bgUnits}})', { bgUnits }));
   clipboardText += textUtil.buildTextLine(t('{{- veryHighRange}}   {{percentInVeryHigh}}', { veryHighRange, percentInVeryHigh }));
@@ -131,7 +153,7 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
-  clipboardText += textUtil.buildTextLine(t('Sensor Usage: {{ cgmActive }}%', { cgmActive }));
+  clipboardText += textUtil.buildTextLine(t('% Time CGM Active: {{ cgmActive }}%', { cgmActive }));
   clipboardText += textUtil.buildTextLine(t('GMI (CGM): {{ gmi }}%', { gmi }));
 
   return clipboardText;

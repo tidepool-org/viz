@@ -17,6 +17,7 @@
 
 import * as utils from '../../../src/utils/agp/data';
 import { formatCurrentDate } from '../../../src/utils/datetime';
+import _ from 'lodash';
 
 const { agpCGMText } = utils;
 
@@ -147,7 +148,10 @@ const data = {
   metaData: {},
 };
 
-const expectedOutput = (
+describe('[agp] data utils', () => {
+  describe('agpCGMText', () => {
+    it('should return the expected output', () => {
+      const expectedOutput = (
 `Terence Crawford
 Date of birth: 2001-01-01
 Exported from Tidepool TIDE: ${formatCurrentDate()}
@@ -162,14 +166,68 @@ Avg. Daily Time In Range (mg/dL)
 <54   0%
 
 Avg. Glucose (CGM): 121 mg/dL
-Sensor Usage: 99.8%
+% Time CGM Active: 99.8%
 GMI (CGM): 6.2%
 `);
 
-describe('[agp] data utils', () => {
-  describe('agpCGMText', () => {
-    it('should return the expected output', () => {
       expect(agpCGMText(patient, data)).to.eql(expectedOutput);
+    });
+
+    it('should return the expected output when the showCpt95251 flag is present and meets 72h requirement', () => {
+      const opts = { showCpt95251: true };
+
+      const expectedOutput = (
+`Terence Crawford
+Date of birth: 2001-01-01
+Exported from Tidepool TIDE: ${formatCurrentDate()}
+
+Reporting Period: December 15, 2024 - January 13, 2025
+
+Total CGM data recorded: 29d 7h 30m — Meets ≥72-hour requirement for CPT 95251
+
+Avg. Daily Time In Range (mg/dL)
+>250   4%
+181-250   17%
+70-180   76%
+54-69   3%
+<54   0%
+
+Avg. Glucose (CGM): 121 mg/dL
+% Time CGM Active: 99.8%
+GMI (CGM): 6.2%
+`);
+
+      expect(agpCGMText(patient, data, opts)).to.eql(expectedOutput);
+    });
+
+    it('should return the expected output when the showCpt95251 flag is present and does not meet 72h requirement', () => {
+      const opts = { showCpt95251: true };
+
+      const testData = _.cloneDeep(data);
+      testData.data.current.stats.sensorUsage.count = 500;
+
+      const expectedOutput = (
+`Terence Crawford
+Date of birth: 2001-01-01
+Exported from Tidepool TIDE: ${formatCurrentDate()}
+
+Reporting Period: December 15, 2024 - January 13, 2025
+
+Total CGM data recorded: 1d 17h 40m
+
+Avg. Daily Time In Range (mg/dL)
+>250   4%
+181-250   17%
+70-180   76%
+54-69   3%
+<54   0%
+
+Avg. Glucose (CGM): 121 mg/dL
+% Time CGM Active: 99.8%
+GMI (CGM): 6.2%
+`);
+
+      expect(agpCGMText(patient, testData, opts)).to.eql(expectedOutput);
     });
   });
 });
