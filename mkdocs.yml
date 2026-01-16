@@ -101,13 +101,9 @@ nav:
     - PDF Reports: views/pdf-reports.md
   - Components: Components.md
   - Reference:
-    - Common Props: misc/CommonProps.md
-    - Time Rendering: misc/TimeRenderingModes.md
-    - Code Style: CodeStyle.md
-  - Dependencies:
-    - Overview: deps/README.md
-    - D3: deps/D3.md
-    - React: deps/React.md
-    - React Motion: deps/ReactMotion.md
+    - Common Props: reference/common-props.md
+    - Time Rendering: reference/time-rendering.md
+    - Code Style: reference/code-style.md
+    - Dependencies: reference/dependencies.md
   - Planning:
     - Restructure Plan: DOCUMENTATION_RESTRUCTURE_PLAN.md
