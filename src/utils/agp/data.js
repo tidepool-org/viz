@@ -20,9 +20,9 @@ import i18next from 'i18next';
 import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
-import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
+import { formatDatum, reconcileTIRPercentages, statFormats } from '../../utils/stat';
 import { formatPercentage, bankersRound } from '../format';
-import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN, MS_IN_HOUR } from '../constants';
 
 import {
   getOffset,
