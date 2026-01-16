@@ -50,11 +50,11 @@ Normal programmed basal from user's schedule.
 
 **Flat rate (single rate all day)**
 
-![Scheduled flat rate](../../screenshots/Basal/scheduled%20flat%20rate%20basal.png)
+![Scheduled flat rate](./screenshots/scheduled%20flat%20rate%20basal.png)
 
 **Multi-rate schedule**
 
-![Scheduled basals](../../screenshots/Basal/scheduled%20basals.png)
+![Scheduled basals](./screenshots/scheduled%20basals.png)
 
 ### Temporary Basals
 
@@ -62,23 +62,23 @@ User-initiated rate adjustments.
 
 **Positive temp (increased rate)**
 
-![Positive temp](../../screenshots/Basal/simple%20positive%20temp%20basal.png)
+![Positive temp](./screenshots/simple%20positive%20temp%20basal.png)
 
 **Negative temp (decreased rate)**
 
-![Negative temp](../../screenshots/Basal/simple%20negative%20temp%20basal.png)
+![Negative temp](./screenshots/simple%20negative%20temp%20basal.png)
 
 ### Suspend
 
 Delivery completely stopped (rate = 0).
 
-![Suspend](../../screenshots/Basal/simple%20suspend%20basal.png)
+![Suspend](./screenshots/simple%20suspend%20basal.png)
 
 ### Automated Basals
 
 Algorithm-controlled delivery from closed-loop systems.
 
-![Automated basals](../../screenshots/Basal/automated%20basals.png)
+![Automated basals](./screenshots/automated%20basals.png)
 
 ---
 
@@ -88,17 +88,17 @@ When temp basals or suspends span schedule changes, the suppressed rate updates.
 
 ### Positive Temp Across Boundary
 
-![Positive temp across boundary](../../screenshots/Basal/positive%20temp%20basal%20across%20schedule%20boundary.png)
+![Positive temp across boundary](./screenshots/positive%20temp%20basal%20across%20schedule%20boundary.png)
 
 The suppressed (gray) line shows the underlying scheduled rate changing while the temp (colored area) continues.
 
 ### Negative Temp Across Boundary
 
-![Negative temp across boundary](../../screenshots/Basal/negative%20temp%20basal%20across%20schedule%20boundary.png)
+![Negative temp across boundary](./screenshots/negative%20temp%20basal%20across%20schedule%20boundary.png)
 
 ### Suspend Across Boundary
 
-![Suspend across boundary](../../screenshots/Basal/suspend%20basal%20across%20schedule%20boundary.png)
+![Suspend across boundary](./screenshots/suspend%20basal%20across%20schedule%20boundary.png)
 
 ---
 
@@ -106,7 +106,7 @@ The suppressed (gray) line shows the underlying scheduled rate changing while th
 
 Hybrid closed-loop systems alternate between automated and scheduled delivery:
 
-![Automated and scheduled](../../screenshots/Basal/automated%20and%20scheduled%20basals.png)
+![Automated and scheduled](./screenshots/automated%20and%20scheduled%20basals.png)
 
 The visualization distinguishes:
 - **Blue regions**: Algorithm-controlled automated delivery
@@ -118,7 +118,7 @@ The visualization distinguishes:
 
 When the algorithm suspends delivery to prevent lows:
 
-![Automated with suspend](../../screenshots/Basal/automated%20basals%20with%20suspend.png)
+![Automated with suspend](./screenshots/automated%20basals%20with%20suspend.png)
 
 ---
 
@@ -126,7 +126,7 @@ When the algorithm suspends delivery to prevent lows:
 
 Gaps in basal data (pump off, upload gaps) are rendered with breaks:
 
-![Discontinuities](../../screenshots/Basal/scheduled%20flat%20rate%20basal%20with%20two%20discontinuities.png)
+![Discontinuities](./screenshots/scheduled%20flat%20rate%20basal%20with%20two%20discontinuities.png)
 
 Discontinuities are marked with `discontinuousEnd` and `discontinuousStart` flags on adjacent segments.
 

@@ -6,7 +6,7 @@ The PDF reports module generates printable documents from diabetes data. Reports
 
 ## Overview
 
-![Combined PDF Example](../screenshots/Combined%20Views%20PDF/daily.jpg)
+![Combined PDF Example](./screenshots/daily.jpg)
 
 The viz library supports generating these PDF report types:
 
@@ -134,9 +134,9 @@ Standardized glucose reporting format showing:
 - **Ambulatory Glucose Profile**: Percentile bands by time of day
 - **Daily Glucose Profiles**: Individual day traces
 
-![AGP CGM](../screenshots/Combined%20Views%20PDF/agpCGM.jpg)
+![AGP CGM](./screenshots/agpCGM.jpg)
 
-![AGP BGM](../screenshots/Combined%20Views%20PDF/agpBGM.jpg)
+![AGP BGM](./screenshots/agpBGM.jpg)
 
 The AGP view uses external SVG data URLs for chart rendering:
 
@@ -153,7 +153,7 @@ Two-week summary with:
 - Calendar grids (BG readings, boluses, site changes, basals)
 - Summary tables
 
-![Basics](../screenshots/Combined%20Views%20PDF/basics.jpg)
+![Basics](./screenshots/basics.jpg)
 
 See [Basics View](./basics.md) for details.
 
@@ -166,7 +166,7 @@ Day-by-day timeline showing:
 - Carbohydrates
 - Device events
 
-![Daily](../screenshots/Combined%20Views%20PDF/daily.jpg)
+![Daily](./screenshots/daily.jpg)
 
 See [Daily View](./daily.md) for details.
 
@@ -174,7 +174,7 @@ See [Daily View](./daily.md) for details.
 
 Tabular blood glucose readings:
 
-![BG Log](../screenshots/Combined%20Views%20PDF/bgLog.jpg)
+![BG Log](./screenshots/bgLog.jpg)
 
 ### Settings
 
@@ -184,7 +184,7 @@ Pump configuration snapshot:
 - Sensitivity factors
 - BG targets
 
-![Settings](../screenshots/Combined%20Views%20PDF/settings.jpg)
+![Settings](./screenshots/settings.jpg)
 
 ---
 

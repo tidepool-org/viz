@@ -39,43 +39,43 @@ Boluses are rendered as vertical bars with various indicators:
 
 Just a solid bar representing delivered units.
 
-![Normal bolus](../../screenshots/Bolus/normal%20bolus.png)
+![Normal bolus](./screenshots/normal%20bolus.png)
 
 ### Interrupted Normal Bolus
 
 Shows delivered (solid) and undelivered (hatched) portions.
 
-![Interrupted bolus](../../screenshots/Bolus/interrupted%20bolus.png)
+![Interrupted bolus](./screenshots/interrupted%20bolus.png)
 
 ### Override on Normal Bolus
 
 Triangle pointing UP at recommended line.
 
-![Override normal](../../screenshots/Bolus/override%20on%20a%20normal%20bolus.png)
+![Override normal](./screenshots/override%20on%20a%20normal%20bolus.png)
 
 ### Underride on Normal Bolus
 
 Triangle pointing DOWN at recommended line.
 
-![Underride normal](../../screenshots/Bolus/underride%20on%20a%20normal%20bolus.png)
+![Underride normal](./screenshots/underride%20on%20a%20normal%20bolus.png)
 
 ### Zero Override
 
 Delivered > 0 when recommended = 0.
 
-![Zero override](../../screenshots/Bolus/zero%20override%20on%20a%20normal%20bolus.png)
+![Zero override](./screenshots/zero%20override%20on%20a%20normal%20bolus.png)
 
 ### Override + Interrupted
 
 Both override indicator and hatched undelivered portion.
 
-![Override and interrupt](../../screenshots/Bolus/override%20and%20interrupt%20on%20a%20normal%20bolus.png)
+![Override and interrupt](./screenshots/override%20and%20interrupt%20on%20a%20normal%20bolus.png)
 
 ### Underride + Interrupted
 
 Both underride indicator and hatched undelivered portion.
 
-![Underride and interrupt](../../screenshots/Bolus/underride%20and%20interrupt%20a%20normal%20bolus.png)
+![Underride and interrupt](./screenshots/underride%20and%20interrupt%20a%20normal%20bolus.png)
 
 ---
 
@@ -85,19 +85,19 @@ Extended boluses show duration with a horizontal bar.
 
 ### Simple Extended Bolus
 
-![Extended bolus](../../screenshots/Bolus/extended%20%28square%29%20bolus.png)
+![Extended bolus](./screenshots/extended%20%28square%29%20bolus.png)
 
 ### Interrupted Extended Bolus
 
-![Interrupted extended](../../screenshots/Bolus/interrupted%20extended%20%28square%29%20bolus.png)
+![Interrupted extended](./screenshots/interrupted%20extended%20%28square%29%20bolus.png)
 
 ### Override on Extended
 
-![Override extended](../../screenshots/Bolus/override%20on%20an%20extended%20%28square%29%20bolus.png)
+![Override extended](./screenshots/override%20on%20an%20extended%20%28square%29%20bolus.png)
 
 ### Underride on Extended
 
-![Underride extended](../../screenshots/Bolus/underride%20on%20an%20extended%20%28square%29%20bolus.png)
+![Underride extended](./screenshots/underride%20on%20an%20extended%20%28square%29%20bolus.png)
 
 ---
 
@@ -107,27 +107,27 @@ Combo boluses combine immediate and extended portions.
 
 ### Simple Combo Bolus
 
-![Combo bolus](../../screenshots/Bolus/combo%20bolus.png)
+![Combo bolus](./screenshots/combo%20bolus.png)
 
 ### Interrupted During Normal Portion
 
-![Interrupted combo normal](../../screenshots/Bolus/interrupted%20combo%20bolus%20%28during%20the%20immediately%20delievered%20portion%29.png)
+![Interrupted combo normal](./screenshots/interrupted%20combo%20bolus%20%28during%20the%20immediately%20delievered%20portion%29.png)
 
 ### Interrupted During Extended Portion
 
-![Interrupted combo extended](../../screenshots/Bolus/interrupted%20combo%20bolus%20%28during%20the%20extended%20delivery%20portion%29.png)
+![Interrupted combo extended](./screenshots/interrupted%20combo%20bolus%20%28during%20the%20extended%20delivery%20portion%29.png)
 
 ### Override on Combo
 
-![Override combo](../../screenshots/Bolus/override%20on%20a%20combo%20bolus.png)
+![Override combo](./screenshots/override%20on%20a%20combo%20bolus.png)
 
 ### Override + Interrupted Combo
 
-![Override interrupted combo](../../screenshots/Bolus/override%20on%20a%20combo%20bolus%20interrupted%20during%20extended%20delivery.png)
+![Override interrupted combo](./screenshots/override%20on%20a%20combo%20bolus%20interrupted%20during%20extended%20delivery.png)
 
 ### Underride on Combo
 
-![Underride combo](../../screenshots/Bolus/underride%20on%20a%20combo%20bolus.png)
+![Underride combo](./screenshots/underride%20on%20a%20combo%20bolus.png)
 
 ---
 
@@ -141,45 +141,45 @@ Tooltips show detailed bolus information on hover.
 
 ### Normal Bolus Tooltip
 
-![Normal tooltip](../../screenshots/BolusTooltip/normal.png)
+![Normal tooltip](./screenshots/normal.png)
 
 ### With Carb Input
 
-![With carbs](../../screenshots/BolusTooltip/withCarbInput.png)
+![With carbs](./screenshots/withCarbInput.png)
 
 ### With BG Input
 
-![With BG](../../screenshots/BolusTooltip/withBGInput.png)
+![With BG](./screenshots/withBGInput.png)
 
 ### With BG and Carb Input
 
-![With BG and carbs](../../screenshots/BolusTooltip/withBGAndCarbInput.png)
+![With BG and carbs](./screenshots/withBGAndCarbInput.png)
 
 ### Override Tooltip
 
 Shows recommended vs delivered.
 
-![Override tooltip](../../screenshots/BolusTooltip/override.png)
+![Override tooltip](./screenshots/override.png)
 
 ### Underride Tooltip
 
-![Underride tooltip](../../screenshots/BolusTooltip/underride.png)
+![Underride tooltip](./screenshots/underride.png)
 
 ### Cancelled Bolus Tooltip
 
-![Cancelled tooltip](../../screenshots/BolusTooltip/cancelled.png)
+![Cancelled tooltip](./screenshots/cancelled.png)
 
 ### Automated Bolus Tooltip
 
-![Automated tooltip](../../screenshots/BolusTooltip/automated.png)
+![Automated tooltip](./screenshots/automated.png)
 
 ### Extended Bolus Tooltip
 
-![Extended tooltip](../../screenshots/BolusTooltip/extended.png)
+![Extended tooltip](./screenshots/extended.png)
 
 ### Combo Bolus Tooltip
 
-![Combo tooltip](../../screenshots/BolusTooltip/combo.png)
+![Combo tooltip](./screenshots/combo.png)
 
 ---
 
@@ -191,31 +191,31 @@ Different pumps display BG targets differently in tooltips.
 
 Shows low-high range.
 
-![Medtronic target](../../screenshots/BolusTooltip/withMedtronicTarget.png)
+![Medtronic target](./screenshots/withMedtronicTarget.png)
 
 ### Tandem Target
 
 Shows single target value.
 
-![Tandem target](../../screenshots/BolusTooltip/withTandemTarget.png)
+![Tandem target](./screenshots/withTandemTarget.png)
 
 ### Insulet (OmniPod) Target
 
 Shows target with "correct above" threshold.
 
-![Insulet target](../../screenshots/BolusTooltip/withInsuletTarget.png)
+![Insulet target](./screenshots/withInsuletTarget.png)
 
 ### Animas Target
 
 Shows target ± range.
 
-![Animas target](../../screenshots/BolusTooltip/withAnimasTarget.png)
+![Animas target](./screenshots/withAnimasTarget.png)
 
 ### Loop Auto Target
 
 Shows low-high range for automated systems.
 
-![Auto target](../../screenshots/BolusTooltip/withAutoTarget.png)
+![Auto target](./screenshots/withAutoTarget.png)
 
 ---
 
@@ -223,16 +223,16 @@ Shows low-high range for automated systems.
 
 ### Standard Insulin
 
-![Insulin](../../screenshots/BolusTooltip/insulin.png)
+![Insulin](./screenshots/insulin.png)
 
 ### By Acting Type
 
 | Type | Screenshot |
 |------|------------|
-| Rapid | ![Rapid](../../screenshots/BolusTooltip/insulinRapid.png) |
-| Short | ![Short](../../screenshots/BolusTooltip/insulinShort.png) |
-| Intermediate | ![Intermediate](../../screenshots/BolusTooltip/insulinIntermediate.png) |
-| Long | ![Long](../../screenshots/BolusTooltip/insulinLong.png) |
+| Rapid | ![Rapid](./screenshots/insulinRapid.png) |
+| Short | ![Short](./screenshots/insulinShort.png) |
+| Intermediate | ![Intermediate](./screenshots/insulinIntermediate.png) |
+| Long | ![Long](./screenshots/insulinLong.png) |
 
 ---
 
@@ -240,7 +240,7 @@ Shows low-high range for automated systems.
 
 Shows Loop algorithm recommendation.
 
-![Loop dosing decision](../../screenshots/BolusTooltip/withLoopDosingDecision.png)
+![Loop dosing decision](./screenshots/withLoopDosingDecision.png)
 
 ---
 
@@ -250,11 +250,11 @@ Some pumps use carb exchanges instead of grams.
 
 ### With Exchange Input
 
-![Exchange input](../../screenshots/BolusTooltip/withCarbExchangeInput.png)
+![Exchange input](./screenshots/withCarbExchangeInput.png)
 
 ### Zero Exchange
 
-![Zero exchange](../../screenshots/BolusTooltip/withCarbExchangeInputZero.png)
+![Zero exchange](./screenshots/withCarbExchangeInputZero.png)
 
 ---
 
@@ -264,15 +264,15 @@ Bolus values display varying precision.
 
 ### Standard Precision
 
-![Normal](../../screenshots/BolusTooltip/normal.png)
+![Normal](./screenshots/normal.png)
 
 ### High Precision
 
-![Precise](../../screenshots/BolusTooltip/normalPrecise.png)
+![Precise](./screenshots/normalPrecise.png)
 
 ### Very High Precision
 
-![Very precise](../../screenshots/BolusTooltip/normalVeryPrecise.png)
+![Very precise](./screenshots/normalVeryPrecise.png)
 
 ---
 

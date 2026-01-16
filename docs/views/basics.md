@@ -6,7 +6,7 @@ The Basics view provides a summary of diabetes management over a 2-week period, 
 
 ## Overview
 
-![Basics View PDF](../screenshots/Combined%20Views%20PDF/basics.jpg)
+![Basics View PDF](./screenshots/basics.jpg)
 
 The Basics view displays:
 - **Aggregated statistics** (TIR, average glucose, CV, GMI)

@@ -6,7 +6,7 @@ The Daily view provides a detailed 24-hour timeline of diabetes data, showing gl
 
 ## Overview
 
-![Daily View PDF](../screenshots/Combined%20Views%20PDF/daily.jpg)
+![Daily View PDF](./screenshots/daily.jpg)
 
 The Daily view displays:
 - **Glucose readings** (CGM line + BGM dots)
@@ -82,11 +82,11 @@ this.smbgRadius = 3;  // larger than CGM
 
 | Scenario | Screenshot |
 |----------|------------|
-| Target range | ![Target](../screenshots/SMBGTooltip/target.png) |
-| High reading | ![High](../screenshots/SMBGTooltip/high.png) |
-| Low reading | ![Low](../screenshots/SMBGTooltip/low.png) |
-| Manual entry | ![Manual](../screenshots/SMBGTooltip/manual.png) |
-| Linked to bolus | ![Linked](../screenshots/SMBGTooltip/linked.png) |
+| Target range | ![Target](../domains/glucose/screenshots/target.png) |
+| High reading | ![High](../domains/glucose/screenshots/high.png) |
+| Low reading | ![Low](../domains/glucose/screenshots/low.png) |
+| Manual entry | ![Manual](../domains/glucose/screenshots/manual.png) |
+| Linked to bolus | ![Linked](../domains/glucose/screenshots/linked.png) |
 
 ### Bolus Insulin
 
@@ -101,20 +101,20 @@ this.triangleHeight = 1.25;  // for override indicators
 
 | Type | Visual | Screenshot |
 |------|--------|------------|
-| Normal | Solid bar | ![Normal](../screenshots/Bolus/normal%20bolus.png) |
-| Extended | Bar with horizontal line | ![Extended](../screenshots/Bolus/extended%20(square)%20bolus.png) |
+| Normal | Solid bar | ![Normal](../domains/bolus/screenshots/normal%20bolus.png) |
+| Extended | Bar with horizontal line | ![Extended](../domains/bolus/screenshots/extended%20(square)%20bolus.png) |
 | Combo | Both portions shown | See bolus domain docs |
-| Override (up) | Triangle pointing up | ![Override](../screenshots/Bolus/override%20on%20a%20normal%20bolus.png) |
-| Underride (down) | Triangle pointing down | ![Underride](../screenshots/Bolus/underride%20on%20a%20normal%20bolus.png) |
-| Interrupted | Dashed portion | ![Interrupted](../screenshots/Bolus/interrupted%20bolus.png) |
+| Override (up) | Triangle pointing up | ![Override](../domains/bolus/screenshots/override%20on%20a%20normal%20bolus.png) |
+| Underride (down) | Triangle pointing down | ![Underride](../domains/bolus/screenshots/underride%20on%20a%20normal%20bolus.png) |
+| Interrupted | Dashed portion | ![Interrupted](../domains/bolus/screenshots/interrupted%20bolus.png) |
 
 #### Bolus Tooltip Examples
 
-![Normal bolus](../screenshots/BolusTooltip/normal.png)
+![Normal bolus](../domains/bolus/screenshots/normal.png)
 
-![With carbs](../screenshots/BolusTooltip/withCarbInput.png)
+![With carbs](../domains/bolus/screenshots/withCarbInput.png)
 
-![Automated bolus](../screenshots/BolusTooltip/automated.png)
+![Automated bolus](../domains/bolus/screenshots/automated.png)
 
 ### Basal Insulin
 
@@ -142,9 +142,9 @@ The carb amount (grams) appears as text below the circle when space permits.
 
 #### Food Tooltip
 
-![Standard food](../screenshots/FoodTooltip/Standard.png)
+![Standard food](../domains/carbs/screenshots/Standard.png)
 
-![Loop time entry](../screenshots/FoodTooltip/Loop%20time%20of%20entry.png)
+![Loop time entry](../domains/carbs/screenshots/Loop%20time%20of%20entry.png)
 
 ### Device Events
 
@@ -163,11 +163,11 @@ const eventImages = {
 
 | Event Type | Screenshot |
 |------------|------------|
-| Exercise (high intensity) | ![Exercise High](../screenshots/EventTooltip/Physical%20Activity%20(high).png) |
-| Exercise (medium) | ![Exercise Med](../screenshots/EventTooltip/Physical%20Activity%20(medium).png) |
-| Health event | ![Health](../screenshots/EventTooltip/Health%20(stress).png) |
-| Notes | ![Notes](../screenshots/EventTooltip/Notes.png) |
-| Pump shutdown | ![Shutdown](../screenshots/EventTooltip/Pump%20Shutdown.png) |
+| Exercise (high intensity) | ![Exercise High](../domains/device-events/screenshots/Physical%20Activity%20(high).png) |
+| Exercise (medium) | ![Exercise Med](../domains/device-events/screenshots/Physical%20Activity%20(medium).png) |
+| Health event | ![Health](../domains/device-events/screenshots/Health%20(stress).png) |
+| Notes | ![Notes](../domains/device-events/screenshots/Notes.png) |
+| Pump shutdown | ![Shutdown](../domains/device-events/screenshots/Pump%20Shutdown.png) |
 
 ### Settings Overrides
 
@@ -183,9 +183,9 @@ this.pumpSettingsOverrideLabels = {
 
 Markers use single-character labels: **Z** (sleep), **E** (exercise), **P** (pre-meal).
 
-![Sleep Override](../screenshots/PumpSettingsOverrideTooltip/Sleep.png)
+![Sleep Override](../domains/device-events/screenshots/Sleep.png)
 
-![Exercise Override](../screenshots/PumpSettingsOverrideTooltip/Exercise.png)
+![Exercise Override](../domains/device-events/screenshots/Exercise.png)
 
 ---
 

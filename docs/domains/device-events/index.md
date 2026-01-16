@@ -66,9 +66,9 @@ Suspends track when insulin delivery is paused.
 
 Suspends are shown as icons/markers on the daily view timeline.
 
-![Single automated suspend](../../screenshots/Suspend/single%20automated%20suspend.png)
+![Single automated suspend](./screenshots/single%20automated%20suspend.png)
 
-![Multiple automated suspends](../../screenshots/Suspend/multiple%20automated%20suspends.png)
+![Multiple automated suspends](./screenshots/multiple%20automated%20suspends.png)
 
 ### Counting Distinct Suspends
 
@@ -171,17 +171,17 @@ Device alarms indicate critical events requiring attention.
 
 ### Alarm Tooltips
 
-![Auto Off](../../screenshots/AlarmTooltip/auto_off.png)
+![Auto Off](./screenshots/auto_off.png)
 
-![No Delivery](../../screenshots/AlarmTooltip/no_delivery.png)
+![No Delivery](./screenshots/no_delivery.png)
 
-![No Insulin](../../screenshots/AlarmTooltip/no_insulin.png)
+![No Insulin](./screenshots/no_insulin.png)
 
-![No Power](../../screenshots/AlarmTooltip/no_power.png)
+![No Power](./screenshots/no_power.png)
 
-![Occlusion](../../screenshots/AlarmTooltip/occlusion.png)
+![Occlusion](./screenshots/occlusion.png)
 
-![Over Limit](../../screenshots/AlarmTooltip/over_limit.png)
+![Over Limit](./screenshots/over_limit.png)
 
 ### Device-Specific Alarm Labels
 
@@ -233,11 +233,11 @@ Settings overrides are temporary modes that adjust insulin delivery parameters.
 
 ### Override Tooltips
 
-![Sleep Override](../../screenshots/PumpSettingsOverrideTooltip/Sleep.png)
+![Sleep Override](./screenshots/Sleep.png)
 
-![Exercise Override](../../screenshots/PumpSettingsOverrideTooltip/Exercise.png)
+![Exercise Override](./screenshots/Exercise.png)
 
-![Pre-Meal Override](../../screenshots/PumpSettingsOverrideTooltip/Pre-Meal.png)
+![Pre-Meal Override](./screenshots/Pre-Meal.png)
 
 ### Time in Override Statistics
 

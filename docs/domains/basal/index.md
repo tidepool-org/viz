@@ -67,7 +67,7 @@ Normal programmed basal from the user's basal schedule.
 }
 ```
 
-![Scheduled basals](../../screenshots/Basal/scheduled%20basals.png)
+![Scheduled basals](./screenshots/scheduled%20basals.png)
 
 ### Temporary Basal
 
@@ -82,7 +82,7 @@ User-initiated rate override for a set duration.
 }
 ```
 
-![Positive temp](../../screenshots/Basal/simple%20positive%20temp%20basal.png)
+![Positive temp](./screenshots/simple%20positive%20temp%20basal.png)
 
 **Negative temp** (decreased rate):
 ```javascript
@@ -93,7 +93,7 @@ User-initiated rate override for a set duration.
 }
 ```
 
-![Negative temp](../../screenshots/Basal/simple%20negative%20temp%20basal.png)
+![Negative temp](./screenshots/simple%20negative%20temp%20basal.png)
 
 ### Suspend
 
@@ -107,7 +107,7 @@ Delivery completely stopped (rate = 0).
 }
 ```
 
-![Suspend](../../screenshots/Basal/simple%20suspend%20basal.png)
+![Suspend](./screenshots/simple%20suspend%20basal.png)
 
 ### Automated Basal
 
@@ -122,7 +122,7 @@ Algorithm-controlled rate from hybrid closed-loop systems (Control-IQ, Loop, Aut
 
 Automated basals typically have short durations (5 minutes) as the algorithm continuously adjusts.
 
-![Automated basals](../../screenshots/Basal/automated%20basals.png)
+![Automated basals](./screenshots/automated%20basals.png)
 
 ---
 
@@ -134,7 +134,7 @@ Temp basals and suspends can span schedule boundaries, where the underlying sche
 
 When a temp basal spans a schedule change, the `suppressed` rate updates:
 
-![Temp across boundary](../../screenshots/Basal/positive%20temp%20basal%20across%20schedule%20boundary.png)
+![Temp across boundary](./screenshots/positive%20temp%20basal%20across%20schedule%20boundary.png)
 
 ```javascript
 // Before boundary (1 AM - 3 AM schedule)
@@ -146,7 +146,7 @@ When a temp basal spans a schedule change, the `suppressed` rate updates:
 
 ### Suspend Across Boundary
 
-![Suspend across boundary](../../screenshots/Basal/suspend%20basal%20across%20schedule%20boundary.png)
+![Suspend across boundary](./screenshots/suspend%20basal%20across%20schedule%20boundary.png)
 
 ---
 
@@ -154,7 +154,7 @@ When a temp basal spans a schedule change, the `suppressed` rate updates:
 
 Hybrid closed-loop systems alternate between automated and scheduled delivery:
 
-![Automated and scheduled](../../screenshots/Basal/automated%20and%20scheduled%20basals.png)
+![Automated and scheduled](./screenshots/automated%20and%20scheduled%20basals.png)
 
 The visualization shows:
 - **Automated regions**: Algorithm-controlled delivery
@@ -174,7 +174,7 @@ Gaps in basal data (pump off, upload gaps) are marked with `discontinuousEnd` an
 { ..., discontinuousStart: true }
 ```
 
-![Discontinuities](../../screenshots/Basal/scheduled%20flat%20rate%20basal%20with%20two%20discontinuities.png)
+![Discontinuities](./screenshots/scheduled%20flat%20rate%20basal%20with%20two%20discontinuities.png)
 
 ---
 
@@ -288,7 +288,7 @@ export function getBasalPathGroupType(datum) {
 
 Automated suspends occur when the algorithm predicts low glucose:
 
-![Automated with suspend](../../screenshots/Basal/automated%20basals%20with%20suspend.png)
+![Automated with suspend](./screenshots/automated%20basals%20with%20suspend.png)
 
 ```javascript
 {

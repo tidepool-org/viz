@@ -304,7 +304,7 @@ Prose explanation of the formula components.
 | Create `concepts/architecture.md` | **Done** | 264 lines, mermaid diagrams, data flow |
 | Create `domains/glucose/` complete | **Done** | index.md, statistics.md (with LaTeX), rendering.md |
 | Create `domains/bolus/` complete | **Done** | All 5 files: index, data-model, calculations, rendering, device-notes |
-| Move relevant screenshots | Not Started | Screenshots still centralized |
+| Move relevant screenshots | **Done** | Screenshots distributed to domain/views folders |
 | Update `mkdocs.yml` navigation | **Done** | Domains and views added |
 | Update `index.md` landing page | **Done** | Renamed from StartHere.md |
 | Streamline `getting-started.md` | **Done** | GettingStarted.md (182 lines) |
@@ -323,7 +323,7 @@ Prose explanation of the formula components.
 | Create `views/basics.md` | **Done** | 297 lines, comprehensive |
 | Enhance `views/trends.md` | **Done** | Existing Trends.md (172 lines) |
 | Create `views/pdf-reports.md` | **Done** | 309 lines, comprehensive |
-| Migrate `reference/` content | Not Started | Files still in misc/ |
+| Migrate `reference/` content | **Done** | common-props.md, time-rendering.md, code-style.md, dependencies.md |
 
 ### Phase 3: Comprehensive Reference Documentation (Cohort B)
 **Goal**: Comprehensive reference material for external partners
@@ -340,7 +340,7 @@ Prose explanation of the formula components.
 
 ## Progress Tracking
 
-### Phase 1 Progress: 90%
+### Phase 1 Progress: 100%
 
 ```
 [x] concepts/diabetes-primer.md
@@ -354,13 +354,13 @@ Prose explanation of the formula components.
 [x] domains/bolus/calculations.md
 [x] domains/bolus/rendering.md
 [x] domains/bolus/device-notes.md
-[ ] Screenshot reorganization
+[x] Screenshot reorganization (distributed to domain folders)
 [x] mkdocs.yml update
 [x] index.md update
 [x] getting-started.md streamline
 ```
 
-### Phase 2 Progress: 95%
+### Phase 2 Progress: 100%
 
 ```
 [x] domains/basal/index.md
@@ -375,7 +375,7 @@ Prose explanation of the formula components.
 [x] views/basics.md
 [x] views/trends.md (enhance)
 [x] views/pdf-reports.md
-[ ] reference/* migration
+[x] reference/* migration (common-props, time-rendering, code-style, dependencies)
 ```
 
 ### Phase 3 Progress: 0%
