@@ -22,6 +22,8 @@ import moment from 'moment';
 import TextUtil from '../text/TextUtil';
 import { formatPercentage } from '../format';
 import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
+import { formatPercentage, bankersRound } from '../format';
+import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 import {
   getOffset,
@@ -67,6 +69,8 @@ export function agpCGMText(patient, data) {
           bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
           averageGlucose: { averageGlucose },
           timeInRange: { counts },
+          glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
+          sensorUsage: { sensorUsageAGP }
         },
       },
     },
@@ -84,7 +88,6 @@ export function agpCGMText(patient, data) {
     : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
 
   const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
-
   const highLowerBound = targetUpperBound + minimumIncrement;
   const lowUpperBound = targetLowerBound - minimumIncrement;
 
@@ -111,6 +114,8 @@ export function agpCGMText(patient, data) {
   const percentInVeryLow = formatPercentage(timeInRanges.veryLow, 0, true);
 
   const avgGlucose = averageGlucose ? formatDatum({ value: averageGlucose }, 'bgValue', { bgPrefs, useAGPFormat: true })?.value : null;
+  const gmi = formatDatum({ value: glucoseManagementIndicatorAGP }, 'gmi', { bgPrefs, useAGPFormat: true })?.value;
+  const cgmActive = bankersRound(sensorUsageAGP, 1);
 
   const textUtil = new TextUtil();
   let clipboardText = '';
@@ -129,6 +134,8 @@ export function agpCGMText(patient, data) {
   clipboardText += textUtil.buildTextLine(t('{{- veryLowRange}}   {{percentInVeryLow}}', { veryLowRange, percentInVeryLow }));
   clipboardText += textUtil.buildTextLine('');
   clipboardText += textUtil.buildTextLine(t('Avg. Glucose (CGM): {{avgGlucose}} {{- bgUnits}}', { avgGlucose, bgUnits }));
+  clipboardText += textUtil.buildTextLine(t('Sensor Usage: {{ cgmActive }}%', { cgmActive }));
+  clipboardText += textUtil.buildTextLine(t('GMI (CGM): {{ gmi }}%', { gmi }));
 
   return clipboardText;
 }

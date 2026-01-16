@@ -18,7 +18,7 @@ describe('colors', () => {
     expect(_.toLower(colors.target)).to.equal('#76d3a6');
     expect(_.toLower(colors.high)).to.equal('#bb9ae7');
     expect(_.toLower(colors.veryHigh)).to.equal('#8c65d6');
-    expect(_.toLower(colors.insulin)).to.equal('#0096d1');
+    expect(_.toLower(colors.insulin)).to.equal('#7cd0f0');
     expect(_.toLower(colors.white)).to.equal('#ffffff');
     expect(_.toLower(colors.axis)).to.equal('#e7e9ee');
     expect(_.toLower(colors.muted)).to.equal('#c1c9d6');

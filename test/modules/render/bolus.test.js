@@ -19,7 +19,7 @@ import * as boluses from '../../../data/bolus/fixtures';
 import { detail } from '../../helpers/scales';
 const { detailXScale, detailBolusScale } = detail;
 
-import getBolusPaths, { getBolusEdges } from '../../../src/modules/render/bolus';
+import getBolusPaths, { getBolusEdges, getBolusPattern } from '../../../src/modules/render/bolus';
 
 const BOLUS_OPTS = {
   bolusWidth: 12,
@@ -45,6 +45,30 @@ describe('bolus path generators', () => {
       const edges = getBolusEdges(4, 10, 50, 25);
       expect(edges.top).to.equal(25);
       expect(edges.bottom).to.equal(50);
+    });
+  });
+
+  describe('getBolusPattern', () => {
+    const mockEdges = {
+      left: 10,
+      right: 22,
+      top: 5,
+      bottom: 50,
+    };
+
+    it('should return null for unknown pattern types', () => {
+      expect(getBolusPattern(mockEdges, 'unknownPattern')).to.be.null;
+      expect(getBolusPattern(mockEdges, '')).to.be.null;
+      expect(getBolusPattern(mockEdges, null)).to.be.null;
+    });
+
+    describe('diagonalLines pattern', () => {
+      it('should return a valid SVG path string for diagonalLines pattern', () => {
+        const result = getBolusPattern(mockEdges, 'diagonalLines');
+        expect(result).to.be.a('string');
+        expect(result).to.include('M ');
+        expect(result).to.include('L ');
+      });
     });
   });
 

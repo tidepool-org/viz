@@ -9,6 +9,7 @@ import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isControlIQ,
+  isDexcom,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -37,6 +38,8 @@ import {
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
   DIABETES_DATA_TYPES,
+  DUPLICATE_SMBG_COUNT_THRESHOLD,
+  DUPLICATE_SMBG_TIME_TOLERANCE_MS,
   MS_IN_DAY,
   MS_IN_HOUR,
   MS_IN_MIN,
@@ -53,6 +56,9 @@ import {
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
   EVENT,
+  EVENT_HEALTH,
+  EVENT_NOTES,
+  EVENT_PHYSICAL_ACTIVITY,
   EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
@@ -114,6 +120,7 @@ export class DataUtil {
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
     this.dataAnnotations = this.dataAnnotations || {};
@@ -150,6 +157,12 @@ export class DataUtil {
     this.startTimer('addMissingSuppressedBasals');
     this.addMissingSuppressedBasals(data);
     this.endTimer('addMissingSuppressedBasals');
+
+    // Filter out SMBG data that duplicates CGM values within ±500ms time tolerance
+    // This is done before tagging and adding to crossfilter so filtered data is excluded everywhere
+    this.startTimer('filterDuplicateSMBGs');
+    this.filterDuplicateSMBGs(data);
+    this.endTimer('filterDuplicateSMBGs');
 
     // Filter out any data that failed validation, and any duplicates by `id`
     this.startTimer('filterValidData');
@@ -213,9 +226,14 @@ export class DataUtil {
       }
     }
 
-    if (d.type === 'upload' && d.dataSetType === 'continuous') {
-      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
-      if (!d.time) d.time = moment.utc().toISOString();
+    if (d.type === 'upload') {
+      if (d.dataSetType === 'continuous') {
+        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
+        if (!d.time) d.time = moment.utc().toISOString();
+      } else {
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.uploadId] = d;
+      }
     }
 
     if (d.messagetext) {
@@ -628,6 +646,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
+    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
+
     if (d.type === 'basal') {
       d.tags = {
         suspend: d.deliveryType === 'suspend',
@@ -652,6 +673,12 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'insulin') {
+      d.tags = {
+        manual: true,
+      };
+    }
+
     if (d.type === 'wizard') {
       d.tags = {
         extended: hasExtended(d),
@@ -663,14 +690,16 @@ export class DataUtil {
 
     if (d.type === 'smbg') {
       d.tags = {
-        manual: d.subType === 'manual',
-        meter: d.subType !== 'manual',
+        manual: d.subType === 'manual' || isDexcomDatum,
+        meter: d.subType !== 'manual' && !isDexcomDatum,
       };
     }
 
     if (d.type === 'food') {
       d.tags = {
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        dexcom: isDexcomDatum,
+        manual: isDexcomDatum,
       };
     }
 
@@ -715,10 +744,26 @@ export class DataUtil {
     // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
     const prioritizedEventTypes = [
       EVENT_PUMP_SHUTDOWN,
+      EVENT_PHYSICAL_ACTIVITY,
+      EVENT_HEALTH,
+      EVENT_NOTES,
+    ];
+
+    const healthStates = [
+      'alcohol',
+      'cycle',
+      'hyperglycemiaSymptoms',
+      'hypoglycemiaSymptoms',
+      'illness',
+      'stress',
+      'other',
     ];
 
     const events = {
       [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+      [EVENT_PHYSICAL_ACTIVITY]: d.type === 'physicalActivity',
+      [EVENT_HEALTH]: d.type === 'reportedState' && _.includes(healthStates, d.states?.[0]?.state),
+      [EVENT_NOTES]: d.type === 'reportedState' && (!!d.states?.[0]?.stateOther || d.notes?.length),
     };
 
     const eventType = _.find(prioritizedEventTypes, type => events[type]);
@@ -1086,6 +1131,78 @@ export class DataUtil {
     }
   );
 
+  /**
+   * Filters out SMBG data points that are duplicates of CGM data.
+   * An SMBG is considered a duplicate if:
+   * - It has the same glucose value (in matching units) as a CGM reading
+   * - The time difference is within ±DUPLICATE_SMBG_TIME_TOLERANCE_MS (500ms)
+   *
+   * Filtering only occurs if >DUPLICATE_SMBG_COUNT_THRESHOLD duplicates are detected,
+   * as small numbers of matches may be coincidental.
+   *
+   * @param {Array} data - Array of data objects (already normalized with hammertime timestamps)
+   * @returns {Array} - The data array with duplicate SMBGs marked with reject=true
+   */
+  filterDuplicateSMBGs = (data = []) => {
+    this.startTimer('filterDuplicateSMBGs');
+
+    // Extract CBG and SMBG data from the incoming batch
+    const cbgData = _.filter(data, d => d.type === 'cbg' && !d.reject);
+    const smbgData = _.filter(data, d => d.type === 'smbg' && !d.reject);
+
+    // Skip if there's no CBG or SMBG data to compare
+    if (cbgData.length === 0 || smbgData.length === 0) {
+      this.endTimer('filterDuplicateSMBGs');
+      return data;
+    }
+
+    // Build a time-indexed lookup for CBG data
+    // Group CBGs by their time in seconds (rounded to nearest second for efficient lookup)
+    const cbgByTimeSeconds = _.groupBy(cbgData, d => Math.floor(d.time / 1000));
+
+    // Find all potential duplicate SMBGs - store references directly for efficient marking
+    const duplicateSmbgs = [];
+
+    _.each(smbgData, smbg => {
+      // Get the time in seconds for the SMBG
+      const smbgTimeSeconds = Math.floor(smbg.time / 1000);
+
+      // Check a 2-second window (covers ±500ms tolerance) around the SMBG time
+      const cbgsToCheck = [
+        ...(cbgByTimeSeconds[smbgTimeSeconds - 1] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds + 1] || []),
+      ];
+
+      // Check if any CBG matches the SMBG value within the time tolerance
+      const isDuplicate = _.some(cbgsToCheck, cbg => {
+        const timeDiff = Math.abs(smbg.time - cbg.time);
+        if (timeDiff > DUPLICATE_SMBG_TIME_TOLERANCE_MS) return false;
+
+        // Compare values - both should be in the same units at this point
+        return smbg.value === cbg.value;
+      });
+
+      if (isDuplicate) {
+        duplicateSmbgs.push(smbg);
+      }
+    });
+
+    // Only filter if we exceed the threshold
+    if (duplicateSmbgs.length > DUPLICATE_SMBG_COUNT_THRESHOLD) {
+      this.log(`Filtering ${duplicateSmbgs.length} duplicate SMBGs that match CGM values`);
+
+      // Mark duplicate SMBGs as rejected - O(duplicates) instead of O(all_data)
+      _.each(duplicateSmbgs, smbg => {
+        smbg.reject = true; // eslint-disable-line no-param-reassign
+        smbg.rejectReason = ['SMBG duplicates CGM value within time tolerance']; // eslint-disable-line no-param-reassign
+      });
+    }
+
+    this.endTimer('filterDuplicateSMBGs');
+    return data;
+  };
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {
@@ -1095,11 +1212,16 @@ export class DataUtil {
       this.data.remove(predicate);
     } else {
       this.log('Reinitializing');
-      this.bolusToWizardIdMap = {};
       this.bolusDatumsByIdMap = {};
-      this.wizardDatumsByIdMap = {};
-      this.latestDatumByType = {};
+      this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.latestDatumByType = {};
+      this.pumpSettingsDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.wizardToBolusIdMap = {};
+      this.loopDataSetsByIdMap = {};
+      this.dexcomDataSetsByIdMap = {};
+      this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;

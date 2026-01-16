@@ -118,7 +118,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         break;
 
       case 'boluses':
-        title = t('Bolusing');
+        title = t('Insulin');
         summaryTitle = t('Avg boluses / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
@@ -128,6 +128,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 5 },
           { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
           { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
+          { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3, hideEmpty: !pumpUpload.isAutomatedBolusDevice },
         ];
 
         if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
@@ -138,6 +139,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         }
 
         if (isTwiistLoop(pumpUpload.settings)) {
+          dimensions[1].label = t('Meal');
           dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 6 });
           dimensions[6].selectorIndex = 3; // Move the 'Underride' filter next to the 'Override'
           perRow = 4;
@@ -145,7 +147,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
 
         if (pumpUpload.isAutomatedBolusDevice) {
           dimensions.push(...[
-            { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3 },
             { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 7 },
           ]);
           perRow = 4;
@@ -388,7 +389,7 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
  *
  * @return {String} Basics data as a formatted string
  */
-export function basicsText(patient, data, stats, aggregations) {
+export function basicsText(patient, data, stats, aggregations, copyAsTextMetadata) {
   const {
     bgPrefs,
     data: {
@@ -401,7 +402,7 @@ export function basicsText(patient, data, stats, aggregations) {
     timePrefs,
   } = data;
 
-  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
 
   let basicsString = textUtil.buildDocumentHeader('Basics');
   basicsString += textUtil.buildDocumentDates();
