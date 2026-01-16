@@ -20,7 +20,6 @@ import i18next from 'i18next';
 import moment from 'moment';
 
 import TextUtil from '../text/TextUtil';
-import { formatPercentage } from '../format';
 import { formatDatum, reconcileTIRPercentages } from '../../utils/stat';
 import { formatPercentage, bankersRound } from '../format';
 import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
@@ -31,8 +30,6 @@ import {
   formatCurrentDate,
   formatDateRange,
 } from '../datetime';
-
-import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN } from '../constants';
 
 const t = i18next.t.bind(i18next);
 
