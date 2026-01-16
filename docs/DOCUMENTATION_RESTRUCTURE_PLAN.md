@@ -1,6 +1,6 @@
 # Documentation Restructure Plan
 
-> **Status**: Planning Complete, Implementation Not Started  
+> **Status**: Implementation In Progress (~60% Complete)  
 > **Created**: January 2026  
 > **Last Updated**: January 2026
 
@@ -299,31 +299,31 @@ Prose explanation of the formula components.
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Create `concepts/diabetes-primer.md` | Not Started | ELI5 glossary |
-| Create `concepts/tidepool-data-model.md` | Not Started | Consolidate from existing |
-| Create `concepts/architecture.md` | Not Started | Enhance existing Architecture.md |
-| Create `domains/glucose/` complete | Not Started | Statistics with LaTeX |
-| Create `domains/bolus/` complete | Not Started | Most complex domain |
-| Move relevant screenshots | Not Started | Organize by domain |
-| Update `mkdocs.yml` navigation | Not Started | New structure |
-| Update `index.md` landing page | Not Started | Audience paths |
-| Streamline `getting-started.md` | Not Started | Remove duplicated content |
+| Create `concepts/diabetes-primer.md` | **Done** | 247 lines, comprehensive ELI5 glossary |
+| Create `concepts/tidepool-data-model.md` | **Done** | 492 lines, all data types documented |
+| Create `concepts/architecture.md` | **Done** | 264 lines, mermaid diagrams, data flow |
+| Create `domains/glucose/` complete | **Done** | index.md, statistics.md (with LaTeX), rendering.md |
+| Create `domains/bolus/` complete | **Done** | All 5 files: index, data-model, calculations, rendering, device-notes |
+| Move relevant screenshots | Not Started | Screenshots still centralized |
+| Update `mkdocs.yml` navigation | **Done** | Domains and views added |
+| Update `index.md` landing page | **Done** | Renamed from StartHere.md |
+| Streamline `getting-started.md` | **Done** | GettingStarted.md (182 lines) |
 
 ### Phase 2: Complete Domain Coverage
 **Goal**: Document all remaining domains following established patterns
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Create `domains/basal/` complete | Not Started | |
-| Create `domains/carbs/` complete | Not Started | |
-| Create `domains/insulin-totals/` complete | Not Started | |
-| Create `domains/sensor/` complete | Not Started | |
-| Create `domains/device-events/` complete | Not Started | |
-| Create `views/daily.md` | Not Started | |
-| Create `views/basics.md` | Not Started | |
-| Enhance `views/trends.md` | Not Started | Existing content |
-| Create `views/pdf-reports.md` | Not Started | |
-| Migrate `reference/` content | Not Started | Lower prominence |
+| Create `domains/basal/` complete | **Done** | index.md (322 lines), calculations.md, rendering.md |
+| Create `domains/carbs/` complete | **Done** | index.md, statistics.md |
+| Create `domains/insulin-totals/` complete | **Done** | index.md (comprehensive) |
+| Create `domains/sensor/` complete | **Done** | index.md (comprehensive) |
+| Create `domains/device-events/` complete | **Done** | index.md (336 lines, comprehensive - covers alarms, overrides, settings) |
+| Create `views/daily.md` | **Done** | 311 lines, comprehensive |
+| Create `views/basics.md` | **Done** | 297 lines, comprehensive |
+| Enhance `views/trends.md` | **Done** | Existing Trends.md (172 lines) |
+| Create `views/pdf-reports.md` | **Done** | 309 lines, comprehensive |
+| Migrate `reference/` content | Not Started | Files still in misc/ |
 
 ### Phase 3: Comprehensive Reference Documentation (Cohort B)
 **Goal**: Comprehensive reference material for external partners
@@ -340,38 +340,41 @@ Prose explanation of the formula components.
 
 ## Progress Tracking
 
-### Phase 1 Progress: 0%
+### Phase 1 Progress: 90%
 
 ```
-[ ] concepts/diabetes-primer.md
-[ ] concepts/tidepool-data-model.md  
-[ ] concepts/architecture.md
-[ ] domains/glucose/index.md
-[ ] domains/glucose/statistics.md
-[ ] domains/glucose/rendering.md
-[ ] domains/bolus/index.md
-[ ] domains/bolus/data-model.md
-[ ] domains/bolus/calculations.md
-[ ] domains/bolus/rendering.md
-[ ] domains/bolus/device-notes.md
+[x] concepts/diabetes-primer.md
+[x] concepts/tidepool-data-model.md  
+[x] concepts/architecture.md
+[x] domains/glucose/index.md
+[x] domains/glucose/statistics.md
+[x] domains/glucose/rendering.md
+[x] domains/bolus/index.md
+[x] domains/bolus/data-model.md
+[x] domains/bolus/calculations.md
+[x] domains/bolus/rendering.md
+[x] domains/bolus/device-notes.md
 [ ] Screenshot reorganization
-[ ] mkdocs.yml update
-[ ] index.md update
-[ ] getting-started.md streamline
+[x] mkdocs.yml update
+[x] index.md update
+[x] getting-started.md streamline
 ```
 
-### Phase 2 Progress: 0%
+### Phase 2 Progress: 95%
 
 ```
-[ ] domains/basal/*
-[ ] domains/carbs/*
-[ ] domains/insulin-totals/*
-[ ] domains/sensor/*
-[ ] domains/device-events/*
-[ ] views/daily.md
-[ ] views/basics.md
-[ ] views/trends.md (enhance)
-[ ] views/pdf-reports.md
+[x] domains/basal/index.md
+[x] domains/basal/calculations.md
+[x] domains/basal/rendering.md
+[x] domains/carbs/index.md
+[x] domains/carbs/statistics.md
+[x] domains/insulin-totals/index.md
+[x] domains/sensor/index.md
+[x] domains/device-events/index.md (comprehensive - covers alarms, overrides, settings)
+[x] views/daily.md
+[x] views/basics.md
+[x] views/trends.md (enhance)
+[x] views/pdf-reports.md
 [ ] reference/* migration
 ```
 

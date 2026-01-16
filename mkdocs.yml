@@ -64,7 +64,7 @@ extra_javascript:
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
-  - Home: StartHere.md
+  - Home: index.md
   - Getting Started: GettingStarted.md
   - Concepts:
     - Architecture: concepts/architecture.md
@@ -83,6 +83,15 @@ nav:
       - Device Notes: domains/bolus/device-notes.md
     - Basal:
       - Overview: domains/basal/index.md
+      - Calculations: domains/basal/calculations.md
+      - Rendering: domains/basal/rendering.md
+    - Carbs:
+      - Overview: domains/carbs/index.md
+      - Statistics: domains/carbs/statistics.md
+    - Insulin Totals:
+      - Overview: domains/insulin-totals/index.md
+    - Sensor:
+      - Overview: domains/sensor/index.md
     - Device Events:
       - Overview: domains/device-events/index.md
   - Views:
