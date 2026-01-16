@@ -888,6 +888,7 @@ describe('stat', () => {
             ],
             total: { value: 58800000 },
           },
+          hasSyntheticReadings: true,
         });
       });
 
@@ -918,6 +919,7 @@ describe('stat', () => {
             ],
             total: { value: 86400000 },
           },
+          hasSyntheticReadings: true,
         });
       });
     });
@@ -926,6 +928,16 @@ describe('stat', () => {
   describe('getStatAnnotations', () => {
     const defaultOpts = {
       manufacturer: 'medtronic',
+      bgPrefs: {
+        bgUnits: MGDL_UNITS,
+        bgBounds: {
+          veryLowThreshold: 54,
+          targetLowerBound: 70,
+          targetUpperBound: 180,
+          veryHighThreshold: 250,
+          extremeHighThreshold: 350,
+        }
+      }
     };
 
     const opts = overrides => _.assign({}, defaultOpts, overrides);
@@ -1103,17 +1115,10 @@ describe('stat', () => {
     });
 
     describe('timeInRange', () => {
-      it('should return annotations for `timeInRange` stat when viewing a single day of data', () => {
-        expect(stat.getStatAnnotations(data, commonStats.timeInRange, singleDayOpts)).to.have.ordered.members([
-          '**Time In Range:** Time spent in range, based on CGM readings.',
-          '**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is number of readings in range multiplied by the CGM sample frequency.',
-        ]);
-      });
-
-      it('should return annotations for `timeInRange` stat when viewing multiple days of data', () => {
+      it('should return annotations for `timeInRange` stat', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInRange, multiDayOpts)).to.have.ordered.members([
-          '**Time In Range:** Daily average of the time spent in range, based on CGM readings.',
-          '**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is 24 hours multiplied by % in range.',
+          '**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.',
+          '**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (181-250 mg&#x2F;dL) category per AGP guidance to maintain consistency.',
         ]);
       });
     });
@@ -2292,8 +2297,8 @@ describe('stat', () => {
 
       stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
 
-      // 13 stats, but readingsInRange, timeInAuto, timeInOverride, timeInRange are called an extra time for the secondary value
-      sinon.assert.callCount(formatDatumSpy, 17);
+      // 13 stats, but timeInAuto and timeInOverride are called an extra time for the secondary value
+      sinon.assert.callCount(formatDatumSpy, 15);
       sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
 
       formatDatumSpy.restore();

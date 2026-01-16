@@ -365,7 +365,6 @@ describe('BasicsPrintView', () => {
             text: 'Time in Range',
             note: 'Showing CGM data',
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     });
@@ -385,7 +384,6 @@ describe('BasicsPrintView', () => {
             text: 'Readings in Range',
             note: 'BGM data from 11 readings',
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     });
