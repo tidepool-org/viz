@@ -1,52 +1,50 @@
 # Glucose Domain
 
-Blood glucose data is the foundation of diabetes visualization. This domain covers continuous glucose monitoring (CGM) and self-monitored blood glucose (SMBG) data.
+Blood glucose data is the foundation of diabetes visualization. This parent domain covers all glucose measurements and their shared concepts.
 
 ---
 
 ## Overview
 
-| Data Type | Source | Typical Frequency | Use Case |
-|-----------|--------|-------------------|----------|
-| `cbg` | CGM devices | Every 5 minutes (288/day) | Trends, time-in-range, AGP |
-| `smbg` | Fingerstick meters | Variable (1-10/day) | Spot checks, calibration |
+Glucose data answers the fundamental question: **"What is my blood sugar?"**
 
-Both types share the same glucose value structure but serve different purposes in visualization.
+The platform handles two distinct sources of glucose data, each with different characteristics and use cases:
 
----
+| Subdomain | Data Type | Source | Frequency | Primary Use |
+|-----------|-----------|--------|-----------|-------------|
+| [CBG](./cbg/index.md) | `cbg` | CGM devices | Every 1-5 minutes | Trends, Time in Range, AGP |
+| [SMBG](./smbg/index.md) | `smbg` | Fingerstick meters | Variable (1-10/day) | Spot checks, calibration |
 
-## Data Structure
-
-### CBG (Continuous Blood Glucose)
-
-```javascript
-{
-  type: "cbg",
-  value: 142,                    // Glucose reading
-  units: "mg/dL",                // or "mmol/L"
-  sampleInterval: 300000,        // ms between readings (typically 5 min)
-  time: "2024-01-15T14:30:00Z",  // UTC timestamp
-  deviceId: "DexG6_123456",      // CGM device identifier
-  // ... common fields
-}
-```
-
-### SMBG (Self-Monitored Blood Glucose)
-
-```javascript
-{
-  type: "smbg",
-  value: 98,                     // Glucose reading
-  units: "mg/dL",                // or "mmol/L"
-  subType: "manual",             // optional: "manual", "linked"
-  time: "2024-01-15T08:00:00Z",
-  // ... common fields
-}
-```
+Both types share the same value structure and glycemic range classifications but serve different purposes in visualization.
 
 ---
 
-## Glucose Ranges
+## Subdomains
+
+### CBG (Continuous Glucose)
+
+Continuous glucose data from CGM (Continuous Glucose Monitor) devices. Provides near-continuous visibility into glucose trends.
+
+| File | Content |
+|------|---------|
+| [index.md](./cbg/index.md) | Data structure, sample intervals, devices |
+| [rendering.md](./cbg/rendering.md) | CBGTooltip, trend visualization |
+| [sensor-usage.md](./cbg/sensor-usage.md) | Time in Range, Sensor Usage, GMI |
+
+### SMBG (Self-Monitored Glucose)
+
+Discrete fingerstick readings from blood glucose meters. Point-in-time measurements for verification and calibration.
+
+| File | Content |
+|------|---------|
+| [index.md](./smbg/index.md) | Data structure, subTypes, Medtronic 600 |
+| [rendering.md](./smbg/rendering.md) | SMBGTooltip, source indicators |
+
+---
+
+## Shared Concepts
+
+### Glucose Ranges
 
 The platform defines five glycemic ranges based on clinical guidelines:
 
@@ -58,53 +56,23 @@ The platform defines five glycemic ranges based on clinical guidelines:
 | **High** | 181–249 | 10.1–13.8 | Light Purple | Hyperglycemia |
 | **Very High** | ≥ 250 | ≥ 13.9 | Purple | Significant hyperglycemia |
 
-These thresholds are configurable via `bgBounds` in patient preferences and vary by clinical preset (standard, pregnancy, older adults).
+These thresholds are configurable via `bgBounds` in patient preferences.
 
 ### Glycemic Presets
+
+Different clinical scenarios use different thresholds:
 
 ```javascript
 // From src/utils/constants.js
 export const GLYCEMIC_RANGES_PRESET = {
-  ADA_STANDARD: 'adaStandard',       // Default ranges above
-  ADA_OLDER_HIGH_RISK: 'adaHighRisk', // No very low/extreme high
+  ADA_STANDARD: 'adaStandard',           // Default ranges above
+  ADA_OLDER_HIGH_RISK: 'adaHighRisk',    // No very low/extreme high
   ADA_PREGNANCY_T1: 'adaPregnancyType1', // Tighter targets
   ADA_GESTATIONAL_T2: 'adaPregnancyType2',
 };
 ```
 
----
-
-## CGM Data Quality
-
-### Sample Interval
-
-CGM devices report their sampling interval, which affects statistics calculations:
-
-| Device | Sample Interval | Readings/Day |
-|--------|-----------------|--------------|
-| Dexcom G6/G7 | 5 minutes | 288 |
-| Libre 2/3 | 1 minute (historical) | 1440 |
-| Medtronic Guardian | 5 minutes | 288 |
-
-### Sensor Usage
-
-"Sensor usage" measures what percentage of time the CGM was actively reading. This affects the reliability of statistics:
-
-- **≥70% usage**: Recommended for GMI calculation
-- **<70% usage**: Statistics may be unreliable
-
-See [Glucose Statistics](./statistics.md) for calculation details.
-
-### Deduplication
-
-When multiple uploads contain the same readings, `DataUtil` deduplicates based on:
-1. Same `time` value
-2. Same `value`
-3. Within tolerance window (500ms)
-
----
-
-## Unit Conversion
+### Unit Conversion
 
 The platform stores BG values in mg/dL internally but displays in user-preferred units:
 
@@ -122,6 +90,33 @@ Display precision differs by unit:
 - **mg/dL**: Integer values (1 mg/dL increments)
 - **mmol/L**: One decimal place (0.1 mmol/L increments)
 
+### BG Classification
+
+```javascript
+// From src/utils/bloodglucose.js
+export function classifyBgValue(bgBounds, bgUnits, value, classificationType) {
+  // classificationType: 'fiveWay' or 'threeWay'
+  // Returns: 'veryLow', 'low', 'target', 'high', 'veryHigh'
+}
+```
+
+---
+
+## Cross-Subdomain Statistics
+
+Statistics that apply to both CBG and SMBG data are documented in [Glucose Statistics](./statistics.md):
+
+| Statistic | Applies To | Description |
+|-----------|------------|-------------|
+| Average Glucose | CBG + SMBG | Mean glucose value |
+| Standard Deviation | CBG + SMBG | Glucose variability |
+| Coefficient of Variation (CV) | CBG + SMBG | Relative variability |
+| GMI | CBG only | Glucose Management Indicator |
+
+Subdomain-specific statistics:
+- **Time in Range**: CBG only → [sensor-usage.md](./cbg/sensor-usage.md)
+- **Readings in Range**: SMBG only → [smbg/rendering.md](./smbg/rendering.md)
+
 ---
 
 ## Views Using Glucose Data
@@ -136,21 +131,23 @@ Display precision differs by unit:
 
 ---
 
-## Related Documentation
-
-- [Glucose Statistics](./statistics.md) - Statistical calculations with formulas
-- [Glucose Rendering](./rendering.md) - Component details and tooltips
-- [Tidepool Data Model](../../concepts/tidepool-data-model.md) - Complete data reference
-- [Diabetes Primer](../../concepts/diabetes-primer.md) - Medical terminology
-
----
-
 ## Key Source Files
 
 | Purpose | File |
 |---------|------|
-| CBG/SMBG tooltips | `src/components/common/tooltips/` |
 | BG utilities | `src/utils/bloodglucose.js` |
-| BG constants | `src/utils/constants.js` |
-| Trends components | `src/components/trends/` |
-| Daily BG rendering | `src/components/daily/` |
+| BG formatting | `src/utils/format.js` |
+| Constants | `src/utils/constants.js` |
+| Data processing | `src/utils/DataUtil.js` |
+| Colors | `src/styles/colors.css` |
+
+---
+
+## See Also
+
+- [Glucose Statistics](./statistics.md) - Statistical calculations
+- [Glucose Rendering](./rendering.md) - Shared rendering concepts
+- [CBG Subdomain](./cbg/index.md) - Continuous glucose details
+- [SMBG Subdomain](./smbg/index.md) - Fingerstick glucose details
+- [Tidepool Data Model](../../concepts/tidepool-data-model.md) - Complete data reference
+- [Diabetes Primer](../../concepts/diabetes-primer.md) - Medical terminology

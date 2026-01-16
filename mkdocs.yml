@@ -75,32 +75,48 @@ nav:
       - Overview: domains/glucose/index.md
       - Statistics: domains/glucose/statistics.md
       - Rendering: domains/glucose/rendering.md
-    - Bolus:
-      - Overview: domains/bolus/index.md
-      - Data Model: domains/bolus/data-model.md
-      - Calculations: domains/bolus/calculations.md
-      - Rendering: domains/bolus/rendering.md
-      - Device Notes: domains/bolus/device-notes.md
-    - Basal:
-      - Overview: domains/basal/index.md
-      - Calculations: domains/basal/calculations.md
-      - Rendering: domains/basal/rendering.md
+      - CBG (CGM):
+        - Overview: domains/glucose/cbg/index.md
+        - Rendering: domains/glucose/cbg/rendering.md
+        - Sensor Usage: domains/glucose/cbg/sensor-usage.md
+      - SMBG (Fingerstick):
+        - Overview: domains/glucose/smbg/index.md
+        - Rendering: domains/glucose/smbg/rendering.md
+    - Insulin:
+      - Overview: domains/insulin/index.md
+      - Statistics: domains/insulin/statistics.md
+      - Basal:
+        - Overview: domains/insulin/basal/index.md
+        - Calculations: domains/insulin/basal/calculations.md
+        - Rendering: domains/insulin/basal/rendering.md
+      - Bolus:
+        - Overview: domains/insulin/bolus/index.md
+        - Data Model: domains/insulin/bolus/data-model.md
+        - Calculations: domains/insulin/bolus/calculations.md
+        - Rendering: domains/insulin/bolus/rendering.md
+        - Device Notes: domains/insulin/bolus/device-notes.md
+      - Other (Injections):
+        - Overview: domains/insulin/other/index.md
+        - Rendering: domains/insulin/other/rendering.md
     - Carbs:
       - Overview: domains/carbs/index.md
       - Statistics: domains/carbs/statistics.md
-    - Insulin Totals:
-      - Overview: domains/insulin-totals/index.md
-    - Sensor:
-      - Overview: domains/sensor/index.md
+      - Rendering: domains/carbs/rendering.md
     - Device Events:
       - Overview: domains/device-events/index.md
+      - Alarms: domains/device-events/alarms.md
+      - Suspends: domains/device-events/suspends.md
+      - Site Changes: domains/device-events/site-changes.md
+      - Overrides: domains/device-events/overrides.md
+      - Calibration: domains/device-events/calibration.md
+      - Time Changes: domains/device-events/time-changes.md
   - Views:
     - Daily: views/daily.md
     - Basics: views/basics.md
     - Trends: views/Trends.md
     - PDF Reports: views/pdf-reports.md
-  - Components: Components.md
   - Reference:
+    - Components: reference/components.md
     - Common Props: reference/common-props.md
     - Time Rendering: reference/time-rendering.md
     - Code Style: reference/code-style.md

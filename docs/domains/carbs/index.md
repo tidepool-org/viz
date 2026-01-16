@@ -102,6 +102,7 @@ Medtronic pumps that use carb exchanges store the value internally as grams (aft
 
 ## Related Topics
 
-- [Carbs Statistics](statistics.md) - How carb totals are calculated
-- [Bolus Domain](../bolus/index.md) - Wizard bolus calculations
+- [Carbs Statistics](./statistics.md) - How carb totals are calculated
+- [Carbs Rendering](./rendering.md) - Food tooltip and visual display
+- [Bolus Domain](../insulin/bolus/index.md) - Wizard bolus calculations
 - [Daily View](../../views/daily.md) - Where carbs are displayed
