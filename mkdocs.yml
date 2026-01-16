@@ -59,23 +59,46 @@ markdown_extensions:
   - md_in_html
 
 extra_javascript:
-  # MathJax for LaTeX rendering
+  # MathJax for LaTeX rendering - config must load before MathJax
   - javascripts/mathjax.js
   - https://unpkg.com/mathjax@3/es5/tex-mml-chtml.js
 
 nav:
   - Home: StartHere.md
   - Getting Started: GettingStarted.md
-  - Architecture: Architecture.md
-  - Components: Components.md
-  - Code Style: CodeStyle.md
+  - Concepts:
+    - Architecture: concepts/architecture.md
+    - Diabetes Primer: concepts/diabetes-primer.md
+    - Tidepool Data Model: concepts/tidepool-data-model.md
+  - Domains:
+    - Glucose:
+      - Overview: domains/glucose/index.md
+      - Statistics: domains/glucose/statistics.md
+      - Rendering: domains/glucose/rendering.md
+    - Bolus:
+      - Overview: domains/bolus/index.md
+      - Data Model: domains/bolus/data-model.md
+      - Calculations: domains/bolus/calculations.md
+      - Rendering: domains/bolus/rendering.md
+      - Device Notes: domains/bolus/device-notes.md
+    - Basal:
+      - Overview: domains/basal/index.md
+    - Device Events:
+      - Overview: domains/device-events/index.md
   - Views:
+    - Daily: views/daily.md
+    - Basics: views/basics.md
     - Trends: views/Trends.md
+    - PDF Reports: views/pdf-reports.md
+  - Components: Components.md
   - Reference:
     - Common Props: misc/CommonProps.md
     - Time Rendering: misc/TimeRenderingModes.md
+    - Code Style: CodeStyle.md
   - Dependencies:
     - Overview: deps/README.md
     - D3: deps/D3.md
     - React: deps/React.md
     - React Motion: deps/ReactMotion.md
+  - Planning:
+    - Restructure Plan: DOCUMENTATION_RESTRUCTURE_PLAN.md
