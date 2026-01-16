@@ -1,6 +1,6 @@
 # Documentation Restructure Plan - Hierarchical Domains (Option B)
 
-> **Status**: Phase 2.5 - Hierarchical Restructure (Planning)  
+> **Status**: Phase 2.5 - Hierarchical Restructure ✅ Complete  
 > **Created**: January 2026  
 > **Last Updated**: January 2026
 
@@ -200,6 +200,7 @@ docs/
 │   └── pdf-reports.md
 │
 ├── reference/                         # Technical appendix
+│   ├── components.md                  # Visual component catalog with screenshots
 │   ├── common-props.md
 │   ├── time-rendering.md
 │   ├── code-style.md
@@ -388,27 +389,25 @@ Prose explanation of formula components.
 - Created views documentation
 - Migrated reference content
 
-### Current Phase
-
-#### Phase 2.5: Hierarchical Restructure 🔄
+#### Phase 2.5: Hierarchical Restructure ✅
 
 **Goal**: Implement Option B hierarchical structure
 
 | # | Task | Priority | Status |
 |---|------|----------|--------|
-| 1 | Create `glucose/cbg/` subdomain structure | High | Not Started |
-| 2 | Create `glucose/smbg/` subdomain structure | High | Not Started |
-| 3 | Refactor `glucose/index.md` as parent | High | Not Started |
-| 4 | Create `insulin/` parent domain | High | Not Started |
-| 5 | Move `basal/` under `insulin/` | High | Not Started |
-| 6 | Move `bolus/` under `insulin/` | High | Not Started |
-| 7 | Create `insulin/other/` from insulin-totals content | High | Not Started |
-| 8 | Split `device-events/index.md` into focused files | Medium | Not Started |
-| 9 | Create `carbs/rendering.md` | Medium | Not Started |
-| 10 | Migrate screenshots to domain folders | Medium | Not Started |
-| 11 | Delete obsolete files (`sensor/`, `insulin-totals/`) | Low | Not Started |
-| 12 | Update all cross-references | High | Not Started |
-| 13 | Update `mkdocs.yml` navigation | High | Not Started |
+| 1 | Create `glucose/cbg/` subdomain structure | High | ✅ Complete |
+| 2 | Create `glucose/smbg/` subdomain structure | High | ✅ Complete |
+| 3 | Refactor `glucose/index.md` as parent | High | ✅ Complete |
+| 4 | Create `insulin/` parent domain | High | ✅ Complete |
+| 5 | Move `basal/` under `insulin/` | High | ✅ Complete |
+| 6 | Move `bolus/` under `insulin/` | High | ✅ Complete |
+| 7 | Create `insulin/other/` from insulin-totals content | High | ✅ Complete |
+| 8 | Split `device-events/index.md` into focused files | Medium | ✅ Complete |
+| 9 | Create `carbs/rendering.md` | Medium | ✅ Complete |
+| 10 | Migrate screenshots to domain folders | Medium | ✅ Complete |
+| 11 | Delete obsolete files (`sensor/`, `insulin-totals/`) | Low | ✅ Complete |
+| 12 | Update all cross-references | High | ✅ Complete |
+| 13 | Update `mkdocs.yml` navigation | High | ✅ Complete |
 
 ### Future Phase
 
