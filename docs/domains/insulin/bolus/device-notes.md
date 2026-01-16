@@ -1,5 +1,7 @@
 # Bolus Device-Specific Notes
 
+Part of the [Bolus Subdomain](./index.md) in the [Insulin Domain](../index.md).
+
 This document covers manufacturer-specific variations in bolus data and terminology.
 
 ---

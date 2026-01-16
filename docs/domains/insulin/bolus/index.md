@@ -201,7 +201,7 @@ export function getTotalInsulin(bolusData) {
 
 ---
 
-## Related Documentation
+## See Also
 
 - [Insulin Domain](../index.md) - Parent domain overview
 - [Insulin Statistics](../statistics.md) - TDD calculations

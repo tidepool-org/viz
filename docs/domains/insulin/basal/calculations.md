@@ -1,5 +1,7 @@
 # Basal Calculations
 
+Part of the [Basal Subdomain](./index.md) in the [Insulin Domain](../index.md).
+
 This document details the calculations used for basal insulin data, including dose calculations, duration tracking, and automated delivery statistics.
 
 ---

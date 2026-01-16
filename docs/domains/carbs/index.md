@@ -87,7 +87,7 @@ Medtronic pumps that use carb exchanges store the value internally as grams (aft
 - **Conversion**: `getDeconvertedCarbExchange()` divides by 15
 - **Annotation**: Data is annotated with `medtronic/wizard/carb-to-exchange-ratio-deconverted`
 
-## Key Files
+## Key Source Files
 
 | File | Purpose |
 |------|---------|
@@ -100,7 +100,7 @@ Medtronic pumps that use carb exchanges store the value internally as grams (aft
 | `src/components/daily/bolustooltip/BolusTooltip.js` | Wizard carb display in tooltip |
 | `data/types.js` | Wizard, Food, DosingDecision type definitions |
 
-## Related Topics
+## See Also
 
 - [Carbs Statistics](./statistics.md) - How carb totals are calculated
 - [Carbs Rendering](./rendering.md) - Food tooltip and visual display

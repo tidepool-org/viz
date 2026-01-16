@@ -1,6 +1,14 @@
 # Insulin Statistics
 
+Part of the [Insulin Domain](./index.md).
+
 This document covers insulin statistics that aggregate data across all delivery sources (basal, bolus, other).
+
+---
+
+## Overview
+
+`StatUtil` computes insulin statistics from basal, bolus, and manual injection (other) data. These cross-subdomain statistics provide insights into total insulin delivery and therapy patterns.
 
 ---
 
@@ -88,6 +96,8 @@ statData.data = [
   { id: 'basal', value: data.basal, title: 'Basal Insulin', legendTitle: 'Basal' },
 ];
 ```
+
+> **Note**: The basal/bolus ratio is displayed as a horizontal bar within the Total Insulin stat widget (see [screenshot above](#screenshot)).
 
 ---
 
@@ -185,6 +195,8 @@ IOB appears in bolus tooltips:
 <div className={styles.label}>{t('IOB')}</div>
 <div className={styles.value}>{formatInsulin(iob)}</div>
 ```
+
+> **Note**: IOB is displayed within bolus tooltips, not as a standalone stat widget. See [Bolus Rendering](./bolus/rendering.md) for tooltip screenshots.
 
 ---
 

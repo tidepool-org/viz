@@ -1,5 +1,7 @@
 # Carbs Rendering
 
+Part of the [Carbs Domain](./index.md).
+
 This document covers the visualization of carbohydrate data, including tooltips and visual indicators.
 
 ---

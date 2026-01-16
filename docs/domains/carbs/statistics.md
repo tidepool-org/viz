@@ -1,5 +1,7 @@
 # Carbs Statistics
 
+Part of the [Carbs Domain](./index.md).
+
 This document covers how carbohydrate statistics are calculated and displayed in Tidepool viz.
 
 ## Overview
@@ -134,6 +136,10 @@ When displayed as a stat widget, carbs appear with:
 - Label ("Carbs")
 - Annotation icon with tooltip
 
+### Screenshot
+
+![Avg. Daily Carbs](./screenshots/Avg.%20Daily%20Carbs.png)
+
 ## Data Flow
 
 ```
@@ -172,7 +178,7 @@ If a patient uses both grams and exchanges (rare), both values are tracked and d
 
 Carb entries with `carbInput: 0` are filtered out of totals but the bolus/wizard event itself is still processed.
 
-## Related Files
+## Key Source Files
 
 | File | Function |
 |------|----------|
@@ -180,3 +186,12 @@ Carb entries with `carbInput: 0` are filtered out of totals but the bolus/wizard
 | `src/utils/stat.js` | Formatting, annotations |
 | `src/utils/bolus.js` | `getCarbs()` extraction |
 | `src/modules/print/DailyPrintView.js` | PDF carb rendering |
+
+---
+
+## See Also
+
+- [Carbs Domain](./index.md) - Parent domain overview
+- [Carbs Rendering](./rendering.md) - Food tooltip and visual display
+- [Bolus Domain](../insulin/bolus/index.md) - Wizard bolus calculations
+- [Insulin Statistics](../insulin/statistics.md) - Related stat patterns

@@ -1,5 +1,7 @@
 # Bolus Rendering
 
+Part of the [Bolus Subdomain](./index.md) in the [Insulin Domain](../index.md).
+
 This document covers the visual representation of bolus data, including shapes, colors, tooltips, and screenshots.
 
 ---

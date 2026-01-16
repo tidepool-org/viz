@@ -1,5 +1,7 @@
 # Bolus Calculations
 
+Part of the [Bolus Subdomain](./index.md) in the [Insulin Domain](../index.md).
+
 This document details the calculations used for bolus data, including programmed vs delivered amounts and override/underride detection.
 
 ---

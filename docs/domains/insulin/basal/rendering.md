@@ -1,5 +1,7 @@
 # Basal Rendering
 
+Part of the [Basal Subdomain](./index.md) in the [Insulin Domain](../index.md).
+
 This document covers the visual representation of basal insulin data, including shapes, colors, and view-specific rendering.
 
 ---

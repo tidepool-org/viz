@@ -84,11 +84,13 @@ The hierarchical structure serves all audiences:
 | Stat | Applies To | Location |
 |------|------------|----------|
 | Average Glucose | CBG + SMBG | `glucose/statistics.md` |
-| Time in Range | CBG only | `glucose/cbg/sensor-usage.md` |
-| Sensor Usage | CBG only | `glucose/cbg/sensor-usage.md` |
-| Readings in Range | SMBG only | `glucose/smbg/index.md` |
+| Time in Range | CBG only | `glucose/statistics.md` |
+| Sensor Usage | CBG only | `glucose/statistics.md` |
+| Readings in Range | SMBG only | `glucose/statistics.md` |
 | Avg Daily Insulin | Basal + Bolus + Other | `insulin/statistics.md` |
 | Time in Auto | Basal only | `insulin/basal/calculations.md` |
+
+> **Note**: All glucose statistics are consolidated in `glucose/statistics.md` for ease of reference, with clear notation of which data source (CBG, SMBG, or both) each stat applies to.
 
 ### Decision 3: "Other" Insulin Terminology
 

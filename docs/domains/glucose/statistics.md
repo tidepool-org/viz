@@ -1,5 +1,7 @@
 # Glucose Statistics
 
+Part of the [Glucose Domain](./index.md).
+
 This document details the statistical calculations for blood glucose data, including mathematical formulas and implementation specifics.
 
 > **Prerequisites**: Familiarity with [Glucose Domain](./index.md) concepts and the [Diabetes Primer](../../concepts/diabetes-primer.md).

@@ -1,5 +1,7 @@
 # Bolus Data Model
 
+Part of the [Bolus Subdomain](./index.md) in the [Insulin Domain](../index.md).
+
 This document covers the detailed data structures for bolus-related types: `wizard`, `dosingDecision`, and `insulin`.
 
 ---
