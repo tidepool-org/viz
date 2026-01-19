@@ -66,9 +66,6 @@ yarn test
 
 # Watch mode for TDD
 yarn test-watch
-
-# Run tests in Chrome (recommended before PRs)
-yarn browser-tests
 ```
 
 ### Linting

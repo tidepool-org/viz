@@ -6,8 +6,6 @@ The PDF reports module generates printable documents from diabetes data. Reports
 
 ## Overview
 
-![Combined PDF Example](./screenshots/daily.jpg)
-
 The viz library supports generating these PDF report types:
 
 | Report Type | Class | Description |
@@ -129,6 +127,7 @@ export const HEADER_FONT_SIZE = 14;
 ### AGP (Ambulatory Glucose Profile)
 
 Standardized glucose reporting format showing:
+
 - **Glucose Metrics**: Average glucose, GMI, CV, sensor time
 - **Percent in Ranges**: Time in Range bar chart
 - **Ambulatory Glucose Profile**: Percentile bands by time of day
@@ -149,6 +148,7 @@ renderOpts = {
 ### Basics
 
 Two-week summary with:
+
 - Statistics column (TIR, average glucose, etc.)
 - Calendar grids (BG readings, boluses, site changes, basals)
 - Summary tables
@@ -160,6 +160,7 @@ See [Basics View](./basics.md) for details.
 ### Daily
 
 Day-by-day timeline showing:
+
 - CGM/SMBG glucose
 - Bolus insulin
 - Basal rates
@@ -179,6 +180,7 @@ Tabular blood glucose readings:
 ### Settings
 
 Pump configuration snapshot:
+
 - Basal schedules
 - Carb ratios
 - Sensitivity factors
