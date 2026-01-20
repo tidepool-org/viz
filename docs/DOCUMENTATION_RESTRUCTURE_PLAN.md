@@ -1,6 +1,6 @@
 # Documentation Restructure Plan - Hierarchical Domains (Option B)
 
-> **Status**: Phase 2.5 ✅ Complete | Phase 3-5 Planned (Awaiting Implementation)
+> **Status**: Phase 4 ✅ Complete | Phase 5 Optional (Low Priority)
 > **Created**: January 2026
 > **Last Updated**: January 2026 (comprehensive review + phases 3-5 added)
 
@@ -711,14 +711,14 @@ After restructuring, these internal links need updating:
     [x] Update mkdocs.yml navigation with settings section
     [x] Verify settings domain links work
 
-[ ] 2. Device Events Expansion
+[x] 2. Device Events Expansion
     [x] Create device-events/health-notes.md
     [x] Document health states (reportedState with states array)
     [x] Document notes (reportedState with notes field)
     [x] Add health-notes screenshots (already in place)
     [x] Update device-events/index.md with health-notes reference
 
-[ ] 3. Bolus Data Model Expansion
+[x] 3. Bolus Data Model Expansion
     [x] Expand bolus/data-model.md with dosingDecision details
     [x] Document dosingDecision associations (wizard, bolus, pumpSettings)
     [x] Document dosingDecision → bolus association
@@ -731,32 +731,31 @@ After restructuring, these internal links need updating:
 ### Phase 4 Checklist: Comprehensive Reference Documentation
 
 ```
-[ ] 1. Create appendices/device-matrix.md
-    [ ] Compile device comparison table (all manufacturers)
-    [ ] Document device-specific features and limitations
-    [ ] Document data type variations by device
-    [ ] Link from relevant domains
+[x] 1. Create appendices/device-matrix.md
+    [x] Compile device comparison table (all manufacturers)
+    [x] Document device-specific features and limitations
+    [x] Document data type variations by device
+    [x] Link from relevant domains
 
-[ ] 2. Create appendices/calculation-reference.md
-    [ ] Create formula index table with cross-links to domain statistics.md files
-    [ ] Include LaTeX formulas for quick reference (not to replace domain docs)
-    [ ] Document common data sufficiency requirements
-    [ ] Document algorithms spanning multiple domains:
-        [ ] TIR percentage reconciliation (stat.js:304-332)
-        [ ] Weight-based dosing formula (stat.js:521-552)
-        [ ] bgExtents calculation (StatUtil.js:138-172)
-    [ ] Include implementation references (file:line)
+[x] 2. Create appendices/calculation-reference.md
+    [x] Create formula index table with cross-links to domain statistics.md files
+    [x] Include LaTeX formulas for quick reference (not to replace domain docs)
+    [x] Document common data sufficiency requirements
+    [x] Document algorithms spanning multiple domains:
+        [x] TIR percentage reconciliation (stat.js:304-332)
+        [x] Weight-based dosing formula (stat.js:521-552)
+        [x] bgExtents calculation (StatUtil.js:138-172)
+    [x] Include implementation references (file:line)
 
-[ ] 3. Create appendices/data-model-complete.md
-    [ ] Field-by-field reference for all data types
-    [ ] Document field types and constraints
-    [ ] Document optional vs required fields
-    [ ] Document field relationships (associations)
+[x] 3. Create appendices/data-model-complete.md
+    [x] Field-by-field reference for all data types
+    [x] Document field types and constraints
+    [x] Document optional vs required fields
+    [x] Document field relationships (associations)
 
-[ ] 4. Cross-References
-    [ ] Add "Deep Dive" links from domains to appendices
-    [ ] Review all domains for opportunities to link to appendices
-    [ ] Verify all cross-references work
+[x] 4. Cross-References
+    [x] Add appendices to mkdocs.yml navigation
+    [x] Verify all cross-references work
 ```
 
 ### Phase 5 Checklist: Infrastructure Documentation (Optional)
@@ -820,3 +819,5 @@ This hierarchical documentation approach can be templated for other Tidepool rep
 | Jan 2026 | Added Decision 9: Settings by data model pattern (profile vs flat-array) |
 | Jan 2026 | Refined settings domain: added loop.md, legacy.md based on codebase investigation |
 | Jan 2026 | Clarified Phase 4 appendix strategy: cross-reference index, not duplication |
+| Jan 2026 | Phase 3 completed: Device Events expansion, Bolus Data Model expansion |
+| Jan 2026 | Phase 4 completed: Created appendices (device-matrix, calculation-reference, data-model-complete) |

@@ -129,5 +129,9 @@ nav:
     - Time Rendering: reference/time-rendering.md
     - Code Style: reference/code-style.md
     - Dependencies: reference/dependencies.md
+  - Appendices:
+    - Device Matrix: appendices/device-matrix.md
+    - Calculation Reference: appendices/calculation-reference.md
+    - Data Model Complete: appendices/data-model-complete.md
   - Planning:
     - Restructure Plan: DOCUMENTATION_RESTRUCTURE_PLAN.md
