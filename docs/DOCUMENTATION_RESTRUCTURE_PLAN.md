@@ -1,6 +1,6 @@
 # Documentation Restructure Plan - Hierarchical Domains (Option B)
 
-> **Status**: Phase 4 ✅ Complete | Phase 5 Optional (Low Priority)
+> **Status**: Phase 5 Partial ✅ | DataUtil Internals Optional
 > **Created**: January 2026
 > **Last Updated**: January 2026 (comprehensive review + phases 3-5 added)
 
@@ -761,21 +761,23 @@ After restructuring, these internal links need updating:
 ### Phase 5 Checklist: Infrastructure Documentation (Optional)
 
 ```
-[ ] 1. Create concepts/data-management.md
-    [ ] Document upload type structure
-    [ ] Document latestPumpUpload selection logic
-    [ ] Document device-upload mappings
-    [ ] Document upload-specific metadata
+[x] 1. Create concepts/data-management.md
+    [x] Document upload type structure
+    [x] Document latestPumpUpload selection logic
+    [x] Document device-upload mappings
+    [x] Document upload-specific metadata
 
-[ ] 2. Document DataUtil internals
+[ ] 2. Document DataUtil internals (deferred - narrow audience)
     [ ] Document crossfilter indexing
     [ ] Document caching strategies
     [ ] Document tag system for events
 
-[ ] 3. Document device detection
-    [ ] Document manufacturer identification
-    [ ] Document device model detection
-    [ ] Document feature detection (Loop, automated basals, etc.)
+[x] 3. Create concepts/device-detection.md
+    [x] Document manufacturer identification
+    [x] Document device model detection
+    [x] Document feature detection (Loop, automated basals, etc.)
+    [x] Document pump vocabulary system
+    [x] Document adding new device support checklist
 ```
 
 ---
@@ -821,3 +823,4 @@ This hierarchical documentation approach can be templated for other Tidepool rep
 | Jan 2026 | Clarified Phase 4 appendix strategy: cross-reference index, not duplication |
 | Jan 2026 | Phase 3 completed: Device Events expansion, Bolus Data Model expansion |
 | Jan 2026 | Phase 4 completed: Created appendices (device-matrix, calculation-reference, data-model-complete) |
+| Jan 2026 | Phase 5 partial: Created data-management.md and device-detection.md; DataUtil internals deferred |

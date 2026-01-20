@@ -70,6 +70,8 @@ nav:
     - Architecture: concepts/architecture.md
     - Diabetes Primer: concepts/diabetes-primer.md
     - Tidepool Data Model: concepts/tidepool-data-model.md
+    - Data Management: concepts/data-management.md
+    - Device Detection: concepts/device-detection.md
   - Domains:
     - Glucose:
       - Overview: domains/glucose/index.md
