@@ -96,9 +96,9 @@ This enables:
 
 ## DosingDecision (Loop Systems)
 
-Loop-based systems (Tidepool Loop, DIY Loop, Twiist) record algorithmic dosing decisions.
+Loop-based systems (Tidepool Loop, DIY Loop, Twiist) record algorithmic dosing decisions that capture the full context of automated insulin dosing.
 
-### Structure
+### Complete Structure
 
 ```javascript
 {
@@ -107,45 +107,188 @@ Loop-based systems (Tidepool Loop, DIY Loop, Twiist) record algorithmic dosing d
   time: "2024-01-15T12:30:00Z",
   
   // Decision context
-  reason: "normalBolus",         // "normalBolus", "watch", "automatedBolus"
+  reason: "normalBolus",           // See reason types below
   
   // Algorithm recommendation
   recommendedBolus: {
-    amount: 2.5,                 // Units recommended by algorithm
+    amount: 2.5,                   // Total units recommended
   },
   
   // What user actually requested
   requestedBolus: {
-    normal: 2.0,                 // User may accept different amount
+    normal: 2.0,                   // User may accept different amount
   },
   
-  // Active settings
+  // Food data (carbs)
+  food: {
+    nutrition: {
+      carbohydrate: {
+        net: 45,                   // Current carb estimate (may be edited)
+      },
+    },
+  },
+  originalFood: {                  // Original carb entry (if edited)
+    nutrition: {
+      carbohydrate: {
+        net: 50,                   // Original value at bolus time
+      },
+    },
+  },
+  
+  // Glucose inputs
+  smbg: {                          // Manual BG entry (if present)
+    value: 185,
+  },
+  bgHistorical: [                  // Recent CGM readings
+    { value: 170 },
+    { value: 180 },
+    { value: 185 },                // Most recent (used if no smbg)
+  ],
+  
+  // Active insulin
+  insulinOnBoard: {
+    amount: 1.2,                   // Current IOB in units
+  },
+  
+  // Settings context
   bgTargetSchedule: [{
-    start: 0,                    // ms from midnight
+    start: 0,                      // ms from midnight
     low: 80,
     high: 100,
   }],
   
-  // Settings snapshot
-  pumpSettings: "settings_id",   // Reference to pumpSettings record
+  // Associations to related records
+  associations: [
+    { reason: "bolus", id: "bolus_xyz" },
+    { reason: "pumpSettings", id: "settings_123" },
+  ],
 }
 ```
 
 ### Reason Types
 
-| Reason | Description |
-|--------|-------------|
-| `normalBolus` | User-initiated meal/correction bolus |
-| `automatedBolus` | Algorithm auto-correction bolus |
-| `watch` | Bolus initiated from Apple Watch |
+| Reason | Description | Typical Source |
+|--------|-------------|----------------|
+| `normalBolus` | User-initiated meal/correction bolus | Tidepool Loop app |
+| `simpleBolus` | Simple bolus without full calculator | Quick bolus entry |
+| `watchBolus` | Bolus initiated from Apple Watch | watchOS app |
+| `oneButtonBolus` | Single-tap preset bolus | Quick action |
+| `loop` | Automated algorithm decision (not bolus-related) | Background processing |
 
-### DosingDecision ↔ Bolus Linking
+Only bolus-related reasons (`normalBolus`, `simpleBolus`, `watchBolus`, `oneButtonBolus`) are joined to bolus records.
 
-`DataUtil` links dosingDecisions to boluses by time proximity:
+### Data Processing
+
+`DataUtil` performs several transformations during normalization:
+
+#### Field Normalization
 
 ```javascript
-// After processing:
-bolus.dosingDecision = dosingDecision;  // Embedded
+// src/utils/DataUtil.js:351-371
+// Normalize requestedBolus: use 'normal' instead of deprecated 'amount'
+if (d.requestedBolus?.normal == null && d.requestedBolus?.amount != null) {
+  d.requestedBolus.normal = d.requestedBolus.amount;
+  delete d.requestedBolus.amount;
+}
+
+// Normalize recommendedBolus: calculate 'amount' from normal + extended
+if (d.recommendedBolus?.amount == null && 
+    (d.recommendedBolus.normal != null || d.recommendedBolus.extended != null)) {
+  d.recommendedBolus.amount = 
+    (d.recommendedBolus.normal ?? 0) + (d.recommendedBolus.extended ?? 0);
+}
+```
+
+#### DosingDecision ↔ Bolus Joining
+
+```javascript
+// src/utils/DataUtil.js:459-523
+// 1. First, try definitive association by ID
+d.dosingDecision = _.find(
+  this.bolusDosingDecisionDatumsByIdMap,
+  ({ associations = [] }) => 
+    _.some(associations, { reason: 'bolus', id: d.id })
+);
+
+// 2. If no definitive match, find closest within 1 minute
+if (!d.dosingDecision) {
+  const proximateDosingDecisions = _.filter(
+    this.bolusDosingDecisionDatumsByIdMap,
+    ({ time }) => Math.abs(time - d.time) <= MS_IN_MIN
+  );
+  // Prefer matching requestedBolus.normal to bolus.normal
+  d.dosingDecision = proximateDosingDecisions[0];
+}
+
+// 3. Translate dosingDecision data onto bolus fields
+if (d.dosingDecision) {
+  d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net
+            ?? d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+  d.bgInput = d.dosingDecision.smbg?.value 
+           || _.last(d.dosingDecision.bgHistorical)?.value;
+  d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
+}
+```
+
+### Carb Input Priority
+
+When determining carb input for bolus display:
+
+1. **`originalFood`** - Original carb entry at bolus time (preferred)
+2. **`food`** - Current carb value (may have been edited after bolus)
+
+This ensures bolus tooltips show the carbs the user intended at decision time, not later edits.
+
+### BG Input Priority
+
+When determining glucose input for bolus context:
+
+1. **`smbg.value`** - Manual fingerstick entry (if present)
+2. **`_.last(bgHistorical).value`** - Most recent CGM reading
+
+### Interrupted Bolus Detection
+
+If a bolus is interrupted (delivered less than requested):
+
+```javascript
+// Set expectedNormal from dosingDecision if bolus was interrupted
+const requestedNormal = d.dosingDecision.requestedBolus?.normal;
+if ((!d.expectedNormal && requestedNormal) && (d.normal !== requestedNormal)) {
+  d.expectedNormal = requestedNormal;
+}
+```
+
+This enables the bolus tooltip to show "Interrupted: delivered X of Y units".
+
+### Associations
+
+DosingDecision records link to related data via the `associations` array:
+
+| Reason | Links To | Purpose |
+|--------|----------|---------|
+| `bolus` | Bolus record | The resulting insulin delivery |
+| `pumpSettings` | PumpSettings record | Active settings at decision time |
+| `food` | Food record | Associated carb entry |
+
+After processing, associated pump settings are attached:
+
+```javascript
+d.dosingDecision.pumpSettings = pumpSettingsDatumsByIdMap[
+  _.find(d.dosingDecision.associations, { reason: 'pumpSettings' })?.id
+];
+```
+
+### IOB (Insulin on Board)
+
+`insulinOnBoard.amount` represents the active insulin from previous boluses at decision time. This is:
+
+- **Calculated by Loop algorithm** based on insulin action curves
+- **Used in net recommendation** to prevent stacking
+- **Displayed in bolus tooltips** for context
+
+```javascript
+// IOB is extracted from dosingDecision during bolus joining
+d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 ```
 
 ---
@@ -200,36 +343,59 @@ Manual insulin is included in total daily dose:
 
 ## Data Relationships
 
+### Traditional Pump Flow (Wizard)
+
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                      BOLUS ECOSYSTEM                         │
-├─────────────────────────────────────────────────────────────┤
-│                                                              │
-│   ┌──────────────┐                                          │
-│   │  wizard      │ User enters carbs, BG                    │
-│   │  (calculator)│─────────────────────┐                    │
-│   └──────┬───────┘                     │                    │
-│          │ uses settings               │ links to           │
-│          ▼                             │                    │
-│   ┌──────────────┐                     │                    │
-│   │ pumpSettings │                     │                    │
-│   │  - ICR       │                     ▼                    │
-│   │  - ISF       │              ┌──────────────┐            │
-│   │  - bgTarget  │              │    bolus     │            │
-│   └──────────────┘              │  (delivered) │            │
-│          ▲                      └──────┬───────┘            │
-│          │ references                  │                    │
-│   ┌──────┴───────┐                     │                    │
-│   │dosingDecision│ Loop algorithm      │                    │
-│   │  (Loop only) │─────────────────────┘                    │
-│   └──────────────┘                                          │
-│                                                              │
-│   ┌──────────────┐                                          │
-│   │   insulin    │ Manual injections (MDI)                  │
-│   │   (pen)      │ Not linked to other records              │
-│   └──────────────┘                                          │
-│                                                              │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────┐                     ┌──────────────┐
+│   wizard     │ ──── links to ────▶ │    bolus     │
+│  (calculator)│                     │  (delivered) │
+└──────┬───────┘                     └──────────────┘
+       │ uses settings
+       ▼
+┌──────────────┐
+│ pumpSettings │
+│  - ICR       │
+│  - ISF       │
+│  - bgTarget  │
+└──────────────┘
+```
+
+### Loop System Flow (DosingDecision)
+
+```
+┌──────────────┐
+│dosingDecision│ ◀─── Algorithm calculates recommendation
+│  - food      │
+│  - bgInput   │
+│  - IOB       │
+└──────┬───────┘
+       │ associations array
+       ▼
+┌──────────────────────────────────────────────┐
+│                                              │
+│  ┌──────────┐  ┌──────────┐  ┌────────────┐  │
+│  │  bolus   │  │pumpSettings│ │   food    │  │
+│  │(delivered)│  │ (active)  │ │  (carbs)  │  │
+│  └──────────┘  └──────────┘  └────────────┘  │
+│                                              │
+└──────────────────────────────────────────────┘
+```
+
+### After Processing
+
+```javascript
+// Traditional pump:
+wizard.bolus = { /* full bolus object */ }
+bolus.wizard = wizard.id
+
+// Loop systems:
+bolus.dosingDecision = { /* full dosingDecision object */ }
+bolus.dosingDecision.pumpSettings = { /* associated settings */ }
+
+// Translated fields on bolus:
+bolus.carbInput    // From dosingDecision.food or wizard.carbInput
+bolus.bgInput      // From dosingDecision.smbg/bgHistorical or wizard.bgInput
+bolus.insulinOnBoard // From dosingDecision.insulinOnBoard
 ```
 
 ---
@@ -298,7 +464,9 @@ const insulin = {
 |---------|------|
 | Type classes | `data/types.js` |
 | Validation | `src/utils/validation/schema.js` |
-| Data processing | (in blip) `DataWorker` |
+| DosingDecision normalization | `src/utils/DataUtil.js:351-371` |
+| Bolus ↔ DosingDecision joining | `src/utils/DataUtil.js:459-523` |
+| Bolus ↔ Wizard joining | `src/utils/DataUtil.js:435-457` |
 | Tooltip rendering | `src/components/daily/bolustooltip/` |
 
 ---

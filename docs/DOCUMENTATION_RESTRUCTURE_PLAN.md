@@ -719,13 +719,13 @@ After restructuring, these internal links need updating:
     [x] Update device-events/index.md with health-notes reference
 
 [ ] 3. Bolus Data Model Expansion
-    [ ] Expand bolus/data-model.md with dosingDecision details
-    [ ] Document dosingDecision → wizard association
-    [ ] Document dosingDecision → bolus association
-    [ ] Document dosingDecision → pumpSettings association
-    [ ] Document IOB from dosingDecision.insulinOnBoard
-    [ ] Document dosingDecision.requestedBolus vs delivered
-    [ ] Document dosingDecision.originalFood vs food (Loop)
+    [x] Expand bolus/data-model.md with dosingDecision details
+    [x] Document dosingDecision associations (wizard, bolus, pumpSettings)
+    [x] Document dosingDecision → bolus association
+    [x] Document dosingDecision → pumpSettings association
+    [x] Document IOB from dosingDecision.insulinOnBoard
+    [x] Document dosingDecision.requestedBolus vs delivered
+    [x] Document dosingDecision.originalFood vs food (Loop)
 ```
 
 ### Phase 4 Checklist: Comprehensive Reference Documentation
