@@ -1,6 +1,6 @@
 # Documentation Restructure Plan - Hierarchical Domains (Option B)
 
-> **Status**: Phase 5 Partial ✅ | DataUtil Internals Optional
+> **Status**: Phase 5 ✅ Complete
 > **Created**: January 2026
 > **Last Updated**: January 2026 (comprehensive review + phases 3-5 added)
 
@@ -758,7 +758,7 @@ After restructuring, these internal links need updating:
     [x] Verify all cross-references work
 ```
 
-### Phase 5 Checklist: Infrastructure Documentation (Optional)
+### Phase 5 Checklist: Infrastructure Documentation
 
 ```
 [x] 1. Create concepts/data-management.md
@@ -767,10 +767,10 @@ After restructuring, these internal links need updating:
     [x] Document device-upload mappings
     [x] Document upload-specific metadata
 
-[ ] 2. Document DataUtil internals (deferred - narrow audience)
-    [ ] Document crossfilter indexing
-    [ ] Document caching strategies
-    [ ] Document tag system for events
+[x] 2. Document DataUtil internals
+    [x] Document crossfilter indexing
+    [x] Document caching strategies
+    [x] Document tag system for events
 
 [x] 3. Create concepts/device-detection.md
     [x] Document manufacturer identification
@@ -824,3 +824,4 @@ This hierarchical documentation approach can be templated for other Tidepool rep
 | Jan 2026 | Phase 3 completed: Device Events expansion, Bolus Data Model expansion |
 | Jan 2026 | Phase 4 completed: Created appendices (device-matrix, calculation-reference, data-model-complete) |
 | Jan 2026 | Phase 5 partial: Created data-management.md and device-detection.md; DataUtil internals deferred |
+| Jan 2026 | Phase 5 complete: Created datautil-internals.md (crossfilter, tags, query, caching) |
