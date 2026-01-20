@@ -110,6 +110,13 @@ nav:
       - Overrides: domains/device-events/overrides.md
       - Calibration: domains/device-events/calibration.md
       - Time Changes: domains/device-events/time-changes.md
+    - Settings:
+      - Overview: domains/settings/index.md
+      - Components: domains/settings/components.md
+      - Rendering: domains/settings/rendering.md
+      - Tandem: domains/settings/tandem.md
+      - Loop: domains/settings/loop.md
+      - Legacy: domains/settings/legacy.md
   - Views:
     - Daily: views/daily.md
     - Basics: views/basics.md

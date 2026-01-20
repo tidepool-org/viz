@@ -81,3 +81,26 @@ domain folders for correct image display.
 
 - **Only use read-only git commands** such as `git status`, `git log`, `git diff`, `git show`, `git branch -l`, `git remote -v`
 - **Never run git commands that write or modify the git tree** such as `git commit`, `git push`, `git pull`, `git merge`, `git rebase`, `git checkout`, `git reset`, `git add`, `git rm`, `git stash`, `git cherry-pick`, `git revert`
+
+## Agent Task Delegation Strategy
+
+For complex multi-file tasks, use a **hybrid delegation pattern** to balance token efficiency with quality:
+
+**Premium agents (e.g., Opus)** should handle:
+- Initial planning and task breakdown
+- Files requiring synthesis across multiple sources
+- Architecture decisions and cross-cutting concerns
+- Final review and integration of delegated work
+
+**General agents** should handle (in parallel when independent):
+- Well-scoped, single-file documentation with clear specifications
+- Repetitive tasks with established patterns
+- File creation from detailed templates or examples
+
+**Pattern for documentation tasks:**
+1. Premium agent analyzes codebase and creates detailed specs
+2. Delegate independent files to general agents in parallel (e.g., manufacturer-specific docs)
+3. Premium agent writes synthesis files that reference the delegated work
+4. Premium agent reviews and integrates all pieces
+
+This approach minimizes token usage on premium models while ensuring quality on tasks requiring judgment and synthesis.
