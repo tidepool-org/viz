@@ -8,8 +8,8 @@ Device events capture various state changes and actions from insulin pumps, CGMs
 
 The `deviceEvent` type is a versatile container for device-specific events. Each event has a `subType` identifying the specific event category.
 
-| SubType | Description | Documentation |
-|---------|-------------|---------------|
+| SubType / Type | Description | Documentation |
+|----------------|-------------|---------------|
 | `status` | Pump status changes (suspend/resume) | [Suspends](./suspends.md) |
 | `prime` | Tubing/cannula priming | [Site Changes](./site-changes.md) |
 | `reservoirChange` | Cartridge/reservoir replaced | [Site Changes](./site-changes.md) |
@@ -17,6 +17,8 @@ The `deviceEvent` type is a versatile container for device-specific events. Each
 | `calibration` | CGM calibration | [Calibration](./calibration.md) |
 | `timeChange` | Device clock adjustment | [Time Changes](./time-changes.md) |
 | `pumpSettingsOverride` | Activity modes (sleep, exercise) | [Overrides](./overrides.md) |
+| `reportedState` | Health events and notes (user-reported) | [Health & Notes](./health-notes.md) |
+| `physicalActivity` | Exercise tracking (user-reported) | [Health & Notes](./health-notes.md) |
 
 ---
 
@@ -69,6 +71,7 @@ if (d.type === 'deviceEvent') {
 | [overrides.md](./overrides.md) | Sleep, exercise, pre-meal modes |
 | [calibration.md](./calibration.md) | CGM calibration events |
 | [time-changes.md](./time-changes.md) | Device clock adjustments |
+| [health-notes.md](./health-notes.md) | Health events, notes, and physical activity |
 
 ---
 

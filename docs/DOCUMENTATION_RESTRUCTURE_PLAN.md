@@ -694,29 +694,29 @@ After restructuring, these internal links need updating:
 ### Phase 3 Checklist: Missing Functionality Documentation
 
 ```
-[ ] 1. Settings Domain
-    [ ] Create settings/ directory
-    [ ] Create settings/index.md (overview, data model patterns: profile vs flat-array)
-    [ ] Create settings/components.md (PumpSettingsContainer, common components)
-    [ ] Create settings/rendering.md (SettingsPrintView, PDF export)
-    [ ] Create settings/tandem.md (profile-based settings, Control-IQ)
-    [ ] Create settings/loop.md (DIY Loop, Tidepool Loop, Twiist - hybrid structure)
-        [ ] Document unique fields: bgSafetyLimit, insulinModel, preset overrides
-        [ ] Document Loop-specific terminology and annotations
-    [ ] Create settings/legacy.md (Animas, Medtronic, Insulet, Microtech)
-        [ ] Document manufacturer terminology variations (ISF vs Sensitivity vs Correction Factor)
-        [ ] Document BG target format variations (target+range, low+high)
-        [ ] Document Medtronic Auto Mode handling
-    [ ] Collect settings screenshots (component views, Settings PDF)
-    [ ] Update mkdocs.yml navigation with settings section
-    [ ] Verify settings domain links work
+[x] 1. Settings Domain (Completed Jan 2026)
+    [x] Create settings/ directory
+    [x] Create settings/index.md (overview, data model patterns: profile vs flat-array)
+    [x] Create settings/components.md (PumpSettingsContainer, common components)
+    [x] Create settings/rendering.md (SettingsPrintView, PDF export)
+    [x] Create settings/tandem.md (profile-based settings, Control-IQ)
+    [x] Create settings/loop.md (DIY Loop, Tidepool Loop, Twiist - hybrid structure)
+        [x] Document unique fields: bgSafetyLimit, insulinModel, preset overrides
+        [x] Document Loop-specific terminology and annotations
+    [x] Create settings/legacy.md (Animas, Medtronic, Insulet, Microtech)
+        [x] Document manufacturer terminology variations (ISF vs Sensitivity vs Correction Factor)
+        [x] Document BG target format variations (target+range, low+high)
+        [x] Document Medtronic Auto Mode handling
+    [x] Collect settings screenshots (component views, Settings PDF)
+    [x] Update mkdocs.yml navigation with settings section
+    [x] Verify settings domain links work
 
 [ ] 2. Device Events Expansion
-    [ ] Create device-events/health-notes.md
-    [ ] Document health states (reportedState with states array)
-    [ ] Document notes (reportedState with notes field)
-    [ ] Add health-notes screenshots
-    [ ] Update device-events/index.md with health-notes reference
+    [x] Create device-events/health-notes.md
+    [x] Document health states (reportedState with states array)
+    [x] Document notes (reportedState with notes field)
+    [x] Add health-notes screenshots (already in place)
+    [x] Update device-events/index.md with health-notes reference
 
 [ ] 3. Bolus Data Model Expansion
     [ ] Expand bolus/data-model.md with dosingDecision details

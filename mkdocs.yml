@@ -108,6 +108,7 @@ nav:
       - Suspends: domains/device-events/suspends.md
       - Site Changes: domains/device-events/site-changes.md
       - Overrides: domains/device-events/overrides.md
+      - Health & Notes: domains/device-events/health-notes.md
       - Calibration: domains/device-events/calibration.md
       - Time Changes: domains/device-events/time-changes.md
     - Settings:

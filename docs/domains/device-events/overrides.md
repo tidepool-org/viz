@@ -99,27 +99,11 @@ Override events display tooltips with:
 
 ---
 
-## Activity Events (Health/Physical Activity)
+## User-Reported Activity Events
 
-Some devices report activity separately from pump overrides:
+In addition to pump-controlled overrides, users can log health events, notes, and physical activity through Tidepool Mobile. These are **informational only** and do not affect insulin delivery.
 
-### Health Events
-
-![Health (stress)](./screenshots/Health%20(stress).png)
-
-![Health (other with notes)](./screenshots/Health%20(other%20with%20notes).png)
-
-### Physical Activity Events
-
-![Physical Activity (low)](./screenshots/Physical%20Activity%20(low).png)
-
-![Physical Activity (medium)](./screenshots/Physical%20Activity%20(medium).png)
-
-![Physical Activity (high)](./screenshots/Physical%20Activity%20(high).png)
-
-### Notes
-
-![Notes](./screenshots/Notes.png)
+See [Health Events, Notes & Physical Activity](./health-notes.md) for full documentation.
 
 ---
 
