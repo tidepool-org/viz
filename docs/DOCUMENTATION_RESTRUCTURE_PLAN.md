@@ -141,6 +141,17 @@ The hierarchical structure serves all audiences:
 
 **Rationale**: Health events and notes use `type: 'reportedState'` with `states` or `notes` fields. They display in events zone alongside alarms and other device events. Better documented together with device events than as standalone domain.
 
+### Decision 9: Settings Documentation by Data Model Pattern
+
+**Choice**: Document settings by data model pattern (profile-based vs flat-array), not per-manufacturer
+
+**Rationale**: Investigation revealed two fundamentally different settings data structures:
+- **Profile-based** (Tandem): Settings keyed by profile name (`bgTargets: { "Normal": [...], "Sick": [...] }`)
+- **Flat-array** (Legacy): Settings as global arrays (`bgTarget: [{ start, low, high }, ...]`)
+- **Hybrid** (Loop): Profile-based structure with unique fields (`bgSafetyLimit`, `insulinModel`)
+
+NonTandem.js handles 8 manufacturers (Animas, Insulet, Medtronic, Microtech, DIY Loop, Tidepool Loop, Twiist) with 344 lines of conditional logic for terminology and formatting variations. Rather than document each manufacturer separately, document the patterns with manufacturer-specific notes where relevant.
+
 ---
 
 ## Final Structure (Option B - Hierarchical)
@@ -205,10 +216,12 @@ docs/
 │   │   └── screenshots/               # FoodTooltip/
 │   │
 │   ├── settings/                      # TOP-LEVEL DOMAIN
-│   │   ├── index.md                   # Overview, pump settings data model
-│   │   ├── components.md              # Settings components (Tandem, NonTandem)
+│   │   ├── index.md                   # Overview, pump settings data model patterns
+│   │   ├── components.md              # Settings components (PumpSettingsContainer, common)
 │   │   ├── rendering.md               # Settings print/export views
-│   │   ├── tandem.md                  # Tandem-specific settings (profiles)
+│   │   ├── tandem.md                  # Profile-based settings (Tandem)
+│   │   ├── loop.md                    # Loop devices (DIY, Tidepool, Twiist) - hybrid structure
+│   │   ├── legacy.md                  # Flat-array settings (Animas, Medtronic, Insulet, Microtech)
 │   │   └── screenshots/               # Settings view PDF, component screenshots
 │   │
 │   └── device-events/                 # TOP-LEVEL DOMAIN
@@ -479,28 +492,35 @@ Based on comprehensive review of the codebase vs existing documentation (January
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | | **Settings Domain** | | |
-| 1 | Create `settings/index.md` (overview, data model) | Critical | Not Started |
-| 2 | Create `settings/components.md` (Tandem, NonTandem usage) | Critical | Not Started |
+| 1 | Create `settings/index.md` (overview, data model patterns) | Critical | Not Started |
+| 2 | Create `settings/components.md` (PumpSettingsContainer, common components) | Critical | Not Started |
 | 3 | Create `settings/rendering.md` (PDF export, PrintView) | Critical | Not Started |
-| 4 | Create `settings/tandem.md` (Tandem-specific profiles) | High | Not Started |
-| 5 | Collect/organize settings screenshots | Medium | Not Started |
-| 6 | Update `mkdocs.yml` navigation | High | Not Started |
+| 4 | Create `settings/tandem.md` (profile-based settings) | High | Not Started |
+| 5 | Create `settings/loop.md` (Loop/Twiist hybrid structure, unique fields) | High | Not Started |
+| 6 | Create `settings/legacy.md` (flat-array settings, manufacturer terminology) | High | Not Started |
+| 7 | Collect/organize settings screenshots | Medium | Not Started |
+| 8 | Update `mkdocs.yml` navigation | High | Not Started |
 | | **Device Events Expansion** | | |
-| 7 | Create `device-events/health-notes.md` (health states, notes) | Important | Not Started |
-| 8 | Update `device-events/index.md` with health-notes reference | Medium | Not Started |
+| 9 | Create `device-events/health-notes.md` (health states, notes) | Important | Not Started |
+| 10 | Update `device-events/index.md` with health-notes reference | Medium | Not Started |
 | | **Bolus Data Model Expansion** | | |
-| 9 | Expand `bolus/data-model.md` with dosingDecision details | Important | Not Started |
-| 10 | Document dosingDecision associations (wizard, bolus, pumpSettings) | Important | Not Started |
-| 11 | Document IOB calculation from dosingDecision | Medium | Not Started |
+| 11 | Expand `bolus/data-model.md` with dosingDecision details | Important | Not Started |
+| 12 | Document dosingDecision associations (wizard, bolus, pumpSettings) | Important | Not Started |
+| 13 | Document IOB calculation from dosingDecision | Medium | Not Started |
 
 #### Phase 4: Comprehensive Reference Documentation (External Partners)
 
 **Goal**: Deep-dive reference material for Cohort B (external partners)
 
+**Strategy Note**: Appendices serve as quick-reference indexes that cross-link to detailed domain documentation, not as duplicates. Domain `statistics.md` files remain the authoritative source for calculation details. Appendices add:
+- Consolidated formula tables for at-a-glance comparison
+- Algorithms that span multiple domains (e.g., TIR reconciliation)
+- Cross-cutting concerns not owned by any single domain
+
 | # | Task | Priority | Status |
 |---|------|----------|--------|
 | 1 | Create `appendices/device-matrix.md` (comprehensive device comparison) | Critical | Not Started |
-| 2 | Create `appendices/calculation-reference.md` (all formulas consolidated) | Critical | Not Started |
+| 2 | Create `appendices/calculation-reference.md` (formula index with cross-links) | Critical | Not Started |
 | 3 | Create `appendices/data-model-complete.md` (field-by-field reference) | Critical | Not Started |
 | 4 | Add "Deep Dive" callouts throughout domains | Medium | Not Started |
 | 5 | Create cross-references from domains to appendices | Medium | Not Started |
@@ -676,10 +696,17 @@ After restructuring, these internal links need updating:
 ```
 [ ] 1. Settings Domain
     [ ] Create settings/ directory
-    [ ] Create settings/index.md (overview, pumpSettings data structure)
-    [ ] Create settings/components.md (Tandem, NonTandem components)
+    [ ] Create settings/index.md (overview, data model patterns: profile vs flat-array)
+    [ ] Create settings/components.md (PumpSettingsContainer, common components)
     [ ] Create settings/rendering.md (SettingsPrintView, PDF export)
-    [ ] Create settings/tandem.md (Tandem profiles, Control-IQ)
+    [ ] Create settings/tandem.md (profile-based settings, Control-IQ)
+    [ ] Create settings/loop.md (DIY Loop, Tidepool Loop, Twiist - hybrid structure)
+        [ ] Document unique fields: bgSafetyLimit, insulinModel, preset overrides
+        [ ] Document Loop-specific terminology and annotations
+    [ ] Create settings/legacy.md (Animas, Medtronic, Insulet, Microtech)
+        [ ] Document manufacturer terminology variations (ISF vs Sensitivity vs Correction Factor)
+        [ ] Document BG target format variations (target+range, low+high)
+        [ ] Document Medtronic Auto Mode handling
     [ ] Collect settings screenshots (component views, Settings PDF)
     [ ] Update mkdocs.yml navigation with settings section
     [ ] Verify settings domain links work
@@ -711,9 +738,13 @@ After restructuring, these internal links need updating:
     [ ] Link from relevant domains
 
 [ ] 2. Create appendices/calculation-reference.md
-    [ ] Compile all statistical formulas (glucose, insulin, carbs)
-    [ ] Include LaTeX formulas
-    [ ] Document data requirements and edge cases
+    [ ] Create formula index table with cross-links to domain statistics.md files
+    [ ] Include LaTeX formulas for quick reference (not to replace domain docs)
+    [ ] Document common data sufficiency requirements
+    [ ] Document algorithms spanning multiple domains:
+        [ ] TIR percentage reconciliation (stat.js:304-332)
+        [ ] Weight-based dosing formula (stat.js:521-552)
+        [ ] bgExtents calculation (StatUtil.js:138-172)
     [ ] Include implementation references (file:line)
 
 [ ] 3. Create appendices/data-model-complete.md
@@ -786,3 +817,6 @@ This hierarchical documentation approach can be templated for other Tidepool rep
 | Jan 2026 | Added Phase 3: Missing Functionality Documentation |
 | Jan 2026 | Added Phase 4: Comprehensive Reference Documentation |
 | Jan 2026 | Added Phase 5: Infrastructure Documentation (optional) |
+| Jan 2026 | Added Decision 9: Settings by data model pattern (profile vs flat-array) |
+| Jan 2026 | Refined settings domain: added loop.md, legacy.md based on codebase investigation |
+| Jan 2026 | Clarified Phase 4 appendix strategy: cross-reference index, not duplication |
