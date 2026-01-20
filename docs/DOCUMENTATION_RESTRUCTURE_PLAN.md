@@ -1,10 +1,16 @@
 # Documentation Restructure Plan - Hierarchical Domains (Option B)
 
-> **Status**: Phase 2.5 - Hierarchical Restructure ✅ Complete  
-> **Created**: January 2026  
-> **Last Updated**: January 2026
+> **Status**: Phase 2.5 ✅ Complete | Phase 3-5 Planned (Awaiting Implementation)
+> **Created**: January 2026
+> **Last Updated**: January 2026 (comprehensive review + phases 3-5 added)
 
 This document captures the planning process, decisions, and implementation plan for restructuring the `@tidepool/viz` documentation into a hierarchical domain structure.
+
+**Recent Updates (January 2026):**
+- Comprehensive codebase review identified missing documentation
+- Added `settings/` domain to plan (pump configuration)
+- Added health/notes documentation requirements
+- Defined Phase 3-5 with detailed task lists and progress tracking
 
 ---
 
@@ -16,6 +22,7 @@ This document captures the planning process, decisions, and implementation plan 
 - [Final Structure (Option B - Hierarchical)](#final-structure-option-b---hierarchical)
 - [Domain Hierarchy Rationale](#domain-hierarchy-rationale)
 - [Documentation Patterns](#documentation-patterns)
+- [Missing Functionality Identified](#missing-functionality-identified)
 - [Implementation Phases](#implementation-phases)
 - [Migration Details](#migration-details)
 - [Progress Tracking](#progress-tracking)
@@ -122,6 +129,18 @@ The hierarchical structure serves all audiences:
 
 **Rationale**: Carbs are conceptually distinct from insulin delivery, even though carb input informs bolus calculations. Carbs come from food; insulin is medication.
 
+### Decision 7: Pump Settings as Top-Level Domain
+
+**Choice**: Create `settings/` as a top-level domain for pump configuration
+
+**Rationale**: Pump settings (basal schedules, carb ratios, sensitivity, targets) are distinct from data visualization. Settings documentation explains data structure, component usage, and PDF export—separate concerns from therapeutic domains.
+
+### Decision 8: Health/Notes Under Device Events
+
+**Choice**: Document health states and notes as additional `deviceEvent` subtypes
+
+**Rationale**: Health events and notes use `type: 'reportedState'` with `states` or `notes` fields. They display in events zone alongside alarms and other device events. Better documented together with device events than as standalone domain.
+
 ---
 
 ## Final Structure (Option B - Hierarchical)
@@ -185,6 +204,13 @@ docs/
 │   │   ├── rendering.md               # Food tooltip, carb circles on boluses
 │   │   └── screenshots/               # FoodTooltip/
 │   │
+│   ├── settings/                      # TOP-LEVEL DOMAIN
+│   │   ├── index.md                   # Overview, pump settings data model
+│   │   ├── components.md              # Settings components (Tandem, NonTandem)
+│   │   ├── rendering.md               # Settings print/export views
+│   │   ├── tandem.md                  # Tandem-specific settings (profiles)
+│   │   └── screenshots/               # Settings view PDF, component screenshots
+│   │
 │   └── device-events/                 # TOP-LEVEL DOMAIN
 │       ├── index.md                   # Overview of deviceEvent types
 │       ├── alarms.md                  # Alarm types, tooltips
@@ -193,6 +219,7 @@ docs/
 │       ├── overrides.md               # Sleep, Exercise, Pre-Meal modes
 │       ├── calibration.md             # CGM calibration events
 │       ├── time-changes.md            # Clock adjustments, timezone detection
+│       ├── health-notes.md            # Health states, reported notes
 │       └── screenshots/               # AlarmTooltip/, EventTooltip/, etc.
 │
 ├── views/                             # View-specific implementation
@@ -377,6 +404,38 @@ Prose explanation of formula components.
 
 ---
 
+## Missing Functionality Identified
+
+Based on comprehensive review of the codebase vs existing documentation (January 2026), the following functionality is undocumented:
+
+### Critical Gaps (Blocking External Partners)
+
+| Functionality | Evidence | Priority |
+|--------------|-----------|----------|
+| **Pump Settings Domain** | `src/components/settings/`, `src/utils/settings/`, `src/modules/print/SettingsPrintView.js` | **Critical** |
+| **Phase 3 Appendices** | `docs/appendices/` directory is empty | **Critical** |
+
+**Impact**: External partners (Cohort B) lack comprehensive reference material for pump configuration and deep technical documentation.
+
+### Important Gaps (Feature Coverage)
+
+| Functionality | Evidence | Documentation Status |
+|--------------|-----------|---------------------|
+| **Health/Note Events** | `type: 'reportedState'`, `EVENT_HEALTH`, `EVENT_NOTES` constants | Screenshots exist, no documentation |
+| **Dosing Decision Processing** | Extensive `dosingDecision` handling in `DataUtil.js` (800+ lines) | Briefly mentioned only in bolus/data-model.md |
+| **Upload Data Management** | `upload` type processing, `latestPumpUpload` tracking | Not documented |
+
+**Impact**: These features exist in the application but lack comprehensive documentation for developers (Cohort A).
+
+### Recommended Additions to Plan
+
+1. **Create `settings/` domain** - Full pump configuration documentation
+2. **Add `health-notes.md` to `device-events/`** - Document health states and notes
+3. **Expand `bolus/data-model.md`** - Full dosingDecision processing details
+4. **Create `concepts/data-management.md`** - Upload data processing infrastructure (lower priority)
+
+---
+
 ## Implementation Phases
 
 ### Completed Phases
@@ -411,16 +470,50 @@ Prose explanation of formula components.
 | 12 | Update all cross-references | High | ✅ Complete |
 | 13 | Update `mkdocs.yml` navigation | High | ✅ Complete |
 
-### Future Phase
+### Future Phases
 
-#### Phase 3: Comprehensive Reference Documentation
+#### Phase 3: Missing Functionality Documentation
 
-| Task | Status |
-|------|--------|
-| Create `appendices/device-matrix.md` | Not Started |
-| Create `appendices/calculation-reference.md` | Not Started |
-| Create `appendices/data-model-complete.md` | Not Started |
-| Add "Deep Dive" callouts throughout | Not Started |
+**Goal**: Document critical gaps identified in review
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| | **Settings Domain** | | |
+| 1 | Create `settings/index.md` (overview, data model) | Critical | Not Started |
+| 2 | Create `settings/components.md` (Tandem, NonTandem usage) | Critical | Not Started |
+| 3 | Create `settings/rendering.md` (PDF export, PrintView) | Critical | Not Started |
+| 4 | Create `settings/tandem.md` (Tandem-specific profiles) | High | Not Started |
+| 5 | Collect/organize settings screenshots | Medium | Not Started |
+| 6 | Update `mkdocs.yml` navigation | High | Not Started |
+| | **Device Events Expansion** | | |
+| 7 | Create `device-events/health-notes.md` (health states, notes) | Important | Not Started |
+| 8 | Update `device-events/index.md` with health-notes reference | Medium | Not Started |
+| | **Bolus Data Model Expansion** | | |
+| 9 | Expand `bolus/data-model.md` with dosingDecision details | Important | Not Started |
+| 10 | Document dosingDecision associations (wizard, bolus, pumpSettings) | Important | Not Started |
+| 11 | Document IOB calculation from dosingDecision | Medium | Not Started |
+
+#### Phase 4: Comprehensive Reference Documentation (External Partners)
+
+**Goal**: Deep-dive reference material for Cohort B (external partners)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 1 | Create `appendices/device-matrix.md` (comprehensive device comparison) | Critical | Not Started |
+| 2 | Create `appendices/calculation-reference.md` (all formulas consolidated) | Critical | Not Started |
+| 3 | Create `appendices/data-model-complete.md` (field-by-field reference) | Critical | Not Started |
+| 4 | Add "Deep Dive" callouts throughout domains | Medium | Not Started |
+| 5 | Create cross-references from domains to appendices | Medium | Not Started |
+
+#### Phase 5: Infrastructure Documentation (Optional)
+
+**Goal**: Document non-user-facing infrastructure (Cohort A)
+
+| # | Task | Priority | Status |
+|---|------|----------|--------|
+| 1 | Create `concepts/data-management.md` (upload processing) | Low | Not Started |
+| 2 | Document DataUtil caching and indexing strategies | Low | Not Started |
+| 3 | Document device-upload mappings and metadata | Low | Not Started |
 
 ---
 
@@ -529,7 +622,7 @@ After restructuring, these internal links need updating:
 [x] 1. Glucose hierarchy
     [x] Create glucose/cbg/ directory
     [x] Create glucose/cbg/index.md
-    [x] Create glucose/cbg/rendering.md  
+    [x] Create glucose/cbg/rendering.md
     [x] Create glucose/cbg/sensor-usage.md
     [x] Create glucose/smbg/ directory
     [x] Create glucose/smbg/index.md
@@ -578,6 +671,83 @@ After restructuring, these internal links need updating:
     [ ] No orphaned files (manual check recommended)
 ```
 
+### Phase 3 Checklist: Missing Functionality Documentation
+
+```
+[ ] 1. Settings Domain
+    [ ] Create settings/ directory
+    [ ] Create settings/index.md (overview, pumpSettings data structure)
+    [ ] Create settings/components.md (Tandem, NonTandem components)
+    [ ] Create settings/rendering.md (SettingsPrintView, PDF export)
+    [ ] Create settings/tandem.md (Tandem profiles, Control-IQ)
+    [ ] Collect settings screenshots (component views, Settings PDF)
+    [ ] Update mkdocs.yml navigation with settings section
+    [ ] Verify settings domain links work
+
+[ ] 2. Device Events Expansion
+    [ ] Create device-events/health-notes.md
+    [ ] Document health states (reportedState with states array)
+    [ ] Document notes (reportedState with notes field)
+    [ ] Add health-notes screenshots
+    [ ] Update device-events/index.md with health-notes reference
+
+[ ] 3. Bolus Data Model Expansion
+    [ ] Expand bolus/data-model.md with dosingDecision details
+    [ ] Document dosingDecision → wizard association
+    [ ] Document dosingDecision → bolus association
+    [ ] Document dosingDecision → pumpSettings association
+    [ ] Document IOB from dosingDecision.insulinOnBoard
+    [ ] Document dosingDecision.requestedBolus vs delivered
+    [ ] Document dosingDecision.originalFood vs food (Loop)
+```
+
+### Phase 4 Checklist: Comprehensive Reference Documentation
+
+```
+[ ] 1. Create appendices/device-matrix.md
+    [ ] Compile device comparison table (all manufacturers)
+    [ ] Document device-specific features and limitations
+    [ ] Document data type variations by device
+    [ ] Link from relevant domains
+
+[ ] 2. Create appendices/calculation-reference.md
+    [ ] Compile all statistical formulas (glucose, insulin, carbs)
+    [ ] Include LaTeX formulas
+    [ ] Document data requirements and edge cases
+    [ ] Include implementation references (file:line)
+
+[ ] 3. Create appendices/data-model-complete.md
+    [ ] Field-by-field reference for all data types
+    [ ] Document field types and constraints
+    [ ] Document optional vs required fields
+    [ ] Document field relationships (associations)
+
+[ ] 4. Cross-References
+    [ ] Add "Deep Dive" links from domains to appendices
+    [ ] Review all domains for opportunities to link to appendices
+    [ ] Verify all cross-references work
+```
+
+### Phase 5 Checklist: Infrastructure Documentation (Optional)
+
+```
+[ ] 1. Create concepts/data-management.md
+    [ ] Document upload type structure
+    [ ] Document latestPumpUpload selection logic
+    [ ] Document device-upload mappings
+    [ ] Document upload-specific metadata
+
+[ ] 2. Document DataUtil internals
+    [ ] Document crossfilter indexing
+    [ ] Document caching strategies
+    [ ] Document tag system for events
+
+[ ] 3. Document device detection
+    [ ] Document manufacturer identification
+    [ ] Document device model detection
+    [ ] Document feature detection (Loop, automated basals, etc.)
+```
+
 ---
 
 ## Appendix: Applying This Approach to Other Repos
@@ -610,3 +780,9 @@ This hierarchical documentation approach can be templated for other Tidepool rep
 | Jan 2026 | Revised for Option B hierarchical structure |
 | Jan 2026 | Phase 2.5 implementation: glucose, insulin, device-events hierarchies |
 | Jan 2026 | Phase 2.5 completed: cleanup, carbs rendering, navigation updated |
+| Jan 2026 | Comprehensive codebase review: identified missing functionality |
+| Jan 2026 | Added settings domain to plan (Decision 7) |
+| Jan 2026 | Added health/notes documentation requirement (Decision 8) |
+| Jan 2026 | Added Phase 3: Missing Functionality Documentation |
+| Jan 2026 | Added Phase 4: Comprehensive Reference Documentation |
+| Jan 2026 | Added Phase 5: Infrastructure Documentation (optional) |
