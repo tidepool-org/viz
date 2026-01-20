@@ -39,7 +39,43 @@ When implementing new features or adding device-specific logic:
 
 ## Git Commit Messages
 
-After implementing a feature or fix, suggest a commit message in imperative mood (e.g., "Add feature X to support Y").
+**After completing ANY task that modifies files**, provide a commit message suggestion in this format:
+
+```
+<Imperative summary (50 chars or less)>
+
+<Optional body: 2-4 sentences>
+
+<Optional bullet points, one per line with "- ">
+```
+
+**Rules:**
+- Summary: 50 chars max, imperative mood ("Add X", not "Added X")
+- Body: Concise, blank line between sections
+- Bullets: Use "- " prefix for lists
+
+**Examples:**
+
+```
+Add settings domain to documentation plan
+
+Created pump settings documentation with data structure,
+components, rendering, and manufacturer variations.
+
+- Added Design Decision 7
+- Updated final structure
+- Defined Phase 3 tasks
+```
+
+```
+Fix incorrect screenshot paths in component reference
+
+Updated paths from docs/screenshots/ to distributed
+domain folders for correct image display.
+
+- Updated 23 paths
+- Verified locations
+```
 
 ## Git Command Restrictions
 
