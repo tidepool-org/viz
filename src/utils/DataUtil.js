@@ -136,7 +136,6 @@ export class DataUtil {
     return this.addData(data, patientId, returnData);
   };
 
-
   addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
 
