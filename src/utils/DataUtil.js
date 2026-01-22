@@ -109,6 +109,33 @@ export class DataUtil {
     this.endTimer('init total');
   };
 
+  addLocalData = (patientId, returnData = false, localDataSource) => {
+    let data;
+    try {
+      // eslint-disable-next-line global-require, import/no-unresolved
+      data = require('../../local/rawData.json');
+      let dataSource = localDataSource === 'export' ? 'the Tidepool export service' : 'the Tidepool API';
+
+      if (data?.data?.current?.data) {
+        data = _.flatten(_.values(data.data.current.data));
+        dataSource = 'a Tidepool Web console export';
+      } else if (data?.[0].dataset) {
+        data = _.flatten(_.map(data, v => v.data));
+        dataSource = 'a Tidepool Account Tool export';
+      }
+
+      this.log(`Loading dataset provided by ${dataSource}`);
+    } catch (e) {
+      data = { data: [] };
+    }
+
+    if (localDataSource === 'export') {
+      data = _.map(data, d => ({ ...d, duration: d.type === 'basal' && d.duration < 1000 ? d.duration * MS_IN_MIN : d.duration }));
+    }
+
+    return this.addData(data, patientId, returnData);
+  };
+
   addData = (rawData = [], patientId, returnData = false) => {
     this.startTimer('addData');
 
