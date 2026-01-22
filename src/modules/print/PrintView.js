@@ -73,6 +73,7 @@ class PrintView {
     this.bgSource = _.get(this.data, 'metaData.bgSources.current');
     this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
     this.manufacturer = _.get(this.latestPumpUpload, 'manufacturer');
+    this.devices = _.get(this.data, 'metaData.devices', []);
 
     this.stats = {};
     const statsData = _.get(this.data, 'data.current.stats', {});

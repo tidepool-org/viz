@@ -336,6 +336,8 @@ class BasicsPrintView extends PrintView {
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
     this.renderSimpleStat(standardDev);
     this.renderSimpleStat(coefficientOfVariation);
+
+    this.renderDeviceNames();
   }
 
   defineStatColumns(opts = {}) {
@@ -421,6 +423,24 @@ class BasicsPrintView extends PrintView {
     });
 
     this.setFill();
+  }
+
+  renderDeviceNames() {
+    const tableColumns = this.defineStatColumns();
+
+    const deviceString = this.devices.map(d => d.deviceName).join(', ');
+
+    const rows = [{
+      label: 'Devices',
+      value: {
+        text: deviceString,
+      },
+    }]
+
+    this.renderTable(tableColumns, rows, {
+      showHeaders: false,
+      bottomMargin: 14,
+    });
   }
 
   renderHorizontalBarStat(statArg, opts = {}) {

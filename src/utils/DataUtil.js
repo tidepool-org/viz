@@ -1686,6 +1686,7 @@ export class DataUtil {
         const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
         const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
         const deviceModel = _.get(upload, 'deviceModel', '');
+        const deviceName = _.get(upload, 'deviceName', '');
         let label = key;
 
         if (deviceManufacturer || deviceModel) {
@@ -1707,6 +1708,7 @@ export class DataUtil {
           cgm: _.includes(upload.deviceTags, 'cgm'),
           oneMinCgmSampleInterval: isOneMinCGMSampleIntervalDevice(upload),
           id: key,
+          deviceName,
           label,
           pump: _.includes(upload.deviceTags, 'insulin-pump'),
           serialNumber: upload.deviceSerialNumber,
