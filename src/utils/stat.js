@@ -325,8 +325,13 @@ export const reconcileTIRPercentages = (timeInRanges) => {
   // e.g. if sum === 0.99 and high === 0.21, we increase high to 0.22 so that all TIR
   // values add up to 1 (or 100%).
   const diff = 1 - sum;
-  const newHigh = bankersRound((modifiedTimeInRanges.high || 0) + diff, DECIMAL_PRECISION);
-  modifiedTimeInRanges.high = newHigh;
+
+  let newHigh = (modifiedTimeInRanges.high || 0) + diff;
+
+  if (newHigh < 0) newHigh = 0;
+  if (newHigh > 1) newHigh = 1;
+
+  modifiedTimeInRanges.high = bankersRound(newHigh, DECIMAL_PRECISION);
 
   return modifiedTimeInRanges;
 };
@@ -341,6 +346,8 @@ export const reconcileTIRPercentages = (timeInRanges) => {
  * @returns {Object} a modified stat TIR datum so the percentages add to 100%
  */
 export const reconcileTIRDatumValues = (statTIRDatum) => {
+  console.log('@@@ reconcileTIRDatumValues', statTIRDatum)
+
   // For each of the individual range datums, calculate its percentage of the total
   const ranges = {};
   const total = statTIRDatum.data?.total?.value;
