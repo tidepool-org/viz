@@ -346,8 +346,6 @@ export const reconcileTIRPercentages = (timeInRanges) => {
  * @returns {Object} a modified stat TIR datum so the percentages add to 100%
  */
 export const reconcileTIRDatumValues = (statTIRDatum) => {
-  console.log('@@@ reconcileTIRDatumValues', statTIRDatum)
-
   // For each of the individual range datums, calculate its percentage of the total
   const ranges = {};
   const total = statTIRDatum.data?.total?.value;
