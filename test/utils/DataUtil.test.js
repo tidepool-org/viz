@@ -3746,7 +3746,7 @@ describe('DataUtil', () => {
       expect(dataUtil.latestPumpUpload.settings.uploadId).to.equal('upload-A');
     });
 
-    it('should not select pumpSettings more than 15 minutes later than the latest upload', () => {
+    it('should not select pumpSettings with timestamps more than 15 minutes later than the latest upload', () => {
       const uploadA = { ...uploadData[0], uploadId: 'upload-A' };
 
       const basal = {
@@ -3793,7 +3793,7 @@ describe('DataUtil', () => {
       expect(dataUtil.latestPumpUpload.settings.id).to.equal('ps-old');
     });
 
-    it('should select pumpSettings less than 15 minutes later than the latest upload', () => {
+    it('should select pumpSettings with timestamps up to 15 minutes later than the latest upload', () => {
       const uploadA = { ...uploadData[0], uploadId: 'upload-A' };
 
       const basal = {
