@@ -427,8 +427,10 @@ class BasicsPrintView extends PrintView {
 
   renderDeviceNames() {
     // Build Content Body
-    let deviceNames = this.devices.map(d => d.deviceName)
-                                  .filter(s => !!s); // TODO: Account for blank names or unknown device names
+    const deviceNames = _.chain(this.devices)
+      .map(d => d.deviceName)
+      .filter(s => !!s)
+      .value(); // TODO: Account for blank names or unknown device names
 
     const rows = [{ label: deviceNames.join('\n\n') }];
 
@@ -436,7 +438,7 @@ class BasicsPrintView extends PrintView {
     const columnWidth = this.getActiveColumnWidth();
     const textHeight = this.doc.heightOfString(' ');
 
-    const additionalLineCount = deviceNames.reduce((count, deviceName) => {
+    const additionalLineCount = _.reduce(deviceNames, (count, deviceName) => {
       // Long names will line-break, so we need to add additional height for each line-break
       const nameWidth = this.doc.widthOfString(deviceName);
       const columnBodyWidth = columnWidth - 10;
