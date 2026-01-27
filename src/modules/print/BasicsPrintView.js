@@ -426,25 +426,29 @@ class BasicsPrintView extends PrintView {
   }
 
   renderDeviceNames() {
+    // Build Content Body
+    let deviceNames = this.devices.map(d => d.deviceName)
+                                  .filter(s => !!s); // TODO: Account for blank names or unknown device names
+
+    const rows = [{ label: deviceNames.join('\n\n') }];
+
+    // Calculate Table Height
     const columnWidth = this.getActiveColumnWidth();
-
-    let deviceList = this.devices.map(d => d.deviceName)
-                                 .filter(s => !!s);
-
-    const extraLineCount = deviceList.reduce((count, deviceName) => {
-      const nameWidth = this.doc.widthOfString(deviceName);
-      const columnBodyWidth = columnWidth - 10;
-      const extraLinesToAdd = Math.floor(nameWidth / columnBodyWidth);
-
-      return count + extraLinesToAdd;
-    }, 0);
-
     const textHeight = this.doc.heightOfString(' ');
 
-    const rowHeight = (
+    const additionalLineCount = deviceNames.reduce((count, deviceName) => {
+      // Long names will line-break, so we need to add additional height for each line-break
+      const nameWidth = this.doc.widthOfString(deviceName);
+      const columnBodyWidth = columnWidth - 10;
+      const linesToAdd = Math.floor(nameWidth / columnBodyWidth);
+
+      return count + linesToAdd;
+    }, 0);
+
+    const contentHeight = (
       textHeight
-      + textHeight * deviceList.length * 2 // Multiply by 2 to account for double-spacing
-      + textHeight * extraLineCount
+      + textHeight * deviceNames.length * 2 // Multiply by 2 to account for double-spacing
+      + textHeight * additionalLineCount
     );
 
     const tableColumns = [
@@ -453,7 +457,7 @@ class BasicsPrintView extends PrintView {
         cache: false,
         renderer: this.renderCustomTextCell,
         width: columnWidth - this.tableSettings.borderWidth,
-        height: rowHeight,
+        height: contentHeight,
         fontSize: this.defaultFontSize,
         font: this.boldFont,
         align: 'left',
@@ -461,11 +465,6 @@ class BasicsPrintView extends PrintView {
         header: 'Devices'
       },
     ];
-
-    const deviceNameString = deviceList.join('\n\n')
-
-    // TODO: Account for blank names or unknown device names
-    const rows = [{ label: deviceNameString }];
 
     this.renderTable(tableColumns, rows, {
       showHeaders: true,
