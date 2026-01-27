@@ -426,19 +426,49 @@ class BasicsPrintView extends PrintView {
   }
 
   renderDeviceNames() {
-    const tableColumns = this.defineStatColumns();
+    const columnWidth = this.getActiveColumnWidth();
 
-    const deviceString = this.devices.map(d => d.deviceName).join(', ');
+    let deviceList = this.devices.map(d => d.deviceName)
+                                 .filter(s => !!s);
 
-    const rows = [{
-      label: 'Devices',
-      value: {
-        text: deviceString,
+    const extraLineCount = deviceList.reduce((count, deviceName) => {
+      const nameWidth = this.doc.widthOfString(deviceName);
+      const columnBodyWidth = columnWidth - 10;
+      const extraLinesToAdd = Math.floor(nameWidth / columnBodyWidth);
+
+      return count + extraLinesToAdd;
+    }, 0);
+
+    const textHeight = this.doc.heightOfString(' ');
+
+    const rowHeight = (
+      textHeight
+      + textHeight * deviceList.length * 2 // Multiply by 2 to account for double-spacing
+      + textHeight * extraLineCount
+    );
+
+    const tableColumns = [
+      {
+        id: 'label',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: columnWidth - this.tableSettings.borderWidth,
+        height: rowHeight,
+        fontSize: this.defaultFontSize,
+        font: this.boldFont,
+        align: 'left',
+        border: 'TBLR',
+        header: 'Devices'
       },
-    }]
+    ];
+
+    const deviceNameString = deviceList.join('\n\n')
+
+    // TODO: Account for blank names or unknown device names
+    const rows = [{ label: deviceNameString }];
 
     this.renderTable(tableColumns, rows, {
-      showHeaders: false,
+      showHeaders: true,
       bottomMargin: 14,
     });
   }
