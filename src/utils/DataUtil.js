@@ -1481,8 +1481,8 @@ export class DataUtil {
         );
       } else {
         // Clock drift on user's device may cause pumpSettings datum to have LATER timestamp than upload
-        // datum. The maximum time devation that Uploader allows between user device and tidepool server
-        // time is 15 minutes, so we search 15 minutes into the future for the pumpSettings datum
+        // datum. The maximum time deviation that the Uploader allows between the user's device and Tidepool
+        // server time is 15 minutes, so we search up to 15 minutes into the future for the pumpSettings datum
         const UPLOADER_TIME_DEVIATION_TOLERANCE = 15 * MS_IN_MIN;
 
         pumpSettingsForUpload = _.filter(
