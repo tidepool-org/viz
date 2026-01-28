@@ -691,7 +691,14 @@ class PrintView {
     ev.cancel = true; // eslint-disable-line no-param-reassign
   }
 
-  onPageAdded(tb) {
+  onPageAdded(tb, row) {
+    const tableLabel = row._renderedContent?.data?.label;
+    const tableData = row._renderedContent?.data?.value;
+
+    const isPageBreakAtTableStart = !_.isNil(tableLabel) && _.isNil(tableData);
+
+    if (isPageBreakAtTableStart) return; // prevent double header on new page
+
     tb.addHeader();
   }
 
