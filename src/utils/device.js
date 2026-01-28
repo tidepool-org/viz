@@ -172,13 +172,11 @@ export function getPumpVocabulary(manufacturer) {
  * @returns {String|null} Return render-friendly name for device or null if unable
  */
 export function getDeviceName(device) {
-  if (!!device.deviceName && device.deviceName !== 'Unknown') {
-    return device.deviceName;
-  }
+  if (!!device.deviceName && device.deviceName !== 'Unknown') return device.deviceName;
 
-  if (!!device.label) {
-    return device.label;
-  }
+  if (!!device.label) return device.label;
+
+  if (!!device.id) return device.id;
 
   return null;
 }
