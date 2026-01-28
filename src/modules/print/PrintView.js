@@ -692,8 +692,8 @@ class PrintView {
   }
 
   onPageAdded(tb, row) {
-    const tableLabel = row._renderedContent?.data?.label;
-    const tableData = row._renderedContent?.data?.value;
+    const tableLabel = _.get(row, '_renderedContent.data.label', undefined);
+    const tableData = _.get(row, '_renderedContent.data.value', undefined);
 
     const isPageBreakAtTableStart = !_.isNil(tableLabel) && _.isNil(tableData);
 

@@ -31,7 +31,7 @@ import {
 } from '../../utils/basics/data';
 
 import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
-import { getPumpVocabulary } from '../../utils/device';
+import { getDeviceName, getPumpVocabulary } from '../../utils/device';
 
 import {
   AUTOMATED_DELIVERY,
@@ -428,13 +428,7 @@ class BasicsPrintView extends PrintView {
   renderDeviceNames() {
     // Build Content Body
     const deviceNames = _.chain(this.devices)
-      .map(d => {
-        if (!!d.deviceName && d.deviceName !== 'Unknown') return d.deviceName;
-
-        if (!!d.label) return d.label;
-
-        return null;
-      })
+      .map(d => getDeviceName(d))
       .compact()
       .uniq()
       .value();

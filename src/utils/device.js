@@ -165,3 +165,20 @@ export function getPumpVocabulary(manufacturer) {
     vocabulary.default
   );
 }
+
+/**
+ * Get a pump terminology vocabulary, with default fallbacks for missing keys
+ * @param {String} device a device object from the DataUtil instance "devices" property
+ * @returns {String|null} Get render-friendly name for device
+ */
+export function getDeviceName(device) {
+  if (!!device.deviceName && device.deviceName !== 'Unknown') {
+    return device.deviceName;
+  }
+
+  if (!!device.label) {
+    return device.label;
+  }
+
+  return null;
+}
