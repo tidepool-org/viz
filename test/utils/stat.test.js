@@ -857,22 +857,24 @@ describe('stat', () => {
     });
 
     describe('does not adjust high below 0% (edge case)', () => {
-      const timeInRanges = {
-        veryLow: 0.069767,
-        low: 0.465116,
-        target: 0.465116,
-        high: 0,
-        veryHigh: 0,
-      };
+      it('when using standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.069767,
+          low: 0.465116,
+          target: 0.465116,
+          high: 0,
+          veryHigh: 0,
+        };
 
-      // The algorithm would be expected to subtract 1% from High to keep the Total at 100%,
-      // but we can't go below 0%, so the Total in this case will be 101%
-      expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
-        veryLow: 0.07,
-        low: 0.47,
-        target: 0.47,
-        high: 0,
-        veryHigh: 0,
+        // The algorithm would be expected to subtract 1% from High to keep the Total at 100%,
+        // but we can't go below 0%, so the Total in this case will be 101%
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.07,
+          low: 0.47,
+          target: 0.47,
+          high: 0,
+          veryHigh: 0,
+        });
       });
     });
   });
