@@ -60,7 +60,7 @@
     "i18next": "23.6.0",
     "intl": "1.2.5",
     "intl-pluralrules": "2.0.1",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "memorystream": "0.3.1",
     "moment": "2.29.4",
     "moment-timezone": "0.5.43",
@@ -175,7 +175,7 @@
   "resolutions": {
     "highlight.js": "10.4.1",
     "jackspeak": "2.1.1",
-    "lodash": "4.17.21",
+    "lodash": "4.17.23",
     "prismjs": "1.29.0"
   }
 }
