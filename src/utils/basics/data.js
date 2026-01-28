@@ -19,7 +19,16 @@ import _ from 'lodash';
 import moment from 'moment';
 import i18next from 'i18next';
 
-import { getPumpVocabulary, getUppercasedManufacturer, isDIYLoop, isLoop, isTidepoolLoop, isTwiistLoop } from '../device';
+import {
+  getPumpVocabulary,
+  getUppercasedManufacturer,
+  isDIYLoop,
+  isLoop,
+  isTidepoolLoop,
+  isTwiistLoop,
+  getDeviceName,
+} from '../device';
+
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -47,7 +56,6 @@ import {
 
 import TextUtil from '../text/TextUtil';
 import { statsText } from '../stat';
-import { getDeviceName } from '../device';
 
 const t = i18next.t.bind(i18next);
 
