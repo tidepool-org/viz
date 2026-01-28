@@ -21,6 +21,7 @@ import i18next from 'i18next';
 import TextUtil from '../text/TextUtil';
 import { statsText } from '../stat';
 import { reshapeBgClassesToBgBounds } from '../bloodglucose';
+import { getDeviceName } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -125,7 +126,7 @@ export function trendsText(patient, data, stats, chartPrefs, copyAsTextMetadata)
   if (devices.length) {
     const textLines = [
       `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, ({ id, label }) => label || id),
+      ..._.map(devices, d => getDeviceName(d)),
     ];
 
     _.each(textLines, line => {

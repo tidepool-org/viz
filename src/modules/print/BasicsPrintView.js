@@ -31,7 +31,7 @@ import {
 } from '../../utils/basics/data';
 
 import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
-import { getPumpVocabulary } from '../../utils/device';
+import { getDeviceName, getPumpVocabulary } from '../../utils/device';
 
 import {
   AUTOMATED_DELIVERY,
@@ -336,6 +336,8 @@ class BasicsPrintView extends PrintView {
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
     this.renderSimpleStat(standardDev);
     this.renderSimpleStat(coefficientOfVariation);
+
+    this.renderDeviceNames();
   }
 
   defineStatColumns(opts = {}) {
@@ -421,6 +423,58 @@ class BasicsPrintView extends PrintView {
     });
 
     this.setFill();
+  }
+
+  renderDeviceNames() {
+    // Build Content Body
+    const deviceNames = _.chain(this.devices)
+      .map(d => getDeviceName(d))
+      .compact()
+      .uniq()
+      .value();
+
+    if (!deviceNames.length) return;
+
+    const rows = [{ label: deviceNames.join('\n\n') }];
+
+    // Calculate Table Height
+    const columnWidth = this.getActiveColumnWidth();
+    const textHeight = this.doc.heightOfString(' ');
+
+    const additionalLineCount = _.reduce(deviceNames, (count, deviceName) => {
+      // Long names will line-break, so we need to add additional height for each line-break
+      const nameWidth = this.doc.widthOfString(deviceName);
+      const columnBodyWidth = columnWidth - 10;
+      const linesToAdd = Math.floor(nameWidth / columnBodyWidth);
+
+      return count + linesToAdd;
+    }, 0);
+
+    const contentHeight = (
+      textHeight
+      + textHeight * deviceNames.length * 2 // Multiply by 2 to account for double-spacing
+      + textHeight * additionalLineCount
+    );
+
+    const tableColumns = [
+      {
+        id: 'label',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: columnWidth - this.tableSettings.borderWidth,
+        height: contentHeight,
+        fontSize: this.defaultFontSize,
+        font: this.boldFont,
+        align: 'left',
+        border: 'TBLR',
+        header: 'Devices'
+      },
+    ];
+
+    this.renderTable(tableColumns, rows, {
+      showHeaders: true,
+      bottomMargin: 14,
+    });
   }
 
   renderHorizontalBarStat(statArg, opts = {}) {

@@ -242,6 +242,7 @@ describe('DataUtil', () => {
       deviceSerialNumber: 'sn-0',
       deviceTime: '2018-01-01T00:00:00',
       deviceId: 'tandemCIQ12345',
+      deviceName: 'Tandem CIQ',
       uploadId: 'upload-0',
       ...useRawData,
     }),
@@ -252,6 +253,7 @@ describe('DataUtil', () => {
       deviceModel: 'dash',
       deviceSerialNumber: 'sn-1',
       deviceTime: '2018-01-02T00:00:00',
+      deviceName: 'Insulet Dash',
       uploadId: 'upload-1',
       ...useRawData,
     }),
@@ -262,6 +264,7 @@ describe('DataUtil', () => {
       deviceModel: '1780',
       deviceSerialNumber: 'sn-2',
       deviceTime: '2018-02-02T00:00:00',
+      deviceName: 'Medtronic Pumpname',
       uploadId: 'upload-2',
       ...useRawData,
     }),
@@ -270,6 +273,7 @@ describe('DataUtil', () => {
       deviceTime: '2018-02-03T00:00:00',
       uploadId: 'upload-3',
       client: { name: 'org.tidepool.Loop' },
+      deviceName: 'Tidepool Loop DeviceName',
       ...useRawData,
     }),
     new Types.Upload({
@@ -277,6 +281,7 @@ describe('DataUtil', () => {
       deviceTime: '2018-02-04T00:00:00',
       uploadId: 'upload-4',
       client: { name: 'com.loopkit.Loop' },
+      deviceName: 'Tidepool Loop DeviceName',
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -4200,6 +4205,7 @@ describe('DataUtil', () => {
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
+          deviceName: 'Tandem CIQ',
           pump: true,
           serialNumber: 'sn-0',
         },
@@ -4207,7 +4213,13 @@ describe('DataUtil', () => {
     });
 
     it('should exclude a non-Control-IQ device upload if a Control-IQ upload exists', () => {
-      initDataUtil([{ ...uploadData[0], deviceId: 'tandem12345' }]);
+      const nonCIQUploadDatum = _.cloneDeep(uploadData[0]);
+      nonCIQUploadDatum.id = 'nonCIQUploadId';
+      nonCIQUploadDatum.deviceId = 'tandem12345';
+      nonCIQUploadDatum.deviceName = 'Tandem Non-CIQ';
+      nonCIQUploadDatum.uploadId = 'upload-1';
+
+      initDataUtil([nonCIQUploadDatum]);
       delete(dataUtil.devices);
       delete(dataUtil.excludedDevices);
 
@@ -4220,6 +4232,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandem12345',
+          deviceName: 'Tandem Non-CIQ',
           label: 'Tandem 12345',
           pump: true,
           serialNumber: 'sn-0',
@@ -4238,6 +4251,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandem12345',
+          deviceName: 'Tandem Non-CIQ',
           label: 'Tandem 12345',
           pump: true,
           serialNumber: 'sn-0',
@@ -4247,6 +4261,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
+          deviceName: 'Tandem CIQ',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
           serialNumber: 'sn-0',
@@ -4266,6 +4281,7 @@ describe('DataUtil', () => {
           'bgm',
           'cgm'
         ],
+        deviceName: 'Abbott DeviceName',
       }]);
 
       delete(dataUtil.devices);
@@ -4278,6 +4294,7 @@ describe('DataUtil', () => {
           oneMinCgmSampleInterval: false,
           id: 'MyAbbott123',
           label: 'FreeStyle Libre (from LibreView)',
+          deviceName: 'Abbott DeviceName',
           pump: false,
           serialNumber: undefined
         },
@@ -4299,6 +4316,7 @@ describe('DataUtil', () => {
           'cgm',
           'insulin-pump',
         ],
+        deviceName: 'Sequel DeviceName',
       }]);
 
       delete(dataUtil.devices);
@@ -4310,6 +4328,7 @@ describe('DataUtil', () => {
           cgm: true,
           oneMinCgmSampleInterval: true,
           id: 'MySequel123',
+          deviceName: 'Sequel DeviceName',
           label: 'twiist',
           pump: true,
           serialNumber: undefined
@@ -4326,6 +4345,7 @@ describe('DataUtil', () => {
         deviceTags: [
           'cgm'
         ],
+        deviceName: 'Dexcom DeviceName',
       }]);
 
       delete(dataUtil.devices);
@@ -4338,6 +4358,7 @@ describe('DataUtil', () => {
           oneMinCgmSampleInterval: false,
           id: 'MyDexcom123',
           label: 'Dexcom API',
+          deviceName: 'Dexcom DeviceName',
           pump: false,
           serialNumber: undefined
         },
@@ -5569,7 +5590,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
@@ -5604,7 +5625,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 

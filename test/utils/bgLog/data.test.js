@@ -48,6 +48,7 @@ describe('[bgLog] data utils', () => {
       timePrefs,
       metaData: {
         devices: [
+          { id: 'deviceWithFriendlyName', deviceName: 'Friendly Name', label: 'Hidden Label' },
           { id: 'deviceWithLabelId', label: 'Device With Label' },
           { id: 'deviceWithoutLabelId' },
           { id: 'deviceNotUsedInCurrentDataId' },
@@ -55,6 +56,7 @@ describe('[bgLog] data utils', () => {
         matchedDevices: {
           deviceWithLabelId: true,
           deviceWithoutLabelId: true,
+          deviceWithFriendlyName: true,
         },
       },
     };
@@ -136,6 +138,7 @@ describe('[bgLog] data utils', () => {
     it('should output devices found in the current data set used for the report', () => {
       utils.bgLogText(patient, data, stats);
       sinon.assert.calledWith(textUtilStub.buildTextLine, '\n\nDevices Uploaded');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Friendly Name');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
       sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');

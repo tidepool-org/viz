@@ -73,6 +73,7 @@ class PrintView {
     this.bgSource = _.get(this.data, 'metaData.bgSources.current');
     this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
     this.manufacturer = _.get(this.latestPumpUpload, 'manufacturer');
+    this.devices = _.get(this.data, 'metaData.devices', []);
 
     this.stats = {};
     const statsData = _.get(this.data, 'data.current.stats', {});
@@ -690,7 +691,14 @@ class PrintView {
     ev.cancel = true; // eslint-disable-line no-param-reassign
   }
 
-  onPageAdded(tb) {
+  onPageAdded(tb, row) {
+    const tableLabel = _.get(row, '_renderedContent.data.label', undefined);
+    const tableData = _.get(row, '_renderedContent.data.value', undefined);
+
+    const isPageBreakAtTableStart = !_.isNil(tableLabel) && _.isNil(tableData);
+
+    if (isPageBreakAtTableStart) return; // prevent double header on new page
+
     tb.addHeader();
   }
 
