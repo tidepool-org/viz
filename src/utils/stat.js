@@ -300,6 +300,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
  *
  * @returns {Object} an object with values corrected to sum up to 100%
  * - if the values do not sum up to 100%, the 'high' range is adjusted to compensate
+ * - in specific edge cases, the values may still sum up to 101%
  */
 export const reconcileTIRPercentages = (timeInRanges) => {
   const DECIMAL_PRECISION = 2;
