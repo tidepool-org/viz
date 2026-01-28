@@ -144,6 +144,7 @@ describe('[trends] data utils', () => {
       timePrefs,
       metaData: {
         devices: [
+          { id: 'deviceWithNiceName', deviceName: 'Display-Friendly Name', label: 'Hidden Label', pump: true, cgm: false, bgm: false },
           { id: 'deviceWithLabelId', label: 'Device With Label', pump: true, cgm: false, bgm: false },
           { id: 'deviceWithoutLabelId', pump: false, cgm: true, bgm: false },
           { id: 'deviceNotUsedInCurrentDataId', pump: false, cgm: true, bgm: false },
@@ -152,6 +153,7 @@ describe('[trends] data utils', () => {
         matchedDevices: {
           deviceWithLabelId: true,
           deviceWithoutLabelId: true,
+          deviceWithNiceName: true,
         },
       },
       query: { bgSource: 'cbg' },
@@ -189,7 +191,7 @@ describe('[trends] data utils', () => {
 
     it('should return formatted text for Trends data', () => {
       const result = utils.trendsText(patient, data, stats, chartPrefs);
-      expect(result).to.equal('Trends Header, Trends Dates, Trends Line, Stats Text, Trends Line, Trends Line, Trends Line, ');
+      expect(result).to.equal('Trends Header, Trends Dates, Trends Line, Stats Text, Trends Line, Trends Line, Trends Line, Trends Line, ');
     });
 
     it('should build the document header section', () => {
@@ -230,6 +232,7 @@ describe('[trends] data utils', () => {
     it('should output devices found in the current data set used for the report', () => {
       utils.trendsText(patient, data, stats, chartPrefs);
       sinon.assert.calledWith(textUtilStub.buildTextLine, '\nDevices Uploaded');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Display-Friendly Name');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
       sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');
