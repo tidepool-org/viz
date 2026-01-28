@@ -4167,8 +4167,10 @@ describe('DataUtil', () => {
 
     it('should exclude a non-Control-IQ device upload if a Control-IQ upload exists', () => {
       const nonCIQUploadDatum = _.cloneDeep(uploadData[0]);
+      nonCIQUploadDatum.id = 'nonCIQUploadId';
       nonCIQUploadDatum.deviceId = 'tandem12345';
       nonCIQUploadDatum.deviceName = 'Tandem Non-CIQ';
+      nonCIQUploadDatum.uploadId = 'upload-1';
 
       initDataUtil([nonCIQUploadDatum]);
       delete(dataUtil.devices);
@@ -4212,7 +4214,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
-          deviceName: 'Tandem Non-CIQ',
+          deviceName: 'Tandem CIQ',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
           serialNumber: 'sn-0',
