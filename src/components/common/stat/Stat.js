@@ -295,7 +295,7 @@ class Stat extends PureComponent {
   renderStatLegend = () => {
     const items = _.map(
       this.props.data.data,
-      datum => _.pick(datum, ['id', 'legendTitle'])
+      datum => _.pick(datum, ['id', 'legendTitle', 'pattern', 'annotations'])
     );
 
     if (!this.props.reverseLegendOrder) {
@@ -519,7 +519,7 @@ class Stat extends PureComponent {
     let padding;
     let total;
 
-    const chartData = _.cloneDeep(data.data);
+    const chartData = _.reject(_.cloneDeep(data.data), d => (d.hideEmpty && d.value === -1));
 
     const chartProps = this.getDefaultChartProps(props);
 
@@ -589,11 +589,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: ({ datum }) => this.getDatumColor(datum),
+              fill: ({ datum }) => this.getDatumFill(datum, true),
               width: () => barWidth,
             },
             labels: {
-              fill: ({ datum }) => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({ datum }) => this.getDatumFill(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
@@ -713,11 +713,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: ({ datum }) => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
+              fill: ({ datum }) => (datum._y === 0 ? 'transparent' : this.getDatumFill(datum, true)),
               width: () => barWidth,
             },
             labels: {
-              fill: ({ datum }) => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({ datum }) => this.getDatumFill(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
@@ -763,7 +763,7 @@ class Stat extends PureComponent {
     return this.getFormattedDataByDataPath(path, format);
   };
 
-  getDatumColor = datum => {
+  getDatumFill = (datum, usePattern) => {
     const { hoveredDatumIndex, isDisabled } = this.state;
 
     const isMuted = this.props.muteOthersOnHover
@@ -774,6 +774,8 @@ class Stat extends PureComponent {
 
     if (isDisabled || isMuted) {
       color = isDisabled ? colors.statDisabled : colors.muted;
+    } else if (usePattern && datum?.pattern?.id) {
+      return `url(#${datum.pattern.id})`;
     }
 
     return color;

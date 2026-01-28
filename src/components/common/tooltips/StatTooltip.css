@@ -6,6 +6,10 @@
   font-weight: medium;
 }
 
+.row:last-child {
+  margin-bottom: -2px;
+}
+
 .message {
   composes: row;
   color: var(--stat--default);
@@ -21,7 +25,7 @@
 
 .divider {
   height: 2px;
-  margin: 10px -12px;
+  margin: 9px -12px;
   background-color: var(--stat--default);
 }
 

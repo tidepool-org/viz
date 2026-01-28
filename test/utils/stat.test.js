@@ -111,7 +111,7 @@ describe('stat', () => {
         timeInAuto: 'getTimeInAutoData',
         timeInOverride: 'getTimeInOverrideData',
         timeInRange: 'getTimeInRangeData',
-        totalInsulin: 'getBasalBolusData',
+        totalInsulin: 'getInsulinData',
       });
     });
   });
@@ -852,6 +852,28 @@ describe('stat', () => {
           low: 0.10,
           target: 0.58,
           high: 0.30, // value increased to ensure sum is 100%
+        });
+      });
+    });
+
+    describe('does not adjust high below 0% (edge case)', () => {
+      it('when using standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.069767,
+          low: 0.465116,
+          target: 0.465116,
+          high: 0,
+          veryHigh: 0,
+        };
+
+        // The algorithm would be expected to subtract 1% from High to keep the Total at 100%,
+        // but we can't go below 0%, so the Total in this case will be 101%
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.07,
+          low: 0.47,
+          target: 0.47,
+          high: 0,
+          veryHigh: 0,
         });
       });
     });
@@ -1674,8 +1696,8 @@ describe('stat', () => {
         {
           id: 'preprandial',
           value: 0,
-          title: 'Time In Premeal',
-          legendTitle: 'Premeal',
+          title: 'Time In Pre-Meal',
+          legendTitle: 'Pre-Meal',
         },
       ]);
 
@@ -1797,11 +1819,24 @@ describe('stat', () => {
       const data = {
         bolus: 9,
         basal: 6,
+        insulin: 3,
       };
 
       const statData = stat.getStatData(data, commonStats.totalInsulin, opts);
 
       expect(statData.data).to.eql([
+        {
+          id: 'insulin',
+          pattern: {
+            id: 'diagonalStripes',
+            color: 'rgba(0,0,0,0.15)',
+          },
+          value: 3,
+          title: 'Other Insulin',
+          legendTitle: 'Other',
+          annotations: ['**Other:** Insulin logged from a source outside of a connected pump - for example, a manual injection or inhaled dose.'],
+          hideEmpty: true,
+        },
         {
           id: 'bolus',
           value: 9,
@@ -1816,7 +1851,7 @@ describe('stat', () => {
         },
       ]);
 
-      expect(statData.total).to.eql({ id: 'insulin', value: 15 });
+      expect(statData.total).to.eql({ id: 'insulin', value: 18 });
 
       expect(statData.dataPaths).to.eql({
         summary: 'total',

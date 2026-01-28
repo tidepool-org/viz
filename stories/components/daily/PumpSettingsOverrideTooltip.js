@@ -81,7 +81,7 @@ storiesOf('PumpSettingsOverrideTooltip', module)
       <PumpSettingsOverrideTooltip {...props} override={physicalActivity} />
     </div>
   ))
-  .add('Premeal', () => (
+  .add('Pre-Meal', () => (
     <div>
       {refDiv}
       <PumpSettingsOverrideTooltip {...props} tail={false} side="top" override={preprandial} />

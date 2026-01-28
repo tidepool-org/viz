@@ -25,7 +25,7 @@ export const utils = {
  *
  * @return {String}  Trends data as a formatted string
  */
-export function bgLogText(patient, data, stats) {
+export function bgLogText(patient, data, stats, copyAsTextMetadata) {
   const {
     bgPrefs,
     data: {
@@ -41,7 +41,7 @@ export function bgLogText(patient, data, stats) {
     bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
   let bgLogString = textUtil.buildDocumentHeader('BG Log');
   bgLogString += textUtil.buildDocumentDates();
   bgLogString += utils.statsText(stats, textUtil, bgPrefs);

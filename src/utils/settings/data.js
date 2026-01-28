@@ -28,6 +28,7 @@ import {
   INSULIN_DURATION,
   PHYSICAL_ACTIVITY,
   PREPRANDIAL,
+  INSULIN_MODEL_LABELS,
 } from '../../utils/constants';
 
 const t = i18next.t.bind(i18next);
@@ -437,16 +438,8 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   ];
 
   if (isLoop(settings)) {
-    const insulinModelLabels = {
-      rapidAdult: t('Rapid-Acting - Adults'),
-      rapidChild: t('Rapid Acting - Children'),
-      fiasp: t('Fiasp'),
-      lyumjev: t('Lyumjev'),
-      afrezza: t('Afrezza'),
-    };
-
     const insulinModel = {
-      label: insulinModelLabels[settings?.insulinModel?.modelType] || settings?.insulinModel?.modelType || t('Unknown'),
+      label: INSULIN_MODEL_LABELS[settings?.insulinModel?.modelType] || settings?.insulinModel?.modelType || t('Unknown'),
       peakMinutes: _.isFinite(settings?.insulinModel?.actionPeakOffset) ? settings.insulinModel.actionPeakOffset / 60 : null,
     };
 

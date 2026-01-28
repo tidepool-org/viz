@@ -123,6 +123,7 @@ describe('basics data utils', () => {
           'interrupted',
           'override',
           'underride',
+          'manual',
         ]);
       });
     });
@@ -236,7 +237,7 @@ describe('basics data utils', () => {
 
       it('should add a one-button bolus selector', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
-        expect(result.boluses.dimensions[7].key).to.equal('oneButton');
+        expect(result.boluses.dimensions[8].key).to.equal('oneButton');
       });
 
       it('should set `selectorIndex` for underrides to render directly after overrides', () => {

@@ -99,7 +99,7 @@ export const statFetchMethods = {
   [commonStats.timeInAuto]: 'getTimeInAutoData',
   [commonStats.timeInOverride]: 'getTimeInOverrideData',
   [commonStats.timeInRange]: 'getTimeInRangeData',
-  [commonStats.totalInsulin]: 'getBasalBolusData',
+  [commonStats.totalInsulin]: 'getInsulinData',
 };
 
 export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
@@ -300,6 +300,7 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
  *
  * @returns {Object} an object with values corrected to sum up to 100%
  * - if the values do not sum up to 100%, the 'high' range is adjusted to compensate
+ * - in specific edge cases, the values may still sum up to 101%
  */
 export const reconcileTIRPercentages = (timeInRanges) => {
   const DECIMAL_PRECISION = 2;
@@ -325,8 +326,13 @@ export const reconcileTIRPercentages = (timeInRanges) => {
   // e.g. if sum === 0.99 and high === 0.21, we increase high to 0.22 so that all TIR
   // values add up to 1 (or 100%).
   const diff = 1 - sum;
-  const newHigh = bankersRound((modifiedTimeInRanges.high || 0) + diff, DECIMAL_PRECISION);
-  modifiedTimeInRanges.high = newHigh;
+
+  let newHigh = (modifiedTimeInRanges.high || 0) + diff;
+
+  if (newHigh < 0) newHigh = 0;
+  if (newHigh > 1) newHigh = 1;
+
+  modifiedTimeInRanges.high = bankersRound(newHigh, DECIMAL_PRECISION);
 
   return modifiedTimeInRanges;
 };
@@ -774,6 +780,18 @@ export const getStatData = (data, type, opts = {}) => {
 
     case commonStats.totalInsulin:
       statData.data = [
+        {
+          id: 'insulin',
+          pattern: {
+            id: 'diagonalStripes',
+            color: 'rgba(0,0,0,0.15)',
+          },
+          value: ensureNumeric(data.insulin),
+          title: t('Other Insulin'),
+          legendTitle: t('Other'),
+          annotations: [t('**Other:** Insulin logged from a source outside of a connected pump - for example, a manual injection or inhaled dose.')],
+          hideEmpty: true,
+        },
         {
           id: 'bolus',
           value: ensureNumeric(data.bolus),

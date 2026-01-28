@@ -19,10 +19,16 @@ describe('TextUtil', () => {
 
   const timePrefs = { timezoneName: 'US/Eastern', timezoneAware: true };
 
+  const copyAsTextMetadata = {
+    diagnosisTypeLabel: 'Type 3c',
+    patientTags: [{ id: '5', name: 'Yankee' }, { id: '6', name: 'Zulu' }],
+    sites: [{ id: '2', name: 'Bravo' }, { id: '1', name: 'Alpha' }],
+  };
+
   let textUtil;
 
   beforeEach(() => {
-    textUtil = new TextUtil(patient, endpoints, timePrefs);
+    textUtil = new TextUtil(patient, endpoints, timePrefs, copyAsTextMetadata);
   });
 
   describe('constructor', () => {
@@ -54,6 +60,13 @@ describe('TextUtil', () => {
       expect(result).to.include('Date of birth: Jan 1, 2000');
     });
 
+    it('should print the patient\'s diabetes type', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Diabetes Type', value: 'Type 3c' });
+      expect(result).to.include('Diabetes Type: Type 3c');
+    });
+
     it('should print the patient\'s diagnosis date', () => {
       sinon.spy(textUtil, 'buildTextLine');
       const result = textUtil.buildDocumentHeader();
@@ -66,6 +79,20 @@ describe('TextUtil', () => {
       const result = textUtil.buildDocumentHeader();
       sinon.assert.calledWith(textUtil.buildTextLine, { label: 'MRN', value: 'mrn123' });
       expect(result).to.include('MRN: mrn123');
+    });
+
+    it('should print the patient\'s tags', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Patient Tags', value: 'Yankee, Zulu' });
+      expect(result).to.include('Patient Tags: Yankee, Zulu');
+    });
+
+    it('should print the patient\'s sites', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Clinic Sites', value: 'Alpha, Bravo' });
+      expect(result).to.include('Clinic Sites: Alpha, Bravo');
     });
 
     context('patient profile is missing fields', () => {

@@ -48,6 +48,11 @@ const loop = {
   },
 };
 
+const dexcom = {
+  ...standard,
+  tags: { dexcom: true, manual: true },
+};
+
 const loopTimeOfEntry = {
   ...loop,
   payload: {
@@ -66,10 +71,16 @@ const loopEdited = {
 
 storiesOf('FoodTooltip', module)
   .addDecorator(BackgroundDecorator)
-  .add('standard', () => (
+  .add('Standard', () => (
     <div>
       {refDiv}
       <FoodTooltip {...props} food={standard} />
+    </div>
+  ))
+  .add('Dexcom', () => (
+    <div>
+      {refDiv}
+      <FoodTooltip {...props} food={dexcom} />
     </div>
   ))
   .add('Loop', () => (

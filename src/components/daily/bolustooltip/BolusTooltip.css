@@ -33,6 +33,10 @@
   line-height: 20px;
 }
 
+.row:last-child {
+  margin-bottom: -2px;
+}
+
 .label {
   flex-grow: 1;
 }
@@ -127,8 +131,16 @@
   composes: row;
 }
 
+.source {
+  composes: row;
+}
+
+.actingType {
+  composes: row;
+}
+
 .divider {
   background-color: var(--bolus);
   height: 3px;
-  margin: 5px -10px;
+  margin: 9px -12px;
 }
