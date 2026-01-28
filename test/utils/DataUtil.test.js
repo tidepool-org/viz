@@ -3765,7 +3765,7 @@ describe('DataUtil', () => {
       const pumpSettingsNew = {
         type: 'pumpSettings',
         uploadId: 'upload-A',
-        time: basal.time + (16 * 60 * 1000), // 16 minutes
+        time: basal.time + (16 * MS_IN_MIN), // 16 minutes
         id: 'ps-new',
       };
 
@@ -3812,7 +3812,7 @@ describe('DataUtil', () => {
       const pumpSettingsNew = {
         type: 'pumpSettings',
         uploadId: 'upload-A',
-        time: basal.time + (12 * 60 * 1000), // 12 minutes
+        time: basal.time + (12 * MS_IN_MIN), // 12 minutes
         id: 'ps-new',
       };
 
