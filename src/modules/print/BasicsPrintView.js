@@ -430,7 +430,9 @@ class BasicsPrintView extends PrintView {
     const deviceNames = _.chain(this.devices)
       .map(d => d.deviceName)
       .filter(s => !!s)
-      .value(); // TODO: Account for blank names or unknown device names
+      .value(); // TODO: What to do in case of unknown device names
+
+    if (!deviceNames.length) return; // TODO: What to do in case of no devices
 
     const rows = [{ label: deviceNames.join('\n\n') }];
 
