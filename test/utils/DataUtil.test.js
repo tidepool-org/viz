@@ -3751,7 +3751,7 @@ describe('DataUtil', () => {
       expect(dataUtil.latestPumpUpload.settings.uploadId).to.equal('upload-A');
     });
 
-    it('should not select pumpSettings more recent than the latest pump data used to determine the upload', () => {
+    it('should not select pumpSettings with timestamps more than 15 minutes later than the latest upload', () => {
       const uploadA = { ...uploadData[0], uploadId: 'upload-A' };
 
       const basal = {
@@ -3770,7 +3770,7 @@ describe('DataUtil', () => {
       const pumpSettingsNew = {
         type: 'pumpSettings',
         uploadId: 'upload-A',
-        time: basal.time + 1000, // newer than basal
+        time: basal.time + (16 * MS_IN_MIN), // 16 minutes
         id: 'ps-new',
       };
 
@@ -3796,6 +3796,53 @@ describe('DataUtil', () => {
       expect(dataUtil.latestPumpUpload).to.be.an('object');
       expect(dataUtil.latestPumpUpload.settings).to.be.an('object');
       expect(dataUtil.latestPumpUpload.settings.id).to.equal('ps-old');
+    });
+
+    it('should select pumpSettings with timestamps up to 15 minutes later than the latest upload', () => {
+      const uploadA = { ...uploadData[0], uploadId: 'upload-A' };
+
+      const basal = {
+        type: 'basal',
+        time: Date.parse(uploadA.deviceTime) + 1000,
+        uploadId: 'upload-A',
+      };
+
+      const pumpSettingsOld = {
+        type: 'pumpSettings',
+        uploadId: 'upload-A',
+        time: basal.time - 1000,
+        id: 'ps-old',
+      };
+
+      const pumpSettingsNew = {
+        type: 'pumpSettings',
+        uploadId: 'upload-A',
+        time: basal.time + (12 * MS_IN_MIN), // 12 minutes
+        id: 'ps-new',
+      };
+
+      initDataUtil([
+        uploadA,
+        basal,
+        pumpSettingsOld,
+        pumpSettingsNew,
+      ]);
+
+      dataUtil.pumpSettingsDatumsByIdMap = {
+        [pumpSettingsOld.id]: pumpSettingsOld,
+        [pumpSettingsNew.id]: pumpSettingsNew,
+      };
+
+      dataUtil.latestDatumByType = {
+        ...dataUtil.latestDatumByType,
+        basal,
+      };
+
+      dataUtil.setLatestPumpUpload();
+
+      expect(dataUtil.latestPumpUpload).to.be.an('object');
+      expect(dataUtil.latestPumpUpload.settings).to.be.an('object');
+      expect(dataUtil.latestPumpUpload.settings.id).to.equal('ps-new');
     });
 
     it('should fall back to traditional pump upload logic when no pumpSettings data is available', () => {
