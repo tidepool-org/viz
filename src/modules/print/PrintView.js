@@ -510,6 +510,12 @@ class PrintView {
       subText = note = null;
     }
 
+    if (!draw) {
+      // In pre-draw phase, if `text` exists, return it so the lib can use
+      // it to measure what the height of the containing box should be
+      return text ? text : ' ';
+    }
+
     if (draw) {
       const alignKey = isHeader ? 'headerAlign' : 'align';
       const align = _.get(column, alignKey, 'left');
@@ -572,11 +578,9 @@ class PrintView {
             width,
           });
       }
-
-      return ' ';
     }
 
-    return text ? text : ' ';
+    return ' ';
   }
 
   renderTableHeading(heading = {}, opts = {}) {
