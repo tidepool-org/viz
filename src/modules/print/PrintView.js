@@ -511,9 +511,10 @@ class PrintView {
     }
 
     if (!draw) {
-      // In pre-draw phase, if `text` exists, return it so the lib can use
-      // it to measure what the height of the containing box should be
-      return text ? text : ' ';
+      // In pre-draw phase, we use the text to measure height for the container
+      if (data?.hasDynamicHeight && text) return text;
+
+      return ' ';
     }
 
     if (draw) {

@@ -436,7 +436,7 @@ class BasicsPrintView extends PrintView {
     if (!deviceNames.length) return;
 
     const labelText = deviceNames.join('\n\n').concat('\n\n');
-    const rows = [{ text: labelText }];
+    const rows = [{ text: labelText, hasDynamicHeight: true }];
 
     const columnWidth = this.getActiveColumnWidth();
 
