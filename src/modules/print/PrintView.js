@@ -499,18 +499,18 @@ class PrintView {
   }
 
   renderCustomTextCell(tb, data, draw, column, pos, padding, isHeader) {
+    let {
+      text = '',
+      subText = '',
+      note,
+    } = _.get(data, column.id, column.header || {});
+
+    if ((!isHeader && _.isString(data[column.id])) || _.isString(column.header)) {
+      text = isHeader ? column.header : data[column.id];
+      subText = note = null;
+    }
+
     if (draw) {
-      let {
-        text = '',
-        subText = '',
-        note,
-      } = _.get(data, column.id, column.header || {});
-
-      if ((!isHeader && _.isString(data[column.id])) || _.isString(column.header)) {
-        text = isHeader ? column.header : data[column.id];
-        subText = note = null;
-      }
-
       const alignKey = isHeader ? 'headerAlign' : 'align';
       const align = _.get(column, alignKey, 'left');
 
@@ -572,9 +572,11 @@ class PrintView {
             width,
           });
       }
+
+      return ' ';
     }
 
-    return ' ';
+    return text ? text : ' ';
   }
 
   renderTableHeading(heading = {}, opts = {}) {

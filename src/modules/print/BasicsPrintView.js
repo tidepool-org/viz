@@ -435,39 +435,22 @@ class BasicsPrintView extends PrintView {
 
     if (!deviceNames.length) return;
 
-    const rows = [{ label: deviceNames.join('\n\n') }];
+    const labelText = deviceNames.join('\n\n').concat('\n\n');
+    const rows = [{ text: labelText }];
 
-    // Calculate Table Height
     const columnWidth = this.getActiveColumnWidth();
-    const textHeight = this.doc.heightOfString(' ');
-
-    const additionalLineCount = _.reduce(deviceNames, (count, deviceName) => {
-      // Long names will line-break, so we need to add additional height for each line-break
-      const nameWidth = this.doc.widthOfString(deviceName);
-      const columnBodyWidth = columnWidth - 10;
-      const linesToAdd = Math.floor(nameWidth / columnBodyWidth);
-
-      return count + linesToAdd;
-    }, 0);
-
-    const contentHeight = (
-      textHeight
-      + textHeight * deviceNames.length * 2 // Multiply by 2 to account for double-spacing
-      + textHeight * additionalLineCount
-    );
 
     const tableColumns = [
       {
-        id: 'label',
+        id: 'text',
         cache: false,
         renderer: this.renderCustomTextCell,
         width: columnWidth - this.tableSettings.borderWidth,
-        height: contentHeight,
         fontSize: this.defaultFontSize,
         font: this.boldFont,
         align: 'left',
         border: 'TBLR',
-        header: 'Devices'
+        header: t('Devices'),
       },
     ];
 
