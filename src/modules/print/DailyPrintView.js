@@ -1106,12 +1106,12 @@ class DailyPrintView extends PrintView {
     bolusDetailPositions,
     bolusDetailWidths,
     bolusScale,
-    data: { bolus: insulinEvents },
+    data: { bolus: bolusData, insulin: insulinData },
   }) {
     this.doc.font(this.font)
       .fontSize(this.smallFontSize)
       .fillColor('black');
-
+    const insulinEvents = [...bolusData || [], ...insulinData || []];
     const topOfBolusDetails = bolusScale.range()[0] + 2;
 
     const grouped = _.groupBy(
