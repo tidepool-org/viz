@@ -448,8 +448,13 @@ describe('device utility functions', () => {
       expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha A1');
     });
 
+    it('returns the device label if device friendly name is `Unknown`', () => {
+      const deviceObject = { deviceName: 'Unknown', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha A1');
+    });
+
     it('returns the device id if label doesn\'t exist', () => {
-      const deviceObject = { id: 'cool-c-a1' };
+      const deviceObject = { deviceName: 'Cooltec Alpha Super Ultra', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
       expect(device.getDeviceName(deviceObject)).to.equal('cool-c-a1');
     });
 
