@@ -1111,7 +1111,7 @@ class DailyPrintView extends PrintView {
     this.doc.font(this.font)
       .fontSize(this.smallFontSize)
       .fillColor('black');
-    const insulinEvents = [...bolusData || [], ...insulinData || []];
+    const insulinEvents = [...(bolusData || []), ...(insulinData || [])];
     const topOfBolusDetails = bolusScale.range()[0] + 2;
 
     const grouped = _.groupBy(
