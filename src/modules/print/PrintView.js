@@ -34,6 +34,7 @@ import {
 
 import { getStatDefinition } from '../../utils/stat';
 import { getPatientFullName } from '../../utils/misc';
+import { getDeviceName } from '../../utils/device';
 
 import {
   DPI,
@@ -854,6 +855,74 @@ class PrintView {
       .stroke('black');
 
     this.dividerWidth = padding * 2 + 1;
+  }
+
+  getDeviceNames() {
+    return _.chain(this.devices)
+      .map(d => getDeviceName(d))
+      .compact()
+      .uniq()
+      .value();
+  }
+
+  getDeviceNamesHeaderContent() {
+    const deviceNames = this.getDeviceNames();
+
+    if (!deviceNames.length) return null;
+
+    const label = t('Devices');
+    const devicesText = deviceNames.join(', ');
+
+    return { label, devicesText };
+  }
+
+  renderDeviceNamesHeader() {
+    const content = this.getDeviceNamesHeaderContent();
+    if (!content) return;
+
+    const { label, devicesText } = content;
+
+    this.doc.font(this.font).fontSize(this.defaultFontSize);
+    const labelWidth = this.doc.widthOfString(label) + 10;
+
+    const rows = [{ label, text: devicesText, hasDynamicHeight: true }];
+
+    const tableColumns = [
+      {
+        id: 'label',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: labelWidth,
+        fontSize: this.defaultFontSize,
+        font: this.boldFont,
+        align: 'left',
+        border: 'B',
+        borderWidth: 1,
+        borderColor: 'black',
+        padding: [0, 0, 7, 0]
+      },
+      {
+        id: 'text',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: this.width - labelWidth,
+        fontSize: this.defaultFontSize,
+        font: this.font,
+        align: 'left',
+        border: 'B',
+        borderWidth: 1,
+        borderColor: 'black',
+        padding: [0, 0, 7, 0]
+      },
+    ];
+
+    this.doc.x = this.margins.left;
+    this.doc.y = this.chartArea.topEdge;
+
+    this.renderTable(tableColumns, rows, {
+      showHeaders: false,
+      bottomMargin: 10,
+    });
   }
 
   renderTitle(opts = {}) {

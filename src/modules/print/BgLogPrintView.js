@@ -112,62 +112,9 @@ class BgLogPrintView extends PrintView {
   }
 
   render() {
-    this.renderDeviceNames();
+    this.renderDeviceNamesHeader();
     this.renderBGChart();
     this.renderSummaryTable();
-  }
-
-  renderDeviceNames() {
-    // Build Content Body
-    const deviceNames = _.chain(this.devices)
-      .map(d => getDeviceName(d))
-      .compact()
-      .uniq()
-      .value();
-
-    if (!deviceNames.length) return;
-
-    const label = t('Devices');
-    const devicesText = deviceNames.join(', ');
-
-    const rows = [{ label: label, text: devicesText, hasDynamicHeight: true }];
-
-    this.doc.font(this.font).fontSize(this.defaultFontSize);
-    const labelWidth = this.doc.widthOfString(label) + 10;
-
-    const tableColumns = [
-      {
-        id: 'label',
-        cache: false,
-        renderer: this.renderCustomTextCell,
-        width: labelWidth,
-        fontSize: this.defaultFontSize,
-        font: this.font,
-        align: 'left',
-        border: 'B',
-        borderWidth: 1,
-        borderColor: 'black',
-        padding: [0, 0, 7, 0]
-      },
-      {
-        id: 'text',
-        cache: false,
-        renderer: this.renderCustomTextCell,
-        width: this.chartArea.width - labelWidth,
-        fontSize: this.defaultFontSize,
-        font: this.boldFont,
-        align: 'left',
-        border: 'B',
-        borderWidth: 1,
-        borderColor: 'black',
-        padding: [0, 0, 7, 0]
-      },
-    ];
-
-    this.renderTable(tableColumns, rows, {
-      showHeaders: false,
-      bottomMargin: 10,
-    });
   }
 
   renderBGChart() {

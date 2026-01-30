@@ -28,7 +28,7 @@ import PrintView from './PrintView';
 import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
-import { getPumpVocabulary } from '../../utils/device';
+import { getDeviceName, getPumpVocabulary } from '../../utils/device';
 import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
   classifyBgValue,
@@ -226,6 +226,8 @@ class DailyPrintView extends PrintView {
     this.setHeaderSize().setFooterSize().calculateChartMinimums(this.chartArea);
 
     // calculate heights and place charts in preparation for rendering
+    this.deviceNamesHeaderHeight = this.calculateDeviceNamesHeaderHeight();
+
     _.each(selectedDates, (date) => {
       this.calculateDateChartHeight(this.chartsByDate[date]);
     });
@@ -418,6 +420,26 @@ class DailyPrintView extends PrintView {
     return this;
   }
 
+  calculateDeviceNamesHeaderHeight() {
+    const content = this.getDeviceNamesHeaderContent();
+    if (!content) return 0;
+
+    const { label, devicesText } = content;
+
+    this.doc.font(this.font).fontSize(this.defaultFontSize);
+    const labelWidth = this.doc.widthOfString(label) + 10;
+    const textColumnWidth = this.width - labelWidth;
+
+    // Calculate height of the text content
+    const textHeight = this.doc.heightOfString(devicesText, { width: textColumnWidth });
+
+    // Add padding: [top, right, bottom, left] = [0, 0, 7, 0] + bottomMargin of 10
+    const bottomPadding = 7;
+    const bottomMargin = 10;
+
+    return textHeight + bottomPadding + bottomMargin;
+  }
+
   makeScales(dateChart) {
     const {
       notesEtc,
@@ -460,6 +482,10 @@ class DailyPrintView extends PrintView {
 
   placeChartsOnPage() {
     const { topEdge, bottomEdge } = this.chartArea;
+
+    const hasDeviceNamesHeader = this.currentPageIndex === -1; // Rendered only on first page
+    const contentStartY = hasDeviceNamesHeader ? topEdge + this.deviceNamesHeaderHeight : topEdge;
+
     let totalChartHeight = 0;
     const dates = _.keys(this.chartsByDate);
     const startingIndexThisPage = this.chartIndex;
@@ -468,7 +494,7 @@ class DailyPrintView extends PrintView {
     for (let i = startingIndexThisPage; i < limit; ++i) {
       const thisChartHeight = this.chartsByDate[dates[i]].chartHeight;
       const nextTotalHeight = totalChartHeight + thisChartHeight + this.chartMinimums.paddingBelow;
-      if (nextTotalHeight > (bottomEdge - topEdge)) {
+      if (nextTotalHeight > (bottomEdge - contentStartY)) {
         this.chartIndex = i;
         break;
       }
@@ -481,8 +507,8 @@ class DailyPrintView extends PrintView {
       const chart = this.chartsByDate[dates[i]];
       chart.page = this.currentPageIndex + 1;
       if (i === startingIndexThisPage) {
-        chart.topEdge = this.chartArea.topEdge;
-        chart.bottomEdge = this.chartArea.topEdge + chart.chartHeight;
+        chart.topEdge = contentStartY;
+        chart.bottomEdge = contentStartY + chart.chartHeight;
       } else {
         chart.topEdge =
           this.chartsByDate[dates[i - 1]].bottomEdge + this.chartMinimums.paddingBelow;
@@ -529,6 +555,9 @@ class DailyPrintView extends PrintView {
   }
 
   render() {
+    this.goToPage(0);
+    this.renderDeviceNamesHeader();
+
     _.each(this.chartsByDate, (dateChart) => {
       this.goToPage(dateChart.page);
       this.renderSummary(dateChart)
