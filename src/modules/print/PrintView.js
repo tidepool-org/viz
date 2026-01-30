@@ -512,7 +512,12 @@ class PrintView {
 
     if (!draw) {
       // In pre-draw phase, we use the text to measure height for the container
-      if (data?.hasDynamicHeight && text) return text;
+      if (data?.hasDynamicHeight && text) {
+        const { font = this.font, fontSize = this.defaultFontSize } = column;
+        this.doc.font(font).fontSize(fontSize);
+
+        return text;
+      }
 
       return ' ';
     }
@@ -774,11 +779,14 @@ class PrintView {
   }
 
   onCellBorderAdd(tb, column) {
-    this.doc.lineWidth(this.tableSettings.borderWidth);
+    const borderWidth = _.get(column, 'borderWidth', this.tableSettings.borderWidth);
+
+    this.doc.lineWidth(borderWidth);
     this.setStroke(_.get(column, 'borderColor', 'black'), 1);
   }
 
   onCellBorderAdded() {
+    this.doc.lineWidth(this.tableSettings.borderWidth);
     this.setStroke();
   }
 
