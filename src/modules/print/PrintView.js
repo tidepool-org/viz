@@ -876,6 +876,26 @@ class PrintView {
     return { label, devicesText };
   }
 
+  calculateDeviceNamesHeaderHeight() {
+    const content = this.getDeviceNamesHeaderContent();
+    if (!content) return 0;
+
+    const { label, devicesText } = content;
+
+    this.doc.font(this.font).fontSize(this.defaultFontSize);
+    const labelWidth = this.doc.widthOfString(label) + 10;
+    const textColumnWidth = this.width - labelWidth;
+
+    // Calculate height of the text content
+    const textHeight = this.doc.heightOfString(devicesText, { width: textColumnWidth });
+
+    // Add padding: [top, right, bottom, left] = [0, 0, 7, 0] + bottomMargin of 10
+    const bottomPadding = 7;
+    const bottomMargin = 10;
+
+    return textHeight + bottomPadding + bottomMargin;
+  }
+
   renderDeviceNamesHeader() {
     const content = this.getDeviceNamesHeaderContent();
     if (!content) return;

@@ -53,6 +53,8 @@ class BgLogPrintView extends PrintView {
 
   newPage() {
     super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
+    this.renderDeviceNamesHeader();
+    this.doc.y = this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight();
   }
 
   getBGLabelYOffset() {
@@ -111,8 +113,12 @@ class BgLogPrintView extends PrintView {
     return row;
   }
 
+  setNewPageTablePosition() {
+    super.setNewPageTablePosition();
+    this.doc.y = this.table.pos.y = this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight();
+  }
+
   render() {
-    this.renderDeviceNamesHeader();
     this.renderBGChart();
     this.renderSummaryTable();
   }
