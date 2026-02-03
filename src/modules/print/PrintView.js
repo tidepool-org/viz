@@ -943,6 +943,8 @@ class PrintView {
       showHeaders: false,
       bottomMargin: 10,
     });
+
+    this.doc.y = this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight();
   }
 
   renderTitle(opts = {}) {

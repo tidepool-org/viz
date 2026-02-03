@@ -461,10 +461,13 @@ class DailyPrintView extends PrintView {
   }
 
   placeChartsOnPage() {
-    const { topEdge, bottomEdge } = this.chartArea;
+    const { bottomEdge } = this.chartArea;
 
     const hasDeviceNamesHeader = this.currentPageIndex === -1; // Rendered only on first page
-    const contentStartY = hasDeviceNamesHeader ? topEdge + this.deviceNamesHeaderHeight : topEdge;
+
+    const topEdge = hasDeviceNamesHeader
+      ? this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight()
+      : this.chartArea.topEdge;
 
     let totalChartHeight = 0;
     const dates = _.keys(this.chartsByDate);
@@ -474,7 +477,7 @@ class DailyPrintView extends PrintView {
     for (let i = startingIndexThisPage; i < limit; ++i) {
       const thisChartHeight = this.chartsByDate[dates[i]].chartHeight;
       const nextTotalHeight = totalChartHeight + thisChartHeight + this.chartMinimums.paddingBelow;
-      if (nextTotalHeight > (bottomEdge - contentStartY)) {
+      if (nextTotalHeight > (bottomEdge - topEdge)) {
         this.chartIndex = i;
         break;
       }
@@ -487,8 +490,8 @@ class DailyPrintView extends PrintView {
       const chart = this.chartsByDate[dates[i]];
       chart.page = this.currentPageIndex + 1;
       if (i === startingIndexThisPage) {
-        chart.topEdge = contentStartY;
-        chart.bottomEdge = contentStartY + chart.chartHeight;
+        chart.topEdge = topEdge;
+        chart.bottomEdge = topEdge + chart.chartHeight;
       } else {
         chart.topEdge =
           this.chartsByDate[dates[i - 1]].bottomEdge + this.chartMinimums.paddingBelow;
