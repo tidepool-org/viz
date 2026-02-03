@@ -160,7 +160,7 @@ class PrintView {
       topEdge: this.margins.top,
     };
 
-    this.deviceNamesHeader = this.getDeviceNamesHeader();
+    this.deviceNamesHeader = null; // if needed, call this.generateDeviceNamesHeader();
 
     this.chartArea.width = this.rightEdge - this.chartArea.leftEdge;
     this.initialChartArea = _.clone(this.chartArea);
@@ -860,7 +860,7 @@ class PrintView {
     this.dividerWidth = padding * 2 + 1;
   }
 
-  getDeviceNamesHeader() {
+  generateDeviceNamesHeader() {
     const deviceNames = getDeviceNames(this.devices);
     let label = deviceNames.length === 1 ? t('Device') : t('Devices');
     let content = deviceNames.join(', ');
@@ -887,6 +887,10 @@ class PrintView {
   }
 
   renderDeviceNamesHeader() {
+    if (!this.deviceNamesHeader) {
+      this.deviceNamesHeader = this.generateDeviceNamesHeader();
+    }
+
     const { label, content } = this.deviceNamesHeader;
 
     if (!content) return;

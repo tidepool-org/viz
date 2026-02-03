@@ -229,6 +229,8 @@ class DailyPrintView extends PrintView {
       this.calculateDateChartHeight(this.chartsByDate[date]);
     });
 
+    this.deviceNamesHeader = this.generateDeviceNamesHeader();
+
     while (this.chartsPlaced < selectedDates.length) {
       this.placeChartsOnPage();
     }

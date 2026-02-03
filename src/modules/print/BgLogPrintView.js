@@ -48,6 +48,8 @@ class BgLogPrintView extends PrintView {
     this.getBgChartColumns = this.getBgChartColumns.bind(this);
     this.getBgChartRow = this.getBgChartRow.bind(this);
     this.renderBgCell = this.renderBgCell.bind(this);
+
+    this.deviceNamesHeader = this.generateDeviceNamesHeader();
   }
 
   newPage() {
