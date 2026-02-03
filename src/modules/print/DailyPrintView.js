@@ -458,13 +458,12 @@ class DailyPrintView extends PrintView {
   }
 
   placeChartsOnPage() {
-    const { bottomEdge } = this.chartArea;
-
     const hasDeviceNamesHeader = this.currentPageIndex === -1; // Rendered only on first page
 
-    const topEdge = hasDeviceNamesHeader
-      ? this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight()
-      : this.chartArea.topEdge;
+    const bottomEdge = this.chartArea.bottomEdge;
+    let topEdge = this.chartArea.topEdge;
+
+    if (hasDeviceNamesHeader) topEdge += this.deviceNamesHeader.height;
 
     let totalChartHeight = 0;
     const dates = _.keys(this.chartsByDate);

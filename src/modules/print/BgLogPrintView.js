@@ -114,7 +114,7 @@ class BgLogPrintView extends PrintView {
 
   setNewPageTablePosition() {
     super.setNewPageTablePosition();
-    this.doc.y = this.table.pos.y = this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight();
+    this.doc.y = this.table.pos.y = this.chartArea.topEdge + this.deviceNamesHeader.height;
   }
 
   render() {

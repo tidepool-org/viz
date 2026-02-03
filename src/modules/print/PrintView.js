@@ -159,6 +159,8 @@ class PrintView {
       topEdge: this.margins.top,
     };
 
+    this.deviceNamesHeader = this.getDeviceNamesHeader();
+
     this.chartArea.width = this.rightEdge - this.chartArea.leftEdge;
     this.initialChartArea = _.clone(this.chartArea);
 
@@ -865,47 +867,42 @@ class PrintView {
       .value();
   }
 
-  getDeviceNamesHeaderContent() {
+  getDeviceNamesHeader() {
     const deviceNames = this.getDeviceNames();
 
-    if (!deviceNames.length) return null;
-
     const label = t('Devices');
-    const devicesText = deviceNames.join(', ');
-
-    return { label, devicesText };
-  }
-
-  calculateDeviceNamesHeaderHeight() {
-    const content = this.getDeviceNamesHeaderContent();
-    if (!content) return 0;
-
-    const { label, devicesText } = content;
+    const content = deviceNames.join(', ');
 
     this.doc.font(this.font).fontSize(this.defaultFontSize);
+
     const labelWidth = this.doc.widthOfString(label) + 10;
     const textColumnWidth = this.width - labelWidth;
 
-    // Calculate height of the text content
-    const textHeight = this.doc.heightOfString(devicesText, { width: textColumnWidth });
+    const textHeight = this.doc.heightOfString(content, { width: textColumnWidth });
+    const height = textHeight + 7 + 10; // textHeight + bottomPadding + bottomMargin;
 
-    // Add padding: [top, right, bottom, left] = [0, 0, 7, 0] + bottomMargin of 10
-    const bottomPadding = 7;
-    const bottomMargin = 10;
+    if (!deviceNames.length) return {
+      label: '',
+      content: '',
+      height: 0,
+    }
 
-    return textHeight + bottomPadding + bottomMargin;
+    return {
+      label,
+      content,
+      height,
+    }
   }
 
   renderDeviceNamesHeader() {
-    const content = this.getDeviceNamesHeaderContent();
-    if (!content) return;
+    const { label, content } = this.deviceNamesHeader;
 
-    const { label, devicesText } = content;
+    if (!content) return;
 
     this.doc.font(this.font).fontSize(this.defaultFontSize);
     const labelWidth = this.doc.widthOfString(label) + 10;
 
-    const rows = [{ label, text: devicesText, hasDynamicHeight: true }];
+    const rows = [{ label, text: content, hasDynamicHeight: true }];
 
     const tableColumns = [
       {
@@ -944,7 +941,7 @@ class PrintView {
       bottomMargin: 10,
     });
 
-    this.doc.y = this.chartArea.topEdge + this.calculateDeviceNamesHeaderHeight();
+    this.doc.y = this.chartArea.topEdge + this.deviceNamesHeader.height;
   }
 
   renderTitle(opts = {}) {
