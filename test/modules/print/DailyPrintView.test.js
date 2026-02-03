@@ -445,7 +445,8 @@ describe('DailyPrintView', () => {
 
       Renderer.render();
 
-      sinon.assert.callCount(Renderer.goToPage, numCharts);
+      const expectedCallCount = numCharts + 1; // +1 for rendering of header
+      sinon.assert.callCount(Renderer.goToPage, expectedCallCount);
 
       sinon.assert.callCount(Renderer.renderSummary, numCharts);
       sinon.assert.callCount(Renderer.renderXAxes, numCharts);

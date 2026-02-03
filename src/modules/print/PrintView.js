@@ -890,7 +890,7 @@ class PrintView {
       label,
       content,
       height,
-    }
+    };
   }
 
   renderDeviceNamesHeader() {

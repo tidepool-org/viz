@@ -454,7 +454,7 @@ describe('device utility functions', () => {
     });
 
     it('returns the device id if label doesn\'t exist', () => {
-      const deviceObject = { deviceName: 'Cooltec Alpha Super Ultra', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      const deviceObject = { deviceName: 'Unknown', id: 'cool-c-a1' };
       expect(device.getDeviceName(deviceObject)).to.equal('cool-c-a1');
     });
 
