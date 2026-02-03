@@ -31,7 +31,7 @@ import {
 } from '../../utils/basics/data';
 
 import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
-import { getPumpVocabulary } from '../../utils/device';
+import { getDeviceNames, getPumpVocabulary } from '../../utils/device';
 
 import {
   AUTOMATED_DELIVERY,
@@ -336,6 +336,8 @@ class BasicsPrintView extends PrintView {
     if (glucoseManagementIndicator) this.renderSimpleStat(glucoseManagementIndicator);
     this.renderSimpleStat(standardDev);
     this.renderSimpleStat(coefficientOfVariation);
+
+    this.renderDeviceNames();
   }
 
   defineStatColumns(opts = {}) {
@@ -421,6 +423,37 @@ class BasicsPrintView extends PrintView {
     });
 
     this.setFill();
+  }
+
+  renderDeviceNames() {
+    // Build Content Body
+    const deviceNames = getDeviceNames(this.devices);
+
+    if (!deviceNames.length) return;
+
+    const labelText = deviceNames.join('\n\n').concat('\n\n');
+    const rows = [{ text: labelText, hasDynamicHeight: true }];
+
+    const columnWidth = this.getActiveColumnWidth();
+
+    const tableColumns = [
+      {
+        id: 'text',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: columnWidth - this.tableSettings.borderWidth,
+        fontSize: this.defaultFontSize,
+        font: this.boldFont,
+        align: 'left',
+        border: 'TBLR',
+        header: t('Devices'),
+      },
+    ];
+
+    this.renderTable(tableColumns, rows, {
+      showHeaders: true,
+      bottomMargin: 14,
+    });
   }
 
   renderHorizontalBarStat(statArg, opts = {}) {

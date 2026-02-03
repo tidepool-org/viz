@@ -48,6 +48,8 @@ import {
   SMALL_FONT_SIZE,
 } from './utils/constants';
 
+import { getDeviceNames } from '../../utils/device';
+
 import { BG_COLORS, MS_IN_MIN } from '../../utils/constants';
 import './registerStaticFiles';
 
@@ -73,6 +75,7 @@ class PrintView {
     this.bgSource = _.get(this.data, 'metaData.bgSources.current');
     this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
     this.manufacturer = _.get(this.latestPumpUpload, 'manufacturer');
+    this.devices = _.get(this.data, 'metaData.devices', []);
 
     this.stats = {};
     const statsData = _.get(this.data, 'data.current.stats', {});
@@ -156,6 +159,8 @@ class PrintView {
       leftEdge: this.margins.left,
       topEdge: this.margins.top,
     };
+
+    this.deviceNamesHeader = null; // if needed, call this.generateDeviceNamesHeader();
 
     this.chartArea.width = this.rightEdge - this.chartArea.leftEdge;
     this.initialChartArea = _.clone(this.chartArea);
@@ -498,18 +503,30 @@ class PrintView {
   }
 
   renderCustomTextCell(tb, data, draw, column, pos, padding, isHeader) {
-    if (draw) {
-      let {
-        text = '',
-        subText = '',
-        note,
-      } = _.get(data, column.id, column.header || {});
+    let {
+      text = '',
+      subText = '',
+      note,
+    } = _.get(data, column.id, column.header || {});
 
-      if ((!isHeader && _.isString(data[column.id])) || _.isString(column.header)) {
-        text = isHeader ? column.header : data[column.id];
-        subText = note = null;
+    if ((!isHeader && _.isString(data[column.id])) || _.isString(column.header)) {
+      text = isHeader ? column.header : data[column.id];
+      subText = note = null;
+    }
+
+    if (!draw) {
+      // In pre-draw phase, we use the text to measure height for the container
+      if (data?.hasDynamicHeight && text) {
+        const { font = this.font, fontSize = this.defaultFontSize } = column;
+        this.doc.font(font).fontSize(fontSize);
+
+        return text;
       }
 
+      return ' ';
+    }
+
+    if (draw) {
       const alignKey = isHeader ? 'headerAlign' : 'align';
       const align = _.get(column, alignKey, 'left');
 
@@ -690,7 +707,14 @@ class PrintView {
     ev.cancel = true; // eslint-disable-line no-param-reassign
   }
 
-  onPageAdded(tb) {
+  onPageAdded(tb, row) {
+    const tableLabel = _.get(row, '_renderedContent.data.label', undefined);
+    const tableData = _.get(row, '_renderedContent.data.value', undefined);
+
+    const isPageBreakAtTableStart = !_.isNil(tableLabel) && _.isNil(tableData);
+
+    if (isPageBreakAtTableStart) return; // prevent double header on new page
+
     tb.addHeader();
   }
 
@@ -759,11 +783,14 @@ class PrintView {
   }
 
   onCellBorderAdd(tb, column) {
-    this.doc.lineWidth(this.tableSettings.borderWidth);
+    const borderWidth = _.get(column, 'borderWidth', this.tableSettings.borderWidth);
+
+    this.doc.lineWidth(borderWidth);
     this.setStroke(_.get(column, 'borderColor', 'black'), 1);
   }
 
   onCellBorderAdded() {
+    this.doc.lineWidth(this.tableSettings.borderWidth);
     this.setStroke();
   }
 
@@ -831,6 +858,86 @@ class PrintView {
       .stroke('black');
 
     this.dividerWidth = padding * 2 + 1;
+  }
+
+  generateDeviceNamesHeader() {
+    const deviceNames = getDeviceNames(this.devices);
+    let label = deviceNames.length === 1 ? t('Device') : t('Devices');
+    let content = deviceNames.join(', ');
+
+    this.doc.font(this.font).fontSize(this.defaultFontSize);
+
+    const labelWidth = this.doc.widthOfString(label) + 10;
+    const textColumnWidth = this.width - labelWidth;
+
+    const textHeight = this.doc.heightOfString(content, { width: textColumnWidth });
+    let height = textHeight + 7 + 10; // textHeight + bottomPadding + bottomMargin;
+
+    if (!deviceNames.length) {
+      label = '';
+      content = '';
+      height = 0;
+    }
+
+    return {
+      label,
+      content,
+      height,
+    };
+  }
+
+  renderDeviceNamesHeader() {
+    if (!this.deviceNamesHeader) {
+      this.deviceNamesHeader = this.generateDeviceNamesHeader();
+    }
+
+    const { label, content } = this.deviceNamesHeader;
+
+    if (!content) return;
+
+    this.doc.font(this.font).fontSize(this.defaultFontSize);
+    const labelWidth = this.doc.widthOfString(label) + 10;
+
+    const rows = [{ label, text: content, hasDynamicHeight: true }];
+
+    const tableColumns = [
+      {
+        id: 'label',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: labelWidth,
+        fontSize: this.defaultFontSize,
+        font: this.boldFont,
+        align: 'left',
+        border: 'B',
+        borderWidth: 1,
+        borderColor: 'black',
+        padding: [0, 0, 7, 0]
+      },
+      {
+        id: 'text',
+        cache: false,
+        renderer: this.renderCustomTextCell,
+        width: this.width - labelWidth,
+        fontSize: this.defaultFontSize,
+        font: this.font,
+        align: 'left',
+        border: 'B',
+        borderWidth: 1,
+        borderColor: 'black',
+        padding: [0, 0, 7, 0]
+      },
+    ];
+
+    this.doc.x = this.margins.left;
+    this.doc.y = this.chartArea.topEdge;
+
+    this.renderTable(tableColumns, rows, {
+      showHeaders: false,
+      bottomMargin: 10,
+    });
+
+    this.doc.y = this.chartArea.topEdge + this.deviceNamesHeader.height;
   }
 
   renderTitle(opts = {}) {

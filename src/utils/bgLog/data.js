@@ -6,6 +6,7 @@ import { statsText } from '../stat';
 import { reshapeBgClassesToBgBounds } from '../bloodglucose';
 import { formatBgValue } from '../format';
 import { formatLocalizedFromUTC } from '../datetime';
+import { getDeviceName } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -64,7 +65,7 @@ export function bgLogText(patient, data, stats, copyAsTextMetadata) {
   if (devices.length) {
     const textLines = [
       `\n\n${t('Devices Uploaded')}`,
-      ..._.map(devices, ({ id, label }) => label || id),
+      ..._.map(devices, d => getDeviceName(d)),
     ];
 
     _.each(textLines, line => {

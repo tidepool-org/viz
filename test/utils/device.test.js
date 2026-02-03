@@ -436,4 +436,31 @@ describe('device utility functions', () => {
       expect(device.getUppercasedManufacturer('diy loop')).to.equal('DIY Loop');
     });
   });
+
+  describe('getDeviceName', () => {
+    it('returns the device friendly name if it exists', () => {
+      const deviceObject = { deviceName: 'Cooltec Alpha Super Ultra', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha Super Ultra');
+    });
+
+    it('returns the device label if device friendly name doesn\'t exist', () => {
+      const deviceObject = { label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha A1');
+    });
+
+    it('returns the device label if device friendly name is `Unknown`', () => {
+      const deviceObject = { deviceName: 'Unknown', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha A1');
+    });
+
+    it('returns the device id if label doesn\'t exist', () => {
+      const deviceObject = { deviceName: 'Unknown', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('cool-c-a1');
+    });
+
+    it('returns null if id doesn\'t exist', () => {
+      const deviceObject = { foo: 'bar' };
+      expect(device.getDeviceName(deviceObject)).to.be.null;
+    });
+  });
 });

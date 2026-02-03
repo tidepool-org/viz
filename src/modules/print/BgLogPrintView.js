@@ -48,10 +48,13 @@ class BgLogPrintView extends PrintView {
     this.getBgChartColumns = this.getBgChartColumns.bind(this);
     this.getBgChartRow = this.getBgChartRow.bind(this);
     this.renderBgCell = this.renderBgCell.bind(this);
+
+    this.deviceNamesHeader = this.generateDeviceNamesHeader();
   }
 
   newPage() {
     super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
+    this.renderDeviceNamesHeader();
   }
 
   getBGLabelYOffset() {
@@ -108,6 +111,11 @@ class BgLogPrintView extends PrintView {
     };
 
     return row;
+  }
+
+  setNewPageTablePosition() {
+    super.setNewPageTablePosition();
+    this.doc.y = this.table.pos.y = this.chartArea.topEdge + this.deviceNamesHeader.height;
   }
 
   render() {
