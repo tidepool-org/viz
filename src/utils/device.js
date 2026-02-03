@@ -167,9 +167,9 @@ export function getPumpVocabulary(manufacturer) {
 }
 
 /**
- * Get a pump terminology vocabulary, with default fallbacks for missing keys
+ * Get the render-friendly name for a device
  * @param {Object} device a device object from the DataUtil instance "devices" property
- * @returns {String|null} Return render-friendly name for device or null if unable
+ * @returns {String|null} render-friendly name for device or null if unable
  */
 export function getDeviceName(device) {
   if (!!device.deviceName && device.deviceName !== 'Unknown') return device.deviceName;
@@ -179,4 +179,17 @@ export function getDeviceName(device) {
   if (!!device.id) return device.id;
 
   return null;
+}
+
+/**
+ * Get a unique list of render-friendly names from a list of devices
+ * @param {Array<Object>} deviceList an array of device objects from the DataUtil instance "devices" property
+ * @returns {Array<String>} unique array of render-friendly names for each device
+ */
+export function getDeviceNames(deviceList) {
+  return _.chain(deviceList)
+    .map(d => getDeviceName(d))
+    .compact()
+    .uniq()
+    .value();
 }

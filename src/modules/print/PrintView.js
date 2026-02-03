@@ -34,7 +34,6 @@ import {
 
 import { getStatDefinition } from '../../utils/stat';
 import { getPatientFullName } from '../../utils/misc';
-import { getDeviceName } from '../../utils/device';
 
 import {
   DPI,
@@ -48,6 +47,8 @@ import {
   LARGE_FONT_SIZE,
   SMALL_FONT_SIZE,
 } from './utils/constants';
+
+import { getDeviceNames } from '../../utils/device';
 
 import { BG_COLORS, MS_IN_MIN } from '../../utils/constants';
 import './registerStaticFiles';
@@ -859,16 +860,8 @@ class PrintView {
     this.dividerWidth = padding * 2 + 1;
   }
 
-  getDeviceNames() {
-    return _.chain(this.devices)
-      .map(d => getDeviceName(d))
-      .compact()
-      .uniq()
-      .value();
-  }
-
   getDeviceNamesHeader() {
-    const deviceNames = this.getDeviceNames();
+    const deviceNames = getDeviceNames(this.devices);
     let label = deviceNames.length === 1 ? t('Device') : t('Devices');
     let content = deviceNames.join(', ');
 

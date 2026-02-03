@@ -28,7 +28,6 @@ import { formatBgValue } from '../../utils/format';
 import { classifyBgValue, getOutOfRangeThreshold } from '../../utils/bloodglucose';
 import { formatClocktimeFromMsPer24, THREE_HRS } from '../../utils/datetime';
 import { MS_IN_HOUR } from '../../utils/constants';
-import { getDeviceName } from '../../utils/device';
 
 const t = i18next.t.bind(i18next);
 

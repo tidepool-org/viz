@@ -28,7 +28,7 @@ import PrintView from './PrintView';
 import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
-import { getDeviceName, getPumpVocabulary } from '../../utils/device';
+import { getPumpVocabulary } from '../../utils/device';
 import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
   classifyBgValue,

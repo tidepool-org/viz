@@ -31,7 +31,7 @@ import {
 } from '../../utils/basics/data';
 
 import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
-import { getDeviceName, getPumpVocabulary } from '../../utils/device';
+import { getDeviceNames, getPumpVocabulary } from '../../utils/device';
 
 import {
   AUTOMATED_DELIVERY,
@@ -427,7 +427,7 @@ class BasicsPrintView extends PrintView {
 
   renderDeviceNames() {
     // Build Content Body
-    const deviceNames = this.getDeviceNames();
+    const deviceNames = getDeviceNames(this.devices);
 
     if (!deviceNames.length) return;
 

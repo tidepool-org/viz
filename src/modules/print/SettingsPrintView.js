@@ -55,7 +55,7 @@ class SettingsPrintView extends PrintView {
     this.deviceLabels = getPumpVocabulary(this.manufacturer);
 
     const devices = data?.metaData?.devices || [];
-    this.deviceInMetaData = devices.find(d => d.serialNumber === this.deviceMeta.serial);
+    this.deviceInMetaData = _.find(devices, d => d.serialNumber === this.deviceMeta.serial);
 
     this.doc.addPage();
   }
