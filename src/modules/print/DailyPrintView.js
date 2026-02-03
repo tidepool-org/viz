@@ -225,9 +225,6 @@ class DailyPrintView extends PrintView {
     // kick off the dynamic calculation of chart area based on font sizes for header and footer
     this.setHeaderSize().setFooterSize().calculateChartMinimums(this.chartArea);
 
-    // calculate heights and place charts in preparation for rendering
-    this.deviceNamesHeaderHeight = this.calculateDeviceNamesHeaderHeight();
-
     _.each(selectedDates, (date) => {
       this.calculateDateChartHeight(this.chartsByDate[date]);
     });
