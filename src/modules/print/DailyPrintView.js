@@ -536,11 +536,14 @@ class DailyPrintView extends PrintView {
   }
 
   render() {
-    this.goToPage(0);
-    this.renderDeviceNamesHeader();
+    let chartIndex = 0;
 
     _.each(this.chartsByDate, (dateChart) => {
       this.goToPage(dateChart.page);
+
+      // only rendered on first page
+      if (chartIndex === 0) this.renderDeviceNamesHeader();
+
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
         .renderYAxes(dateChart)
@@ -554,6 +557,8 @@ class DailyPrintView extends PrintView {
         .renderBasalRates(dateChart)
         .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
+
+      chartIndex++;
     });
 
     if (this.hasAlarms) this.renderAlarmsFootnote();
