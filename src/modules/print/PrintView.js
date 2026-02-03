@@ -869,9 +869,8 @@ class PrintView {
 
   getDeviceNamesHeader() {
     const deviceNames = this.getDeviceNames();
-
-    const label = t('Devices');
-    const content = deviceNames.join(', ');
+    let label = deviceNames.length === 1 ? t('Device') : t('Devices');
+    let content = deviceNames.join(', ');
 
     this.doc.font(this.font).fontSize(this.defaultFontSize);
 
@@ -879,12 +878,12 @@ class PrintView {
     const textColumnWidth = this.width - labelWidth;
 
     const textHeight = this.doc.heightOfString(content, { width: textColumnWidth });
-    const height = textHeight + 7 + 10; // textHeight + bottomPadding + bottomMargin;
+    let height = textHeight + 7 + 10; // textHeight + bottomPadding + bottomMargin;
 
-    if (!deviceNames.length) return {
-      label: '',
-      content: '',
-      height: 0,
+    if (!deviceNames.length) {
+      label = '';
+      content = '';
+      height = 0;
     }
 
     return {
