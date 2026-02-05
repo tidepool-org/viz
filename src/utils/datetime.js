@@ -197,10 +197,10 @@ export function formatDateRangeWithTime(startDate, endDate) {
 
   const isSameDay = start.isSame(end, 'day');
 
-  if (isSameDay) return end.format(`MMM D, YYYY`);
+  if (isSameDay) return end.format('MMM D, YYYY');
 
-  const startFormat = start.format(`MMM D, YYYY (h:mm A)`);
-  const endFormat = end.format(`MMM D, YYYY (h:mm A)`);
+  const startFormat = start.format('MMM D, YYYY (h:mm A)');
+  const endFormat = end.format('MMM D, YYYY (h:mm A)');
 
   return `${startFormat} - ${endFormat}`;
 }
