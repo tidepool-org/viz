@@ -298,6 +298,22 @@ describe('datetime', () => {
     });
   });
 
+  describe('formatDateRangeWithTime', () => {
+    it('should format a date & time range with dates provided as date strings', () => {
+      const start = '2017-12-01T08:00:00Z';
+      const end = '2017-12-10T08:00:00Z';
+
+      expect(datetime.formatDateRangeWithTime(start, end)).to.equal('Dec 1, 2017 (8:00 AM) - Dec 10, 2017 (8:00 AM)');
+    });
+
+    it('should format a date & time range with dates provided as unix timestamps in ms', () => {
+      const start = 1491408000000;
+      const end = 1492617600000;
+
+      expect(datetime.formatDateRangeWithTime(start, end)).to.equal('Apr 5, 2017 (4:00 PM) - Apr 19, 2017 (4:00 PM)');
+    });
+  });
+
   describe('formatCurrentDate', () => {
     it('should properly format the current date', () => {
       expect(timeParse('%b %-d, %Y')(datetime.formatCurrentDate())).to.not.be.null;

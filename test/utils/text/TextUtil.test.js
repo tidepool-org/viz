@@ -131,7 +131,8 @@ describe('TextUtil', () => {
   describe('buildDocumentDates', () => {
     it('should print the document reporting period', () => {
       const result = textUtil.buildDocumentDates();
-      expect(result).to.equal('\nReporting Period: Feb 1 - Feb 19, 2019\n');
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 (12:00 AM) - Feb 20, 2019 (12:00 AM)\n');
     });
   });
 

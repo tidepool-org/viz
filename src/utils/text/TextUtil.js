@@ -5,7 +5,7 @@ import i18next from 'i18next';
 import {
   formatBirthdate,
   formatCurrentDate,
-  formatDateRange,
+  formatDateRangeWithTime,
   formatDiagnosisDate,
   getOffset,
   getTimezoneFromTimePrefs,
@@ -63,14 +63,13 @@ export class TextUtil {
   buildDocumentDates = () => {
     const timezone = getTimezoneFromTimePrefs(this.timePrefs);
 
-    // endpoint is exclusive, so need to subtract a millisecond from formatted range end date
-    let start = this.endpoints[0];
-    let end = this.endpoints[1] - 1;
-
+    let [start, end] = this.endpoints;
     start = start - getOffset(start, timezone) * MS_IN_MIN;
     end = end - getOffset(end, timezone) * MS_IN_MIN;
 
-    return `\nReporting Period: ${formatDateRange(start, end)}\n`;
+    const formattedDateAndTime = formatDateRangeWithTime(start, end);
+
+    return `\nReporting Period: ${formattedDateAndTime}\n`;
   };
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
