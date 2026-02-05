@@ -151,6 +151,10 @@ export function getRecommended(insulinEvent) {
  * @return {Number} units of insulin delivered in this insulinEvent
  */
 export function getDelivered(insulinEvent) {
+  if (_.get(insulinEvent, 'type') === 'insulin') {
+    return insulinEvent.dose?.total || 0;
+  }
+
   let bolus = insulinEvent;
   if (_.get(insulinEvent, 'type') === 'wizard') {
     bolus = getBolusFromInsulinEvent(insulinEvent);
@@ -281,12 +285,12 @@ export function getNormalPercentage(insulinEvent) {
 }
 
 /**
- * getTotalBolus
+ * getTotalInsulin
  * @param {Array} insulinEvents - Array of Tidepool bolus or wizard objects
  *
  * @return {Number} total bolus insulin in units
  */
-export function getTotalBolus(insulinEvents) {
+export function getTotalInsulin(insulinEvents) {
   return _.reduce(insulinEvents, (result, insulinEvent) => (
     result + getDelivered(insulinEvent)
   ), 0);

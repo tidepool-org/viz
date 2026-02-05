@@ -53,6 +53,10 @@ import './registerStaticFiles';
 
 const t = i18next.t.bind(i18next);
 
+const patternImages = {
+  diagonalStripes: 'images/diagonalStripes.png',
+};
+
 class PrintView {
   constructor(doc, data = {}, opts) {
     this.doc = doc;
@@ -116,7 +120,9 @@ class PrintView {
       physicalActivity: '#758CFF',
       preprandial: '#4457D9',
       bolus: '#7CD0F0',
+      insulin: '#7CD0F0',
       bolusAutomated: '#00B2C3',
+      presets: '#F4F5FF',
       smbg: '#6480FB',
       siteChange: '#FCD144',
       basalHeader: '#DCF1F9',
@@ -475,6 +481,14 @@ class PrintView {
         this.doc
           .rect(xPos, yPos, stripeWidth, stripeHeight)
           .fill();
+
+        if (patternImages[fillStripe.patternOverlay]) {
+          this.doc.save();
+          this.doc.rect(xPos, yPos, stripeWidth, stripeHeight).clip();
+          this.doc.fillOpacity(1);
+          this.doc.image(patternImages[fillStripe.patternOverlay], xPos, yPos, { cover: [stripeWidth, stripeHeight] });
+          this.doc.restore();
+        }
       }
 
       this.setFill();
