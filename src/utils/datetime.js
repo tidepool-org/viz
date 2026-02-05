@@ -166,7 +166,9 @@ export function formatDiagnosisDate(patient) {
  * formatDateRange
  * @param {String|Date} startDate - A moment-compatible date object or string
  * @param {String|Date} endDate - A moment-compatible date object or string
- * @param {String} format - Optional. The moment format string to parse startDate and endDate with
+ * @param {String} dateParseFormat - Optional. The moment format string to parse startDate and endDate with
+ *
+ * @return {String} formatted date range for display
  */
 export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat = 'MMM') {
   const start = moment.utc(startDate, dateParseFormat);
@@ -180,6 +182,27 @@ export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat
   const formattedRange = isSameDay ? endFormat : `${startFormat} - ${endFormat}`;
 
   return formattedRange;
+}
+
+/**
+ * formatDateRangeWithTime
+ * @param {String|Date} startDate - A moment-compatible date object or string
+ * @param {String|Date} endDate - A moment-compatible date object or string
+ *
+ * @return {String} formatted time range for display with date and time (hours and minutes)
+ */
+export function formatDateRangeWithTime(startDate, endDate) {
+  const start = moment.utc(startDate);
+  const end = moment.utc(endDate);
+
+  const isSameDay = start.isSame(end, 'day');
+
+  if (isSameDay) return end.format(`MMM D, YYYY`);
+
+  const startFormat = start.format(`MMM D, YYYY (h:mm A)`);
+  const endFormat = end.format(`MMM D, YYYY (h:mm A)`);
+
+  return `${startFormat} - ${endFormat}`;
 }
 
 /**
