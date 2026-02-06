@@ -405,7 +405,7 @@ export function basicsText(patient, data, stats, aggregations, copyAsTextMetadat
   const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
 
   let basicsString = textUtil.buildDocumentHeader('Basics');
-  basicsString += textUtil.buildDocumentDates();
+  basicsString += textUtil.buildDocumentDates({ showTimeInDateRange: true });
 
   basicsString += textUtil.buildTextLine(t('Days with no insulin data have been excluded from calculations'));
 

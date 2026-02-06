@@ -6,6 +6,7 @@ import {
   formatBirthdate,
   formatCurrentDate,
   formatDateRangeWithTime,
+  formatDateRange,
   formatDiagnosisDate,
   getOffset,
   getTimezoneFromTimePrefs,
@@ -60,16 +61,25 @@ export class TextUtil {
     );
   };
 
-  buildDocumentDates = () => {
+  buildDocumentDates = (opts = {}) => {
+    const { showTimeInDateRange = false } = opts;
+
     const timezone = getTimezoneFromTimePrefs(this.timePrefs);
 
     let [start, end] = this.endpoints;
+
+    if (!showTimeInDateRange) {
+      end -= 1; // endpoint is exclusive, so need to subtract 1 ms from formatted range end date
+    }
+
     start = start - getOffset(start, timezone) * MS_IN_MIN;
     end = end - getOffset(end, timezone) * MS_IN_MIN;
 
-    const formattedDateAndTime = formatDateRangeWithTime(start, end);
+    const formattedRange = showTimeInDateRange
+      ? formatDateRangeWithTime(start, end)
+      : formatDateRange(start, end);
 
-    return `\nReporting Period: ${formattedDateAndTime}\n`;
+    return `\nReporting Period: ${formattedRange}\n`;
   };
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
