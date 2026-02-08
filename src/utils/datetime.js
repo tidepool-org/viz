@@ -205,6 +205,29 @@ export function formatDateRangeWithTime(startDate, endDate) {
   return `${startFormat} - ${endFormat}`;
 }
 
+export const CHART_DATE_BOUND_FORMAT = {
+  DATE_AND_TIME: 'MMM D, YYYY (h:mm A)',
+  DATE_ONLY: 'MMM D, YYYY',
+};
+
+export function getChartDateBoundFormat(startDate, endDate) {
+  if (!endDate) return 'MMM D, YYYY';
+
+  const isStartDateMidnight = (startDate?.hours() === 0 && startDate?.minutes() === 0) ||
+                              (startDate?.hours() === 23 && startDate?.minutes() >= 59);
+
+  const isEndDateMidnight = (endDate?.hours() === 0 && endDate?.minutes() === 0) ||
+                            (endDate?.hours() === 23 && endDate?.minutes() >= 59);
+
+  const isMatchingDateBounds = isStartDateMidnight && isEndDateMidnight;
+
+  if (!isMatchingDateBounds) {
+    return CHART_DATE_BOUND_FORMAT.DATE_AND_TIME;
+  }
+
+  return CHART_DATE_BOUND_FORMAT.DATE_ONLY;
+};
+
 /**
  * formatDuration
  * @param {Number} duration - positive integer duration in milliseconds

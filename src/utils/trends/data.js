@@ -103,7 +103,7 @@ export function trendsText(patient, data, stats, chartPrefs, copyAsTextMetadata)
   const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
   let trendsString = textUtil.buildDocumentHeader('Trends');
 
-  trendsString += textUtil.buildDocumentDates({ showTimeInDateRange: true });
+  trendsString += textUtil.buildDocumentDates({ showPartialDates: true });
 
   const excludedDays = _.map(_.keys(_.pickBy(chartPrefs.activeDays, day => day === false)), _.capitalize).join(', ');
   if (excludedDays.length) trendsString += textUtil.buildTextLine({ label: 'Excluded Days', value: excludedDays });

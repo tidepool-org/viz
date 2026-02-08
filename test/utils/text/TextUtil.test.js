@@ -130,7 +130,7 @@ describe('TextUtil', () => {
 
   describe('buildDocumentDates', () => {
     it('should print the document reporting period (with exclusive end date)', () => {
-      const result = textUtil.buildDocumentDates({ showTimeInDateRange: true });
+      const result = textUtil.buildDocumentDates({ showPartialDates: true });
 
       // Feb 1 TO Feb 20 (exclusive)
       expect(result).to.equal('\nReporting Period: Feb 1, 2019 (12:00 AM) - Feb 20, 2019 (12:00 AM)\n');
