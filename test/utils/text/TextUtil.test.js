@@ -129,18 +129,33 @@ describe('TextUtil', () => {
   });
 
   describe('buildDocumentDates', () => {
-    it('should print the document reporting period (with exclusive end date)', () => {
+    it('should print the document reporting period correctly when full dates', () => {
       const result = textUtil.buildDocumentDates({ showPartialDates: true });
 
-      // Feb 1 TO Feb 20 (exclusive)
-      expect(result).to.equal('\nReporting Period: Feb 1, 2019 (12:00 AM) - Feb 20, 2019 (12:00 AM)\n');
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 - Feb 19, 2019\n');
+    });
+
+    it('should print the document reporting period correctly when partial dates', () => {
+      const endpoints = [
+        Date.parse('2019-02-01T08:00:00.000Z'),
+        Date.parse('2019-02-20T08:00:00.000Z'),
+      ];
+      textUtil = new TextUtil(patient, endpoints, timePrefs, copyAsTextMetadata);
+
+      const result = textUtil.buildDocumentDates({ showPartialDates: true });
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 (3:00 AM) - Feb 20, 2019 (3:00 AM)\n');
     });
 
     it('should print the document reporting period (with inclusive end date)', () => {
+      const endpoints = [
+        Date.parse('2019-02-01T08:00:00.000Z'), // Feb 01 @ 3 AM
+        Date.parse('2019-02-20T08:00:00.000Z'), // Feb 20 @ 3 AM
+      ];
+      textUtil = new TextUtil(patient, endpoints, timePrefs, copyAsTextMetadata);
       const result = textUtil.buildDocumentDates();
 
-      // Feb 1 THROUGH Feb 19 (inclusive)
-      expect(result).to.equal('\nReporting Period: Feb 1 - Feb 19, 2019\n');
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 - Feb 20, 2019\n');
     });
   });
 
