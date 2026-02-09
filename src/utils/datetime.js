@@ -184,32 +184,18 @@ export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat
   return formattedRange;
 }
 
-/**
- * formatDateRangeWithTime
- * @param {String|Date} startDate - A moment-compatible date object or string
- * @param {String|Date} endDate - A moment-compatible date object or string
- *
- * @return {String} formatted time range for display with date and time (hours and minutes)
- */
-export function formatDateRangeWithTime(startDate, endDate) {
-  const start = moment.utc(startDate);
-  const end = moment.utc(endDate);
-
-  const isSameDay = start.isSame(end, 'day');
-
-  if (isSameDay) return end.format('MMM D, YYYY');
-
-  const startFormat = start.format('MMM D, YYYY (h:mm A)');
-  const endFormat = end.format('MMM D, YYYY (h:mm A)');
-
-  return `${startFormat} - ${endFormat}`;
-}
-
 export const CHART_DATE_BOUND_FORMAT = {
   DATE_AND_TIME: 'MMM D, YYYY (h:mm A)',
   DATE_ONLY: 'MMM D, YYYY',
 };
 
+/**
+ * getChartDateBoundFormat
+ * @param {Object} startDate - a moment time object
+ * @param {Object} endDate - a moment time object
+ *
+ * @return {String} a moment time format (e.g 'MMM D, YYYY')
+ */
 export function getChartDateBoundFormat(startDate, endDate) {
   if (!endDate) return 'MMM D, YYYY';
 
@@ -226,7 +212,7 @@ export function getChartDateBoundFormat(startDate, endDate) {
   }
 
   return CHART_DATE_BOUND_FORMAT.DATE_ONLY;
-};
+}
 
 /**
  * formatDuration

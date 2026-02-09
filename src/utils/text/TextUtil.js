@@ -6,16 +6,11 @@ import moment from 'moment-timezone';
 import {
   formatBirthdate,
   formatCurrentDate,
-  formatDateRangeWithTime,
-  formatDateRange,
   formatDiagnosisDate,
-  getOffset,
   getTimezoneFromTimePrefs,
   getChartDateBoundFormat,
   CHART_DATE_BOUND_FORMAT,
 } from '../datetime';
-
-import { MS_IN_MIN } from '../constants';
 
 import { getPatientFullName } from '../misc';
 
@@ -69,12 +64,11 @@ export class TextUtil {
 
     const timezone = getTimezoneFromTimePrefs(this.timePrefs);
 
-    let [start, end] = this.endpoints;
+    const [start, end] = this.endpoints;
+    const startDate = moment.utc(start).tz(timezone);
+    const endDate = moment.utc(end).tz(timezone);
 
-    const startDate = moment(start).tz(timezone);
-    const endDate = moment(end).tz(timezone);
-
-    let dtMask = showPartialDates
+    const dtMask = showPartialDates
       ? getChartDateBoundFormat(startDate, endDate)
       : CHART_DATE_BOUND_FORMAT.DATE_ONLY;
 
@@ -85,7 +79,7 @@ export class TextUtil {
       endDate.subtract(1, 'ms');
     }
 
-    const formattedRange = startDate.format(dtMask) + ' - ' + endDate.format(dtMask);
+    const formattedRange = `${startDate.format(dtMask)} - ${endDate.format(dtMask)}`;
 
     return `\nReporting Period: ${formattedRange}\n`;
   };
