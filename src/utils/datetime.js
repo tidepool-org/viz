@@ -142,9 +142,18 @@ export function formatClocktimeFromMsPer24(milliseconds, format = 'h:mm a') {
 
 /**
  * formatCurrentDate
- * @return {String} formatted current date, e.g., 'Jul 4, 2017';
+ * @param {String} [timezone] - optional timezone name; if provided, formats in that timezone
+ * @return {String} formatted current date in the specified timezone (or browser local time if not provided), e.g., 'Jul 4, 2017'
  */
-export function formatCurrentDate() {
+export function formatCurrentDate(timezone) {
+  if (timezone) {
+    try {
+      sundial.checkTimezoneName(timezone);
+    } catch (err) {
+      return timeFormat('%b %-d, %Y')(new Date());
+    }
+    return moment.utc().tz(timezone).format('MMM D, YYYY');
+  }
   return timeFormat('%b %-d, %Y')(new Date());
 }
 
