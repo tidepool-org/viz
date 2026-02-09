@@ -1013,7 +1013,7 @@ class PrintView {
       helpText: t('Questions or feedback? Please email support@tidepool.org or visit support.tidepool.org.'),
     });
 
-    const printDateText = `Printed on: ${formatCurrentDate()}`;
+    const printDateText = `Printed on: ${formatCurrentDate(this.timezone)}`;
     const printDateWidth = this.doc.widthOfString(printDateText);
 
     const pageCountWidth = this.doc.widthOfString('Page 1 of 1');
