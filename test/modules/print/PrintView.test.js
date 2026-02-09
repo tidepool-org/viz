@@ -1790,9 +1790,9 @@ describe('PrintView', () => {
       );
     });
 
-    it('should render the date printed', () => {
+    it('should render the date printed in the configured timezone', () => {
       Renderer.renderFooter();
-      sinon.assert.calledWith(Renderer.doc.text, `Printed on: ${formatCurrentDate()}`);
+      sinon.assert.calledWith(Renderer.doc.text, `Printed on: ${formatCurrentDate(Renderer.timezone)}`);
     });
   });
 
