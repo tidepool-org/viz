@@ -299,8 +299,37 @@ describe('datetime', () => {
   });
 
   describe('formatCurrentDate', () => {
-    it('should properly format the current date', () => {
+    let clock;
+
+    beforeEach(() => {
+      // Set a fixed time: Sept 5, 2016 04:00:00 UTC
+      // In US/Pacific (UTC-7), this is Sept 4, 2016 21:00:00
+      clock = sinon.useFakeTimers(new Date('2016-09-05T04:00:00Z').getTime());
+    });
+
+    afterEach(() => {
+      clock.restore();
+    });
+
+    it('should properly format the current date when no timezone provided', () => {
+      // When no timezone is provided, it uses browser local time (which we can't easily mock here without more aggressive mocking)
+      // or just falls back. The implementation uses new Date().
+      // For this test running in Node/Karma, the environment's timezone applies if not mocked.
+      // However, we can at least assert it returns a valid string.
       expect(timeParse('%b %-d, %Y')(datetime.formatCurrentDate())).to.not.be.null;
+    });
+
+    it('should format the current date in the specified timezone', () => {
+      const result = datetime.formatCurrentDate('US/Pacific');
+      expect(result).to.equal('Sep 4, 2016');
+    });
+
+    it('should return valid date formats for different timezones', () => {
+      const utcResult = datetime.formatCurrentDate('UTC');
+      const pacificResult = datetime.formatCurrentDate('US/Pacific');
+
+      expect(utcResult).to.equal('Sep 5, 2016');
+      expect(pacificResult).to.equal('Sep 4, 2016');
     });
   });
 
