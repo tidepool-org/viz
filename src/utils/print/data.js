@@ -45,13 +45,15 @@ export function processBgRange(dataByDate) {
  */
 export function processBolusRange(dataByDate, timezoneName) {
   const boluses = _.reduce(
-    dataByDate, (all, date) => (all.concat(_.get(date, 'bolus', []))), []
+    dataByDate,
+    (all, date) => (all.concat(_.get(date, 'bolus', [])).concat(_.get(date, 'insulin', []))),
+    []
   );
   _.each(boluses, (bolus) => {
     // eslint-disable-next-line no-param-reassign
     bolus.threeHrBin = Math.floor(moment.utc(bolus.normalTime).tz(timezoneName).hours() / 3) * 3;
   });
-  return extent(boluses, (d) => ((d.normal || 0) + (d.extended || 0)));
+  return extent(boluses, (d) => (_.get(d, 'dose.total') || (d.normal || 0) + (d.extended || 0)));
 }
 
 /**

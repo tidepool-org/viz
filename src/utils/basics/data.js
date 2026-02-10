@@ -119,7 +119,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
 
       case 'boluses':
         title = t('Insulin');
-        summaryTitle = t('Avg boluses / day');
+        summaryTitle = t('Avg insulin injections / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
