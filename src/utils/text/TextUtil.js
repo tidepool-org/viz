@@ -81,7 +81,7 @@ export class TextUtil {
 
     const formattedRange = `${startDate.format(dtMask)} - ${endDate.format(dtMask)}`;
 
-    return `\nReporting Period: ${formattedRange}\n`;
+    return `\n${t('Reporting Period')}: ${formattedRange}\n`;
   };
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
