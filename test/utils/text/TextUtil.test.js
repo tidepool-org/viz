@@ -129,9 +129,33 @@ describe('TextUtil', () => {
   });
 
   describe('buildDocumentDates', () => {
-    it('should print the document reporting period', () => {
+    it('should print the dates only when bounds are midnight', () => {
+      const result = textUtil.buildDocumentDates({ showPartialDates: true });
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 - Feb 19, 2019\n');
+    });
+
+    it('should print the dates and times when bounds are not midnight', () => {
+      const testEndpoints = [
+        Date.parse('2019-02-01T08:00:00.000Z'), // Feb 01 @ 3 AM
+        Date.parse('2019-02-20T08:00:00.000Z'), // Feb 20 @ 3 AM
+      ];
+      textUtil = new TextUtil(patient, testEndpoints, timePrefs, copyAsTextMetadata);
+
+      const result = textUtil.buildDocumentDates({ showPartialDates: true });
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 (3:00 AM) - Feb 20, 2019 (3:00 AM)\n');
+    });
+
+    it('should print the document reporting period (with inclusive end date)', () => {
+      const testEndpoints = [
+        Date.parse('2019-02-01T08:00:00.000Z'), // Feb 01 @ 3 AM
+        Date.parse('2019-02-20T08:00:00.000Z'), // Feb 20 @ 3 AM
+      ];
+      textUtil = new TextUtil(patient, testEndpoints, timePrefs, copyAsTextMetadata);
       const result = textUtil.buildDocumentDates();
-      expect(result).to.equal('\nReporting Period: Feb 1 - Feb 19, 2019\n');
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 - Feb 20, 2019\n');
     });
   });
 

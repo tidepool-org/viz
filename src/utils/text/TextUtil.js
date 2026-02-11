@@ -1,17 +1,16 @@
 import _ from 'lodash';
 import table from 'text-table';
 import i18next from 'i18next';
+import moment from 'moment-timezone';
 
 import {
   formatBirthdate,
   formatCurrentDate,
-  formatDateRange,
   formatDiagnosisDate,
-  getOffset,
   getTimezoneFromTimePrefs,
+  getChartDateBoundFormat,
+  CHART_DATE_BOUND_FORMAT,
 } from '../datetime';
-
-import { MS_IN_MIN } from '../constants';
 
 import { getPatientFullName } from '../misc';
 
@@ -60,17 +59,29 @@ export class TextUtil {
     );
   };
 
-  buildDocumentDates = () => {
+  buildDocumentDates = (opts = {}) => {
+    const { showPartialDates = false } = opts;
+
     const timezone = getTimezoneFromTimePrefs(this.timePrefs);
 
-    // endpoint is exclusive, so need to subtract a millisecond from formatted range end date
-    let start = this.endpoints[0];
-    let end = this.endpoints[1] - 1;
+    const [start, end] = this.endpoints;
+    const startDate = moment.utc(start).tz(timezone);
+    const endDate = moment.utc(end).tz(timezone);
 
-    start = start - getOffset(start, timezone) * MS_IN_MIN;
-    end = end - getOffset(end, timezone) * MS_IN_MIN;
+    const dtMask = showPartialDates
+      ? getChartDateBoundFormat(startDate, endDate)
+      : CHART_DATE_BOUND_FORMAT.DATE_ONLY;
 
-    return `\nReporting Period: ${formatDateRange(start, end)}\n`;
+    // When showing dates only, we subtract 1ms from the end date because the end timestamp
+    // represents midnight of the following day, but we want to display the last included day.
+    // E.g. Jan 10 (12:00 AM) - Jan 20 (12:00 AM) should render as Jan 10 - Jan 19
+    if (dtMask === CHART_DATE_BOUND_FORMAT.DATE_ONLY) {
+      endDate.subtract(1, 'ms');
+    }
+
+    const formattedRange = `${startDate.format(dtMask)} - ${endDate.format(dtMask)}`;
+
+    return `\n${t('Reporting Period')}: ${formattedRange}\n`;
   };
 
   buildTextLine = (text = '') => (_.isPlainObject(text) ? `${text.label}: ${text.value}\n` : `${text}\n`);
