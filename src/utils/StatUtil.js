@@ -103,12 +103,13 @@ export class StatUtil {
 
     // Count unique 24-hour periods relative to the first datum
     const combinedInsulinData = [...rawBasalData, ...bolusData, ...insulinData];
-    const firstDatumAt = Math.min(...combinedInsulinData.map(d => moment.utc(d.time).valueOf()));
+    const datumTimestamps = _.map(combinedInsulinData, datum => moment.utc(datum.time).valueOf());
+    const firstDatumAt = _.min(datumTimestamps);
 
     // Calculate the number of 24-hour buckets, starting from the first datum.
     // We calculate the number of whole 24h periods that have elapsed between
     // the current datum and the first datum, then group by that number
-    const dayBuckets = combinedInsulinData.map(d => Math.floor((moment.utc(d.time).valueOf() - firstDatumAt) / MS_IN_DAY));
+    const dayBuckets = datumTimestamps.map(timestamp => Math.floor((timestamp - firstDatumAt) / MS_IN_DAY));
     const uniqueDayBuckets = new Set(dayBuckets);
 
     const activeDaysWithInsulinData = uniqueDayBuckets.size;
@@ -136,12 +137,13 @@ export class StatUtil {
 
     // Count unique 24-hour periods relative to the first datum
     const combinedCarbData = [...wizardData, ...foodData];
-    const firstDatumTime = Math.min(...combinedCarbData.map(d => moment.utc(d.time).valueOf()));
+    const datumTimestamps = _.map(combinedCarbData, datum => moment.utc(datum.time).valueOf());
+    const firstDatumAt = _.min(datumTimestamps);
 
     // Calculate the number of 24-hour buckets, starting from the first datum.
     // We calculate the number of whole 24h periods that have elapsed between
     // the current datum and the first datum, then group by that number
-    const dayBuckets = combinedCarbData.map(d => Math.floor((moment.utc(d.time).valueOf() - firstDatumTime) / MS_IN_DAY));
+    const dayBuckets = datumTimestamps.map(timestamp => Math.floor((timestamp - firstDatumAt) / MS_IN_DAY));
     const uniqueDayBuckets = new Set(dayBuckets);
 
     const activeDaysWithCarbData = uniqueDayBuckets.size;
