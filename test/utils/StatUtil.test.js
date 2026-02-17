@@ -487,60 +487,72 @@ describe('StatUtil', () => {
     });
 
     it('should count 24-hour periods from first datum, not calendar days', () => {
-      // Create data that spans 2 calendar days but fits within one 24-hour period
+      // Create data that spans 4 calendar days but only 2 full 24-hour periods
+      // Data at: Day 1 8pm, Day 2 8am (12h later), Day 4 6pm (58h after Day 2 8am)
       const partialDayBolusData = _.map([
         new Types.Bolus({
-          deviceTime: '2018-02-01T20:00:00', // Day 1, 8pm
-          value: 5,
+          deviceTime: '2018-02-01T20:00:00', // Day 1, 8pm - bucket 0
+          value: 6,
           ...useRawData,
         }),
         new Types.Bolus({
-          deviceTime: '2018-02-02T08:00:00', // Day 2, 8am (12 hours later)
-          value: 5,
+          deviceTime: '2018-02-02T08:00:00', // Day 2, 8am (12 hours later) - bucket 0
+          value: 6,
+          ...useRawData,
+        }),
+        new Types.Bolus({
+          deviceTime: '2018-02-04T18:00:00', // Day 4, 6pm (58 hours after Day 2 8am) - bucket 2
+          value: 6,
           ...useRawData,
         }),
       ], _.toPlainObject);
 
-      // Endpoints span 2 calendar days
-      const partialDayEndpoints = [
+      // Endpoints span 7 calendar days
+      const testEndpoints = [
         '2018-02-01T18:00:00.000Z',
-        '2018-02-02T18:00:00.000Z',
+        '2018-02-08T00:00:00.000Z',
       ];
 
-      statUtil = createStatUtil(partialDayBolusData, opts({ endpoints: partialDayEndpoints }));
+      statUtil = createStatUtil(partialDayBolusData, opts({ endpoints: testEndpoints }));
       const result = statUtil.getInsulinData();
 
-      // Both boluses are within 24 hours of each other (12 hours later)
-      // So they should be in the same bucket, meaning no division occurs
-      expect(result.bolus).to.equal(10); // 10 total, not divided
+      // First two boluses are within 24 hours of each other (bucket 0)
+      // Third bolus is 70 hours after first (bucket 2)
+      // So we have 2 buckets with data, total 18 / 2 = 9
+      expect(result.bolus).to.equal(9);
     });
 
     it('should divide by number of 24-hour periods when data spans multiple periods', () => {
-      // Create data that spans more than 24 hours apart
+      // Create data spanning 3 24-hour periods
       const multiDayBolusData = _.map([
         new Types.Bolus({
-          deviceTime: '2018-02-01T08:00:00', // Day 1, 8am
-          value: 10,
+          deviceTime: '2018-02-01T08:00:00', // bucket 0
+          value: 6,
           ...useRawData,
         }),
         new Types.Bolus({
-          deviceTime: '2018-02-02T10:00:00', // Day 2, 10am (26 hours later)
-          value: 10,
+          deviceTime: '2018-02-02T10:00:00', // 26 hours later - bucket 1
+          value: 6,
+          ...useRawData,
+        }),
+        new Types.Bolus({
+          deviceTime: '2018-02-03T12:00:00', // 26 hours later - bucket 2
+          value: 6,
           ...useRawData,
         }),
       ], _.toPlainObject);
 
-      const multiDayEndpoints = [
-        '2018-02-01T00:00:00.000Z',
-        '2018-02-03T00:00:00.000Z',
+      const testEndpoints = [
+        '2018-02-01T04:00:00.000Z',
+        '2018-02-08T04:00:00.000Z',
       ];
 
-      statUtil = createStatUtil(multiDayBolusData, opts({ endpoints: multiDayEndpoints }));
+      statUtil = createStatUtil(multiDayBolusData, opts({ endpoints: testEndpoints }));
       const result = statUtil.getInsulinData();
 
-      // Boluses are 26 hours apart, so they fall into 2 different 24-hour buckets
-      // Total is 20, divided by 2 buckets = 10
-      expect(result.bolus).to.equal(10);
+      // Boluses are each 26 hours apart, so they fall into 3 different 24-hour buckets
+      // Total is 18, divided by 3 buckets = 6
+      expect(result.bolus).to.equal(6);
     });
   });
 
