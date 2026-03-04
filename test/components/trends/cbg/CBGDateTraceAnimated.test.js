@@ -17,7 +17,7 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, fireEvent } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -59,52 +59,52 @@ describe('CBGDateTraceAnimated', () => {
   };
 
   describe('when the `data` is an empty array', () => {
-    let wrapper;
+    let container;
     before(() => {
       const noDataProps = _.assign({}, props, { data: [] });
-      wrapper = mount(
+      ({ container } = render(
         <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
           <CBGDateTraceAnimated {...noDataProps} />
         </SVGContainer>
-      );
+      ));
     });
 
     it('should render a <g> with nothing in it', () => {
-      expect(wrapper.find(`#cbgDateTrace-${props.date}`)).to.have.length(1);
-      expect(wrapper.find('circle')).to.have.length(0);
+      expect(container.querySelectorAll(`#cbgDateTrace-${props.date}`)).to.have.length(1);
+      expect(container.querySelectorAll('circle')).to.have.length(0);
     });
   });
 
   describe('when `data` is not empty', () => {
-    let wrapper;
+    let container;
     before(() => {
-      wrapper = mount(
+      ({ container } = render(
         <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
           <CBGDateTraceAnimated {...props} />
         </SVGContainer>
-      );
+      ));
     });
 
     it('should render a <g> with two <circle>s in it', () => {
-      expect(wrapper.find(`#cbgDateTrace-${props.date}`)).to.have.length(1);
-      expect(wrapper.find('circle')).to.have.length(2);
+      expect(container.querySelectorAll(`#cbgDateTrace-${props.date}`)).to.have.length(1);
+      expect(container.querySelectorAll('circle')).to.have.length(2);
     });
 
     it('should render each circle centered on (scaled) `msPer24` and `value`', () => {
-      const circles = wrapper.find('circle');
+      const circles = container.querySelectorAll('circle');
       const { data } = props;
       circles.forEach((circle, i) => { // eslint-disable-line lodash/prefer-lodash-method
-        expect(circle.prop('cx')).to.equal(xScale(data[i].msPer24));
-        expect(circle.prop('cy')).to.equal(yScale(data[i].value));
+        expect(Number(circle.getAttribute('cx'))).to.equal(xScale(data[i].msPer24));
+        expect(Number(circle.getAttribute('cy'))).to.equal(yScale(data[i].value));
       });
     });
 
     describe('interactions', () => {
       describe('onClick', () => {
         it('should fire the onSelectDate function', () => {
-          const circle = wrapper.find('circle').first();
+          const circle = container.querySelectorAll('circle')[0];
           expect(props.onSelectDate.callCount).to.equal(0);
-          circle.simulate('click');
+          fireEvent.click(circle);
           expect(props.onSelectDate.callCount).to.equal(1);
           expect(props.onSelectDate.args[0][0]).to.equal(props.data[0].localDate);
         });
@@ -112,9 +112,9 @@ describe('CBGDateTraceAnimated', () => {
 
       describe('onMouseOver', () => {
         it('should fire the onFocusDate function', () => {
-          const circle = wrapper.find('circle').first();
+          const circle = container.querySelectorAll('circle')[0];
           expect(props.focusDateTrace.callCount).to.equal(0);
-          circle.simulate('mouseover');
+          fireEvent.mouseOver(circle);
           expect(props.focusDateTrace.callCount).to.equal(1);
           expect(props.focusDateTrace.args[0][0]).to.eql(props.data[0]);
           expect(props.focusDateTrace.args[0][1]).to.be.an('object').and.have.keys(['left', 'yPositions']);
@@ -123,9 +123,9 @@ describe('CBGDateTraceAnimated', () => {
 
       describe('onMouseOut', () => {
         it('should fire the unfocusDateTrace function', () => {
-          const circle = wrapper.find('circle').first();
+          const circle = container.querySelectorAll('circle')[0];
           expect(props.unfocusDateTrace.callCount).to.equal(0);
-          circle.simulate('mouseout');
+          fireEvent.mouseOut(circle);
           expect(props.unfocusDateTrace.callCount).to.equal(1);
         });
       });

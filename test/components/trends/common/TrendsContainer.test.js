@@ -22,7 +22,7 @@ import { range } from 'd3-array';
 import moment from 'moment-timezone';
 import React from 'react';
 
-import { shallow } from 'enzyme';
+import { render as rtlRender, cleanup, act } from '@testing-library/react/pure';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../../src/utils/constants';
 import DummyComponent from '../../../helpers/DummyComponent';
@@ -33,13 +33,42 @@ import {
   getLocalizedNoonBeforeUTC,
   getLocalizedOffset,
 } from '../../../../src/components/trends/common/TrendsContainer';
-import TrendsSVGContainer from '../../../../src/components/trends/common/TrendsSVGContainer';
+// Mock TrendsSVGContainer to avoid rendering its deep component tree
+jest.mock('../../../../src/components/trends/common/TrendsSVGContainer', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('div', { 'data-testid': 'TrendsSVGContainer' }),
+}));
+
+// Helper to create a render wrapper with instance access and setProps
+function renderTrends(initialProps) {
+  const ref = React.createRef();
+  let currentProps = { ...initialProps, ref };
+  const result = rtlRender(React.createElement(TrendsContainer, currentProps));
+  return {
+    ref,
+    container: result.container,
+    instance: () => ref.current,
+    state: () => ref.current.state,
+    setProps: (newProps) => {
+      currentProps = { ...currentProps, ...newProps };
+      result.rerender(React.createElement(TrendsContainer, { ...currentProps, ref }));
+    },
+  };
+}
 
 describe('TrendsContainer', () => {
   // stubbing console.warn gets rid of the annoying warnings from react-dimensions
   // due to not rendering TrendsContainer within a real app like blip
   // eslint-disable-next-line no-console
+  const originalConsoleWarn = console.warn;
+  // eslint-disable-next-line no-console
   console.warn = sinon.stub();
+
+  after(() => {
+    // eslint-disable-next-line no-console
+    console.warn = originalConsoleWarn;
+    cleanup();
+  });
 
   describe('getAllDatesInRange', () => {
     it('should be a function', () => {
@@ -278,9 +307,7 @@ describe('TrendsContainer', () => {
     };
 
     before(() => {
-      minimalData = shallow(
-        <TrendsContainer {...props} {...mgdl} {...makeDataProp(justOneDatum())} />,
-      );
+      minimalData = renderTrends({ ...props, ...mgdl, ...makeDataProp(justOneDatum()) });
     });
 
     afterEach(() => {
@@ -293,17 +320,17 @@ describe('TrendsContainer', () => {
       let withInitialDatetimeLocation;
 
       before(() => {
-        withInitialDatetimeLocation = shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-            initialDatetimeLocation="2016-03-15T19:00:00.000Z"
-          />
-        );
+        withInitialDatetimeLocation = renderTrends({
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+          initialDatetimeLocation: '2016-03-15T19:00:00.000Z',
+        });
 
-        withInitialDatetimeLocation.instance().mountData();
-        minimalData.instance().mountData();
+        act(() => {
+          withInitialDatetimeLocation.instance().mountData();
+          minimalData.instance().mountData();
+        });
       });
 
       it('should set dateDomain to `mostRecentDateTimeLocation` prop ceiling if no initialDatetimeLocation', () => {
@@ -323,97 +350,81 @@ describe('TrendsContainer', () => {
 
       it('should mark trends viewed as `touched` if not already touched', () => {
         expect(markTrendsViewed.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        }));
         expect(markTrendsViewed.callCount).to.equal(1);
       });
 
       it('should not mark trends view `touched` if already touched', () => {
         expect(markTrendsViewed.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {..._.merge({}, props, { touched: true })}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ..._.merge({}, props, { touched: true }),
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        }));
         expect(markTrendsViewed.callCount).to.equal(0);
       });
 
       it('should toggle BG data source if not enough cbg data', () => {
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp([...justOneDatum(), ...justOneDatum(undefined, 'smbg')])}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp([...justOneDatum(), ...justOneDatum(undefined, 'smbg')]),
+        }));
         expect(onSwitchBgDataSource.callCount).to.equal(1);
       });
 
       it('should not toggle BG data source if enough cbg data (dexcom)', () => {
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(sevenDaysData())}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp(sevenDaysData()),
+        }));
         expect(onSwitchBgDataSource.callCount).to.equal(0);
       });
 
       it('should not toggle BG data source if enough cbg data (libre)', () => {
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(sevenDaysData(devices.libre))}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp(sevenDaysData(devices.libre)),
+        }));
         expect(onSwitchBgDataSource.callCount).to.equal(0);
       });
 
       it('should not toggle BG data source if enough cbg data (dexcom + libre mix)', () => {
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(sevenDaysDataMixedMinimum())}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp(sevenDaysDataMixedMinimum()),
+        }));
         expect(onSwitchBgDataSource.callCount).to.equal(0);
       });
 
       it('should not toggle BG data source even if not enough cbg data if `touched`', () => {
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {..._.merge({}, props, { trendsState: { touched: true } })}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ..._.merge({}, props, { trendsState: { touched: true } }),
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        }));
         expect(onSwitchBgDataSource.callCount).to.equal(0);
       });
 
       it('should not toggle BG data source even if not enough cbg data if there\'s no smbg data', () => {
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum(), { cbg: true, smbg: false })}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        }));
         expect(onSwitchBgDataSource.callCount).to.equal(0);
       });
     });
@@ -430,13 +441,11 @@ describe('TrendsContainer', () => {
       });
 
       it('should call the `mountData` method', () => {
-        shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        rtlRender(React.createElement(TrendsContainer, {
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        }));
         sinon.assert.callCount(mountDataSpy, 1);
       });
     });
@@ -457,13 +466,11 @@ describe('TrendsContainer', () => {
       });
 
       it('should call `mountData` if `loading` prop changes from true to false', () => {
-        const container = shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        const container = renderTrends({
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        });
         mountDataSpy.resetHistory();
         sinon.assert.callCount(mountDataSpy, 0);
 
@@ -475,13 +482,11 @@ describe('TrendsContainer', () => {
       });
 
       it('should not call `mountData` if `loading` prop does not change from true to false', () => {
-        const container = shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        const container = renderTrends({
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        });
         mountDataSpy.resetHistory();
         sinon.assert.callCount(mountDataSpy, 0);
 
@@ -490,13 +495,11 @@ describe('TrendsContainer', () => {
       });
 
       it('should call `mountData` if `queryDataCount` prop changes', () => {
-        const container = shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        const container = renderTrends({
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        });
         mountDataSpy.resetHistory();
         sinon.assert.callCount(mountDataSpy, 0);
 
@@ -505,13 +508,11 @@ describe('TrendsContainer', () => {
       });
 
       it('should not call `mountData` if `queryDataCount` prop does not change', () => {
-        const container = shallow(
-          <TrendsContainer
-            {...props}
-            {...mgdl}
-            {...makeDataProp(justOneDatum())}
-          />
-        );
+        const container = renderTrends({
+          ...props,
+          ...mgdl,
+          ...makeDataProp(justOneDatum()),
+        });
         mountDataSpy.resetHistory();
         sinon.assert.callCount(mountDataSpy, 0);
 
@@ -523,9 +524,7 @@ describe('TrendsContainer', () => {
     describe('yScale', () => {
       describe('mg/dL blood glucose units', () => {
         before(() => {
-          enoughCbgData = shallow(
-            <TrendsContainer {...props} {...mgdl} {...makeDataProp(sevenDaysData())} />
-          );
+          enoughCbgData = renderTrends({ ...props, ...mgdl, ...makeDataProp(sevenDaysData()) });
         });
 
         it('should have `clamp` set to true', () => {
@@ -542,12 +541,10 @@ describe('TrendsContainer', () => {
         });
 
         it('should have a minimum yScale domain: [targetLowerBound, yScaleClampTop] if veryLowThreshold is absent', () => {
-          const mgdlMissingVeryLow = { ...mgdl };
+          const mgdlMissingVeryLow = _.cloneDeep(mgdl);
           mgdlMissingVeryLow.bgPrefs.bgBounds.veryLowThreshold = null;
 
-          minimalData = shallow(
-            <TrendsContainer {...props} {...mgdlMissingVeryLow} {...makeDataProp(justOneDatum())} />,
-          );
+          minimalData = renderTrends({ ...props, ...mgdlMissingVeryLow, ...makeDataProp(justOneDatum()) });
 
           const { yScale } = minimalData.state();
           expect(yScale.domain())
@@ -565,12 +562,8 @@ describe('TrendsContainer', () => {
 
       describe('mmol/L blood glucose units', () => {
         before(() => {
-          enoughCbgDataMmol = shallow(
-            <TrendsContainer {...props} {...mmoll} {...makeDataProp(sevenDaysDataMmol())} />
-          );
-          minimalDataMmol = shallow(
-            <TrendsContainer {...props} {...mmoll} {...makeDataProp(justOneDatumMmol())} />
-          );
+          enoughCbgDataMmol = renderTrends({ ...props, ...mmoll, ...makeDataProp(sevenDaysDataMmol()) });
+          minimalDataMmol = renderTrends({ ...props, ...mmoll, ...makeDataProp(justOneDatumMmol()) });
         });
 
         it('should have `clamp` set to true', () => {
@@ -602,14 +595,12 @@ describe('TrendsContainer', () => {
         let withInitialDatetimeLocation;
 
         before(() => {
-          withInitialDatetimeLocation = shallow(
-            <TrendsContainer
-              {...props}
-              {...mgdl}
-              {...makeDataProp(justOneDatum())}
-              initialDatetimeLocation="2016-03-15T19:00:00.000Z"
-            />
-          );
+          withInitialDatetimeLocation = renderTrends({
+            ...props,
+            ...mgdl,
+            ...makeDataProp(justOneDatum()),
+            initialDatetimeLocation: '2016-03-15T19:00:00.000Z',
+          });
         });
 
         it('should exist and be a function', () => {
@@ -767,10 +758,10 @@ describe('TrendsContainer', () => {
 
     describe('render', () => {
       it('should render `TrendsSVGContainer`', () => {
-        const wrapper = shallow(
-          <TrendsContainer {...props} {...mgdl} {...makeDataProp(justOneDatum())} />
-        );
-        expect(wrapper.find(TrendsSVGContainer)).to.have.length(1);
+        const { container } = rtlRender(React.createElement(TrendsContainer, {
+          ...props, ...mgdl, ...makeDataProp(justOneDatum()),
+        }));
+        expect(container.querySelectorAll('[data-testid="TrendsSVGContainer"]')).to.have.length(1);
       });
     });
   });

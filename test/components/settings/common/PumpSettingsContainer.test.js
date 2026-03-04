@@ -19,14 +19,19 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render as rtlRender, cleanup } from '@testing-library/react/pure';
 import _ from 'lodash';
 
 import { PumpSettingsContainer, mapStateToProps }
   from '../../../../src/components/settings/common/PumpSettingsContainer';
-import NonTandem from '../../../../src/components/settings/NonTandem';
-import Tandem from '../../../../src/components/settings/Tandem';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
+
+jest.mock('../../../../src/components/settings/NonTandem', () => (props) => (
+  <div data-testid="NonTandem" data-device-key={props.deviceKey}>NonTandem</div>
+));
+jest.mock('../../../../src/components/settings/Tandem', () => (props) => (
+  <div data-testid="Tandem">Tandem</div>
+));
 
 const animasSettings = require('../../../../data/pumpSettings/animas/multirate.json');
 const medtronicSettings = require('../../../../data/pumpSettings/medtronic/multirate.json');
@@ -78,13 +83,14 @@ describe('PumpSettingsContainer', () => {
     afterEach(() => {
       markSettingsViewed.resetHistory();
       toggleSettingsSection.resetHistory();
+      cleanup();
     });
 
     describe('componentWillMount', () => {
       it('should call `toggleSettingsSection` & set opened section state if not `touched`', () => {
         expect(toggleSettingsSection.callCount).to.equal(0);
         const manufacturerKey = 'animas';
-        mount(
+        rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -100,7 +106,7 @@ describe('PumpSettingsContainer', () => {
       it('should not call `toggleSettingsSection`, etc. if already `touched`', () => {
         expect(toggleSettingsSection.callCount).to.equal(0);
         const manufacturerKey = 'animas';
-        mount(
+        rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -117,7 +123,7 @@ describe('PumpSettingsContainer', () => {
 
         const manufacturerKey = 'medtronic';
 
-        mount(
+        rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -143,7 +149,7 @@ describe('PumpSettingsContainer', () => {
           lastManualBasalSchedule: undefined,
         });
 
-        mount(
+        rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -163,19 +169,19 @@ describe('PumpSettingsContainer', () => {
 
     describe('render', () => {
       it('should render nothing if `settingsState` is empty', () => {
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             pumpSettings={animasSettings}
             settingsState={{}}
           />
         );
-        expect(wrapper.html()).to.be.null;
+        expect(container.firstChild).to.be.null;
       });
 
       it('should render `NonTandem` for manufacturerKey of `animas`', () => {
         const manufacturerKey = 'animas';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -183,13 +189,13 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(animasSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.find(NonTandem)).to.have.length(1);
-        expect(wrapper.find(NonTandem).prop('deviceKey')).to.equal('animas');
+        expect(container.querySelectorAll('[data-testid="NonTandem"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NonTandem"]').getAttribute('data-device-key')).to.equal('animas');
       });
 
       it('should render `NonTandem` for manufacturerKey of `carelink`', () => {
         const manufacturerKey = 'carelink';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -197,13 +203,13 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(medtronicSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.find(NonTandem)).to.have.length(1);
-        expect(wrapper.find(NonTandem).prop('deviceKey')).to.equal('carelink');
+        expect(container.querySelectorAll('[data-testid="NonTandem"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NonTandem"]').getAttribute('data-device-key')).to.equal('carelink');
       });
 
       it('should render `NonTandem` for manufacturerKey of `insulet`', () => {
         const manufacturerKey = 'insulet';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -211,13 +217,13 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(omnipodSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.find(NonTandem)).to.have.length(1);
-        expect(wrapper.find(NonTandem).prop('deviceKey')).to.equal('insulet');
+        expect(container.querySelectorAll('[data-testid="NonTandem"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NonTandem"]').getAttribute('data-device-key')).to.equal('insulet');
       });
 
       it('should render `NonTandem` for manufacturerKey of `medtronic`', () => {
         const manufacturerKey = 'medtronic';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -225,13 +231,13 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(medtronicSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.find(NonTandem)).to.have.length(1);
-        expect(wrapper.find(NonTandem).prop('deviceKey')).to.equal('medtronic');
+        expect(container.querySelectorAll('[data-testid="NonTandem"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NonTandem"]').getAttribute('data-device-key')).to.equal('medtronic');
       });
 
       it('should render `Tandem` for manufacturerKey of `tandem`', () => {
         const manufacturerKey = 'tandem';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -239,12 +245,12 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(tandemSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.find(Tandem)).to.have.length(1);
+        expect(container.querySelectorAll('[data-testid="Tandem"]')).to.have.length(1);
       });
 
       it('should render `NonTandem` for manufacturerKey of `microtech`', () => {
         const manufacturerKey = 'microtech';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -252,15 +258,15 @@ describe('PumpSettingsContainer', () => {
             settingsState={touched(equilSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.find(NonTandem)).to.have.length(1);
-        expect(wrapper.find(NonTandem).prop('deviceKey')).to.equal('microtech');
+        expect(container.querySelectorAll('[data-testid="NonTandem"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NonTandem"]').getAttribute('data-device-key')).to.equal('microtech');
       });
 
       it('should console.warn and render `null` if unknown manufacturerKey provided', () => {
         console.warn = sinon.spy();
         expect(console.warn.callCount).to.equal(0);
         const manufacturerKey = 'foo';
-        const wrapper = mount(
+        const { container } = rtlRender(
           <PumpSettingsContainer
             {...props}
             manufacturerKey={manufacturerKey}
@@ -268,7 +274,7 @@ describe('PumpSettingsContainer', () => {
             settingsState={untouched(animasSettings, manufacturerKey)}
           />
         );
-        expect(wrapper.html()).to.be.null;
+        expect(container.firstChild).to.be.null;
         expect(console.warn.callCount).to.equal(1);
         expect(console.warn.args[0][0]).to.equal('Unknown manufacturer key: [foo]!');
       });

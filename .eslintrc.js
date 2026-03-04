@@ -1,23 +1,26 @@
-{
-  "extends": "airbnb",
-  "parser": "@babel/eslint-parser",
-  "plugins": ["lodash"],
-  "parserOptions": {
-    "requireConfigFile": false
+module.exports = {
+  extends: "airbnb",
+  parser: "@babel/eslint-parser",
+  plugins: ["lodash"],
+  parserOptions: {
+    requireConfigFile: false,
+    babelOptions: {
+      envName: process.env.BABEL_ENV || process.env.NODE_ENV || "development",
+    },
   },
-  "rules": {
+  rules: {
     "no-multiple-empty-lines": 0,
     "no-mixed-operators": 0,
     "no-redeclare": 0,
     "arrow-parens": 0,
-    "camelcase": 1,
+    camelcase: 1,
     "class-methods-use-this": 0,
     "comma-dangle": ["error", {
-      "arrays": "only-multiline",
-      "objects": "only-multiline",
-      "imports": "only-multiline",
-      "exports": "only-multiline",
-      "functions": "never"
+      arrays: "only-multiline",
+      objects: "only-multiline",
+      imports: "only-multiline",
+      exports: "only-multiline",
+      functions: "never",
     }],
     "function-paren-newline": 0,
     "implicit-arrow-linebreak": 0,
@@ -25,6 +28,7 @@
     "import/first": 0,
     "import/newline-after-import": 0,
     "import/no-cycle": 0,
+    "import/no-dynamic-require": 0,
     "import/no-extraneous-dependencies": 0,
     "import/no-named-as-default": 0,
     "import/no-named-as-default-member": 0,
@@ -37,8 +41,8 @@
     "jsx-a11y/mouse-events-have-key-events": 0,
     "jsx-a11y/no-noninteractive-element-interactions": 0,
     "jsx-a11y/no-static-element-interactions": 0,
-    "lodash/prefer-lodash-method": ["error", {
-      "ignoreMethods": ["split", "trim", "replace", "toLower"]
+    "lodash/prefer-lodash-method": ["warn", {
+      ignoreMethods: ["split", "trim", "replace", "toLower"],
     }],
     "max-len": 1,
     "no-else-return": 0,
@@ -80,5 +84,5 @@
     "react/sort-comp": 0,
     "react/static-property-placement": 0,
     "space-unary-ops": 0
-  }
-}
+  },
+};

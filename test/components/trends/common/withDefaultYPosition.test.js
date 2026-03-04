@@ -16,10 +16,9 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import bgBounds from '../../../helpers/bgBounds';
-import DummyComponent from '../../../helpers/DummyComponent';
 import * as scales from '../../../helpers/scales';
 const {
   trendsYScale: yScale,
@@ -33,24 +32,23 @@ describe('withDefaultYPosition', () => {
     yScale,
     foo: 'bar',
   };
-  const ToRender = withDefaultYPosition(DummyComponent);
-  let wrapper;
+  let capturedProps;
+  const MockDummy = (p) => { capturedProps = p; return <div />; };
+  const ToRender = withDefaultYPosition(MockDummy);
   before(() => {
-    wrapper = shallow(<ToRender {...props} />);
+    render(<ToRender {...props} />);
   });
 
   it('should render the DummyComponent with an additional defaultY prop', () => {
-    const dummy = wrapper.find(DummyComponent);
-    expect(dummy.length).to.equal(1);
+    expect(capturedProps).to.exist;
     const { targetLowerBound, targetUpperBound } = bgBounds;
-    expect(dummy.prop('defaultY'))
+    expect(capturedProps.defaultY)
       .to.equal(yScale(targetUpperBound - (targetUpperBound - targetLowerBound) / 2));
   });
 
   it('should also pass through all other props', () => {
-    const dummy = wrapper.find(DummyComponent);
-    expect(dummy.prop('bgBounds')).to.deep.equal(bgBounds);
-    expect(dummy.prop('yScale')).to.equal(yScale);
-    expect(dummy.prop('foo')).to.equal('bar');
+    expect(capturedProps.bgBounds).to.deep.equal(bgBounds);
+    expect(capturedProps.yScale).to.equal(yScale);
+    expect(capturedProps.foo).to.equal('bar');
   });
 });

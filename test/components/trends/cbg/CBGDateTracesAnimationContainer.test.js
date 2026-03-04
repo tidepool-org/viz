@@ -17,11 +17,23 @@
 
 import _ from 'lodash';
 import React from 'react';
-import TransitionGroupPlus from 'react-transition-group-plus';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import bgBounds from '../../../helpers/bgBounds';
-import CBGDateTraceAnimated from '../../../../src/components/trends/cbg/CBGDateTraceAnimated';
+
+// eslint-disable-next-line arrow-body-style
+jest.mock('react-transition-group-plus', () => {
+  return function MockTransitionGroupPlus({ children }) {
+    return <div data-testid="transition-group-plus">{children}</div>;
+  };
+});
+
+// eslint-disable-next-line arrow-body-style
+jest.mock('../../../../src/components/trends/cbg/CBGDateTraceAnimated', () => {
+  return function MockCBGDateTraceAnimated() {
+    return <div data-testid="cbg-date-trace-animated" />;
+  };
+});
 
 import CBGDateTracesAnimationContainer
   from '../../../../src/components/trends/cbg/CBGDateTracesAnimationContainer';
@@ -40,14 +52,14 @@ describe('CBGDateTracesAnimationContainer', () => {
 
   it('should render a TransitionGroupPlus even if there are no dates or data', () => {
     const noDataProps = _.assign({}, props, { data: {}, dates: [] });
-    const wrapper = shallow(<CBGDateTracesAnimationContainer {...noDataProps} />);
-    expect(wrapper.find(TransitionGroupPlus)).to.have.length(1);
-    expect(wrapper.find(CBGDateTraceAnimated)).to.have.length(0);
+    const { container } = render(<CBGDateTracesAnimationContainer {...noDataProps} />);
+    expect(container.querySelectorAll('[data-testid="transition-group-plus"]')).to.have.length(1);
+    expect(container.querySelectorAll('[data-testid="cbg-date-trace-animated"]')).to.have.length(0);
   });
 
   it('should render a TransitionGroupPlus and a CBGDateTraceAnimated for each date', () => {
-    const wrapper = shallow(<CBGDateTracesAnimationContainer {...props} />);
-    expect(wrapper.find(TransitionGroupPlus)).to.have.length(1);
-    expect(wrapper.find(CBGDateTraceAnimated)).to.have.length(2);
+    const { container } = render(<CBGDateTracesAnimationContainer {...props} />);
+    expect(container.querySelectorAll('[data-testid="transition-group-plus"]')).to.have.length(1);
+    expect(container.querySelectorAll('[data-testid="cbg-date-trace-animated"]')).to.have.length(2);
   });
 });

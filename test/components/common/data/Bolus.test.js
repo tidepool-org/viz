@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { detail } from '../../../helpers/scales';
 const { detailXScale, detailBolusScale } = detail;
@@ -35,28 +35,28 @@ const BOLUS_OPTS = {
 
 describe('Bolus', () => {
   it('should return `null` if no paths calculated from insulinEvent', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Bolus insulinEvent={zeroUnderride} xScale={detailXScale} yScale={detailBolusScale} />
     );
-    expect(wrapper.html()).to.be.null;
+    expect(container.firstChild).to.be.null;
   });
 
   it('should return a `<g>` with as many `<path>s` as are calculated for the insulinEvent', () => {
     const paths = getBolusPaths(normal, detailXScale, detailBolusScale, BOLUS_OPTS);
-    const wrapper = shallow(
+    const { container } = render(
       <Bolus insulinEvent={normal} xScale={detailXScale} yScale={detailBolusScale} />
     );
-    expect(wrapper.find(`#bolus-${normal.id}`).length).to.equal(1);
-    expect(wrapper.find('path').length).to.equal(paths.length);
-    expect(wrapper.find('circle').length).to.equal(0);
-    expect(wrapper.find('text').length).to.equal(0);
+    expect(container.querySelectorAll(`#bolus-${normal.id}`).length).to.equal(1);
+    expect(container.querySelectorAll('path').length).to.equal(paths.length);
+    expect(container.querySelectorAll('circle').length).to.equal(0);
+    expect(container.querySelectorAll('text').length).to.equal(0);
   });
 
   it('should include a <circle> and <text> for carbs if insulinEvent has `carbInput`', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Bolus insulinEvent={underrideNormal} xScale={detailXScale} yScale={detailBolusScale} />
     );
-    expect(wrapper.find('circle').length).to.equal(1);
-    expect(wrapper.find('text').length).to.equal(1);
+    expect(container.querySelectorAll('circle').length).to.equal(1);
+    expect(container.querySelectorAll('text').length).to.equal(1);
   });
 });

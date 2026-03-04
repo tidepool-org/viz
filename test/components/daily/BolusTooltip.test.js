@@ -18,7 +18,7 @@
 import React from 'react';
 import _ from 'lodash';
 
-import { mount, shallow } from 'enzyme';
+import { render as rtlRender, cleanup } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
@@ -509,261 +509,273 @@ const props = {
 };
 
 describe('BolusTooltip', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   it('should render without issue when all properties provided', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={normal} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
   });
 
   it('should render programmed, interrupted and delivered for cancelled bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={cancelled} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.programmed))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={cancelled} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.programmed))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
   });
 
   it('should render programmed, interrupted and delivered for immediately cancelled bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={immediatelyCancelled} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.programmed))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={immediatelyCancelled} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.programmed))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
   });
 
   it('should render suggested, override and delivered for override bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={override} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={override} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
   });
 
   it('should render suggested, underride and delivered for underride bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={underride} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={underride} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
   });
 
   it('should render delivered, normal and extended for combo bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={combo} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.normal))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={combo} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.normal))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render programmed, interrupted, normal, extended and delivered for cancelled in normal combo bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={cancelledInNormalCombo} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.programmed))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.normal))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={cancelledInNormalCombo} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.programmed))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.normal))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render programmed, interrupted, normal, extended and delivered for cancelled in extended combo bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={cancelledInExtendedCombo} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.programmed))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.normal))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={cancelledInExtendedCombo} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.programmed))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.normal))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render suggested, normal, extended, override and delivered for override combo bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={comboOverride} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.normal))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={comboOverride} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.normal))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render suggested, interrupted, override, delivered, normal and extended for underride interrupted combo bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={comboUnderrideCancelled} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.normal))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={comboUnderrideCancelled} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.normal))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render suggested, bg, interrupted, override, delivered, normal, extended, carbRatio, isf and target for underride interrupted combo with BG bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={comboUnderrideCancelledWithBG} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.normal))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.carbRatio))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={comboUnderrideCancelledWithBG} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.normal))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.carbRatio))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
   });
 
   it('should render delivered and extended for extended bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={extended} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={extended} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
-  it('should render programmed, interrupted, delivered and extendedDuraation for interrupted extended bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={cancelledExtended} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.programmed))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+  it('should render programmed, interrupted, delivered and extendedDuration for interrupted extended bolus', () => {
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={cancelledExtended} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.programmed))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render programmed, interrupted and extended for immediately cancelled extended bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={immediatelyCancelledExtended} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.programmed))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={immediatelyCancelledExtended} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.programmed))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render delivered, extended and annotation for extended Animas bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimas} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.annotation))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={extendedAnimas} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.annotation))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render suggested, override, delivered, extended and annotation for extended underride Animas bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimasUnderride} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.annotation))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={extendedAnimasUnderride} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.annotation))).to.have.length(1);
   });
 
   // eslint-disable-next-line max-len
   it('should render suggested, override, delivered and extended for extended underide bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={extendedUnderride} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.suggested))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.override))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.extended))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={extendedUnderride} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.suggested))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.override))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.extended))).to.have.length(1);
   });
 
   it('should render carbRatio for bolus with carb input', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={withCarbInput} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.carbRatio))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={withCarbInput} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.carbRatio))).to.have.length(1);
   });
 
   it('should render carbRatio for bolus with carb exchange input', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={carbExchangesMedtronic} />);
-    const carbRatio = wrapper.find(formatClassesAsSelector(styles.carbRatio));
-    expect(carbRatio.find(formatClassesAsSelector(styles.label)).text()).to.equal('I:C Ratio  (U/exch)');
-    expect(carbRatio.find(formatClassesAsSelector(styles.value)).text()).to.equal('2.5');
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={carbExchangesMedtronic} />);
+    const carbRatio = container.querySelector(formatClassesAsSelector(styles.carbRatio));
+    expect(carbRatio.querySelector(formatClassesAsSelector(styles.label)).textContent).to.contain('I:C Ratio');
+    expect(carbRatio.querySelector(formatClassesAsSelector(styles.label)).textContent).to.contain('(U/exch)');
+    expect(carbRatio.querySelector(formatClassesAsSelector(styles.value)).textContent).to.equal('2.5');
   });
 
   it('should render delivered, bg, iob, isf and target for bg and iob bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={withBGInputAndIOB} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={withBGInputAndIOB} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
   });
 
   it('should render iob when iob is 0', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={withBGInputAndZeroIOB} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={withBGInputAndZeroIOB} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.iob))).to.have.length(1);
   });
 
   it('should render an automated header label for automated bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={automated} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.title))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.include('Automated');
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={automated} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.title)).length).to.be.at.least(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.title)).textContent).to.include('Automated');
   });
 
   it('should render a one-button bolus header label for a one-button bolus', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={oneButton} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.title))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.include('One-Button Bolus');
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={oneButton} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.title)).length).to.be.at.least(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.title)).textContent).to.include('One-Button Bolus');
   });
 
   // eslint-disable-next-line max-len
   it('should render appropriate fields for a bolus with a Loop dosing decision', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
   });
 
   it('should render appropriate fields for a bolus with a twiist Loop dosing decision', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={withTwiistLoopDosingDecision} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(0); // No bg field shown for twiist Loop
-    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={withTwiistLoopDosingDecision} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(0); // No bg field shown for twiist Loop
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
   });
 
   it('should render appropriate fields for a manual insulin delivery', () => {
-    const wrapper = mount(<BolusTooltip {...props} bolus={insulinRapidActing} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.actingType))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.actingType)).text()).contains('Short-acting insulin');
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.source)).text()).contains('Manual');
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={insulinRapidActing} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.actingType))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.actingType)).textContent).to.contain('Short-acting insulin');
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.source)).textContent).to.contain('Manual');
   });
 
   describe('getTarget', () => {
     // eslint-disable-next-line max-len
     const targetValue = `${formatClassesAsSelector(styles.target)} ${formatClassesAsSelector(styles.value)}`;
     it('should return a single div for Medtronic style target', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withMedtronicTarget} />);
-      expect(shallow(getTarget(withMedtronicTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
-      expect(wrapper.find(targetValue).text()).to.equal('60-180');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withMedtronicTarget} />);
+      const result = getTarget(withMedtronicTarget, props.bgPrefs, props.timePrefs);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(targetValue).textContent).to.equal('60-180');
     });
     it('should return a single div and single value for Medtronic style same value target', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withMedtronicSameTarget} />);
-      expect(shallow(getTarget(withMedtronicSameTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
-      expect(wrapper.find(targetValue).text()).to.equal('100');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withMedtronicSameTarget} />);
+      const result = getTarget(withMedtronicSameTarget, props.bgPrefs, props.timePrefs);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(targetValue).textContent).to.equal('100');
     });
     it('should return an array for Animas style target', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withAnimasTarget} />);
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withAnimasTarget} />);
       expect(_.isArray(getTarget(withAnimasTarget, props.bgPrefs, props.timePrefs))).to.be.true;
       expect(getTarget(withAnimasTarget, props.bgPrefs, props.timePrefs).length).to.equal(2);
-      expect(wrapper.find(targetValue).first().text()).to.equal('100');
-      expect(wrapper.find(targetValue).last().text()).to.equal('40');
+      const targetValues = container.querySelectorAll(targetValue);
+      expect(targetValues[0].textContent).to.equal('100');
+      expect(targetValues[targetValues.length - 1].textContent).to.equal('40');
     });
     it('should return an array for Insulet style target', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withInsuletTarget} />);
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withInsuletTarget} />);
       expect(_.isArray(getTarget(withInsuletTarget, props.bgPrefs, props.timePrefs))).to.be.true;
       expect(getTarget(withInsuletTarget, props.bgPrefs, props.timePrefs).length).to.equal(2);
-      expect(wrapper.find(targetValue).first().text()).to.equal('100');
-      expect(wrapper.find(targetValue).last().text()).to.equal('180');
+      const targetValues = container.querySelectorAll(targetValue);
+      expect(targetValues[0].textContent).to.equal('100');
+      expect(targetValues[targetValues.length - 1].textContent).to.equal('180');
     });
     it('should return a single div for Tandem style target', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withTandemTarget} />);
-      expect(shallow(getTarget(withTandemTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
-      expect(wrapper.find(targetValue).text()).to.equal('100');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withTandemTarget} />);
+      const result = getTarget(withTandemTarget, props.bgPrefs, props.timePrefs);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(targetValue).textContent).to.equal('100');
     });
     it('should return a single div for Loop style target', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
-      expect(shallow(getTarget(withLoopDosingDecision, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
-      expect(wrapper.find(targetValue).text()).to.equal('155-165');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
+      const result = getTarget(withLoopDosingDecision, props.bgPrefs, props.timePrefs);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(targetValue).textContent).to.equal('155-165');
     });
     it('should return "Auto" for a bolus with an automated wizard annotation', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withAutoTarget} />);
-      expect(shallow(getTarget(withAutoTarget, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
-      expect(wrapper.find(targetValue).text()).to.equal('Auto');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withAutoTarget} />);
+      const result = getTarget(withAutoTarget, props.bgPrefs, props.timePrefs);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(targetValue).textContent).to.equal('Auto');
     });
   });
 
@@ -771,7 +783,7 @@ describe('BolusTooltip', () => {
     it('should return true if annotations include Animas extended equal split', () => {
       expect(isAnimasExtended(extendedAnimas)).to.be.true;
     });
-    it('should return false for non-annotated boluse', () => {
+    it('should return false for non-annotated bolus', () => {
       expect(isAnimasExtended(normal)).to.be.false;
     });
     it('should return false for non-Animas annotated bolus', () => {
@@ -794,33 +806,35 @@ describe('BolusTooltip', () => {
     const normalStyle = formatClassesAsSelector(styles.normal);
     const label = formatClassesAsSelector(styles.label);
     it('should return a single div for Animas extended', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={extendedAnimas} />);
-      expect(shallow(getExtended(extendedAnimas)).type()).to.equal('div');
-      expect(wrapper.find(`${extendedStyle} ${label}`).text()).to.equal('Extended Over*');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={extendedAnimas} />);
+      const result = getExtended(extendedAnimas);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(`${extendedStyle} ${label}`).textContent).to.equal('Extended Over*');
     });
     it('should return an array for normal extended', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={extended} />);
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={extended} />);
       expect(_.isArray(getExtended(extended))).to.be.true;
       expect(getExtended(extended).length).to.equal(2);
       expect(getExtended(extended)[0]).to.be.false;
-      expect(wrapper.find(`${extendedStyle} ${label}`).text()).to.equal('Over 1 hr ');
+      expect(container.querySelector(`${extendedStyle} ${label}`).textContent).to.equal('Over 1 hr ');
     });
     it('should return an array for combo extended', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={combo} />);
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={combo} />);
       expect(_.isArray(getExtended(combo))).to.be.true;
       expect(getExtended(combo).length).to.equal(2);
-      expect(wrapper.find(`${normalStyle} ${label}`).text()).to.equal('Up Front (33%)');
-      expect(wrapper.find(`${extendedStyle} ${label}`).text()).to.equal('Over 1 hr (67%)');
+      expect(container.querySelector(`${normalStyle} ${label}`).textContent).to.equal('Up Front (33%)');
+      expect(container.querySelector(`${extendedStyle} ${label}`).textContent).to.equal('Over 1 hr (67%)');
     });
     it('should return null for normal bolus', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={normal} />);
+      rtlRender(<BolusTooltip {...props} bolus={normal} />);
       expect(getExtended(normal)).to.be.null;
     });
   });
 
   describe('animasExtendedAnnotationMessage', () => {
     it('should return a div for Animas extended', () => {
-      expect(shallow(animasExtendedAnnotationMessage(extendedAnimas)).type()).to.equal('div');
+      const result = animasExtendedAnnotationMessage(extendedAnimas);
+      expect(result.type).to.equal('div');
     });
     it('should return null for normal bolus', () => {
       expect(animasExtendedAnnotationMessage(normal)).to.be.null;
@@ -829,7 +843,8 @@ describe('BolusTooltip', () => {
 
   describe('medronicDeconvertedExchangeMessage', () => {
     it('should return a div for Medtronic deconverted carb-to-exchange ratio', () => {
-      expect(shallow(medronicDeconvertedExchangeMessage(deconvertedCarbExchangeRatioMedtronic)).type()).to.equal('div');
+      const result = medronicDeconvertedExchangeMessage(deconvertedCarbExchangeRatioMedtronic);
+      expect(result.type).to.equal('div');
     });
     it('should return null for normal bolus', () => {
       expect(animasExtendedAnnotationMessage(normal)).to.be.null;

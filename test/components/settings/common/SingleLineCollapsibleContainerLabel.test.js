@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, fireEvent } from '@testing-library/react/pure';
 
 import SingleLineCollapsibleContainerLabel
   from '../../../../src/components/settings/common/SingleLineCollapsibleContainerLabel';
@@ -25,14 +25,14 @@ describe('SingleLineCollapsibleContainerLabel', () => {
   it('should render a label with a click handler', () => {
     const clicker = sinon.stub();
     expect(clicker.callCount).to.equal(0);
-    const wrapper = shallow(
+    const { container } = render(
       <SingleLineCollapsibleContainerLabel
         isOpened
         label={{ main: 'Foo', secondary: 'Bar' }}
         onClick={clicker}
       />
     );
-    wrapper.simulate('click');
+    fireEvent.click(container.firstChild);
     expect(clicker.callCount).to.equal(1);
   });
 });

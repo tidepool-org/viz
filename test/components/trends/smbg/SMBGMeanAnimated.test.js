@@ -17,9 +17,8 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { TransitionMotion } from 'react-motion';
 
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -29,11 +28,26 @@ const {
 import bgBounds from '../../../helpers/bgBounds';
 
 import { THREE_HRS } from '../../../../src/utils/datetime';
-import { SMBGMeanAnimated } from '../../../../src/components/trends/smbg/SMBGMeanAnimated';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
+let lastTMProps = null;
+jest.mock('react-motion', () => ({
+  TransitionMotion: jest.fn((props) => {
+    lastTMProps = props;
+    const interpolated = (props.styles || []).map(s => ({
+      key: s.key,
+      style: Object.fromEntries(
+        Object.entries(s.style).map(([k, v]) => [k, typeof v === 'object' ? v.val : v])
+      ),
+    }));
+    return props.children ? props.children(interpolated) : null;
+  }),
+  spring: (val, config) => ({ val, config }),
+}));
+
+import { SMBGMeanAnimated } from '../../../../src/components/trends/smbg/SMBGMeanAnimated';
+
 describe('SMBGMeanAnimated', () => {
-  let wrapper;
   const focus = sinon.spy();
   const unfocus = sinon.spy();
   const datum = {
@@ -56,25 +70,24 @@ describe('SMBGMeanAnimated', () => {
   };
 
   before(() => {
-    wrapper = shallow(<SMBGMeanAnimated {...props} />);
+    render(<SMBGMeanAnimated {...props} />);
   });
 
   describe('when a datum (overlay data) is provided', () => {
     it('should create an array of 1 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(1);
     });
 
     it('should create `styles` for a <rect> vertically centered on the mean', () => {
-      const { datum: { mean }, meanHeight } = wrapper.instance().props;
-      const { style } = wrapper.find(TransitionMotion).prop('styles')[0];
+      const meanHeight = SMBGMeanAnimated.defaultProps.meanHeight;
+      const { style } = lastTMProps.styles[0];
       expect(style.y.val)
-        .to.equal(yScale(mean) - meanHeight / 2);
+        .to.equal(yScale(datum.mean) - meanHeight / 2);
     });
   });
 
   describe('when datum with `undefined` statistics (i.e., gap in data)', () => {
-    let noDatumWrapper;
     before(() => {
       const noDatumProps = _.assign({}, props, {
         datum: {
@@ -86,12 +99,12 @@ describe('SMBGMeanAnimated', () => {
         },
       });
 
-      noDatumWrapper = shallow(<SMBGMeanAnimated {...noDatumProps} />);
+      render(<SMBGMeanAnimated {...noDatumProps} />);
     });
 
     it('should create an array of 0 `styles` to render on the TransitionMotion', () => {
-      expect(noDatumWrapper.find(TransitionMotion).length).to.equal(1);
-      const styles = noDatumWrapper.find(TransitionMotion).prop('styles');
+      expect(lastTMProps).to.exist;
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(0);
     });
   });

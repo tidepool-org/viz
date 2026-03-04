@@ -17,9 +17,8 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { TransitionMotion } from 'react-motion';
 
-import { shallow } from 'enzyme';
+import { render, cleanup } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -30,10 +29,29 @@ const {
 import bgBounds from '../../../helpers/bgBounds';
 
 import { THREE_HRS } from '../../../../src/utils/datetime';
+
+let lastTMProps = null;
+jest.mock('react-motion', () => ({
+  TransitionMotion: jest.fn((props) => {
+    lastTMProps = props;
+    const interpolated = (props.styles || []).map(s => ({
+      key: s.key,
+      style: Object.fromEntries(
+        Object.entries(s.style).map(([k, v]) => [k, typeof v === 'object' ? v.val : v])
+      ),
+    }));
+    return props.children ? props.children(interpolated) : null;
+  }),
+  spring: (val, config) => ({ val, config }),
+}));
+
 import { SMBGRangeAnimated } from '../../../../src/components/trends/smbg/SMBGRangeAnimated';
 
 describe('SMBGRangeAnimated', () => {
-  let wrapper;
+  afterEach(() => {
+    cleanup();
+  });
+
   const focus = sinon.spy();
   const unfocus = sinon.spy();
   const datum = {
@@ -55,24 +73,23 @@ describe('SMBGRangeAnimated', () => {
   };
 
   before(() => {
-    wrapper = shallow(<SMBGRangeAnimated {...props} />);
+    render(<SMBGRangeAnimated {...props} />);
   });
 
   describe('when a datum (overlay data) is provided', () => {
     it('should create an array of 1 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(1);
     });
 
     it('should create `styles` for a <rect> covering the whole yScale range', () => {
-      const { style } = wrapper.find(TransitionMotion).prop('styles')[0];
+      const { style } = lastTMProps.styles[0];
       expect(style.height.val).to.equal(trendsHeight);
       expect(style.y.val).to.equal(0);
     });
   });
 
   describe('when datum with `undefined` statistics (i.e., gap in data)', () => {
-    let noDatumWrapper;
     before(() => {
       const noDatumProps = _.assign({}, props, {
         datum: {
@@ -84,12 +101,12 @@ describe('SMBGRangeAnimated', () => {
         },
       });
 
-      noDatumWrapper = shallow(<SMBGRangeAnimated {...noDatumProps} />);
+      render(<SMBGRangeAnimated {...noDatumProps} />);
     });
 
     it('should create an array of 0 `styles` to render on the TransitionMotion', () => {
-      expect(noDatumWrapper.find(TransitionMotion).length).to.equal(1);
-      const styles = noDatumWrapper.find(TransitionMotion).prop('styles');
+      expect(lastTMProps).to.exist;
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(0);
     });
   });

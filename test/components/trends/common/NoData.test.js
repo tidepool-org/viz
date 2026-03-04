@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import NoData from '../../../../src/components/trends/common/NoData';
 
@@ -25,73 +25,73 @@ describe('NoData', () => {
   const position = { x: 10, y: 50 };
 
   it('should render without issue when all properties provided', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <NoData
         position={position}
       />
     );
-    expect(wrapper.find('text')).to.have.length(1);
+    expect(container.querySelectorAll('text')).to.have.length(1);
   });
 
   it('should render given with x and y position', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <NoData
         position={position}
       />
     );
-    expect(wrapper.find('text[x=10]')).to.have.length(1);
-    expect(wrapper.find('text[y=50]')).to.have.length(1);
+    expect(container.querySelectorAll('text[x="10"]')).to.have.length(1);
+    expect(container.querySelectorAll('text[y="50"]')).to.have.length(1);
   });
 
   it('should not render when position not provided', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <NoData />
     );
-    expect(wrapper.find('text')).to.have.length(0);
+    expect(container.querySelectorAll('text')).to.have.length(0);
   });
 
   it('should render with the provided data type in the message', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <NoData
         dataType="smbg"
         position={position}
       />
     );
-    expect(wrapper.find('text').text())
+    expect(container.querySelector('text').textContent)
       .to.equal('There is no fingerstick data for this time period :(');
   });
 
   it('should not specify a default data type', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <NoData
         position={position}
       />
     );
-    expect(wrapper.find('text').text())
+    expect(container.querySelector('text').textContent)
       .to.equal('There is no  data for this time period :(');
   });
 
   it('should render the unselected all data msg if unselectedAllData prop is true', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <NoData
         position={position}
         unselectedAllData
       />
     );
-    expect(wrapper.find('text').text())
+    expect(container.querySelector('text').textContent)
       .to.equal('Hang on there, skippy! You unselected all of the data!');
   });
 
   it('should be able to override the unselected all data message string', () => {
     const customized = 'Dude, you unselected everything!';
-    const wrapper = shallow(
+    const { container } = render(
       <NoData
         position={position}
         unselectedAllData
         unselectedAllDataString={customized}
       />
     );
-    expect(wrapper.find('text').text())
+    expect(container.querySelector('text').textContent)
       .to.equal(customized);
   });
 });
