@@ -6,7 +6,6 @@ import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from 
 import { getTotalInsulin } from './bolus';
 import { classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
-import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -102,14 +101,16 @@ export class StatUtil {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
-    // Create a list of all dates for which we have at least one datum
-    const uniqueDatumDates = new Set([
-      ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-      ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-    ]);
+    const combinedInsulinData = [...rawBasalData, ...bolusData, ...insulinData];
+    const datumTimestamps = _.map(combinedInsulinData, datum => moment.utc(datum.time).valueOf());
+    const firstDatumAt = _.min(datumTimestamps);
 
-    const activeDaysWithInsulinData = uniqueDatumDates.size;
+    // For each datum, calculate the number of 24hr periods that elapsed between it and the first datum
+    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - firstDatumAt) / MS_IN_DAY));
+
+    // Find the number of unique 24hr periods that have data occurring on them
+    const uniqueDayBuckets = new Set(numOfDaysElapsed);
+    const activeDaysWithInsulinData = uniqueDayBuckets.size;
 
     const basalBolusData = {
       basal: basalData.length
@@ -132,13 +133,16 @@ export class StatUtil {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
-    // Create a list of all dates for which we have at least one datum
-    const uniqueDatumDates = new Set([
-      ...wizardData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-      ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-    ]);
+    const combinedCarbData = [...wizardData, ...foodData];
+    const datumTimestamps = _.map(combinedCarbData, datum => moment.utc(datum.time).valueOf());
+    const firstDatumAt = _.min(datumTimestamps);
 
-    const activeDaysWithCarbData = uniqueDatumDates.size;
+    // For each datum, calculate the number of 24hr periods that elapsed between it and the first datum
+    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - firstDatumAt) / MS_IN_DAY));
+
+    // Find the number of unique 24hr periods that have data occurring on them
+    const uniqueDayBuckets = new Set(numOfDaysElapsed);
+    const activeDaysWithCarbData = uniqueDayBuckets.size;
 
     const wizardCarbs = _.reduce(
       wizardData,
