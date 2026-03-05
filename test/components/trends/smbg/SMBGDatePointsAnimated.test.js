@@ -17,9 +17,8 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { TransitionMotion } from 'react-motion';
 
-import { mount } from 'enzyme';
+import { render, fireEvent, cleanup } from '@testing-library/react/pure';
 
 import { THREE_HRS } from '../../../../src/utils/datetime';
 
@@ -37,8 +36,21 @@ import { SMBGDatePointsAnimated }
   from '../../../../src/components/trends/smbg/SMBGDatePointsAnimated';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
+let tmRendered = false;
+jest.mock('react-motion', () => {
+  const React = require('react');
+  return {
+    TransitionMotion: (tmProps) => {
+      tmRendered = true;
+      const styles = typeof tmProps.styles === 'function' ? tmProps.styles() : (tmProps.styles || []);
+      return tmProps.children(styles);
+    },
+    spring: (val) => val,
+  };
+});
+
 describe('SMBGDatePointsAnimated', () => {
-  let wrapper;
+  let container;
   const focusSmbg = sinon.spy();
   const unfocusSmbg = sinon.spy();
   const onSelectDate = sinon.spy();
@@ -72,36 +84,41 @@ describe('SMBGDatePointsAnimated', () => {
     yScale,
   };
   before(() => {
-    wrapper = mount(
+    ({ container } = render(
       <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
         <SMBGDatePointsAnimated {...props} />
       </SVGContainer>
-    );
+    ));
+  });
+
+  after(() => {
+    cleanup();
   });
 
   describe('when an empty array of data is provided', () => {
-    let noDataWrapper;
+    let noDataContainer;
     before(() => {
+      tmRendered = false;
       const noDataProps = _.assign({}, props, { data: [] });
 
-      noDataWrapper = mount(
+      ({ container: noDataContainer } = render(
         <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
           <SMBGDatePointsAnimated {...noDataProps} />
         </SVGContainer>
-      );
+      ));
     });
 
     it('should render a TransitionMotion component but no <g> or <circle>s', () => {
-      expect(noDataWrapper.find(TransitionMotion).length).to.equal(1);
-      expect(noDataWrapper.find(`#smbgDatePoints-${date}`).length).to.equal(0);
-      expect(noDataWrapper.find('g').length).to.equal(0);
-      expect(noDataWrapper.find('circle').length).to.equal(0);
+      expect(tmRendered).to.be.true;
+      expect(noDataContainer.querySelectorAll(`#smbgDatePoints-${date}`).length).to.equal(0);
+      expect(noDataContainer.querySelector('svg').querySelectorAll('g').length).to.equal(0);
+      expect(noDataContainer.querySelectorAll('circle').length).to.equal(0);
     });
   });
 
   describe('when data is provided', () => {
     it('should render the appropriate number of smbgDatePoints <circle>s', () => {
-      expect(wrapper.find(`#smbgDatePoints-${date} circle`).length).to.equal(3);
+      expect(container.querySelectorAll(`#smbgDatePoints-${date} circle`).length).to.equal(3);
     });
   });
 
@@ -109,30 +126,31 @@ describe('SMBGDatePointsAnimated', () => {
     afterEach(() => {
       props.focusSmbg.resetHistory();
       props.unfocusSmbg.resetHistory();
+      props.onSelectDate.resetHistory();
     });
 
     it('should call focusSmbg on mouseover of smbg circle', () => {
-      const smbgCircle = wrapper
-        .find(`#smbg-${data[0].id}`);
+      const smbgCircle = container
+        .querySelector(`#smbg-${data[0].id}`);
       expect(focusSmbg.callCount).to.equal(0);
-      smbgCircle.simulate('mouseover');
+      fireEvent.mouseOver(smbgCircle);
       expect(focusSmbg.args[0][0]).to.deep.equal(data[0]);
       expect(focusSmbg.callCount).to.equal(1);
     });
 
     it('should call unfocusSmbg on mouseout of smbg circle', () => {
-      const smbgCircle = wrapper
-        .find(`#smbg-${data[0].id}`);
+      const smbgCircle = container
+        .querySelector(`#smbg-${data[0].id}`);
       expect(unfocusSmbg.callCount).to.equal(0);
-      smbgCircle.simulate('mouseout');
+      fireEvent.mouseOut(smbgCircle);
       expect(unfocusSmbg.callCount).to.equal(1);
     });
 
     it('should call onSelectDate on click of smbg circle', () => {
-      const smbgCircle = wrapper
-        .find(`#smbg-${data[0].id}`);
+      const smbgCircle = container
+        .querySelector(`#smbg-${data[0].id}`);
       expect(onSelectDate.callCount).to.equal(0);
-      smbgCircle.simulate('click');
+      fireEvent.click(smbgCircle);
       expect(onSelectDate.callCount).to.equal(1);
     });
   });

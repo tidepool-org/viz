@@ -18,24 +18,82 @@
 import _ from 'lodash';
 import React from 'react';
 
-import { shallow } from 'enzyme';
+import { render as rtlRender, cleanup } from '@testing-library/react/pure';
 
 import bgBounds from '../../../helpers/bgBounds';
 
 import { TrendsSVGContainer } from '../../../../src/components/trends/common/TrendsSVGContainer';
 
 import { MGDL_UNITS } from '../../../../src/utils/constants';
-import Background
-  from '../../../../src/components/trends/common/Background';
-import CBGSlicesContainer
-  from '../../../../src/components/trends/cbg/CBGSlicesContainer';
-import SMBGRangeAvgContainer
-  from '../../../../src/components/trends/smbg/SMBGRangeAvgContainer';
-import NoData from '../../../../src/components/trends/common/NoData';
-import TargetRangeLines from '../../../../src/components/trends/common/TargetRangeLines';
-import XAxisLabels from '../../../../src/components/trends/common/XAxisLabels';
-import XAxisTicks from '../../../../src/components/trends/common/XAxisTicks';
-import YAxisLabelsAndTicks from '../../../../src/components/trends/common/YAxisLabelsAndTicks';
+
+// Mock react-sizeme (used by source file's default export)
+jest.mock('react-sizeme', () => ({
+  __esModule: true,
+  default: () => (Component) => Component,
+}));
+
+// Mock all child components rendered by TrendsSVGContainer
+jest.mock('../../../../src/components/trends/common/Background', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'Background' }),
+}));
+
+jest.mock('../../../../src/components/trends/common/XAxisLabels', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'XAxisLabels' }),
+}));
+
+jest.mock('../../../../src/components/trends/common/XAxisTicks', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'XAxisTicks' }),
+}));
+
+jest.mock('../../../../src/components/trends/common/YAxisLabelsAndTicks', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'YAxisLabelsAndTicks' }),
+}));
+
+jest.mock('../../../../src/components/trends/cbg/CBGSlicesContainer', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'CBGSlicesContainer' }),
+}));
+
+jest.mock('../../../../src/components/trends/cbg/CBGDateTracesAnimationContainer', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'CBGDateTracesAnimationContainer' }),
+}));
+
+jest.mock('../../../../src/components/trends/cbg/FocusedCBGSliceSegment', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+jest.mock('../../../../src/components/trends/smbg/SMBGsByDateContainer', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'SMBGsByDateContainer' }),
+}));
+
+jest.mock('../../../../src/components/trends/smbg/SMBGRangeAvgContainer', () => ({
+  __esModule: true,
+  default: (props) => require('react').createElement('g', {
+    'data-testid': 'SMBGRangeAvgContainer',
+    'data-data': JSON.stringify(props.data),
+  }),
+}));
+
+jest.mock('../../../../src/components/trends/common/NoData', () => ({
+  __esModule: true,
+  default: (props) => require('react').createElement('g', {
+    'data-testid': 'NoData',
+    'data-type': props.dataType || '',
+    'data-unselected': String(!!props.unselectedAllData),
+  }),
+}));
+
+jest.mock('../../../../src/components/trends/common/TargetRangeLines', () => ({
+  __esModule: true,
+  default: () => require('react').createElement('g', { 'data-testid': 'TargetRangeLines' }),
+}));
 
 function makeScale(scale) {
   // eslint-disable-next-line no-param-reassign
@@ -85,6 +143,13 @@ describe('TrendsSVGContainer', () => {
   };
 
   afterEach(() => {
+    cleanup();
+    // Safely restore any prototype spies left over from failed tests
+    ['setScales', 'UNSAFE_componentWillMount', 'UNSAFE_componentWillReceiveProps', 'setState'].forEach((method) => {
+      if (TrendsSVGContainer.prototype[method] && TrendsSVGContainer.prototype[method].restore) {
+        TrendsSVGContainer.prototype[method].restore();
+      }
+    });
     props.xScale.range.resetHistory();
     props.yScale.range.resetHistory();
   });
@@ -93,7 +158,7 @@ describe('TrendsSVGContainer', () => {
     it('should set the range of the xScale', () => {
       sinon.spy(TrendsSVGContainer.prototype, 'setScales');
       expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(0);
-      shallow(<TrendsSVGContainer {...props} />);
+      rtlRender(React.createElement(TrendsSVGContainer, props));
       expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(1);
       expect(props.xScale.range.callCount).to.equal(1);
       expect(props.xScale.range.firstCall.args[0]).to.deep.equal([48, 942]);
@@ -103,7 +168,7 @@ describe('TrendsSVGContainer', () => {
     it('should set the range of the yScale', () => {
       sinon.spy(TrendsSVGContainer.prototype, 'setScales');
       expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(0);
-      shallow(<TrendsSVGContainer {...props} />);
+      rtlRender(React.createElement(TrendsSVGContainer, props));
       expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(1);
       expect(props.yScale.range.callCount).to.equal(1);
       expect(props.yScale.range.firstCall.args[0]).to.deep.equal([480, 80]);
@@ -117,7 +182,7 @@ describe('TrendsSVGContainer', () => {
       sinon.spy(TrendsSVGContainer.prototype, 'UNSAFE_componentWillMount');
       expect(TrendsSVGContainer.prototype.UNSAFE_componentWillMount.callCount).to.equal(0);
       expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(0);
-      shallow(<TrendsSVGContainer {...props} />);
+      rtlRender(React.createElement(TrendsSVGContainer, props));
       expect(TrendsSVGContainer.prototype.UNSAFE_componentWillMount.callCount).to.equal(1);
       expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(1);
       TrendsSVGContainer.prototype.UNSAFE_componentWillMount.restore();
@@ -129,11 +194,14 @@ describe('TrendsSVGContainer', () => {
     describe('when yScale changes', () => {
       it('should call the `setScales` method', () => {
         sinon.spy(TrendsSVGContainer.prototype, 'setScales');
-        const container = shallow(<TrendsSVGContainer {...props} />);
+        const { rerender } = rtlRender(React.createElement(TrendsSVGContainer, props));
         TrendsSVGContainer.prototype.setScales.resetHistory();
         expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(0);
 
-        container.setProps({ yScale: _.assign({}, props.yScale, { changed: true }) });
+        rerender(React.createElement(TrendsSVGContainer, {
+          ...props,
+          yScale: _.assign({}, props.yScale, { changed: true }),
+        }));
         expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(1);
 
         TrendsSVGContainer.prototype.setScales.restore();
@@ -143,11 +211,14 @@ describe('TrendsSVGContainer', () => {
     describe('when yScale does not change', () => {
       it('should not call the `setScales` method', () => {
         sinon.spy(TrendsSVGContainer.prototype, 'setScales');
-        const container = shallow(<TrendsSVGContainer {...props} />);
+        const { rerender } = rtlRender(React.createElement(TrendsSVGContainer, props));
         TrendsSVGContainer.prototype.setScales.resetHistory();
         expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(0);
 
-        container.setProps({ someChange: true });
+        rerender(React.createElement(TrendsSVGContainer, {
+          ...props,
+          someChange: true,
+        }));
         expect(TrendsSVGContainer.prototype.setScales.callCount).to.equal(0);
 
         TrendsSVGContainer.prototype.setScales.restore();
@@ -155,10 +226,12 @@ describe('TrendsSVGContainer', () => {
     });
 
     describe('when showingCbgDateTraces is true', () => {
-      let wrapper;
+      let localRerender;
+      const cwrpProps = _.assign({}, props, { showingCbgDateTraces: true });
+
       beforeEach(() => {
-        const showingCbgDateTracesProps = _.assign({}, props, { showingCbgDateTraces: true });
-        wrapper = shallow(<TrendsSVGContainer {...showingCbgDateTracesProps} />);
+        const result = rtlRender(React.createElement(TrendsSVGContainer, cwrpProps));
+        localRerender = result.rerender;
       });
 
       describe('when a cbg slice segment has been focused long enough', () => {
@@ -176,7 +249,12 @@ describe('TrendsSVGContainer', () => {
           const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
-          wrapper.setProps({ cbgData: props.cbgData, focusedSlice, focusedSliceKeys });
+          localRerender(React.createElement(TrendsSVGContainer, {
+            ...cwrpProps,
+            cbgData: props.cbgData,
+            focusedSlice,
+            focusedSliceKeys,
+          }));
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(1);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(2);
           expect(TrendsSVGContainer.prototype.setState.args[0][0]).to.deep.equal({
@@ -211,7 +289,11 @@ describe('TrendsSVGContainer', () => {
           const focusedSliceKeys = ['firstQuartile', 'thirdQuartile'];
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
-          wrapper.setProps({ focusedSlice, focusedSliceKeys });
+          localRerender(React.createElement(TrendsSVGContainer, {
+            ...cwrpProps,
+            focusedSlice,
+            focusedSliceKeys,
+          }));
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(1);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(2);
           expect(TrendsSVGContainer.prototype.setState.args[1][0]).to.deep.equal({
@@ -228,9 +310,12 @@ describe('TrendsSVGContainer', () => {
           sinon.spy(TrendsSVGContainer.prototype, 'setState');
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
-          wrapper.setProps({
-            focusedSlice: null, focusedSliceKeys: null, showingCbgDateTraces: false,
-          });
+          localRerender(React.createElement(TrendsSVGContainer, {
+            ...cwrpProps,
+            focusedSlice: null,
+            focusedSliceKeys: null,
+            showingCbgDateTraces: false,
+          }));
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(1);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(2);
           expect(TrendsSVGContainer.prototype.setState.args[1][0]).to.deep.equal({
@@ -243,9 +328,10 @@ describe('TrendsSVGContainer', () => {
     });
 
     describe('when showingCbgDateTraces is false', () => {
-      let wrapper;
+      let localRerender;
       beforeEach(() => {
-        wrapper = shallow(<TrendsSVGContainer {...props} />);
+        const result = rtlRender(React.createElement(TrendsSVGContainer, props));
+        localRerender = result.rerender;
       });
 
       describe('when you haven\'t focused a cbg slice segment', () => {
@@ -254,7 +340,8 @@ describe('TrendsSVGContainer', () => {
           sinon.spy(TrendsSVGContainer.prototype, 'setState');
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
-          wrapper.setProps({
+          localRerender(React.createElement(TrendsSVGContainer, {
+            ...props,
             activeDays: {
               monday: true,
               tuesday: true,
@@ -264,7 +351,7 @@ describe('TrendsSVGContainer', () => {
               saturday: true,
               sunday: true,
             },
-          });
+          }));
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(1);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(1);
           expect(TrendsSVGContainer.prototype.setState.args[0][0]).to.not.include.keys('focusedSegmentDataGroupedByDate');
@@ -288,7 +375,12 @@ describe('TrendsSVGContainer', () => {
           const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(0);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(0);
-          wrapper.setProps({ cbgData: props.cbgData, focusedSlice, focusedSliceKeys });
+          localRerender(React.createElement(TrendsSVGContainer, {
+            ...props,
+            cbgData: props.cbgData,
+            focusedSlice,
+            focusedSliceKeys,
+          }));
           expect(TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.callCount).to.equal(1);
           expect(TrendsSVGContainer.prototype.setState.callCount).to.equal(1);
           TrendsSVGContainer.prototype.UNSAFE_componentWillReceiveProps.restore();
@@ -299,62 +391,70 @@ describe('TrendsSVGContainer', () => {
   });
 
   describe('render', () => {
-    let wrapper;
-    before(() => {
-      wrapper = shallow(<TrendsSVGContainer {...props} />);
-    });
-
     it('should render a Background', () => {
-      expect(wrapper.find(Background)).to.have.length(1);
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      expect(container.querySelectorAll('[data-testid="Background"]')).to.have.length(1);
     });
 
     it('should render a XAxisLabels', () => {
-      expect(wrapper.find(XAxisLabels)).to.have.length(1);
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      expect(container.querySelectorAll('[data-testid="XAxisLabels"]')).to.have.length(1);
     });
 
     it('should render a XAxisTicks', () => {
-      expect(wrapper.find(XAxisTicks)).to.have.length(1);
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      expect(container.querySelectorAll('[data-testid="XAxisTicks"]')).to.have.length(1);
     });
 
     it('should render a YAxisLabelsAndTicks', () => {
-      expect(wrapper.find(YAxisLabelsAndTicks)).to.have.length(1);
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      expect(container.querySelectorAll('[data-testid="YAxisLabelsAndTicks"]')).to.have.length(1);
     });
 
     it('should render a CBGSlicesContainer', () => {
-      expect(wrapper.find(CBGSlicesContainer)).to.have.length(1);
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      expect(container.querySelectorAll('[data-testid="CBGSlicesContainer"]')).to.have.length(1);
     });
 
     it('should render a TargetRangeLines', () => {
-      expect(wrapper.find(TargetRangeLines)).to.have.length(1);
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      expect(container.querySelectorAll('[data-testid="TargetRangeLines"]')).to.have.length(1);
     });
 
     it('should render the TargetRangeLines on top', () => {
-      expect(wrapper.find('svg').children().last().is(TargetRangeLines)).to.be.true;
+      const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+      const svgEl = container.querySelector('svg');
+      const lastChild = svgEl.lastElementChild;
+      expect(lastChild.getAttribute('data-testid')).to.equal('TargetRangeLines');
     });
 
     describe('showing CGM data', () => {
       it('should render a CBGSlicesContainer', () => {
-        expect(wrapper.find(CBGSlicesContainer)).to.have.length(1);
+        const { container } = rtlRender(React.createElement(TrendsSVGContainer, props));
+        expect(container.querySelectorAll('[data-testid="CBGSlicesContainer"]')).to.have.length(1);
       });
 
       it('should render a unselected all data message when all days unselected', () => {
         const unselectedProps = _.assign({}, props, { cbgData: [], activeDays: { monday: false } });
-        const unselectedWrapper = shallow(<TrendsSVGContainer {...unselectedProps} />);
-        expect(unselectedWrapper.find(NoData)).to.have.length(1);
-        expect(unselectedWrapper.find(NoData).prop('unselectedAllData')).to.be.true;
+        const { container } = rtlRender(React.createElement(TrendsSVGContainer, unselectedProps));
+        expect(container.querySelectorAll('[data-testid="NoData"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NoData"]').getAttribute('data-unselected')).to.equal('true');
       });
 
       describe('when showingSmbg is false', () => {
         it('should not render an SMBGRangeAvgContainer', () => {
-          expect(wrapper.find(SMBGRangeAvgContainer)).to.have.length(0);
+          // With smbgRangeOverlay also false to isolate SMBG display behavior
+          const noSmbgProps = _.assign({}, props, { smbgRangeOverlay: false });
+          const { container } = rtlRender(React.createElement(TrendsSVGContainer, noSmbgProps));
+          expect(container.querySelectorAll('[data-testid="SMBGRangeAvgContainer"]')).to.have.length(0);
         });
       });
 
       it('should render a no data message when there are no cbg values', () => {
         const noCBGDataProps = _.assign({}, props, { cbgData: [] });
-        const noDataWrapper = shallow(<TrendsSVGContainer {...noCBGDataProps} />);
-        expect(noDataWrapper.find(NoData)).to.have.length(1);
-        expect(noDataWrapper.find(NoData).prop('dataType')).to.equal('cbg');
+        const { container } = rtlRender(React.createElement(TrendsSVGContainer, noCBGDataProps));
+        expect(container.querySelectorAll('[data-testid="NoData"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NoData"]').getAttribute('data-type')).to.equal('cbg');
       });
     });
 
@@ -365,9 +465,9 @@ describe('TrendsSVGContainer', () => {
           props,
           { showingCbg: false, showingSmbg: true, smbgData: [], activeDays: { monday: false } }
         );
-        const unselectedWrapper = shallow(<TrendsSVGContainer {...unselectedProps} />);
-        expect(unselectedWrapper.find(NoData)).to.have.length(1);
-        expect(unselectedWrapper.find(NoData).prop('unselectedAllData')).to.be.true;
+        const { container } = rtlRender(React.createElement(TrendsSVGContainer, unselectedProps));
+        expect(container.querySelectorAll('[data-testid="NoData"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NoData"]').getAttribute('data-unselected')).to.equal('true');
       });
 
       describe('when smbgRangeOverlay is true', () => {
@@ -375,8 +475,8 @@ describe('TrendsSVGContainer', () => {
           const smbgRangeProps = _.assign(
             {}, props, { showingSmbg: true, smbgRangeOverlay: true }
           );
-          const smbgRangeWrapper = shallow(<TrendsSVGContainer {...smbgRangeProps} />);
-          expect(smbgRangeWrapper.find(SMBGRangeAvgContainer)).to.have.length(2);
+          const { container } = rtlRender(React.createElement(TrendsSVGContainer, smbgRangeProps));
+          expect(container.querySelectorAll('[data-testid="SMBGRangeAvgContainer"]')).to.have.length(2);
         });
       });
 
@@ -385,12 +485,12 @@ describe('TrendsSVGContainer', () => {
           const smbgRangeProps = _.assign(
             {}, props, { showingSmbg: true, smbgRangeOverlay: false }
           );
-          const smbgRangeWrapper = shallow(<TrendsSVGContainer {...smbgRangeProps} />);
-          const rangeAvgContainer = smbgRangeWrapper.find(SMBGRangeAvgContainer);
-          expect(rangeAvgContainer).to.have.length(2);
+          const { container } = rtlRender(React.createElement(TrendsSVGContainer, smbgRangeProps));
+          const rangeAvgContainers = container.querySelectorAll('[data-testid="SMBGRangeAvgContainer"]');
+          expect(rangeAvgContainers).to.have.length(2);
           // eslint-disable-next-line lodash/prefer-lodash-method
-          rangeAvgContainer.forEach((container) => {
-            expect(container.prop('data')).to.deep.equal([]);
+          rangeAvgContainers.forEach((el) => {
+            expect(JSON.parse(el.getAttribute('data-data'))).to.deep.equal([]);
           });
         });
       });
@@ -398,9 +498,9 @@ describe('TrendsSVGContainer', () => {
       describe('when showingCbg is false', () => {
         it('should not render a CBGSlicesContainer', () => {
           const noCbgProps = _.assign({}, props, { showingCbg: false, showingSmbg: true });
-          const noCbgWrapper = shallow(<TrendsSVGContainer {...noCbgProps} />);
-          expect(noCbgWrapper.find(CBGSlicesContainer)).to.have.length(0);
-          expect(noCbgWrapper.find(SMBGRangeAvgContainer)).to.have.length(2);
+          const { container } = rtlRender(React.createElement(TrendsSVGContainer, noCbgProps));
+          expect(container.querySelectorAll('[data-testid="CBGSlicesContainer"]')).to.have.length(0);
+          expect(container.querySelectorAll('[data-testid="SMBGRangeAvgContainer"]')).to.have.length(2);
         });
       });
 
@@ -408,9 +508,9 @@ describe('TrendsSVGContainer', () => {
         const noSMBGDataProps = _.assign(
           {}, props, { showingCbg: false, showingSmbg: true, smbgData: [] }
         );
-        const noDataWrapper = shallow(<TrendsSVGContainer {...noSMBGDataProps} />);
-        expect(noDataWrapper.find(NoData)).to.have.length(1);
-        expect(noDataWrapper.find(NoData).prop('dataType')).to.equal('smbg');
+        const { container } = rtlRender(React.createElement(TrendsSVGContainer, noSMBGDataProps));
+        expect(container.querySelectorAll('[data-testid="NoData"]')).to.have.length(1);
+        expect(container.querySelector('[data-testid="NoData"]').getAttribute('data-type')).to.equal('smbg');
       });
     });
   });

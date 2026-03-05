@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -32,7 +32,7 @@ import { TWENTY_FOUR_HRS } from '../../../../src/utils/datetime';
 import XAxisTicks from '../../../../src/components/trends/common/XAxisTicks';
 
 describe('XAxisTicks', () => {
-  let wrapper;
+  let container;
   const props = {
     margins: {
       top: 0,
@@ -45,21 +45,20 @@ describe('XAxisTicks', () => {
   };
 
   before(() => {
-    wrapper = mount(
+    ({ container } = render(
       <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
         <XAxisTicks {...props} />
       </SVGContainer>
-    );
+    ));
   });
 
   it('should render nine tick lines at three hour intervals', () => {
-    const ticks = wrapper.find('line');
+    const ticks = container.querySelectorAll('line');
     expect(ticks).to.have.length(9);
-    // Enzyme forEach cannot be replaced by _.forEach
     // eslint-disable-next-line lodash/prefer-lodash-method
     ticks.forEach((tick, i) => {
-      expect(tick.prop('x1')).to.equal(xScale(i * (TWENTY_FOUR_HRS / 8)));
-      expect(tick.prop('x2')).to.equal(xScale(i * (TWENTY_FOUR_HRS / 8)));
+      expect(Number(tick.getAttribute('x1'))).to.equal(xScale(i * (TWENTY_FOUR_HRS / 8)));
+      expect(Number(tick.getAttribute('x2'))).to.equal(xScale(i * (TWENTY_FOUR_HRS / 8)));
     });
   });
 });

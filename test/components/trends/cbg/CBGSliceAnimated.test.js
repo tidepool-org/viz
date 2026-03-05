@@ -17,9 +17,8 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { TransitionMotion } from 'react-motion';
 
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -29,10 +28,25 @@ const {
 import bgBounds from '../../../helpers/bgBounds';
 
 import { THREE_HRS } from '../../../../src/utils/datetime';
+
+let lastTMProps = null;
+jest.mock('react-motion', () => ({
+  TransitionMotion: jest.fn((props) => {
+    lastTMProps = props;
+    const interpolated = (props.styles || []).map(s => ({
+      key: s.key,
+      style: Object.fromEntries(
+        Object.entries(s.style).map(([k, v]) => [k, typeof v === 'object' ? v.val : v])
+      ),
+    }));
+    return props.children ? props.children(interpolated) : null;
+  }),
+  spring: (val, config) => ({ val, config }),
+}));
+
 import { CBGSliceAnimated } from '../../../../src/components/trends/cbg/CBGSliceAnimated';
 
 describe('CBGSliceAnimated', () => {
-  let wrapper;
   const focusSlice = sinon.spy();
   const unfocusSlice = sinon.spy();
   const datum = {
@@ -68,21 +82,20 @@ describe('CBGSliceAnimated', () => {
 
   describe('when full datum and all `displayFlags` enabled', () => {
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...props} />);
+      render(<CBGSliceAnimated {...props} />);
     });
 
     it('should create an array of 5 `styles` to render on the TransitionMotion', () => {
-      const TM = wrapper.find(TransitionMotion);
-      expect(TM.prop('styles').length).to.equal(5);
+      expect(lastTMProps.styles.length).to.equal(5);
     });
 
     describe('animation', () => {
       it('should render a TransitionMotion component', () => {
-        expect(wrapper.find(TransitionMotion).length).to.equal(1);
+        expect(lastTMProps).to.exist;
       });
 
       it('should define `defaultStyles` on the TransitionMotion component', () => {
-        expect(wrapper.find(TransitionMotion).prop('defaultStyles')).to.exist;
+        expect(lastTMProps.defaultStyles).to.exist;
       });
 
       it('should define a `willEnter` instance method', () => {
@@ -105,11 +118,11 @@ describe('CBGSliceAnimated', () => {
       },
     });
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...cbg100EnabledProps} />);
+      render(<CBGSliceAnimated {...cbg100EnabledProps} />);
     });
 
     it('should create an array of 2 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(2);
       expect(styles[0].key).to.equal('top10');
       expect(styles[1].key).to.equal('bottom10');
@@ -126,11 +139,11 @@ describe('CBGSliceAnimated', () => {
       },
     });
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...cbg80EnabledProps} />);
+      render(<CBGSliceAnimated {...cbg80EnabledProps} />);
     });
 
     it('should create an array of 2 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(2);
       expect(styles[0].key).to.equal('upper15');
       expect(styles[1].key).to.equal('lower15');
@@ -147,11 +160,11 @@ describe('CBGSliceAnimated', () => {
       },
     });
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...cbg50EnabledProps} />);
+      render(<CBGSliceAnimated {...cbg50EnabledProps} />);
     });
 
     it('should create an array of 1 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(1);
       expect(styles[0].key).to.equal('innerQuartiles');
     });
@@ -167,11 +180,11 @@ describe('CBGSliceAnimated', () => {
       },
     });
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...cbgMedianEnabledProps} />);
+      render(<CBGSliceAnimated {...cbgMedianEnabledProps} />);
     });
 
     it('should create an array of 0 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(0);
     });
   });
@@ -186,11 +199,11 @@ describe('CBGSliceAnimated', () => {
       },
     });
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...cbgMedianEnabledProps} />);
+      render(<CBGSliceAnimated {...cbgMedianEnabledProps} />);
     });
 
     it('should create an array of 0 `styles` to render on the TransitionMotion', () => {
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(0);
     });
   });
@@ -212,12 +225,12 @@ describe('CBGSliceAnimated', () => {
       },
     });
     before(() => {
-      wrapper = shallow(<CBGSliceAnimated {...gapInDataProps} />);
+      render(<CBGSliceAnimated {...gapInDataProps} />);
     });
 
     it('should create an array of 0 `styles` to render on the TransitionMotion', () => {
-      expect(wrapper.find(TransitionMotion).length).to.equal(1);
-      const styles = wrapper.find(TransitionMotion).prop('styles');
+      expect(lastTMProps).to.exist;
+      const styles = lastTMProps.styles;
       expect(styles.length).to.equal(0);
     });
   });

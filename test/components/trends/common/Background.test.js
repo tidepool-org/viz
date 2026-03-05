@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../../helpers/cssmodules';
 
@@ -38,7 +38,7 @@ import styles
   from '../../../../src/components/trends/common/Background.css';
 
 describe('Background', () => {
-  let wrapper;
+  let container;
   const props = {
     bgBounds: {
       veryHighThreshold: 300,
@@ -61,43 +61,42 @@ describe('Background', () => {
   };
 
   before(() => {
-    wrapper = mount(
+    ({ container } = render(
       <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
         <Background {...props} />
       </SVGContainer>
-    );
+    ));
   });
 
   it('should render one rect for the chart background', () => {
-    expect(wrapper.find('rect').length).to.equal(1);
-    expect(wrapper.find('rect').hasClass((styles.background))).to.be.true;
+    expect(container.querySelectorAll('rect').length).to.equal(1);
+    expect(container.querySelector('rect').classList.contains(styles.background)).to.be.true;
   });
 
   it('should NOT render 3-hr dividing lines by default', () => {
-    const threeHrLines = wrapper.find(formatClassesAsSelector(styles.threeHrLine));
+    const threeHrLines = container.querySelectorAll(formatClassesAsSelector(styles.threeHrLine));
     expect(threeHrLines).to.have.length(0);
   });
 
   describe('when `linesAtThreeHrs` prop is `true`', () => {
-    let withLinesWrapper;
+    let withLinesContainer;
 
     before(() => {
-      withLinesWrapper = mount(
+      ({ container: withLinesContainer } = render(
         <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
           <Background {...props} linesAtThreeHrs />
         </SVGContainer>
-      );
+      ));
     });
 
     it('should render seven 3-hr dividing lines', () => {
-      const threeHrLines = withLinesWrapper.find(formatClassesAsSelector(styles.threeHrLine));
+      const threeHrLines = withLinesContainer.querySelectorAll(formatClassesAsSelector(styles.threeHrLine));
       expect(threeHrLines).to.have.length(7);
-      // Enzyme forEach cannot be replaced by _.forEach
       // eslint-disable-next-line lodash/prefer-lodash-method
       threeHrLines.forEach((line, i) => {
-        expect(line.is('line')).to.be.true;
-        expect(line.prop('x1')).to.equal(xScale((i + 1) * (TWENTY_FOUR_HRS / 8)));
-        expect(line.prop('x2')).to.equal(xScale((i + 1) * (TWENTY_FOUR_HRS / 8)));
+        expect(line.tagName.toLowerCase()).to.equal('line');
+        expect(Number(line.getAttribute('x1'))).to.equal(xScale((i + 1) * (TWENTY_FOUR_HRS / 8)));
+        expect(Number(line.getAttribute('x2'))).to.equal(xScale((i + 1) * (TWENTY_FOUR_HRS / 8)));
       });
     });
   });

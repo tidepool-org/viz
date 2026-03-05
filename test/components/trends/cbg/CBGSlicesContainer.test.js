@@ -18,7 +18,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '../../../helpers/renderHelper';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -33,11 +33,29 @@ import { THREE_HRS, TWENTY_FOUR_HRS } from '../../../../src/utils/datetime';
 import * as bgUtils from '../../../../src/utils/bloodglucose';
 import CBGSlicesContainer
   from '../../../../src/components/trends/cbg/CBGSlicesContainer';
-import CBGSliceAnimated from '../../../../src/components/trends/cbg/CBGSliceAnimated';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
+jest.mock('../../../../src/components/trends/cbg/CBGSliceAnimated', () => {
+  const React = require('react');
+  return { __esModule: true, default: (props) => React.createElement('g', { 'data-testid': 'CBGSliceAnimated' }) };
+});
+
+jest.mock('../../../../src/components/trends/cbg/CBGMedianAnimated', () => {
+  const React = require('react');
+  return { __esModule: true, default: (props) => React.createElement('g', { 'data-testid': 'CBGMedianAnimated' }) };
+});
+
+jest.mock('../../../../src/utils/bloodglucose', () => {
+  const actual = jest.requireActual('../../../../src/utils/bloodglucose');
+  return {
+    __esModule: true,
+    ...actual,
+    mungeBGDataBins: jest.fn(actual.mungeBGDataBins),
+  };
+});
+
 describe('CBGSlicesContainer', () => {
-  let wrapper;
+  let result;
 
   // six-hour bins for testing
   const binSize = THREE_HRS * 2;
@@ -56,7 +74,7 @@ describe('CBGSlicesContainer', () => {
   };
 
   before(() => {
-    wrapper = mount(<CBGSlicesContainer {...props} />);
+    result = render(<CBGSlicesContainer {...props} />);
   });
 
   describe('componentWillMount', () => {
@@ -65,7 +83,7 @@ describe('CBGSlicesContainer', () => {
       sinon.spy(CBGSlicesContainer.prototype, 'setState');
       expect(CBGSlicesContainer.prototype.UNSAFE_componentWillMount.callCount).to.equal(0);
       expect(CBGSlicesContainer.prototype.setState.callCount).to.equal(0);
-      mount(<CBGSlicesContainer {...props} />);
+      render(<CBGSlicesContainer {...props} />);
       expect(CBGSlicesContainer.prototype.UNSAFE_componentWillMount.callCount).to.equal(1);
       expect(CBGSlicesContainer.prototype.setState.callCount).to.equal(1);
       const undefineds = {
@@ -89,26 +107,25 @@ describe('CBGSlicesContainer', () => {
 
   describe('componentWillReceiveProps', () => {
     it('remunges data if binSize has changed', () => {
-      sinon.spy(bgUtils, 'mungeBGDataBins');
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
-      wrapper.setProps({ binSize: THREE_HRS });
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
-      bgUtils.mungeBGDataBins.restore();
+      bgUtils.mungeBGDataBins.mockClear();
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(0);
+      result.setProps({ binSize: THREE_HRS });
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(1);
     });
 
     it('remunges data if data has changed', () => {
-      sinon.spy(bgUtils, 'mungeBGDataBins');
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
-      wrapper.setProps({ data: [{ id: 'a2b3c4', msPer24: 6000, value: 180 }] });
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
-      bgUtils.mungeBGDataBins.restore();
+      bgUtils.mungeBGDataBins.mockClear();
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(0);
+      result.setProps({ data: [{ id: 'a2b3c4', msPer24: 6000, value: 180 }] });
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(1);
     });
   });
 
   describe('render', () => {
     it('should render proper number of CBGSliceAnimated components for the `binSize`', () => {
-      expect(wrapper.find(CBGSliceAnimated).length)
-        .to.equal(TWENTY_FOUR_HRS / wrapper.prop('binSize'));
+      const { container: freshContainer } = render(<CBGSlicesContainer {...props} />);
+      expect(freshContainer.querySelectorAll('[data-testid="CBGSliceAnimated"]').length)
+        .to.equal(TWENTY_FOUR_HRS / props.binSize);
     });
   });
 });

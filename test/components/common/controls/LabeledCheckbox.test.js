@@ -16,15 +16,19 @@
  */
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render, fireEvent } from '@testing-library/react/pure';
 
 import LabeledCheckbox from '../../../../src/components/common/controls/LabeledCheckbox';
 
 describe('LabeledCheckbox', () => {
-  let checkedWrapper;
-  let uncheckedWrapper;
+  let checkedContainer;
+  let uncheckedContainer;
   const onFn = sinon.spy();
   const offFn = sinon.spy();
+  afterEach(() => {
+    onFn.resetHistory();
+    offFn.resetHistory();
+  });
   before(() => {
     const checkedProps = {
       checked: true,
@@ -40,36 +44,36 @@ describe('LabeledCheckbox', () => {
       label: 'Unchecked Label',
       name: 'unchecked',
     };
-    checkedWrapper = mount(<LabeledCheckbox {...checkedProps} />);
-    uncheckedWrapper = mount(<LabeledCheckbox {...uncheckedProps} />);
+    checkedContainer = render(<LabeledCheckbox {...checkedProps} />).container;
+    uncheckedContainer = render(<LabeledCheckbox {...uncheckedProps} />).container;
   });
 
   describe('Checked', () => {
     it('should render a checked checkbox', () => {
-      expect(checkedWrapper.find('input[type="checkbox"]').length).to.equal(1);
-      expect(checkedWrapper.find('input[type="checkbox"]').prop('checked')).to.be.true;
+      expect(checkedContainer.querySelectorAll('input[type="checkbox"]').length).to.equal(1);
+      expect(checkedContainer.querySelector('input[type="checkbox"]').checked).to.be.true;
     });
     it('should render the label', () => {
-      expect(checkedWrapper.find('label').text()).to.have.string('Checked Label');
+      expect(checkedContainer.querySelector('label').textContent).to.have.string('Checked Label');
     });
     it('should trigger offFn when changed', () => {
       expect(offFn.callCount).to.equal(0);
-      checkedWrapper.find('input[type="checkbox"]').simulate('change');
+      fireEvent.click(checkedContainer.querySelector('input[type="checkbox"]'));
       expect(offFn.callCount).to.equal(1);
     });
   });
 
   describe('Unchecked', () => {
     it('should render an unchecked checkbox', () => {
-      expect(uncheckedWrapper.find('input[type="checkbox"]').length).to.equal(1);
-      expect(uncheckedWrapper.find('input[type="checkbox"]').prop('checked')).to.be.false;
+      expect(uncheckedContainer.querySelectorAll('input[type="checkbox"]').length).to.equal(1);
+      expect(uncheckedContainer.querySelector('input[type="checkbox"]').checked).to.be.false;
     });
     it('should render the label', () => {
-      expect(uncheckedWrapper.find('label').text()).to.have.string('Unchecked Label');
+      expect(uncheckedContainer.querySelector('label').textContent).to.have.string('Unchecked Label');
     });
     it('should trigger onFn when changed', () => {
       expect(onFn.callCount).to.equal(0);
-      uncheckedWrapper.find('input[type="checkbox"]').simulate('change');
+      fireEvent.click(uncheckedContainer.querySelector('input[type="checkbox"]'));
       expect(onFn.callCount).to.equal(1);
     });
   });

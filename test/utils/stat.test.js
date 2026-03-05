@@ -1,6 +1,5 @@
 import React from 'react';
 import _ from 'lodash';
-import { shallow } from 'enzyme';
 import * as stat from '../../src/utils/stat';
 import {
   BG_COLORS,
@@ -602,17 +601,19 @@ describe('stat', () => {
 
     context('standardDevRange format', () => {
       const renderResult = result => {
-        const Component = () => result.value;
-        const render = shallow(<Component />);
+        // result.value is <span><span style={{color}}>value</span>&nbsp;-&nbsp;<span style={{color}}>value</span></span>
+        const children = React.Children.toArray(result.value.props.children);
+        const lowerSpan = children[0];
+        const upperSpan = children[2];
 
         return {
           lower: {
-            color: render.childAt(0).props().style.color,
-            value: render.childAt(0).props().children,
+            color: lowerSpan.props.style.color,
+            value: lowerSpan.props.children,
           },
           upper: {
-            color: render.childAt(2).props().style.color,
-            value: render.childAt(2).props().children,
+            color: upperSpan.props.style.color,
+            value: upperSpan.props.children,
           },
         };
       };
@@ -2328,15 +2329,13 @@ describe('stat', () => {
     });
 
     it('should call formatDatum on each stat with appropriate args', () => {
-      const formatDatumSpy = sinon.spy(stat, 'formatDatum');
+      const formatDatumSpy = sinon.spy(stat.formatDatum);
 
       stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
 
       // 13 stats, but timeInAuto and timeInOverride are called an extra time for the secondary value
       sinon.assert.callCount(formatDatumSpy, 15);
       sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
-
-      formatDatumSpy.restore();
     });
   });
 });

@@ -1,12 +1,20 @@
 {
   "env": {
-    "mocha": true,
+    "jest": true,
     "node": true
   },
+  "extends": [
+    "plugin:testing-library/react",
+    "plugin:jest-dom/recommended"
+  ],
   "globals": {
     "assert": false,
     "expect": false,
-    "sinon": false
+    "sinon": false,
+    "before": false,
+    "after": false,
+    "context": false,
+    "document": false,
   },
   "rules": {
     "comma-dangle": ["error", "only-multiline"],
@@ -22,7 +30,7 @@
     "import/first": 0,
     "import/no-useless-path-segments": 0,
     "indent": 0,
-    "lodash/prefer-lodash-method": ["error", {
+    "lodash/prefer-lodash-method": ["warn", {
       "ignoreMethods": ["find", "split", "trim", "replace"]
     }],
     "no-prototype-builtins": 0,
@@ -33,6 +41,20 @@
     "react/jsx-curly-brace-presence": 0,
     "react/jsx-props-no-spreading": 0,
     "react/function-component-definition": 0,
-    "space-unary-ops": 0
+    "space-unary-ops": 0,
+    "testing-library/prefer-presence-queries": "warn",
+    "testing-library/no-node-access": "warn",
+    "testing-library/render-result-naming-convention": "warn",
+    "testing-library/no-manual-cleanup": "warn",
+    "testing-library/no-container": "warn",
+    "testing-library/no-render-in-lifecycle": "warn",
+    "testing-library/no-wait-for-multiple-assertions": "warn",
+    "testing-library/prefer-screen-queries": "warn",
+    "testing-library/no-unnecessary-act": "warn",
+    "jest-dom/prefer-in-document": "warn",
+    "jest-dom/prefer-enabled-disabled": "warn",
+    "jest-dom/prefer-empty": "warn",
+    "global-require": "warn",
+    "no-shadow": "warn",
   }
 }
