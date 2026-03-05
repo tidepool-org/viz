@@ -27,7 +27,7 @@ require('@testing-library/jest-dom');
 
 // Polyfill webpack's require.context for Jest
 if (typeof require.context === 'undefined') {
-  const fs = require('fs');
+  const fs = require('node:fs');
   const path = require('path');
 
   require.context = function (base, deep, filter) {

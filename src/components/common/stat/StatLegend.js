@@ -143,7 +143,7 @@ class StatLegend extends PureComponent {
     }
 
     return { backgroundColor: colors[item.id] };
-  };
+  }
 
   render() {
     return (
