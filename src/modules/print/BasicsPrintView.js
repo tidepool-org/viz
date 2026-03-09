@@ -427,7 +427,7 @@ class BasicsPrintView extends PrintView {
 
   renderDeviceNames() {
     // Build Content Body
-    const deviceNames = getDeviceNames(this.devices);
+    const deviceNames = getDeviceNames(this.reportDevices);
 
     if (!deviceNames.length) return;
 

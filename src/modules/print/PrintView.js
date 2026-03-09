@@ -76,6 +76,8 @@ class PrintView {
     this.latestPumpUpload = _.get(this.data, 'metaData.latestPumpUpload');
     this.manufacturer = _.get(this.latestPumpUpload, 'manufacturer');
     this.devices = _.get(this.data, 'metaData.devices', []);
+    this.matchedDevices = _.get(this.data, 'metaData.matchedDevices', {});
+    this.reportDevices = _.filter(this.devices, d => !!this.matchedDevices[d.id]);
 
     this.stats = {};
     const statsData = _.get(this.data, 'data.current.stats', {});
@@ -861,7 +863,7 @@ class PrintView {
   }
 
   generateDeviceNamesHeader() {
-    const deviceNames = getDeviceNames(this.devices);
+    const deviceNames = getDeviceNames(this.reportDevices);
     let label = deviceNames.length === 1 ? t('Device') : t('Devices');
     let content = deviceNames.join(', ');
 
