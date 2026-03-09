@@ -634,12 +634,17 @@ class Stat extends PureComponent {
           alignment: 'middle',
           containerComponent: <VictoryContainer responsive={false} style={{ touchAction: 'auto' }} />,
           cornerRadius: { topLeft: 2, bottomLeft: 2, topRight: 2, bottomRight: 2 },
-          data: _.map(chartData, (d, i) => ({
-            ...d,
-            _x: Math.round(i + 1),
-            _y: total > 0 ? d.value / total : d.value,
-            index: i,
-          })),
+          data: _.map(chartData, (d, i) => {
+            const value = _.isFinite(d.value) ? d.value : 0;
+            const safeTotal = _.isFinite(total) && total > 0 ? total : 0;
+            return {
+              ...d,
+              value,
+              _x: Math.round(i + 1),
+              _y: safeTotal > 0 ? value / safeTotal : 0,
+              index: i,
+            };
+          }),
           x: '_x',
           y: '_y',
           dataComponent: (
