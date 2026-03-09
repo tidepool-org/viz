@@ -103,10 +103,10 @@ export class StatUtil {
 
     const combinedInsulinData = [...rawBasalData, ...bolusData, ...insulinData];
     const datumTimestamps = _.map(combinedInsulinData, datum => moment.utc(datum.time).valueOf());
-    const [start, _end] = this.endpoints;
+    const [startEndpoint] = this.endpoints;
 
     // For each datum, calculate the number of 24hr periods that elapsed between it and the window start
-    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - start) / MS_IN_DAY));
+    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - startEndpoint) / MS_IN_DAY));
 
     // Find the number of unique 24hr periods that have data occurring on them
     const uniqueDayBuckets = new Set(numOfDaysElapsed);
@@ -135,10 +135,10 @@ export class StatUtil {
 
     const combinedCarbData = [...wizardData, ...foodData];
     const datumTimestamps = _.map(combinedCarbData, datum => moment.utc(datum.time).valueOf());
-    const [start, _end] = this.endpoints;
+    const [startEndpoint] = this.endpoints;
 
     // For each datum, calculate the number of 24hr periods that elapsed between it and the window start
-    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - start) / MS_IN_DAY));
+    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - startEndpoint) / MS_IN_DAY));
 
     // Find the number of unique 24hr periods that have data occurring on them
     const uniqueDayBuckets = new Set(numOfDaysElapsed);
