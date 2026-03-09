@@ -516,8 +516,8 @@ describe('StatUtil', () => {
       statUtil = createStatUtil(partialDayBolusData, opts({ endpoints: testEndpoints }));
       const result = statUtil.getInsulinData();
 
-      // First two boluses are within 24 hours of each other (bucket 0)
-      // Third bolus is 70 hours after first (bucket 2)
+      // First two boluses should go in bucket 0
+      // Third bolus should go in bucket 2
       // So we have 2 buckets with data, total 18 / 2 = 9
       expect(result.bolus).to.equal(9);
     });
@@ -533,7 +533,7 @@ describe('StatUtil', () => {
       const result = statUtil.getInsulinData();
 
       // First two boluses are in different 24 hour buckets (bucket 0 and 1)
-      // Third bolus is 70 hours after first (bucket 3)
+      // Third bolus comes later (bucket 3)
       // So we have 3 buckets with data, total 18 / 3 = 6
       expect(result.bolus).to.equal(6);
     });
