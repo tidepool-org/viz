@@ -59,7 +59,7 @@ export function deviceName(manufacturer) {
     tandem: 'Tandem',
     microtech: 'Equil',
     'diy loop': 'DIY Loop',
-    'trio': 'Trio',
+    trio: 'Trio',
     'tidepool loop': 'Tidepool Loop',
     twiist: 'twiist',
   };

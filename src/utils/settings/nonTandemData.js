@@ -223,7 +223,7 @@ function targetTitle(manufacturer) {
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
     'diy loop': t('Correction Range'),
-    'trio': t('Glucose Targets'),
+    trio: t('Glucose Targets'),
     'tidepool loop': t('Correction Range'),
     twiist: t('Correction Range'),
   };
@@ -261,7 +261,7 @@ function targetColumns(manufacturer) {
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
     ],
-    'trio': [
+    trio: [
       { key: 'start', label: t('Start time') },
       { key: 'columnTwo', label: t('Target') },
     ],
@@ -290,7 +290,7 @@ function targetRows(settings, units, manufacturer) {
     medtronic: { columnTwo: 'low', columnThree: 'high' },
     microtech: { columnTwo: 'low', columnThree: 'high' },
     'diy loop': { columnTwo: 'low', columnThree: 'high' },
-    'trio': { columnTwo: 'low', columnThree: 'high' },
+    trio: { columnTwo: 'low', columnThree: 'high' },
     'tidepool loop': { columnTwo: 'low', columnThree: 'high' },
     twiist: { columnTwo: 'low', columnThree: 'high' },
   };

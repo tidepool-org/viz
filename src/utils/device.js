@@ -99,7 +99,8 @@ export function isDexcom(datum = {}) {
 export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, deviceModel) {
   return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []), deviceModel)
     || (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
-    || isLoop(pumpSettingsOrUpload);
+    || isLoop(pumpSettingsOrUpload)
+    || isTrio(pumpSettingsOrUpload);
 }
 
 /**

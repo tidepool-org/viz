@@ -36,7 +36,7 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
-import { getPumpVocabulary, isControlIQ, isLoop, isTrio } from '../../utils/device';
+import { getPumpVocabulary, isControlIQ, isLoop } from '../../utils/device';
 import { INSULIN_MODEL_LABELS } from '../../utils/constants';
 
 import {

@@ -440,7 +440,7 @@ export default {
     tandem: v.compile(pumpSettingsTandem),
     equil: v.compile(pumpSettingsEquil),
     'diy loop': v.compile(pumpSettingsLoop),
-    'trio': v.compile(pumpSettingsLoop),
+    trio: v.compile(pumpSettingsLoop),
     'tidepool loop': v.compile(pumpSettingsLoop),
     twiist: v.compile(pumpSettingsLoop),
   },
