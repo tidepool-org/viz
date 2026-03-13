@@ -36,7 +36,7 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
-import { getPumpVocabulary, isControlIQ, isLoop } from '../../utils/device';
+import { getPumpVocabulary, isControlIQ, isLoop, isTrio } from '../../utils/device';
 import { INSULIN_MODEL_LABELS } from '../../utils/constants';
 
 import {
@@ -267,7 +267,8 @@ class SettingsPrintView extends PrintView {
     });
 
     this.renderBasalSchedule({ columnIndex: 0 });
-    this.renderTarget({ columnIndex: 1, heading: { text: t('Correction Range'), subText: ` ${this.bgUnits}\u00B9` } });
+    const rangeLabel = this.manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
+    this.renderTarget({ columnIndex: 1, heading: { text: rangeLabel, subText: ` ${this.bgUnits}\u00B9` } });
     this.renderRatio({ columnIndex: 2 });
 
     // Row 2: Insulin Sensitivities, Insulin Settings (2 columns)
@@ -320,9 +321,10 @@ class SettingsPrintView extends PrintView {
   renderLoopFootnotes() {
     const settings = this.latestPumpUpload.settings;
     const device = deviceName(this.manufacturer) || t('Unknown');
+    const rangeLabel = this.manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
 
     const footnotes = [
-      t('1 - Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device }),
+      t('1 - {{rangeLabel}} is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { rangeLabel, device }),
       t('2 - {{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device }),
       t('3 - {{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed. The {{insulinModel}} model assumes peak activity at {{peakMinutes}} minutes.', {
         device,

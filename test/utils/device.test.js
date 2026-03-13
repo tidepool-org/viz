@@ -27,6 +27,7 @@ import {
   MICROTECH,
   TIDEPOOL_LOOP,
   DIY_LOOP,
+  TRIO,
   pumpVocabulary,
   SLEEP,
   PHYSICAL_ACTIVITY,
@@ -116,6 +117,32 @@ describe('device utility functions', () => {
     it('should return `false` for a non-matching pattern within `client.name`', () => {
       const datum = { client: { name: 'org.loopkit.Loop' } };
       expect(device.isDIYLoop(datum)).to.be.false;
+    });
+  });
+
+  describe('isTrio', () => {
+    it('should return `true` for a matching pattern within `origin.name`', () => {
+      const datum = { origin: { name: 'org.nightscout.Trio' } };
+      const datum2 = { origin: { name: 'org.nightscout.Trio.xyz' } };
+      expect(device.isTrio(datum)).to.be.true;
+      expect(device.isTrio(datum2)).to.be.true;
+    });
+
+    it('should return `false` for a non-matching pattern within `origin.name`', () => {
+      const datum = { origin: { name: 'com.nightscout.Trio' } };
+      const datum2 = { origin: { name: 'com.loopkit.Loop' } };
+      expect(device.isTrio(datum)).to.be.false;
+      expect(device.isTrio(datum2)).to.be.false;
+    });
+
+    it('should return `true` for a matching pattern within `client.name`', () => {
+      const datum = { client: { name: 'org.nightscout.Trio' } };
+      expect(device.isTrio(datum)).to.be.true;
+    });
+
+    it('should return `false` for a non-matching pattern within `client.name`', () => {
+      const datum = { client: { name: 'com.nightscout.Trio' } };
+      expect(device.isTrio(datum)).to.be.false;
     });
   });
 
@@ -313,6 +340,7 @@ describe('device utility functions', () => {
       expect(device.isAutomatedBasalDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
       expect(device.isAutomatedBasalDevice('tidepool loop', { origin: { name: 'org.tidepool.Loop' } })).to.be.true;
       expect(device.isAutomatedBasalDevice('diy loop', { origin: { name: 'com.loopkit.Loop' } })).to.be.true;
+      expect(device.isAutomatedBasalDevice('trio', { origin: { name: 'org.nightscout.Trio' } })).to.be.true;
       expect(device.isAutomatedBasalDevice('twiist', { origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
     });
 
@@ -325,6 +353,7 @@ describe('device utility functions', () => {
     it('should return `true` for an upload record for a pump with automated bolus delivery capabilities', () => {
       expect(device.isAutomatedBolusDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
       expect(device.isAutomatedBolusDevice('diy loop', { origin: { name: 'com.loopkit.Loop' } })).to.be.true;
+      expect(device.isAutomatedBolusDevice('trio', { origin: { name: 'org.nightscout.Trio' } })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without automated bolus delivery capabilities', () => {
@@ -344,6 +373,7 @@ describe('device utility functions', () => {
 
     it('should return `false` for an upload record for a pump without settings override capabilities', () => {
       expect(device.isSettingsOverrideDevice('tandem', { deviceId: 'tandem123456' })).to.be.false;
+      expect(device.isSettingsOverrideDevice('trio', { origin: { name: 'org.nightscout.Trio' } })).to.be.false;
     });
   });
 
@@ -380,6 +410,7 @@ describe('device utility functions', () => {
         TANDEM,
         TIDEPOOL_LOOP,
         DIY_LOOP,
+        TRIO,
         MICROTECH,
         'default',
       ];
@@ -434,6 +465,7 @@ describe('device utility functions', () => {
       expect(device.getUppercasedManufacturer('tandem')).to.equal('Tandem');
       expect(device.getUppercasedManufacturer('tidepool loop')).to.equal('Tidepool Loop');
       expect(device.getUppercasedManufacturer('diy loop')).to.equal('DIY Loop');
+      expect(device.getUppercasedManufacturer('trio')).to.equal('Trio');
     });
   });
 });

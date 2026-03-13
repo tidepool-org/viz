@@ -59,6 +59,7 @@ export function deviceName(manufacturer) {
     tandem: 'Tandem',
     microtech: 'Equil',
     'diy loop': 'DIY Loop',
+    'trio': 'Trio',
     'tidepool loop': 'Tidepool Loop',
     twiist: 'twiist',
   };
@@ -403,7 +404,7 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
   let insulinDurationUnits = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.units` : 'bolus.calculator.insulin.units');
   let insulinDuration = _.get(settings, scheduleName ? `bolus[${scheduleName}].calculator.insulin.duration` : 'bolus.calculator.insulin.duration');
 
-  if (_.includes(['diy loop', 'tidepool loop', 'twiist'], manufacturer)) {
+  if (_.includes(['diy loop', 'trio', 'tidepool loop', 'twiist'], manufacturer)) {
     insulinDuration = _.get(settings, 'insulinModel.actionDuration');
     insulinDurationUnits = 'milliseconds';
   }
@@ -483,10 +484,11 @@ export function presetSettings(settings, manufacturer) {
   const deviceLabels = getPumpVocabulary(manufacturer);
   const bgUnits = settings?.units?.bg;
   const correctionRange = range => `${format.formatBgValue(range?.low, { bgUnits })}-${format.formatBgValue(range?.high, { bgUnits })}`;
+  const rangeLabel = manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
 
   const columns = [
     { key: 'name', label: 'Name' },
-    { key: 'value', label: `${t('Correction Range')} (${bgUnits})` },
+    { key: 'value', label: `${rangeLabel} (${bgUnits})` },
   ];
 
   const rows = [];

@@ -18,7 +18,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 import * as data from './data';
 import { pumpVocabulary, AUTOMATED_DELIVERY } from '../constants';
-import { isLoop } from '../device';
+import { isLoop, isTrio } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -223,6 +223,7 @@ function targetTitle(manufacturer) {
     medtronic: t('BG Target'),
     microtech: t('Target BG'),
     'diy loop': t('Correction Range'),
+    'trio': t('Glucose Targets'),
     'tidepool loop': t('Correction Range'),
     twiist: t('Correction Range'),
   };
@@ -260,6 +261,10 @@ function targetColumns(manufacturer) {
       { key: 'columnTwo', label: t('Low') },
       { key: 'columnThree', label: t('High') },
     ],
+    'trio': [
+      { key: 'start', label: t('Start time') },
+      { key: 'columnTwo', label: t('Target') },
+    ],
     'tidepool loop': [
       { key: 'start', label: t('Start time') },
       { key: 'columnTwo', label: t('Low') },
@@ -285,10 +290,11 @@ function targetRows(settings, units, manufacturer) {
     medtronic: { columnTwo: 'low', columnThree: 'high' },
     microtech: { columnTwo: 'low', columnThree: 'high' },
     'diy loop': { columnTwo: 'low', columnThree: 'high' },
+    'trio': { columnTwo: 'low', columnThree: 'high' },
     'tidepool loop': { columnTwo: 'low', columnThree: 'high' },
     twiist: { columnTwo: 'low', columnThree: 'high' },
   };
-  const targetData = _.includes(['diy loop', 'tidepool loop', 'twiist'], manufacturer)
+  const targetData = _.includes(['diy loop', 'trio', 'tidepool loop', 'twiist'], manufacturer)
     ? settings.bgTargets[settings.activeSchedule]
     : settings.bgTarget;
 
@@ -310,8 +316,9 @@ function targetRows(settings, units, manufacturer) {
 export function target(settings, manufacturer, units) {
   const device = data.deviceName(manufacturer);
 
+  const rangeLabel = isTrio(settings) ? t('Glucose Targets') : t('Correction Range');
   const annotations = isLoop(settings)
-    ? [t('Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device })]
+    ? [t('{{rangeLabel}} is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { rangeLabel, device })]
     : null;
 
   return {

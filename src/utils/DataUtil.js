@@ -15,6 +15,7 @@ import {
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
   isDIYLoop,
+  isTrio,
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
@@ -45,6 +46,7 @@ import {
   MS_IN_MIN,
   MGDL_UNITS,
   DIY_LOOP,
+  TRIO,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
   SITE_CHANGE_RESERVOIR,
@@ -1569,6 +1571,8 @@ export class DataUtil {
         }
       } else if (isTidepoolLoop(pumpSettings)) {
         source = TIDEPOOL_LOOP.toLowerCase();
+      } else if (isTrio(pumpSettings)) {
+        source = TRIO.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {
