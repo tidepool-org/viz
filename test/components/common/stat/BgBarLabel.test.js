@@ -49,5 +49,12 @@ describe('BgBarLabel', () => {
       expect(textTspan.getAttribute('style')).to.contain('fill:');
       expect(textTspan.getAttribute('style')).to.contain('mauve');
     }
+    const fontSizeValue = textTspan.style.fontSize;
+    if (fontSizeValue) {
+      expect(fontSizeValue).to.equal('40px');
+    } else {
+      expect(textTspan.getAttribute('style')).to.contain('font-size');
+      expect(textTspan.getAttribute('style')).to.contain('40px');
+    }
   });
 });
