@@ -116,21 +116,21 @@ export class StatUtil {
    */
   getActiveDaysEdgeCorrection = (uniqueDatumDates) => {
     const [start, end] = this.endpoints;
-    const tz = _.get(this, 'timePrefs.timezoneName', 'UTC');
+    const timezoneName = _.get(this, 'timePrefs.timezoneName', 'UTC');
 
-    const startMoment = moment.utc(start).tz(tz);
+    const startMoment = moment.utc(start).tz(timezoneName);
     const isStartDateMidnight = startMoment.hour() === 0 &&
                                 startMoment.minute() === 0 &&
                                 startMoment.second() === 0;
 
     const headDow = startMoment.day();
-    const tailDow = moment.utc(end).tz(tz).day();
+    const tailDow = moment.utc(end).tz(timezoneName).day();
     const isHeadDowInFilter = _.includes(this.dataUtil.activeDays, headDow);
     const isTailDowInFilter = _.includes(this.dataUtil.activeDays, tailDow);
     const hasBothEdgesInFilter = isHeadDowInFilter && isTailDowInFilter;
 
     const headDate = startMoment.format('YYYY-MM-DD');
-    const tailDate = moment.utc(end).tz(tz).format('YYYY-MM-DD');
+    const tailDate = moment.utc(end).tz(timezoneName).format('YYYY-MM-DD');
     const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
 
     if (!isStartDateMidnight && hasBothEdgesInFilter && hasDataOnBothEdges) return -1;
