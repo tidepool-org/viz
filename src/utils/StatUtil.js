@@ -102,11 +102,11 @@ export class StatUtil {
    * However when the window starts/ends on a non-midnight time (e.g. 1:30pm), it shifts and
    * touches an extra calendar day, despite representing the same number of 24-hour periods.
    *
-   *   Window:         |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
-   *   Calendar: [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+   *   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
+   *   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
    *
-   *   Window:            |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
-   *   Calendar: [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+   *   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
+   *   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
    *
    * This inflates the denominator by 1, systematically underestimating per-day averages.
    * We correct the systematic over-count by applying a correction when viewing partial days.
