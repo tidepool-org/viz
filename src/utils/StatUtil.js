@@ -6,6 +6,7 @@ import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from 
 import { getTotalInsulin } from './bolus';
 import { classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { formatLocalizedFromUTC } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -95,6 +96,30 @@ export class StatUtil {
     return data;
   };
 
+  getActiveDaysEdgeCorrection = (uniqueDatumDates) => {
+    const [start, end] = this.endpoints;
+    const tz = _.get(this, 'timePrefs.timezoneName', 'UTC');
+
+    const startMoment = moment.utc(start).tz(tz);
+    const isStartDateMidnight = startMoment.hour() === 0 &&
+                                startMoment.minute() === 0 &&
+                                startMoment.second() === 0;
+
+    const headDow = startMoment.day();
+    const tailDow = moment.utc(end).tz(tz).day();
+    const isHeadDowInFilter = _.includes(this.dataUtil.activeDays, headDow);
+    const isTailDowInFilter = _.includes(this.dataUtil.activeDays, tailDow);
+    const hasBothEdgesInFilter = isHeadDowInFilter && isTailDowInFilter;
+
+    const headDate = startMoment.format('YYYY-MM-DD');
+    const tailDate = moment.utc(end).tz(tz).format('YYYY-MM-DD');
+    const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
+
+    if (!isStartDateMidnight && hasBothEdgesInFilter && hasDataOnBothEdges) return 1;
+
+    return 0;
+  };
+
   getInsulinData = () => {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
@@ -108,7 +133,7 @@ export class StatUtil {
       ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
     ]);
 
-    const activeDaysWithInsulinData = uniqueDatumDates.size;
+    const activeDaysWithInsulinData = uniqueDatumDates.size - this.getActiveDaysEdgeCorrection(uniqueDatumDates);
 
     const basalBolusData = {
       basal: basalData.length
@@ -137,7 +162,7 @@ export class StatUtil {
       ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
     ]);
 
-    const activeDaysWithCarbData = uniqueDatumDates.size;
+    const activeDaysWithCarbData = uniqueDatumDates.size - this.getActiveDaysEdgeCorrection(uniqueDatumDates);
 
     const wizardCarbs = _.reduce(
       wizardData,
