@@ -96,6 +96,24 @@ export class StatUtil {
     return data;
   };
 
+  /**
+   * Corrects the calendar date-based day count when the data window is offset from midnight.
+   * When the data window starts/ends on midnight, it covers the expected number of days.
+   * However when the window starts/ends on a non-midnight time (e.g. 1:30pm), it shifts and
+   * touches an extra calendar day, despite representing the same number of 24-hour periods.
+   *
+   *   Window:         |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
+   *   Calendar: [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+   *
+   *   Window:            |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
+   *   Calendar: [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+   *
+   * This inflates the denominator by 1, systematically underestimating per-day averages.
+   * We correct the systematic over-count by applying a correction when viewing partial days.
+   *
+   * @param {Set<string>} uniqueDatumDates - Set of 'YYYY-MM-DD' date strings that have data
+   * @returns {number} value to add to active days count to correct for partial day selection
+   */
   getActiveDaysEdgeCorrection = (uniqueDatumDates) => {
     const [start, end] = this.endpoints;
     const tz = _.get(this, 'timePrefs.timezoneName', 'UTC');
@@ -115,7 +133,7 @@ export class StatUtil {
     const tailDate = moment.utc(end).tz(tz).format('YYYY-MM-DD');
     const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
 
-    if (!isStartDateMidnight && hasBothEdgesInFilter && hasDataOnBothEdges) return 1;
+    if (!isStartDateMidnight && hasBothEdgesInFilter && hasDataOnBothEdges) return -1;
 
     return 0;
   };
@@ -133,7 +151,7 @@ export class StatUtil {
       ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
     ]);
 
-    const activeDaysWithInsulinData = uniqueDatumDates.size - this.getActiveDaysEdgeCorrection(uniqueDatumDates);
+    const activeDaysWithInsulinData = uniqueDatumDates.size + this.getActiveDaysEdgeCorrection(uniqueDatumDates);
 
     const basalBolusData = {
       basal: basalData.length
@@ -162,7 +180,7 @@ export class StatUtil {
       ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
     ]);
 
-    const activeDaysWithCarbData = uniqueDatumDates.size - this.getActiveDaysEdgeCorrection(uniqueDatumDates);
+    const activeDaysWithCarbData = uniqueDatumDates.size + this.getActiveDaysEdgeCorrection(uniqueDatumDates);
 
     const wizardCarbs = _.reduce(
       wizardData,
