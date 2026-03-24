@@ -101,16 +101,14 @@ export class StatUtil {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
-    const combinedInsulinData = [...rawBasalData, ...bolusData, ...insulinData];
-    const datumTimestamps = _.map(combinedInsulinData, datum => moment.utc(datum.time).valueOf());
-    const [startEndpoint] = this.endpoints;
+    // Create a list of all dates for which we have at least one datum
+    const uniqueDatumDates = new Set([
+      ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+    ]);
 
-    // For each datum, calculate the number of 24hr periods that elapsed between it and the window start
-    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - startEndpoint) / MS_IN_DAY));
-
-    // Find the number of unique 24hr periods that have data occurring on them
-    const uniqueDayBuckets = new Set(numOfDaysElapsed);
-    const activeDaysWithInsulinData = uniqueDayBuckets.size;
+    const activeDaysWithInsulinData = uniqueDatumDates.size;
 
     const basalBolusData = {
       basal: basalData.length
@@ -133,16 +131,13 @@ export class StatUtil {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
-    const combinedCarbData = [...wizardData, ...foodData];
-    const datumTimestamps = _.map(combinedCarbData, datum => moment.utc(datum.time).valueOf());
-    const [startEndpoint] = this.endpoints;
+    // Create a list of all dates for which we have at least one datum
+    const uniqueDatumDates = new Set([
+      ...wizardData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+    ]);
 
-    // For each datum, calculate the number of 24hr periods that elapsed between it and the window start
-    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - startEndpoint) / MS_IN_DAY));
-
-    // Find the number of unique 24hr periods that have data occurring on them
-    const uniqueDayBuckets = new Set(numOfDaysElapsed);
-    const activeDaysWithCarbData = uniqueDayBuckets.size;
+    const activeDaysWithCarbData = uniqueDatumDates.size;
 
     const wizardCarbs = _.reduce(
       wizardData,
