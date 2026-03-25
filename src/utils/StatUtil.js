@@ -126,17 +126,11 @@ export class StatUtil {
                                   startMoment.minute() === 0 &&
                                   startMoment.second() === 0;
 
-      const headDow = startMoment.day();
-      const tailDow = moment.utc(end).tz(timezoneName).day();
-      const isHeadDowSetVisible = _.includes(this.dataUtil.activeDays, headDow);
-      const isTailDowSetVisible = _.includes(this.dataUtil.activeDays, tailDow);
-      const hasBothEdgesSetVisible = isHeadDowSetVisible && isTailDowSetVisible;
-
       const headDate = startMoment.format('YYYY-MM-DD');
       const tailDate = moment.utc(end).tz(timezoneName).format('YYYY-MM-DD');
       const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
 
-      if (!isStartDateMidnight && hasBothEdgesSetVisible && hasDataOnBothEdges) return -1;
+      if (!isStartDateMidnight && hasDataOnBothEdges) return -1;
 
       return 0;
     })();

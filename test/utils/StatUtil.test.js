@@ -657,7 +657,7 @@ describe('StatUtil', () => {
       expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(2);
     });
 
-    it('should subtract 1 when start is not midnight, both DOWs are visible, and both edges have data', () => {
+    it('should subtract 1 when start is not midnight and both edges have data', () => {
       filterEndpoints(offsetEndpoints);
       expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(1);
     });
