@@ -488,25 +488,29 @@ describe('StatUtil', () => {
 
     context('edge correction for offset windows', () => {
       it('should not apply edge correction when endpoints are midnight-aligned', () => {
-        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02
-        // uniqueDatumDates = { '2018-02-01', '2018-02-02' } → 2 dates, correction = 0 → divide by 2
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02.
         filterEndpoints(twoDayEndpoints);
         const result = statUtil.getInsulinData();
+
+        // Should divide total insulin by 2
+
         expect(result).to.eql({
-          basal: 0.75,
-          bolus: 7.5,
+          basal: 0.75, // === 1.5 / 2
+          bolus: 7.5, // === 15 / 2
           insulin: 1.5,
         });
       });
 
       it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
-        // Offset window: 2018-02-01T13:30:00Z to 2018-02-08T13:30:00Z (7 × 24hrs)
-        // Data on 2018-02-01, 2018-02-02, and 2018-02-08 → 3 unique dates
-        // Without correction: divide by 3. With correction (-1): divide by 2.
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
+
         const offsetBasalData = _.map([
-          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-01T14:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 0.5, ...useRawData }),
-          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-02T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 0.5, ...useRawData }),
-          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-08T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 0.5, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-01T14:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-02T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-08T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
         ], _.toPlainObject);
 
         const offsetBolusData = _.map([
@@ -515,23 +519,17 @@ describe('StatUtil', () => {
           new Types.Bolus({ deviceTime: '2018-02-08T10:00:00', value: 6, ...useRawData }),
         ], _.toPlainObject);
 
-        const offsetEndpoints = [
-          '2018-02-01T13:30:00.000Z',
-          '2018-02-08T13:30:00.000Z',
-        ];
-
         statUtil = createStatUtil([...offsetBasalData, ...offsetBolusData], opts({ endpoints: offsetEndpoints }));
         filterEndpoints(offsetEndpoints);
 
         // Total basal = 0.5 + 0.5 + 0.5 = 1.5, Total bolus = 2 + 4 + 6 = 12
-        // uniqueDatumDates = { '2018-02-01', '2018-02-02', '2018-02-08' } → 3 dates
-        // Edge correction: start is 13:30 (not midnight), both edges visible, data on both → -1
-        // activeDaysWithInsulinData = 3 - 1 = 2
-        // activeDays > 1 (7 days) and activeDaysWithInsulinData > 1 (2), so divide by 2
+
+        // Should divide total insulin by 2 instead of 3 since we are looking at a 2 x 24h period
+
         const result = statUtil.getInsulinData();
         expect(result).to.eql({
-          basal: 0.75,
-          bolus: 6,
+          basal: 1.5, // === 3 / 2
+          bolus: 6, // === 12 / 2
           insulin: NaN,
         });
       });
