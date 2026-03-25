@@ -485,6 +485,57 @@ describe('StatUtil', () => {
         });
       });
     });
+
+    context('edge correction for offset windows', () => {
+      it('should not apply edge correction when endpoints are midnight-aligned', () => {
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02
+        // uniqueDatumDates = { '2018-02-01', '2018-02-02' } → 2 dates, correction = 0 → divide by 2
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getInsulinData();
+        expect(result).to.eql({
+          basal: 0.75,
+          bolus: 7.5,
+          insulin: 1.5,
+        });
+      });
+
+      it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
+        // Offset window: 2018-02-01T13:30:00Z to 2018-02-08T13:30:00Z (7 × 24hrs)
+        // Data on 2018-02-01, 2018-02-02, and 2018-02-08 → 3 unique dates
+        // Without correction: divide by 3. With correction (-1): divide by 2.
+        const offsetBasalData = _.map([
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-01T14:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 0.5, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-02T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 0.5, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-08T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 0.5, ...useRawData }),
+        ], _.toPlainObject);
+
+        const offsetBolusData = _.map([
+          new Types.Bolus({ deviceTime: '2018-02-01T14:00:00', value: 2, ...useRawData }),
+          new Types.Bolus({ deviceTime: '2018-02-02T10:00:00', value: 4, ...useRawData }),
+          new Types.Bolus({ deviceTime: '2018-02-08T10:00:00', value: 6, ...useRawData }),
+        ], _.toPlainObject);
+
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
+
+        statUtil = createStatUtil([...offsetBasalData, ...offsetBolusData], opts({ endpoints: offsetEndpoints }));
+        filterEndpoints(offsetEndpoints);
+
+        // Total basal = 0.5 + 0.5 + 0.5 = 1.5, Total bolus = 2 + 4 + 6 = 12
+        // uniqueDatumDates = { '2018-02-01', '2018-02-02', '2018-02-08' } → 3 dates
+        // Edge correction: start is 13:30 (not midnight), both edges visible, data on both → -1
+        // activeDaysWithInsulinData = 3 - 1 = 2
+        // activeDays > 1 (7 days) and activeDaysWithInsulinData > 1 (2), so divide by 2
+        const result = statUtil.getInsulinData();
+        expect(result).to.eql({
+          basal: 0.75,
+          bolus: 6,
+          insulin: NaN,
+        });
+      });
+    });
   });
 
   describe('getBgExtentsData', () => {
@@ -549,6 +600,97 @@ describe('StatUtil', () => {
         carbs: { grams: 21.5, exchanges: 1 },
         total: 7,
       });
+    });
+
+    context('edge correction for offset windows', () => {
+      it('should not apply edge correction when endpoints are midnight-aligned', () => {
+        // twoDayEndpoints are midnight-aligned: carb data on 2018-02-01 and 2018-02-02
+        // uniqueDatumDates = { '2018-02-01', '2018-02-02' } → 2 dates, correction = 0 → divide by 2
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getCarbsData();
+        expect(result).to.eql({
+          carbs: { grams: 21.5, exchanges: 1 },
+          total: 7,
+        });
+      });
+
+      it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
+        // Offset window: 2018-02-01T13:30:00Z to 2018-02-08T13:30:00Z (7 × 24hrs)
+        // Food data on 2018-02-01, 2018-02-02, and 2018-02-08 → 3 unique dates
+        // Without correction: divide by 3. With correction (-1): divide by 2.
+        const offsetFoodData = _.map([
+          new Types.Food({ deviceTime: '2018-02-01T14:00:00', nutrition: { carbohydrate: { net: 10 } }, ...useRawData }),
+          new Types.Food({ deviceTime: '2018-02-02T10:00:00', nutrition: { carbohydrate: { net: 20 } }, ...useRawData }),
+          new Types.Food({ deviceTime: '2018-02-08T10:00:00', nutrition: { carbohydrate: { net: 30 } }, ...useRawData }),
+        ], _.toPlainObject);
+
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
+
+        statUtil = createStatUtil(offsetFoodData, opts({ endpoints: offsetEndpoints }));
+        filterEndpoints(offsetEndpoints);
+
+        // Total grams = 10 + 20 + 30 = 60
+        // uniqueDatumDates = { '2018-02-01', '2018-02-02', '2018-02-08' } → 3 dates
+        // Edge correction: start is 13:30 (not midnight), both edges visible, data on both → -1
+        // activeDaysWithCarbData = 3 - 1 = 2
+        // activeDays > 1 (7 days) and activeDaysWithCarbData > 1 (2), so divide by 2
+        const result = statUtil.getCarbsData();
+        expect(result).to.eql({
+          carbs: { grams: 30, exchanges: 0 },
+          total: 3,
+        });
+      });
+    });
+  });
+
+  describe('getActiveDaysEdgeCorrection', () => {
+    // For these tests, the offset endpoints span 2018-02-01T13:30 to 2018-02-03T13:30 (UTC)
+    // 2018-02-01 = Thursday (dow 4), 2018-02-03 = Saturday (dow 6)
+    const offsetEndpoints = [
+      '2018-02-01T13:30:00.000Z',
+      '2018-02-03T13:30:00.000Z',
+    ];
+
+    const bothEdgeDates = new Set(['2018-02-01', '2018-02-03']);
+
+    it('should return 0 when the start endpoint is midnight-aligned', () => {
+      filterEndpoints(twoDayEndpoints); // midnight-aligned
+      const dates = new Set(['2018-02-01', '2018-02-03']);
+      expect(statUtil.getActiveDaysEdgeCorrection(dates)).to.equal(0);
+    });
+
+    it('should return -1 when start is not midnight, both DOWs are visible, and both edges have data', () => {
+      filterEndpoints(offsetEndpoints);
+      expect(statUtil.getActiveDaysEdgeCorrection(bothEdgeDates)).to.equal(-1);
+    });
+
+    it('should return 0 when start is not midnight but head DOW is not in activeDays', () => {
+      filterEndpoints(offsetEndpoints);
+      // Head DOW = Thursday (4). Exclude it from activeDays.
+      statUtil.dataUtil.activeDays = [0, 1, 2, 3, 5, 6]; // no Thursday
+      expect(statUtil.getActiveDaysEdgeCorrection(bothEdgeDates)).to.equal(0);
+    });
+
+    it('should return 0 when start is not midnight but tail DOW is not in activeDays', () => {
+      filterEndpoints(offsetEndpoints);
+      // Tail DOW = Saturday (6). Exclude it from activeDays.
+      statUtil.dataUtil.activeDays = [0, 1, 2, 3, 4, 5]; // no Saturday
+      expect(statUtil.getActiveDaysEdgeCorrection(bothEdgeDates)).to.equal(0);
+    });
+
+    it('should return 0 when start is not midnight but head date has no data', () => {
+      filterEndpoints(offsetEndpoints);
+      const tailOnly = new Set(['2018-02-03']);
+      expect(statUtil.getActiveDaysEdgeCorrection(tailOnly)).to.equal(0);
+    });
+
+    it('should return 0 when start is not midnight but tail date has no data', () => {
+      filterEndpoints(offsetEndpoints);
+      const headOnly = new Set(['2018-02-01']);
+      expect(statUtil.getActiveDaysEdgeCorrection(headOnly)).to.equal(0);
     });
   });
 
