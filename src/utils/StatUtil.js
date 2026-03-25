@@ -150,8 +150,8 @@ export class StatUtil {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
-    const datums = [...rawBasalData, ...bolusData, ...insulinData];
-    const activeDaysWithInsulinData = this.getActiveDaysWithData(datums);
+    const combinedInsulinData = [...rawBasalData, ...bolusData, ...insulinData];
+    const activeDaysWithInsulinData = this.getActiveDaysWithData(combinedInsulinData);
 
     const basalBolusData = {
       basal: basalData.length
@@ -174,9 +174,8 @@ export class StatUtil {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
-    const datums = [...wizardData, ...foodData];
-
-    const activeDaysWithCarbData = this.getActiveDaysWithData(datums);
+    const combinedCarbData = [...wizardData, ...foodData];
+    const activeDaysWithCarbData = this.getActiveDaysWithData(combinedCarbData);
 
     const wizardCarbs = _.reduce(
       wizardData,
