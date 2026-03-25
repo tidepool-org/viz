@@ -96,46 +96,52 @@ export class StatUtil {
     return data;
   };
 
-  /**
-   * Corrects the calendar date-based day count when the data window is offset from midnight.
-   * When the data window starts/ends on midnight, it covers the expected number of days.
-   * However when the window starts/ends on a non-midnight time (e.g. 1:30pm), it shifts and
-   * touches an extra calendar day, despite representing the same number of 24-hour periods.
-   *
-   *   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
-   *   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
-   *
-   *   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
-   *   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
-   *
-   * This inflates the denominator by 1, systematically underestimating per-day averages.
-   * We correct the systematic over-count by applying a correction when viewing partial days.
-   *
-   * @param {Set<string>} uniqueDatumDates - Set of 'YYYY-MM-DD' date strings that have data
-   * @returns {number} value to add to active days count to correct for partial day selection
-   */
-  getActiveDaysEdgeCorrection = (uniqueDatumDates) => {
-    const [start, end] = this.endpoints;
-    const timezoneName = _.get(this, 'timePrefs.timezoneName', 'UTC');
+  getActiveDaysWithData = (datums = []) => {
+    // Create a list of all dates for which we have at least one datum
+    const datumDates = datums.map(d => formatLocalizedFromUTC(d.time, this.timePrefs, 'YYYY-MM-DD'));
+    const uniqueDatumDates = new Set(datumDates);
 
-    const startMoment = moment.utc(start).tz(timezoneName);
-    const isStartDateMidnight = startMoment.hour() === 0 &&
-                                startMoment.minute() === 0 &&
-                                startMoment.second() === 0;
+    const uniqueDateCount = uniqueDatumDates.size;
 
-    const headDow = startMoment.day();
-    const tailDow = moment.utc(end).tz(timezoneName).day();
-    const isHeadDowSetVisible = _.includes(this.dataUtil.activeDays, headDow);
-    const isTailDowSetVisible = _.includes(this.dataUtil.activeDays, tailDow);
-    const hasBothEdgesSetVisible = isHeadDowSetVisible && isTailDowSetVisible;
+    // We need to apply a correction factor when the data window is offset from midnight.
+    // When the data window does start/end on midnight, it covers the expected number of days.
+    // However when the window starts/ends on a non-midnight time (e.g. 1:30pm), it shifts and
+    // pulls data from extra calendar day, despite representing the same number of 24hr blocks.
+    //
+    //   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
+    //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+    //
+    //   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
+    //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+    //
+    // This inflates the denominator by 1, systematically underestimating per-day averages.
+    // We correct the systematic over-count by subtracting 1 when viewing partial days.
 
-    const headDate = startMoment.format('YYYY-MM-DD');
-    const tailDate = moment.utc(end).tz(timezoneName).format('YYYY-MM-DD');
-    const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
+    const correctionFactor = (() => {
+      const [start, end] = this.endpoints;
+      const timezoneName = _.get(this, 'timePrefs.timezoneName', 'UTC');
 
-    if (!isStartDateMidnight && hasBothEdgesSetVisible && hasDataOnBothEdges) return -1;
+      const startMoment = moment.utc(start).tz(timezoneName);
+      const isStartDateMidnight = startMoment.hour() === 0 &&
+                                  startMoment.minute() === 0 &&
+                                  startMoment.second() === 0;
 
-    return 0;
+      const headDow = startMoment.day();
+      const tailDow = moment.utc(end).tz(timezoneName).day();
+      const isHeadDowSetVisible = _.includes(this.dataUtil.activeDays, headDow);
+      const isTailDowSetVisible = _.includes(this.dataUtil.activeDays, tailDow);
+      const hasBothEdgesSetVisible = isHeadDowSetVisible && isTailDowSetVisible;
+
+      const headDate = startMoment.format('YYYY-MM-DD');
+      const tailDate = moment.utc(end).tz(timezoneName).format('YYYY-MM-DD');
+      const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
+
+      if (!isStartDateMidnight && hasBothEdgesSetVisible && hasDataOnBothEdges) return -1;
+
+      return 0;
+    })();
+
+    return uniqueDateCount + correctionFactor;
   };
 
   getInsulinData = () => {
@@ -144,14 +150,8 @@ export class StatUtil {
     const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
     const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
-    // Create a list of all dates for which we have at least one datum
-    const uniqueDatumDates = new Set([
-      ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-      ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-    ]);
-
-    const activeDaysWithInsulinData = uniqueDatumDates.size + this.getActiveDaysEdgeCorrection(uniqueDatumDates);
+    const datums = [...rawBasalData, ...bolusData, ...insulinData];
+    const activeDaysWithInsulinData = this.getActiveDaysWithData(datums);
 
     const basalBolusData = {
       basal: basalData.length
@@ -174,13 +174,9 @@ export class StatUtil {
     const wizardData = this.dataUtil.filter.byType('wizard').top(Infinity);
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
-    // Create a list of all dates for which we have at least one datum
-    const uniqueDatumDates = new Set([
-      ...wizardData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-      ...foodData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
-    ]);
+    const datums = [...wizardData, ...foodData];
 
-    const activeDaysWithCarbData = uniqueDatumDates.size + this.getActiveDaysEdgeCorrection(uniqueDatumDates);
+    const activeDaysWithCarbData = this.getActiveDaysWithData(datums);
 
     const wizardCarbs = _.reduce(
       wizardData,
