@@ -110,10 +110,10 @@ export class StatUtil {
       // from an extra calendar day despite representing the same number of 24 hour periods.
       //
       //   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
+      //                           |                                        |
       //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
-      //
+      //                              |                                        |
       //   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
-      //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
       //
       // This inflates the denominator by 1, which causes systematic underestimating of averages.
       // We correct the systematic over-count by subtracting 1 when viewing partial days.
