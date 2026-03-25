@@ -646,7 +646,7 @@ describe('StatUtil', () => {
     });
   });
 
-  describe('getActiveDaysEdgeCorrection', () => {
+  describe('getActiveDaysWithData', () => {
     // For these tests, the offset endpoints span 2018-02-01T13:30 to 2018-02-03T13:30 (UTC)
     // 2018-02-01 = Thursday (dow 4), 2018-02-03 = Saturday (dow 6)
     const offsetEndpoints = [
@@ -654,43 +654,42 @@ describe('StatUtil', () => {
       '2018-02-03T13:30:00.000Z',
     ];
 
-    const bothEdgeDates = new Set(['2018-02-01', '2018-02-03']);
+    const headDatum = { time: '2018-02-01T14:00:00.000Z' };
+    const tailDatum = { time: '2018-02-03T10:00:00.000Z' };
+    const bothEdgeDatums = [headDatum, tailDatum];
 
-    it('should return 0 when the start endpoint is midnight-aligned', () => {
+    it('should not apply correction when the start endpoint is midnight-aligned', () => {
       filterEndpoints(twoDayEndpoints); // midnight-aligned
-      const dates = new Set(['2018-02-01', '2018-02-03']);
-      expect(statUtil.getActiveDaysEdgeCorrection(dates)).to.equal(0);
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(2);
     });
 
-    it('should return -1 when start is not midnight, both DOWs are visible, and both edges have data', () => {
+    it('should subtract 1 when start is not midnight, both DOWs are visible, and both edges have data', () => {
       filterEndpoints(offsetEndpoints);
-      expect(statUtil.getActiveDaysEdgeCorrection(bothEdgeDates)).to.equal(-1);
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(1);
     });
 
-    it('should return 0 when start is not midnight but head DOW is not in activeDays', () => {
+    it('should not apply correction when start is not midnight but head DOW is not in activeDays', () => {
       filterEndpoints(offsetEndpoints);
       // Head DOW = Thursday (4). Exclude it from activeDays.
       statUtil.dataUtil.activeDays = [0, 1, 2, 3, 5, 6]; // no Thursday
-      expect(statUtil.getActiveDaysEdgeCorrection(bothEdgeDates)).to.equal(0);
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(2);
     });
 
-    it('should return 0 when start is not midnight but tail DOW is not in activeDays', () => {
+    it('should not apply correction when start is not midnight but tail DOW is not in activeDays', () => {
       filterEndpoints(offsetEndpoints);
       // Tail DOW = Saturday (6). Exclude it from activeDays.
       statUtil.dataUtil.activeDays = [0, 1, 2, 3, 4, 5]; // no Saturday
-      expect(statUtil.getActiveDaysEdgeCorrection(bothEdgeDates)).to.equal(0);
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(2);
     });
 
-    it('should return 0 when start is not midnight but head date has no data', () => {
+    it('should not apply correction when start is not midnight but head date has no data', () => {
       filterEndpoints(offsetEndpoints);
-      const tailOnly = new Set(['2018-02-03']);
-      expect(statUtil.getActiveDaysEdgeCorrection(tailOnly)).to.equal(0);
+      expect(statUtil.getActiveDaysWithData([tailDatum])).to.equal(1);
     });
 
-    it('should return 0 when start is not midnight but tail date has no data', () => {
+    it('should not apply correction when start is not midnight but tail date has no data', () => {
       filterEndpoints(offsetEndpoints);
-      const headOnly = new Set(['2018-02-01']);
-      expect(statUtil.getActiveDaysEdgeCorrection(headOnly)).to.equal(0);
+      expect(statUtil.getActiveDaysWithData([headDatum])).to.equal(1);
     });
   });
 

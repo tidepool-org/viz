@@ -103,21 +103,21 @@ export class StatUtil {
 
     const uniqueDateCount = uniqueDatumDates.size;
 
-    // We need to apply a correction factor when the data window is offset from midnight.
-    // When the data window does start/end on midnight, it covers the expected number of days.
-    // However when the window starts/ends on a non-midnight time (e.g. 1:30pm), it shifts and
-    // pulls data from extra calendar day, despite representing the same number of 24hr blocks.
-    //
-    //   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
-    //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
-    //
-    //   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
-    //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
-    //
-    // This inflates the denominator by 1, systematically underestimating per-day averages.
-    // We correct the systematic over-count by subtracting 1 when viewing partial days.
+    const extraDayAdjustment = (() => {
+      // We need to adjust the day count when the data window is offset from midnight-to-midnight.
+      // When the data window DOES start/end on midnight, it pulls from the expected num of days.
+      // However, when the window starts/ends on a non-midnight time (e.g. 1:30pm), it pulls data
+      // from an extra calendar day despite representing the same number of 24 hour periods.
+      //
+      //   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
+      //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+      //
+      //   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
+      //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+      //
+      // This inflates the denominator by 1, which causes systematic underestimating of averages.
+      // We correct the systematic over-count by subtracting 1 when viewing partial days.
 
-    const correctionFactor = (() => {
       const [start, end] = this.endpoints;
       const timezoneName = _.get(this, 'timePrefs.timezoneName', 'UTC');
 
@@ -141,7 +141,7 @@ export class StatUtil {
       return 0;
     })();
 
-    return uniqueDateCount + correctionFactor;
+    return uniqueDateCount + extraDayAdjustment;
   };
 
   getInsulinData = () => {
