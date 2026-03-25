@@ -602,8 +602,7 @@ describe('StatUtil', () => {
 
     context('edge correction for offset windows', () => {
       it('should not apply edge correction when endpoints are midnight-aligned', () => {
-        // twoDayEndpoints are midnight-aligned: carb data on 2018-02-01 and 2018-02-02
-        // uniqueDatumDates = { '2018-02-01', '2018-02-02' } → 2 dates, correction = 0 → divide by 2
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02
         filterEndpoints(twoDayEndpoints);
         const result = statUtil.getCarbsData();
         expect(result).to.eql({
@@ -613,31 +612,27 @@ describe('StatUtil', () => {
       });
 
       it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
-        // Offset window: 2018-02-01T13:30:00Z to 2018-02-08T13:30:00Z (7 × 24hrs)
-        // Food data on 2018-02-01, 2018-02-02, and 2018-02-08 → 3 unique dates
-        // Without correction: divide by 3. With correction (-1): divide by 2.
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
+
         const offsetFoodData = _.map([
           new Types.Food({ deviceTime: '2018-02-01T14:00:00', nutrition: { carbohydrate: { net: 10 } }, ...useRawData }),
           new Types.Food({ deviceTime: '2018-02-02T10:00:00', nutrition: { carbohydrate: { net: 20 } }, ...useRawData }),
           new Types.Food({ deviceTime: '2018-02-08T10:00:00', nutrition: { carbohydrate: { net: 30 } }, ...useRawData }),
         ], _.toPlainObject);
 
-        const offsetEndpoints = [
-          '2018-02-01T13:30:00.000Z',
-          '2018-02-08T13:30:00.000Z',
-        ];
-
         statUtil = createStatUtil(offsetFoodData, opts({ endpoints: offsetEndpoints }));
         filterEndpoints(offsetEndpoints);
 
         // Total grams = 10 + 20 + 30 = 60
-        // uniqueDatumDates = { '2018-02-01', '2018-02-02', '2018-02-08' } → 3 dates
-        // Edge correction: start is 13:30 (not midnight), both edges visible, data on both → -1
-        // activeDaysWithCarbData = 3 - 1 = 2
-        // activeDays > 1 (7 days) and activeDaysWithCarbData > 1 (2), so divide by 2
+
+        // Should divide total grams by 2 instead of 3 since we are looking at a 2 x 24h period
+
         const result = statUtil.getCarbsData();
         expect(result).to.eql({
-          carbs: { grams: 30, exchanges: 0 },
+          carbs: { grams: 30, exchanges: 0 }, // === 60 / 2
           total: 3,
         });
       });
