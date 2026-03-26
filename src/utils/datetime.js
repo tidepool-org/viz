@@ -309,6 +309,22 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
 }
 
 /**
+ * formatLocalizedFromUTCAndTimezone
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {Object} timezone - object containing timezoneAware Boolean and timezoneName String
+ * @param  {String} [format] - optional moment display format string; default is 'dddd, MMMM D'
+ *
+ * @return {String} formatted datetime, e.g., 'Sunday, January 1'
+ */
+export function formatLocalizedFromUTCAndTimezone(utc, timezone, format = 'dddd, MMMM D') {
+  if (utc instanceof Date) {
+    throw new Error('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
+  }
+
+  return moment.utc(utc).tz(timezone).format(format);
+}
+
+/**
  * getLocalizedCeiling
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String

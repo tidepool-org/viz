@@ -6,7 +6,7 @@ import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from 
 import { getTotalInsulin } from './bolus';
 import { classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
-import { formatLocalizedFromUTC } from './datetime';
+import { formatLocalizedFromUTCAndTimezone, getTimezoneFromTimePrefs } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -98,7 +98,8 @@ export class StatUtil {
 
   getActiveDaysWithData = (datums = []) => {
     // Create a list of all dates for which we have at least one datum
-    const datumDates = datums.map(d => formatLocalizedFromUTC(d.time, this.timePrefs, 'YYYY-MM-DD'));
+    const timezone = getTimezoneFromTimePrefs(this.timePrefs);
+    const datumDates = datums.map(d => formatLocalizedFromUTCAndTimezone(d.time, timezone, 'YYYY-MM-DD'));
     const uniqueDatumDates = new Set(datumDates);
 
     const uniqueDateCount = uniqueDatumDates.size;
@@ -119,15 +120,14 @@ export class StatUtil {
       // We correct the systematic over-count by subtracting 1 when viewing partial days.
 
       const [start, end] = this.endpoints;
-      const timezoneName = _.get(this, 'timePrefs.timezoneName', 'UTC');
 
-      const startMoment = moment.utc(start).tz(timezoneName);
+      const startMoment = moment.utc(start).tz(timezone);
       const isStartDateMidnight = startMoment.hour() === 0 &&
                                   startMoment.minute() === 0 &&
                                   startMoment.second() === 0;
 
       const headDate = startMoment.format('YYYY-MM-DD');
-      const tailDate = moment.utc(end).tz(timezoneName).format('YYYY-MM-DD');
+      const tailDate = moment.utc(end).tz(timezone).format('YYYY-MM-DD');
       const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
 
       if (!isStartDateMidnight && hasDataOnBothEdges) return -1;
