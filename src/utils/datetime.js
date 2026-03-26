@@ -310,8 +310,10 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
 
 /**
  * formatLocalizedFromUTCAndTimezone
+ * @description formatLocalizedFromUTC is expensive; this one is faster if you have the timezoneName
+ *
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
- * @param {Object} timezone - object containing timezoneAware Boolean and timezoneName String
+ * @param {Object} timezone - timezoneName String
  * @param  {String} [format] - optional moment display format string; default is 'dddd, MMMM D'
  *
  * @return {String} formatted datetime, e.g., 'Sunday, January 1'
