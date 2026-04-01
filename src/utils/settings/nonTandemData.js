@@ -316,8 +316,8 @@ function targetRows(settings, units, manufacturer) {
 export function target(settings, manufacturer, units) {
   const device = data.deviceName(manufacturer);
 
-  const rangeLabel = manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
-  const annotations = isLoop(settings) || manufacturer === 'trio'
+  const rangeLabel = isTrio(settings) ? t('Glucose Targets') : t('Correction Range');
+  const annotations = isLoop(settings)
     ? [t('{{rangeLabel}} is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { rangeLabel, device })]
     : null;
 
