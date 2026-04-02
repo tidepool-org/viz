@@ -6,7 +6,7 @@ import * as bolusUtils from '../../../utils/bolus';
 import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
-import { getPumpVocabulary, isLoop, isTwiistLoop } from '../../../utils/device';
+import { getPumpVocabulary, isLoop, isTrio, isTwiistLoop } from '../../../utils/device';
 import { getAnnotationMessages } from '../../../utils/annotations';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -122,11 +122,11 @@ export const getTarget = (bolus, bgPrefs, timePrefs, unitStyles) => {
       </div>,
     ];
   }
-  if (isLoop(bolus)) {
-    // loop
+  if (isLoop(bolus) || isTrio(bolus)) {
+    // loop / trio
     const schedules = _.get(bolus, 'dosingDecision.bgTargetSchedule', []);
     const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < msPer24);
-    const label = t('Correction Range');
+    const label = isTrio(bolus) ? t('Glucose Targets') : t('Correction Range');
     return (
       <div className={styles.target}>
         <div className={styles.label}>{label} ({bgUnits})</div>
@@ -211,7 +211,7 @@ const BolusTooltip = (props) => {
     let carbRatio = wizard?.insulinCarbRatio || null;
     let isf = wizard?.insulinSensitivity || null;
 
-    if (isLoop(wizard)) {
+    if (isLoop(wizard) || isTrio(wizard)) {
       const { activeSchedule, carbRatios, insulinSensitivities } = wizard?.dosingDecision?.pumpSettings || {};
       carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || carbRatio;
       isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || isf;
