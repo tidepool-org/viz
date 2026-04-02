@@ -18,7 +18,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 import * as data from './data';
 import { pumpVocabulary, AUTOMATED_DELIVERY } from '../constants';
-import { isLoop, isTrio } from '../device';
+import { isLoop } from '../device';
 
 const t = i18next.t.bind(i18next);
 
@@ -58,6 +58,7 @@ export function bolusTitle(manufacturer) {
     'tidepool loop': t('Bolus Calculator'),
     'diy loop': t('Bolus Calculator'),
     twiist: t('Bolus Calculator'),
+    trio: t('Bolus Calculator'),
   };
   return BOLUS_SETTINGS_LABEL_BY_MANUFACTURER[manufacturer];
 }
@@ -125,6 +126,7 @@ function sensitivityTitle(manufacturer) {
     'diy loop': t('Insulin Sensitivities'),
     'tidepool loop': t('Insulin Sensitivities'),
     twiist: t('Insulin Sensitivities'),
+    trio: t('Insulin Sensitivities'),
   };
   return ISF_BY_MANUFACTURER[manufacturer];
 }
@@ -177,6 +179,7 @@ function ratioTitle(manufacturer) {
     'diy loop': t('Carb Ratios'),
     'tidepool loop': t('Carb Ratios'),
     twiist: t('Carb Ratios'),
+    trio: t('Carb Ratios'),
   };
   return CARB_RATIO_BY_MANUFACTURER[manufacturer];
 }
@@ -316,8 +319,8 @@ function targetRows(settings, units, manufacturer) {
 export function target(settings, manufacturer, units) {
   const device = data.deviceName(manufacturer);
 
-  const rangeLabel = isTrio(settings) ? t('Glucose Targets') : t('Correction Range');
-  const annotations = isLoop(settings)
+  const rangeLabel = manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
+  const annotations = (isLoop(settings) || manufacturer === 'trio')
     ? [t('{{rangeLabel}} is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { rangeLabel, device })]
     : null;
 

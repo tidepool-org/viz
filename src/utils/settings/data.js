@@ -20,7 +20,7 @@ import i18next from 'i18next';
 
 import * as datetime from '../datetime';
 import * as format from '../format';
-import { getPumpVocabulary, isControlIQ, isLoop } from '../device';
+import { getPumpVocabulary, isControlIQ, isLoop, isTrio } from '../device';
 
 import {
   MAX_BOLUS,
@@ -438,31 +438,46 @@ export function insulinSettings(settings, manufacturer, scheduleName) {
     { setting: deviceLabels[INSULIN_DURATION] + (isControlIQ(settings) ? '*' : ''), value: insulinDuration ? `${insulinDuration} hrs` : '-' },
   ];
 
-  if (isLoop(settings)) {
-    const insulinModel = {
-      label: INSULIN_MODEL_LABELS[settings?.insulinModel?.modelType] || settings?.insulinModel?.modelType || t('Unknown'),
-      peakMinutes: _.isFinite(settings?.insulinModel?.actionPeakOffset) ? settings.insulinModel.actionPeakOffset / 60 : null,
-    };
-
+  if (isLoop(settings) || isTrio(settings)) {
     const device = deviceName(manufacturer);
+    const isTrioDevice = isTrio(settings);
 
-    const insulinModelAnnotations = [
-      t('{{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.', { device }),
-    ];
+    if (settings?.bgSafetyLimit != null) {
+      const safetyLimitLabel = isTrioDevice
+        ? t('Minimum Safety Threshold')
+        : t('Glucose Safety Limit');
+      const safetyLimitAnnotations = isTrioDevice ? [] : [
+        t('{{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device }),
+      ];
 
-    if (insulinModel.peakMinutes) insulinModelAnnotations.push(t('The {{label}} model assumes peak activity at {{peakMinutes}} minutes.', insulinModel));
+      rows.unshift({
+        ...(safetyLimitAnnotations.length ? { annotations: safetyLimitAnnotations } : {}),
+        setting: safetyLimitLabel,
+        value: `${format.formatBgValue(settings.bgSafetyLimit, { bgUnits })} ${bgUnits}`,
+      });
+    }
 
-    rows.unshift({
-      annotations: [t('{{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device })],
-      setting: t('Glucose Safety Limit'),
-      value: `${format.formatBgValue(settings?.bgSafetyLimit, { bgUnits })} ${bgUnits}`,
-    });
+    if (settings?.insulinModel?.modelType != null) {
+      const insulinModel = {
+        label: INSULIN_MODEL_LABELS[settings.insulinModel.modelType] || settings.insulinModel.modelType || t('Unknown'),
+        peakMinutes: _.isFinite(settings.insulinModel.actionPeakOffset) ? settings.insulinModel.actionPeakOffset / 60 : null,
+      };
 
-    rows.splice(3, 1, {
-      annotations: insulinModelAnnotations,
-      setting: t('Insulin Model'),
-      value: insulinModel.label,
-    });
+      const insulinModelAnnotations = isTrioDevice ? [] : [
+        t('{{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed.', { device }),
+      ];
+
+      if (insulinModel.peakMinutes) insulinModelAnnotations.push(t('The {{label}} model assumes peak activity at {{peakMinutes}} minutes.', insulinModel));
+
+      const durationIndex = _.findIndex(rows, r => _.startsWith(r.setting, deviceLabels[INSULIN_DURATION]));
+      if (durationIndex >= 0) {
+        rows.splice(durationIndex, 1, {
+          ...(insulinModelAnnotations.length ? { annotations: insulinModelAnnotations } : {}),
+          setting: t('Insulin Model'),
+          value: insulinModel.label,
+        });
+      }
+    }
   }
 
   // Tandem insulin settings do not have max basal
