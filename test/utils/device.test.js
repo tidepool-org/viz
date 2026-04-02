@@ -144,6 +144,16 @@ describe('device utility functions', () => {
       const datum = { client: { name: 'com.nightscout.Trio' } };
       expect(device.isTrio(datum)).to.be.false;
     });
+
+    it('should return `true` for a datum with `tags.trio` set', () => {
+      const datum = { tags: { trio: true } };
+      expect(device.isTrio(datum)).to.be.true;
+    });
+
+    it('should return `false` for a datum with `tags.trio` not set', () => {
+      const datum = { tags: { loop: true } };
+      expect(device.isTrio(datum)).to.be.false;
+    });
   });
 
   describe('isTidepoolLoop', () => {

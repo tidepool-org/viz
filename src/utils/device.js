@@ -38,7 +38,7 @@ export function isDIYLoop(datum = {}) {
  * Check to see if datum is from Trio
  */
 export function isTrio(datum = {}) {
-  return (/^org\.nightscout\.Trio/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
+  return datum.tags?.trio || (/^org\.nightscout\.Trio/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**
