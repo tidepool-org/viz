@@ -21,7 +21,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
-import { MS_IN_HOUR } from '../../../utils/constants';
+import { MS_IN_HOUR, MS_IN_MIN } from '../../../utils/constants';
 import { isLoop } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -110,7 +110,14 @@ const FoodTooltip = (props) => {
           );
         }
 
-        rows.push(<div key={'divider'} className={styles.divider} />);
+        const foodNormalTimeMs = _.isFinite(food.normalTime) ? food.normalTime : Date.parse(food.normalTime);
+        const entryTimeDiffExceedsThreshold = _.isFinite(foodNormalTimeMs)
+          && Math.abs(firstDD.time - foodNormalTimeMs) > 5 * MS_IN_MIN;
+        const showDivider = carbsWereEdited || entryTimeDiffExceedsThreshold;
+
+        if (showDivider) {
+          rows.push(<div key={'divider'} className={styles.divider} />);
+        }
 
         if (carbsWereEdited) {
           rows.push(
@@ -158,17 +165,19 @@ const FoodTooltip = (props) => {
             );
           }
         } else {
-          rows.push(
-            <div key={'timeEntered'} className={styles.row}>
-              <div className={styles.label}>{t('Time Entered')}</div>
-              <div className={styles.value}>
-                {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
+          if (entryTimeDiffExceedsThreshold) {
+            rows.push(
+              <div key={'timeEntered'} className={styles.row}>
+                <div className={styles.label}>{t('Time Entered')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
+                </div>
               </div>
-              <div className={styles.units}>
-                {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
-              </div>
-            </div>
-          );
+            );
+          }
         }
       }
     }

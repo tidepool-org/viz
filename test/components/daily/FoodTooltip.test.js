@@ -83,11 +83,25 @@ const loop = {
   },
 };
 
+// dosingDecision time (5:00pm) is 1hr before normalTime (6:00pm) → >5min → shows Time Entered
 const loopWithDosingDecision = {
   ...loop,
+  normalTime: '2024-02-02T18:00:00.000Z',
   dosingDecisions: [
     {
       time: Date.parse('2024-02-02T17:00:00.000Z'), // 5:00 pm UTC
+      food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+    },
+  ],
+};
+
+// dosingDecision time (6:02pm) is 2min after normalTime (6:00pm) → within 5min → no Time Entered
+const loopWithDosingDecisionWithinThreshold = {
+  ...loop,
+  normalTime: '2024-02-02T18:00:00.000Z',
+  dosingDecisions: [
+    {
+      time: Date.parse('2024-02-02T18:02:00.000Z'), // 6:02 pm UTC
       food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
     },
   ],
@@ -205,12 +219,18 @@ describe('FoodTooltip', () => {
       expect(wrapper.find(carbLabel).text()).to.contain('Total Carbs');
     });
 
-    it('should show "Time Entered" from dosingDecision time', () => {
+    it('should show "Time Entered" when dosingDecision time differs from normalTime by >5min', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loopWithDosingDecision} />);
       const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
       expect(timeRow).to.have.length(1);
       expect(timeRow.find(rowValue).text()).to.contain('5:00');
       expect(timeRow.find(rowUnits).text()).to.contain('pm');
+    });
+
+    it('should not show "Time Entered" when dosingDecision time is within 5min of normalTime', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithDosingDecisionWithinThreshold} />);
+      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      expect(timeRow).to.have.length(0);
     });
 
     it('should show "Total Carbs (Edited)" label when originalFood differs from current carbs', () => {
@@ -243,8 +263,10 @@ describe('FoodTooltip', () => {
 
     it('should not show time/edit rows when dosingDecisions are absent', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loop} />);
-      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
-      expect(timeRow).to.have.length(0);
+      const timeEnteredRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      const timeEditedRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Edited'));
+      expect(timeEnteredRow).to.have.length(0);
+      expect(timeEditedRow).to.have.length(0);
     });
   });
 

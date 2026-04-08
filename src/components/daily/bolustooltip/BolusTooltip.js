@@ -266,10 +266,10 @@ const BolusTooltip = (props) => {
       </div>
     );
     const foodTime = wizard?.dosingDecision?.food?.time;
-    const bolusTime = wizard?.normalTime;
     const foodTimeMs = foodTime ? Date.parse(foodTime) : null;
-    const foodTimeDiffExceedsThreshold = foodTimeMs && bolusTime
-      && Math.abs(foodTimeMs - bolusTime) > 5 * MS_IN_MIN;
+    const bolusTimeMs = wizard?.normalTime ? (_.isFinite(wizard.normalTime) ? wizard.normalTime : Date.parse(wizard.normalTime)) : null;
+    const foodTimeDiffExceedsThreshold = _.isFinite(foodTimeMs) && _.isFinite(bolusTimeMs)
+      && Math.abs(foodTimeMs - bolusTimeMs) > 5 * MS_IN_MIN;
     const carbsLabel = foodTimeDiffExceedsThreshold
       ? t('Carbs (eaten at {{time}})', { time: formatLocalizedFromUTC(foodTime, props.timePrefs, 'h:mm a') })
       : t('Carbs');
