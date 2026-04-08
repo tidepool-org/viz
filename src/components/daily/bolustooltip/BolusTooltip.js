@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import i18next from 'i18next';
 import * as bolusUtils from '../../../utils/bolus';
-import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
+import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS, MS_IN_MIN } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
 import { getPumpVocabulary, isLoop, isTwiistLoop } from '../../../utils/device';
@@ -265,9 +265,17 @@ const BolusTooltip = (props) => {
         <div className={unitStyles} />
       </div>
     );
+    const foodTime = wizard?.dosingDecision?.food?.time;
+    const bolusTime = wizard?.normalTime;
+    const foodTimeMs = foodTime ? Date.parse(foodTime) : null;
+    const foodTimeDiffExceedsThreshold = foodTimeMs && bolusTime
+      && Math.abs(foodTimeMs - bolusTime) > 5 * MS_IN_MIN;
+    const carbsLabel = foodTimeDiffExceedsThreshold
+      ? t('Carbs (eaten at {{time}})', { time: formatLocalizedFromUTC(foodTime, props.timePrefs, 'h:mm a') })
+      : t('Carbs');
     const carbsLine = !!carbsValue && (
       <div className={styles.carbs}>
-        <div className={styles.label}>{t('Carbs')}</div>
+        <div className={styles.label}>{carbsLabel}</div>
         <div className={styles.value}>{carbsValue}</div>
         <div className={unitStyles}>{carbUnits}</div>
       </div>

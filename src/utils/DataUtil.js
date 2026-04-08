@@ -122,6 +122,7 @@ export class DataUtil {
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
     this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
+    this.foodDatumsByIdMap = this.foodDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
     this.dataAnnotations = this.dataAnnotations || {};
 
@@ -152,6 +153,11 @@ export class DataUtil {
     this.startTimer('joinBolusAndDosingDecision');
     _.each(data, this.joinBolusAndDosingDecision);
     this.endTimer('joinBolusAndDosingDecision');
+
+    // Join food and dosingDecision datums
+    this.startTimer('joinFoodAndDosingDecision');
+    _.each(data, this.joinFoodAndDosingDecision);
+    this.endTimer('joinFoodAndDosingDecision');
 
     // Add missing suppressed basals to select basal datums
     this.startTimer('addMissingSuppressedBasals');
@@ -322,6 +328,10 @@ export class DataUtil {
       this.bolusDatumsByIdMap[d.id] = d;
     }
 
+    if (d.type === 'food') {
+      this.foodDatumsByIdMap[d.id] = d;
+    }
+
     if (d.type === 'pumpSettings') {
       this.pumpSettingsDatumsByIdMap[d.id] = d;
     }
@@ -431,6 +441,19 @@ export class DataUtil {
         if ((!d.expectedNormal && requestedNormal) && (d.normal !== requestedNormal)) {
           d.expectedNormal = requestedNormal;
         }
+      }
+    }
+  };
+
+  joinFoodAndDosingDecision = d => {
+    if (d.type === 'food' && !!this.loopDataSetsByIdMap[d.uploadId]) {
+      const matchingDosingDecisions = _.filter(
+        _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
+        ({ associations = [] }) => _.some(associations, { reason: 'food', id: d.id })
+      );
+
+      if (matchingDosingDecisions.length) {
+        d.dosingDecisions = _.orderBy(matchingDosingDecisions, 'time', 'asc');
       }
     }
   };
@@ -1222,6 +1245,7 @@ export class DataUtil {
       this.loopDataSetsByIdMap = {};
       this.dexcomDataSetsByIdMap = {};
       this.bolusDosingDecisionDatumsByIdMap = {};
+      this.foodDatumsByIdMap = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;

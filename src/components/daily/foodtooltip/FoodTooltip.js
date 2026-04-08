@@ -17,7 +17,6 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import moment from 'moment';
 import _ from 'lodash';
 import i18next from 'i18next';
 
@@ -63,10 +62,9 @@ const FoodTooltip = (props) => {
     }
 
     if (isLoop(food)) {
+      const dosingDecisions = food.dosingDecisions;
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
-      const latestUpdatedTime = food.payload?.userUpdatedDate;
-      const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
       if (absorptionTime > 0) {
         rows.unshift(
@@ -91,33 +89,86 @@ const FoodTooltip = (props) => {
         );
       }
 
-      if (latestUpdatedTime || timeOfEntry) {
+      if (dosingDecisions && dosingDecisions.length > 0) {
+        const firstDD = dosingDecisions[0];
+        const latestDD = dosingDecisions.length > 1 ? dosingDecisions[dosingDecisions.length - 1] : null;
+
+        const currentCarbs = getCarbs(food);
+        const originalCarbs = latestDD?.originalFood?.nutrition?.carbohydrate?.net
+          ?? firstDD?.originalFood?.nutrition?.carbohydrate?.net;
+        const carbsWereEdited = originalCarbs != null && originalCarbs !== currentCarbs;
+
+        // Update the carbs row label
+        const carbRowIndex = rows.findIndex(r => r.key === 'carb');
+        if (carbRowIndex !== -1) {
+          rows[carbRowIndex] = (
+            <div key={'carb'} className={styles.carb}>
+              <div className={styles.label}>{carbsWereEdited ? t('Total Carbs (Edited)') : t('Total Carbs')}</div>
+              <div className={styles.value}>{`${currentCarbs}`}</div>
+              <div className={styles.units}>g</div>
+            </div>
+          );
+        }
+
         rows.push(<div key={'divider'} className={styles.divider} />);
 
-        if (latestUpdatedTime) {
-          rows.push((
-            <div key={'latestUpdatedTime'} className={styles.row}>
-              <div className={styles.label}>{t('Last Edited')}</div>
-              <div className={styles.value}>
-                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'h:mm')}
-              </div>
-              <div className={styles.units}>
-                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'a')}
-              </div>
+        if (carbsWereEdited) {
+          rows.push(
+            <div key={'initialCarbs'} className={styles.row}>
+              <div className={styles.label}>{t('Initial Carb Amount')}</div>
+              <div className={styles.value}>{`${_.round(originalCarbs, 1)}`}</div>
+              <div className={styles.units}>g</div>
             </div>
-          ));
+          );
+
+          if (latestDD) {
+            rows.push(
+              <div key={'timeEntered'} className={styles.row}>
+                <div className={styles.label}>{t('Time Entered')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
+                </div>
+              </div>
+            );
+            rows.push(
+              <div key={'timeLastEdited'} className={styles.row}>
+                <div className={styles.label}>{t('Time Last Edited')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(latestDD.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(latestDD.time, props.timePrefs, 'a')}
+                </div>
+              </div>
+            );
+          } else {
+            rows.push(
+              <div key={'timeEdited'} className={styles.row}>
+                <div className={styles.label}>{t('Time Edited')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
+                </div>
+              </div>
+            );
+          }
         } else {
-          rows.push((
-            <div key={'timeOfEntry'} className={styles.row}>
-              <div className={styles.label}>{t('Time of Entry')}</div>
+          rows.push(
+            <div key={'timeEntered'} className={styles.row}>
+              <div className={styles.label}>{t('Time Entered')}</div>
               <div className={styles.value}>
-                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'h:mm')}
+                {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
               </div>
               <div className={styles.units}>
-                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'a')}
+                {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
               </div>
             </div>
-          ));
+          );
         }
       }
     }

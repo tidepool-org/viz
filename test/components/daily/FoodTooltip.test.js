@@ -16,7 +16,6 @@
  */
 
 import React from 'react';
-import moment from 'moment';
 import { mount } from 'enzyme';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
@@ -84,20 +83,48 @@ const loop = {
   },
 };
 
-const loopTimeOfEntry = {
+const loopWithDosingDecision = {
   ...loop,
-  payload: {
-    userCreatedDate: '2024-02-02T14:00:00.000Z',
-  },
-  normalTime: '2024-02-02T01:00:00.000Z',
+  dosingDecisions: [
+    {
+      time: Date.parse('2024-02-02T17:00:00.000Z'), // 5:00 pm UTC
+      food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+    },
+  ],
 };
 
-const loopEdited = {
+const loopWithEditedCarbs = {
   ...loop,
-  payload: {
-    userUpdatedDate: '2024-02-02T03:00:00.000Z',
+  nutrition: {
+    ...loop.nutrition,
+    carbohydrate: { net: 10, units: 'grams' },
   },
-  normalTime: '2024-02-02T02:00:00.000Z',
+  dosingDecisions: [
+    {
+      time: Date.parse('2024-02-02T17:00:00.000Z'), // Time Edited
+      food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 10 } } },
+      originalFood: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+    },
+  ],
+};
+
+const loopWithMultipleDosingDecisions = {
+  ...loop,
+  nutrition: {
+    ...loop.nutrition,
+    carbohydrate: { net: 80, units: 'grams' },
+  },
+  dosingDecisions: [
+    {
+      time: Date.parse('2024-02-02T18:00:00.000Z'), // Time Entered (6:00 pm UTC -> 1:00 pm local -5)
+      food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+    },
+    {
+      time: Date.parse('2024-02-02T19:00:00.000Z'), // Time Last Edited (7:00 pm UTC -> 2:00 pm local -5)
+      food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
+      originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+    },
+  ],
 };
 
 const manual = {
@@ -166,30 +193,58 @@ describe('FoodTooltip', () => {
     });
   });
 
-  describe('edited', () => {
+  describe('dosingDecision-based time/edit display', () => {
     const row = formatClassesAsSelector(styles.row);
     const rowLabel = formatClassesAsSelector(styles.label);
     const rowValue = formatClassesAsSelector(styles.value);
     const rowUnits = formatClassesAsSelector(styles.units);
-    it('should include the edited time for an edited Loop food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={loopEdited} />);
-      expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Last Edited');
-      expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('3:00');
-      expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('am');
-    });
-  });
+    const carbLabel = `${formatClassesAsSelector(styles.carb)} ${formatClassesAsSelector(styles.label)}`;
 
-  describe('different time of entry', () => {
-    const row = formatClassesAsSelector(styles.row);
-    const rowLabel = formatClassesAsSelector(styles.label);
-    const rowValue = formatClassesAsSelector(styles.value);
-    const rowUnits = formatClassesAsSelector(styles.units);
-    // eslint-disable-next-line max-len
-    it('should include the time of entry for a Loop food value that was given a different time of entry', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={loopTimeOfEntry} />);
-      expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Time of Entry');
-      expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('2:00');
-      expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('pm');
+    it('should show "Total Carbs" label for Loop food with dosingDecision', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithDosingDecision} />);
+      expect(wrapper.find(carbLabel).text()).to.contain('Total Carbs');
+    });
+
+    it('should show "Time Entered" from dosingDecision time', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithDosingDecision} />);
+      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      expect(timeRow).to.have.length(1);
+      expect(timeRow.find(rowValue).text()).to.contain('5:00');
+      expect(timeRow.find(rowUnits).text()).to.contain('pm');
+    });
+
+    it('should show "Total Carbs (Edited)" label when originalFood differs from current carbs', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
+      expect(wrapper.find(carbLabel).text()).to.contain('Total Carbs (Edited)');
+    });
+
+    it('should show "Initial Carb Amount" with the original carb value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
+      const initialCarbRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Initial Carb Amount'));
+      expect(initialCarbRow).to.have.length(1);
+      expect(initialCarbRow.find(rowValue).text()).to.equal('5');
+    });
+
+    it('should show "Time Edited" for single dosingDecision with originalFood', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
+      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Edited'));
+      expect(timeRow).to.have.length(1);
+      expect(timeRow.find(rowValue).text()).to.contain('5:00');
+      expect(timeRow.find(rowUnits).text()).to.contain('pm');
+    });
+
+    it('should show "Time Entered" and "Time Last Edited" for multiple dosingDecisions', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loopWithMultipleDosingDecisions} />);
+      const timeEnteredRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      const timeLastEditedRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Last Edited'));
+      expect(timeEnteredRow).to.have.length(1);
+      expect(timeLastEditedRow).to.have.length(1);
+    });
+
+    it('should not show time/edit rows when dosingDecisions are absent', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={loop} />);
+      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      expect(timeRow).to.have.length(0);
     });
   });
 

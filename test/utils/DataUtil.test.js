@@ -1332,6 +1332,114 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('joinFoodAndDosingDecision', () => {
+    const uploadId = 'upload1';
+
+    beforeEach(() => {
+      dataUtil.loopDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.Loop' } },
+      };
+    });
+
+    it('should join dosingDecisions to food datums by explicit food association', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId,
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 25 } },
+      };
+
+      const dosingDecision1 = {
+        type: 'dosingDecision',
+        id: 'dd1',
+        time: Date.parse('2024-02-02T17:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+        food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 25 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecisions).to.have.length(1);
+      expect(food.dosingDecisions[0].id).to.equal('dd1');
+    });
+
+    it('should attach multiple dosingDecisions sorted by time ascending', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId,
+        time: Date.parse('2024-02-02T17:30:00.000Z'),
+        nutrition: { carbohydrate: { net: 80 } },
+      };
+
+      const dd1 = {
+        id: 'dd1',
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+        food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+      };
+
+      const dd2 = {
+        id: 'dd2',
+        time: Date.parse('2024-02-02T19:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+        food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
+        originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd2, dd1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecisions).to.have.length(2);
+      expect(food.dosingDecisions[0].id).to.equal('dd1');
+      expect(food.dosingDecisions[1].id).to.equal('dd2');
+    });
+
+    it('should not join dosingDecisions to non-Loop food datums', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId: 'non-loop-upload',
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 25 } },
+      };
+
+      const dosingDecision1 = {
+        id: 'dd1',
+        time: Date.parse('2024-02-02T17:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecisions).to.be.undefined;
+    });
+
+    it('should not attach dosingDecisions when no association references the food datum', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId,
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 25 } },
+      };
+
+      const dosingDecision1 = {
+        id: 'dd1',
+        time: Date.parse('2024-02-02T17:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food-other' }],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecisions).to.be.undefined;
+    });
+  });
+
   describe('needsCarbToExchangeConversion', () => {
     const bolus = {
       deviceId: 'MedT-123456',
