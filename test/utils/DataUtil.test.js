@@ -1286,7 +1286,7 @@ describe('DataUtil', () => {
       expect(bolus.dosingDecision).to.be.undefined;
     });
 
-    it('should use originalFood.nutrition.carbohydrate.net when present, and fall back to food.nutrition.carbohydrate.net otherwise, preserving the original carbs associated with the bolus', () => {
+    it('should use food.nutrition.carbohydrate.net for carbInput', () => {
       const bolus = {
         type: 'bolus',
         id: 'bolus1',
@@ -1309,25 +1309,37 @@ describe('DataUtil', () => {
         upload1: { client: { name: 'org.tidepool.Loop' } },
       };
 
-      // originalFood = 42 → overrides food
-      const dd1 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 42 } } } };
-      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd1 };
-      dataUtil.joinBolusAndDosingDecision(bolus);
-      expect(bolus.carbInput).to.equal(42);
-      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
-
-      // originalFood = null → falls back to food
-      const dd2 = { ...base, originalFood: null };
-      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd2 };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: base };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(30);
       expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
+    });
 
-      // originalFood = 0 → explicit zero honored
-      const dd3 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 0 } } } };
-      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd3 };
+    it('should use food.nutrition.carbohydrate.net even when originalFood is present', () => {
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus1',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+      };
+
+      dataUtil.loopDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.Loop' } },
+      };
+
+      const dd = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        associations: [],
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        originalFood: { nutrition: { carbohydrate: { net: 42 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd };
       dataUtil.joinBolusAndDosingDecision(bolus);
-      expect(bolus.carbInput).to.equal(0);
+      expect(bolus.carbInput).to.equal(30);
       expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
     });
   });
