@@ -87,58 +87,54 @@ const loop = {
 const loopWithDosingDecision = {
   ...loop,
   normalTime: '2024-02-02T18:00:00.000Z',
-  dosingDecisions: [
-    {
-      time: Date.parse('2024-02-02T17:00:00.000Z'), // 5:00 pm UTC
-      food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
-    },
-  ],
+  dosingDecision: {
+    time: Date.parse('2024-02-02T17:00:00.000Z'), // 5:00 pm UTC
+    food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
 };
 
 // dosingDecision time (6:02pm) is 2min after normalTime (6:00pm) → within 5min → no Time Entered
 const loopWithDosingDecisionWithinThreshold = {
   ...loop,
   normalTime: '2024-02-02T18:00:00.000Z',
-  dosingDecisions: [
-    {
-      time: Date.parse('2024-02-02T18:02:00.000Z'), // 6:02 pm UTC
-      food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
-    },
-  ],
+  dosingDecision: {
+    time: Date.parse('2024-02-02T18:02:00.000Z'), // 6:02 pm UTC
+    food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
 };
 
+// Single dosingDecision with originalFood — carbs were edited, shows Time Edited
 const loopWithEditedCarbs = {
   ...loop,
   nutrition: {
     ...loop.nutrition,
     carbohydrate: { net: 10, units: 'grams' },
   },
-  dosingDecisions: [
-    {
-      time: Date.parse('2024-02-02T17:00:00.000Z'), // Time Edited
-      food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 10 } } },
-      originalFood: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
-    },
-  ],
+  dosingDecision: {
+    time: Date.parse('2024-02-02T17:00:00.000Z'), // Time Edited
+    food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 10 } } },
+    originalFood: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
 };
 
+// Two dosingDecisions — originalDosingDecision + dosingDecision, normalTime far from both
+// → shows Time Entered (from originalDosingDecision) + Time Last Edited (from dosingDecision)
 const loopWithMultipleDosingDecisions = {
   ...loop,
+  normalTime: '2024-02-02T17:30:00.000Z',
   nutrition: {
     ...loop.nutrition,
     carbohydrate: { net: 80, units: 'grams' },
   },
-  dosingDecisions: [
-    {
-      time: Date.parse('2024-02-02T18:00:00.000Z'), // Time Entered (6:00 pm UTC -> 1:00 pm local -5)
-      food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
-    },
-    {
-      time: Date.parse('2024-02-02T19:00:00.000Z'), // Time Last Edited (7:00 pm UTC -> 2:00 pm local -5)
-      food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
-      originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
-    },
-  ],
+  originalDosingDecision: {
+    time: Date.parse('2024-02-02T18:00:00.000Z'), // Time Entered (6:00 pm UTC)
+    food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+  },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T19:00:00.000Z'), // Time Last Edited (7:00 pm UTC)
+    food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
+    originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+  },
 };
 
 const manual = {

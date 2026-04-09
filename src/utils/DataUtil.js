@@ -452,7 +452,11 @@ export class DataUtil {
       );
 
       if (matchingDosingDecisions.length) {
-        d.dosingDecisions = _.orderBy(matchingDosingDecisions, 'time', 'asc');
+        const sorted = _.orderBy(matchingDosingDecisions, 'time', 'asc');
+        d.dosingDecision = sorted[sorted.length - 1];
+        if (sorted.length > 1) {
+          d.originalDosingDecision = sorted[0];
+        }
       }
     }
   };

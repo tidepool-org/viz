@@ -62,7 +62,7 @@ const FoodTooltip = (props) => {
     }
 
     if (isLoop(food)) {
-      const dosingDecisions = food.dosingDecisions;
+      const { dosingDecision, originalDosingDecision } = food;
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
 
@@ -89,13 +89,10 @@ const FoodTooltip = (props) => {
         );
       }
 
-      if (dosingDecisions && dosingDecisions.length > 0) {
-        const firstDD = dosingDecisions[0];
-        const latestDD = dosingDecisions.length > 1 ? dosingDecisions[dosingDecisions.length - 1] : null;
-
+      if (dosingDecision) {
         const currentCarbs = getCarbs(food);
-        const originalCarbs = latestDD?.originalFood?.nutrition?.carbohydrate?.net
-          ?? firstDD?.originalFood?.nutrition?.carbohydrate?.net;
+        const originalCarbs = dosingDecision.originalFood?.nutrition?.carbohydrate?.net
+          ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
         const carbsWereEdited = originalCarbs != null && originalCarbs !== currentCarbs;
 
         // Update the carbs row label
@@ -110,9 +107,13 @@ const FoodTooltip = (props) => {
           );
         }
 
+        // 'Time Entered' is shown only when the food normalTime differs from
+        // both the current and original dosingDecision times by >5 minutes
         const foodNormalTimeMs = _.isFinite(food.normalTime) ? food.normalTime : Date.parse(food.normalTime);
         const entryTimeDiffExceedsThreshold = _.isFinite(foodNormalTimeMs)
-          && Math.abs(firstDD.time - foodNormalTimeMs) > 5 * MS_IN_MIN;
+          && Math.abs(dosingDecision.time - foodNormalTimeMs) > 5 * MS_IN_MIN
+          && (!originalDosingDecision || Math.abs(originalDosingDecision.time - foodNormalTimeMs) > 5 * MS_IN_MIN);
+
         const showDivider = carbsWereEdited || entryTimeDiffExceedsThreshold;
 
         if (showDivider) {
@@ -128,56 +129,43 @@ const FoodTooltip = (props) => {
             </div>
           );
 
-          if (latestDD) {
+          if (originalDosingDecision && entryTimeDiffExceedsThreshold) {
             rows.push(
               <div key={'timeEntered'} className={styles.row}>
                 <div className={styles.label}>{t('Time Entered')}</div>
                 <div className={styles.value}>
-                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
+                  {formatLocalizedFromUTC(originalDosingDecision.time, props.timePrefs, 'h:mm')}
                 </div>
                 <div className={styles.units}>
-                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
-                </div>
-              </div>
-            );
-            rows.push(
-              <div key={'timeLastEdited'} className={styles.row}>
-                <div className={styles.label}>{t('Time Last Edited')}</div>
-                <div className={styles.value}>
-                  {formatLocalizedFromUTC(latestDD.time, props.timePrefs, 'h:mm')}
-                </div>
-                <div className={styles.units}>
-                  {formatLocalizedFromUTC(latestDD.time, props.timePrefs, 'a')}
-                </div>
-              </div>
-            );
-          } else {
-            rows.push(
-              <div key={'timeEdited'} className={styles.row}>
-                <div className={styles.label}>{t('Time Edited')}</div>
-                <div className={styles.value}>
-                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
-                </div>
-                <div className={styles.units}>
-                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
+                  {formatLocalizedFromUTC(originalDosingDecision.time, props.timePrefs, 'a')}
                 </div>
               </div>
             );
           }
-        } else {
-          if (entryTimeDiffExceedsThreshold) {
-            rows.push(
-              <div key={'timeEntered'} className={styles.row}>
-                <div className={styles.label}>{t('Time Entered')}</div>
-                <div className={styles.value}>
-                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'h:mm')}
-                </div>
-                <div className={styles.units}>
-                  {formatLocalizedFromUTC(firstDD.time, props.timePrefs, 'a')}
-                </div>
+
+          rows.push(
+            <div key={originalDosingDecision ? 'timeLastEdited' : 'timeEdited'} className={styles.row}>
+              <div className={styles.label}>{originalDosingDecision ? t('Time Last Edited') : t('Time Edited')}</div>
+              <div className={styles.value}>
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
               </div>
-            );
-          }
+              <div className={styles.units}>
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
+              </div>
+            </div>
+          );
+        } else if (entryTimeDiffExceedsThreshold) {
+          rows.push(
+            <div key={'timeEntered'} className={styles.row}>
+              <div className={styles.label}>{t('Time Entered')}</div>
+              <div className={styles.value}>
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+              </div>
+              <div className={styles.units}>
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
+              </div>
+            </div>
+          );
         }
       }
     }

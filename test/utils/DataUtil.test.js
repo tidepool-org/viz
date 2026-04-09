@@ -1353,7 +1353,7 @@ describe('DataUtil', () => {
       };
     });
 
-    it('should join dosingDecisions to food datums by explicit food association', () => {
+    it('should set dosingDecision on food datum by explicit food association', () => {
       const food = {
         type: 'food',
         id: 'food1',
@@ -1373,11 +1373,11 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
       dataUtil.joinFoodAndDosingDecision(food);
 
-      expect(food.dosingDecisions).to.have.length(1);
-      expect(food.dosingDecisions[0].id).to.equal('dd1');
+      expect(food.dosingDecision.id).to.equal('dd1');
+      expect(food.originalDosingDecision).to.be.undefined;
     });
 
-    it('should attach multiple dosingDecisions sorted by time ascending', () => {
+    it('should set dosingDecision (latest) and originalDosingDecision (earliest) when multiple match', () => {
       const food = {
         type: 'food',
         id: 'food1',
@@ -1404,9 +1404,8 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dd2, dd1 };
       dataUtil.joinFoodAndDosingDecision(food);
 
-      expect(food.dosingDecisions).to.have.length(2);
-      expect(food.dosingDecisions[0].id).to.equal('dd1');
-      expect(food.dosingDecisions[1].id).to.equal('dd2');
+      expect(food.dosingDecision.id).to.equal('dd2');
+      expect(food.originalDosingDecision.id).to.equal('dd1');
     });
 
     it('should not join dosingDecisions to non-Loop food datums', () => {
@@ -1427,10 +1426,10 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
       dataUtil.joinFoodAndDosingDecision(food);
 
-      expect(food.dosingDecisions).to.be.undefined;
+      expect(food.dosingDecision).to.be.undefined;
     });
 
-    it('should not attach dosingDecisions when no association references the food datum', () => {
+    it('should not attach dosingDecision when no association references the food datum', () => {
       const food = {
         type: 'food',
         id: 'food1',
@@ -1448,7 +1447,7 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
       dataUtil.joinFoodAndDosingDecision(food);
 
-      expect(food.dosingDecisions).to.be.undefined;
+      expect(food.dosingDecision).to.be.undefined;
     });
   });
 
