@@ -1019,7 +1019,7 @@ class DailyPrintView extends PrintView {
 
       const carbs = getCarbs(insulinEvent);
 
-      if (carbs && !insulinEvent.carbInputGeneratedFromFoodData) {
+      if (carbs && !insulinEvent.tags?.carbInputGeneratedFromFoodData) {
         const circleOffset = 1;
         const textOffset = 1.75;
         const carbUnits = _.get(getWizardFromInsulinEvent(insulinEvent), 'carbUnits');

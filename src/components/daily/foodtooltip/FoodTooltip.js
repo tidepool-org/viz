@@ -21,7 +21,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
-import { MS_IN_HOUR, MS_IN_MIN } from '../../../utils/constants';
+import { MS_IN_HOUR } from '../../../utils/constants';
 import { isLoop } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -93,10 +93,11 @@ const FoodTooltip = (props) => {
         const currentCarbs = getCarbs(food);
         const originalCarbs = dosingDecision.originalFood?.nutrition?.carbohydrate?.net
           ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
-        const carbsWereEdited = originalCarbs != null && originalCarbs !== currentCarbs;
+        const carbsWereEdited = food.tags?.carbsEdited;
+        const entryTimeDiffExceedsThreshold = food.tags?.entryTimeDiffers;
 
         // Update the carbs row label
-        const carbRowIndex = rows.findIndex(r => r.key === 'carb');
+        const carbRowIndex = _.findIndex(rows, r => r.key === 'carb');
         if (carbRowIndex !== -1) {
           rows[carbRowIndex] = (
             <div key={'carb'} className={styles.carb}>
@@ -106,13 +107,6 @@ const FoodTooltip = (props) => {
             </div>
           );
         }
-
-        // 'Time Entered' is shown only when the food normalTime differs from
-        // both the current and original dosingDecision times by >5 minutes
-        const foodNormalTimeMs = _.isFinite(food.normalTime) ? food.normalTime : Date.parse(food.normalTime);
-        const entryTimeDiffExceedsThreshold = _.isFinite(foodNormalTimeMs)
-          && Math.abs(dosingDecision.time - foodNormalTimeMs) > 5 * MS_IN_MIN
-          && (!originalDosingDecision || Math.abs(originalDosingDecision.time - foodNormalTimeMs) > 5 * MS_IN_MIN);
 
         const showDivider = carbsWereEdited || entryTimeDiffExceedsThreshold;
 

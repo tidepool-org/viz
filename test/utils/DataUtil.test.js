@@ -1312,7 +1312,6 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: base };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(30);
-      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
     });
 
     it('should use food.nutrition.carbohydrate.net even when originalFood is present', () => {
@@ -1340,7 +1339,6 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(30);
-      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
     });
   });
 
@@ -1672,6 +1670,58 @@ describe('DataUtil', () => {
         dataUtil.tagDatum(loopBolus);
         expect(loopBolus.tags.loop).to.be.true;
       });
+
+      it('should tag `carbInputGeneratedFromFoodData` true when bolus has carbInput from dosingDecision', () => {
+        const bolusWithDD = {
+          ...bolus,
+          carbInput: 30,
+          dosingDecision: { food: { nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.carbInputGeneratedFromFoodData).to.be.true;
+      });
+
+      it('should tag `carbInputGeneratedFromFoodData` false when bolus has no dosingDecision', () => {
+        const bolusWithoutDD = { ...bolus, carbInput: 30 };
+        dataUtil.tagDatum(bolusWithoutDD);
+        expect(bolusWithoutDD.tags.carbInputGeneratedFromFoodData).to.be.false;
+      });
+
+      it('should tag `foodTimeDiffers` true when dosingDecision food.time differs from bolus time by >5min', () => {
+        const bolusTime = Date.parse('2024-02-02T18:00:00.000Z');
+        const foodTime = '2024-02-02T17:50:00.000Z'; // 10min before bolus
+        const bolusWithDD = {
+          ...bolus,
+          time: bolusTime,
+          carbInput: 30,
+          dosingDecision: { food: { time: foodTime, nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.true;
+      });
+
+      it('should tag `foodTimeDiffers` false when dosingDecision food.time is within 5min of bolus time', () => {
+        const bolusTime = Date.parse('2024-02-02T18:00:00.000Z');
+        const foodTime = '2024-02-02T18:02:00.000Z'; // 2min after bolus
+        const bolusWithDD = {
+          ...bolus,
+          time: bolusTime,
+          carbInput: 30,
+          dosingDecision: { food: { time: foodTime, nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.false;
+      });
+
+      it('should tag `foodTimeDiffers` false when dosingDecision has no food.time', () => {
+        const bolusWithDD = {
+          ...bolus,
+          carbInput: 30,
+          dosingDecision: { food: { nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.false;
+      });
     });
 
     context('insulin', () => {
@@ -1774,6 +1824,67 @@ describe('DataUtil', () => {
         dataUtil.tagDatum(dexcomFood);
         expect(dexcomFood.tags.dexcom).to.be.true;
         expect(dexcomFood.tags.manual).to.be.true;
+      });
+
+      it('should tag a food datum with `carbsEdited: true` when dosingDecision has originalFood with different carbs', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.nutrition = { carbohydrate: { net: 75 } };
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T00:30:00'),
+          food: { nutrition: { carbohydrate: { net: 75 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 50 } } },
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.carbsEdited).to.be.true;
+      });
+
+      it('should tag a food datum with `carbsEdited: false` when carbs were not edited', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.nutrition = { carbohydrate: { net: 25 } };
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T00:30:00'),
+          food: { nutrition: { carbohydrate: { net: 25 } } },
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.carbsEdited).to.be.false;
+      });
+
+      it('should tag a food datum with `entryTimeDiffers: true` when dosingDecision time differs from food time by >5min', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.time = Date.parse('2018-02-01T01:00:00'); // carb time (1:00am)
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T00:30:00'), // entered at 12:30am — 30min before
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.entryTimeDiffers).to.be.true;
+      });
+
+      it('should tag a food datum with `entryTimeDiffers: false` when dosingDecision time is within 5min of food time', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.time = Date.parse('2018-02-01T01:00:00');
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T01:02:00'), // only 2min apart
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.entryTimeDiffers).to.be.false;
+      });
+
+      it('should tag a food datum with `entryTimeDiffers: false` when originalDosingDecision time is within 5min of food time', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.time = Date.parse('2018-02-01T01:00:00');
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T02:00:00'), // 1hr after — exceeds threshold on its own
+        };
+        food.originalDosingDecision = {
+          time: Date.parse('2018-02-01T01:02:00'), // only 2min from food time — pulls entryTimeDiffers to false
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.entryTimeDiffers).to.be.false;
       });
     });
 

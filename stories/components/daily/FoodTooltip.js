@@ -55,6 +55,7 @@ const dexcom = {
 // Basic Loop food with dosingDecision — entered 1hr before eaten, shows Time Entered
 const loopWithDosingDecision = {
   ...loop,
+  tags: { loop: true, entryTimeDiffers: true },
   normalTime: '2017-11-11T18:00:00.000Z',
   nutrition: {
     ...loop.nutrition,
@@ -72,6 +73,7 @@ const loopWithDosingDecision = {
 // Loop food where carbs were edited (single dosingDecision with originalFood), shows Time Edited
 const loopEditedCarbs = {
   ...loop,
+  tags: { loop: true, carbsEdited: true, entryTimeDiffers: false },
   nutrition: {
     ...loop.nutrition,
     carbohydrate: { net: 75, units: 'grams' },
@@ -93,6 +95,7 @@ const loopEditedCarbs = {
 // normalTime (5:30pm) is >5min from both DDs (6pm, 7pm) → shows Time Entered + Time Last Edited
 const loopBothEdits = {
   ...loop,
+  tags: { loop: true, carbsEdited: true, entryTimeDiffers: true },
   normalTime: '2017-11-11T17:30:00.000Z',
   nutrition: {
     ...loop.nutrition,

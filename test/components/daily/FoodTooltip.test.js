@@ -16,6 +16,7 @@
  */
 
 import React from 'react';
+import _ from 'lodash';
 import { mount } from 'enzyme';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
@@ -83,45 +84,43 @@ const loop = {
   },
 };
 
-// dosingDecision time (5:00pm) is 1hr before normalTime (6:00pm) → >5min → shows Time Entered
+// tags.entryTimeDiffers set by DataUtil.tagDatum; set directly here since tests bypass DataUtil
 const loopWithDosingDecision = {
   ...loop,
-  normalTime: '2024-02-02T18:00:00.000Z',
+  tags: { ...loop.tags, entryTimeDiffers: true },
   dosingDecision: {
     time: Date.parse('2024-02-02T17:00:00.000Z'), // 5:00 pm UTC
     food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
   },
 };
 
-// dosingDecision time (6:02pm) is 2min after normalTime (6:00pm) → within 5min → no Time Entered
 const loopWithDosingDecisionWithinThreshold = {
   ...loop,
-  normalTime: '2024-02-02T18:00:00.000Z',
+  tags: { ...loop.tags, entryTimeDiffers: false },
   dosingDecision: {
     time: Date.parse('2024-02-02T18:02:00.000Z'), // 6:02 pm UTC
     food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
   },
 };
 
-// Single dosingDecision with originalFood — carbs were edited, shows Time Edited
+// tags.carbsEdited set by DataUtil.tagDatum; set directly here since tests bypass DataUtil
 const loopWithEditedCarbs = {
   ...loop,
+  tags: { ...loop.tags, carbsEdited: true, entryTimeDiffers: false },
   nutrition: {
     ...loop.nutrition,
     carbohydrate: { net: 10, units: 'grams' },
   },
   dosingDecision: {
-    time: Date.parse('2024-02-02T17:00:00.000Z'), // Time Edited
+    time: Date.parse('2024-02-02T17:00:00.000Z'),
     food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 10 } } },
     originalFood: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
   },
 };
 
-// Two dosingDecisions — originalDosingDecision + dosingDecision, normalTime far from both
-// → shows Time Entered (from originalDosingDecision) + Time Last Edited (from dosingDecision)
 const loopWithMultipleDosingDecisions = {
   ...loop,
-  normalTime: '2024-02-02T17:30:00.000Z',
+  tags: { ...loop.tags, carbsEdited: true, entryTimeDiffers: true },
   nutrition: {
     ...loop.nutrition,
     carbohydrate: { net: 80, units: 'grams' },
@@ -217,7 +216,7 @@ describe('FoodTooltip', () => {
 
     it('should show "Time Entered" when dosingDecision time differs from normalTime by >5min', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loopWithDosingDecision} />);
-      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      const timeRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Entered'));
       expect(timeRow).to.have.length(1);
       expect(timeRow.find(rowValue).text()).to.contain('5:00');
       expect(timeRow.find(rowUnits).text()).to.contain('pm');
@@ -225,7 +224,7 @@ describe('FoodTooltip', () => {
 
     it('should not show "Time Entered" when dosingDecision time is within 5min of normalTime', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loopWithDosingDecisionWithinThreshold} />);
-      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
+      const timeRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Entered'));
       expect(timeRow).to.have.length(0);
     });
 
@@ -236,14 +235,14 @@ describe('FoodTooltip', () => {
 
     it('should show "Initial Carb Amount" with the original carb value', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
-      const initialCarbRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Initial Carb Amount'));
+      const initialCarbRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Initial Carb Amount'));
       expect(initialCarbRow).to.have.length(1);
       expect(initialCarbRow.find(rowValue).text()).to.equal('5');
     });
 
     it('should show "Time Edited" for single dosingDecision with originalFood', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
-      const timeRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Edited'));
+      const timeRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Edited'));
       expect(timeRow).to.have.length(1);
       expect(timeRow.find(rowValue).text()).to.contain('5:00');
       expect(timeRow.find(rowUnits).text()).to.contain('pm');
@@ -251,16 +250,16 @@ describe('FoodTooltip', () => {
 
     it('should show "Time Entered" and "Time Last Edited" for multiple dosingDecisions', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loopWithMultipleDosingDecisions} />);
-      const timeEnteredRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
-      const timeLastEditedRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Last Edited'));
+      const timeEnteredRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Entered'));
+      const timeLastEditedRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Last Edited'));
       expect(timeEnteredRow).to.have.length(1);
       expect(timeLastEditedRow).to.have.length(1);
     });
 
     it('should not show time/edit rows when dosingDecisions are absent', () => {
       const wrapper = mount(<FoodTooltip {...props} food={loop} />);
-      const timeEnteredRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Entered'));
-      const timeEditedRow = wrapper.find(row).filterWhere(n => n.find(rowLabel).text().includes('Time Edited'));
+      const timeEnteredRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Entered'));
+      const timeEditedRow = wrapper.find(row).filterWhere(n => _.includes(n.find(rowLabel).text(), 'Time Edited'));
       expect(timeEnteredRow).to.have.length(0);
       expect(timeEditedRow).to.have.length(0);
     });

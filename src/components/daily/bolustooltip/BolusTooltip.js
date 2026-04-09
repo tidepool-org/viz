@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import _ from 'lodash';
 import i18next from 'i18next';
 import * as bolusUtils from '../../../utils/bolus';
-import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS, MS_IN_MIN } from '../../../utils/constants';
+import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
 import { getPumpVocabulary, isLoop, isTwiistLoop } from '../../../utils/device';
@@ -267,11 +267,7 @@ const BolusTooltip = (props) => {
       </div>
     );
     const foodTime = wizard?.dosingDecision?.food?.time;
-    const foodTimeMs = foodTime ? Date.parse(foodTime) : null;
-    const bolusTimeMs = wizard?.normalTime ? (_.isFinite(wizard.normalTime) ? wizard.normalTime : Date.parse(wizard.normalTime)) : null;
-    const foodTimeDiffExceedsThreshold = _.isFinite(foodTimeMs) && _.isFinite(bolusTimeMs)
-      && Math.abs(foodTimeMs - bolusTimeMs) > 5 * MS_IN_MIN;
-    const carbsLabel = foodTimeDiffExceedsThreshold
+    const carbsLabel = wizard?.tags?.foodTimeDiffers
       ? t('Carbs (eaten at {{time}})', { time: formatLocalizedFromUTC(foodTime, props.timePrefs, 'h:mm a') })
       : t('Carbs');
     const carbsLine = !!carbsValue && (

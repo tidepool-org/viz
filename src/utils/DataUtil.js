@@ -426,10 +426,6 @@ export class DataUtil {
         // Translate relevant dosing decision data onto expected bolus fields
         d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
 
-        if (_.isFinite(d.carbInput)) {
-          d.carbInputGeneratedFromFoodData = true;
-        }
-
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
@@ -684,11 +680,18 @@ export class DataUtil {
 
     if (d.type === 'bolus') {
       const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net;
+      const carbInputGeneratedFromFoodData = _.isFinite(d.carbInput) && !!d.dosingDecision;
+
+      const foodTimeMs = d.dosingDecision?.food?.time ? Date.parse(d.dosingDecision.food.time) : null;
+      const foodTimeDiffers = _.isFinite(foodTimeMs)
+        && Math.abs(foodTimeMs - d.time) > 5 * MS_IN_MIN;
 
       d.tags = {
         automated: isAutomated(d),
+        carbInputGeneratedFromFoodData,
         correction: isCorrection(d),
         extended: hasExtended(d),
+        foodTimeDiffers,
         interrupted: isInterruptedBolus(d),
         manual: !isWizardOrDosingDecision && !isAutomated(d),
         override: isOverride(d),
@@ -722,10 +725,22 @@ export class DataUtil {
     }
 
     if (d.type === 'food') {
+      const { dosingDecision, originalDosingDecision } = d;
+      const currentCarbs = d.nutrition?.carbohydrate?.net;
+      const originalCarbs = dosingDecision?.originalFood?.nutrition?.carbohydrate?.net
+        ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
+      const carbsEdited = originalCarbs != null && originalCarbs !== currentCarbs;
+
+      const entryTimeDiffExceedsThreshold = dosingDecision
+        && Math.abs(dosingDecision.time - d.time) > 5 * MS_IN_MIN
+        && (!originalDosingDecision || Math.abs(originalDosingDecision.time - d.time) > 5 * MS_IN_MIN);
+
       d.tags = {
         loop: isLoopDatum,
         dexcom: isDexcomDatum,
         manual: isDexcomDatum,
+        carbsEdited,
+        entryTimeDiffers: !!entryTimeDiffExceedsThreshold,
       };
     }
 
