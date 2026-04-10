@@ -494,12 +494,14 @@ const withLoopDosingDecision = {
 const withLoopDosingDecisionFoodTime = {
   ...withLoopDosingDecision,
   normalTime: Date.parse('2017-11-11T05:45:52.000Z'), // food.time is 4:00am, bolus at 5:45am → >5min diff
+  tags: { ...(withLoopDosingDecision.tags || {}), foodTimeDiffers: true },
 };
 
 // normalTime is very close to food.time — within 5min threshold → plain "Carbs" label
 const withLoopDosingDecisionFoodTimeWithinThreshold = {
   ...withLoopDosingDecision,
   normalTime: Date.parse('2017-11-11T04:02:00.000Z'), // food.time is 4:00am, bolus at 4:02am → <5min diff
+  tags: { ...(withLoopDosingDecision.tags || {}), foodTimeDiffers: false },
 };
 
 // dosingDecision has no food field — plain "Carbs" label
