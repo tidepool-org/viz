@@ -190,7 +190,6 @@ export const getExtended = (bolusProp, unitStyles = styles.units) => {
 };
 
 const BolusTooltip = (props) => {
-  console.log('dosingDecision', props.bolus?.dosingDecision);
   const carbs = bolusUtils.getCarbs(props.bolus);
   const carbsInput = _.isFinite(carbs) && carbs > 0;
   const bgUnits = props.bgPrefs?.bgUnits || '';
