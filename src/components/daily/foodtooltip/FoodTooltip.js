@@ -94,6 +94,7 @@ const FoodTooltip = (props) => {
         const originalCarbs = dosingDecision.originalFood?.nutrition?.carbohydrate?.net
           ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
         const carbsWereEdited = food.tags?.carbsEdited;
+        const editedLabel = currentCarbs === 0 ? t('Deleted') : t('Edited');
         const entryTimeDiffExceedsThreshold = food.tags?.entryTimeDiffers;
 
         // Update the carbs row label
@@ -101,7 +102,7 @@ const FoodTooltip = (props) => {
         if (carbRowIndex !== -1) {
           rows[carbRowIndex] = (
             <div key={'carb'} className={styles.carb}>
-              <div className={styles.label}>{carbsWereEdited ? t('Total Carbs (Edited)') : t('Total Carbs')}</div>
+              <div className={styles.label}>{carbsWereEdited ? t('Total Carbs ({{editedLabel}})', { editedLabel }) : t('Total Carbs')}</div>
               <div className={styles.value}>{`${currentCarbs}`}</div>
               <div className={styles.units}>g</div>
             </div>
