@@ -122,7 +122,6 @@ export class DataUtil {
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
     this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
-    this.foodDatumsByIdMap = this.foodDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
     this.dataAnnotations = this.dataAnnotations || {};
 
@@ -328,10 +327,6 @@ export class DataUtil {
       this.bolusDatumsByIdMap[d.id] = d;
     }
 
-    if (d.type === 'food') {
-      this.foodDatumsByIdMap[d.id] = d;
-    }
-
     if (d.type === 'pumpSettings') {
       this.pumpSettingsDatumsByIdMap[d.id] = d;
     }
@@ -443,7 +438,7 @@ export class DataUtil {
   joinFoodAndDosingDecision = d => {
     if (d.type === 'food' && !!this.loopDataSetsByIdMap[d.uploadId]) {
       const matchingDosingDecisions = _.filter(
-        _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
+        _.values(this.bolusDosingDecisionDatumsByIdMap),
         ({ associations = [] }) => _.some(associations, { reason: 'food', id: d.id })
       );
 
@@ -679,7 +674,7 @@ export class DataUtil {
     }
 
     if (d.type === 'bolus') {
-      const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net;
+      const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food;
       const carbInputGeneratedFromFoodData = _.isFinite(d.carbInput) && !!d.dosingDecision;
 
       const foodTimeMs = d.dosingDecision?.food?.time ? Date.parse(d.dosingDecision.food.time) : null;
@@ -1263,7 +1258,6 @@ export class DataUtil {
       this.loopDataSetsByIdMap = {};
       this.dexcomDataSetsByIdMap = {};
       this.bolusDosingDecisionDatumsByIdMap = {};
-      this.foodDatumsByIdMap = {};
       this.clearMatchedDevices();
       this.clearDataAnnotations();
       delete this.bgSources;

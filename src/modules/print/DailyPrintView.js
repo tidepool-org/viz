@@ -1074,11 +1074,12 @@ class DailyPrintView extends PrintView {
       .fill(fillColor);
 
     if (dashed) {
+      this.doc.save();
       this.doc.circle(x, centerY, this.carbRadius)
         .lineWidth(0.6)
         .dash(1.65, { space: 1.65 })
         .stroke('black');
-      this.doc.undash();
+      this.doc.restore();
     }
 
     this.doc.font(this.font)
@@ -1119,11 +1120,11 @@ class DailyPrintView extends PrintView {
 
     this.doc.roundedRect(obroundX, obroundY, obroundWidth, obroundHeight, obroundWidth / 2)
       .fill(fillColor);
+    this.doc.save();
     this.doc.roundedRect(obroundX, obroundY, obroundWidth, obroundHeight, obroundWidth / 2)
       .lineWidth(0.65)
       .dash(1.6, { space: 1.6 })
       .stroke('black');
-    this.doc.undash();
 
     const topTextY = obroundY + obroundPad + 0.5;
     const bottomTextY = topTextY + this.carbsFontSize + 0.5;
@@ -1134,6 +1135,7 @@ class DailyPrintView extends PrintView {
       .lineTo(x + strikeHalfWidth, strikeY)
       .lineWidth(0.65)
       .stroke(this.colors.carbsStrikeLine);
+    this.doc.restore();
 
     this.doc.font('Helvetica-Oblique')
       .fontSize(this.carbsFontSize)
@@ -1606,13 +1608,22 @@ class DailyPrintView extends PrintView {
           itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
           break;
         case 'carbsEdited':
-          itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('edited'));
+          itemWidth = this.carbRadius + 4 + Math.max(
+            this.doc.widthOfString(t('Carbs')),
+            this.doc.widthOfString(t('edited'))
+          );
           break;
         case 'carbsEditedTime':
-          itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('differs'));
+          itemWidth = this.carbRadius + 4 + Math.max(
+            this.doc.widthOfString(t('Carbs, time')),
+            this.doc.widthOfString(t('differs'))
+          );
           break;
         case 'carbsDeleted':
-          itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('deleted'));
+          itemWidth = this.carbRadius + 4 + Math.max(
+            this.doc.widthOfString(t('Carbs')),
+            this.doc.widthOfString(t('deleted'))
+          );
           break;
         case EVENT_PHYSICAL_ACTIVITY:
           itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
