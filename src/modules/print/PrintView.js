@@ -95,6 +95,7 @@ class PrintView {
 
     this.font = 'Helvetica';
     this.boldFont = 'Helvetica-Bold';
+    this.italicFont = 'Helvetica-Oblique';
 
     this.defaultFontSize = opts.defaultFontSize || DEFAULT_FONT_SIZE;
     this.footerFontSize = opts.footerFontSize || FOOTER_FONT_SIZE;

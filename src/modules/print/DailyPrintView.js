@@ -1137,7 +1137,7 @@ class DailyPrintView extends PrintView {
       .stroke(this.colors.carbsStrikeLine);
     this.doc.restore();
 
-    this.doc.font('Helvetica-Oblique')
+    this.doc.font(this.italicFont)
       .fontSize(this.carbsFontSize)
       .fillColor(this.colors.carbsStrikeText)
       .text(
