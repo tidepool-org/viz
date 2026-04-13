@@ -953,7 +953,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.stroke, Renderer.colors.carbsStrikeLine);
     });
 
-    it('should render a dashed gold circle with single value for entryTimeDiffers food', () => {
+    it('should render a dashed circle with single value for entryTimeDiffers food', () => {
       const chart = {
         ...Renderer.chartsByDate[sampleDate],
         data: {
@@ -979,7 +979,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 45);
     });
 
-    it('should render a gray obround with struck-through original and "0" for deleted carbs', () => {
+    it('should render an obround with struck-through original and "0" for deleted carbs', () => {
       const chart = {
         ...Renderer.chartsByDate[sampleDate],
         data: {
