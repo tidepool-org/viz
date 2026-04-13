@@ -84,7 +84,6 @@ const loop = {
   },
 };
 
-// tags.entryTimeDiffers set by DataUtil.tagDatum; set directly here since tests bypass DataUtil
 const loopWithDosingDecision = {
   ...loop,
   tags: { ...loop.tags, entryTimeDiffers: true },

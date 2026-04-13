@@ -922,7 +922,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 65);
     });
 
-    it('should render a gold obround with stacked struck-through original and current value for carbsEdited food (carbs > 0)', () => {
+    it('should render an obround with stacked struck-through original and current value for carbsEdited food (carbs > 0)', () => {
       const chart = {
         ...Renderer.chartsByDate[sampleDate],
         data: {
