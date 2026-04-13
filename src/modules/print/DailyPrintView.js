@@ -1568,80 +1568,31 @@ class DailyPrintView extends PrintView {
     // Calculate available width for legend items
     const availableWidth = this.width - (legendXPadding * 2);
 
+    // Icon widths by legend item type
+    const iconWidths = {
+      cbg: 16,
+      smbg: this.smbgRadius * 3,
+      bolus: this.isAutomatedBolusDevice ? this.bolusWidth * 3 : this.bolusWidth,
+      override: this.bolusWidth * 3,
+      interrupted: this.bolusWidth,
+      extended: (this.bolusWidth / 2) + 10,
+      insulin: this.bolusWidth,
+      basals: 23,
+      carbs: this.carbRadius,
+      carbsEdited: this.carbRadius,
+      carbsEditedTime: this.carbRadius,
+      carbsDeleted: this.carbRadius,
+      [EVENT_PHYSICAL_ACTIVITY]: this.eventRadius * 2,
+      [EVENT_NOTES]: this.eventRadius * 2,
+      [EVENT_HEALTH]: this.eventRadius * 2,
+      alarms: this.eventRadius * 2,
+    };
+
     // Function to calculate item width
     const getItemWidth = (item) => {
-      let itemWidth = 0;
-      switch (item.type) {
-        case 'cbg':
-          itemWidth = 16 + 4 + this.doc.widthOfString(t('CGM'));
-          break;
-        case 'smbg':
-          itemWidth = (this.smbgRadius * 3) + 4 + this.doc.widthOfString(t('BGM'));
-          break;
-        case 'bolus':
-          if (this.isAutomatedBolusDevice) {
-            itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
-          } else {
-            itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
-          }
-          break;
-        case 'override':
-          itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('up & down'));
-          break;
-        case 'interrupted':
-          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Interrupted'));
-          break;
-        case 'extended':
-          itemWidth = (this.bolusWidth / 2) + 10 + 4 + this.doc.widthOfString(t('Extended'));
-          break;
-        case 'insulin':
-          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Insulin, other'));
-          break;
-        case 'basals':
-          if (this.isAutomatedBasalDevice) {
-            itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
-          } else {
-            itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
-          }
-          break;
-        case 'carbs':
-          itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
-          break;
-        case 'carbsEdited':
-          itemWidth = this.carbRadius + 4 + Math.max(
-            this.doc.widthOfString(t('Carbs')),
-            this.doc.widthOfString(t('edited'))
-          );
-          break;
-        case 'carbsEditedTime':
-          itemWidth = this.carbRadius + 4 + Math.max(
-            this.doc.widthOfString(t('Carbs, time')),
-            this.doc.widthOfString(t('differs'))
-          );
-          break;
-        case 'carbsDeleted':
-          itemWidth = this.carbRadius + 4 + Math.max(
-            this.doc.widthOfString(t('Carbs')),
-            this.doc.widthOfString(t('deleted'))
-          );
-          break;
-        case EVENT_PHYSICAL_ACTIVITY:
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
-          break;
-        case EVENT_NOTES:
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Note'));
-          break;
-        case EVENT_HEALTH:
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Health'));
-          break;
-        case 'alarms':
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
-          break;
-        default:
-          itemWidth = 0;
-          break;
-      }
-      return itemWidth;
+      const iconWidth = iconWidths[item.type] ?? 0;
+      const maxLabelWidth = _.max(_.map(item.labels, label => this.doc.widthOfString(label))) || 0;
+      return iconWidth + 4 + maxLabelWidth;
     };
 
     // Chunk items into rows based on available width
