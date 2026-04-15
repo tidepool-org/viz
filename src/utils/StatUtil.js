@@ -6,6 +6,7 @@ import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from 
 import { getTotalInsulin } from './bolus';
 import { classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
+import { formatLocalizedFromUTCAndTimezone, getTimezoneFromTimePrefs } from './datetime';
 
 /* eslint-disable lodash/prefer-lodash-method, no-underscore-dangle, no-param-reassign */
 
@@ -95,6 +96,48 @@ export class StatUtil {
     return data;
   };
 
+  getActiveDaysWithData = (datums = []) => {
+    // Create a list of all dates for which we have at least one datum
+    const timezone = getTimezoneFromTimePrefs(this.timePrefs);
+    const datumDates = datums.map(d => formatLocalizedFromUTCAndTimezone(d.time, timezone, 'YYYY-MM-DD'));
+    const uniqueDatumDates = new Set(datumDates);
+
+    const uniqueDateCount = uniqueDatumDates.size;
+
+    const extraDayAdjustment = (() => {
+      // We need to adjust the day count when the data window is offset from midnight-to-midnight.
+      // When the data window DOES start/end on midnight, it pulls from the expected num of days.
+      // However, when the window starts/ends on a non-midnight time (e.g. 1:30pm), it pulls data
+      // from an extra calendar day despite representing the same number of 24 hour periods.
+      //
+      //   Midnight Window:        |-------------- 7 x 24 hrs --------------|        (Data from 7 Calendar Days)
+      //                           |                                        |
+      //   Calendar Days:    [ Su ][ Mo ][ Tu ][ We ][ Th ][ Fr ][ Sa ][ Su ][ Mo ]
+      //                              |                                        |
+      //   Offset Window:             |-------------- 7 x 24 hrs --------------|     (Data from 8 Calendar Days)
+      //
+      // This inflates the denominator by 1, which causes systematic underestimating of averages.
+      // We correct the systematic over-count by subtracting 1 when viewing partial days.
+
+      const [start, end] = this.endpoints;
+
+      const startMoment = moment.utc(start).tz(timezone);
+      const isStartDateMidnight = startMoment.hour() === 0 &&
+                                  startMoment.minute() === 0 &&
+                                  startMoment.second() === 0;
+
+      const headDate = startMoment.format('YYYY-MM-DD');
+      const tailDate = moment.utc(end).tz(timezone).format('YYYY-MM-DD');
+      const hasDataOnBothEdges = uniqueDatumDates.has(headDate) && uniqueDatumDates.has(tailDate);
+
+      if (!isStartDateMidnight && hasDataOnBothEdges) return -1;
+
+      return 0;
+    })();
+
+    return uniqueDateCount + extraDayAdjustment;
+  };
+
   getInsulinData = () => {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
@@ -102,15 +145,7 @@ export class StatUtil {
     const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
     const combinedInsulinData = [...rawBasalData, ...bolusData, ...insulinData];
-    const datumTimestamps = _.map(combinedInsulinData, datum => moment.utc(datum.time).valueOf());
-    const [startEndpoint] = this.endpoints;
-
-    // For each datum, calculate the number of 24hr periods that elapsed between it and the window start
-    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - startEndpoint) / MS_IN_DAY));
-
-    // Find the number of unique 24hr periods that have data occurring on them
-    const uniqueDayBuckets = new Set(numOfDaysElapsed);
-    const activeDaysWithInsulinData = uniqueDayBuckets.size;
+    const activeDaysWithInsulinData = this.getActiveDaysWithData(combinedInsulinData);
 
     const basalBolusData = {
       basal: basalData.length
@@ -134,15 +169,7 @@ export class StatUtil {
     const foodData = this.dataUtil.filter.byType('food').top(Infinity);
 
     const combinedCarbData = [...wizardData, ...foodData];
-    const datumTimestamps = _.map(combinedCarbData, datum => moment.utc(datum.time).valueOf());
-    const [startEndpoint] = this.endpoints;
-
-    // For each datum, calculate the number of 24hr periods that elapsed between it and the window start
-    const numOfDaysElapsed = datumTimestamps.map(timestamp => Math.floor((timestamp - startEndpoint) / MS_IN_DAY));
-
-    // Find the number of unique 24hr periods that have data occurring on them
-    const uniqueDayBuckets = new Set(numOfDaysElapsed);
-    const activeDaysWithCarbData = uniqueDayBuckets.size;
+    const activeDaysWithCarbData = this.getActiveDaysWithData(combinedCarbData);
 
     const wizardCarbs = _.reduce(
       wizardData,
