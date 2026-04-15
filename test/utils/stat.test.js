@@ -111,7 +111,7 @@ describe('stat', () => {
         timeInAuto: 'getTimeInAutoData',
         timeInOverride: 'getTimeInOverrideData',
         timeInRange: 'getTimeInRangeData',
-        totalInsulin: 'getBasalBolusData',
+        totalInsulin: 'getInsulinData',
       });
     });
   });
@@ -573,17 +573,9 @@ describe('stat', () => {
           suffix: '%',
         });
 
-        // 1 decimal place when `% < 0.5` and `% >= 0.05`
+        // 0 when `% < 0.5`
         expect(stat.formatDatum({
           value: 0.049,
-        }, statFormats.percentage, customOpts)).to.include({
-          value: '0.5',
-          suffix: '%',
-        });
-
-        // 1 decimal places when `% < 0.05`
-        expect(stat.formatDatum({
-          value: 0.0049,
         }, statFormats.percentage, customOpts)).to.include({
           value: '0',
           suffix: '%',
@@ -827,9 +819,147 @@ describe('stat', () => {
     });
   });
 
+  describe('reconcileTIRPercentages', () => {
+    describe('correctly rounds and adjusts the high value so the sum equals 100%', () => {
+      it('when using standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.025456,
+          low: 0.076484,
+          target: 0.58571,
+          high: 0.28177,
+          veryHigh: 0.03058,
+        };
+
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.03,
+          low: 0.08,
+          target: 0.59,
+          high: 0.27, // value decreased to ensure sum is 100%
+          veryHigh: 0.03,
+        });
+      });
+
+      it('when using non-standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.024156,
+          low: 0.104184,
+          target: 0.58171,
+          high: 0.28995,
+        };
+
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.02,
+          low: 0.10,
+          target: 0.58,
+          high: 0.30, // value increased to ensure sum is 100%
+        });
+      });
+    });
+
+    describe('does not adjust high below 0% (edge case)', () => {
+      it('when using standard range', () => {
+        const timeInRanges = {
+          veryLow: 0.069767,
+          low: 0.465116,
+          target: 0.465116,
+          high: 0,
+          veryHigh: 0,
+        };
+
+        // The algorithm would be expected to subtract 1% from High to keep the Total at 100%,
+        // but we can't go below 0%, so the Total in this case will be 101%
+        expect(stat.reconcileTIRPercentages(timeInRanges)).to.deep.equal({
+          veryLow: 0.07,
+          low: 0.47,
+          target: 0.47,
+          high: 0,
+          veryHigh: 0,
+        });
+      });
+    });
+  });
+
+  describe('reconcileTIRDatumValues', () => {
+    describe('modifies the datum to have range durations that sum up to 100%', () => {
+      it('when using standard range', () => {
+        const statTIRDatum = {
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 900000 },
+              { id: 'low', value: 900000 },
+              { id: 'target', value: 51000000 },
+              { id: 'high', value: 2400000 },
+              { id: 'veryHigh', value: 3600000 },
+            ],
+            total: { value: 58800000 },
+          },
+        };
+
+        expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 1176000 },
+              { id: 'low', value: 1176000 },
+              { id: 'target', value: 51156000 },
+              { id: 'high', value: 1764000 },
+              { id: 'veryHigh', value: 3528000 },
+            ],
+            total: { value: 58800000 },
+          },
+          hasSyntheticReadings: true,
+        });
+      });
+
+      it('when using non-standard range', () => {
+        const statTIRDatum = {
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 630218.8259812435 },
+              { id: 'low', value: 1230427.2316776658 },
+              { id: 'target', value: 46546161.861757554 },
+              { id: 'high', value: 37993192.080583535 }
+            ],
+            total: { value: 86400000 },
+          },
+        };
+
+        expect(stat.reconcileTIRDatumValues(statTIRDatum)).to.deep.equal({
+          id: 'timeInRange',
+          title: 'Avg. Daily Time In Range',
+          data: {
+            data: [
+              { id: 'veryLow', value: 864000 },
+              { id: 'low', value: 864000 },
+              { id: 'target', value: 46656000 },
+              { id: 'high', value: 38016000 },
+            ],
+            total: { value: 86400000 },
+          },
+          hasSyntheticReadings: true,
+        });
+      });
+    });
+  });
+
   describe('getStatAnnotations', () => {
     const defaultOpts = {
       manufacturer: 'medtronic',
+      bgPrefs: {
+        bgUnits: MGDL_UNITS,
+        bgBounds: {
+          veryLowThreshold: 54,
+          targetLowerBound: 70,
+          targetUpperBound: 180,
+          veryHighThreshold: 250,
+          extremeHighThreshold: 350,
+        }
+      }
     };
 
     const opts = overrides => _.assign({}, defaultOpts, overrides);
@@ -1007,17 +1137,10 @@ describe('stat', () => {
     });
 
     describe('timeInRange', () => {
-      it('should return annotations for `timeInRange` stat when viewing a single day of data', () => {
-        expect(stat.getStatAnnotations(data, commonStats.timeInRange, singleDayOpts)).to.have.ordered.members([
-          '**Time In Range:** Time spent in range, based on CGM readings.',
-          '**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is number of readings in range multiplied by the CGM sample frequency.',
-        ]);
-      });
-
-      it('should return annotations for `timeInRange` stat when viewing multiple days of data', () => {
+      it('should return annotations for `timeInRange` stat', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInRange, multiDayOpts)).to.have.ordered.members([
-          '**Time In Range:** Daily average of the time spent in range, based on CGM readings.',
-          '**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is 24 hours multiplied by % in range.',
+          '**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.',
+          '**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (181-250 mg&#x2F;dL) category per AGP guidance to maintain consistency.',
         ]);
       });
     });
@@ -1351,6 +1474,63 @@ describe('stat', () => {
       });
     });
 
+    it('should format and return `readingsInRange` data using raw counts if ranges are absent', () => {
+      const nonStandardRangeOpts = {
+        manufacturer: 'medtronic',
+        bgPrefs: {
+          bgBounds: {
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+          },
+          bgUnits: MGDL_UNITS,
+        },
+      };
+
+      const data = {
+        counts: {
+          low: 3,
+          target: 4,
+          high: 5,
+        },
+        dailyAverages: {
+          low: 7,
+          target: 8,
+          high: 9,
+        },
+      };
+
+      const statData = stat.getStatData(data, commonStats.readingsInRange, { ...nonStandardRangeOpts, days: 1 });
+
+      expect(statData.data).to.eql([
+        {
+          id: 'low',
+          value: 3,
+          title: 'Readings Below Range',
+          legendTitle: '<70',
+        },
+        {
+          id: 'target',
+          value: 4,
+          title: 'Readings In Range',
+          legendTitle: '70-180',
+        },
+        {
+          id: 'high',
+          value: 5,
+          title: 'Readings Above Range',
+          legendTitle: '>180',
+        },
+      ]);
+
+      expect(statData.total).to.eql({ value: 12 });
+
+      expect(statData.dataPaths).to.eql({
+        summary: ['data', 1],
+        totalReadings: 'raw.counts.total',
+        averageDailyReadings: 'total',
+      });
+    });
+
     it('should format and return `readingsInRange` data using daily average if viewing multiple days', () => {
       const data = {
         counts: {
@@ -1516,8 +1696,8 @@ describe('stat', () => {
         {
           id: 'preprandial',
           value: 0,
-          title: 'Time In Premeal',
-          legendTitle: 'Premeal',
+          title: 'Time In Pre-Meal',
+          legendTitle: 'Pre-Meal',
         },
       ]);
 
@@ -1590,15 +1770,73 @@ describe('stat', () => {
       });
     });
 
+    it('should format and return `timeInRange` data when veryHigh and veryLow are absent', () => {
+      const data = {
+        durations: {
+          low: 20000,
+          target: 30000,
+          high: 40000,
+        },
+        counts: {
+          low: 2,
+          target: 3,
+          high: 4,
+          total: 9,
+        },
+      };
+
+      const statData = stat.getStatData(data, commonStats.timeInRange, opts);
+
+      expect(statData.data).to.eql([
+        {
+          id: 'low',
+          value: 20000,
+          title: 'Time Below Range',
+          legendTitle: '54-69',
+        },
+        {
+          id: 'target',
+          value: 30000,
+          title: 'Time In Range',
+          legendTitle: '70-180',
+        },
+        {
+          id: 'high',
+          value: 40000,
+          title: 'Time Above Range',
+          legendTitle: '181-250',
+        },
+      ]);
+
+      expect(statData.total).to.eql({ value: 90000 });
+
+      expect(statData.dataPaths).to.eql({
+        summary: ['data', 1],
+      });
+    });
+
     it('should format and return `totalInsulin` data', () => {
       const data = {
         bolus: 9,
         basal: 6,
+        insulin: 3,
       };
 
       const statData = stat.getStatData(data, commonStats.totalInsulin, opts);
 
       expect(statData.data).to.eql([
+        {
+          id: 'insulin',
+          pattern: {
+            id: 'diagonalStripes',
+            color: 'rgba(0,0,0,0.15)',
+          },
+          value: 3,
+          title: 'Other Insulin',
+          legendTitle: 'Other',
+          annotations: ['**Other:** Insulin logged from a source outside of a connected pump - for example, a manual injection or inhaled dose.'],
+          hideEmpty: true,
+        },
         {
           id: 'bolus',
           value: 9,
@@ -1613,7 +1851,7 @@ describe('stat', () => {
         },
       ]);
 
-      expect(statData.total).to.eql({ id: 'insulin', value: 15 });
+      expect(statData.total).to.eql({ id: 'insulin', value: 18 });
 
       expect(statData.dataPaths).to.eql({
         summary: 'total',
@@ -1978,9 +2216,19 @@ describe('stat', () => {
       dataFormat: { summary: 'myFormat' },
     };
 
+    const tirStat = {
+      title: 'Avg Daily Time In Range',
+      data: {
+        data: [{ value: 5, id: 'high' }],
+        dataPaths: { summary: 'data.0' },
+        total: { value: 5 }
+      },
+      dataFormat: { summary: 'myFormat' },
+    };
+
     // Stats formatted as tables
-    const timeInRange = { ...defaultStat, id: 'timeInRange', title: 'timeInRange' };
-    const readingsInRange = { ...defaultStat, id: 'readingsInRange', title: 'readingsInRange' };
+    const timeInRange = { ...tirStat, id: 'timeInRange', title: 'timeInRange' };
+    const readingsInRange = { ...tirStat, id: 'readingsInRange', title: 'readingsInRange' };
     const totalInsulin = { ...defaultStat, id: 'totalInsulin', title: 'totalInsulin' };
     const timeInAuto = { ...defaultStat, id: 'timeInAuto', title: 'timeInAuto' };
     const timeInOverride = { ...defaultStat, id: 'timeInOverride', title: 'timeInOverride' };
@@ -2084,8 +2332,8 @@ describe('stat', () => {
 
       stat.statsText(stats, textUtil, defaultBgPrefs, formatDatumSpy);
 
-      // 13 stats, but readingsInRange, timeInAuto, timeInOverride, timeInRange are called an extra time for the secondary value
-      sinon.assert.callCount(formatDatumSpy, 17);
+      // 13 stats, but timeInAuto and timeInOverride are called an extra time for the secondary value
+      sinon.assert.callCount(formatDatumSpy, 15);
       sinon.assert.calledWith(formatDatumSpy, defaultStat.data.data[0], 'myFormat', sinon.match(defaultOpts));
 
       formatDatumSpy.restore();

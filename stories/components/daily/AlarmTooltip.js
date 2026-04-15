@@ -5,6 +5,15 @@ import { storiesOf } from '@storybook/react';
 import AlarmTooltip from '../../../src/components/daily/alarmtooltip/AlarmTooltip';
 import { getBrowserTimezone } from '../../../src/utils/datetime';
 
+import {
+  ALARM_NO_DELIVERY,
+  ALARM_AUTO_OFF,
+  ALARM_NO_INSULIN,
+  ALARM_NO_POWER,
+  ALARM_OCCLUSION,
+  ALARM_OVER_LIMIT,
+} from '../../../src/utils/constants';
+
 const BackgroundDecorator = story => (
   <div style={{ backgroundColor: 'FloralWhite', width: '100%', height: '96vh' }}>{story()}</div>
 );
@@ -31,12 +40,12 @@ const normalTime = Date.now();
 const source = 'twiist';
 
 const alarmTypes = [
-  'no_delivery',
-  'auto_off',
-  'no_insulin',
-  'no_power',
-  'occlusion',
-  'over_limit',
+  ALARM_NO_DELIVERY,
+  ALARM_AUTO_OFF,
+  ALARM_NO_INSULIN,
+  ALARM_NO_POWER,
+  ALARM_OCCLUSION,
+  ALARM_OVER_LIMIT,
 ];
 
 const props = {

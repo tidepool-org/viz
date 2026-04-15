@@ -27,14 +27,11 @@ export class AggregationUtil {
     this.bgUnits = _.get(dataUtil, 'bgPrefs.bgUnits');
     this.timezoneName = _.get(dataUtil, 'timePrefs.timezoneName', 'UTC');
     this.initialActiveEndpoints = _.cloneDeep(this.dataUtil.activeEndpoints);
-    this.rangeDates = [
-      moment.utc(this.initialActiveEndpoints.range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).format('YYYY-MM-DD'),
-    ];
     this.excludedDevices = _.get(dataUtil, 'excludedDevices', []);
 
     reductio.registerPostProcessor('postProcessBasalAggregations', this.postProcessBasalAggregations);
     reductio.registerPostProcessor('postProcessBolusAggregations', this.postProcessBolusAggregations);
+    reductio.registerPostProcessor('postProcessInsulinAggregations', this.postProcessInsulinAggregations);
     reductio.registerPostProcessor('postProcessCalibrationAggregations', this.postProcessCalibrationAggregations);
     reductio.registerPostProcessor('postProcessAutoSuspendAggregations', this.postProcessAutoSuspendAggregations);
     reductio.registerPostProcessor('postProcessSiteChangeAggregations', this.postProcessSiteChangeAggregations);
@@ -82,10 +79,10 @@ export class AggregationUtil {
   aggregateBoluses = group => {
     this.dataUtil.filter.byType('bolus');
 
-    const reducer = reductio();
+    let reducer = reductio();
     reducer.dataList(true);
 
-    const tags = [
+    let tags = [
       'automated',
       'correction',
       'extended',
@@ -101,7 +98,44 @@ export class AggregationUtil {
 
     reducer(group);
 
-    return group.post().postProcessBolusAggregations()();
+    const result = {
+      bolus: group.post().postProcessBolusAggregations()(),
+    };
+
+    this.dataUtil.filter.byType('insulin');
+
+    reducer = reductio();
+    reducer.dataList(true);
+
+    tags = [
+      'manual',
+    ];
+
+    _.each(tags, tag => this.reduceByTag(tag, 'insulin', reducer));
+
+    reducer(group);
+
+    result.insulin = group.post().postProcessInsulinAggregations()();
+
+
+    /* eslint-disable consistent-return */
+    const combined = _.mergeWith({}, result.bolus, result.insulin, (objValue, srcValue, key, object, source) => {
+      if (_.isNumber(objValue) && _.isNumber(srcValue)) {
+        if (key === 'percentage') {
+          // For percentage, recalculate based on combined count and total
+          if (object.count && source.count) {
+            const combinedCount = object.count + source.count;
+            const matchingBolusCount = object.count * object.percentage;
+            const matchingInsulinCount = source.count * source.percentage;
+            return (matchingBolusCount + matchingInsulinCount) / combinedCount;
+          }
+        }
+        return objValue + srcValue;
+      }
+    });
+    /* eslint-enable consistent-return */
+
+    return combined;
   };
 
   aggregateFingersticks = group => {
@@ -119,6 +153,8 @@ export class AggregationUtil {
 
     const bgClasses = [
       'veryLow',
+      'low',
+      'high',
       'veryHigh',
     ];
 
@@ -289,6 +325,41 @@ export class AggregationUtil {
             override: override.count,
             underride: underride.count,
             wizard: wizard.count,
+          },
+        };
+      }
+    });
+
+    return this.summarizeProcessedData(processedData);
+  };
+
+  /**
+   * postProcessInsulinAggregations
+   *
+   * Post processor for crossfilter reductio bolus aggregations
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} formatted total and subtotal data for bolus aggregations
+   */
+  postProcessInsulinAggregations = priorResults => () => {
+    const data = this.filterByActiveRange(priorResults());
+    const processedData = {};
+
+    _.each(data, dataForDay => {
+      const {
+        value: {
+          dataList,
+          manual,
+        },
+      } = dataForDay;
+
+      const total = dataList.length;
+
+      if (total) {
+        processedData[dataForDay.key] = {
+          total,
+          subtotals: {
+            manual: manual.count,
           },
         };
       }
@@ -483,6 +554,8 @@ export class AggregationUtil {
           meter,
           veryHigh,
           veryLow,
+          high,
+          low
         },
       } = dataForDay;
 
@@ -496,6 +569,8 @@ export class AggregationUtil {
             meter: meter.count,
             veryHigh: veryHigh.count,
             veryLow: veryLow.count,
+            high: high.count,
+            low: low.count,
           },
         };
       }
@@ -549,7 +624,12 @@ export class AggregationUtil {
 
         // Filter cgm data by the currently-set sample interval range.
         this.dataUtil.filter.bySampleIntervalRange(...(this.dataUtil.cgmSampleIntervalRange || this.dataUtil.defaultCgmSampleIntervalRange));
-        groupedData.cbg = this.dataUtil.filter.byType('cbg').top(Infinity);
+
+        const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+        const deduplicatedCbgData = this.dataUtil.getDeduplicatedCBGData(cbgData);
+
+        groupedData.cbg = cbgData;
+        groupedData.cbgDeduplicated = deduplicatedCbgData;
 
         // Clear the previous byType and bySampleInterval filters so as to not affect the next aggregations
         this.dataUtil.dimension.byType.filterAll();
@@ -631,10 +711,23 @@ export class AggregationUtil {
     return processedData;
   };
 
-  filterByActiveRange = results => _.filter(
-    _.cloneDeep(results),
-    result => result.key >= this.rangeDates[0] && result.key < this.rangeDates[1]
-  );
+  filterByActiveRange = results => {
+    const [start, end] = this.initialActiveEndpoints.range;
+
+    const startMoment = moment.utc(start).tz(this.timezoneName);
+    const endMoment = moment.utc(end).tz(this.timezoneName);
+
+    // If query ends at midnight, we only want to include data up to the previous whole calendar day
+    if (endMoment.format('HH:mm') === '00:00') {
+      endMoment.subtract(1, 'day').endOf('day');
+    }
+
+    // Select all data that between the two specified calendar days (inclusive)
+    const startDate = startMoment.format('YYYY-MM-DD');
+    const endDate = endMoment.format('YYYY-MM-DD');
+
+    return _.filter(_.cloneDeep(results), result => result.key >= startDate && result.key <= endDate);
+  };
 
   /* eslint-disable lodash/prefer-lodash-method */
   reduceByTag = (tag, type, reducer) => {

@@ -99,10 +99,10 @@ export class TrendsContainer extends PureComponent {
     }).isRequired,
     bgPrefs: PropTypes.shape({
       bgBounds: PropTypes.shape({
-        veryHighThreshold: PropTypes.number.isRequired,
+        veryHighThreshold: PropTypes.number,
         targetUpperBound: PropTypes.number.isRequired,
         targetLowerBound: PropTypes.number.isRequired,
-        veryLowThreshold: PropTypes.number.isRequired,
+        veryLowThreshold: PropTypes.number,
       }).isRequired,
       bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
     }).isRequired,
@@ -275,10 +275,12 @@ export class TrendsContainer extends PureComponent {
     const currentSmbgData = _.filter(allBg, { type: 'smbg' });
 
     const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop, mostRecentDatetimeLocation } = props;
+
     const upperBound = yScaleClampTop[bgUnits];
     const yScaleDomain = [bgDomain[0], upperBound];
-    if (!bgDomain[0] || bgDomain[0] > bgBounds.veryLowThreshold) {
-      yScaleDomain[0] = bgBounds.veryLowThreshold;
+    const lowestThreshold = _.isNil(bgBounds.veryLowThreshold) ? bgBounds.targetLowerBound : bgBounds.veryLowThreshold;
+    if (!bgDomain[0] || bgDomain[0] > lowestThreshold) {
+      yScaleDomain[0] = lowestThreshold;
     }
     const yScale = scaleLinear().domain(yScaleDomain).clamp(true);
 
@@ -286,14 +288,7 @@ export class TrendsContainer extends PureComponent {
     const { extentSize, initialDatetimeLocation, timePrefs } = props;
     const timezone = datetime.getTimezoneFromTimePrefs(timePrefs);
 
-    const mostRecentCeiling = datetime.getLocalizedCeiling(
-      mostRecentDatetimeLocation,
-      timePrefs
-    ).toISOString();
-
-    const end = initialDatetimeLocation
-      ? datetime.getLocalizedCeiling(initialDatetimeLocation, timePrefs).toISOString()
-      : mostRecentCeiling;
+    const end = initialDatetimeLocation || mostRecentDatetimeLocation;
 
     const start = moment(end).tz(timezone).subtract(extentSize, 'days').toISOString();
     const dateDomain = [start, end];
@@ -303,7 +298,7 @@ export class TrendsContainer extends PureComponent {
       currentCbgData,
       currentSmbgData,
       dateDomain: { start: dateDomain[0], end: dateDomain[1] },
-      mostRecent: mostRecentCeiling,
+      mostRecent: mostRecentDatetimeLocation,
       xScale: scaleLinear().domain([0, 864e5]),
       yScale,
     };
@@ -315,6 +310,12 @@ export class TrendsContainer extends PureComponent {
   getCurrentDay() {
     const { dateDomain: { end } } = this.state;
     return getLocalizedNoonBeforeUTC(end, this.props.timePrefs).toISOString();
+  }
+
+  getCurrentChartTime() {
+    const { dateDomain: { end } } = this.state;
+    const timezone = datetime.getTimezoneFromTimePrefs(this.props.timePrefs);
+    return moment.utc(end).tz(timezone).toDate();
   }
 
   setExtent(newDomain) {

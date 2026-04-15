@@ -12,7 +12,10 @@ import {
 import {
   AUTOMATED_DELIVERY,
   BG_COLORS,
+  BG_DISPLAY_MINIMUM_INCREMENTS,
+  DEFAULT_BG_BOUNDS,
   LBS_PER_KG,
+  MGDL_UNITS,
   MS_IN_DAY,
   SCHEDULED_DELIVERY,
   SETTINGS_OVERRIDE,
@@ -96,12 +99,14 @@ export const statFetchMethods = {
   [commonStats.timeInAuto]: 'getTimeInAutoData',
   [commonStats.timeInOverride]: 'getTimeInOverrideData',
   [commonStats.timeInRange]: 'getTimeInRangeData',
-  [commonStats.totalInsulin]: 'getBasalBolusData',
+  [commonStats.totalInsulin]: 'getInsulinData',
 };
 
 export const getSum = data => _.sum(_.map(data, d => _.max([d.value, 0])));
 
 export const ensureNumeric = value => (_.isNil(value) || _.isNaN(value) ? -1 : parseFloat(value));
+
+export const isRangeDefined = value => ensureNumeric(value) > -1;
 
 export const formatDatum = (datum = {}, format, opts = {}) => {
   let id = datum.id;
@@ -288,8 +293,100 @@ export const formatDatum = (datum = {}, format, opts = {}) => {
   };
 };
 
+/**
+ * reconcileTIRPercentages
+ * @param {Object} timeInRanges - the percent TIR values for each range in decimal form
+ * - e.g. { veryLow: 0.012, low: 0.056, target: 0.612, high: 0.294, veryHigh: 0.021 }
+ *
+ * @returns {Object} an object with values corrected to sum up to 100%
+ * - if the values do not sum up to 100%, the 'high' range is adjusted to compensate
+ * - in specific edge cases, the values may still sum up to 101%
+ */
+export const reconcileTIRPercentages = (timeInRanges) => {
+  const DECIMAL_PRECISION = 2;
+
+  // Round each TIR value to whole integers for percentages (e.g. 0.21428 -> 0.21)
+  const modifiedTimeInRanges = _.cloneDeep(timeInRanges);
+  const rangeKeys = _.keys(modifiedTimeInRanges);
+
+  _.forEach(rangeKeys, key => {
+    modifiedTimeInRanges[key] = bankersRound(modifiedTimeInRanges[key], DECIMAL_PRECISION);
+  });
+
+  // Calculate the sum of all TIR values. It should be close to 1 (or 100%)
+  const rangeValues = _.values(modifiedTimeInRanges);
+  const sum = _.reduce(rangeValues, (acc, cur) => acc + cur, 0);
+
+  // Error Case: If the discrepancy from 100% is >2%, there is something wrong with
+  // the incoming data. Performing additional calculations on TIR would compound the
+  // error. Instead, we'll return the data in its original state.
+  if (sum < 0.98 || sum > 1.02) return timeInRanges;
+
+  // Calculate the difference from 100% and dump the discrepancy into the 'high' range.
+  // e.g. if sum === 0.99 and high === 0.21, we increase high to 0.22 so that all TIR
+  // values add up to 1 (or 100%).
+  const diff = 1 - sum;
+
+  let newHigh = (modifiedTimeInRanges.high || 0) + diff;
+
+  if (newHigh < 0) newHigh = 0;
+  if (newHigh > 1) newHigh = 1;
+
+  modifiedTimeInRanges.high = bankersRound(newHigh, DECIMAL_PRECISION);
+
+  return modifiedTimeInRanges;
+};
+
+/**
+ * reconcileTIRDatumValues
+ * @param {Object} statTIRDatum - the stat TIR datum
+ * - Should contain the following subfields:
+ * - data.data - an array of TIR datums for all of the ranges
+ * - data.total.value - a number representing the total time duration
+ *
+ * @returns {Object} a modified stat TIR datum so the percentages add to 100%
+ */
+export const reconcileTIRDatumValues = (statTIRDatum) => {
+  // For each of the individual range datums, calculate its percentage of the total
+  const ranges = {};
+  const total = statTIRDatum.data?.total?.value;
+
+  _.forEach(statTIRDatum.data.data, datum => {
+    ranges[datum.id] = datum.value / total;
+  });
+
+  // Reconcile the values to ensure the values sum up to 1 (or 100%)
+  const reconciledTimeInRanges = reconcileTIRPercentages(ranges);
+
+  // Multiply the reconciled percentages with the total to get the reconciled datum
+  // values. We return a modified stat TIR datum with these reconciled values.
+  const modifiedStatTIRDatum = _.cloneDeep(statTIRDatum);
+
+  const rangeKeys = _.keys(reconciledTimeInRanges);
+  _.forEach(rangeKeys, key => {
+    const datum = _.find(modifiedStatTIRDatum.data.data, d => d.id === key);
+    datum.value = reconciledTimeInRanges[key] * total;
+  });
+
+  // Add an indicator that these values are synthetic
+  modifiedStatTIRDatum.hasSyntheticReadings = true;
+
+  return modifiedStatTIRDatum;
+};
+
 export const getStatAnnotations = (data, type, opts = {}) => {
-  const { bgSource, days, manufacturer } = opts;
+  const { bgSource, days, manufacturer, bgPrefs } = opts;
+
+  const bgUnits = bgPrefs?.bgUnits || MGDL_UNITS;
+  const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
+
+  const {
+    targetUpperBound = DEFAULT_BG_BOUNDS[bgUnits].targetUpperBound,
+    veryHighThreshold = DEFAULT_BG_BOUNDS[bgUnits].veryHighThreshold,
+  } = bgPrefs?.bgBounds || {};
+
+  const highLowerBound = targetUpperBound + minimumIncrement;
+
   const vocabulary = getPumpVocabulary(manufacturer);
   const labels = { overrideLabel: vocabulary[SETTINGS_OVERRIDE], overrideLabelLowerCase: _.lowerCase(vocabulary[SETTINGS_OVERRIDE]) };
 
@@ -367,12 +464,12 @@ export const getStatAnnotations = (data, type, opts = {}) => {
       break;
 
     case commonStats.timeInRange:
-      if (days > 1) {
-        annotations.push(t('**Time In Range:** Daily average of the time spent in range, based on {{cbgLabel}} readings.', { cbgLabel: statBgSourceLabels.cbg }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is 24 hours multiplied by % in range.'));
+      if (!!veryHighThreshold) {
+        annotations.push(t('**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.'));
+        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High ({{ highLowerBound }}-{{ veryHighThreshold }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { veryHighThreshold, highLowerBound, bgUnits }));
       } else {
-        annotations.push(t('**Time In Range:** Time spent in range, based on {{cbgLabel}} readings.', { cbgLabel: statBgSourceLabels.cbg }));
-        annotations.push(t('**How we calculate this:**\n\n**(%)** is the number of readings in range divided by all readings for this time period.\n\n**(time)** is number of readings in range multiplied by the {{cbgLabel}} sample frequency.', { cbgLabel: statBgSourceLabels.cbg }));
+        annotations.push(t('**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.'));
+        annotations.push(t('**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (>{{ targetUpperBound }} {{ bgUnits }}) category per AGP guidance to maintain consistency.', { targetUpperBound, bgUnits }));
       }
       break;
 
@@ -522,13 +619,13 @@ export const getStatData = (data, type, opts = {}) => {
       break;
 
     case commonStats.readingsInRange:
-      statData.data = [
-        {
+      statData.data = _.filter([
+        (isRangeDefined(data[readingsInRangeDataPath]?.veryLow) && ({
           id: 'veryLow',
           value: ensureNumeric(data[readingsInRangeDataPath].veryLow),
           title: t('Readings Below Range'),
           legendTitle: bgRanges.veryLow,
-        },
+        })),
         {
           id: 'low',
           value: ensureNumeric(data[readingsInRangeDataPath].low),
@@ -547,13 +644,13 @@ export const getStatData = (data, type, opts = {}) => {
           title: t('Readings Above Range'),
           legendTitle: bgRanges.high,
         },
-        {
+        (isRangeDefined(data[readingsInRangeDataPath]?.veryHigh) && ({
           id: 'veryHigh',
           value: ensureNumeric(data[readingsInRangeDataPath].veryHigh),
           title: t('Readings Above Range'),
           legendTitle: bgRanges.veryHigh,
-        },
-      ];
+        })),
+      ], Boolean);
 
       statData.total = { value: getSum(statData.data) };
       statData.dataPaths = {
@@ -639,13 +736,13 @@ export const getStatData = (data, type, opts = {}) => {
       break;
 
     case commonStats.timeInRange:
-      statData.data = [
-        {
+      statData.data = _.filter([
+        (isRangeDefined(data.durations.veryLow) && ({
           id: 'veryLow',
           value: ensureNumeric(data.durations.veryLow),
           title: t('Time Below Range'),
           legendTitle: bgRanges.veryLow,
-        },
+        })),
         {
           id: 'low',
           value: ensureNumeric(data.durations.low),
@@ -664,13 +761,13 @@ export const getStatData = (data, type, opts = {}) => {
           title: t('Time Above Range'),
           legendTitle: bgRanges.high,
         },
-        {
+        (isRangeDefined(data.durations.veryHigh) && ({
           id: 'veryHigh',
           value: ensureNumeric(data.durations.veryHigh),
           title: t('Time Above Range'),
           legendTitle: bgRanges.veryHigh,
-        },
-      ];
+        })),
+      ], Boolean);
 
       statData.total = { value: getSum(statData.data) };
       statData.dataPaths = {
@@ -683,6 +780,18 @@ export const getStatData = (data, type, opts = {}) => {
 
     case commonStats.totalInsulin:
       statData.data = [
+        {
+          id: 'insulin',
+          pattern: {
+            id: 'diagonalStripes',
+            color: 'rgba(0,0,0,0.15)',
+          },
+          value: ensureNumeric(data.insulin),
+          title: t('Other Insulin'),
+          legendTitle: t('Other'),
+          annotations: [t('**Other:** Insulin logged from a source outside of a connected pump - for example, a manual injection or inhaled dose.')],
+          hideEmpty: true,
+        },
         {
           id: 'bolus',
           value: ensureNumeric(data.bolus),
@@ -944,7 +1053,16 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
   let statsString = '';
 
-  _.each(stats, stat => {
+  _.each(stats, statArg => {
+    let statTitle = `${statArg.title}${statArg.units ? ` (${statArg.units})` : ''}`;
+
+    if (statArg.id === 'readingsInRange' && statArg.data?.raw?.total > 0) {
+      statTitle += t(' from {{count}} readings', { count: statArg.data.raw.total });
+    }
+
+    const isTIRStat = _.includes(['timeInRange', 'readingsInRange'], statArg.id);
+    const stat = isTIRStat ? reconcileTIRDatumValues(statArg) : statArg;
+
     const renderTable = _.includes([
       commonStats.timeInRange,
       commonStats.readingsInRange,
@@ -955,18 +1073,11 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
     ], stat.id);
 
     const renderSecondaryValue = _.includes([
-      commonStats.readingsInRange,
       commonStats.timeInAuto,
       commonStats.timeInOverride,
-      commonStats.timeInRange,
     ], stat.id);
 
     const opts = { bgPrefs, data: stat.data, forcePlainTextValues: true };
-    let statTitle = `${stat.title}${stat.units ? ` (${stat.units})` : ''}`;
-
-    if (stat.id === 'readingsInRange' && stat.data?.raw?.total > 0) {
-      statTitle += t(' from {{count}} readings', { count: stat.data.raw.total });
-    }
 
     if (renderTable) {
       statsString += textUtil.buildTextTable(
@@ -980,7 +1091,7 @@ export function statsText(stats, textUtil, bgPrefs, formatFn = formatDatum) {
 
           let formattedText = `${formatted.value}${formatted.suffix || ''}`;
 
-          if (renderSecondaryValue) {
+          if (renderSecondaryValue && !stat.hasSyntheticReadings) {
             const secondary = formatFn(
               datum,
               stat.dataFormat.tooltip,

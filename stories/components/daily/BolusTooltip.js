@@ -496,6 +496,32 @@ const withLoopDosingDecision = {
   },
 };
 
+const insulinDose = {
+  type: 'insulin',
+  dose: { total: 2.35 },
+  tags: { manual: true },
+};
+
+const insulinIntermediate = {
+  ...insulinDose,
+  formulation: { simple: { actingType: 'intermediate' } },
+};
+
+const insulinLong = {
+  ...insulinDose,
+  formulation: { simple: { actingType: 'long' } },
+};
+
+const insulinRapid = {
+  ...insulinDose,
+  formulation: { simple: { actingType: 'rapid' } },
+};
+
+const insulinShort = {
+  ...insulinDose,
+  formulation: { simple: { actingType: 'short' } },
+};
+
 const props = {
   bgPrefs: { bgUnits: MGDL_UNITS },
   position: { top: 205, left: 205 },
@@ -725,5 +751,35 @@ storiesOf('BolusTooltip', module)
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withLoopDosingDecision} />
+    </div>
+  ))
+  .add('insulin', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={insulinDose} />
+    </div>
+  ))
+  .add('insulinIntermediate', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={insulinIntermediate} />
+    </div>
+  ))
+  .add('insulinLong', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={insulinLong} />
+    </div>
+  ))
+  .add('insulinRapid', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={insulinRapid} />
+    </div>
+  ))
+  .add('insulinShort', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={insulinShort} />
     </div>
   ));

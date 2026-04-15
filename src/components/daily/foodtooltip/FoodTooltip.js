@@ -39,6 +39,7 @@ export const getName = (food) => _.get(food, 'name');
 const FoodTooltip = (props) => {
   const renderFood = () => {
     const food = props.food;
+    const isManual = food?.tags?.manual;
 
     const rows = [
       <div key={'carb'} className={styles.carb}>
@@ -49,6 +50,17 @@ const FoodTooltip = (props) => {
         <div className={styles.units}>g</div>
       </div>,
     ];
+
+    if (isManual) {
+      rows.push(
+        <div key={'manual'} className={styles.row}>
+          <div className={styles.label}>{t('Source')}</div>
+          <div className={styles.value}>
+            {t('Manual')}
+          </div>
+        </div>
+      );
+    }
 
     if (isLoop(food)) {
       const absorptionTime = getAbsorptionTime(food);

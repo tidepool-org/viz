@@ -45,6 +45,18 @@ export const BG_DISPLAY_MINIMUM_INCREMENTS = {
   [MMOLL_UNITS]: 0.1,
 };
 
+export const GLYCEMIC_RANGES_PRESET = {
+  ADA_STANDARD: 'adaStandard',
+  ADA_OLDER_HIGH_RISK: 'adaHighRisk',
+  ADA_PREGNANCY_T1: 'adaPregnancyType1',
+  ADA_GESTATIONAL_T2: 'adaPregnancyType2',
+};
+
+export const GLYCEMIC_RANGES_TYPE = {
+  PRESET: 'preset',
+  CUSTOM: 'custom',
+};
+
 export const DEFAULT_BG_BOUNDS = {
   [MGDL_UNITS]: {
     veryLowThreshold: 54,
@@ -64,6 +76,48 @@ export const DEFAULT_BG_BOUNDS = {
   },
 };
 
+export const ADA_STANDARD_BG_BOUNDS = DEFAULT_BG_BOUNDS;
+
+export const ADA_OLDER_HIGH_RISK_BG_BOUNDS = {
+  [MGDL_UNITS]: {
+    veryLowThreshold: null,
+    targetLowerBound: 70,
+    targetUpperBound: 180,
+    veryHighThreshold: 250,
+    extremeHighThreshold: null,
+    clampThreshold: 600,
+  },
+  [MMOLL_UNITS]: {
+    veryLowThreshold: null,
+    targetLowerBound: 3.9,
+    targetUpperBound: 10.0,
+    veryHighThreshold: 13.9,
+    extremeHighThreshold: null,
+    clampThreshold: 33.3,
+  },
+};
+
+export const ADA_PREGNANCY_T1_BG_BOUNDS = {
+  [MGDL_UNITS]: {
+    veryLowThreshold: 54,
+    targetLowerBound: 63,
+    targetUpperBound: 140,
+    veryHighThreshold: null,
+    extremeHighThreshold: null,
+    clampThreshold: 600,
+  },
+  [MMOLL_UNITS]: {
+    veryLowThreshold: 3.0,
+    targetLowerBound: 3.5,
+    targetUpperBound: 7.8,
+    veryHighThreshold: null,
+    extremeHighThreshold: null,
+    clampThreshold: 33.3,
+  },
+};
+
+export const ADA_GESTATIONAL_T2_BG_BOUNDS = ADA_PREGNANCY_T1_BG_BOUNDS;
+
 export const LBS_PER_KG = 2.2046226218;
 
 const ONE_WEEK = 7;
@@ -80,6 +134,9 @@ export const CGM_READINGS_ONE_DAY = 288;
 export const CGM_DATA_KEY = 'cbg';
 export const BGM_DATA_KEY = 'smbg';
 
+export const DUPLICATE_SMBG_COUNT_THRESHOLD = 10;
+export const DUPLICATE_SMBG_TIME_TOLERANCE_MS = 500;
+
 export const NO_SITE_CHANGE = 'noSiteChange';
 export const SITE_CHANGE = 'siteChange';
 export const SITE_CHANGE_RESERVOIR = 'reservoirChange';
@@ -94,6 +151,12 @@ export const ALARM_NO_POWER = 'no_power';
 export const ALARM_OCCLUSION = 'occlusion';
 export const ALARM_OVER_LIMIT = 'over_limit';
 
+export const EVENT = 'event';
+export const EVENT_HEALTH = 'health';
+export const EVENT_NOTES = 'notes';
+export const EVENT_PHYSICAL_ACTIVITY = 'physical_activity';
+export const EVENT_PUMP_SHUTDOWN = 'pump_shutdown';
+
 export const AUTOMATED_BOLUS = 'automatedBolus';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';
@@ -107,6 +170,10 @@ export const MAX_BOLUS = 'maxBolus';
 export const MAX_BASAL = 'maxBasal';
 export const ONE_BUTTON_BOLUS = 'oneButtonBolus';
 export const INSULIN_DURATION = 'insulinDuration';
+export const INSULIN_ACTING_TYPE_INTERMEDIATE = 'intermediate';
+export const INSULIN_ACTING_TYPE_LONG = 'long';
+export const INSULIN_ACTING_TYPE_RAPID = 'rapid';
+export const INSULIN_ACTING_TYPE_SHORT = 'short';
 
 export const SITE_CHANGE_TYPE_UNDECLARED = 'undeclared';
 
@@ -178,6 +245,7 @@ export const pumpVocabulary = {
     [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Maximum Basal Rate'),
+    [ALARM_NO_INSULIN]: t('Cassette Empty'),
     [ALARM_OCCLUSION]: t('Line Blocked'),
   },
   [DIY_LOOP]: {
@@ -201,7 +269,7 @@ export const pumpVocabulary = {
     [SETTINGS_OVERRIDE]: t('Settings Override'),
     [SLEEP]: { label: t('Sleep'), marker: t('Z') },
     [PHYSICAL_ACTIVITY]: { label: t('Exercise'), marker: t('E') },
-    [PREPRANDIAL]: { label: t('Premeal'), marker: t('P') },
+    [PREPRANDIAL]: { label: t('Pre-Meal'), marker: t('P') },
     [MAX_BOLUS]: t('Max Bolus'),
     [MAX_BASAL]: t('Max Basal'),
     [INSULIN_DURATION]: t('Insulin Duration'),
@@ -212,6 +280,11 @@ export const pumpVocabulary = {
     [ALARM_NO_POWER]: t('Battery Empty'),
     [ALARM_OCCLUSION]: t('Occlusion Detected'),
     [ALARM_OVER_LIMIT]: t('Insulin Delivery Limit Exceeded'),
+    [EVENT_PUMP_SHUTDOWN]: t('Pump Shutdown'),
+    [INSULIN_ACTING_TYPE_INTERMEDIATE]: t('Intermediate-acting insulin'),
+    [INSULIN_ACTING_TYPE_LONG]: t('Long-acting insulin'),
+    [INSULIN_ACTING_TYPE_RAPID]: t('Short-acting insulin'),
+    [INSULIN_ACTING_TYPE_SHORT]: t('Short-acting insulin'),
   },
 };
 
@@ -260,4 +333,12 @@ export const BG_COLORS = {
   target: '#76D3A6',
   high: '#BB9AE7',
   veryHigh: '#8C65D6',
+};
+
+export const INSULIN_MODEL_LABELS = {
+  rapidAdult: t('Rapid-Acting - Adults'),
+  rapidChild: t('Rapid-Acting - Children'),
+  fiasp: t('Fiasp'),
+  lyumjev: t('Lyumjev'),
+  afrezza: t('Afrezza'),
 };

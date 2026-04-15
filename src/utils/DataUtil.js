@@ -8,6 +8,8 @@ import sundial from 'sundial';
 import {
   getLatestPumpUpload,
   getLastManualBasalSchedule,
+  isControlIQ,
+  isDexcom,
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
@@ -16,6 +18,7 @@ import {
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
+  isLibreViewAPI,
 } from './device';
 
 import {
@@ -35,6 +38,8 @@ import {
   CGM_DATA_KEY,
   DEFAULT_BG_BOUNDS,
   DIABETES_DATA_TYPES,
+  DUPLICATE_SMBG_COUNT_THRESHOLD,
+  DUPLICATE_SMBG_TIME_TOLERANCE_MS,
   MS_IN_DAY,
   MS_IN_HOUR,
   MS_IN_MIN,
@@ -47,12 +52,14 @@ import {
   SITE_CHANGE_CANNULA,
   SITE_CHANGE,
   ALARM,
-  ALARM_NO_DELIVERY,
-  ALARM_AUTO_OFF,
   ALARM_NO_INSULIN,
   ALARM_NO_POWER,
   ALARM_OCCLUSION,
-  ALARM_OVER_LIMIT,
+  EVENT,
+  EVENT_HEALTH,
+  EVENT_NOTES,
+  EVENT_PHYSICAL_ACTIVITY,
+  EVENT_PUMP_SHUTDOWN,
 } from './constants';
 
 import {
@@ -64,7 +71,7 @@ import {
 
 import StatUtil from './StatUtil';
 import AggregationUtil from './AggregationUtil';
-import { statFetchMethods } from './stat';
+import { commonStats, statFetchMethods } from './stat';
 import SchemaValidator from './validation/schema';
 
 const t = i18next.t.bind(i18next);
@@ -113,8 +120,10 @@ export class DataUtil {
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
     this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
+    this.dataAnnotations = this.dataAnnotations || {};
 
     if (_.isEmpty(rawData) || !patientId) return {};
 
@@ -148,6 +157,12 @@ export class DataUtil {
     this.startTimer('addMissingSuppressedBasals');
     this.addMissingSuppressedBasals(data);
     this.endTimer('addMissingSuppressedBasals');
+
+    // Filter out SMBG data that duplicates CGM values within ±500ms time tolerance
+    // This is done before tagging and adding to crossfilter so filtered data is excluded everywhere
+    this.startTimer('filterDuplicateSMBGs');
+    this.filterDuplicateSMBGs(data);
+    this.endTimer('filterDuplicateSMBGs');
 
     // Filter out any data that failed validation, and any duplicates by `id`
     this.startTimer('filterValidData');
@@ -211,9 +226,14 @@ export class DataUtil {
       }
     }
 
-    if (d.type === 'upload' && d.dataSetType === 'continuous') {
-      if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
-      if (!d.time) d.time = moment.utc().toISOString();
+    if (d.type === 'upload') {
+      if (d.dataSetType === 'continuous') {
+        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
+        if (!d.time) d.time = moment.utc().toISOString();
+      } else {
+        if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.uploadId] = d;
+      }
     }
 
     if (d.messagetext) {
@@ -228,9 +248,12 @@ export class DataUtil {
       // we rely on it for stat calculations and data filtering from the frontend queries.
       let sampleInterval = this.defaultCgmSampleInterval;
 
-      // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
-      // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
-      if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+      if (isLibreViewAPI(d)) {
+        d.annotations = d.annotations || [];
+        d.annotations.push({ code: 'cbg/unknown-sample-interval' });
+      } else if (d.deviceId?.indexOf('AbbottFreeStyleLibre') === 0 && d.deviceId.indexOf('AbbottFreeStyleLibre3') !== 0) {
+        // The Abbott FreeStyle Libre 3 uses the default interval of 5 minutes, while the original
+        // uses 15.  FreeStyle Libre 2 data comes with the sampleInterval, so we don't need to set it here.
         sampleInterval = 15 * MS_IN_MIN;
       }
 
@@ -391,7 +414,13 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+        d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
+              d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
+
+        if (_.isFinite(d.carbInput)) {
+          d.carbInputGeneratedFromFoodData = true;
+        }
+
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
 
@@ -617,6 +646,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
+    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
+
     if (d.type === 'basal') {
       d.tags = {
         suspend: d.deliveryType === 'suspend',
@@ -641,6 +673,12 @@ export class DataUtil {
       };
     }
 
+    if (d.type === 'insulin') {
+      d.tags = {
+        manual: true,
+      };
+    }
+
     if (d.type === 'wizard') {
       d.tags = {
         extended: hasExtended(d),
@@ -652,30 +690,22 @@ export class DataUtil {
 
     if (d.type === 'smbg') {
       d.tags = {
-        manual: d.subType === 'manual',
-        meter: d.subType !== 'manual',
+        manual: d.subType === 'manual' || isDexcomDatum,
+        meter: d.subType !== 'manual' && !isDexcomDatum,
       };
     }
 
     if (d.type === 'food') {
       d.tags = {
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        dexcom: isDexcomDatum,
+        manual: isDexcomDatum,
       };
     }
 
     if (d.type === 'deviceEvent') {
       const isReservoirChange = d.subType === 'reservoirChange';
       const isPrime = d.subType === 'prime';
-      const isAlarm = d.subType === 'alarm';
-
-      const recognizedAlarmTypes = [
-        ALARM_NO_DELIVERY,
-        ALARM_AUTO_OFF,
-        ALARM_NO_INSULIN,
-        ALARM_NO_POWER,
-        ALARM_OCCLUSION,
-        ALARM_OVER_LIMIT,
-      ];
 
       d.tags = {
         automatedSuspend: (
@@ -689,13 +719,59 @@ export class DataUtil {
         [SITE_CHANGE_RESERVOIR]: isReservoirChange,
         [SITE_CHANGE_CANNULA]: isPrime && d.primeTarget === 'cannula',
         [SITE_CHANGE_TUBING]: isPrime && d.primeTarget === 'tubing',
-        [ALARM]: isAlarm && _.includes(recognizedAlarmTypes, d.alarmType),
-        [ALARM_NO_DELIVERY]: d.alarmType === ALARM_NO_DELIVERY,
-        [ALARM_AUTO_OFF]: d.alarmType === ALARM_AUTO_OFF,
-        [ALARM_NO_INSULIN]: d.alarmType === ALARM_NO_INSULIN,
-        [ALARM_NO_POWER]: d.alarmType === ALARM_NO_POWER,
-        [ALARM_OCCLUSION]: d.alarmType === ALARM_OCCLUSION,
-        [ALARM_OVER_LIMIT]: d.alarmType === ALARM_OVER_LIMIT,
+      };
+
+      if (isTwiistLoop(d)) {
+        const recognizedAlarmTypes = [
+          ALARM_NO_INSULIN,
+          ALARM_NO_POWER,
+          ALARM_OCCLUSION,
+        ];
+
+        d.tags = {
+          ...d.tags,
+          [ALARM]: d.subType === 'alarm' && _.includes(recognizedAlarmTypes, d.alarmType),
+          ..._.reduce(recognizedAlarmTypes, (acc, type) => {
+            acc[type] = d.alarmType === type;
+            return acc;
+          }, {}),
+        };
+      }
+    }
+
+    // Events can appear on any datum type.
+    // We only display one event per datum, so we set the event tag to the highest priority event that applies.
+    // Currently, the only event we tag is pump shutdowns on Control-IQ pumps, but we anticipate adding more in the future.
+    const prioritizedEventTypes = [
+      EVENT_PUMP_SHUTDOWN,
+      EVENT_PHYSICAL_ACTIVITY,
+      EVENT_HEALTH,
+      EVENT_NOTES,
+    ];
+
+    const healthStates = [
+      'alcohol',
+      'cycle',
+      'hyperglycemiaSymptoms',
+      'hypoglycemiaSymptoms',
+      'illness',
+      'stress',
+      'other',
+    ];
+
+    const events = {
+      [EVENT_PUMP_SHUTDOWN]: isControlIQ(d) && _.some(d.annotations, { code: 'pump-shutdown' }),
+      [EVENT_PHYSICAL_ACTIVITY]: d.type === 'physicalActivity',
+      [EVENT_HEALTH]: d.type === 'reportedState' && _.includes(healthStates, d.states?.[0]?.state),
+      [EVENT_NOTES]: d.type === 'reportedState' && (!!d.states?.[0]?.stateOther || d.notes?.length),
+    };
+
+    const eventType = _.find(prioritizedEventTypes, type => events[type]);
+
+    if (eventType) {
+      d.tags = {
+        ...d.tags || {},
+        [EVENT]: eventType,
       };
     }
   };
@@ -881,6 +957,8 @@ export class DataUtil {
       d.fillDate = moment.utc(localTime).toISOString().slice(0, 10);
       d.id = `fill_${normalTimeISO.replace(/[^\w\s]|_/g, '')}`;
     }
+
+    this.setDataAnnotations(d);
   };
 
   normalizeDatumOutTime = d => {
@@ -1001,6 +1079,130 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  deduplicateCBGData = (data = []) => {
+    const cbgData = this.sort.byTime(_.cloneDeep(data));
+
+    // Iterate through the time-ordered list of glucose data. For each datum, we set a blackout
+    // window for the time span it occupies - e.g. if a datum has a time of 14:30 and duration
+    // of 5 min, then any OTHER datums occuring between 14:30 to 14:35 should be discarded.
+
+    const OVERLAP_TOLERANCE = MS_IN_MIN / 6; // tolerate up to 10 seconds of overlap
+
+    let blackoutUntil = 0; // end of current blackout window (unix timestamp)
+
+    const output = [];
+
+    for (let i = 0; i < cbgData.length; i++) {
+      const currentRecord = cbgData[i];
+
+      // If current record occured within the current blackout window, discard the record.
+      if (currentRecord.time < blackoutUntil) continue; // eslint-disable-line
+
+      // Otherwise, if the record is past the blackout window, we include the record.
+      // Then, set a new blackout window based on the current record's time window
+      output.push(currentRecord);
+      blackoutUntil = currentRecord.time + currentRecord.sampleInterval - OVERLAP_TOLERANCE;
+    }
+
+    return output;
+  };
+
+  // memoize deduplicateCBGData and only recompute if filters or data change
+  getDeduplicatedCBGData = _.memoize(
+    this.deduplicateCBGData,
+    data => {
+      const firstDatumId = _.first(data)?.id;
+      const lastDatumId = _.last(data)?.id;
+      const units = this.bgPrefs?.bgUnits || 'unknown';
+      const endpoints = this.activeEndpoints?.range?.join(',') || '';
+      const activeDays = this.activeDays?.join('') || '';
+      const excludedDevices = this.excludedDevices?.join(',') || '';
+      const sampleIntervalRange = this.cgmSampleIntervalRange?.join('-') || '';
+
+      return (
+        `${firstDatumId}_` +
+        `${lastDatumId}_` +
+        `${units}_` +
+        `[${endpoints}]_` +
+        `${activeDays}_` +
+        `[${excludedDevices}]_` +
+        `${sampleIntervalRange}_`
+      );
+    }
+  );
+
+  /**
+   * Filters out SMBG data points that are duplicates of CGM data.
+   * An SMBG is considered a duplicate if:
+   * - It has the same glucose value (in matching units) as a CGM reading
+   * - The time difference is within ±DUPLICATE_SMBG_TIME_TOLERANCE_MS (500ms)
+   *
+   * Filtering only occurs if >DUPLICATE_SMBG_COUNT_THRESHOLD duplicates are detected,
+   * as small numbers of matches may be coincidental.
+   *
+   * @param {Array} data - Array of data objects (already normalized with hammertime timestamps)
+   * @returns {Array} - The data array with duplicate SMBGs marked with reject=true
+   */
+  filterDuplicateSMBGs = (data = []) => {
+    this.startTimer('filterDuplicateSMBGs');
+
+    // Extract CBG and SMBG data from the incoming batch
+    const cbgData = _.filter(data, d => d.type === 'cbg' && !d.reject);
+    const smbgData = _.filter(data, d => d.type === 'smbg' && !d.reject);
+
+    // Skip if there's no CBG or SMBG data to compare
+    if (cbgData.length === 0 || smbgData.length === 0) {
+      this.endTimer('filterDuplicateSMBGs');
+      return data;
+    }
+
+    // Build a time-indexed lookup for CBG data
+    // Group CBGs by their time in seconds (rounded to nearest second for efficient lookup)
+    const cbgByTimeSeconds = _.groupBy(cbgData, d => Math.floor(d.time / 1000));
+
+    // Find all potential duplicate SMBGs - store references directly for efficient marking
+    const duplicateSmbgs = [];
+
+    _.each(smbgData, smbg => {
+      // Get the time in seconds for the SMBG
+      const smbgTimeSeconds = Math.floor(smbg.time / 1000);
+
+      // Check a 2-second window (covers ±500ms tolerance) around the SMBG time
+      const cbgsToCheck = [
+        ...(cbgByTimeSeconds[smbgTimeSeconds - 1] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds] || []),
+        ...(cbgByTimeSeconds[smbgTimeSeconds + 1] || []),
+      ];
+
+      // Check if any CBG matches the SMBG value within the time tolerance
+      const isDuplicate = _.some(cbgsToCheck, cbg => {
+        const timeDiff = Math.abs(smbg.time - cbg.time);
+        if (timeDiff > DUPLICATE_SMBG_TIME_TOLERANCE_MS) return false;
+
+        // Compare values - both should be in the same units at this point
+        return smbg.value === cbg.value;
+      });
+
+      if (isDuplicate) {
+        duplicateSmbgs.push(smbg);
+      }
+    });
+
+    // Only filter if we exceed the threshold
+    if (duplicateSmbgs.length > DUPLICATE_SMBG_COUNT_THRESHOLD) {
+      this.log(`Filtering ${duplicateSmbgs.length} duplicate SMBGs that match CGM values`);
+
+      // Mark duplicate SMBGs as rejected - O(duplicates) instead of O(all_data)
+      _.each(duplicateSmbgs, smbg => {
+        smbg.reject = true; // eslint-disable-line no-param-reassign
+        smbg.rejectReason = ['SMBG duplicates CGM value within time tolerance']; // eslint-disable-line no-param-reassign
+      });
+    }
+
+    this.endTimer('filterDuplicateSMBGs');
+    return data;
+  };
+
   /* eslint-disable no-param-reassign */
   removeData = (predicate = null) => {
     if (predicate) {
@@ -1010,12 +1212,18 @@ export class DataUtil {
       this.data.remove(predicate);
     } else {
       this.log('Reinitializing');
-      this.bolusToWizardIdMap = {};
       this.bolusDatumsByIdMap = {};
-      this.wizardDatumsByIdMap = {};
-      this.latestDatumByType = {};
+      this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.latestDatumByType = {};
+      this.pumpSettingsDatumsByIdMap = {};
+      this.wizardDatumsByIdMap = {};
+      this.wizardToBolusIdMap = {};
+      this.loopDataSetsByIdMap = {};
+      this.dexcomDataSetsByIdMap = {};
+      this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
+      this.clearDataAnnotations();
       delete this.bgSources;
       delete this.bgPrefs;
       delete this.timePrefs;
@@ -1223,14 +1431,87 @@ export class DataUtil {
     this.clearFilters();
 
     const uploadData = this.sort.byTime(this.filter.byType('upload').top(Infinity));
-    const latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+
+    // Find the latest pump-related data to determine the most relevant upload
+    const pumpDataTypes = ['basal', 'bolus'];
+    let latestPumpData = null;
+    let latestPumpDataTime = 0;
+
+    _.each(pumpDataTypes, dataType => {
+      const datum = this.latestDatumByType[dataType];
+      if (datum && datum.time > latestPumpDataTime) {
+        latestPumpData = datum;
+        latestPumpDataTime = datum.time;
+      }
+    });
+
+    let latestPumpUpload;
+    if (latestPumpData && latestPumpData.uploadId) {
+      // Use the uploadId from the latest pump-related data
+      latestPumpUpload = _.find(uploadData, { uploadId: latestPumpData.uploadId });
+    }
+
+    // Fall back to the original logic if no pump data found or no matching upload
+    if (!latestPumpUpload) {
+      latestPumpUpload = _.cloneDeep(getLatestPumpUpload(uploadData));
+    } else {
+      latestPumpUpload = _.cloneDeep(latestPumpUpload);
+    }
 
     if (latestPumpUpload) {
       const latestUploadSource = _.get(this.uploadMap[latestPumpUpload.uploadId], 'source', '').toLowerCase();
       const manufacturer = latestUploadSource === 'carelink' ? 'medtronic' : latestUploadSource;
       const deviceModel = _.get(latestPumpUpload, 'deviceModel', '');
 
-      const latestPumpSettings = _.cloneDeep(this.latestDatumByType.pumpSettings);
+      // Prefer the most recent pumpSettings associated with the selected latestPumpUpload
+      let pumpSettingsForUpload = _.filter(
+        this.pumpSettingsDatumsByIdMap,
+        ps => ps.uploadId === latestPumpUpload.uploadId
+      );
+
+      const isContinuous = latestPumpUpload.dataSetType === 'continuous';
+
+      // For continuous datasets, ignore settings after the latest pump data.
+      // For non-continuous datasets, settings are written after pump data but before upload,
+      // so only require settings.time <= latestPumpUpload.time.
+      if (latestPumpData && isContinuous) {
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= latestPumpData.time
+        );
+      } else {
+        // Clock drift on user's device may cause pumpSettings datum to have LATER timestamp than upload
+        // datum. The maximum time deviation that the Uploader allows between the user's device and Tidepool
+        // server time is 15 minutes, so we search up to 15 minutes into the future for the pumpSettings datum
+        const UPLOADER_TIME_DEVIATION_TOLERANCE = 15 * MS_IN_MIN;
+
+        pumpSettingsForUpload = _.filter(
+          pumpSettingsForUpload,
+          ps => ps.time <= (latestPumpUpload.time + UPLOADER_TIME_DEVIATION_TOLERANCE)
+        );
+      }
+
+      let latestPumpSettings = _.maxBy(pumpSettingsForUpload, 'time');
+
+      // If none match by uploadId (and time, if constrained above), fall back to latestDatumByType.pumpSettings
+      if (!latestPumpSettings) {
+        const candidate = this.latestDatumByType.pumpSettings;
+
+        // Only consider candidate if it exists and has a matching uploadId
+        if (candidate && candidate.uploadId === latestPumpUpload.uploadId) {
+          // For continuous datasets, respect latestPumpData constraint when available.
+          // For non-continuous datasets, only require candidate.time <= latestPumpUpload.time.
+          if (
+            (isContinuous && (!latestPumpData || candidate.time == null || candidate.time <= latestPumpData.time)) ||
+            (!isContinuous && (candidate.time == null || candidate.time <= latestPumpUpload.time))
+          ) {
+            latestPumpSettings = candidate;
+          }
+        }
+      }
+
+      latestPumpSettings = _.cloneDeep(latestPumpSettings);
+
       const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
       const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);
@@ -1459,6 +1740,15 @@ export class DataUtil {
   };
   /* eslint-enable no-param-reassign */
 
+  setDataAnnotations = d => {
+    if (this.trackDataAnnotations && d.annotations?.length) {
+      // Set any new annotation by code to the dataAnnotations metaData map
+      _.each(d.annotations, (annotation) => {
+        if (!this.dataAnnotations[annotation.code]) this.dataAnnotations[annotation.code] = annotation;
+      });
+    }
+  };
+
   setMetaData = () => {
     this.startTimer('setMetaData');
     this.setSize();
@@ -1679,8 +1969,8 @@ export class DataUtil {
     this.matchedDevices = {};
   };
 
-  setExcludedDaysWithoutBolus = (excludeDaysWithoutBolus = false) => {
-    this.excludeDaysWithoutBolus = excludeDaysWithoutBolus;
+  clearDataAnnotations = () => {
+    this.dataAnnotations = {};
   };
 
   query = (query = {}) => {
@@ -1694,7 +1984,6 @@ export class DataUtil {
       bgSource,
       cgmSampleIntervalRange,
       endpoints,
-      excludeDaysWithoutBolus,
       excludedDevices,
       fillData,
       metaData,
@@ -1732,7 +2021,6 @@ export class DataUtil {
     this.setEndpoints(endpoints, nextDays, prevDays);
     this.setActiveDays(activeDays);
     this.setExcludedDevices(excludedDevices);
-    this.setExcludedDaysWithoutBolus(excludeDaysWithoutBolus);
 
     const data = {};
 
@@ -1740,6 +2028,7 @@ export class DataUtil {
       this.activeRange = rangeKey;
       this.activeEndpoints = rangeEndpoints;
       this.matchDevices = false;
+      this.trackDataAnnotations = false;
       data[rangeKey] = {};
 
       // Filter the data set by date range
@@ -1753,21 +2042,21 @@ export class DataUtil {
 
       if (rangeKey === 'current') {
         this.matchDevices = true;
+        const requestedMetaData = _.isString(metaData) ? _.map(metaData.split(','), _.trim) : metaData;
+        const dataAnnotationsRequested = _.includes(requestedMetaData, 'dataAnnotations');
+
+        // We generate annotations metaData only when typed data is requested, or certain stats are
+        // being requested that may be inaccurate when certain annotations are present in the data.
+        this.trackDataAnnotations = dataAnnotationsRequested && (
+          this.types.length || _.intersection(this.stats, [commonStats.sensorUsage, commonStats.timeInRange]).length
+        );
+
+        // Clear previous dataAnnotations metaData so we can track annotations for only the current data
+        if (this.trackDataAnnotations) this.clearDataAnnotations();
 
         // Generate the aggregations for current range
         if (aggregationsByDate) {
           data[rangeKey].aggregationsByDate = this.getAggregationsByDate(aggregationsByDate);
-        }
-
-        if (this.excludeDaysWithoutBolus) {
-          // Determine count of days with boluses for current range
-          const bolusesByDate = _.get(
-            data,
-            [rangeKey, 'aggregationsByDate'],
-            this.getAggregationsByDate('boluses')
-          ).boluses.byDate;
-
-          this.activeEndpoints.bolusDays = _.keys(bolusesByDate).length;
         }
 
         // Generate the stats for current range
@@ -1800,9 +2089,10 @@ export class DataUtil {
 
     if (metaData) result.metaData = this.getMetaData(metaData);
 
-    // Always reset `returnRawData` and `matchDevices` to `false` after each query
+    // Always reset `returnRawData`, `matchDevices` and `trackDataAnnotations` to `false` after each query
     this.setReturnRawData(false);
     this.matchDevices = false;
+    this.trackDataAnnotations = false;
 
     this.log('Result', result);
 
@@ -1928,6 +2218,7 @@ export class DataUtil {
       'devices',
       'excludedDevices',
       'matchedDevices',
+      'dataAnnotations',
       'queryDataCount',
     ];
 

@@ -43,10 +43,10 @@ import styles from './SMBGDateLineAnimated.css';
 export class SMBGDateLineAnimated extends PureComponent {
   static propTypes = {
     bgBounds: PropTypes.shape({
-      veryHighThreshold: PropTypes.number.isRequired,
+      veryHighThreshold: PropTypes.number,
       targetUpperBound: PropTypes.number.isRequired,
       targetLowerBound: PropTypes.number.isRequired,
-      veryLowThreshold: PropTypes.number.isRequired,
+      veryLowThreshold: PropTypes.number,
     }).isRequired,
     data: PropTypes.arrayOf(PropTypes.shape({
       id: PropTypes.string.isRequired,

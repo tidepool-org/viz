@@ -30,7 +30,7 @@ import {
   findBasicsDays,
 } from '../../utils/basics/data';
 
-import { formatDatum, statBgSourceLabels } from '../../utils/stat';
+import { formatDatum, reconcileTIRDatumValues, statBgSourceLabels } from '../../utils/stat';
 import { getPumpVocabulary } from '../../utils/device';
 
 import {
@@ -80,8 +80,43 @@ class BasicsPrintView extends PrintView {
     this.initLayout();
   }
 
+  getChartDateBoundDisplayFormat() {
+    const [start, end] = this.endpoints.range;
+    const startDate = moment.utc(start).tz(this.timePrefs.timezoneName);
+    const endDate = moment.utc(end).tz(this.timePrefs.timezoneName);
+
+    const isStartDateMidnight = (startDate?.hours() === 0 && startDate?.minutes() === 0) ||
+                                (startDate?.hours() === 23 && startDate?.minutes() >= 59);
+
+    const isEndDateMidnight = (endDate?.hours() === 0 && endDate?.minutes() === 0) ||
+                              (endDate?.hours() === 23 && endDate?.minutes() >= 59);
+
+    const isMatchingDateBounds = isStartDateMidnight && isEndDateMidnight;
+
+    if (!isMatchingDateBounds) {
+      return 'MMM D, YYYY (h:mm A)';
+    }
+
+    return 'MMM D, YYYY';
+  }
+
   newPage() {
-    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
+    const [start, end] = this.endpoints.range;
+    const format = this.getChartDateBoundDisplayFormat();
+
+    // split days
+    if (format === 'MMM D, YYYY (h:mm A)') {
+      const startText = moment.utc(start).tz(this.timePrefs.timezoneName).format(format);
+      const endText = moment.utc(end).tz(this.timePrefs.timezoneName).format(format);
+
+      const dateRange = `${startText} - ${endText}`;
+
+      super.newPage(t('Date range: {{dateRange}}', { dateRange }));
+
+    // whole days
+    } else {
+      super.newPage(this.getDateRange(start, end - 1, undefined, t('Date range: ')));
+    }
   }
 
   initCalendar() {
@@ -231,7 +266,6 @@ class BasicsPrintView extends PrintView {
             text: 'Time in Range',
             note: t('Showing {{source}} data', { source: statBgSourceLabels[this.bgSource] }),
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -247,7 +281,6 @@ class BasicsPrintView extends PrintView {
               count: readingsInRange.data?.raw?.counts?.total,
             }),
           },
-          secondaryFormatKey: 'tooltip',
         }
       );
     }
@@ -390,7 +423,9 @@ class BasicsPrintView extends PrintView {
     this.setFill();
   }
 
-  renderHorizontalBarStat(stat, opts = {}) {
+  renderHorizontalBarStat(statArg, opts = {}) {
+    let stat = _.cloneDeep(statArg);
+
     _.defaults(opts, {
       heading: {
         text: stat.title,
@@ -431,7 +466,10 @@ class BasicsPrintView extends PrintView {
     this.doc.fontSize(this.smallFontSize);
 
     if (statHasData) {
-      const statDatums = _.get(stat, 'data.data', []);
+      const isTIRStat = ['timeInRange', 'readingsInRange'].includes(stat.id);
+      stat = isTIRStat ? reconcileTIRDatumValues(stat) : stat;
+
+      const statDatums = _.reject(_.get(stat, 'data.data', []), datum => datum.hideEmpty && _.toNumber(datum.value) <= 0);
       const statTotal = _.get(stat, 'data.total.value', 1);
 
       const tableColumns = [
@@ -486,6 +524,7 @@ class BasicsPrintView extends PrintView {
           },
           _fillStripe: {
             color,
+            patternOverlay: id === 'insulin' ? 'diagonalStripes' : null,
             opacity: opts.fillOpacity,
             width: (columnWidth - (2 * stripePadding)) * (_.toNumber(datum.value) / statTotal),
             background: true,
@@ -525,11 +564,11 @@ class BasicsPrintView extends PrintView {
       renderSectionHeading(headingMoveDown);
       this.renderEmptyText(emptyText);
     } else {
-      const isSiteChange = type === 'siteChange';
+      const isSiteChangeCalendarSection = type === 'siteChange';
       let priorToFirstSiteChange = false;
       const siteChangeSource = this.sections.siteChanges.source;
 
-      if (isSiteChange) {
+      if (isSiteChangeCalendarSection) {
         priorToFirstSiteChange = _.some(data, ({ summary = {} }) => _.isNaN(summary.daysSince[siteChangeSource]));
       }
 
@@ -539,9 +578,13 @@ class BasicsPrintView extends PrintView {
 
         let dayType = day.type;
 
-        if (isSiteChange) {
+        if (isSiteChangeCalendarSection) {
           if (dayType === 'inRange') {
-            dayType = data[day.date] ? SITE_CHANGE : NO_SITE_CHANGE;
+            // Only show a site change if the type of site change matches the report's config
+            // E.g. If report config'd for Cannula Fills, we don't render Cartridge Changes
+            const hasSiteChangesOfMatchingType = (data[day.date]?.subtotals?.[siteChangeSource] || 0) > 0;
+
+            dayType = hasSiteChangesOfMatchingType ? SITE_CHANGE : NO_SITE_CHANGE;
           }
 
           if (dayType === NO_SITE_CHANGE && priorToFirstSiteChange) {

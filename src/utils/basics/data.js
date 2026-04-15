@@ -68,6 +68,8 @@ export const utils = {
 export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {}) {
   const bgLabels = generateBgRangeLabels(bgPrefs);
   bgLabels.veryLow = _.upperFirst(bgLabels.veryLow);
+  bgLabels.low = _.upperFirst(bgLabels.low);
+  bgLabels.high = _.upperFirst(bgLabels.high);
   bgLabels.veryHigh = _.upperFirst(bgLabels.veryHigh);
 
   const deviceLabels = getPumpVocabulary(manufacturer);
@@ -116,8 +118,8 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         break;
 
       case 'boluses':
-        title = t('Bolusing');
-        summaryTitle = t('Avg boluses / day');
+        title = t('Insulin');
+        summaryTitle = t('Avg insulin injections / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
@@ -126,6 +128,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'interrupted', label: t('Interrupted'), percentage: true, selectorIndex: 5 },
           { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
           { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
+          { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3, hideEmpty: !pumpUpload.isAutomatedBolusDevice },
         ];
 
         if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
@@ -136,6 +139,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
         }
 
         if (isTwiistLoop(pumpUpload.settings)) {
+          dimensions[1].label = t('Meal');
           dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 6 });
           dimensions[6].selectorIndex = 3; // Move the 'Underride' filter next to the 'Override'
           perRow = 4;
@@ -143,7 +147,6 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
 
         if (pumpUpload.isAutomatedBolusDevice) {
           dimensions.push(...[
-            { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3 },
             { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 7 },
           ]);
           perRow = 4;
@@ -153,14 +156,20 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
       case 'fingersticks':
         title = t('BG readings');
         summaryTitle = t('Avg BG readings / day');
-        dimensions = [
+        dimensions = _.filter([
           { path: 'smbg.summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'smbg.summary.subtotals', key: 'meter', label: t('Meter'), percentage: true },
           { path: 'smbg.summary.subtotals', key: 'manual', label: t('Manual'), percentage: true },
           { path: 'calibration.summary.subtotals', key: 'calibration', label: t('Calibrations'), hideEmpty: true },
-          { path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true },
-          { path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true },
-        ];
+          (_.isNumber(bgPrefs?.bgBounds?.veryLowThreshold)
+            ? ({ path: 'smbg.summary.subtotals', key: 'veryLow', label: bgLabels.veryLow, percentage: true })
+            : ({ path: 'smbg.summary.subtotals', key: 'low', label: bgLabels.low, percentage: true })
+          ),
+          (_.isNumber(bgPrefs?.bgBounds?.veryHighThreshold)
+            ? ({ path: 'smbg.summary.subtotals', key: 'veryHigh', label: bgLabels.veryHigh, percentage: true })
+            : ({ path: 'smbg.summary.subtotals', key: 'high', label: bgLabels.high, percentage: true })
+          ),
+        ], Boolean);
         break;
 
       case 'siteChanges':
@@ -380,7 +389,7 @@ export function findBasicsStart(timestamp, timezone = 'UTC') {
  *
  * @return {String} Basics data as a formatted string
  */
-export function basicsText(patient, data, stats, aggregations) {
+export function basicsText(patient, data, stats, aggregations, copyAsTextMetadata) {
   const {
     bgPrefs,
     data: {
@@ -393,10 +402,10 @@ export function basicsText(patient, data, stats, aggregations) {
     timePrefs,
   } = data;
 
-  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
 
   let basicsString = textUtil.buildDocumentHeader('Basics');
-  basicsString += textUtil.buildDocumentDates();
+  basicsString += textUtil.buildDocumentDates({ showPartialDates: true });
 
   basicsString += textUtil.buildTextLine(t('Days with no insulin data have been excluded from calculations'));
 

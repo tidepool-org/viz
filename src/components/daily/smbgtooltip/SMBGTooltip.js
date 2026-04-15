@@ -18,6 +18,8 @@
 import PropTypes from 'prop-types';
 import React from 'react';
 import _ from 'lodash';
+import i18next from 'i18next';
+
 import {
   classifyBgValue,
   reshapeBgClassesToBgBounds,
@@ -33,23 +35,31 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './SMBGTooltip.css';
 
+const t = i18next.t.bind(i18next);
+
 const SMBGTooltip = (props) => {
   const renderSMBG = () => {
     const smbg = props.smbg;
     const outOfRangeMessage = getOutOfRangeAnnotationMessage(smbg);
     const rows = [
       <div key={'bg'} className={styles.bg}>
-        <div className={styles.label}>BG</div>
+        <div className={styles.label}>{t('BG')}</div>
         <div className={styles.value}>
           {`${formatBgValue(smbg.value, props.bgPrefs, getOutOfRangeThreshold(smbg))}`}
         </div>
       </div>,
     ];
 
-    const source = !_.isEmpty(smbg.subType) ? `${_.upperFirst(smbg.subType)}` : 'Meter';
+    let source = 'Meter';
+    if (smbg.tags?.manual) {
+      source = t('Manual');
+    } else if (smbg.subType) {
+      source = _.upperFirst(smbg.subType);
+    }
+
     rows.push(
       <div key={'source'} className={styles.source}>
-        <div className={styles.label}>Source</div>
+        <div className={styles.label}>{t('Source')}</div>
         <div className={styles.value}>{source}</div>
       </div>
     );

@@ -53,6 +53,10 @@ import './registerStaticFiles';
 
 const t = i18next.t.bind(i18next);
 
+const patternImages = {
+  diagonalStripes: 'images/diagonalStripes.png',
+};
+
 class PrintView {
   constructor(doc, data = {}, opts) {
     this.doc = doc;
@@ -116,7 +120,9 @@ class PrintView {
       physicalActivity: '#758CFF',
       preprandial: '#4457D9',
       bolus: '#7CD0F0',
+      insulin: '#7CD0F0',
       bolusAutomated: '#00B2C3',
+      presets: '#F4F5FF',
       smbg: '#6480FB',
       siteChange: '#FCD144',
       basalHeader: '#DCF1F9',
@@ -475,6 +481,14 @@ class PrintView {
         this.doc
           .rect(xPos, yPos, stripeWidth, stripeHeight)
           .fill();
+
+        if (patternImages[fillStripe.patternOverlay]) {
+          this.doc.save();
+          this.doc.rect(xPos, yPos, stripeWidth, stripeHeight).clip();
+          this.doc.fillOpacity(1);
+          this.doc.image(patternImages[fillStripe.patternOverlay], xPos, yPos, { cover: [stripeWidth, stripeHeight] });
+          this.doc.restore();
+        }
       }
 
       this.setFill();
@@ -837,6 +851,8 @@ class PrintView {
   }
 
   renderDateText(dateText = '') {
+    const MAX_CHARS_PER_LINE = 45;
+    const TOP_PADDING = 2.5;
     const lineHeight = this.doc.fontSize(14).currentLineHeight();
 
     // Calculate the remaining available width so we can
@@ -853,15 +869,51 @@ class PrintView {
     const xOffset = (
       this.margins.left + this.patientInfoBox.width + this.dividerWidth + this.titleWidth
     );
+
     const yOffset = (
       this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2))
     );
 
+    const shouldSplitLines = dateText.length > MAX_CHARS_PER_LINE && dateText.includes(' - ');
+
+    if (!shouldSplitLines) {
+      this.doc
+        .fontSize(10)
+        .text(dateText, xOffset, yOffset + TOP_PADDING, {
+          width: availableWidth,
+          align: 'center',
+        });
+
+      return;
+    }
+
+    // Date is too long to render on one line, we need to render on 2 lines
+    const [
+      yOffsetLine1,
+      yOffsetLine2
+    ] = [
+      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - lineHeight),
+      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2)
+    ];
+
+    const lines = dateText.split(' - ');
+    const dateTextLine1 = lines[0].concat(' - ');
+    const dateTextLine2 = lines[1] || '';
+
+    const RIGHT_PADDING = 20;
+
     this.doc
       .fontSize(10)
-      .text(dateText, xOffset, yOffset + 2.5, {
+      .text(dateTextLine1, xOffset - RIGHT_PADDING, yOffsetLine1 + TOP_PADDING, {
         width: availableWidth,
-        align: 'center',
+        align: 'right',
+      });
+
+    this.doc
+      .fontSize(10)
+      .text(dateTextLine2, xOffset - RIGHT_PADDING, yOffsetLine2 + TOP_PADDING, {
+        width: availableWidth,
+        align: 'right',
       });
   }
 

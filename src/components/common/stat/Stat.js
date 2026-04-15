@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
+import { withTranslation } from 'react-i18next';
 import _ from 'lodash';
 import bows from 'bows';
 import cx from 'classnames';
@@ -7,8 +8,14 @@ import { SizeMe } from 'react-sizeme';
 import { VictoryBar, VictoryContainer } from 'victory';
 import { Collapse } from 'react-collapse';
 
-import { formatPercentage } from '../../../utils/format';
-import { MGDL_UNITS, MGDL_CLAMP_TOP, MMOLL_CLAMP_TOP } from '../../../utils/constants';
+import { formatPercentage, formatDecimalNumber } from '../../../utils/format';
+import {
+  MGDL_UNITS,
+  MMOLL_UNITS,
+  MGDL_CLAMP_TOP,
+  MMOLL_CLAMP_TOP,
+  ADA_STANDARD_BG_BOUNDS
+} from '../../../utils/constants';
 import { statFormats, statTypes, formatDatum } from '../../../utils/stat';
 import styles from './Stat.css';
 import colors from '../../../styles/colors.css';
@@ -117,6 +124,18 @@ class Stat extends PureComponent {
     this.chartProps = this.getChartPropsByType(nextProps);
   }
 
+  hasNonStandardTargets = () => {
+    const {
+      bgUnits = MGDL_UNITS,
+      bgBounds = ADA_STANDARD_BG_BOUNDS,
+    } = this.props.bgPrefs || {};
+
+    return (
+      bgBounds.targetLowerBound !== ADA_STANDARD_BG_BOUNDS[bgUnits].targetLowerBound ||
+      bgBounds.targetUpperBound !== ADA_STANDARD_BG_BOUNDS[bgUnits].targetUpperBound
+    );
+  };
+
   renderChartTitle = () => {
     const isDatumHovered = this.state.hoveredDatumIndex >= 0;
 
@@ -206,6 +225,32 @@ class Stat extends PureComponent {
     );
   };
 
+  renderNonStandardTargetsWarning = () => {
+    const isRendered = (
+      this.hasNonStandardTargets() &&
+      this.state.isOpened &&
+      _.includes(['timeInRange', 'readingsInRange'], this.props.id)
+    );
+
+    if (!isRendered) return null;
+
+    const { targetLowerBound, targetUpperBound } = this.props.bgPrefs?.bgBounds || {};
+    const { bgUnits } = this.props.bgPrefs || {};
+
+    const bgPrecision = this.props.bgPrefs?.bgUnits === MMOLL_UNITS ? 1 : 0;
+    const lowerTarget = formatDecimalNumber(targetLowerBound, bgPrecision);
+    const upperTarget = formatDecimalNumber(targetUpperBound, bgPrecision);
+
+    return (
+      <div className={styles.statHeaderNonStandardWarning}>
+        {this.props.t(
+          `Alternate range in use (${lowerTarget}-${upperTarget} ${bgUnits})`,
+          { lowerTarget, upperTarget, bgUnits: this.props.bgPrefs?.bgUnits }
+        )}
+      </div>
+    );
+  };
+
   renderStatUnits = () => (
     <div className={styles.units}>
       {this.props.units}
@@ -218,12 +263,26 @@ class Stat extends PureComponent {
     </div>
   );
 
-  renderStatHeader = () => (
-    <div className={styles.statHeader}>
-      {this.renderChartTitle()}
-      {this.renderChartSummary()}
-    </div>
-  );
+  renderStatHeader = () => {
+    const hasNonStandardTargetStyles = (
+      this.hasNonStandardTargets() &&
+      _.includes(['timeInRange', 'readingsInRange'], this.props.id)
+    );
+
+    const containerStyles = hasNonStandardTargetStyles
+      ? styles.statHeaderContainerNonStandardTargets
+      : styles.statHeaderContainer;
+
+    return (
+      <div className={containerStyles}>
+        <div className={styles.statHeader}>
+          {this.renderChartTitle()}
+          {this.renderChartSummary()}
+        </div>
+        {this.renderNonStandardTargetsWarning()}
+      </div>
+    );
+  };
 
   renderStatFooter = () => (
     <div className={styles.statFooter}>
@@ -236,7 +295,7 @@ class Stat extends PureComponent {
   renderStatLegend = () => {
     const items = _.map(
       this.props.data.data,
-      datum => _.pick(datum, ['id', 'legendTitle'])
+      datum => _.pick(datum, ['id', 'legendTitle', 'pattern', 'annotations'])
     );
 
     if (!this.props.reverseLegendOrder) {
@@ -444,7 +503,12 @@ class Stat extends PureComponent {
   };
 
   getChartPropsByType = props => {
-    const { type, data, bgPrefs: { bgUnits } } = props;
+    const {
+      type,
+      data,
+      bgPrefs: { bgUnits },
+      hasSyntheticReadings = false,
+    } = props;
 
     let barWidth;
     let barSpacing;
@@ -455,7 +519,7 @@ class Stat extends PureComponent {
     let padding;
     let total;
 
-    const chartData = _.cloneDeep(data.data);
+    const chartData = _.reject(_.cloneDeep(data.data), d => (d.hideEmpty && d.value === -1));
 
     const chartProps = this.getDefaultChartProps(props);
 
@@ -525,11 +589,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: ({ datum }) => this.getDatumColor(datum),
+              fill: ({ datum }) => this.getDatumFill(datum, true),
               width: () => barWidth,
             },
             labels: {
-              fill: ({ datum }) => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({ datum }) => this.getDatumFill(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
@@ -634,6 +698,8 @@ class Stat extends PureComponent {
                 return [value, suffix];
               }}
               tooltipText={(datum = {}) => {
+                if (hasSyntheticReadings) return '';
+
                 const { value, suffix } = formatDatum(
                   _.get(chartData, datum.index, datum),
                   props.dataFormat.tooltip,
@@ -647,11 +713,11 @@ class Stat extends PureComponent {
           renderer: VictoryBar,
           style: {
             data: {
-              fill: ({ datum }) => (datum._y === 0 ? 'transparent' : this.getDatumColor(datum)),
+              fill: ({ datum }) => (datum._y === 0 ? 'transparent' : this.getDatumFill(datum, true)),
               width: () => barWidth,
             },
             labels: {
-              fill: ({ datum }) => this.getDatumColor(_.assign({}, datum, formatDatum(
+              fill: ({ datum }) => this.getDatumFill(_.assign({}, datum, formatDatum(
                 datum,
                 props.dataFormat.label,
                 props
@@ -697,7 +763,7 @@ class Stat extends PureComponent {
     return this.getFormattedDataByDataPath(path, format);
   };
 
-  getDatumColor = datum => {
+  getDatumFill = (datum, usePattern) => {
     const { hoveredDatumIndex, isDisabled } = this.state;
 
     const isMuted = this.props.muteOthersOnHover
@@ -708,6 +774,8 @@ class Stat extends PureComponent {
 
     if (isDisabled || isMuted) {
       color = isDisabled ? colors.statDisabled : colors.muted;
+    } else if (usePattern && datum?.pattern?.id) {
+      return `url(#${datum.pattern.id})`;
     }
 
     return color;
@@ -778,4 +846,8 @@ class Stat extends PureComponent {
   };
 }
 
-export default Stat;
+export {
+  Stat
+};
+
+export default withTranslation()(Stat);

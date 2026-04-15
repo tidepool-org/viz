@@ -3,7 +3,7 @@ import bows from 'bows';
 import moment from 'moment-timezone';
 
 import { getTotalBasalFromEndpoints, getBasalGroupDurationsFromEndpoints } from './basal';
-import { getTotalBolus } from './bolus';
+import { getTotalInsulin } from './bolus';
 import { classifyBgValue } from './bloodglucose';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_DAY, MS_IN_MIN } from './constants';
 import { formatLocalizedFromUTC } from './datetime';
@@ -40,7 +40,12 @@ export class StatUtil {
   getAverageGlucoseData = (returnBgData = false) => {
     if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
 
-    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+
+    if (this.bgSource === CGM_DATA_KEY) {
+      bgData = this.dataUtil.getDeduplicatedCBGData(bgData);
+    }
+
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const data = {
@@ -58,7 +63,12 @@ export class StatUtil {
   getBgExtentsData = () => {
     if (this.bgSource === CGM_DATA_KEY) this.filterCBGDataByDefaultSampleInterval();
 
-    const bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+    let bgData = _.cloneDeep(this.dataUtil.filter.byType(this.bgSource).top(Infinity));
+
+    if (this.bgSource === CGM_DATA_KEY) {
+      bgData = this.dataUtil.getDeduplicatedCBGData(bgData);
+    }
+
     _.each(bgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
     const rawBgData = this.dataUtil.sort.byTime(_.cloneDeep(bgData));
@@ -86,15 +96,17 @@ export class StatUtil {
     return data;
   };
 
-  getBasalBolusData = () => {
-    const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
+  getInsulinData = () => {
     const rawBasalData = this.dataUtil.sort.byTime(this.dataUtil.filter.byType('basal').top(Infinity));
     const basalData = this.dataUtil.addBasalOverlappingStart(_.cloneDeep(rawBasalData));
+    const bolusData = this.dataUtil.filter.byType('bolus').top(Infinity);
+    const insulinData = this.dataUtil.filter.byType('insulin').top(Infinity);
 
     // Create a list of all dates for which we have at least one datum
     const uniqueDatumDates = new Set([
-      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
       ...rawBasalData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...bolusData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
+      ...insulinData.map(datum => formatLocalizedFromUTC(datum.time, this.timePrefs, 'YYYY-MM-DD')),
     ]);
 
     const activeDaysWithInsulinData = uniqueDatumDates.size;
@@ -103,12 +115,14 @@ export class StatUtil {
       basal: basalData.length
         ? parseFloat(getTotalBasalFromEndpoints(basalData, this.endpoints))
         : NaN,
-      bolus: bolusData.length ? getTotalBolus(bolusData) : NaN,
+      bolus: bolusData.length ? getTotalInsulin(bolusData) : NaN,
+      insulin: insulinData.length ? getTotalInsulin(insulinData) : NaN,
     };
 
-    if (activeDaysWithInsulinData > 1) {
+    if (this.activeDays > 1 && activeDaysWithInsulinData > 1) {
       basalBolusData.basal = basalBolusData.basal / activeDaysWithInsulinData;
       basalBolusData.bolus = basalBolusData.bolus / activeDaysWithInsulinData;
+      basalBolusData.insulin = basalBolusData.insulin / activeDaysWithInsulinData;
     }
 
     return basalBolusData;
@@ -157,7 +171,7 @@ export class StatUtil {
       exchanges: wizardCarbs.exchanges,
     };
 
-    if (activeDaysWithCarbData > 1) {
+    if (this.activeDays > 1 && activeDaysWithCarbData > 1) {
       carbs = {
         grams: carbs.grams / activeDaysWithCarbData,
         exchanges: carbs.exchanges / activeDaysWithCarbData,
@@ -259,6 +273,23 @@ export class StatUtil {
     const smbgData = _.cloneDeep(this.dataUtil.filter.byType('smbg').top(Infinity));
     _.each(smbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
 
+    const initialValue = {
+      counts: {
+        low: 0,
+        target: 0,
+        high: 0,
+        total: 0,
+      },
+    };
+
+    if (_.isNumber(this.bgBounds.veryLowThreshold)) {
+      initialValue.counts.veryLow = 0;
+    }
+
+    if (_.isNumber(this.bgBounds.veryHighThreshold)) {
+      initialValue.counts.veryHigh = 0;
+    }
+
     const readingsInRangeData = _.reduce(
       smbgData,
       (result, datum) => {
@@ -267,16 +298,7 @@ export class StatUtil {
         result.counts.total++;
         return result;
       },
-      {
-        counts: {
-          veryLow: 0,
-          low: 0,
-          target: 0,
-          high: 0,
-          veryHigh: 0,
-          total: 0,
-        },
-      }
+      initialValue
     );
 
     if (this.activeDays > 1) {
@@ -288,23 +310,20 @@ export class StatUtil {
 
   getSensorUsage = () => {
     this.filterCBGDataByDefaultSampleInterval();
-    const cbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const cbgData = this.dataUtil.getDeduplicatedCBGData(rawCbgData);
+
+    let sensorUsage = 0;
+    for (let i = 0; i < cbgData.length; i++) {
+      const datum = cbgData[i];
+      this.dataUtil.setDataAnnotations(datum);
+
+      sensorUsage += datum.sampleInterval;
+    }
+
     const count = cbgData.length;
-
-    // Data for Tidepool sensor usage stat
-    const duration = _.reduce(
-      cbgData,
-      (result, datum) => {
-        result += datum.sampleInterval;
-        return result;
-      },
-      0
-    );
-
     const total = this.activeDays * MS_IN_DAY;
 
-    // Data for AGP sensor usage stat
-    const rawCbgData = this.dataUtil.sort.byTime(_.cloneDeep(cbgData));
     const { newestDatum, oldestDatum } = this.getBgExtentsData();
     const sampleInterval = newestDatum?.sampleInterval || this.dataUtil.defaultCgmSampleInterval;
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
@@ -312,8 +331,8 @@ export class StatUtil {
 
     let cgmMinutesWorn;
 
-    if (rawCbgData.length < 2) {
-      cgmMinutesWorn = rawCbgData.length === 1 ? sampleInterval : 0;
+    if (cbgData.length < 2) {
+      cgmMinutesWorn = cbgData.length === 1 ? sampleInterval : 0;
     } else {
       cgmMinutesWorn = Math.ceil(moment.utc(newestDatum?.time).diff(moment.utc(oldestDatum?.time), 'minutes', true));
     }
@@ -324,18 +343,19 @@ export class StatUtil {
     ) * 100;
 
     return {
-      sensorUsage: duration,
+      sensorUsage,
       sensorUsageAGP,
-      total,
       sampleInterval,
       count,
+      total,
     };
   };
 
   getStandardDevData = () => {
     const { averageGlucose, bgData, total } = this.getAverageGlucoseData(true);
 
-    if (bgData.length < 3) {
+    // Minimum 30 data points to report stdev per BGM AGP Spec, which we also apply to TDP
+    if (bgData.length < 30) {
       return {
         averageGlucose,
         insufficientData: true,
@@ -418,12 +438,29 @@ export class StatUtil {
 
   getTimeInRangeData = () => {
     this.filterCBGDataByDefaultSampleInterval();
-    const cbgData = _.cloneDeep(this.dataUtil.filter.byType('cbg').top(Infinity));
+    const rawCbgData = this.dataUtil.filter.byType('cbg').top(Infinity);
+    const cbgData = this.dataUtil.getDeduplicatedCBGData(rawCbgData);
     _.each(cbgData, d => this.dataUtil.normalizeDatumBgUnits(d));
+
+    const initialValue = {
+      durations: { low: 0, target: 0, high: 0, total: 0 },
+      counts: { low: 0, target: 0, high: 0, total: 0 },
+    };
+
+    if (_.isNumber(this.bgBounds.veryLowThreshold)) {
+      initialValue.durations.veryLow = 0;
+      initialValue.counts.veryLow = 0;
+    }
+
+    if (_.isNumber(this.bgBounds.veryHighThreshold)) {
+      initialValue.durations.veryHigh = 0;
+      initialValue.counts.veryHigh = 0;
+    }
 
     const timeInRangeData = _.reduce(
       cbgData,
       (result, datum) => {
+        this.dataUtil.setDataAnnotations(datum);
         const classification = classifyBgValue(this.bgBounds, this.bgUnits, datum.value, 'fiveWay');
         const duration = datum.sampleInterval;
         result.durations[classification] += duration;
@@ -432,24 +469,7 @@ export class StatUtil {
         result.counts.total++;
         return result;
       },
-      {
-        durations: {
-          veryLow: 0,
-          low: 0,
-          target: 0,
-          high: 0,
-          veryHigh: 0,
-          total: 0,
-        },
-        counts: {
-          veryLow: 0,
-          low: 0,
-          target: 0,
-          high: 0,
-          veryHigh: 0,
-          total: 0,
-        },
-      }
+      initialValue
     );
 
     if (this.activeDays > 1) {
@@ -460,9 +480,9 @@ export class StatUtil {
   };
 
   getTotalInsulinData = () => {
-    const { basal, bolus } = this.getBasalBolusData();
+    const { basal, bolus, insulin } = this.getInsulinData();
 
-    const totalInsulin = _.reduce([basal, bolus], (result, value) => {
+    const totalInsulin = _.reduce([basal, bolus, insulin], (result, value) => {
       const delivered = _.isNaN(value) ? 0 : value || 0;
       return result + delivered;
     }, 0);

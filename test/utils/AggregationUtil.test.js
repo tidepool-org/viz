@@ -75,6 +75,11 @@ describe('AggregationUtil', () => {
     veryLowSMBG,
   ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
 
+  const insulinDose = new Types.Insulin({ deviceTime: '2018-02-02T01:00:00', ...useRawData });
+  const insulinData = _.map([
+    insulinDose,
+  ], d => ({ ..._.toPlainObject(d), id: generateGUID() }));
+
   const siteChange = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
   const cannulaPrime = { ...siteChange, subType: 'prime', primeTarget: 'cannula' };
   const reservoirChange = { ...siteChange, subType: 'reservoirChange' };
@@ -92,6 +97,7 @@ describe('AggregationUtil', () => {
     ...basalData,
     ...bolusData,
     ...fingerstickData,
+    ...insulinData,
     ...siteChangeData,
   ];
 
@@ -175,16 +181,6 @@ describe('AggregationUtil', () => {
     it('should set `initialActiveEndpoints` as clone of dataUtil.activeEndpoints', () => {
       expect(aggregationUtil.initialActiveEndpoints).to.eql(aggregationUtil.dataUtil.activeEndpoints);
     });
-
-    it('should set `rangeDates` from dataUtil.activeEndpoints option in correct time zone', () => {
-      expect(aggregationUtil.rangeDates).to.eql(['2018-02-01', '2018-02-03']);
-
-      aggregationUtil = createAggregationUtil(data, {
-        ...defaultOpts,
-        timePrefs: { timezoneName: 'US/Eastern' },
-      });
-      expect(aggregationUtil.rangeDates).to.eql(['2018-01-31', '2018-02-02']);
-    });
   });
 
   describe('aggregateBasals', () => {
@@ -266,19 +262,18 @@ describe('AggregationUtil', () => {
     });
 
     it('should summarize total count for all non-automated bolus events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.total).to.equal(8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.total).to.equal(9);
     });
 
     it('should summarize average daily number of bolus events in the entire date range', () => {
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.avgPerDay).to.equal(4);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.avgPerDay).to.equal(4.5);
     });
-
 
     it('should summarize total `correction`, `extended`, `interrupted`, `manual`, `automated`, `oneButton`, `override`, `underride`, and `wizard` bolus events for the entire date range', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.count).to.equal(1);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.count).to.equal(7);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.count).to.equal(8);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.oneButton.count).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.count).to.equal(1);
@@ -290,7 +285,7 @@ describe('AggregationUtil', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.correction.percentage).to.equal(1 / 8);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.extended.percentage).to.equal(1 / 8);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.interrupted.percentage).to.equal(1 / 8);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.percentage).to.equal(7 / 8);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.manual.percentage).to.equal(8 / 9);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.automated.percentage).to.equal(1 / 8);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.oneButton.percentage).to.equal(1 / 8);
       expect(aggregationUtil.aggregateBoluses(groupByDate).summary.subtotals.override.percentage).to.equal(1 / 8);
@@ -300,7 +295,7 @@ describe('AggregationUtil', () => {
 
     it('should summarize total count for all bolus events for each date in the date range', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].total).to.equal(7);
-      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].total).to.equal(1);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].total).to.equal(2);
     });
 
     it('should count total `correction`, `extended`, `interrupted`, `manual`, `automated`, `override`, `underride`, and `wizard` bolus events for each date in the date range', () => {
@@ -313,6 +308,7 @@ describe('AggregationUtil', () => {
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.override).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-01'].subtotals.underride).to.equal(1);
       expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].subtotals.wizard).to.equal(1);
+      expect(aggregationUtil.aggregateBoluses(groupByDate).byDate['2018-02-02'].subtotals.manual).to.equal(1);
     });
   });
 
@@ -553,6 +549,53 @@ describe('AggregationUtil', () => {
     it('should reset `dataUtil.activeEndpoints` to initial values after processing', () => {
       aggregationUtil.aggregateStatsByDate(groupByDate);
       expect(aggregationUtil.dataUtil.activeEndpoints).to.eql(aggregationUtil.initialActiveEndpoints);
+    });
+  });
+
+  describe('filterByActiveRange', () => {
+    const mockResultsArg = [
+      { key: '2025-08-04', value: { dataList: [] } },
+      { key: '2025-08-05', value: { dataList: [] } },
+      { key: '2025-08-06', value: { dataList: [] } },
+      { key: '2025-08-07', value: { dataList: [] } },
+      { key: '2025-08-08', value: { dataList: [] } },
+      { key: '2025-08-09', value: { dataList: [] } },
+    ];
+
+    beforeEach(() => {
+      aggregationUtil = createAggregationUtil(data, {
+        ...defaultOpts,
+        timePrefs: { timezoneName: 'US/Eastern' },
+      });
+    });
+
+    it('does NOT include data from the last date when endpoint range ends at midnight', () => {
+      aggregationUtil.initialActiveEndpoints.range = [
+        1754366400000, // 2025-08-05 at 00:00 (midnight) in US/Eastern
+        1754625600000, // 2025-08-08 at 00:00 (midnight) in US/Eastern
+      ];
+
+      // Here, we should only return data that occurred on the 5th, 6th, and 7th
+      expect(aggregationUtil.filterByActiveRange(mockResultsArg)).to.deep.equal([
+        { key: '2025-08-05', value: { dataList: [] } },
+        { key: '2025-08-06', value: { dataList: [] } },
+        { key: '2025-08-07', value: { dataList: [] } },
+      ]);
+    });
+
+    it('includes data from the last date when endpoint range does NOT end at midnight', () => {
+      aggregationUtil.initialActiveEndpoints.range = [
+        1754380800000, // 2025-08-05 at 4:00 AM in US/Eastern
+        1754640000000, // 2025-08-08 at 4:00 AM in US/Eastern
+      ];
+
+      // Here, we should return data that occurred on the 5th, 6th, 7th, and 8th
+      expect(aggregationUtil.filterByActiveRange(mockResultsArg)).to.deep.equal([
+        { key: '2025-08-05', value: { dataList: [] } },
+        { key: '2025-08-06', value: { dataList: [] } },
+        { key: '2025-08-07', value: { dataList: [] } },
+        { key: '2025-08-08', value: { dataList: [] } },
+      ]);
     });
   });
 });

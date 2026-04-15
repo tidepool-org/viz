@@ -19,10 +19,16 @@ describe('TextUtil', () => {
 
   const timePrefs = { timezoneName: 'US/Eastern', timezoneAware: true };
 
+  const copyAsTextMetadata = {
+    diagnosisTypeLabel: 'Type 3c',
+    patientTags: [{ id: '5', name: 'Yankee' }, { id: '6', name: 'Zulu' }],
+    sites: [{ id: '2', name: 'Bravo' }, { id: '1', name: 'Alpha' }],
+  };
+
   let textUtil;
 
   beforeEach(() => {
-    textUtil = new TextUtil(patient, endpoints, timePrefs);
+    textUtil = new TextUtil(patient, endpoints, timePrefs, copyAsTextMetadata);
   });
 
   describe('constructor', () => {
@@ -54,6 +60,13 @@ describe('TextUtil', () => {
       expect(result).to.include('Date of birth: Jan 1, 2000');
     });
 
+    it('should print the patient\'s diabetes type', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Diabetes Type', value: 'Type 3c' });
+      expect(result).to.include('Diabetes Type: Type 3c');
+    });
+
     it('should print the patient\'s diagnosis date', () => {
       sinon.spy(textUtil, 'buildTextLine');
       const result = textUtil.buildDocumentHeader();
@@ -66,6 +79,20 @@ describe('TextUtil', () => {
       const result = textUtil.buildDocumentHeader();
       sinon.assert.calledWith(textUtil.buildTextLine, { label: 'MRN', value: 'mrn123' });
       expect(result).to.include('MRN: mrn123');
+    });
+
+    it('should print the patient\'s tags', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Patient Tags', value: 'Yankee, Zulu' });
+      expect(result).to.include('Patient Tags: Yankee, Zulu');
+    });
+
+    it('should print the patient\'s sites', () => {
+      sinon.spy(textUtil, 'buildTextLine');
+      const result = textUtil.buildDocumentHeader();
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Clinic Sites', value: 'Alpha, Bravo' });
+      expect(result).to.include('Clinic Sites: Alpha, Bravo');
     });
 
     context('patient profile is missing fields', () => {
@@ -102,9 +129,33 @@ describe('TextUtil', () => {
   });
 
   describe('buildDocumentDates', () => {
-    it('should print the document reporting period', () => {
+    it('should print the dates only when bounds are midnight', () => {
+      const result = textUtil.buildDocumentDates({ showPartialDates: true });
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 - Feb 19, 2019\n');
+    });
+
+    it('should print the dates and times when bounds are not midnight', () => {
+      const testEndpoints = [
+        Date.parse('2019-02-01T08:00:00.000Z'), // Feb 01 @ 3 AM
+        Date.parse('2019-02-20T08:00:00.000Z'), // Feb 20 @ 3 AM
+      ];
+      textUtil = new TextUtil(patient, testEndpoints, timePrefs, copyAsTextMetadata);
+
+      const result = textUtil.buildDocumentDates({ showPartialDates: true });
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 (3:00 AM) - Feb 20, 2019 (3:00 AM)\n');
+    });
+
+    it('should print the document reporting period (with inclusive end date)', () => {
+      const testEndpoints = [
+        Date.parse('2019-02-01T08:00:00.000Z'), // Feb 01 @ 3 AM
+        Date.parse('2019-02-20T08:00:00.000Z'), // Feb 20 @ 3 AM
+      ];
+      textUtil = new TextUtil(patient, testEndpoints, timePrefs, copyAsTextMetadata);
       const result = textUtil.buildDocumentDates();
-      expect(result).to.equal('\nReporting Period: Feb 1 - Feb 19, 2019\n');
+
+      expect(result).to.equal('\nReporting Period: Feb 1, 2019 - Feb 20, 2019\n');
     });
   });
 

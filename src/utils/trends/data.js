@@ -83,7 +83,7 @@ export function categorizeSmbgSubtype(data) {
  *
  * @return {String}  Trends data as a formatted string
  */
-export function trendsText(patient, data, stats, chartPrefs) {
+export function trendsText(patient, data, stats, chartPrefs, copyAsTextMetadata) {
   const {
     bgPrefs,
     data: {
@@ -100,10 +100,10 @@ export function trendsText(patient, data, stats, chartPrefs) {
     bgBounds: utils.reshapeBgClassesToBgBounds(bgPrefs),
   });
 
-  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs);
+  const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
   let trendsString = textUtil.buildDocumentHeader('Trends');
 
-  trendsString += textUtil.buildDocumentDates();
+  trendsString += textUtil.buildDocumentDates({ showPartialDates: true });
 
   const excludedDays = _.map(_.keys(_.pickBy(chartPrefs.activeDays, day => day === false)), _.capitalize).join(', ');
   if (excludedDays.length) trendsString += textUtil.buildTextLine({ label: 'Excluded Days', value: excludedDays });

@@ -12,14 +12,11 @@ const EventsInfoTooltip = props => {
     sections: [
       {
         title: t('Pump Alarms Shown'),
-        note: t('Please note that not all pump alarms are shown.'),
+        note: t('Please note that pump alarms are only shown for the twiist AID system and not all alarms are shown.'),
         items: [
-          t('Insulin Delivery Stopped'),
-          t('Pump Auto-Off'),
-          t('Reservoir Empty'),
-          t('Battery Power Out'),
-          t('Occlusion Detected or Line Blocked'),
-          t('Insulin Delivery Limit Exceeded'),
+          t('Cassette Empty'),
+          t('Battery Empty'),
+          t('Line Blocked'),
         ],
       },
     ]

@@ -16,10 +16,10 @@ export class CBGDateTraceAnimated extends PureComponent {
   static propTypes = {
     animationDuration: PropTypes.number.isRequired,
     bgBounds: PropTypes.shape({
-      veryHighThreshold: PropTypes.number.isRequired,
+      veryHighThreshold: PropTypes.number,
       targetUpperBound: PropTypes.number.isRequired,
       targetLowerBound: PropTypes.number.isRequired,
-      veryLowThreshold: PropTypes.number.isRequired,
+      veryLowThreshold: PropTypes.number,
     }).isRequired,
     bgUnits: PropTypes.string.isRequired,
     cbgRadius: PropTypes.number.isRequired,

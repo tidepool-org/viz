@@ -1,5 +1,6 @@
 import _ from 'lodash';
 
+import moment from 'moment';
 import DataUtil from '../../src/utils/DataUtil';
 import StatUtil from '../../src/utils/StatUtil';
 import { types as Types, generateGUID } from '../../data/types';
@@ -213,6 +214,14 @@ describe('StatUtil', () => {
     }),
   ], _.toPlainObject);
 
+  const insulinData = _.map([
+    new Types.Insulin({
+      deviceTime: '2018-02-01T05:00:00',
+      dose: { total: 3 },
+      ...useRawData,
+    }),
+  ], _.toPlainObject);
+
   const smbgData = _.map([
     new Types.SMBG({
       value: 60,
@@ -291,6 +300,7 @@ describe('StatUtil', () => {
     ...cbgData,
     ...deviceEventData,
     ...foodData,
+    ...insulinData,
     ...smbgData,
     ...uploadData,
     ...wizardData,
@@ -425,29 +435,32 @@ describe('StatUtil', () => {
     });
   });
 
-  describe('getBasalBolusData', () => {
+  describe('getInsulinData', () => {
     it('should return the total basal and bolus insulin delivery when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
-      expect(statUtil.getBasalBolusData()).to.eql({
+      expect(statUtil.getInsulinData()).to.eql({
         basal: 1.5,
         bolus: 15,
+        insulin: 3,
       });
     });
 
     it('should return the avg daily total basal and bolus insulin delivery when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
-      expect(statUtil.getBasalBolusData()).to.eql({
+      expect(statUtil.getInsulinData()).to.eql({
         basal: 0.75,
         bolus: 7.5,
+        insulin: 1.5,
       });
     });
 
     it('calculates insulin delivery using only data-populated days when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       statUtil.activeDays = 7; // data only exists for 2 days; this should not impact the calculation
-      expect(statUtil.getBasalBolusData()).to.eql({
+      expect(statUtil.getInsulinData()).to.eql({
         basal: 0.75,
         bolus: 7.5,
+        insulin: 1.5,
       });
     });
 
@@ -455,18 +468,20 @@ describe('StatUtil', () => {
       it('should include the portion of delivery of a basal datum that overlaps the start endpoint', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
         filterEndpoints(dayEndpoints);
-        expect(statUtil.getBasalBolusData()).to.eql({
+        expect(statUtil.getInsulinData()).to.eql({
           basal: 2,
           bolus: 15,
+          insulin: 3,
         });
       });
 
       it('should include the portion of delivery of a basal datum that overlaps the end endpoint', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
         filterEndpoints(dayEndpoints);
-        expect(statUtil.getBasalBolusData()).to.eql({
+        expect(statUtil.getInsulinData()).to.eql({
           basal: 2.5,
           bolus: 15,
+          insulin: 3,
         });
       });
     });
@@ -539,27 +554,65 @@ describe('StatUtil', () => {
 
   describe('getCoefficientOfVariationData', () => {
     it('should return the coefficient of variation for cbg data', () => {
-      statUtil.bgSource = 'cbg';
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        })),
+      );
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
+
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
-        coefficientOfVariation: 68.47579720288888,
-        total: 5,
+        coefficientOfVariation: 8.121932051642304,
+        total: 32
       });
     });
 
-    it('should return the coefficient of variation for cbg data', () => {
+    it('should return the coefficient of variation for smbg data', () => {
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.SMBG({
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'smbg' }));
       statUtil.bgSource = 'smbg';
+
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
-        coefficientOfVariation: 69.0941762401971,
-        total: 5,
+        coefficientOfVariation: 8.121932051642304,
+        total: 32,
       });
     });
 
-    it('should return `NaN` when less than 3 datums available', () => {
-      statUtil = createStatUtil(smbgData.slice(0, 2), opts({ bgSource: 'smbg' }));
+    it('should return NaN when there are fewer than 30 datums', () => {
+      const mockData = _.times(
+        28,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        })),
+      );
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
+
       expect(statUtil.getCoefficientOfVariationData()).to.eql({
         coefficientOfVariation: NaN,
+        total: 28,
         insufficientData: true,
-        total: 2,
       });
     });
   });
@@ -656,9 +709,36 @@ describe('StatUtil', () => {
 
     it('should return the GMI data when viewing at least 14 days of data and 70% coverage', () => {
       const requiredDexcomDatums = 2823; // 288(total daily possible readings) * .7(%required) * 14(days)
+
+      const sampleDatum = cbgData[4];
+
+      // We are using a sample cbgDatum and cloning it 2,830 times for this test. However,
+      // since all of the cloned data will have the same timestamp, the Data Worker would
+      // deduplicate it until there is only one datum remaining. We need to ensure that the
+      // data has sequential and well-spaced timestamps to preserve all the data.
+      const sampleDatumTimes = (() => {
+        const sampleDatumTimeMs = moment(sampleDatum.time).valueOf();
+        const times = [];
+
+        for (let i = 0; i <= requiredDexcomDatums; i++) {
+          const updatedTime = moment(sampleDatumTimeMs + (5 * MS_IN_MIN * i));
+          const time = updatedTime.toISOString();
+          const deviceTime = updatedTime.format('YYYY-MM-DDTHH:mm:ss');
+
+          times.push({ time, deviceTime });
+        }
+
+        return times;
+      })();
+
       const sufficientData = _.map(
-        _.fill(Array(requiredDexcomDatums), cbgData[4], 0, requiredDexcomDatums),
-        d => ({ ...d, id: generateGUID() })
+        _.fill(Array(requiredDexcomDatums), sampleDatum, 0, requiredDexcomDatums),
+        (d, i) => ({
+          ...d,
+          id: generateGUID(),
+          time: sampleDatumTimes[i].time,
+          deviceTime: sampleDatumTimes[i].deviceTime
+        })
       );
 
       statUtil = createStatUtil(sufficientData, defaultOpts);
@@ -727,39 +807,99 @@ describe('StatUtil', () => {
   });
 
   describe('getReadingsInRangeData', () => {
-    it('should return the readings in range data when viewing 1 day', () => {
-      filterEndpoints(dayEndpoints);
-      expect(statUtil.getReadingsInRangeData()).to.eql({
-        counts: {
-          veryLow: 0,
-          low: 1,
-          target: 2,
-          high: 1,
-          veryHigh: 1,
-          total: 5,
-        },
+    describe('when using default glycemic ranges', () => {
+      it('should return the readings in range data when viewing 1 day', () => {
+        filterEndpoints(dayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            veryLow: 0,
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+        });
+      });
+
+      it('should return the avg daily readings in range data when viewing more than 1 day', () => {
+        filterEndpoints(twoDayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            veryLow: 0,
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+          dailyAverages: {
+            veryLow: 0,
+            low: 0.5,
+            target: 1,
+            high: 0.5,
+            veryHigh: 0.5,
+            total: 5,
+          },
+        });
       });
     });
 
-    it('should return the avg daily readings in range data when viewing more than 1 day', () => {
-      filterEndpoints(twoDayEndpoints);
-      expect(statUtil.getReadingsInRangeData()).to.eql({
-        counts: {
-          veryLow: 0,
-          low: 1,
-          target: 2,
-          high: 1,
-          veryHigh: 1,
-          total: 5,
+    describe('when using non-standard glycemic ranges', () => {
+      const nonStandardOpts = {
+        bgPrefs: {
+          bgClasses: {
+            // no veryLow,
+            low: { boundary: 70 },
+            target: { boundary: 180 },
+            high: { boundary: 250 },
+          },
+          bgBounds: {
+            // no veryLow
+            targetLowerBound: 70,
+            targetUpperBound: 180,
+            veryHighThreshold: 250,
+          },
+          bgUnits: MGDL_UNITS,
         },
-        dailyAverages: {
-          veryLow: 0,
-          low: 0.5,
-          target: 1,
-          high: 0.5,
-          veryHigh: 0.5,
-          total: 5,
-        },
+        endpoints: dayEndpoints,
+      };
+
+      it('should return the readings in range data when viewing 1 day', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+
+        filterEndpoints(dayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+        });
+      });
+
+      it('should return the avg daily readings in range data when viewing more than 1 day', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+
+        filterEndpoints(twoDayEndpoints);
+        expect(statUtil.getReadingsInRangeData()).to.eql({
+          counts: {
+            low: 1,
+            target: 2,
+            high: 1,
+            veryHigh: 1,
+            total: 5,
+          },
+          dailyAverages: {
+            low: 0.5,
+            target: 1,
+            high: 0.5,
+            veryHigh: 0.5,
+            total: 5,
+          },
+        });
       });
     });
   });
@@ -770,6 +910,19 @@ describe('StatUtil', () => {
       statUtil.getSensorUsage();
       expect(spy.called).to.be.true;
       spy.restore();
+    });
+
+    it('should call setDataAnnotations with each datum', () => {
+      const spy = sinon.spy(statUtil.dataUtil, 'setDataAnnotations');
+      const normalizeStub = sinon.stub(statUtil.dataUtil, 'normalizeDatumOut'); // to avoid also calling setDataAnnotations from within normalizeDatumOut
+      filterEndpoints(twoWeekEndpoints); // use all the datums
+      statUtil.getSensorUsage();
+      sinon.assert.callCount(spy, cbgData.length);
+      _.each(cbgData, (d) => {
+        sinon.assert.calledWith(statUtil.dataUtil.setDataAnnotations, sinon.match({ id: d.id }));
+      });
+      spy.restore();
+      normalizeStub.restore();
     });
 
     it('should return the duration of sensor usage and total duration of the endpoint range', () => {
@@ -822,30 +975,69 @@ describe('StatUtil', () => {
     });
 
     it('should return the average glucose and standard deviation for cbg data', () => {
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg' }));
       statUtil.bgSource = 'cbg';
+
       expect(statUtil.getStandardDevData()).to.eql({
-        averageGlucose: 132,
-        standardDeviation: 90.38805230781334,
-        total: 5,
+        averageGlucose: 115.5,
+        standardDeviation: 9.380831519646861,
+        total: 32,
       });
     });
 
     it('should return the average glucose and standard deviation for smbg data', () => {
+      const mockData = _.times(
+        32,
+        i => _.toPlainObject(new Types.SMBG({
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'smbg' }));
       statUtil.bgSource = 'smbg';
+
       expect(statUtil.getStandardDevData()).to.eql({
-        averageGlucose: 136,
-        standardDeviation: 93.96807968666806,
-        total: 5,
+        averageGlucose: 115.5,
+        standardDeviation: 9.380831519646861,
+        total: 32,
       });
     });
 
-    it('should return `NaN` when less than 3 datums available', () => {
-      statUtil = createStatUtil(smbgData.slice(0, 2), opts({ bgSource: 'smbg' }));
+    it('should return NaN when there are fewer than 30 datums', () => {
+      const mockData = _.times(
+        28,
+        i => _.toPlainObject(new Types.CBG({
+          deviceId: 'Dexcom-XXX-XXXX',
+          sampleInterval: 15 * MS_IN_MIN,
+          value: i + 100,
+          // 2018-02-01T00:00:00 to 2018-02-01T07:45:00
+          deviceTime: `2018-02-01T0${Math.floor(i / 4) || '0'}:${((i + 4) % 4) * 15 || '00'}:00`,
+          ...useRawData,
+        }),
+      ));
+
+      statUtil = createStatUtil(mockData, opts({ bgSource: 'cbg', bgPrefs }));
+
       expect(statUtil.getStandardDevData()).to.eql({
-        averageGlucose: 65,
-        standardDeviation: NaN,
+        averageGlucose: 113.5,
         insufficientData: true,
-        total: 2,
+        standardDeviation: NaN,
+        total: 28
       });
     });
   });
@@ -934,6 +1126,20 @@ describe('StatUtil', () => {
       spy.restore();
     });
 
+    it('should call setDataAnnotations with each datum', () => {
+      const spy = sinon.spy(statUtil.dataUtil, 'setDataAnnotations');
+      const normalizeStub = sinon.stub(statUtil.dataUtil, 'normalizeDatumOut'); // to avoid also calling setDataAnnotations from within normalizeDatumOut
+      filterEndpoints(twoWeekEndpoints); // use all the datums
+      statUtil.getTimeInRangeData();
+      sinon.assert.callCount(spy, cbgData.length);
+      _.each(cbgData, (d) => {
+        sinon.assert.calledWith(statUtil.dataUtil.setDataAnnotations, sinon.match({ id: d.id }));
+      });
+
+      spy.restore();
+      normalizeStub.restore();
+    });
+
     it('should return the time in range data when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
 
@@ -945,38 +1151,134 @@ describe('StatUtil', () => {
         veryHigh: MS_IN_MIN * 5,
         total: MS_IN_MIN * 55,
       });
+    });
 
-      expect(statUtil.getTimeInRangeData().counts).to.eql({
-        veryLow: 1,
-        low: 1,
-        target: 1,
-        high: 1,
-        veryHigh: 1,
-        total: 5,
+    describe('when using default glycemic ranges', () => {
+      it('should call filterCBGDataByDefaultSampleInterval', () => {
+        const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+        statUtil.getTimeInRangeData();
+        expect(spy.calledOnce).to.be.true;
+        spy.restore();
+      });
+
+      it('should return the time in range data when viewing 1 day', () => {
+        filterEndpoints(dayEndpoints);
+
+        expect(statUtil.getTimeInRangeData().durations).to.eql({
+          veryLow: MS_IN_MIN * 15,
+          low: MS_IN_MIN * 15,
+          target: MS_IN_MIN * 15,
+          high: MS_IN_MIN * 5,
+          veryHigh: MS_IN_MIN * 5,
+          total: MS_IN_MIN * 55,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 1,
+          veryHigh: 1,
+          total: 5,
+        });
+      });
+
+      it('should return the avg daily time in range data when viewing more than 1 day', () => {
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getTimeInRangeData();
+        const totalDuration = result.durations.total;
+
+        expect(result.durations).to.eql({
+          veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          high: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
+          veryHigh: ((MS_IN_MIN * 5) / totalDuration * MS_IN_DAY) * 2,
+          total: MS_IN_MIN * 60,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 1,
+          veryHigh: 2,
+          total: 6,
+        });
       });
     });
 
-    it('should return the avg daily time in range data when viewing more than 1 day', () => {
-      filterEndpoints(twoDayEndpoints);
-      const result = statUtil.getTimeInRangeData();
-      const totalDuration = result.durations.total;
+    describe('when using non-standard glycemic ranges', () => {
+      const nonStandardOpts = {
+        bgPrefs: {
+          bgClasses: {
+            'very-low': { boundary: 54 },
+            low: { boundary: 70 },
+            target: { boundary: 180 },
+            // no veryHigh
+          },
+          bgBounds: {
+            veryLowThreshold: 54,
+            targetLowerBound: 70,
+            targetUpperBound: 180,
+            // no veryHigh
+          },
+          bgUnits: MGDL_UNITS,
+        },
+        endpoints: dayEndpoints,
+      };
 
-      expect(result.durations).to.eql({
-        veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
-        low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
-        target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
-        high: (MS_IN_MIN * 5) / totalDuration * MS_IN_DAY,
-        veryHigh: ((MS_IN_MIN * 5) / totalDuration * MS_IN_DAY) * 2,
-        total: MS_IN_MIN * 60,
+      it('should call filterCBGDataByDefaultSampleInterval', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+
+        const spy = sinon.spy(statUtil, 'filterCBGDataByDefaultSampleInterval');
+        statUtil.getTimeInRangeData();
+        expect(spy.calledOnce).to.be.true;
+        spy.restore();
       });
 
-      expect(statUtil.getTimeInRangeData().counts).to.eql({
-        veryLow: 1,
-        low: 1,
-        target: 1,
-        high: 1,
-        veryHigh: 2,
-        total: 6,
+      it('should return the time in range data when viewing 1 day', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+        filterEndpoints(dayEndpoints);
+
+        expect(statUtil.getTimeInRangeData().durations).to.eql({
+          veryLow: MS_IN_MIN * 15,
+          low: MS_IN_MIN * 15,
+          target: MS_IN_MIN * 15,
+          high: MS_IN_MIN * 10,
+          total: MS_IN_MIN * 55,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 2,
+          total: 5,
+        });
+      });
+
+      it('should return the avg daily time in range data when viewing more than 1 day', () => {
+        statUtil = createStatUtil(data, nonStandardOpts);
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getTimeInRangeData();
+        const totalDuration = result.durations.total;
+
+        expect(result.durations).to.eql({
+          veryLow: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          low: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          target: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          high: (MS_IN_MIN * 15) / totalDuration * MS_IN_DAY,
+          total: MS_IN_MIN * 60,
+        });
+
+        expect(statUtil.getTimeInRangeData().counts).to.eql({
+          veryLow: 1,
+          low: 1,
+          target: 1,
+          high: 3,
+          total: 6,
+        });
       });
     });
   });
@@ -985,14 +1287,14 @@ describe('StatUtil', () => {
     it('should return the total basal and bolus insulin delivery when viewing 1 day', () => {
       filterEndpoints(dayEndpoints);
       expect(statUtil.getTotalInsulinData()).to.eql({
-        totalInsulin: 16.5,
+        totalInsulin: 19.5,
       });
     });
 
     it('should return the avg daily total basal and bolus insulin delivery when viewing more than 1 day', () => {
       filterEndpoints(twoDayEndpoints);
       expect(statUtil.getTotalInsulinData()).to.eql({
-        totalInsulin: 8.25,
+        totalInsulin: 9.75,
       });
     });
 
@@ -1001,7 +1303,7 @@ describe('StatUtil', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingStart], patientId);
         filterEndpoints(dayEndpoints);
         expect(statUtil.getTotalInsulinData()).to.eql({
-          totalInsulin: 17,
+          totalInsulin: 20,
         });
       });
 
@@ -1009,7 +1311,7 @@ describe('StatUtil', () => {
         statUtil.dataUtil.addData([basalDatumOverlappingEnd], patientId);
         filterEndpoints(dayEndpoints);
         expect(statUtil.getTotalInsulinData()).to.eql({
-          totalInsulin: 17.5,
+          totalInsulin: 20.5,
         });
       });
     });

@@ -166,7 +166,9 @@ export function formatDiagnosisDate(patient) {
  * formatDateRange
  * @param {String|Date} startDate - A moment-compatible date object or string
  * @param {String|Date} endDate - A moment-compatible date object or string
- * @param {String} format - Optional. The moment format string to parse startDate and endDate with
+ * @param {String} dateParseFormat - Optional. The moment format string to parse startDate and endDate with
+ *
+ * @return {String} formatted date range for display
  */
 export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat = 'MMM') {
   const start = moment.utc(startDate, dateParseFormat);
@@ -180,6 +182,36 @@ export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat
   const formattedRange = isSameDay ? endFormat : `${startFormat} - ${endFormat}`;
 
   return formattedRange;
+}
+
+export const CHART_DATE_BOUND_FORMAT = {
+  DATE_AND_TIME: 'MMM D, YYYY (h:mm A)',
+  DATE_ONLY: 'MMM D, YYYY',
+};
+
+/**
+ * getChartDateBoundFormat
+ * @param {Object} startDate - a moment time object
+ * @param {Object} endDate - a moment time object
+ *
+ * @return {String} a moment time format (e.g 'MMM D, YYYY')
+ */
+export function getChartDateBoundFormat(startDate, endDate) {
+  if (!endDate) return CHART_DATE_BOUND_FORMAT.DATE_ONLY;
+
+  const isStartDateMidnight = (startDate?.hours() === 0 && startDate?.minutes() === 0) ||
+                              (startDate?.hours() === 23 && startDate?.minutes() >= 59);
+
+  const isEndDateMidnight = (endDate?.hours() === 0 && endDate?.minutes() === 0) ||
+                            (endDate?.hours() === 23 && endDate?.minutes() >= 59);
+
+  const isMatchingDateBounds = isStartDateMidnight && isEndDateMidnight;
+
+  if (!isMatchingDateBounds) {
+    return CHART_DATE_BOUND_FORMAT.DATE_AND_TIME;
+  }
+
+  return CHART_DATE_BOUND_FORMAT.DATE_ONLY;
 }
 
 /**
@@ -280,24 +312,30 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
  * getLocalizedCeiling
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {Object} timePrefs - object containing timezoneAware Boolean and timezoneName String
+ * @param {String} period - the period to round the timestamp to the ceiling of
  *
- * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
+ * @return {Object} a JavaScript Date, the start of the next closes period according timePrefs;
+ *                  If period is 'day', this fn returns the closest future midnight
+ *                  If period is 'hour', this fn returns the start of the closest future hour
  *                  if utc is already local midnight, returns utc
  */
-export function getLocalizedCeiling(utc, timePrefs) {
+export function getLocalizedCeiling(utc, timePrefs, period = 'day') {
   if (utc instanceof Date) {
     throw new Error('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
   }
+  if (!_.includes(['day', 'hour'], period)) {
+    throw new Error('`period` must be either "day" or "hour"');
+  }
   const timezone = getTimezoneFromTimePrefs(timePrefs);
-  const startOfDay = moment.utc(utc)
+  const startOfPeriod = moment.utc(utc)
     .tz(timezone)
-    .startOf('day');
+    .startOf(period);
 
   const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
-  if (startOfDay.valueOf() === utcHammertime) {
-    return startOfDay.toDate();
+  if (startOfPeriod.valueOf() === utcHammertime) {
+    return startOfPeriod.toDate();
   }
-  return startOfDay.add(1, 'day').toDate();
+  return startOfPeriod.add(1, period).toDate();
 }
 
 /**

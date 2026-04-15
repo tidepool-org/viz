@@ -123,6 +123,7 @@ describe('basics data utils', () => {
           'interrupted',
           'override',
           'underride',
+          'manual',
         ]);
       });
     });
@@ -164,6 +165,28 @@ describe('basics data utils', () => {
       const veryLowFilter = _.find(result.fingersticks.dimensions, { key: 'veryLow' });
       expect(veryHighFilter.label).to.equal('Above 300 mg/dL');
       expect(veryLowFilter.label).to.equal('Below 55 mg/dL');
+    });
+
+    it('should set the fingerstick filter labels correctly for mg/dL data when veryLow is not specified', () => {
+      const noVeryLowBgPrefs = {
+        [MGDL_UNITS]: {
+          bgBounds: {
+            veryHighThreshold: 300,
+            targetUpperBound: 180,
+            targetLowerBound: 70,
+            veryLowThreshold: null,
+          },
+          bgUnits: MGDL_UNITS,
+        }
+      };
+
+      const result = dataUtils.defineBasicsAggregations(noVeryLowBgPrefs[MGDL_UNITS]);
+      const veryHighFilter = _.find(result.fingersticks.dimensions, { key: 'veryHigh' });
+      const veryLowFilter = _.find(result.fingersticks.dimensions, { key: 'veryLow' });
+      const lowFilter = _.find(result.fingersticks.dimensions, { key: 'low' });
+      expect(veryHighFilter.label).to.equal('Above 300 mg/dL');
+      expect(veryLowFilter).to.equal(undefined);
+      expect(lowFilter.label).to.equal('Below 70 mg/dL');
     });
 
     it('should set the veryLow and veryHigh fingerstick filter labels correctly for mmol/L data', () => {
@@ -214,7 +237,7 @@ describe('basics data utils', () => {
 
       it('should add a one-button bolus selector', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
-        expect(result.boluses.dimensions[7].key).to.equal('oneButton');
+        expect(result.boluses.dimensions[8].key).to.equal('oneButton');
       });
 
       it('should set `selectorIndex` for underrides to render directly after overrides', () => {

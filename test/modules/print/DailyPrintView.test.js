@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -138,6 +138,7 @@ describe('DailyPrintView', () => {
         { prop: 'hasCarbExchanges', type: 'boolean' },
         { prop: 'basalGroupLabels', type: 'object' },
         { prop: 'pumpSettingsOverrideLabels', type: 'object' },
+        { prop: 'legendItems', type: 'array' },
         { prop: 'initialChartArea', type: 'object', value: {
           bottomEdge: opts.margins.top + opts.height,
           leftEdge: opts.margins.left +
@@ -191,6 +192,114 @@ describe('DailyPrintView', () => {
       expect(Renderer.chartsByDate[sampleDate].bolusScale).to.be.a('function');
       expect(Renderer.chartsByDate[sampleDate].basalScale).to.be.a('function');
       expect(Renderer.chartsByDate[sampleDate].xScale).to.be.a('function');
+    });
+  });
+
+  describe('getLegendItems', () => {
+    beforeEach(() => {
+      // Reset any state that might affect legend items
+      Renderer.hasAlarms = false;
+      Renderer.hasCarbExchanges = false;
+      Renderer.isAutomatedBolusDevice = false;
+    });
+
+    it('should return basic legend items for standard pump data', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      expect(legendItems).to.be.an('array');
+      expect(legendItems.length).to.be.greaterThan(0);
+
+      // Should include basic items
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('cbg');
+      expect(itemIds).to.include('smbg');
+      expect(itemIds).to.include('bolus');
+      expect(itemIds).to.include('basals');
+      expect(itemIds).to.include('carbs');
+    });
+
+    it('should include carb exchanges when present in dataset', () => {
+      Renderer.hasCarbExchanges = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('carbs');
+
+      const carbItem = _.find(legendItems, item => item.type === 'carbs');
+      expect(carbItem.labels).to.deep.equal(['Carbs (g)', 'Carb exch.']);
+    });
+
+    it('should not include carb exchanges when not present in dataset', () => {
+      Renderer.hasCarbExchanges = false;
+      const legendItems = Renderer.getLegendItems();
+
+      const carbItem = _.find(legendItems, item => item.type === 'carbs');
+      if (carbItem) {
+        expect(carbItem.labels).to.deep.equal(['Carbs (g)']);
+      }
+    });
+
+    it('should include automated bolus items when device supports automated boluses', () => {
+      Renderer.isAutomatedBolusDevice = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('bolus');
+
+      const automatedBolusItem = _.find(legendItems, item => item.type === 'bolus');
+      expect(automatedBolusItem.labels).to.deep.equal(['Bolus', 'manual &', 'automated']);
+    });
+
+    it('should include alarm items when alarms are present', () => {
+      Renderer.hasAlarms = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('alarms');
+
+      const alarmItem = _.find(legendItems, item => item.type === 'alarms');
+      expect(alarmItem.labels).to.deep.equal(['Pump', 'Alarm']);
+    });
+
+    it('should include pump settings override items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('override');
+
+      const overrideItem = _.find(legendItems, item => item.type === 'override');
+      expect(overrideItem.labels).to.deep.equal(['Override', 'up & down']);
+    });
+
+    it('should include interrupted bolus items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('interrupted');
+
+      const interruptedItem = _.find(legendItems, item => item.type === 'interrupted');
+      expect(interruptedItem.labels).to.deep.equal(['Interrupted']);
+    });
+
+    it('should include extended bolus items', () => {
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('extended');
+
+      const extendedItem = _.find(legendItems, item => item.type === 'extended');
+      expect(extendedItem.labels).to.deep.equal(['Combo /', 'Extended']);
+    });
+
+    it('should include automated basal items when device supports automated basals', () => {
+      Renderer.isAutomatedBasalDevice = true;
+      const legendItems = Renderer.getLegendItems();
+
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('basals');
+
+      const automatedBasalItem = _.find(legendItems, item => item.type === 'basals');
+      expect(automatedBasalItem.labels).to.deep.equal(['Basals', 'automated &', 'manual']);
     });
   });
 
@@ -320,6 +429,7 @@ describe('DailyPrintView', () => {
       sinon.stub(Renderer, 'renderSummary').returns(Renderer);
       sinon.stub(Renderer, 'renderXAxes').returns(Renderer);
       sinon.stub(Renderer, 'renderYAxes').returns(Renderer);
+      sinon.stub(Renderer, 'renderDeviceEvents').returns(Renderer);
       sinon.stub(Renderer, 'renderCbgs').returns(Renderer);
       sinon.stub(Renderer, 'renderSmbgs').returns(Renderer);
       sinon.stub(Renderer, 'renderInsulinEvents').returns(Renderer);
@@ -340,6 +450,7 @@ describe('DailyPrintView', () => {
       sinon.assert.callCount(Renderer.renderSummary, numCharts);
       sinon.assert.callCount(Renderer.renderXAxes, numCharts);
       sinon.assert.callCount(Renderer.renderYAxes, numCharts);
+      sinon.assert.callCount(Renderer.renderDeviceEvents, numCharts);
       sinon.assert.callCount(Renderer.renderCbgs, numCharts);
       sinon.assert.callCount(Renderer.renderSmbgs, numCharts);
       sinon.assert.callCount(Renderer.renderInsulinEvents, numCharts);
@@ -402,7 +513,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, formattedDate);
     });
 
-    it('should render the time in target', () => {
+    it('should render the time in target and time below veryLowThreshold', () => {
       const { targetUpperBound, targetLowerBound, veryLowThreshold } = Renderer.bgBounds;
 
       sinon.assert.calledWith(Renderer.doc.text, 'Time in Target');
@@ -484,6 +595,48 @@ describe('DailyPrintView', () => {
       it('should render the Average BG in mmol/L with correct formatting', () => {
         sinon.assert.calledWith(Renderer.doc.text, 'Avg Glucose');
         sinon.assert.calledWith(Renderer.doc.text, '12.3 mmol/L');
+      });
+    });
+
+    context('mmol/L support with non-standard range that has no veryLow threshold', () => {
+      const nonStandardBgPrefs = {
+        bgBounds: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS],
+        bgClasses: {
+          'very-low': { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].veryLowThreshold }, // is null
+          low: { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].targetLowerBound },
+          target: { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].targetUpperBound },
+          high: { boundary: ADA_OLDER_HIGH_RISK_BG_BOUNDS[MMOLL_UNITS].veryHighThreshold },
+        },
+        bgUnits: MMOLL_UNITS,
+      };
+
+      beforeEach(() => {
+        Renderer = new DailyPrintView(doc, _.assign({}, data, { bgPrefs: nonStandardBgPrefs }), opts);
+        args = setArgs(Renderer);
+        Renderer.aggregationsByDate.statsByDate[sampleDate] = {
+          averageGlucose: {
+            averageGlucose: 12.25,
+          },
+          timeInRange: {
+            durations: {
+              target: MS_IN_HOUR * 3,
+              veryLow: MS_IN_HOUR,
+              total: MS_IN_HOUR * 4,
+            },
+          },
+        };
+        Renderer.renderSummary(args);
+      });
+
+      it('should render the time in target range labels in mmol/L with correct formatting', () => {
+        const { targetUpperBound, targetLowerBound } = Renderer.bgBounds;
+        const text = {
+          targetUpper: formatDecimalNumber(targetUpperBound, 1),
+          targetLower: formatDecimalNumber(targetLowerBound, 1),
+        };
+        sinon.assert.calledWith(Renderer.doc.text, 'Time in Target');
+        sinon.assert.calledWith(Renderer.doc.text, `${text.targetLower} - ${text.targetUpper}`);
+        sinon.assert.calledWith(Renderer.doc.text, `Below ${text.targetLower}`);
       });
     });
   });
@@ -648,6 +801,22 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 80);
     });
 
+    it('should graph only the bolus if the carb input was generated from food data', () => {
+      Renderer.chartsByDate[sampleDate].data.bolus[2].carbInputGeneratedFromFoodData = true;
+      expect(Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput).to.equal(80);
+
+      const bolusCount = Renderer.chartsByDate[sampleDate].data.bolus.length;
+
+      sinon.stub(Renderer, 'renderEventPath');
+      Renderer.renderInsulinEvents(Renderer.chartsByDate[sampleDate]);
+
+      expect(Renderer.renderEventPath.callCount >= bolusCount).to.be.true;
+      sinon.assert.notCalled(Renderer.doc.circle);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.neverCalledWith(Renderer.doc.fill, Renderer.colors.carbExchanges);
+      sinon.assert.neverCalledWith(Renderer.doc.text, 80);
+    });
+
     it('should graph carb exchange events', () => {
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbUnits = 'exchanges';
       Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput = 3;
@@ -682,6 +851,50 @@ describe('DailyPrintView', () => {
       const expectedTextCallCount = bolusCount * 2 + 1;
 
       sinon.assert.callCount(Renderer.doc.text, expectedTextCallCount);
+    });
+
+    it('should truncate bolus details to 50 lines and add an ellipsis as the 51st entry', () => {
+      // 25 extended boluses (2 lines each, 3 text() calls each) = 50 lines, 75 text() calls
+      const boluses = _.times(25, i => ({ normalTime: i * 1000, threeHrBin: 0, extended: 1 }));
+      // Add 1 more normal bolus, which should not be rendered
+      boluses.push({ normalTime: 99999, threeHrBin: 0 });
+      const chart = {
+        bolusDetailPositions: [0],
+        bolusDetailWidths: [100],
+        bolusScale: { range: () => [0, 100] },
+        data: { bolus: boluses },
+        timePrefs: {},
+      };
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      sinon.stub(RendererLocal, 'timePrefs').value({});
+      RendererLocal.renderBolusDetails(chart);
+      // 25 extended boluses * 3 text calls = 75, plus 1 ellipsis
+      const expectedMinCalls = 75 + 1;
+      sinon.assert.callCount(RendererLocal.doc.text, expectedMinCalls);
+      sinon.assert.calledWith(RendererLocal.doc.text, '…');
+    });
+
+    it('should not add an ellipsis if 50 or fewer lines', () => {
+      // 24 extended boluses (2 lines each) = 48 lines, 2 normal boluses = 2 lines, total 50
+      const boluses = [
+        ..._.times(24, i => ({ normalTime: i * 1000, threeHrBin: 0, extended: 1 })),
+        { normalTime: 99998, threeHrBin: 0 },
+        { normalTime: 99999, threeHrBin: 0 },
+      ];
+      const chart = {
+        bolusDetailPositions: [0],
+        bolusDetailWidths: [100],
+        bolusScale: { range: () => [0, 100] },
+        data: { bolus: boluses },
+        timePrefs: {},
+      };
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      sinon.stub(RendererLocal, 'timePrefs').value({});
+      RendererLocal.renderBolusDetails(chart);
+      // 24*3 + 2*2 = 76 calls
+      const expectedMinCalls = 76;
+      sinon.assert.callCount(RendererLocal.doc.text, expectedMinCalls);
+      sinon.assert.neverCalledWith(RendererLocal.doc.text, '…');
     });
   });
 
@@ -773,19 +986,20 @@ describe('DailyPrintView', () => {
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
 
+      Renderer.hasAlarms = true;
       Renderer.renderLegend();
 
-      sinon.assert.calledWith(Renderer.doc.text, 'Legend');
       sinon.assert.calledWith(Renderer.doc.text, 'CGM');
       sinon.assert.calledWith(Renderer.doc.text, 'BGM');
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
-      sinon.assert.calledWith(Renderer.doc.text, 'Override up & down');
+      sinon.assert.calledWith(Renderer.doc.text, 'Override');
+      sinon.assert.calledWith(Renderer.doc.text, 'up & down');
       sinon.assert.calledWith(Renderer.doc.text, 'Interrupted');
       sinon.assert.calledWith(Renderer.doc.text, 'Combo /');
       sinon.assert.calledWith(Renderer.doc.text, 'Extended');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch');
       sinon.assert.calledWith(Renderer.doc.text, 'Basals');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
+      sinon.assert.neverCalledWith(Renderer.doc.text, 'Carb exch.');
 
       // All of the bolus visual elements are called by renderEventPath
       // And the paths total 13
@@ -810,22 +1024,93 @@ describe('DailyPrintView', () => {
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Carbs (g)');
-      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch');
+      sinon.assert.calledWith(Renderer.doc.text, 'Carb exch.');
 
-      // CGM and BGM data calls (11) + one for carbs + 1 for carb exchanges
-      sinon.assert.callCount(Renderer.doc.circle, 13);
+      // one for carbs + 1 for carb exchanges
+      sinon.assert.callCount(Renderer.doc.circle, 2);
     });
 
     it('should render the legend with automated boluses when pump is an automated bolus device', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        metaData: {
+          ...data.metaData,
+          latestPumpUpload: { isAutomatedBolusDevice: true },
+        },
+      }, opts);
+
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
-
-      Renderer.isAutomatedBolusDevice = true;
 
       Renderer.renderLegend();
 
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
-      sinon.assert.calledWith(Renderer.doc.text, 'manual & automated');
+      sinon.assert.calledWith(Renderer.doc.text, 'manual &');
+      sinon.assert.calledWith(Renderer.doc.text, 'automated');
+    });
+
+    it('should render the legend with pump alarms when present in dataset', () => {
+      doc = new Doc({ margin: MARGIN });
+      Renderer = new DailyPrintView(doc, {
+        ...data,
+        data: { current: { data: { deviceEvent: [{ type: 'deviceEvent', tags: { alarm: true } }] } } },
+      }, opts);
+
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Pump');
+      sinon.assert.calledWith(Renderer.doc.text, 'Alarm');
+      sinon.assert.calledWith(Renderer.doc.image, 'images/alarm.png');
+    });
+  });
+
+  describe('countBolusLinesWithLimit', () => {
+    it('should count lines for normal boluses only', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      const boluses = _.times(10, i => ({ normalTime: i * 1000 }));
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(10);
+      expect(result.bolusesToRender.length).to.equal(10);
+      expect(result.needsEllipsis).to.be.false;
+    });
+
+    it('should count lines for extended boluses', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      const boluses = _.times(5, i => ({ normalTime: i * 1000, extended: 1 }));
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(10);
+      expect(result.bolusesToRender.length).to.equal(5);
+      expect(result.needsEllipsis).to.be.false;
+    });
+
+    it('should count lines for mixed boluses', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      const boluses = [
+        { normalTime: 0 },
+        { normalTime: 1, extended: 1 },
+        { normalTime: 2 },
+        { normalTime: 3, expectedExtended: 1 },
+      ];
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(6);
+      expect(result.bolusesToRender.length).to.equal(4);
+      expect(result.needsEllipsis).to.be.false;
+    });
+
+    it('should stop at maxLines and set needsEllipsis if exceeded', () => {
+      const RendererLocal = new DailyPrintView(new Doc({ margin: MARGIN }), { data: { current: { data: {} } }, dataByDate: {} }, opts);
+      // 25 extended boluses (2 lines each) = 50 lines
+      const boluses = _.times(25, i => ({ normalTime: i * 1000, extended: 1 }));
+      // Add 1 more normal bolus, which should not be rendered
+      boluses.push({ normalTime: 99999 });
+      const result = RendererLocal.countBolusLinesWithLimit(boluses, 50);
+      expect(result.count).to.equal(50);
+      expect(result.bolusesToRender.length).to.equal(25);
+      expect(result.needsEllipsis).to.be.true;
     });
   });
 });

@@ -100,6 +100,11 @@ const loopEdited = {
   normalTime: '2024-02-02T02:00:00.000Z',
 };
 
+const manual = {
+  ...normal,
+  tags: { dexcom: true, manual: true },
+};
+
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
@@ -185,6 +190,17 @@ describe('FoodTooltip', () => {
       expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Time of Entry');
       expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('2:00');
       expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('pm');
+    });
+  });
+
+  describe('manual source', () => {
+    const row = formatClassesAsSelector(styles.row);
+    const rowLabel = formatClassesAsSelector(styles.label);
+    const rowValue = formatClassesAsSelector(styles.value);
+    it('should include the manual source for a manual food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={manual} />);
+      expect(wrapper.find(row).at(1).find(rowLabel).text()).to.contain('Source');
+      expect(wrapper.find(row).at(1).find(rowValue).text()).to.contain('Manual');
     });
   });
 });

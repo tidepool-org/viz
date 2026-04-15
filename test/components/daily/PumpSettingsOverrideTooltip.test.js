@@ -107,7 +107,7 @@ describe('PumpSettingsOverrideTooltip', () => {
   it('should render the override type for a preprandial override and use the appropriate color', () => {
     const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
     expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0)).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0).text()).to.equal('Premeal');
+    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0).text()).to.equal('Pre-Meal');
 
     const tooltipWrapper = wrapper.find(Tooltip);
     expect(tooltipWrapper.props().borderColor).to.be.a('string').and.equal(colors.preprandial);

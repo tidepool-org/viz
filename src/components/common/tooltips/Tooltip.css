@@ -22,7 +22,6 @@
   border: solid;
   pointer-events: none;
   position: absolute;
-  border-radius: 4px;
   z-index: 1000;
 }
 
