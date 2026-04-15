@@ -176,6 +176,7 @@
     "highlight.js": "10.4.1",
     "jackspeak": "2.1.1",
     "lodash": "4.17.21",
+    "tar-fs": "^2.1.4",
     "prismjs": "1.29.0"
   }
 }
