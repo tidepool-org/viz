@@ -2383,6 +2383,12 @@ export class DataUtil {
       if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
     });
 
+    // Skip prepending if the start of the endpoints range falls on a non-active day,
+    // as any overlapping basal from that day would not be relevant to the active days
+    const startDay = moment.utc(this.activeEndpoints.range[0])
+      .tz(_.get(this, 'timePrefs.timezoneName', 'UTC')).day();
+    if (!_.includes(this.activeDays, startDay)) return basalData;
+
     // We need to ensure all the days of the week are active to ensure we get all basals
     this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
 
