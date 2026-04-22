@@ -485,6 +485,55 @@ describe('StatUtil', () => {
         });
       });
     });
+
+    context('edge correction for offset windows', () => {
+      it('should not apply edge correction when endpoints are midnight-aligned', () => {
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02.
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getInsulinData();
+
+        // Should divide total insulin by 2
+
+        expect(result).to.eql({
+          basal: 0.75, // === 1.5 / 2
+          bolus: 7.5, // === 15 / 2
+          insulin: 1.5,
+        });
+      });
+
+      it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
+
+        const offsetBasalData = _.map([
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-01T14:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-02T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-08T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+        ], _.toPlainObject);
+
+        const offsetBolusData = _.map([
+          new Types.Bolus({ deviceTime: '2018-02-01T14:00:00', value: 2, ...useRawData }),
+          new Types.Bolus({ deviceTime: '2018-02-02T10:00:00', value: 4, ...useRawData }),
+          new Types.Bolus({ deviceTime: '2018-02-08T10:00:00', value: 6, ...useRawData }),
+        ], _.toPlainObject);
+
+        statUtil = createStatUtil([...offsetBasalData, ...offsetBolusData], opts({ endpoints: offsetEndpoints }));
+        filterEndpoints(offsetEndpoints);
+
+        // Total basal = 0.5 + 0.5 + 0.5 = 1.5, Total bolus = 2 + 4 + 6 = 12
+
+        // Should divide total insulin by 2 instead of 3 since we are looking at a 2 x 24h period
+
+        const result = statUtil.getInsulinData();
+        expect(result).to.eql({
+          basal: 1.5, // === 3 / 2
+          bolus: 6, // === 12 / 2
+          insulin: NaN,
+        });
+      });
+    });
   });
 
   describe('getBgExtentsData', () => {
@@ -549,6 +598,80 @@ describe('StatUtil', () => {
         carbs: { grams: 21.5, exchanges: 1 },
         total: 7,
       });
+    });
+
+    context('edge correction for offset windows', () => {
+      it('should not apply edge correction when endpoints are midnight-aligned', () => {
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getCarbsData();
+        expect(result).to.eql({
+          carbs: { grams: 21.5, exchanges: 1 },
+          total: 7,
+        });
+      });
+
+      it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
+
+        const offsetFoodData = _.map([
+          new Types.Food({ deviceTime: '2018-02-01T14:00:00', nutrition: { carbohydrate: { net: 10 } }, ...useRawData }),
+          new Types.Food({ deviceTime: '2018-02-02T10:00:00', nutrition: { carbohydrate: { net: 20 } }, ...useRawData }),
+          new Types.Food({ deviceTime: '2018-02-08T10:00:00', nutrition: { carbohydrate: { net: 30 } }, ...useRawData }),
+        ], _.toPlainObject);
+
+        statUtil = createStatUtil(offsetFoodData, opts({ endpoints: offsetEndpoints }));
+        filterEndpoints(offsetEndpoints);
+
+        // Total grams = 10 + 20 + 30 = 60
+
+        // Should divide total grams by 2 instead of 3 since we are looking at a 2 x 24h period
+
+        const result = statUtil.getCarbsData();
+        expect(result).to.eql({
+          carbs: { grams: 30, exchanges: 0 }, // === 60 / 2
+          total: 3,
+        });
+      });
+    });
+  });
+
+  describe('getActiveDaysWithData', () => {
+    // For these tests, the offset endpoints span 2018-02-01T13:30 to 2018-02-03T13:30 (UTC)
+    // 2018-02-01 = Thursday (dow 4), 2018-02-03 = Saturday (dow 6)
+    const offsetEndpoints = [
+      '2018-02-01T13:30:00.000Z',
+      '2018-02-03T13:30:00.000Z',
+    ];
+
+    const headDatum = { time: '2018-02-01T14:00:00.000Z' };
+    const middleDatum = { time: '2018-02-02T12:00:00.000Z' };
+    const tailDatum = { time: '2018-02-03T10:00:00.000Z' };
+    const bothEdgeDatums = [headDatum, tailDatum];
+
+    it('should not apply correction when the start endpoint is midnight-aligned', () => {
+      filterEndpoints(twoDayEndpoints); // midnight-aligned
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(2);
+    });
+
+    it('should subtract 1 when start is not midnight and both edges have data', () => {
+      filterEndpoints(offsetEndpoints);
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(1);
+    });
+
+    it('should not apply correction when start is not midnight but head date has no data', () => {
+      filterEndpoints(offsetEndpoints);
+      // Data on middle and tail dates, but not on head date (Feb 1)
+      expect(statUtil.getActiveDaysWithData([middleDatum, tailDatum])).to.equal(2);
+    });
+
+    it('should not apply correction when start is not midnight but tail date has no data', () => {
+      filterEndpoints(offsetEndpoints);
+      // Data on head and middle dates, but not on tail date (Feb 3)
+      expect(statUtil.getActiveDaysWithData([headDatum, middleDatum])).to.equal(2);
     });
   });
 
