@@ -20,6 +20,15 @@ import MemoryStream from 'memorystream';
 import * as Module from '../../../src/modules/print';
 import Doc from '../../helpers/pdfDoc';
 
+// Mock pdfkit so the source code falls back to utils.PDFDocument (which we stub)
+jest.mock('pdfkit', () => ({ __esModule: true, default: undefined }));
+
+// Mock pdfkitHelpers so waitForData resolves immediately in tests
+jest.mock('../../../src/modules/print/pdfkitHelpers', () => ({
+  waitForData: jest.fn().mockResolvedValue(''),
+  base64ToArrayBuffer: jest.fn().mockReturnValue(new Uint8Array(0)),
+}));
+
 describe('print module', () => {
   const pdf = {
     url: 'someURL',
@@ -33,7 +42,8 @@ describe('print module', () => {
     bgLog: { type: 'bgLog' },
     basics: { type: 'basics' },
     settings: { type: 'settings' },
-    agp: { type: 'agp' },
+    agpCGM: { type: 'agpCGM' },
+    agpBGM: { type: 'agpBGM' },
   };
 
   const opts = {
@@ -56,9 +66,15 @@ describe('print module', () => {
     render() {}
   }
 
-  const AGPPrintView = () => ({
-    render: sinon.stub().resolves(null),
-  });
+  function AGPPrintView() {
+    return {
+      render: sinon.stub().resolves(null),
+    };
+  }
+
+  class PrescriptionPrintView {
+    render() {}
+  }
 
   const sandbox = sinon.createSandbox();
 
@@ -70,16 +86,19 @@ describe('print module', () => {
   sinon.stub(Module.utils, 'DailyPrintView').returns(new DailyPrintView());
   sinon.stub(Module.utils, 'BgLogPrintView').returns(new BgLogPrintView());
   sinon.stub(Module.utils, 'SettingsPrintView').returns(new SettingsPrintView());
-  sinon.stub(Module.utils, 'AGPPrintView').resolves(new AGPPrintView());
+  sinon.stub(Module.utils, 'AGPPrintView').returns(new AGPPrintView());
+  sinon.stub(Module.utils, 'PrescriptionPrintView').returns(new PrescriptionPrintView());
   sinon.stub(Module.utils, 'blobStream').returns(new MemoryStream());
 
   beforeEach(() => {
     doc = new Doc({ pdf, margin });
     sandbox.stub(Module.utils, 'PDFDocument').returns(doc);
+    global.URL.createObjectURL = jest.fn(() => pdf.url);
   });
 
   afterEach(() => {
     sandbox.restore();
+    delete global.URL.createObjectURL;
     Module.utils.PrintView.renderPageNumbers.resetHistory();
     Module.utils.PrintView.renderNoData.resetHistory();
     Module.utils.BasicsPrintView.resetHistory();
@@ -87,6 +106,7 @@ describe('print module', () => {
     Module.utils.BgLogPrintView.resetHistory();
     Module.utils.SettingsPrintView.resetHistory();
     Module.utils.AGPPrintView.resetHistory();
+    Module.utils.PrescriptionPrintView.resetHistory();
     Module.utils.blobStream.resetHistory();
   });
 
@@ -100,9 +120,8 @@ describe('print module', () => {
 
   it('should render and return the complete pdf data package when all data is available', () => {
     const result = Module.createPrintPDFPackage(data, opts);
-    doc.stream.end();
 
-    result.then(_result => {
+    return result.then(_result => {
       sinon.assert.calledOnce(Module.utils.BasicsPrintView);
       sinon.assert.calledWithMatch(
         Module.utils.BasicsPrintView,
@@ -147,18 +166,26 @@ describe('print module', () => {
         },
       );
 
-      sinon.assert.calledOnce(Module.utils.AGPPrintView);
+      sinon.assert.calledTwice(Module.utils.AGPPrintView);
       sinon.assert.calledWithMatch(
         Module.utils.AGPPrintView,
         doc,
-        data.agp,
+        data.agpCGM,
         {
           patient: opts.patient,
-          title: 'Foo',
+        },
+      );
+      sinon.assert.calledWithMatch(
+        Module.utils.AGPPrintView,
+        doc,
+        data.agpBGM,
+        {
+          patient: opts.patient,
         },
       );
 
-      expect(_result).to.eql(pdf);
+      expect(_result.url).to.equal(pdf.url);
+      expect(_result.blob).to.be.instanceof(Blob);
     });
   });
 
@@ -168,13 +195,13 @@ describe('print module', () => {
       daily: { disabled: true },
       bgLog: { disabled: true },
       settings: { disabled: true },
-      agp: { disabled: true },
+      agpCGM: { disabled: true },
+      agpBGM: { disabled: true },
     };
 
     const result = Module.createPrintPDFPackage(data, basicsOnlyEnabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.BasicsPrintView);
 
       sinon.assert.notCalled(Module.utils.DailyPrintView);
@@ -190,13 +217,13 @@ describe('print module', () => {
       daily: { disabled: false },
       bgLog: { disabled: true },
       settings: { disabled: true },
-      agp: { disabled: true },
+      agpCGM: { disabled: true },
+      agpBGM: { disabled: true },
     };
 
     const result = Module.createPrintPDFPackage(data, dailyOnlyEnabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.DailyPrintView);
 
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
@@ -212,13 +239,13 @@ describe('print module', () => {
       daily: { disabled: true },
       bgLog: { disabled: false },
       settings: { disabled: true },
-      agp: { disabled: true },
+      agpCGM: { disabled: true },
+      agpBGM: { disabled: true },
     };
 
     const result = Module.createPrintPDFPackage(data, bgLogOnlyEnabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.BgLogPrintView);
 
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
@@ -233,13 +260,13 @@ describe('print module', () => {
       daily: { disabled: true },
       bgLog: { disabled: true },
       settings: { disabled: false },
-      agp: { disabled: true },
+      agpCGM: { disabled: true },
+      agpBGM: { disabled: true },
     };
 
     const result = Module.createPrintPDFPackage(data, settingsOnlyEnabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.SettingsPrintView);
 
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
@@ -260,9 +287,8 @@ describe('print module', () => {
     };
 
     const result = Module.createPrintPDFPackage(data, agpOnlyEnabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.AGPPrintView);
 
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
@@ -283,9 +309,8 @@ describe('print module', () => {
     };
 
     const result = Module.createPrintPDFPackage(data, agpOnlyEnabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.AGPPrintView);
 
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
@@ -306,9 +331,8 @@ describe('print module', () => {
     };
 
     const result = Module.createPrintPDFPackage(data, allDisabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.notCalled(Module.utils.AGPPrintView);
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
       sinon.assert.notCalled(Module.utils.DailyPrintView);
@@ -325,9 +349,8 @@ describe('print module', () => {
     };
 
     const result = Module.createPrintPDFPackage(data, allDisabledOpts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.notCalled(Module.utils.AGPPrintView);
       sinon.assert.notCalled(Module.utils.BasicsPrintView);
       sinon.assert.notCalled(Module.utils.DailyPrintView);
@@ -340,9 +363,8 @@ describe('print module', () => {
 
   it('should add the page numbers to the document', () => {
     const result = Module.createPrintPDFPackage(data, opts);
-    doc.stream.end();
 
-    result.then(() => {
+    return result.then(() => {
       sinon.assert.calledOnce(Module.utils.PrintView.renderPageNumbers);
     });
   });

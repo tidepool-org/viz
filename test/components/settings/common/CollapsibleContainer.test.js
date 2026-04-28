@@ -16,13 +16,25 @@
  */
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render as rtlRender, cleanup, fireEvent } from '@testing-library/react/pure';
 
 import CollapsibleContainer from '../../../../src/components/settings/common/CollapsibleContainer';
-import SingleLineCollapsibleContainerLabel
-  from '../../../../src/components/settings/common/SingleLineCollapsibleContainerLabel';
-import TwoLineCollapsibleContainerLabel
-  from '../../../../src/components/settings/common/TwoLineCollapsibleContainerLabel';
+
+// Mock label components
+jest.mock('../../../../src/components/settings/common/SingleLineCollapsibleContainerLabel', () => ({
+  __esModule: true,
+  default: (props) => require('react').createElement('div', {
+    'data-testid': 'SingleLineLabel',
+    onClick: props.onClick,
+  }),
+}));
+jest.mock('../../../../src/components/settings/common/TwoLineCollapsibleContainerLabel', () => ({
+  __esModule: true,
+  default: (props) => require('react').createElement('div', {
+    'data-testid': 'TwoLineLabel',
+    onClick: props.onClick,
+  }),
+}));
 
 describe('CollapsibleContainer', () => {
   const label = {
@@ -33,8 +45,12 @@ describe('CollapsibleContainer', () => {
 
   const labelClass = 'whatever';
 
+  afterEach(() => {
+    cleanup();
+  });
+
   it('should render passed-in children', () => {
-    const wrapper = mount(
+    const { container } = rtlRender(
       <CollapsibleContainer
         label={label}
         labelClass={labelClass}
@@ -44,11 +60,11 @@ describe('CollapsibleContainer', () => {
         <div className="unique" />
       </CollapsibleContainer>
     );
-    expect(wrapper.contains(<div className="unique" />)).to.equal(true);
+    expect(container.querySelector('.unique')).to.not.be.null;
   });
 
   it('should render TwoLineCollapsibleContainerLabel if given `twoLineLabel`', () => {
-    const wrapper = mount(
+    const { container } = rtlRender(
       <CollapsibleContainer
         label={label}
         labelClass={labelClass}
@@ -59,12 +75,12 @@ describe('CollapsibleContainer', () => {
         <div className="unique" />
       </CollapsibleContainer>
     );
-    expect(wrapper.find(SingleLineCollapsibleContainerLabel)).to.have.length(0);
-    expect(wrapper.find(TwoLineCollapsibleContainerLabel)).to.have.length(1);
+    expect(container.querySelectorAll('[data-testid="SingleLineLabel"]')).to.have.length(0);
+    expect(container.querySelectorAll('[data-testid="TwoLineLabel"]')).to.have.length(1);
   });
 
   it('should render the SingleLineCollapsibleContainerLabel if not given `twoLineLabel`', () => {
-    const wrapper = mount(
+    const { container } = rtlRender(
       <CollapsibleContainer
         label={label}
         labelClass={labelClass}
@@ -75,12 +91,12 @@ describe('CollapsibleContainer', () => {
         <div className="unique" />
       </CollapsibleContainer>
     );
-    expect(wrapper.find(SingleLineCollapsibleContainerLabel)).to.have.length(1);
-    expect(wrapper.find(TwoLineCollapsibleContainerLabel)).to.have.length(0);
+    expect(container.querySelectorAll('[data-testid="SingleLineLabel"]')).to.have.length(1);
+    expect(container.querySelectorAll('[data-testid="TwoLineLabel"]')).to.have.length(0);
   });
 
   it('should render the Single... if given `twoLineLabel` but label.secondary empty', () => {
-    const wrapper = mount(
+    const { container } = rtlRender(
       <CollapsibleContainer
         label={{ main: 'Foo', secondary: '', units: 'lbs' }}
         labelClass={labelClass}
@@ -91,13 +107,13 @@ describe('CollapsibleContainer', () => {
         <div className="unique" />
       </CollapsibleContainer>
     );
-    expect(wrapper.find(SingleLineCollapsibleContainerLabel)).to.have.length(1);
-    expect(wrapper.find(TwoLineCollapsibleContainerLabel)).to.have.length(0);
+    expect(container.querySelectorAll('[data-testid="SingleLineLabel"]')).to.have.length(1);
+    expect(container.querySelectorAll('[data-testid="TwoLineLabel"]')).to.have.length(0);
   });
 
   it('should call toggleExpansion function on click', () => {
     const toggleExpansion = sinon.spy();
-    const wrapper = mount(
+    const { container } = rtlRender(
       <CollapsibleContainer
         label={label}
         labelClass={labelClass}
@@ -108,7 +124,7 @@ describe('CollapsibleContainer', () => {
       </CollapsibleContainer>
     );
     expect(toggleExpansion.callCount).to.equal(0);
-    wrapper.find('.label').simulate('click');
+    fireEvent.click(container.querySelector('[data-testid$="Label"]'));
     expect(toggleExpansion.callCount).to.equal(1);
   });
 });

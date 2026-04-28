@@ -16,14 +16,14 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, fireEvent } from '@testing-library/react/pure';
 
 import {
   SMBGMean,
 } from '../../../../src/components/trends/smbg/SMBGMean';
 
 describe('SMBGMean', () => {
-  let wrapper;
+  let container;
   const props = {
     classes: 'foo bar baz',
     datum: {
@@ -58,11 +58,11 @@ describe('SMBGMean', () => {
   };
 
   before(() => {
-    wrapper = shallow(<SMBGMean {...props} />);
+    container = render(<SMBGMean {...props} />).container;
   });
 
   it('should render a single <rect>', () => {
-    expect(wrapper.find('rect').length).to.equal(1);
+    expect(container.querySelectorAll('rect').length).to.equal(1);
   });
 
   describe('interactions', () => {
@@ -73,9 +73,9 @@ describe('SMBGMean', () => {
 
     describe('onMouseOver', () => {
       it('should fire the `focusRange` function', () => {
-        const rect = wrapper.find('rect');
+        const rect = container.querySelector('rect');
         expect(props.focusRange.callCount).to.equal(0);
-        rect.simulate('mouseover');
+        fireEvent.mouseOver(rect);
         expect(props.focusRange.callCount).to.equal(1);
         expect(props.focusRange.args[0][0]).to.deep.equal(props.datum);
         expect(props.focusRange.args[0][1]).to.deep.equal(props.positionData);
@@ -84,9 +84,9 @@ describe('SMBGMean', () => {
 
     describe('onMouseOut', () => {
       it('should fire the `unfocusRange` function', () => {
-        const rect = wrapper.find('rect');
+        const rect = container.querySelector('rect');
         expect(props.unfocusRange.callCount).to.equal(0);
-        rect.simulate('mouseout');
+        fireEvent.mouseOut(rect);
         expect(props.unfocusRange.callCount).to.equal(1);
       });
     });
