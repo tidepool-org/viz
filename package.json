@@ -1,7 +1,7 @@
 {
   "name": "@tidepool/viz",
   "engines": {
-    "node": "20.8.0"
+    "node": "24.15.0"
   },
   "packageManager": "yarn@3.6.4",
   "version": "1.56.0-web-4478.3",
