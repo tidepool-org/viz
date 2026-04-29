@@ -43,6 +43,8 @@ import {
   getMaxValue,
   getNormalPercentage,
   getWizardFromInsulinEvent,
+  isOverride,
+  isUnderride,
 } from '../../utils/bolus';
 import {
   formatLocalizedFromUTC,
@@ -270,10 +272,9 @@ class DailyPrintView extends PrintView {
       },
       {
         type: 'override',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
-          const wizard = getWizardFromInsulinEvent(event);
-          return wizard && wizard.recommended;
-        })),
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
+          _.some(dateData.bolus, event => isOverride(event) || isUnderride(event))
+        ),
         labels: [t('Override'), t('up & down')],
       },
       {
@@ -1121,12 +1122,12 @@ class DailyPrintView extends PrintView {
     bolusDetailPositions,
     bolusDetailWidths,
     bolusScale,
-    data: { bolus: insulinEvents },
+    data: { bolus: bolusData, insulin: insulinData },
   }) {
     this.doc.font(this.font)
       .fontSize(this.smallFontSize)
       .fillColor('black');
-
+    const insulinEvents = [...(bolusData || []), ...(insulinData || [])];
     const topOfBolusDetails = bolusScale.range()[0] + 2;
 
     const grouped = _.groupBy(

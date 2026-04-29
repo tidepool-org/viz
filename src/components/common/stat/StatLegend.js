@@ -134,22 +134,16 @@ class StatLegend extends PureComponent {
     );
   };
 
-  getLegendPatternStyle = (item) => {
+  getLegendPatternStyle(item) {
     if (item.pattern?.id === 'diagonalStripes') {
       return {
         backgroundColor: colors[item.id],
-        backgroundImage: `repeating-linear-gradient(
-          -45deg,
-          ${item.pattern.color} 0px,
-          ${item.pattern.color} 2px,
-          transparent 2px,
-          transparent 5px
-        )`
+        backgroundImage: `repeating-linear-gradient(-45deg, ${item.pattern.color} 0px, ${item.pattern.color} 2px, transparent 2px, transparent 5px)`,
       };
     }
 
     return { backgroundColor: colors[item.id] };
-  };
+  }
 
   render() {
     return (

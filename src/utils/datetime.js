@@ -166,7 +166,9 @@ export function formatDiagnosisDate(patient) {
  * formatDateRange
  * @param {String|Date} startDate - A moment-compatible date object or string
  * @param {String|Date} endDate - A moment-compatible date object or string
- * @param {String} format - Optional. The moment format string to parse startDate and endDate with
+ * @param {String} dateParseFormat - Optional. The moment format string to parse startDate and endDate with
+ *
+ * @return {String} formatted date range for display
  */
 export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat = 'MMM') {
   const start = moment.utc(startDate, dateParseFormat);
@@ -180,6 +182,36 @@ export function formatDateRange(startDate, endDate, dateParseFormat, monthFormat
   const formattedRange = isSameDay ? endFormat : `${startFormat} - ${endFormat}`;
 
   return formattedRange;
+}
+
+export const CHART_DATE_BOUND_FORMAT = {
+  DATE_AND_TIME: 'MMM D, YYYY (h:mm A)',
+  DATE_ONLY: 'MMM D, YYYY',
+};
+
+/**
+ * getChartDateBoundFormat
+ * @param {Object} startDate - a moment time object
+ * @param {Object} endDate - a moment time object
+ *
+ * @return {String} a moment time format (e.g 'MMM D, YYYY')
+ */
+export function getChartDateBoundFormat(startDate, endDate) {
+  if (!endDate) return CHART_DATE_BOUND_FORMAT.DATE_ONLY;
+
+  const isStartDateMidnight = (startDate?.hours() === 0 && startDate?.minutes() === 0) ||
+                              (startDate?.hours() === 23 && startDate?.minutes() >= 59);
+
+  const isEndDateMidnight = (endDate?.hours() === 0 && endDate?.minutes() === 0) ||
+                            (endDate?.hours() === 23 && endDate?.minutes() >= 59);
+
+  const isMatchingDateBounds = isStartDateMidnight && isEndDateMidnight;
+
+  if (!isMatchingDateBounds) {
+    return CHART_DATE_BOUND_FORMAT.DATE_AND_TIME;
+  }
+
+  return CHART_DATE_BOUND_FORMAT.DATE_ONLY;
 }
 
 /**
@@ -273,6 +305,24 @@ export function formatLocalizedFromUTC(utc, timePrefs, format = 'dddd, MMMM D') 
     throw new Error('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
   }
   const timezone = getTimezoneFromTimePrefs(timePrefs);
+  return moment.utc(utc).tz(timezone).format(format);
+}
+
+/**
+ * formatLocalizedFromUTCAndTimezone
+ * @description formatLocalizedFromUTC is expensive; this one is faster if you have the timezoneName
+ *
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {Object} timezone - timezoneName String
+ * @param  {String} [format] - optional moment display format string; default is 'dddd, MMMM D'
+ *
+ * @return {String} formatted datetime, e.g., 'Sunday, January 1'
+ */
+export function formatLocalizedFromUTCAndTimezone(utc, timezone, format = 'dddd, MMMM D') {
+  if (utc instanceof Date) {
+    throw new Error('`utc` must be a ISO-formatted String timestamp or integer hammertime!');
+  }
+
   return moment.utc(utc).tz(timezone).format(format);
 }
 

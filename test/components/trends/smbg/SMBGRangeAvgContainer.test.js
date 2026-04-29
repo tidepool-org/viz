@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { shallow } from 'enzyme';
+import { render } from '../../../helpers/renderHelper';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -32,8 +32,25 @@ import SMBGRangeAvgContainer
 import SMBGRangeAnimated
   from '../../../../src/components/trends/smbg/SMBGRangeAnimated';
 
+jest.mock('../../../../src/components/trends/smbg/SMBGRangeAnimated', () => {
+  // eslint-disable-next-line no-shadow
+  const React = require('react');
+  const Mock = (props) => React.createElement('g', { 'data-testid': 'SMBGRangeAnimated' });
+  Mock.displayName = 'SMBGRangeAnimated';
+  return { __esModule: true, default: Mock };
+});
+
+jest.mock('../../../../src/utils/bloodglucose', () => {
+  const actual = jest.requireActual('../../../../src/utils/bloodglucose');
+  return {
+    __esModule: true,
+    ...actual,
+    mungeBGDataBins: jest.fn(actual.mungeBGDataBins),
+  };
+});
+
 describe('SMBGRangeAvgContainer', () => {
-  let wrapper;
+  let result;
 
   // six-hour bins for testing
   const binSize = THREE_HRS * 2;
@@ -50,7 +67,7 @@ describe('SMBGRangeAvgContainer', () => {
   };
 
   before(() => {
-    wrapper = shallow(<SMBGRangeAvgContainer {...props} />);
+    result = render(<SMBGRangeAvgContainer {...props} />);
   });
 
   describe('componentWillMount', () => {
@@ -59,7 +76,7 @@ describe('SMBGRangeAvgContainer', () => {
       sinon.spy(SMBGRangeAvgContainer.prototype, 'setState');
       expect(SMBGRangeAvgContainer.prototype.UNSAFE_componentWillMount.callCount).to.equal(0);
       expect(SMBGRangeAvgContainer.prototype.setState.callCount).to.equal(0);
-      shallow(<SMBGRangeAvgContainer {...props} />);
+      render(<SMBGRangeAvgContainer {...props} />);
       expect(SMBGRangeAvgContainer.prototype.UNSAFE_componentWillMount.callCount).to.equal(1);
       expect(SMBGRangeAvgContainer.prototype.setState.callCount).to.equal(1);
       expect(SMBGRangeAvgContainer.prototype.setState.firstCall.args[0])
@@ -115,30 +132,28 @@ describe('SMBGRangeAvgContainer', () => {
 
   describe('componentWillReceiveProps', () => {
     it('remunges data if binSize has changed', () => {
-      sinon.spy(bgUtils, 'mungeBGDataBins');
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
-      wrapper.setProps({ binSize: 1000 * 60 * 60 * 3 });
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
-      bgUtils.mungeBGDataBins.restore();
+      bgUtils.mungeBGDataBins.mockClear();
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(0);
+      result.setProps({ binSize: 1000 * 60 * 60 * 3 });
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(1);
     });
 
     it('remunges data if data has changed', () => {
-      sinon.spy(bgUtils, 'mungeBGDataBins');
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(0);
-      wrapper.setProps({
+      bgUtils.mungeBGDataBins.mockClear();
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(0);
+      result.setProps({
         data: [
           { id: 'b1', msPer24: 0, value: 90 },
           { id: 'b2', msPer24: 9000000, value: 90 },
         ],
       });
-      expect(bgUtils.mungeBGDataBins.callCount).to.equal(1);
-      bgUtils.mungeBGDataBins.restore();
+      expect(bgUtils.mungeBGDataBins.mock.calls.length).to.equal(1);
     });
   });
 
   describe('render', () => {
     it('renders a <g> with class smbgAggContainer', () => {
-      expect(wrapper.find('.smbgAggContainer').length).to.equal(1);
+      expect(result.container.querySelectorAll('.smbgAggContainer').length).to.equal(1);
     });
   });
 });

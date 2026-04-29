@@ -60,6 +60,8 @@ import {
   getLocalizedCeiling,
   getOffset,
   getTimezoneFromTimePrefs,
+  getChartDateBoundFormat,
+  CHART_DATE_BOUND_FORMAT,
 } from './utils/datetime';
 
 import { deviceName } from './utils/settings/data';
@@ -158,6 +160,8 @@ const utils = {
     getLocalizedCeiling,
     getOffset,
     getTimezoneFromTimePrefs,
+    getChartDateBoundFormat,
+    CHART_DATE_BOUND_FORMAT,
   },
   stat: {
     bankersRound,

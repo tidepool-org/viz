@@ -362,6 +362,7 @@ describe('DataUtil', () => {
     nextDays: 1,
     prevDays: 1,
     timePrefs: defaultTimePrefs,
+    activeDays: [0, 1, 2, 3, 4, 5, 6],
   };
 
   const defaultPatientId = 'abc123';
@@ -6086,6 +6087,29 @@ describe('DataUtil', () => {
         expect(result).to.be.an('array').and.have.lengthOf(4);
         expect(result).to.eql(expectedNormalizedBasalData);
       });
+
+      it('should not add the overlapping basal datum when the endpoints start day is not in activeDays', () => {
+        const basalDataClone = _.cloneDeep(basalData);
+        const basalDatumOverlappingStartClone = _.cloneDeep(basalDatumOverlappingStart);
+
+        const expectedNormalizedBasalData = _.map(basalDataClone, normalizeExpectedDatum);
+
+        dataUtil.addData([basalDatumOverlappingStartClone.asObject()], defaultPatientId);
+
+        // dayEndpoints[0] is 2018-02-01 (Thursday = day 4); activeDays is set to Wednesday (3) only
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+          activeDays: [3],
+        }));
+
+        dataUtil.activeEndpoints = dataUtil.endpoints.current;
+
+        const result = dataUtil.addBasalOverlappingStart(basalDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(3);
+        expect(result).to.eql(expectedNormalizedBasalData);
+      });
     });
   });
 
@@ -6156,6 +6180,29 @@ describe('DataUtil', () => {
         const result = dataUtil.addPumpSettingsOverrideOverlappingStart(deviceEventDataClone);
 
         expect(result).to.be.an('array').and.have.lengthOf(4);
+        expect(result).to.eql(expectedNormalizedDeviceEventData);
+      });
+
+      it('should not add the overlapping pump settings override datum when the endpoints start day is not in activeDays', () => {
+        const deviceEventDataClone = _.cloneDeep(deviceEventData);
+        const settingsOverrideDatumOverlappingStartClone = _.cloneDeep(settingsOverrideDatumOverlappingStart);
+
+        const expectedNormalizedDeviceEventData = _.map(deviceEventDataClone, normalizeExpectedDatum);
+
+        dataUtil.addData([settingsOverrideDatumOverlappingStartClone.asObject()], defaultPatientId);
+
+        // dayEndpoints[0] is 2018-02-01 (Thursday = day 4); activeDays is set to Wednesday (3) only
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+          activeDays: [3],
+        }));
+
+        dataUtil.activeEndpoints = dataUtil.endpoints.current;
+
+        const result = dataUtil.addPumpSettingsOverrideOverlappingStart(deviceEventDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(3);
         expect(result).to.eql(expectedNormalizedDeviceEventData);
       });
     });

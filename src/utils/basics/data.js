@@ -128,7 +128,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
 
       case 'boluses':
         title = t('Insulin');
-        summaryTitle = t('Avg boluses / day');
+        summaryTitle = t('Avg insulin injections / day');
         dimensions = [
           { path: 'summary', key: 'total', label: t('Avg per day'), average: true, primary: true },
           { path: 'summary.subtotals', key: 'wizard', label: t('Calculator'), percentage: true, selectorIndex: 0 },
@@ -414,7 +414,7 @@ export function basicsText(patient, data, stats, aggregations, copyAsTextMetadat
   const textUtil = new utils.TextUtil(patient, endpoints.range, timePrefs, copyAsTextMetadata);
 
   let basicsString = textUtil.buildDocumentHeader('Basics');
-  basicsString += textUtil.buildDocumentDates();
+  basicsString += textUtil.buildDocumentDates({ showPartialDates: true });
 
   basicsString += textUtil.buildTextLine(t('Days with no insulin data have been excluded from calculations'));
 

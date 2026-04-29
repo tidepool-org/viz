@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import FocusedCBGSliceSegment from '../../../../src/components/trends/cbg/FocusedCBGSliceSegment';
 
@@ -33,18 +33,18 @@ describe('FocusedCBGSliceSegment', () => {
   const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
 
   it('renders nothing if there\'s no `focusedSlice` in props', () => {
-    const wrapper = shallow(<FocusedCBGSliceSegment focusedSliceKeys={focusedSliceKeys} />);
-    expect(wrapper.html()).to.be.null;
+    const { container } = render(<FocusedCBGSliceSegment focusedSliceKeys={focusedSliceKeys} />);
+    expect(container.firstChild).to.be.null;
   });
 
   it('renders nothing if there\'s no `focusedSliceKeys` in props', () => {
-    const wrapper = shallow(<FocusedCBGSliceSegment focusedSlice={focusedSlice} />);
-    expect(wrapper.html()).to.be.null;
+    const { container } = render(<FocusedCBGSliceSegment focusedSlice={focusedSlice} />);
+    expect(container.firstChild).to.be.null;
   });
 
   it('renders a single rect when `focusedSlice` and `focusedSliceKeys`', () => {
     const props = { focusedSlice, focusedSliceKeys };
-    const wrapper = shallow(<FocusedCBGSliceSegment {...props} />);
-    expect(wrapper.find('rect').length).to.equal(1);
+    const { container } = render(<FocusedCBGSliceSegment {...props} />);
+    expect(container.querySelectorAll('rect').length).to.equal(1);
   });
 });
