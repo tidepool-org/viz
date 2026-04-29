@@ -108,6 +108,7 @@ describe('PrintView', () => {
   beforeEach(() => {
     doc = new Doc({ margin: MARGIN });
     Renderer = new PrintView(doc, data, opts);
+    Renderer.doc.font.resetHistory();
   });
 
   describe('class constructor', () => {
