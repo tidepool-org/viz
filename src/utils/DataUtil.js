@@ -1734,6 +1734,11 @@ export class DataUtil {
         const preCIQDeviceID = device.id.replace('tandemCIQ', 'tandem');
         if (_.includes(allDeviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
       }
+
+      if (device.id.indexOf('HealthKit twiist') !== -1) {
+        // Exclude HealthKit twiist devices, as the twiist data will be duplicated
+        excludedDevices.push(device.id);
+      }
     });
 
     this.setExcludedDevices(_.uniq(excludedDevices));

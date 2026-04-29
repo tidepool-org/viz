@@ -4272,6 +4272,36 @@ describe('DataUtil', () => {
       expect(dataUtil.excludedDevices).to.eql(['tandem12345']);
     });
 
+    it('should exclude HealthKit twiist devices by default', () => {
+      initDataUtil([{
+        ...uploadData[0],
+        deviceId: 'HealthKit twiist 12345',
+        deviceName: 'twiist',
+        deviceManufacturers: ['Sequel'],
+        dataSetType: 'continuous',
+        deviceTags: ['cgm'],
+      }]);
+      delete(dataUtil.devices);
+      delete(dataUtil.excludedDevices);
+
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: true,
+          oneMinCgmSampleInterval: false,
+          id: 'HealthKit twiist 12345',
+          deviceName: 'twiist',
+          label: 'twiist',
+          pump: false,
+          serialNumber: 'sn-0',
+        },
+      ]);
+
+      expect(dataUtil.excludedDevices).to.eql(['HealthKit twiist 12345']);
+    });
+
     it('should add set the proper device label for LibreView data', () => {
       initDataUtil([{
         ...uploadData[3],
