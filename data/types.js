@@ -344,6 +344,7 @@ export class Upload extends Common {
     this.deviceTags = opts.deviceTags;
     this.source = opts.source;
     this.deviceTime = opts.deviceTime;
+    this.deviceName = opts.deviceName;
     this.deviceModel = opts.deviceModel;
     this.deviceManufacturers = opts.deviceManufacturers;
     this.deviceSerialNumber = opts.deviceSerialNumber;

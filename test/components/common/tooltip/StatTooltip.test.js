@@ -1,13 +1,26 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { render as rtlRender, cleanup } from '@testing-library/react/pure';
 import _ from 'lodash';
 
 import { formatClassesAsSelector } from '../../../helpers/cssmodules';
 import StatTooltip from '../../../../src/components/common/tooltips/StatTooltip';
 import styles from '../../../../src/components/common/tooltips/StatTooltip.css';
 
+// Mock Tooltip to render title and content props
+jest.mock('../../../../src/components/common/tooltips/Tooltip', () => ({
+  __esModule: true,
+  default: (props) => {
+    const R = require('react');
+    return R.createElement('div', { 'data-testid': 'Tooltip' },
+      props.title && R.createElement('div', null, props.title),
+      props.content,
+    );
+  },
+}));
+
 describe('StatTooltip', () => {
-  let wrapper;
+  let localContainer;
+  let localRerender;
 
   const defaultProps = {
     position: {
@@ -20,46 +33,52 @@ describe('StatTooltip', () => {
     ],
   };
 
+  afterEach(() => {
+    cleanup();
+  });
+
   beforeEach(() => {
-    wrapper = mount(<StatTooltip {...defaultProps} />);
+    const result = rtlRender(React.createElement(StatTooltip, defaultProps));
+    localContainer = result.container;
+    localRerender = result.rerender;
   });
 
   it('should render a tooltip', () => {
-    expect(wrapper.find('Tooltip')).to.have.length(1);
+    expect(localContainer.querySelectorAll('[data-testid="Tooltip"]')).to.have.length(1);
   });
 
   it('should render text messages', () => {
-    const messages = wrapper.find(formatClassesAsSelector(styles.message)).hostNodes();
+    const messages = localContainer.querySelectorAll(formatClassesAsSelector(styles.message));
     expect(messages).to.have.length(2);
-    expect(messages.at(0).text()).to.equal('message 1');
-    expect(messages.at(1).text()).to.equal('message 2');
+    expect(messages[0].textContent).to.equal('message 1');
+    expect(messages[1].textContent).to.equal('message 2');
   });
 
   it('should render markdown messages', () => {
-    wrapper.setProps(_.assign({}, defaultProps, {
+    localRerender(React.createElement(StatTooltip, _.assign({}, defaultProps, {
       annotations: [
         'Some _italic_ text',
         'Some **bold** text',
         'a [link](http://www.example.com)',
       ],
-    }));
-    const messages = wrapper.find(formatClassesAsSelector(styles.message)).hostNodes();
-    expect(messages.at(0).html()).to.include('<em>italic</em>');
-    expect(messages.at(1).html()).to.include('<strong>bold</strong>');
-    expect(messages.at(2).html()).to.include('<a href="http://www.example.com" target="_blank">link</a>');
+    })));
+    const messages = localContainer.querySelectorAll(formatClassesAsSelector(styles.message));
+    expect(messages[0].innerHTML).to.include('<em>italic</em>');
+    expect(messages[1].innerHTML).to.include('<strong>bold</strong>');
+    expect(messages[2].innerHTML).to.include('<a href="http://www.example.com" target="_blank">link</a>');
   });
 
   it('should render a divider between messages', () => {
-    const dividers = () => wrapper.find(formatClassesAsSelector(styles.divider));
+    const dividers = () => localContainer.querySelectorAll(formatClassesAsSelector(styles.divider));
     expect(dividers()).to.have.length(1);
-    wrapper.setProps(_.assign({}, defaultProps, {
+    localRerender(React.createElement(StatTooltip, _.assign({}, defaultProps, {
       annotations: [
         'message 1',
         'message 2',
         'message 3',
         'message 4',
       ],
-    }));
+    })));
     expect(dividers()).to.have.length(3);
   });
 });

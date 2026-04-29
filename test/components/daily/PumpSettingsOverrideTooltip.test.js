@@ -17,15 +17,25 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import { MS_IN_HOUR } from '../../../src/utils/constants';
 
 import PumpSettingsOverrideTooltip from '../../../src/components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip';
 import styles from '../../../src/components/daily/pumpsettingsoverridetooltip/PumpSettingsOverrideTooltip.css';
-import Tooltip from '../../../src/components/common/tooltips/Tooltip';
 import colors from '../../../src/styles/colors.css';
+
+jest.mock('../../../src/components/common/tooltips/Tooltip', () => {
+  const R = require('react');
+  const MockTooltip = (props) => R.createElement('div', {
+    'data-testid': 'Tooltip',
+    'data-tail-color': props.tailColor,
+    'data-border-color': props.borderColor,
+  }, props.title, props.content);
+  MockTooltip.displayName = 'Tooltip';
+  return { __esModule: true, default: MockTooltip };
+});
 
 const sleep = {
   overrideType: 'sleep',
@@ -62,11 +72,11 @@ const props = {
 
 describe('PumpSettingsOverrideTooltip', () => {
   it('should render a settings override label with a pump specific vocabulary, and fall back to a default', () => {
-    const tandemWrapper = mount(<PumpSettingsOverrideTooltip {...props} override={sleep} />);
-    expect(tandemWrapper.find(formatClassesAsSelector(styles.label))).to.have.length(1);
-    expect(tandemWrapper.find(formatClassesAsSelector(styles.label)).text()).to.equal('Activity');
+    const { container: tandemContainer } = render(<PumpSettingsOverrideTooltip {...props} override={sleep} />);
+    expect(tandemContainer.querySelectorAll(formatClassesAsSelector(styles.label))).to.have.length(1);
+    expect(tandemContainer.querySelector(formatClassesAsSelector(styles.label)).textContent).to.equal('Activity');
 
-    const genericWrapper = mount(<PumpSettingsOverrideTooltip
+    const { container: genericContainer } = render(<PumpSettingsOverrideTooltip
       {...props}
       override={{
         ...sleep,
@@ -74,49 +84,49 @@ describe('PumpSettingsOverrideTooltip', () => {
       }}
     />);
 
-    expect(genericWrapper.find(formatClassesAsSelector(styles.label))).to.have.length(1);
-    expect(genericWrapper.find(formatClassesAsSelector(styles.label)).text()).to.equal('Settings Override');
+    expect(genericContainer.querySelectorAll(formatClassesAsSelector(styles.label))).to.have.length(1);
+    expect(genericContainer.querySelector(formatClassesAsSelector(styles.label)).textContent).to.equal('Settings Override');
   });
 
   it('should render the override start and end times', () => {
-    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={sleep} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.title))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.title)).text()).to.equal('12:00 am - 8:00 am');
+    const { container } = render(<PumpSettingsOverrideTooltip {...props} override={sleep} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.title))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.title)).textContent).to.equal('12:00 am - 8:00 am');
   });
 
   it('should render the override type for a sleep override and use the appropriate color', () => {
-    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={sleep} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.value))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.value)).text()).to.equal('Sleep');
+    const { container } = render(<PumpSettingsOverrideTooltip {...props} override={sleep} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.value))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.value)).textContent).to.equal('Sleep');
 
-    const tooltipWrapper = wrapper.find(Tooltip);
-    expect(tooltipWrapper.props().borderColor).to.be.a('string').and.equal(colors.sleep);
-    expect(tooltipWrapper.props().tailColor).to.be.a('string').and.equal(colors.sleep);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-border-color')).to.be.a('string').and.equal(colors.sleep);
+    expect(tooltip.getAttribute('data-tail-color')).to.be.a('string').and.equal(colors.sleep);
   });
 
   it('should render the override type for a physicalActivity override and use the appropriate color', () => {
-    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={physicalActivity} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.value))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.value)).text()).to.equal('Exercise');
+    const { container } = render(<PumpSettingsOverrideTooltip {...props} override={physicalActivity} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.value))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.value)).textContent).to.equal('Exercise');
 
-    const tooltipWrapper = wrapper.find(Tooltip);
-    expect(tooltipWrapper.props().borderColor).to.be.a('string').and.equal(colors.physicalActivity);
-    expect(tooltipWrapper.props().tailColor).to.be.a('string').and.equal(colors.physicalActivity);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-border-color')).to.be.a('string').and.equal(colors.physicalActivity);
+    expect(tooltip.getAttribute('data-tail-color')).to.be.a('string').and.equal(colors.physicalActivity);
   });
 
   it('should render the override type for a preprandial override and use the appropriate color', () => {
-    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0)).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(0).text()).to.equal('Pre-Meal');
+    const { container } = render(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.value))).to.have.lengthOf.at.least(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.value))[0].textContent).to.equal('Pre-Meal');
 
-    const tooltipWrapper = wrapper.find(Tooltip);
-    expect(tooltipWrapper.props().borderColor).to.be.a('string').and.equal(colors.preprandial);
-    expect(tooltipWrapper.props().tailColor).to.be.a('string').and.equal(colors.preprandial);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-border-color')).to.be.a('string').and.equal(colors.preprandial);
+    expect(tooltip.getAttribute('data-tail-color')).to.be.a('string').and.equal(colors.preprandial);
   });
 
   it('should render the bgTarget for an override', () => {
-    const wrapper = mount(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.label)).at(1).text()).to.equal('Correction Range');
-    expect(wrapper.find(formatClassesAsSelector(styles.value)).at(1).text()).to.equal('111-120');
+    const { container } = render(<PumpSettingsOverrideTooltip {...props} override={preprandialWithBgTarget} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.label))[0].textContent).to.equal('Correction Range');
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.value))[1].textContent).to.equal('111-120');
   });
 });

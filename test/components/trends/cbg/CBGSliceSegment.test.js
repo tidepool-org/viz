@@ -16,14 +16,14 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render, fireEvent } from '@testing-library/react/pure';
 
 import {
   CBGSliceSegment,
 } from '../../../../src/components/trends/cbg/CBGSliceSegment';
 
 describe('CBGSliceSegment', () => {
-  let wrapper;
+  let container;
   const props = {
     classes: 'foo bar baz',
     datum: {
@@ -63,11 +63,11 @@ describe('CBGSliceSegment', () => {
   };
 
   before(() => {
-    wrapper = shallow(<CBGSliceSegment {...props} />);
+    container = render(<CBGSliceSegment {...props} />).container;
   });
 
   it('should render a single <rect>', () => {
-    expect(wrapper.find('rect').length).to.equal(1);
+    expect(container.querySelectorAll('rect').length).to.equal(1);
   });
 
   describe('interactions', () => {
@@ -78,9 +78,9 @@ describe('CBGSliceSegment', () => {
 
     describe('onMouseOver', () => {
       it('should fire the `focusSlice` function', () => {
-        const rect = wrapper.find('rect');
+        const rect = container.querySelector('rect');
         expect(props.focusSlice.callCount).to.equal(0);
-        rect.simulate('mouseover');
+        fireEvent.mouseOver(rect);
         expect(props.focusSlice.callCount).to.equal(1);
         expect(props.focusSlice.args[0][0]).to.deep.equal(props.datum);
         expect(props.focusSlice.args[0][1]).to.deep.equal(props.positionData);
@@ -91,20 +91,20 @@ describe('CBGSliceSegment', () => {
     describe('onMouseOut', () => {
       describe('mouse event related target is *not* a cbg circle', () => {
         it('should fire the `unfocusSlice` function', () => {
-          const rect = wrapper.find('rect');
+          const rect = container.querySelector('rect');
           expect(props.unfocusSlice.callCount).to.equal(0);
-          rect.simulate('mouseout', {});
+          fireEvent.mouseOut(rect);
           expect(props.unfocusSlice.callCount).to.equal(1);
         });
       });
 
       describe('mouse event related target *is* a cbg circle', () => {
         it('should NOT fire the `unfocusSlice` function', () => {
-          const rect = wrapper.find('rect');
+          const rect = container.querySelector('rect');
           expect(props.unfocusSlice.callCount).to.equal(0);
-          rect.simulate('mouseout', {
-            relatedTarget: { id: 'cbgCircle-foo-25' },
-          });
+          const cbgCircle = document.createElement('div');
+          cbgCircle.id = 'cbgCircle-foo-25';
+          fireEvent.mouseOut(rect, { relatedTarget: cbgCircle });
           expect(props.unfocusSlice.callCount).to.equal(0);
         });
       });

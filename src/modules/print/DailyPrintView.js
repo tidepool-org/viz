@@ -43,6 +43,8 @@ import {
   getMaxValue,
   getNormalPercentage,
   getWizardFromInsulinEvent,
+  isOverride,
+  isUnderride,
 } from '../../utils/bolus';
 import {
   formatLocalizedFromUTC,
@@ -225,10 +227,11 @@ class DailyPrintView extends PrintView {
     // kick off the dynamic calculation of chart area based on font sizes for header and footer
     this.setHeaderSize().setFooterSize().calculateChartMinimums(this.chartArea);
 
-    // calculate heights and place charts in preparation for rendering
     _.each(selectedDates, (date) => {
       this.calculateDateChartHeight(this.chartsByDate[date]);
     });
+
+    this.deviceNamesHeader = this.generateDeviceNamesHeader();
 
     while (this.chartsPlaced < selectedDates.length) {
       this.placeChartsOnPage();
@@ -269,10 +272,9 @@ class DailyPrintView extends PrintView {
       },
       {
         type: 'override',
-        show: _.some(this.aggregationsByDate?.dataByDate, dateData => _.some(dateData.bolus, event => {
-          const wizard = getWizardFromInsulinEvent(event);
-          return wizard && wizard.recommended;
-        })),
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
+          _.some(dateData.bolus, event => isOverride(event) || isUnderride(event))
+        ),
         labels: [t('Override'), t('up & down')],
       },
       {
@@ -459,7 +461,13 @@ class DailyPrintView extends PrintView {
   }
 
   placeChartsOnPage() {
-    const { topEdge, bottomEdge } = this.chartArea;
+    const hasDeviceNamesHeader = this.currentPageIndex === -1; // Rendered only on first page
+
+    const bottomEdge = this.chartArea.bottomEdge;
+    let topEdge = this.chartArea.topEdge;
+
+    if (hasDeviceNamesHeader) topEdge += this.deviceNamesHeader.height;
+
     let totalChartHeight = 0;
     const dates = _.keys(this.chartsByDate);
     const startingIndexThisPage = this.chartIndex;
@@ -481,8 +489,8 @@ class DailyPrintView extends PrintView {
       const chart = this.chartsByDate[dates[i]];
       chart.page = this.currentPageIndex + 1;
       if (i === startingIndexThisPage) {
-        chart.topEdge = this.chartArea.topEdge;
-        chart.bottomEdge = this.chartArea.topEdge + chart.chartHeight;
+        chart.topEdge = topEdge;
+        chart.bottomEdge = topEdge + chart.chartHeight;
       } else {
         chart.topEdge =
           this.chartsByDate[dates[i - 1]].bottomEdge + this.chartMinimums.paddingBelow;
@@ -529,8 +537,14 @@ class DailyPrintView extends PrintView {
   }
 
   render() {
+    let chartIndex = 0;
+
     _.each(this.chartsByDate, (dateChart) => {
       this.goToPage(dateChart.page);
+
+      // only rendered on first page
+      if (chartIndex === 0) this.renderDeviceNamesHeader();
+
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
         .renderYAxes(dateChart)
@@ -544,6 +558,8 @@ class DailyPrintView extends PrintView {
         .renderBasalRates(dateChart)
         .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
+
+      chartIndex++;
     });
 
     if (this.hasAlarms) this.renderAlarmsFootnote();

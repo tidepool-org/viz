@@ -1691,6 +1691,7 @@ export class DataUtil {
         const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
         const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
         const deviceModel = _.get(upload, 'deviceModel', '');
+        const deviceName = _.get(upload, 'deviceName', '');
         let label = key;
 
         if (deviceManufacturer || deviceModel) {
@@ -1712,6 +1713,7 @@ export class DataUtil {
           cgm: _.includes(upload.deviceTags, 'cgm'),
           oneMinCgmSampleInterval: isOneMinCGMSampleIntervalDevice(upload),
           id: key,
+          deviceName,
           label,
           pump: _.includes(upload.deviceTags, 'insulin-pump'),
           serialNumber: upload.deviceSerialNumber,
@@ -2383,10 +2385,20 @@ export class DataUtil {
     return generatedData;
   };
 
+  getEndpointStartDayOfWeek = () => (
+    moment.utc(this.activeEndpoints.range[0])
+      .tz(_.get(this, 'timePrefs.timezoneName', 'UTC'))
+      .day()
+  );
+
   addBasalOverlappingStart = (basalData = [], normalizeFields) => {
     _.each(basalData, d => {
       if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
     });
+
+    // Skip prepending if the start of the endpoints range falls on a non-active day,
+    // as any overlapping basal from that day would not be relevant to the active days
+    if (!_.includes(this.activeDays, this.getEndpointStartDayOfWeek())) return basalData;
 
     // We need to ensure all the days of the week are active to ensure we get all basals
     this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);
@@ -2425,6 +2437,10 @@ export class DataUtil {
     _.each(pumpSettingsOverrideData, d => {
       if (!d.normalTime) this.normalizeDatumOut(d, normalizeFields);
     });
+
+    // Skip prepending if the start of the endpoints range falls on a non-active day,
+    // as any overlapping override from that day would not be relevant to the active days
+    if (!_.includes(this.activeDays, this.getEndpointStartDayOfWeek())) return pumpSettingsOverrideData;
 
     // We need to ensure all the days of the week are active to ensure we get all override datums
     this.filter.byActiveDays([0, 1, 2, 3, 4, 5, 6]);

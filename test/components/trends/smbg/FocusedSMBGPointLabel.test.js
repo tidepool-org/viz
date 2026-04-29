@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render, cleanup } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../../helpers/cssmodules';
 
@@ -31,6 +31,10 @@ import styles
 // TODO: test absolute positioning?
 
 describe('FocusedSMBGPointLabel', () => {
+  afterAll(() => {
+    cleanup();
+  });
+
   const focusedPoint = {
     allPositions: [
       { left: 215.625, top: 200 },
@@ -77,18 +81,18 @@ describe('FocusedSMBGPointLabel', () => {
           bgUnits: MMOLL_UNITS,
         },
       };
-      const wrapper = mount(
+      const { container } = render(
         <FocusedSMBGPointLabel {...minimalProps} />
       );
-      expect(wrapper.html()).to.be.null;
+      expect(container.firstChild).to.be.null;
     });
   });
 
   describe('when focused and lines turned off and grouped', () => {
-    let wrapper;
+    let container;
 
     before(() => {
-      wrapper = mount(
+      container = render(
         <FocusedSMBGPointLabel
           bgPrefs={bgPrefs}
           focusedPoint={focusedPoint}
@@ -96,22 +100,22 @@ describe('FocusedSMBGPointLabel', () => {
           grouped
           timePrefs={timePrefs}
         />
-      );
+      ).container;
     });
 
     it('should render individual point tooltips', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.number))).to.have.length(2);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.number))).to.have.length(2);
     });
     it('should render a detailed individual point tooltip', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.dateTime))).to.have.length(1);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.dateTime))).to.have.length(1);
     });
   });
 
   describe('when focused and lines turned off and not grouped', () => {
-    let wrapper;
+    let container;
 
     before(() => {
-      wrapper = mount(
+      container = render(
         <FocusedSMBGPointLabel
           bgPrefs={bgPrefs}
           focusedPoint={focusedPoint}
@@ -119,22 +123,22 @@ describe('FocusedSMBGPointLabel', () => {
           grouped={false}
           timePrefs={timePrefs}
         />
-      );
+      ).container;
     });
 
     it('should render individual point tooltips', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.number))).to.have.length(2);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.number))).to.have.length(2);
     });
     it('should render a detailed individual point tooltip', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.dateTime))).to.have.length(1);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.dateTime))).to.have.length(1);
     });
   });
 
   describe('when focused and lines turned on and grouped', () => {
-    let wrapper;
+    let container;
 
     before(() => {
-      wrapper = mount(
+      container = render(
         <FocusedSMBGPointLabel
           bgPrefs={bgPrefs}
           focusedPoint={focusedPoint}
@@ -142,22 +146,22 @@ describe('FocusedSMBGPointLabel', () => {
           grouped
           timePrefs={timePrefs}
         />
-      );
+      ).container;
     });
 
     it('should render individual point tooltips', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.number))).to.have.length(3);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.number))).to.have.length(3);
     });
     it('should render a generic individual point tooltip', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.explainerText))).to.have.length(1);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.explainerText))).to.have.length(1);
     });
   });
 
   describe('when focused and lines turned on and not grouped', () => {
-    let wrapper;
+    let container;
 
     before(() => {
-      wrapper = mount(
+      container = render(
         <FocusedSMBGPointLabel
           bgPrefs={bgPrefs}
           focusedPoint={focusedPoint}
@@ -165,14 +169,14 @@ describe('FocusedSMBGPointLabel', () => {
           grouped={false}
           timePrefs={timePrefs}
         />
-      );
+      ).container;
     });
 
     it('should render individual point tooltips', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.number))).to.have.length(3);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.number))).to.have.length(3);
     });
     it('should render a generic individual point tooltip', () => {
-      expect(wrapper.find(formatClassesAsSelector(styles.explainerText))).to.have.length(1);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.explainerText))).to.have.length(1);
     });
   });
 });
