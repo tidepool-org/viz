@@ -4276,7 +4276,7 @@ describe('DataUtil', () => {
       initDataUtil([{
         ...uploadData[0],
         deviceId: 'HealthKit twiist 12345',
-        deviceName: "twiist",
+        deviceName: 'twiist',
         deviceManufacturers: ['Sequel'],
         dataSetType: 'continuous',
         deviceTags: ['cgm'],
@@ -4292,7 +4292,7 @@ describe('DataUtil', () => {
           cgm: true,
           oneMinCgmSampleInterval: false,
           id: 'HealthKit twiist 12345',
-          deviceName: "twiist",
+          deviceName: 'twiist',
           label: 'twiist',
           pump: false,
           serialNumber: 'sn-0',
