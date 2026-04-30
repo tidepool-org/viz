@@ -301,6 +301,103 @@ describe('DailyPrintView', () => {
       const automatedBasalItem = _.find(legendItems, item => item.type === 'basals');
       expect(automatedBasalItem.labels).to.deep.equal(['Basals', 'automated &', 'manual']);
     });
+
+    context('override legend show logic for dosing decision boluses', () => {
+      function getLegendItemsWithBoluses(boluses) {
+        const bolusData = _.assign({}, data, {
+          data: {
+            current: {
+              ...data.data.current,
+              aggregationsByDate: {
+                statsByDate: {},
+                dataByDate: {
+                  '2017-01-02': {
+                    ...data.data.current.aggregationsByDate.dataByDate['2017-01-02'],
+                    bolus: boluses,
+                  },
+                },
+              },
+            },
+          },
+        });
+        return new DailyPrintView(new Doc({ margin: MARGIN }), bolusData, opts).getLegendItems();
+      }
+
+      it('should not include override legend when no bolus is an override or underride', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'wizard',
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            recommended: { net: 5, carb: 5, correction: 0 },
+            bolus: { type: 'bolus', normal: 5, normalTime: 1483313400000 },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.not.include('override');
+      });
+
+      it('should not include override legend for simple boluses without dosing decisions', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          { type: 'bolus', normal: 2.5, normalTime: 1483313400000, threeHrBin: 21 },
+          { type: 'bolus', normal: 1.0, normalTime: 1483317000000, threeHrBin: 24 },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.not.include('override');
+      });
+
+      it('should include override legend when a bolus is an override (programmed > recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'wizard',
+            carbInput: 20,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            recommended: { net: 0.5, carb: 2, correction: -1.5 },
+            bolus: { type: 'bolus', normal: 2, normalTime: 1483313400000 },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+
+      it('should include override legend when a bolus is an underride (programmed < recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'wizard',
+            carbInput: 80,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            recommended: { net: 10, carb: 8, correction: 2 },
+            bolus: { type: 'bolus', normal: 8, normalTime: 1483313400000 },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+
+      it('should include override legend when a dosingDecision bolus is an override (programmed > recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'bolus',
+            normal: 3,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            dosingDecision: { recommendedBolus: { amount: 0.5 } },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+
+      it('should include override legend when a dosingDecision bolus is an underride (programmed < recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'bolus',
+            normal: 2,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            dosingDecision: { recommendedBolus: { amount: 5 } },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+    });
   });
 
   describe('calculateChartMinimums', () => {

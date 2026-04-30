@@ -486,89 +486,53 @@ describe('StatUtil', () => {
       });
     });
 
-    // Create data that spans 4 calendar days but only 2 full 24-hour periods
-    // Data at: Day 1 8pm, Day 2 8am (12h later), Day 4 6pm (58h after Day 2 8am)
-    const partialDayBolusData = _.map([
-      new Types.Bolus({
-        deviceTime: '2018-02-01T20:00:00', // Day 1, 8pm - bucket 0
-        value: 6,
-        ...useRawData,
-      }),
-      new Types.Bolus({
-        deviceTime: '2018-02-02T08:00:00', // Day 2, 8am (12 hours later) - bucket 0
-        value: 6,
-        ...useRawData,
-      }),
-      new Types.Bolus({
-        deviceTime: '2018-02-04T18:00:00', // Day 4, 6pm (58 hours after Day 2 8am) - bucket 2
-        value: 6,
-        ...useRawData,
-      }),
-    ], _.toPlainObject);
+    context('edge correction for offset windows', () => {
+      it('should not apply edge correction when endpoints are midnight-aligned', () => {
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02.
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getInsulinData();
 
-    it('should count 24-hour periods from starting endpoint when not matching calendar days', () => {
-      // Endpoints span 7 calendar days and does NOT match calendar days
-      const testEndpoints = [
-        '2018-02-01T18:00:00.000Z',
-        '2018-02-08T18:00:00.000Z',
-      ];
+        // Should divide total insulin by 2
 
-      statUtil = createStatUtil(partialDayBolusData, opts({ endpoints: testEndpoints }));
-      const result = statUtil.getInsulinData();
+        expect(result).to.eql({
+          basal: 0.75, // === 1.5 / 2
+          bolus: 7.5, // === 15 / 2
+          insulin: 1.5,
+        });
+      });
 
-      // First two boluses should go in bucket 0
-      // Third bolus should go in bucket 2
-      // So we have 2 buckets with data, total 18 / 2 = 9
-      expect(result.bolus).to.equal(9);
-    });
+      it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
 
-    it('should count 24-hour periods from starting endpoint when matching calendar days', () => {
-      // Endpoints span 7 calendar days, but matches whole calendar days
-      const testEndpoints = [
-        '2018-02-01T00:00:00.000Z',
-        '2018-02-08T00:00:00.000Z',
-      ];
+        const offsetBasalData = _.map([
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-01T14:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-02T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+          new Types.Basal({ duration: MS_IN_HOUR, deviceTime: '2018-02-08T10:00:00', source: 'Medtronic', deviceModel: '1780', deliveryType: 'automated', rate: 1, ...useRawData }),
+        ], _.toPlainObject);
 
-      statUtil = createStatUtil(partialDayBolusData, opts({ endpoints: testEndpoints }));
-      const result = statUtil.getInsulinData();
+        const offsetBolusData = _.map([
+          new Types.Bolus({ deviceTime: '2018-02-01T14:00:00', value: 2, ...useRawData }),
+          new Types.Bolus({ deviceTime: '2018-02-02T10:00:00', value: 4, ...useRawData }),
+          new Types.Bolus({ deviceTime: '2018-02-08T10:00:00', value: 6, ...useRawData }),
+        ], _.toPlainObject);
 
-      // First two boluses are in different 24 hour buckets (bucket 0 and 1)
-      // Third bolus comes later (bucket 3)
-      // So we have 3 buckets with data, total 18 / 3 = 6
-      expect(result.bolus).to.equal(6);
-    });
+        statUtil = createStatUtil([...offsetBasalData, ...offsetBolusData], opts({ endpoints: offsetEndpoints }));
+        filterEndpoints(offsetEndpoints);
 
-    it('should divide by number of 24-hour periods when data spans multiple periods', () => {
-      // Create data spanning 3 24-hour periods
-      const multiDayBolusData = _.map([
-        new Types.Bolus({
-          deviceTime: '2018-02-01T08:00:00', // bucket 0
-          value: 6,
-          ...useRawData,
-        }),
-        new Types.Bolus({
-          deviceTime: '2018-02-02T10:00:00', // 26 hours later - bucket 1
-          value: 6,
-          ...useRawData,
-        }),
-        new Types.Bolus({
-          deviceTime: '2018-02-03T12:00:00', // 26 hours later - bucket 2
-          value: 6,
-          ...useRawData,
-        }),
-      ], _.toPlainObject);
+        // Total basal = 0.5 + 0.5 + 0.5 = 1.5, Total bolus = 2 + 4 + 6 = 12
 
-      const testEndpoints = [
-        '2018-02-01T04:00:00.000Z',
-        '2018-02-08T04:00:00.000Z',
-      ];
+        // Should divide total insulin by 2 instead of 3 since we are looking at a 2 x 24h period
 
-      statUtil = createStatUtil(multiDayBolusData, opts({ endpoints: testEndpoints }));
-      const result = statUtil.getInsulinData();
-
-      // Boluses are each 26 hours apart, so they fall into 3 different 24-hour buckets
-      // Total is 18, divided by 3 buckets = 6
-      expect(result.bolus).to.equal(6);
+        const result = statUtil.getInsulinData();
+        expect(result).to.eql({
+          basal: 1.5, // === 3 / 2
+          bolus: 6, // === 12 / 2
+          insulin: NaN,
+        });
+      });
     });
   });
 
@@ -636,75 +600,78 @@ describe('StatUtil', () => {
       });
     });
 
-    // Create data that spans 2 calendar days but fits within one 24-hour period
-    const partialDayFoodData = _.map([
-      new Types.Food({
-        deviceTime: '2018-02-01T20:00:00', // Day 1, 8pm
-        nutrition: { carbohydrate: { net: 15 } },
-        ...useRawData,
-      }),
-      new Types.Food({
-        deviceTime: '2018-02-02T08:00:00', // Day 2, 8am (12 hours later)
-        nutrition: { carbohydrate: { net: 15 } },
-        ...useRawData,
-      }),
-    ], _.toPlainObject);
+    context('edge correction for offset windows', () => {
+      it('should not apply edge correction when endpoints are midnight-aligned', () => {
+        // twoDayEndpoints are midnight-aligned: data on 2018-02-01 and 2018-02-02
+        filterEndpoints(twoDayEndpoints);
+        const result = statUtil.getCarbsData();
+        expect(result).to.eql({
+          carbs: { grams: 21.5, exchanges: 1 },
+          total: 7,
+        });
+      });
 
-    it('should count 24-hour periods from starting endpoint when not matching calendar days', () => {
-      // Endpoints span 7 calendar days and does NOT match calendar days
-      const partialDayEndpoints = [
-        '2018-02-01T18:00:00.000Z',
-        '2018-02-08T18:00:00.000Z',
-      ];
+      it('should apply edge correction (-1) when endpoints are offset from midnight', () => {
+        const offsetEndpoints = [
+          '2018-02-01T13:30:00.000Z',
+          '2018-02-08T13:30:00.000Z',
+        ];
 
-      statUtil = createStatUtil(partialDayFoodData, opts({ endpoints: partialDayEndpoints }));
-      const result = statUtil.getCarbsData();
+        const offsetFoodData = _.map([
+          new Types.Food({ deviceTime: '2018-02-01T14:00:00', nutrition: { carbohydrate: { net: 10 } }, ...useRawData }),
+          new Types.Food({ deviceTime: '2018-02-02T10:00:00', nutrition: { carbohydrate: { net: 20 } }, ...useRawData }),
+          new Types.Food({ deviceTime: '2018-02-08T10:00:00', nutrition: { carbohydrate: { net: 30 } }, ...useRawData }),
+        ], _.toPlainObject);
 
-      // Both food entries are within 24 hours of each other (12 hours apart)
-      // So they should be in the same bucket, meaning no division occurs
-      expect(result.carbs).to.eql({ grams: 30, exchanges: 0 }); // 30 total, not divided
+        statUtil = createStatUtil(offsetFoodData, opts({ endpoints: offsetEndpoints }));
+        filterEndpoints(offsetEndpoints);
+
+        // Total grams = 10 + 20 + 30 = 60
+
+        // Should divide total grams by 2 instead of 3 since we are looking at a 2 x 24h period
+
+        const result = statUtil.getCarbsData();
+        expect(result).to.eql({
+          carbs: { grams: 30, exchanges: 0 }, // === 60 / 2
+          total: 3,
+        });
+      });
+    });
+  });
+
+  describe('getActiveDaysWithData', () => {
+    // For these tests, the offset endpoints span 2018-02-01T13:30 to 2018-02-03T13:30 (UTC)
+    // 2018-02-01 = Thursday (dow 4), 2018-02-03 = Saturday (dow 6)
+    const offsetEndpoints = [
+      '2018-02-01T13:30:00.000Z',
+      '2018-02-03T13:30:00.000Z',
+    ];
+
+    const headDatum = { time: '2018-02-01T14:00:00.000Z' };
+    const middleDatum = { time: '2018-02-02T12:00:00.000Z' };
+    const tailDatum = { time: '2018-02-03T10:00:00.000Z' };
+    const bothEdgeDatums = [headDatum, tailDatum];
+
+    it('should not apply correction when the start endpoint is midnight-aligned', () => {
+      filterEndpoints(twoDayEndpoints); // midnight-aligned
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(2);
     });
 
-    it('should count 24-hour periods from starting endpoint when matching calendar days', () => {
-      // Endpoints span 7 calendar days
-      const partialDayEndpoints = [
-        '2018-02-01T00:00:00.000Z',
-        '2018-02-08T00:00:00.000Z',
-      ];
-
-      statUtil = createStatUtil(partialDayFoodData, opts({ endpoints: partialDayEndpoints }));
-      const result = statUtil.getCarbsData();
-
-      // Both food entries are now in different 24 hour buckets
-      expect(result.carbs).to.eql({ grams: 15, exchanges: 0 }); // 30 divided by 2 days
+    it('should subtract 1 when start is not midnight and both edges have data', () => {
+      filterEndpoints(offsetEndpoints);
+      expect(statUtil.getActiveDaysWithData(bothEdgeDatums)).to.equal(1);
     });
 
-    it('should divide by number of 24-hour periods when data spans multiple periods', () => {
-      // Create data that spans more than 24 hours apart
-      const multiDayFoodData = _.map([
-        new Types.Food({
-          deviceTime: '2018-02-01T08:00:00', // Day 1, 8am
-          nutrition: { carbohydrate: { net: 20 } },
-          ...useRawData,
-        }),
-        new Types.Food({
-          deviceTime: '2018-02-02T10:00:00', // Day 2, 10am (26 hours later)
-          nutrition: { carbohydrate: { net: 20 } },
-          ...useRawData,
-        }),
-      ], _.toPlainObject);
+    it('should not apply correction when start is not midnight but head date has no data', () => {
+      filterEndpoints(offsetEndpoints);
+      // Data on middle and tail dates, but not on head date (Feb 1)
+      expect(statUtil.getActiveDaysWithData([middleDatum, tailDatum])).to.equal(2);
+    });
 
-      const multiDayEndpoints = [
-        '2018-02-01T00:00:00.000Z',
-        '2018-02-03T00:00:00.000Z',
-      ];
-
-      statUtil = createStatUtil(multiDayFoodData, opts({ endpoints: multiDayEndpoints }));
-      const result = statUtil.getCarbsData();
-
-      // Food entries are 26 hours apart, so they fall into 2 different 24-hour buckets
-      // Total is 40g, divided by 2 buckets = 20g
-      expect(result.carbs).to.eql({ grams: 20, exchanges: 0 });
+    it('should not apply correction when start is not midnight but tail date has no data', () => {
+      filterEndpoints(offsetEndpoints);
+      // Data on head and middle dates, but not on tail date (Feb 3)
+      expect(statUtil.getActiveDaysWithData([headDatum, middleDatum])).to.equal(2);
     });
   });
 
