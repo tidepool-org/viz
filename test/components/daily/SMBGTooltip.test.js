@@ -19,13 +19,24 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import colors from '../../../src/styles/colors.css';
 
 import SMBGTooltip from '../../../src/components/daily/smbgtooltip/SMBGTooltip';
 import styles from '../../../src/components/daily/smbgtooltip/SMBGTooltip.css';
+
+jest.mock('../../../src/components/common/tooltips/Tooltip', () => {
+  const R = require('react');
+  const MockTooltip = (props) => R.createElement('div', {
+    'data-testid': 'Tooltip',
+    'data-tail-color': props.tailColor,
+    'data-border-color': props.borderColor,
+  }, props.title, props.content);
+  MockTooltip.displayName = 'Tooltip';
+  return { __esModule: true, default: MockTooltip };
+});
 
 const bgPrefs = {
   bgClasses: {
@@ -197,126 +208,131 @@ const glucoseValueSelector = `${formatClassesAsSelector(styles.bg)} ${formatClas
 
 describe('SMBGTooltip', () => {
   it('should render without issue when all properties provided', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={target} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    const { container } = render(<SMBGTooltip {...props} smbg={target} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(1);
   });
 
   it('should render "target" color for target bg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={target} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.target);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.target);
+    const { container } = render(<SMBGTooltip {...props} smbg={target} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.target);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.target);
   });
 
   it('should render "high" color for high bg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={high} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.high);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.high);
+    const { container } = render(<SMBGTooltip {...props} smbg={high} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.high);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.high);
   });
 
   it('should render "veryHigh" color for very high bg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={veryHigh} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.veryHigh);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.veryHigh);
+    const { container } = render(<SMBGTooltip {...props} smbg={veryHigh} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.veryHigh);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.veryHigh);
   });
 
   it('should render "low" color for low bg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={low} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.low);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.low);
+    const { container } = render(<SMBGTooltip {...props} smbg={low} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.low);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.low);
   });
 
   it('should render "veryLow" color for very low bg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={veryLow} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.veryLow);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.veryLow);
+    const { container } = render(<SMBGTooltip {...props} smbg={veryLow} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.veryLow);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.veryLow);
   });
 
   it('should render "manual" for a manual smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={manual} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Manual');
+    const { container } = render(<SMBGTooltip {...props} smbg={manual} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Manual');
   });
 
   it('should render "linked" for a linked smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={linked} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Linked');
+    const { container } = render(<SMBGTooltip {...props} smbg={linked} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Linked');
   });
 
   it('should render "Yes" for a confirmed medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600accepted} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('Yes');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600accepted} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('Yes');
   });
 
   it('should render "No" for a rejected medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600rejected} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('No');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600rejected} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('No');
   });
 
   it('should render "Timed Out" for a timed out medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600timeout} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('Timed Out');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600timeout} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('Timed Out');
   });
 
   it('should render "Yes" and "Manual" for a confirmed manual medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600acceptedManual} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('Yes');
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Manual');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600acceptedManual} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('Yes');
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Manual');
   });
 
   it('should render "No" and "Linked" for a rejected linked medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600rejectedLinked} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('No');
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Linked');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600rejectedLinked} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('No');
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Linked');
   });
 
   it('should render "Timed Out" and "Manual" for a timed out manual medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600timeoutManual} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('Timed Out');
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Manual');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600timeoutManual} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('Timed Out');
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Manual');
   });
 
   it('should render "Manual" for a manual medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600calibManual} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.calibration))).to.have.length(0);
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Manual');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600calibManual} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.calibration))).to.have.length(0);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Manual');
   });
 
   it('should render "Manual" for a non-calibration manual medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600noncalibManual} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.calibration))).to.have.length(0);
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Manual');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600noncalibManual} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.calibration))).to.have.length(0);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Manual');
   });
 
   it('should render "Yes" and "Manual" for an accepted non-calibration manual medtronic 600 series smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={medT600acceptedNoncalibManual} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
-    expect(wrapper.find(bgValueSelector).text()).to.equal('Yes');
-    expect(wrapper.find(formatClassesAsSelector(styles.calibration))).to.have.length(0);
-    expect(wrapper.find(formatClassesAsSelector(styles.source))).to.have.length(1);
-    expect(wrapper.find(sourceValueSelector).text()).to.equal('Manual');
+    const { container } = render(<SMBGTooltip {...props} smbg={medT600acceptedNoncalibManual} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.confirmBg))).to.have.length(1);
+    expect(container.querySelector(bgValueSelector).textContent).to.equal('Yes');
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.calibration))).to.have.length(0);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
+    expect(container.querySelector(sourceValueSelector).textContent).to.equal('Manual');
   });
 
   it('should render "High" and an annotation for a "very-high" smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={veryHigh} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.annotation))).to.have.length(1);
-    expect(wrapper.find(glucoseValueSelector).text()).to.equal('High');
+    const { container } = render(<SMBGTooltip {...props} smbg={veryHigh} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.annotation))).to.have.length(1);
+    expect(container.querySelector(glucoseValueSelector).textContent).to.equal('High');
   });
 
   it('should render "Low" and an annotation for a "very-low" smbg', () => {
-    const wrapper = mount(<SMBGTooltip {...props} smbg={veryLow} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.annotation))).to.have.length(1);
-    expect(wrapper.find(glucoseValueSelector).text()).to.equal('Low');
+    const { container } = render(<SMBGTooltip {...props} smbg={veryLow} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.annotation))).to.have.length(1);
+    expect(container.querySelector(glucoseValueSelector).textContent).to.equal('Low');
   });
 });

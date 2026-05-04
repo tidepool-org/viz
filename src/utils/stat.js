@@ -351,6 +351,9 @@ export const reconcileTIRDatumValues = (statTIRDatum) => {
   const ranges = {};
   const total = statTIRDatum.data?.total?.value;
 
+  // If there's no valid total, reconciliation would produce NaN values, so return as-is
+  if (!_.isFinite(total) || total <= 0) return statTIRDatum;
+
   _.forEach(statTIRDatum.data.data, datum => {
     ranges[datum.id] = datum.value / total;
   });
