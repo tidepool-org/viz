@@ -4428,6 +4428,32 @@ describe('DataUtil', () => {
         },
       ]);
     });
+
+    it('should set the proper device label for Trio data', () => {
+      initDataUtil([{
+        ...uploadData[3],
+        origin: {
+          name: 'org.nightscout.Trio',
+        },
+        deviceId: 'MyTrio123',
+        dataSetType: 'continuous',
+      }]);
+
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          oneMinCgmSampleInterval: false,
+          id: 'MyTrio123',
+          label: 'Trio',
+          pump: false,
+          serialNumber: undefined
+        },
+      ]);
+    });
   });
 
   describe('setDataAnnotations', () => {
