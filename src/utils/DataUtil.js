@@ -1711,6 +1711,8 @@ export class DataUtil {
           } else {
             label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }
+        } else if (isTrio(upload)) {
+          label = 'Trio';
         }
 
         if (key.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
