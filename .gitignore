@@ -18,3 +18,5 @@ package-lock.json
 
 .codegpt
 .claude/settings.local.json
+.pi
+.pi-lens
