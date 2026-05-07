@@ -35,6 +35,13 @@ export function isDIYLoop(datum = {}) {
 }
 
 /**
+ * Check to see if datum is from Trio
+ */
+export function isTrio(datum = {}) {
+  return datum.tags?.trio || (/^org\.nightscout\.Trio/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
+}
+
+/**
  * Check to see if datum is from Tidepool Loop
 */
 export function isTidepoolLoop(datum = {}) {
@@ -92,7 +99,8 @@ export function isDexcom(datum = {}) {
 export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, deviceModel) {
   return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []), deviceModel)
     || (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
-    || isLoop(pumpSettingsOrUpload);
+    || isLoop(pumpSettingsOrUpload)
+    || isTrio(pumpSettingsOrUpload);
 }
 
 /**
@@ -103,7 +111,8 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, 
  */
 export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) {
   return (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
-    || isDIYLoop(pumpSettingsOrUpload);
+    || isDIYLoop(pumpSettingsOrUpload)
+    || isTrio(pumpSettingsOrUpload);
 }
 
 /**

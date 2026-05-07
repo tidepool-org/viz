@@ -279,6 +279,13 @@ describe('DataUtil', () => {
       client: { name: 'com.loopkit.Loop' },
       ...useRawData,
     }),
+    new Types.Upload({
+      dataSetType: 'continuous',
+      deviceTime: '2018-02-05T00:00:00',
+      uploadId: 'upload-5',
+      client: { name: 'org.nightscout.Trio' },
+      ...useRawData,
+    }),
   ], _.toPlainObject);
 
   const pumpSettingsData = [
@@ -459,27 +466,29 @@ describe('DataUtil', () => {
       expect(dataUtil.wizardToBolusIdMap[newWizard.id]).to.equal(newBolus.id);
     });
 
-    it('should create and/or update the `loopDataSetsByIdMap`', () => {
-      delete dataUtil.loopDataSetsByIdMap;
-      expect(dataUtil.loopDataSetsByIdMap).to.be.undefined;
+    it('should create and/or update the `dosingDecisionDataSetsByIdMap`', () => {
+      delete dataUtil.dosingDecisionDataSetsByIdMap;
+      expect(dataUtil.dosingDecisionDataSetsByIdMap).to.be.undefined;
 
       dataUtil.addData(defaultData, defaultPatientId);
 
-      expect(dataUtil.loopDataSetsByIdMap).to.be.an('object').and.have.keys([
+      expect(dataUtil.dosingDecisionDataSetsByIdMap).to.be.an('object').and.have.keys([
         uploadData[3].id,
         uploadData[4].id,
+        uploadData[5].id,
       ]);
 
       const newUpload = new Types.Upload({ ...useRawData, dataSetType: 'continuous', client: { name: 'com.loopkit.Loop' } });
       dataUtil.addData([newUpload], defaultPatientId);
 
-      expect(dataUtil.loopDataSetsByIdMap).to.be.an('object').and.have.keys([
+      expect(dataUtil.dosingDecisionDataSetsByIdMap).to.be.an('object').and.have.keys([
         uploadData[3].id,
         uploadData[4].id,
+        uploadData[5].id,
         newUpload.id,
       ]);
 
-      expect(dataUtil.loopDataSetsByIdMap[newUpload.id].id).to.equal(newUpload.id);
+      expect(dataUtil.dosingDecisionDataSetsByIdMap[newUpload.id].id).to.equal(newUpload.id);
     });
 
     it('should create and/or update the `bolusDatumsByIdMap`', () => {
@@ -854,11 +863,18 @@ describe('DataUtil', () => {
         expect(uploadWithoutTime.time).to.be.a('number');
       });
 
-      it('should add a loop datum to `loopDataSetsByIdMap`', () => {
+      it('should add a loop datum to `dosingDecisionDataSetsByIdMap`', () => {
         const loopUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.tidepool.Loop' }, ...useRawData }), id: 'foo' };
-        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.undefined;
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[loopUpload.id]).to.be.undefined;
         dataUtil.normalizeDatumIn(loopUpload);
-        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.an('object').and.have.property('id', loopUpload.id);
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[loopUpload.id]).to.be.an('object').and.have.property('id', loopUpload.id);
+      });
+
+      it('should add a trio datum to `dosingDecisionDataSetsByIdMap`', () => {
+        const trioUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.nightscout.Trio' }, ...useRawData }), id: 'trio-foo' };
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[trioUpload.id]).to.be.undefined;
+        dataUtil.normalizeDatumIn(trioUpload);
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[trioUpload.id]).to.be.an('object').and.have.property('id', trioUpload.id);
       });
 
       it('should add a dexcom datum to `dexcomDataSetsByIdMap`', () => {
@@ -1190,7 +1206,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
-      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
 
       _.each([bolus, bolus2], dataUtil.joinBolusAndDosingDecision);
       // should not attach dosing decision to bolus that is not associated
@@ -1231,7 +1247,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
-      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
 
       dataUtil.joinBolusAndDosingDecision(bolus);
       // should attach associated pump settings to dosingDecisions
@@ -1268,7 +1284,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
-      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
 
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.dosingDecision).to.eql(dosingDecision);
@@ -1306,7 +1322,7 @@ describe('DataUtil', () => {
         food: { nutrition: { carbohydrate: { net: 30 } } },
       };
 
-      dataUtil.loopDataSetsByIdMap = {
+      dataUtil.dosingDecisionDataSetsByIdMap = {
         upload1: { client: { name: 'org.tidepool.Loop' } },
       };
 
@@ -1330,6 +1346,42 @@ describe('DataUtil', () => {
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(0);
       expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
+    });
+
+    it('should join trio dosing decisions to boluses from trio uploads', () => {
+      const uploadId = 'upload-trio';
+      const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.nightscout.Trio' } };
+      const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.nightscout.Trio' } };
+      const pumpSettings = { ...loopMultirate, id: 'pumpSettings1' };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.nightscout.Trio' },
+        associations: [
+          { reason: 'bolus', id: 'bolus1' },
+          { reason: 'pumpSettings', id: 'pumpSettings1' },
+        ],
+        requestedBolus: { normal: 12 },
+        insulinOnBoard: { amount: 4 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        bgHistorical: [
+          { value: 100 },
+          { value: 110 },
+        ],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
+
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.dosingDecision).to.eql(dosingDecision);
+      expect(bolus.dosingDecision.pumpSettings).to.eql(pumpSettings);
+      expect(bolus.carbInput).to.equal(30);
+      expect(bolus.bgInput).to.equal(110);
+      expect(bolus.insulinOnBoard).to.equal(4);
     });
   });
 
@@ -1547,12 +1599,25 @@ describe('DataUtil', () => {
       it('should tag a loop bolus with `loop`', () => {
         const loopUploadId = 'upload1';
         const loopUpload = { type: 'upload', id: loopUploadId, dataSetType: 'continuous', uploadId: loopUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
-        dataUtil.loopDataSetsByIdMap = { [loopUploadId]: loopUpload };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [loopUploadId]: loopUpload };
         const loopBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', uploadId: loopUploadId };
 
         expect(loopBolus.tags).to.be.undefined;
         dataUtil.tagDatum(loopBolus);
         expect(loopBolus.tags.loop).to.be.true;
+        expect(loopBolus.tags.trio).to.be.false;
+      });
+
+      it('should tag a trio bolus with `trio` and not `loop`', () => {
+        const trioUploadId = 'upload-trio';
+        const trioUpload = { type: 'upload', id: trioUploadId, dataSetType: 'continuous', uploadId: trioUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.nightscout.Trio' } };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [trioUploadId]: trioUpload };
+        const trioBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', uploadId: trioUploadId };
+
+        expect(trioBolus.tags).to.be.undefined;
+        dataUtil.tagDatum(trioBolus);
+        expect(trioBolus.tags.trio).to.be.true;
+        expect(trioBolus.tags.loop).to.be.false;
       });
     });
 
@@ -1574,7 +1639,7 @@ describe('DataUtil', () => {
       const underrideWizard = { ...wizard, bolus: { normal: 1 }, recommended: { net: 2 } };
 
       beforeEach(() => {
-        dataUtil.loopDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
+        dataUtil.dosingDecisionDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
       });
 
       it('should tag an extended wizard with `extended`', () => {
@@ -1638,12 +1703,25 @@ describe('DataUtil', () => {
       it('should tag a loop food datum with `loop`', () => {
         const loopUploadId = 'upload1';
         const loopUpload = { type: 'upload', id: loopUploadId, dataSetType: 'continuous', uploadId: loopUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
-        dataUtil.loopDataSetsByIdMap = { [loopUploadId]: loopUpload };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [loopUploadId]: loopUpload };
         const loopFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: loopUploadId, ...useRawData });
 
         expect(loopFood.tags).to.be.undefined;
         dataUtil.tagDatum(loopFood);
         expect(loopFood.tags.loop).to.be.true;
+        expect(loopFood.tags.trio).to.be.false;
+      });
+
+      it('should tag a trio food datum with `trio` and not `loop`', () => {
+        const trioUploadId = 'upload-trio';
+        const trioUpload = { type: 'upload', id: trioUploadId, dataSetType: 'continuous', uploadId: trioUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.nightscout.Trio' } };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [trioUploadId]: trioUpload };
+        const trioFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: trioUploadId, ...useRawData });
+
+        expect(trioFood.tags).to.be.undefined;
+        dataUtil.tagDatum(trioFood);
+        expect(trioFood.tags.trio).to.be.true;
+        expect(trioFood.tags.loop).to.be.false;
       });
 
       it('should tag a dexcom food datum with `dexcom` and `manual`', () => {
@@ -3106,23 +3184,23 @@ describe('DataUtil', () => {
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(37);
+        expect(dataUtil.data.size()).to.equal(38);
         dataUtil.removeData(d => (d.type === 'basal'));
-        expect(dataUtil.data.size()).to.equal(34);
+        expect(dataUtil.data.size()).to.equal(35);
       });
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(37);
+        expect(dataUtil.data.size()).to.equal(38);
         dataUtil.removeData({ type: 'basal' });
-        expect(dataUtil.data.size()).to.equal(34);
+        expect(dataUtil.data.size()).to.equal(35);
       });
     });
 
     context('predicate not provided', () => {
       it('should remove all data from the crossfilter', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(37);
+        expect(dataUtil.data.size()).to.equal(38);
         dataUtil.removeData();
         expect(dataUtil.data.size()).to.equal(0);
       });
@@ -3135,7 +3213,7 @@ describe('DataUtil', () => {
         dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
         dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
         dataUtil.wizardToBolusIdMap = { foo: 'bar' };
-        dataUtil.loopDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.dosingDecisionDataSetsByIdMap = { foo: 'bar' };
         dataUtil.dexcomDataSetsByIdMap = { foo: 'bar' };
         dataUtil.bolusDosingDecisionDatumsByIdMap = { foo: 'bar' };
         dataUtil.removeData();
@@ -3146,7 +3224,7 @@ describe('DataUtil', () => {
         expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
         expect(dataUtil.wizardDatumsByIdMap).to.eql({});
         expect(dataUtil.wizardToBolusIdMap).to.eql({});
-        expect(dataUtil.loopDataSetsByIdMap).to.eql({});
+        expect(dataUtil.dosingDecisionDataSetsByIdMap).to.eql({});
         expect(dataUtil.dexcomDataSetsByIdMap).to.eql({});
         expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.eql({});
       });
@@ -3878,6 +3956,7 @@ describe('DataUtil', () => {
         uploadData[2].uploadId,
         uploadData[3].uploadId,
         uploadData[4].uploadId,
+        uploadData[5].uploadId,
       ]);
 
       expect(dataUtil.uploadMap[uploadData[0].uploadId]).to.eql({
@@ -3902,6 +3981,11 @@ describe('DataUtil', () => {
 
       expect(dataUtil.uploadMap[uploadData[4].uploadId]).to.eql({
         source: 'diy loop',
+        deviceSerialNumber: 'Unknown',
+      });
+
+      expect(dataUtil.uploadMap[uploadData[5].uploadId]).to.eql({
+        source: 'Unknown',
         deviceSerialNumber: 'Unknown',
       });
     });
@@ -5563,7 +5647,7 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings).to.eql(dataUtil.latestPumpUpload.settings);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(37);
+      expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
         { id: 'Test Page Data - 123' },
@@ -5598,7 +5682,7 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings).to.eql(dataUtil.latestPumpUpload.settings);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(37);
+      expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
         { id: 'Test Page Data - 123' },

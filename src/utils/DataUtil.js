@@ -15,6 +15,7 @@ import {
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
   isDIYLoop,
+  isTrio,
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
@@ -45,6 +46,7 @@ import {
   MS_IN_MIN,
   MGDL_UNITS,
   DIY_LOOP,
+  TRIO,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
   SITE_CHANGE_RESERVOIR,
@@ -119,7 +121,7 @@ export class DataUtil {
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
-    this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dosingDecisionDataSetsByIdMap = this.dosingDecisionDataSetsByIdMap || {};
     this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
@@ -228,7 +230,7 @@ export class DataUtil {
 
     if (d.type === 'upload') {
       if (d.dataSetType === 'continuous') {
-        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isLoop(d) || isTrio(d)) this.dosingDecisionDataSetsByIdMap[d.id] = d;
         if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
         if (!d.time) d.time = moment.utc().toISOString();
       } else {
@@ -369,7 +371,7 @@ export class DataUtil {
   };
 
   joinBolusAndDosingDecision = d => {
-    if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
+    if (d.type === 'bolus' && !!this.dosingDecisionDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
       // Find the dosing decision that matches the bolus by checking if there is a definitive association
@@ -646,7 +648,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
-    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const dosingDecisionUpload = this.dosingDecisionDataSetsByIdMap[d.uploadId];
+    const isLoopDatum = !!dosingDecisionUpload && isLoop(dosingDecisionUpload);
+    const isTrioDatum = !!dosingDecisionUpload && isTrio(dosingDecisionUpload);
     const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
 
     if (d.type === 'basal') {
@@ -668,7 +672,8 @@ export class DataUtil {
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        trio: isTrioDatum,
         oneButton: isOneButton(d),
       };
     }
@@ -698,6 +703,7 @@ export class DataUtil {
     if (d.type === 'food') {
       d.tags = {
         loop: isLoopDatum,
+        trio: isTrioDatum,
         dexcom: isDexcomDatum,
         manual: isDexcomDatum,
       };
@@ -1219,7 +1225,7 @@ export class DataUtil {
       this.pumpSettingsDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
       this.wizardToBolusIdMap = {};
-      this.loopDataSetsByIdMap = {};
+      this.dosingDecisionDataSetsByIdMap = {};
       this.dexcomDataSetsByIdMap = {};
       this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
@@ -1569,6 +1575,8 @@ export class DataUtil {
         }
       } else if (isTidepoolLoop(pumpSettings)) {
         source = TIDEPOOL_LOOP.toLowerCase();
+      } else if (isTrio(pumpSettings)) {
+        source = TRIO.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {

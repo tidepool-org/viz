@@ -77,4 +77,54 @@ describe('[settings] non-Tandem data utils', () => {
       });
     });
   });
+
+  describe('bolusTitle', () => {
+    it('should return the correct title for trio', () => {
+      expect(nonTandemData.bolusTitle('trio')).to.equal('Bolus Calculator');
+    });
+  });
+
+  describe('sensitivity', () => {
+    it('should return the correct title for trio', () => {
+      const result = nonTandemData.sensitivity({
+        insulinSensitivities: { Default: [{ amount: 50, start: 0 }] },
+        activeSchedule: 'Default',
+      }, 'trio', 'mg/dL');
+      expect(result.title).to.equal('Insulin Sensitivities');
+    });
+  });
+
+  describe('ratio', () => {
+    it('should return the correct title for trio', () => {
+      const result = nonTandemData.ratio({
+        carbRatios: { Default: [{ amount: 10, start: 0 }] },
+        activeSchedule: 'Default',
+      }, 'trio');
+      expect(result.title).to.equal('Carb Ratios');
+    });
+  });
+
+  describe('target', () => {
+    it('should return Glucose Targets title and annotations for trio', () => {
+      const result = nonTandemData.target({
+        bgTargets: { Default: [{ low: 100, high: 100, start: 0 }] },
+        activeSchedule: 'Default',
+        origin: { name: 'org.nightscout.Trio' },
+      }, 'trio', 'mg/dL');
+      expect(result.title).to.equal('Glucose Targets');
+      expect(result.annotations).to.be.an('array').with.lengthOf(1);
+      expect(result.annotations[0]).to.match(/Glucose Targets/);
+    });
+
+    it('should return Correction Range title for loop', () => {
+      const result = nonTandemData.target({
+        bgTargets: { Default: [{ low: 100, high: 110, start: 0 }] },
+        activeSchedule: 'Default',
+        origin: { name: 'org.tidepool.palmtree.Loop' },
+      }, 'diy loop', 'mg/dL');
+      expect(result.title).to.equal('Correction Range');
+      expect(result.annotations).to.be.an('array').with.lengthOf(1);
+      expect(result.annotations[0]).to.match(/Correction Range/);
+    });
+  });
 });
