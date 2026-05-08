@@ -750,19 +750,19 @@ describe('BolusTooltip', () => {
     const carbsLabel = `${formatClassesAsSelector(styles.carbs)} ${formatClassesAsSelector(styles.label)}`;
 
     it('should show "Carbs (eaten at X:XX)" when food.time diff exceeds 5min from bolus time', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTime} />);
-      expect(wrapper.find(carbsLabel).text()).to.contain('Carbs (eaten at');
-      expect(wrapper.find(carbsLabel).text()).to.contain('4:00');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTime} />);
+      expect(container.querySelector(carbsLabel).textContent).to.contain('Carbs (eaten at');
+      expect(container.querySelector(carbsLabel).textContent).to.contain('4:00');
     });
 
     it('should show plain "Carbs" when dosingDecision has no food.time', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecisionNoFoodTime} />);
-      expect(wrapper.find(carbsLabel).text()).to.equal('Carbs');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionNoFoodTime} />);
+      expect(container.querySelector(carbsLabel).textContent).to.equal('Carbs');
     });
 
     it('should show plain "Carbs" when food.time is within 5min of bolus time', () => {
-      const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTimeWithinThreshold} />);
-      expect(wrapper.find(carbsLabel).text()).to.equal('Carbs');
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTimeWithinThreshold} />);
+      expect(container.querySelector(carbsLabel).textContent).to.equal('Carbs');
     });
   });
 
