@@ -386,7 +386,7 @@ describe('DailyPrintView', () => {
       const deletedItem = _.find(legendItems, item => item.type === 'carbsDeleted');
       expect(deletedItem.labels).to.deep.equal(['Carbs', 'deleted']);
     });
-  
+
     context('override legend show logic for dosing decision boluses', () => {
       function getLegendItemsWithBoluses(boluses) {
         const bolusData = _.assign({}, data, {
