@@ -1,5 +1,5 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
@@ -20,26 +20,26 @@ const props = {
 
 describe('AlarmTooltip', () => {
   it('should render the alarm time', () => {
-    const wrapper = mount(<AlarmTooltip {...props} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.time))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.time)).text()).to.equal('12:00 pm');
+    const { container } = render(<AlarmTooltip {...props} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.time))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.time)).textContent).to.equal('12:00 pm');
   });
 
   it('should render the device alarm title', () => {
-    const wrapper = mount(<AlarmTooltip {...props} alarm={alarm} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.deviceAlarmTitle))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.deviceAlarmTitle)).text()).to.equal('Pump Alarm');
+    const { container } = render(<AlarmTooltip {...props} alarm={alarm} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.deviceAlarmTitle))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.deviceAlarmTitle)).textContent).to.equal('Pump Alarm');
   });
 
   it('should render the alarm type', () => {
-    const wrapper = mount(<AlarmTooltip {...props} alarm={alarm} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.alarmType))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.alarmType)).text()).to.equal('Occlusion Detected');
+    const { container } = render(<AlarmTooltip {...props} alarm={alarm} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.alarmType))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.alarmType)).textContent).to.equal('Occlusion Detected');
   });
 
   it('should render the alarm type with an overridden label for twiist', () => {
-    const wrapper = mount(<AlarmTooltip {...props} alarm={{ ...alarm, source: 'twiist' }} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.alarmType))).to.have.length(1);
-    expect(wrapper.find(formatClassesAsSelector(styles.alarmType)).text()).to.equal('Line Blocked');
+    const { container } = render(<AlarmTooltip {...props} alarm={{ ...alarm, source: 'twiist' }} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.alarmType))).to.have.length(1);
+    expect(container.querySelector(formatClassesAsSelector(styles.alarmType)).textContent).to.equal('Line Blocked');
   });
 });

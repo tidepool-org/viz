@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../../helpers/cssmodules';
 
@@ -41,17 +41,17 @@ describe('CBGDateTraceLabel', () => {
 
   describe('with no date trace currently focused', () => {
     it('should render nothing', () => {
-      const wrapper = mount(<CBGDateTraceLabel focusedDateTrace={null} />);
-      expect(wrapper.html()).to.be.null;
+      const { container } = render(<CBGDateTraceLabel focusedDateTrace={null} />);
+      expect(container.firstChild).to.be.null;
     });
   });
 
   describe('with a date trace focused', () => {
     it('should render a date label', () => {
-      const wrapper = mount(<CBGDateTraceLabel {...props} />);
-      const label = wrapper.find(formatClassesAsSelector(styles.dateLabel));
+      const { container } = render(<CBGDateTraceLabel {...props} />);
+      const label = container.querySelectorAll(formatClassesAsSelector(styles.dateLabel));
       expect(label).to.have.length(1);
-      expect(label.text()).to.equal('Sunday, January 1');
+      expect(label[0].textContent).to.equal('Sunday, January 1');
     });
   });
 });

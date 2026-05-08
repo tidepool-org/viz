@@ -17,9 +17,8 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { TransitionMotion } from 'react-motion';
 
-import { mount } from 'enzyme';
+import { render, fireEvent, cleanup } from '@testing-library/react/pure';
 
 import bgBounds from '../../../helpers/bgBounds';
 import * as scales from '../../../helpers/scales';
@@ -33,8 +32,21 @@ const {
 import SVGContainer from '../../../helpers/SVGContainer';
 import { SMBGDateLineAnimated } from '../../../../src/components/trends/smbg/SMBGDateLineAnimated';
 
+let tmRendered = false;
+jest.mock('react-motion', () => {
+  const React = require('react');
+  return {
+    TransitionMotion: (tmProps) => {
+      tmRendered = true;
+      const styles = typeof tmProps.styles === 'function' ? tmProps.styles() : (tmProps.styles || []);
+      return tmProps.children(styles);
+    },
+    spring: (val) => val,
+  };
+});
+
 describe('SMBGDateLineAnimated', () => {
-  let wrapper;
+  let container;
   const focusSmbg = sinon.spy();
   const unfocusSmbg = sinon.spy();
   const onSelectDate = sinon.spy();
@@ -61,35 +73,40 @@ describe('SMBGDateLineAnimated', () => {
   };
 
   before(() => {
-    wrapper = mount(
+    ({ container } = render(
       <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
         <SMBGDateLineAnimated {...props} />
       </SVGContainer>
-    );
+    ));
   });
 
-  describe('when an empty array of data is provided', () => {
-    let noDataWrapper;
+  after(() => {
+    cleanup();
+  });
+
+  describe('when data prop is omitted', () => {
+    let noDataContainer;
     before(() => {
+      tmRendered = false;
       const noDataProps = _.omit(props, 'data');
 
-      noDataWrapper = mount(
+      ({ container: noDataContainer } = render(
         <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
           <SMBGDateLineAnimated {...noDataProps} />
         </SVGContainer>
-      );
+      ));
     });
 
     it('should render a TransitionMotion component but no <path>', () => {
-      expect(noDataWrapper.find(`#smbgDateLine-${date}`).length).to.equal(1);
-      expect(noDataWrapper.find(TransitionMotion).length).to.equal(1);
-      expect(noDataWrapper.find('path').length).to.equal(0);
+      expect(noDataContainer.querySelectorAll(`#smbgDateLine-${date}`).length).to.equal(1);
+      expect(tmRendered).to.be.true;
+      expect(noDataContainer.querySelectorAll('path').length).to.equal(0);
     });
   });
 
-  describe('when a data is provided', () => {
+  describe('when data is provided', () => {
     it('should render a smbgDateLine <path>', () => {
-      expect(wrapper.find(`#smbgDateLine-${date} path`).length).to.equal(1);
+      expect(container.querySelectorAll(`#smbgDateLine-${date} path`).length).to.equal(1);
     });
   });
 
@@ -97,29 +114,30 @@ describe('SMBGDateLineAnimated', () => {
     afterEach(() => {
       props.focusSmbg.resetHistory();
       props.unfocusSmbg.resetHistory();
+      props.onSelectDate.resetHistory();
     });
 
     it('should call focusSmbg on mouseover of smbg line', () => {
-      const smbgDateLine = wrapper
-        .find(`#smbgDateLine-${date} path`);
+      const smbgDateLine = container
+        .querySelector(`#smbgDateLine-${date} path`);
       expect(focusSmbg.callCount).to.equal(0);
-      smbgDateLine.simulate('mouseover');
+      fireEvent.mouseOver(smbgDateLine);
       expect(focusSmbg.callCount).to.equal(1);
     });
 
     it('should call unfocusSmbg on mouseout of smbg line', () => {
-      const smbgDateLine = wrapper
-        .find(`#smbgDateLine-${date} path`);
+      const smbgDateLine = container
+        .querySelector(`#smbgDateLine-${date} path`);
       expect(unfocusSmbg.callCount).to.equal(0);
-      smbgDateLine.simulate('mouseout');
+      fireEvent.mouseOut(smbgDateLine);
       expect(unfocusSmbg.callCount).to.equal(1);
     });
 
     it('should call onSelectDate on click of smbg line', () => {
-      const smbgDateLine = wrapper
-        .find(`#smbgDateLine-${date} path`);
+      const smbgDateLine = container
+        .querySelector(`#smbgDateLine-${date} path`);
       expect(onSelectDate.callCount).to.equal(0);
-      smbgDateLine.simulate('click');
+      fireEvent.click(smbgDateLine);
       expect(onSelectDate.callCount).to.equal(1);
     });
   });

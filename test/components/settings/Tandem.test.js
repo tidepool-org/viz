@@ -18,14 +18,30 @@
 /* eslint no-console:0 */
 
 import React from 'react';
-import { mount, shallow } from 'enzyme';
+import { render as rtlRender, cleanup, fireEvent } from '@testing-library/react/pure';
 
-import CollapsibleContainer from '../../../src/components/settings/common/CollapsibleContainer';
 import Tandem from '../../../src/components/settings/Tandem';
 import styles from '../../../src/components/settings/Tandem.css';
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../src/utils/constants';
 import { formatDecimalNumber } from '../../../src/utils/format';
+
+jest.mock('../../../src/components/settings/common/Header', () => (props) => (
+  <div data-testid="Header" data-device-display-name={props.deviceDisplayName}>{props.children}</div>
+));
+jest.mock('../../../src/components/settings/common/CollapsibleContainer', () => (props) => (
+  <div data-testid="CollapsibleContainer">
+    <div className="label">
+      <span>{props.label && props.label.main}</span>
+      <span>{props.label && props.label.secondary}</span>
+      <span>{props.label && props.label.units}</span>
+    </div>
+    {props.children}
+  </div>
+));
+jest.mock('../../../src/components/common/controls/ClipboardButton', () => (props) => (
+  <button data-testid="ClipboardButton" onClick={() => props.onSuccess && props.onSuccess()}>Copy</button>
+));
 
 
 const flatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
@@ -42,7 +58,7 @@ const user = {
     },
   },
 };
-let wrapper;
+let container;
 let props;
 
 describe('Tandem', () => {
@@ -57,107 +73,116 @@ describe('Tandem', () => {
       toggleProfileExpansion: () => {},
     };
 
-    wrapper = shallow(
+    const rendered = rtlRender(
       <Tandem {...props} />
     );
+    container = rendered.container;
   });
 
   afterEach(() => {
     copySettingsClicked.resetHistory();
+    cleanup();
   });
 
   it('should render without problems when required props provided', () => {
+    const originalConsoleError = console.error;
     console.error = sinon.spy();
     expect(console.error.callCount).to.equal(0);
-    wrapper = shallow(
+    cleanup();
+    rtlRender(
       <Tandem {...props} />
     );
     expect(console.error.callCount).to.equal(0);
+    console.error = originalConsoleError;
   });
 
   it('should have a header', () => {
-    expect(wrapper.find('Header')).to.have.length(1);
+    expect(container.querySelectorAll('[data-testid="Header"]')).to.have.length(1);
   });
 
   it('should have Tandem as the Header deviceDisplayName', () => {
-    expect(wrapper.find('Header').props().deviceDisplayName).to.equal('Tandem');
+    expect(container.querySelector('[data-testid="Header"]').getAttribute('data-device-display-name')).to.equal('Tandem');
   });
 
   it('should have six Tables - a profile and an insulin settings table for each profile', () => {
-    expect(wrapper.find('Table')).to.have.length(6);
+    expect(container.querySelectorAll('table')).to.have.length(6);
   });
 
   it('should have three CollapsibleContainers', () => {
-    expect(wrapper.find(CollapsibleContainer)).to.have.length(3);
+    expect(container.querySelectorAll('[data-testid="CollapsibleContainer"]')).to.have.length(3);
   });
 
   it('should preserve user capitalization of profile names', () => {
-    // must use mount to search far enough down in tree!
+    // must use full render to search far enough down in tree!
+    cleanup();
     props.pumpSettings = flatrateData;
     props.openedSections = { [flatrateData.activeSchedule]: true };
-    const mounted = mount(
+    const { container: c } = rtlRender(
       <Tandem {...props} />
     );
-    expect(mounted.find('.label').someWhere(n => (n.text().search('Normal') !== -1)))
+    const labels = Array.from(c.querySelectorAll('.label'));
+    expect(labels.some(n => (n.textContent.search('Normal') !== -1)))
       .to.be.true;
-    expect(mounted.find('.label').someWhere(n => (n.text().search('sick') !== -1)))
+    expect(labels.some(n => (n.textContent.search('sick') !== -1)))
       .to.be.true;
   });
 
   it('should have `Active at Upload` text somewhere', () => {
-    const mounted = mount(
-      <Tandem {...props} />
-    );
-    expect(mounted.find('.label').someWhere(n => (n.text().search('Active at upload') !== -1)))
+    const labels = Array.from(container.querySelectorAll('.label'));
+    expect(labels.some(n => (n.textContent.search('Active at upload') !== -1)))
       .to.be.true;
   });
 
   it('should have a button to copy settings', () => {
-    const mounted = mount(<Tandem {...props} />);
-    const clipBoardButton = mounted.find('ClipboardButton').at(0);
+    const clipBoardButton = container.querySelector('[data-testid="ClipboardButton"]');
     expect(copySettingsClicked.callCount).to.equal(0);
-    clipBoardButton.prop('onSuccess')();
+    fireEvent.click(clipBoardButton);
     expect(copySettingsClicked.callCount).to.equal(1);
   });
 
   describe('timed settings', () => {
-    let mounted;
+    let timedContainer;
     let sickProfileTable;
 
-    before(() => {
+    beforeAll(() => {
       props.pumpSettings = flatrateData;
       props.bgUnits = MMOLL_UNITS;
       props.openedSections = { [flatrateData.activeSchedule]: true };
-      mounted = mount(
+      const rendered = rtlRender(
         <Tandem {...props} />
       );
+      timedContainer = rendered.container;
 
-      sickProfileTable = mounted.find('table').filterWhere(
-        n => (n.text().search('Basal Rates') !== -1)
+      sickProfileTable = Array.from(timedContainer.querySelectorAll('table')).filter(
+        n => (n.textContent.search('Basal Rates') !== -1)
       );
     });
 
+    afterAll(() => {
+      cleanup();
+    });
+
     it('should surface the expected basal rate value', () => {
-      expect(sickProfileTable.someWhere(
-        n => (n.text().search(formatDecimalNumber(flatrateData.basalSchedules[1].value[0].rate, 1)))
+      expect(sickProfileTable.some(
+        n => (n.textContent.search(formatDecimalNumber(flatrateData.basalSchedules[1].value[0].rate, 1)))
       )).to.be.true;
     });
 
     it('should surface the expected target BG value', () => {
-      expect(sickProfileTable.someWhere(
-        n => (n.text().search(formatDecimalNumber(flatrateData.bgTargets.sick[0].target, 1)))
+      expect(sickProfileTable.some(
+        n => (n.textContent.search(formatDecimalNumber(flatrateData.bgTargets.sick[0].target, 1)))
       )).to.be.true;
     });
 
     it('should surface the expected carb ratio value', () => {
-      expect(sickProfileTable.someWhere(
-        n => (n.text().search(formatDecimalNumber(flatrateData.carbRatios.sick[0].target, 1)))
+      expect(sickProfileTable.some(
+        n => (n.textContent.search(formatDecimalNumber(flatrateData.carbRatios.sick[0].target, 1)))
       )).to.be.true;
     });
 
     it('should surface the expected correction factor value', () => {
-      expect(sickProfileTable.someWhere(
-        n => (n.text().search(
+      expect(sickProfileTable.some(
+        n => (n.textContent.search(
           formatDecimalNumber(flatrateData.insulinSensitivities.sick[0].target, 1),
         ))
       )).to.be.true;
@@ -165,49 +190,59 @@ describe('Tandem', () => {
   });
 
   describe('insulin settings', () => {
-    let mounted;
     let insulinSettingsTable;
 
-    before(() => {
+    beforeAll(() => {
       props.pumpSettings = flatrateData;
       props.bgUnits = MMOLL_UNITS;
       props.openedSections = { [flatrateData.activeSchedule]: true };
-      mounted = mount(
+      const rendered = rtlRender(
         <Tandem {...props} />
       );
 
-      insulinSettingsTable = mounted.find('table').filterWhere(
-        n => (n.text().search('Insulin Settings') !== -1)
+      insulinSettingsTable = Array.from(rendered.container.querySelectorAll('table')).find(
+        n => (n.textContent.search('Insulin Settings') !== -1)
       );
     });
 
+    afterAll(() => {
+      cleanup();
+    });
+
     it('should surface the expected value for max bolus', () => {
-      expect(insulinSettingsTable.find('tr').at(0).text()).contains('Max Bolus');
-      expect(insulinSettingsTable.find('tr').at(0).text()).contains(flatrateData.bolus[flatrateData.activeSchedule].amountMaximum.value);
+      const rows = insulinSettingsTable.querySelectorAll('tr');
+      expect(rows[0].textContent).contains('Max Bolus');
+      expect(rows[0].textContent).contains(flatrateData.bolus[flatrateData.activeSchedule].amountMaximum.value);
     });
 
     it('should surface the expected value for insulin duration', () => {
-      expect(insulinSettingsTable.find('tr').at(1).text()).contains('Insulin Duration');
+      const rows = insulinSettingsTable.querySelectorAll('tr');
+      expect(rows[1].textContent).contains('Insulin Duration');
       assert.equal(flatrateData.bolus[flatrateData.activeSchedule].calculator.insulin.duration, 245);
-      expect(insulinSettingsTable.find('tr').at(1).text()).contains('4:05 hrs');
+      expect(rows[1].textContent).contains('4:05 hrs');
     });
   });
 
   describe('Tandem C-IQ annotation', () => {
-    let mounted;
+    let ciqContainer;
 
-    before(() => {
+    beforeAll(() => {
       props.pumpSettings = { ...flatrateData, deviceId: 'tandemCIQ123' };
       props.bgUnits = MMOLL_UNITS;
       props.openedSections = { [flatrateData.activeSchedule]: true };
-      mounted = mount(
+      const rendered = rtlRender(
         <Tandem {...props} />
       );
+      ciqContainer = rendered.container;
+    });
+
+    afterAll(() => {
+      cleanup();
     });
 
     it('should render an annotation', () => {
-      const annotation = mounted.find(formatClassesAsSelector(styles.annotations)).hostNodes().at(0);
-      expect(annotation.text()).contains('Tandem\'s Control-IQ Technology uses its own preset');
+      const annotation = ciqContainer.querySelector(formatClassesAsSelector(styles.annotations));
+      expect(annotation.textContent).contains('Tandem\'s Control-IQ Technology uses its own preset');
     });
   });
 });

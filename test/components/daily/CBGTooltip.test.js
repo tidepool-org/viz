@@ -19,13 +19,24 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import colors from '../../../src/styles/colors.css';
 
 import CBGTooltip from '../../../src/components/daily/cbgtooltip/CBGTooltip';
 import styles from '../../../src/components/daily/cbgtooltip/CBGTooltip.css';
+
+jest.mock('../../../src/components/common/tooltips/Tooltip', () => {
+  const R = require('react');
+  const MockTooltip = (props) => R.createElement('div', {
+    'data-testid': 'Tooltip',
+    'data-tail-color': props.tailColor,
+    'data-border-color': props.borderColor,
+  }, props.title, props.content);
+  MockTooltip.displayName = 'Tooltip';
+  return { __esModule: true, default: MockTooltip };
+});
 
 const bgPrefs = {
   bgClasses: {
@@ -92,49 +103,54 @@ const glucoseValueSelector = `${formatClassesAsSelector(styles.bg)} ${formatClas
 
 describe('CBGTooltip', () => {
   it('should render without issue when all properties provided', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={target} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    const { container } = render(<CBGTooltip {...props} cbg={target} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(1);
   });
 
   it('should render "target" color for target bg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={target} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.target);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.target);
+    const { container } = render(<CBGTooltip {...props} cbg={target} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.target);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.target);
   });
 
   it('should render "high" color for high bg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={high} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.high);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.high);
+    const { container } = render(<CBGTooltip {...props} cbg={high} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.high);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.high);
   });
 
   it('should render "veryHigh" color for high bg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={veryHigh} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.veryHigh);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.veryHigh);
+    const { container } = render(<CBGTooltip {...props} cbg={veryHigh} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.veryHigh);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.veryHigh);
   });
 
   it('should render "low" color for low bg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={low} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.low);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.low);
+    const { container } = render(<CBGTooltip {...props} cbg={low} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.low);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.low);
   });
 
   it('should render "veryLow" color for low bg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={veryLow} />);
-    expect(wrapper.find('Tooltip').props().tailColor).to.equal(colors.veryLow);
-    expect(wrapper.find('Tooltip').props().borderColor).to.equal(colors.veryLow);
+    const { container } = render(<CBGTooltip {...props} cbg={veryLow} />);
+    const tooltip = container.querySelector('[data-testid="Tooltip"]');
+    expect(tooltip.getAttribute('data-tail-color')).to.equal(colors.veryLow);
+    expect(tooltip.getAttribute('data-border-color')).to.equal(colors.veryLow);
   });
 
   it('should render "High" and an annotation for a "very-high" cbg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={veryHigh} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.annotation))).to.have.length(1);
-    expect(wrapper.find(glucoseValueSelector).text()).to.equal('High');
+    const { container } = render(<CBGTooltip {...props} cbg={veryHigh} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.annotation))).to.have.length(1);
+    expect(container.querySelector(glucoseValueSelector).textContent).to.equal('High');
   });
 
   it('should render "Low" and an annotation for a "very-low" cbg', () => {
-    const wrapper = mount(<CBGTooltip {...props} cbg={veryLow} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.annotation))).to.have.length(1);
-    expect(wrapper.find(glucoseValueSelector).text()).to.equal('Low');
+    const { container } = render(<CBGTooltip {...props} cbg={veryLow} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.annotation))).to.have.length(1);
+    expect(container.querySelector(glucoseValueSelector).textContent).to.equal('Low');
   });
 });

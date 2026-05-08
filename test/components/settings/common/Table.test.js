@@ -16,7 +16,7 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import Table from '../../../../src/components/settings/common/Table';
 
@@ -58,7 +58,7 @@ describe('Table', () => {
   };
 
   it('should use given rows, columns, and title', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Table
         title={testTitle}
         rows={testData}
@@ -66,43 +66,43 @@ describe('Table', () => {
         tableStyle="whatever"
       />
     );
-    expect(wrapper.find('caption')).to.have.length(1);
-    expect(wrapper.find('table')).to.have.length(1);
-    expect(wrapper.find('thead')).to.have.length(1);
-    expect(wrapper.find('th')).to.have.length(3);
-    expect(wrapper.find('tr')).to.have.length(4);
-    expect(wrapper.find('td')).to.have.length(9);
+    expect(container.querySelectorAll('caption')).to.have.length(1);
+    expect(container.querySelectorAll('table')).to.have.length(1);
+    expect(container.querySelectorAll('thead')).to.have.length(1);
+    expect(container.querySelectorAll('th')).to.have.length(3);
+    expect(container.querySelectorAll('tr')).to.have.length(4);
+    expect(container.querySelectorAll('td')).to.have.length(9);
   });
 
   it('should not require a title', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Table
         rows={testData}
         columns={testColumns}
         tableStyle="whatever"
       />
     );
-    expect(wrapper.find('caption')).to.have.length(0);
-    expect(wrapper.find('table')).to.have.length(1);
-    expect(wrapper.find('thead')).to.have.length(1);
-    expect(wrapper.find('th')).to.have.length(3);
-    expect(wrapper.find('tr')).to.have.length(4);
-    expect(wrapper.find('td')).to.have.length(9);
+    expect(container.querySelectorAll('caption')).to.have.length(0);
+    expect(container.querySelectorAll('table')).to.have.length(1);
+    expect(container.querySelectorAll('thead')).to.have.length(1);
+    expect(container.querySelectorAll('th')).to.have.length(3);
+    expect(container.querySelectorAll('tr')).to.have.length(4);
+    expect(container.querySelectorAll('td')).to.have.length(9);
   });
 
   it('should handle no data', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Table
         rows={[]}
         columns={testColumns}
         tableStyle="whatever"
       />
     );
-    expect(wrapper.find('caption')).to.have.length(0);
-    expect(wrapper.find('table')).to.have.length(1);
-    expect(wrapper.find('thead')).to.have.length(1);
-    expect(wrapper.find('th')).to.have.length(3);
-    expect(wrapper.find('tr')).to.have.length(1);
-    expect(wrapper.find('td')).to.have.length(0);
+    expect(container.querySelectorAll('caption')).to.have.length(0);
+    expect(container.querySelectorAll('table')).to.have.length(1);
+    expect(container.querySelectorAll('thead')).to.have.length(1);
+    expect(container.querySelectorAll('th')).to.have.length(3);
+    expect(container.querySelectorAll('tr')).to.have.length(1);
+    expect(container.querySelectorAll('td')).to.have.length(0);
   });
 });
