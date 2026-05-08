@@ -265,9 +265,13 @@ const BolusTooltip = (props) => {
         <div className={unitStyles} />
       </div>
     );
+    const foodTime = wizard?.dosingDecision?.food?.time;
+    const carbsLabel = wizard?.tags?.foodTimeDiffers
+      ? t('Carbs (eaten at {{time}})', { time: formatLocalizedFromUTC(foodTime, props.timePrefs, 'h:mm a') })
+      : t('Carbs');
     const carbsLine = !!carbsValue && (
       <div className={styles.carbs}>
-        <div className={styles.label}>{t('Carbs')}</div>
+        <div className={styles.label}>{carbsLabel}</div>
         <div className={styles.value}>{carbsValue}</div>
         <div className={unitStyles}>{carbUnits}</div>
       </div>

@@ -17,7 +17,6 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
-import moment from 'moment';
 import _ from 'lodash';
 import i18next from 'i18next';
 
@@ -63,10 +62,9 @@ const FoodTooltip = (props) => {
     }
 
     if (isLoop(food)) {
+      const { dosingDecision, originalDosingDecision } = food;
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
-      const latestUpdatedTime = food.payload?.userUpdatedDate;
-      const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
       if (absorptionTime > 0) {
         rows.unshift(
@@ -91,33 +89,78 @@ const FoodTooltip = (props) => {
         );
       }
 
-      if (latestUpdatedTime || timeOfEntry) {
-        rows.push(<div key={'divider'} className={styles.divider} />);
+      if (dosingDecision) {
+        const currentCarbs = getCarbs(food);
+        const originalCarbs = dosingDecision.originalFood?.nutrition?.carbohydrate?.net
+          ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
+        const carbsWereEdited = food.tags?.carbsEdited;
+        const editedLabel = currentCarbs === 0 ? t('Deleted') : t('Edited');
+        const entryTimeDiffExceedsThreshold = food.tags?.entryTimeDiffers;
 
-        if (latestUpdatedTime) {
-          rows.push((
-            <div key={'latestUpdatedTime'} className={styles.row}>
-              <div className={styles.label}>{t('Last Edited')}</div>
+        // Update the carbs row label
+        const carbRowIndex = _.findIndex(rows, r => r.key === 'carb');
+        if (carbRowIndex !== -1) {
+          rows[carbRowIndex] = (
+            <div key={'carb'} className={styles.carb}>
+              <div className={styles.label}>{carbsWereEdited ? t('Total Carbs ({{editedLabel}})', { editedLabel }) : t('Total Carbs')}</div>
+              <div className={styles.value}>{`${currentCarbs}`}</div>
+              <div className={styles.units}>g</div>
+            </div>
+          );
+        }
+
+        const showDivider = carbsWereEdited || entryTimeDiffExceedsThreshold;
+
+        if (showDivider) {
+          rows.push(<div key={'divider'} className={styles.divider} />);
+        }
+
+        if (carbsWereEdited) {
+          rows.push(
+            <div key={'initialCarbs'} className={styles.row}>
+              <div className={styles.label}>{t('Initial Carb Amount')}</div>
+              <div className={styles.value}>{`${_.round(originalCarbs, 1)}`}</div>
+              <div className={styles.units}>g</div>
+            </div>
+          );
+
+          if (originalDosingDecision && entryTimeDiffExceedsThreshold) {
+            rows.push(
+              <div key={'timeEntered'} className={styles.row}>
+                <div className={styles.label}>{t('Time Entered')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(originalDosingDecision.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(originalDosingDecision.time, props.timePrefs, 'a')}
+                </div>
+              </div>
+            );
+          }
+
+          rows.push(
+            <div key={originalDosingDecision ? 'timeLastEdited' : 'timeEdited'} className={styles.row}>
+              <div className={styles.label}>{originalDosingDecision ? t('Time Last Edited') : t('Time Edited')}</div>
               <div className={styles.value}>
-                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'h:mm')}
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
               </div>
               <div className={styles.units}>
-                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'a')}
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
               </div>
             </div>
-          ));
-        } else {
-          rows.push((
-            <div key={'timeOfEntry'} className={styles.row}>
-              <div className={styles.label}>{t('Time of Entry')}</div>
+          );
+        } else if (entryTimeDiffExceedsThreshold) {
+          rows.push(
+            <div key={'timeEntered'} className={styles.row}>
+              <div className={styles.label}>{t('Time Entered')}</div>
               <div className={styles.value}>
-                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'h:mm')}
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
               </div>
               <div className={styles.units}>
-                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'a')}
+                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
               </div>
             </div>
-          ));
+          );
         }
       }
     }

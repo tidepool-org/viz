@@ -423,7 +423,7 @@ const withLoopDosingDecision = {
   bgInput: 192,
   origin: { name: 'com.loopkit.Loop' },
   normal: 5,
-  normalTime: '2017-11-11T05:45:52.000Z',
+  normalTime: Date.parse('2017-11-11T05:45:52.000Z'),
   carbInput: 24,
   expectedNormal: 6,
   insulinOnBoard: 2.654,
@@ -482,7 +482,34 @@ const withLoopDosingDecision = {
           },
         ],
       },
-    }
+    },
+    food: {
+      time: '2017-11-11T04:00:00.000Z',
+      nutrition: { carbohydrate: { net: 24 } },
+    },
+  },
+};
+
+// normalTime is ~1h45m after food.time — exceeds 5min threshold → shows "eaten at" label
+const withLoopDosingDecisionFoodTime = {
+  ...withLoopDosingDecision,
+  normalTime: Date.parse('2017-11-11T05:45:52.000Z'), // food.time is 4:00am, bolus at 5:45am → >5min diff
+  tags: { ...(withLoopDosingDecision.tags || {}), foodTimeDiffers: true },
+};
+
+// normalTime is very close to food.time — within 5min threshold → plain "Carbs" label
+const withLoopDosingDecisionFoodTimeWithinThreshold = {
+  ...withLoopDosingDecision,
+  normalTime: Date.parse('2017-11-11T04:02:00.000Z'), // food.time is 4:00am, bolus at 4:02am → <5min diff
+  tags: { ...(withLoopDosingDecision.tags || {}), foodTimeDiffers: false },
+};
+
+// dosingDecision has no food field — plain "Carbs" label
+const withLoopDosingDecisionNoFoodTime = {
+  ...withLoopDosingDecision,
+  dosingDecision: {
+    ...withLoopDosingDecision.dosingDecision,
+    food: undefined,
   },
 };
 
@@ -717,6 +744,26 @@ describe('BolusTooltip', () => {
     expect(container.querySelectorAll(formatClassesAsSelector(styles.iob))).to.have.length(1);
     expect(container.querySelectorAll(formatClassesAsSelector(styles.isf))).to.have.length(1);
     expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
+  describe('carbs label with dosingDecision food time', () => {
+    const carbsLabel = `${formatClassesAsSelector(styles.carbs)} ${formatClassesAsSelector(styles.label)}`;
+
+    it('should show "Carbs (eaten at X:XX)" when food.time diff exceeds 5min from bolus time', () => {
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTime} />);
+      expect(container.querySelector(carbsLabel).textContent).to.contain('Carbs (eaten at');
+      expect(container.querySelector(carbsLabel).textContent).to.contain('4:00');
+    });
+
+    it('should show plain "Carbs" when dosingDecision has no food.time', () => {
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionNoFoodTime} />);
+      expect(container.querySelector(carbsLabel).textContent).to.equal('Carbs');
+    });
+
+    it('should show plain "Carbs" when food.time is within 5min of bolus time', () => {
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTimeWithinThreshold} />);
+      expect(container.querySelector(carbsLabel).textContent).to.equal('Carbs');
+    });
   });
 
   it('should render appropriate fields for a manual insulin delivery', () => {
