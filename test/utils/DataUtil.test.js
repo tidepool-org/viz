@@ -804,6 +804,29 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(newerDatum);
         expect(dataUtil.latestDatumByType.any.id).to.equal(3);
       });
+
+      it('should point `deviceUploadMap[deviceId]` at the uploadId of the newest datum seen for that device, regardless of ingestion order', () => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+        dataUtil.deviceUploadMap = {};
+        dataUtil.deviceUploadTimeMap = {};
+
+        const initialDatum = { type: 'any', deviceId: 'device-1', uploadId: 'upload-initial', time: '2018-02-01T01:00:00' };
+        dataUtil.normalizeDatumIn(initialDatum);
+        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-initial');
+
+        const olderDatum = { type: 'any', deviceId: 'device-1', uploadId: 'upload-older', time: '2018-02-01T00:00:00' };
+        dataUtil.normalizeDatumIn(olderDatum);
+        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-initial');
+
+        const newerDatum = { type: 'any', deviceId: 'device-1', uploadId: 'upload-newer', time: '2018-02-01T02:00:00' };
+        dataUtil.normalizeDatumIn(newerDatum);
+        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-newer');
+
+        const otherDeviceDatum = { type: 'any', deviceId: 'device-2', uploadId: 'upload-other', time: '2018-02-01T00:30:00' };
+        dataUtil.normalizeDatumIn(otherDeviceDatum);
+        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-newer');
+        expect(dataUtil.deviceUploadMap['device-2']).to.equal('upload-other');
+      });
     });
 
     context('basal', () => {
@@ -3209,6 +3232,7 @@ describe('DataUtil', () => {
         dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
         dataUtil.bolusToWizardIdMap = { foo: 'bar' };
         dataUtil.deviceUploadMap = { foo: 'bar' };
+        dataUtil.deviceUploadTimeMap = { foo: 1 };
         dataUtil.latestDatumByType = { foo: 'bar' };
         dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
         dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
@@ -3220,6 +3244,7 @@ describe('DataUtil', () => {
         expect(dataUtil.bolusDatumsByIdMap).to.eql({});
         expect(dataUtil.bolusToWizardIdMap).to.eql({});
         expect(dataUtil.deviceUploadMap).to.eql({});
+        expect(dataUtil.deviceUploadTimeMap).to.eql({});
         expect(dataUtil.latestDatumByType).to.eql({});
         expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
         expect(dataUtil.wizardDatumsByIdMap).to.eql({});
