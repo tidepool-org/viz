@@ -118,6 +118,7 @@ export class DataUtil {
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
     this.deviceUploadTimeMap = this.deviceUploadTimeMap || {};
+    this.uploadToDeviceIdMap = this.uploadToDeviceIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
@@ -341,6 +342,9 @@ export class DataUtil {
     if (!d.deviceId && _.get(d, 'payload.transmitterId', false)) {
       const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
       d.deviceId = dexDeviceId.join(' ');
+    }
+    if (d.deviceId && d.uploadId && !this.uploadToDeviceIdMap[d.uploadId]) {
+      this.uploadToDeviceIdMap[d.uploadId] = d.deviceId;
     }
     if (d.deviceId && d.time > _.get(this.deviceUploadTimeMap, d.deviceId, -1)) {
       this.deviceUploadMap[d.deviceId] = d.uploadId;
@@ -1694,8 +1698,19 @@ export class DataUtil {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
 
+    // Fallback: when a device's primary uploadId in deviceUploadMap points at an upload datum
+    // we don't have (e.g. it wasn't fetched), pick the newest fetched upload that maps back to
+    // the same deviceId via uploadToDeviceIdMap, so we can still derive a label.
+    const newestFetchedUploadByDeviceId = _.reduce(uploadsById, (acc, upload) => {
+      const deviceId = this.uploadToDeviceIdMap[upload.uploadId];
+      if (deviceId && (!acc[deviceId] || upload.time > acc[deviceId].time)) {
+        acc[deviceId] = upload;
+      }
+      return acc;
+    }, {});
+
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const upload = uploadsById[value];
+      const upload = uploadsById[value] || newestFetchedUploadByDeviceId[key];
       let device = { id: key };
 
       if (upload) {

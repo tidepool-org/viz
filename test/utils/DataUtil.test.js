@@ -4479,6 +4479,46 @@ describe('DataUtil', () => {
         },
       ]);
     });
+
+    it('should fall back to a fetched upload via uploadToDeviceIdMap when deviceUploadMap points at an unfetched upload', () => {
+      const trioUpload = {
+        ...uploadData[3],
+        uploadId: 'trio-upload-id',
+        origin: { name: 'org.nightscout.Trio' },
+        deviceId: 'MyTrio123',
+        dataSetType: 'continuous',
+        deviceTime: '2018-02-01T00:00:00',
+      };
+
+      // A more recent datum that references an upload we don't have in the data set.
+      // Its newer time makes it win in deviceUploadMap, pointing the device at an
+      // unfetched uploadId — which would yield no label without the fallback.
+      const newerDatumReferencingUnfetchedUpload = new Types.Basal({
+        ...useRawData,
+        deviceTime: '2018-02-05T00:00:00',
+        deviceId: 'MyTrio123',
+        uploadId: 'unfetched-upload-id',
+      });
+
+      initDataUtil([trioUpload, newerDatumReferencingUnfetchedUpload]);
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.deviceUploadMap.MyTrio123).to.equal('unfetched-upload-id');
+      expect(dataUtil.uploadToDeviceIdMap['trio-upload-id']).to.equal('MyTrio123');
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          oneMinCgmSampleInterval: false,
+          id: 'MyTrio123',
+          label: 'Trio',
+          pump: false,
+          serialNumber: undefined,
+        },
+      ]);
+    });
   });
 
   describe('setDataAnnotations', () => {
