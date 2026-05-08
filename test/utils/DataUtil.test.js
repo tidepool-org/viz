@@ -5701,7 +5701,7 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { id: 'Test Page Data - 123' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Trio', pump: false, serialNumber: undefined },
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
@@ -5736,7 +5736,7 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { id: 'Test Page Data - 123' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Trio', pump: false, serialNumber: undefined },
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
