@@ -117,6 +117,7 @@ export class DataUtil {
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
+    this.deviceUploadTimeMap = this.deviceUploadTimeMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
@@ -341,8 +342,9 @@ export class DataUtil {
       const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
       d.deviceId = dexDeviceId.join(' ');
     }
-    if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
+    if (d.deviceId && d.time > _.get(this.deviceUploadTimeMap, d.deviceId, -1)) {
       this.deviceUploadMap[d.deviceId] = d.uploadId;
+      this.deviceUploadTimeMap[d.deviceId] = d.time;
     }
   };
 
@@ -1221,6 +1223,7 @@ export class DataUtil {
       this.bolusDatumsByIdMap = {};
       this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.deviceUploadTimeMap = {};
       this.latestDatumByType = {};
       this.pumpSettingsDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
