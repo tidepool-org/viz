@@ -4519,6 +4519,87 @@ describe('DataUtil', () => {
         },
       ]);
     });
+
+    it('should resolve a device via the latest pumpSettings uploadId when multiple fetched uploads share a deviceId', () => {
+      // Mirrors the real-world scenario where a patient's data carries both a Trio upload and
+      // a Loop upload for the same physical device. Both upload datums lack `deviceId`, so
+      // neither directly populates deviceUploadMap; the map gets pointed at the Loop upload by
+      // an older non-upload datum. The Loop upload also happens to be chronologically newer than
+      // the Trio upload (in the user's real case, this came from `time` being stamped at
+      // ingestion via `if (!d.time) d.time = moment.utc()`), which would otherwise let it win
+      // the reverse-lookup tiebreak. The latest pumpSettings references the Trio uploadId and
+      // is the authoritative signal — it should win regardless of the other two paths.
+      const trioUpload = {
+        type: 'upload',
+        id: 'trio-upload',
+        uploadId: 'trio-upload-id',
+        dataSetType: 'continuous',
+        client: { name: 'org.nightscout.Trio' },
+        time: '2026-05-08T21:18:15.000Z',
+      };
+
+      const loopUpload = {
+        type: 'upload',
+        id: 'loop-upload',
+        uploadId: 'loop-upload-id',
+        dataSetType: 'continuous',
+        client: { name: 'com.loopkit.Loop' },
+        time: '2026-05-08T21:19:47.000Z',
+      };
+
+      const datumLinkingTrioUploadToDeviceId = new Types.Basal({
+        ...useRawData,
+        deviceTime: '2026-05-01T00:00:00',
+        deviceId: 'Apple Inc._iPhone',
+        uploadId: 'trio-upload-id',
+      });
+
+      const datumLinkingLoopUploadToDeviceId = new Types.Basal({
+        ...useRawData,
+        deviceTime: '2026-05-04T00:00:00',
+        deviceId: 'Apple Inc._iPhone',
+        uploadId: 'loop-upload-id',
+      });
+
+      const latestPumpSettings = {
+        ...loopMultirate,
+        id: 'latest-pumpSettings',
+        uploadId: 'trio-upload-id',
+        deviceTime: '2026-05-03T12:00:00',
+        time: '2026-05-03T12:00:00.000Z',
+        origin: { name: 'org.nightscout.Trio' },
+      };
+
+      initDataUtil([
+        trioUpload,
+        loopUpload,
+        datumLinkingTrioUploadToDeviceId,
+        datumLinkingLoopUploadToDeviceId,
+        latestPumpSettings,
+      ]);
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      // Confirm the ambiguous setup that should otherwise resolve to Loop:
+      // deviceUploadMap was pointed at Loop by the later linking datum, and Loop's upload time
+      // is the newest among fetched uploads, so the reverse-lookup tiebreak would also pick it.
+      expect(dataUtil.deviceUploadMap['Apple Inc._iPhone']).to.equal('loop-upload-id');
+      expect(dataUtil.uploadToDeviceIdMap['trio-upload-id']).to.equal('Apple Inc._iPhone');
+      expect(dataUtil.uploadToDeviceIdMap['loop-upload-id']).to.equal('Apple Inc._iPhone');
+      expect(dataUtil.latestDatumByType.pumpSettings.uploadId).to.equal('trio-upload-id');
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          oneMinCgmSampleInterval: false,
+          id: 'Apple Inc._iPhone',
+          label: 'Trio',
+          pump: false,
+          serialNumber: undefined,
+        },
+      ]);
+    });
   });
 
   describe('setDataAnnotations', () => {
@@ -5741,7 +5822,7 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Trio', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', pump: false, serialNumber: undefined },
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
@@ -5776,7 +5857,7 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Trio', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', pump: false, serialNumber: undefined },
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
