@@ -1698,9 +1698,9 @@ export class DataUtil {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
 
-    // Fallback: when a device's primary uploadId in deviceUploadMap points at an upload datum
-    // we don't have (e.g. it wasn't fetched), pick the newest fetched upload that maps back to
-    // the same deviceId via uploadToDeviceIdMap, so we can still derive a label.
+    // Build a map of the newest fetched upload per deviceId via uploadToDeviceIdMap, used as
+    // a fallback when neither the latest-pumpSettings pointer nor the deviceUploadMap entry
+    // resolves to a fetched upload.
     const newestFetchedUploadByDeviceId = _.reduce(uploadsById, (acc, upload) => {
       const deviceId = this.uploadToDeviceIdMap[upload.uploadId];
       if (deviceId && (!acc[deviceId] || upload.time > acc[deviceId].time)) {
@@ -1709,8 +1709,23 @@ export class DataUtil {
       return acc;
     }, {});
 
+    // The latest pumpSettings's uploadId is the most authoritative signal for which upload
+    // represents the "current" device/app, since pumpSettings is the canonical record of the
+    // device's active configuration. When multiple fetched uploads share a deviceId (e.g.
+    // Trio + Loop on the same iPhone), upload datums often lack `deviceId` so they don't
+    // populate deviceUploadMap themselves, and a newer upload session doesn't necessarily
+    // mean a new configuration — so neither the deviceUploadMap entry nor an upload-time
+    // tiebreak reliably picks the upload that owns the current settings.
+    const latestPumpSettingsUploadId = _.get(this.latestDatumByType, 'pumpSettings.uploadId');
+    const latestPumpSettingsDeviceId = latestPumpSettingsUploadId
+      ? this.uploadToDeviceIdMap[latestPumpSettingsUploadId]
+      : null;
+
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const upload = uploadsById[value] || newestFetchedUploadByDeviceId[key];
+      const pumpSettingsUpload = (latestPumpSettingsDeviceId === key)
+        ? uploadsById[latestPumpSettingsUploadId]
+        : null;
+      const upload = pumpSettingsUpload || newestFetchedUploadByDeviceId[key] || uploadsById[value];
       let device = { id: key };
 
       if (upload) {
