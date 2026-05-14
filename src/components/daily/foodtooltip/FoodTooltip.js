@@ -23,7 +23,7 @@ import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { MS_IN_HOUR } from '../../../utils/constants';
-import { isLoop } from '../../../utils/device';
+import { isLoop, isTrio } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './FoodTooltip.css';
@@ -62,7 +62,7 @@ const FoodTooltip = (props) => {
       );
     }
 
-    if (isLoop(food)) {
+    if (isLoop(food) || isTrio(food)) {
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
       const latestUpdatedTime = food.payload?.userUpdatedDate;

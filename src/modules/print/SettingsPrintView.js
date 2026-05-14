@@ -36,7 +36,7 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
-import { getPumpVocabulary, isControlIQ, isLoop } from '../../utils/device';
+import { getPumpVocabulary, isControlIQ, isLoop, isTrio } from '../../utils/device';
 import { INSULIN_MODEL_LABELS } from '../../utils/constants';
 
 import {
@@ -66,8 +66,8 @@ class SettingsPrintView extends PrintView {
 
     if (this.isTandem) {
       this.renderTandemProfiles();
-    } else if (isLoop(this.latestPumpUpload.settings)) {
-      this.renderLoopSettings();
+    } else if (isLoop(this.latestPumpUpload.settings) || isTrio(this.latestPumpUpload.settings)) {
+      this.renderTherapySettings();
     } else {
       if (this.manufacturer !== 'animas') this.renderPumpSettings();
       this.renderBasalSchedules();
@@ -249,8 +249,9 @@ class SettingsPrintView extends PrintView {
     this.doc.moveDown();
   }
 
-  renderLoopSettings() {
+  renderTherapySettings() {
     const settings = this.latestPumpUpload.settings;
+    const isTrioDevice = isTrio(settings);
 
     // Render section heading with active date
     const sectionHeading = {
@@ -267,7 +268,9 @@ class SettingsPrintView extends PrintView {
     });
 
     this.renderBasalSchedule({ columnIndex: 0 });
-    this.renderTarget({ columnIndex: 1, heading: { text: t('Correction Range'), subText: ` ${this.bgUnits}\u00B9` } });
+    const rangeLabel = this.manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
+    const targetSubText = isTrioDevice ? ` ${this.bgUnits}` : ` ${this.bgUnits}\u00B9`;
+    this.renderTarget({ columnIndex: 1, heading: { text: rangeLabel, subText: targetSubText } });
     this.renderRatio({ columnIndex: 2 });
 
     // Row 2: Insulin Sensitivities, Insulin Settings (2 columns)
@@ -281,9 +284,9 @@ class SettingsPrintView extends PrintView {
     });
 
     this.renderSensitivity({ columnIndex: 0 });
-    this.renderInsulinSettings(settings, null, {
-      columnIndex: 1,
-      rowTransform: row => {
+    const insulinSettingsOpts = { columnIndex: 1 };
+    if (!isTrioDevice) {
+      insulinSettingsOpts.rowTransform = row => {
         const newRow = { ...row };
         if (row.setting === t('Glucose Safety Limit')) {
           newRow.setting = `${row.setting} \u00B2`;
@@ -291,8 +294,9 @@ class SettingsPrintView extends PrintView {
           newRow.setting = `${row.setting} \u00B3`;
         }
         return newRow;
-      },
-    });
+      };
+    }
+    this.renderInsulinSettings(settings, null, insulinSettingsOpts);
 
     // Row 3: Presets (if any) - use 2-column width to match row 2
     this.doc.x = this.chartArea.leftEdge;
@@ -311,18 +315,21 @@ class SettingsPrintView extends PrintView {
       });
     }
 
-    // Render footnotes
-    this.renderLoopFootnotes();
+    // Render footnotes (Loop only, not applicable to Trio)
+    if (!isTrioDevice) {
+      this.renderTherapyFootnotes();
+    }
 
     this.resetText();
   }
 
-  renderLoopFootnotes() {
+  renderTherapyFootnotes() {
     const settings = this.latestPumpUpload.settings;
     const device = deviceName(this.manufacturer) || t('Unknown');
+    const rangeLabel = this.manufacturer === 'trio' ? t('Glucose Targets') : t('Correction Range');
 
     const footnotes = [
-      t('1 - Correction Range is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { device }),
+      t('1 - {{rangeLabel}} is the glucose value (or range of values) that you want {{device}} to aim for in adjusting your basal insulin and helping you calculate your boluses.', { rangeLabel, device }),
       t('2 - {{device}} will deliver basal and recommend bolus insulin only if your glucose is predicted to be above this limit for the next three hours.', { device }),
       t('3 - {{device}} assumes that the insulin it has delivered is actively working to lower your glucose for 6 hours. This setting cannot be changed. The {{insulinModel}} model assumes peak activity at {{peakMinutes}} minutes.', {
         device,

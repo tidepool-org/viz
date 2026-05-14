@@ -15,6 +15,7 @@ import {
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
   isDIYLoop,
+  isTrio,
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
@@ -45,6 +46,7 @@ import {
   MS_IN_MIN,
   MGDL_UNITS,
   DIY_LOOP,
+  TRIO,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
   SITE_CHANGE_RESERVOIR,
@@ -115,11 +117,13 @@ export class DataUtil {
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
     this.deviceUploadMap = this.deviceUploadMap || {};
+    this.deviceUploadTimeMap = this.deviceUploadTimeMap || {};
+    this.uploadToDeviceIdMap = this.uploadToDeviceIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
-    this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dosingDecisionDataSetsByIdMap = this.dosingDecisionDataSetsByIdMap || {};
     this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
@@ -228,7 +232,7 @@ export class DataUtil {
 
     if (d.type === 'upload') {
       if (d.dataSetType === 'continuous') {
-        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isLoop(d) || isTrio(d)) this.dosingDecisionDataSetsByIdMap[d.id] = d;
         if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
         if (!d.time) d.time = moment.utc().toISOString();
       } else {
@@ -339,8 +343,12 @@ export class DataUtil {
       const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
       d.deviceId = dexDeviceId.join(' ');
     }
-    if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
+    if (d.deviceId && d.uploadId && !this.uploadToDeviceIdMap[d.uploadId]) {
+      this.uploadToDeviceIdMap[d.uploadId] = d.deviceId;
+    }
+    if (d.deviceId && d.time > _.get(this.deviceUploadTimeMap, d.deviceId, -1)) {
       this.deviceUploadMap[d.deviceId] = d.uploadId;
+      this.deviceUploadTimeMap[d.deviceId] = d.time;
     }
   };
 
@@ -369,7 +377,7 @@ export class DataUtil {
   };
 
   joinBolusAndDosingDecision = d => {
-    if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
+    if (d.type === 'bolus' && !!this.dosingDecisionDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
       // Find the dosing decision that matches the bolus by checking if there is a definitive association
@@ -646,7 +654,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
-    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const dosingDecisionUpload = this.dosingDecisionDataSetsByIdMap[d.uploadId];
+    const isLoopDatum = !!dosingDecisionUpload && isLoop(dosingDecisionUpload);
+    const isTrioDatum = !!dosingDecisionUpload && isTrio(dosingDecisionUpload);
     const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
 
     if (d.type === 'basal') {
@@ -668,7 +678,8 @@ export class DataUtil {
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        trio: isTrioDatum,
         oneButton: isOneButton(d),
       };
     }
@@ -698,6 +709,7 @@ export class DataUtil {
     if (d.type === 'food') {
       d.tags = {
         loop: isLoopDatum,
+        trio: isTrioDatum,
         dexcom: isDexcomDatum,
         manual: isDexcomDatum,
       };
@@ -1215,11 +1227,12 @@ export class DataUtil {
       this.bolusDatumsByIdMap = {};
       this.bolusToWizardIdMap = {};
       this.deviceUploadMap = {};
+      this.deviceUploadTimeMap = {};
       this.latestDatumByType = {};
       this.pumpSettingsDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
       this.wizardToBolusIdMap = {};
-      this.loopDataSetsByIdMap = {};
+      this.dosingDecisionDataSetsByIdMap = {};
       this.dexcomDataSetsByIdMap = {};
       this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
@@ -1569,6 +1582,8 @@ export class DataUtil {
         }
       } else if (isTidepoolLoop(pumpSettings)) {
         source = TIDEPOOL_LOOP.toLowerCase();
+      } else if (isTrio(pumpSettings)) {
+        source = TRIO.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {
@@ -1683,8 +1698,34 @@ export class DataUtil {
     this.startTimer('setDevices');
     const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
 
+    // Build a map of the newest fetched upload per deviceId via uploadToDeviceIdMap, used as
+    // a fallback when neither the latest-pumpSettings pointer nor the deviceUploadMap entry
+    // resolves to a fetched upload.
+    const newestFetchedUploadByDeviceId = _.reduce(uploadsById, (acc, upload) => {
+      const deviceId = this.uploadToDeviceIdMap[upload.uploadId];
+      if (deviceId && (!acc[deviceId] || upload.time > acc[deviceId].time)) {
+        acc[deviceId] = upload;
+      }
+      return acc;
+    }, {});
+
+    // The latest pumpSettings's uploadId is the most authoritative signal for which upload
+    // represents the "current" device/app, since pumpSettings is the canonical record of the
+    // device's active configuration. When multiple fetched uploads share a deviceId (e.g.
+    // Trio + Loop on the same iPhone), upload datums often lack `deviceId` so they don't
+    // populate deviceUploadMap themselves, and a newer upload session doesn't necessarily
+    // mean a new configuration — so neither the deviceUploadMap entry nor an upload-time
+    // tiebreak reliably picks the upload that owns the current settings.
+    const latestPumpSettingsUploadId = _.get(this.latestDatumByType, 'pumpSettings.uploadId');
+    const latestPumpSettingsDeviceId = latestPumpSettingsUploadId
+      ? this.uploadToDeviceIdMap[latestPumpSettingsUploadId]
+      : null;
+
     this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const upload = uploadsById[value];
+      const pumpSettingsUpload = (latestPumpSettingsDeviceId === key)
+        ? uploadsById[latestPumpSettingsUploadId]
+        : null;
+      const upload = pumpSettingsUpload || newestFetchedUploadByDeviceId[key] || uploadsById[value];
       let device = { id: key };
 
       if (upload) {
@@ -1703,6 +1744,8 @@ export class DataUtil {
           } else {
             label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
           }
+        } else if (isTrio(upload)) {
+          label = 'Trio';
         }
 
         if (key.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');

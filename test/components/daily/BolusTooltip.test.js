@@ -491,6 +491,12 @@ const withTwiistLoopDosingDecision = {
   origin: { name: 'com.dekaresearch.twiist' },
 };
 
+const withTrioDosingDecision = {
+  ...withLoopDosingDecision,
+  origin: { name: 'org.nightscout.Trio' },
+  tags: { trio: true },
+};
+
 const insulin = {
   type: 'insulin',
   dose: { total: 5 },
@@ -714,6 +720,16 @@ describe('BolusTooltip', () => {
     expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
   });
 
+  it('should render appropriate fields for a bolus with a Trio dosing decision', () => {
+    const wrapper = mount(<BolusTooltip {...props} bolus={withTrioDosingDecision} />);
+    expect(wrapper.find(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(wrapper.find(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
   it('should render appropriate fields for a manual insulin delivery', () => {
     const wrapper = mount(<BolusTooltip {...props} bolus={insulinRapidActing} />);
     expect(wrapper.find(formatClassesAsSelector(styles.delivered))).to.have.length(1);
@@ -759,6 +775,14 @@ describe('BolusTooltip', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withLoopDosingDecision} />);
       expect(shallow(getTarget(withLoopDosingDecision, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
       expect(wrapper.find(targetValue).text()).to.equal('155-165');
+    });
+    it('should return a single div for Trio style target with "Glucose Targets" label', () => {
+      const wrapper = mount(<BolusTooltip {...props} bolus={withTrioDosingDecision} />);
+      expect(shallow(getTarget(withTrioDosingDecision, props.bgPrefs, props.timePrefs)).type()).to.equal('div');
+      expect(wrapper.find(targetValue).text()).to.equal('155-165');
+      // eslint-disable-next-line max-len
+      const targetLabel = `${formatClassesAsSelector(styles.target)} ${formatClassesAsSelector(styles.label)}`;
+      expect(wrapper.find(targetLabel).text()).to.contain('Glucose Targets');
     });
     it('should return "Auto" for a bolus with an automated wizard annotation', () => {
       const wrapper = mount(<BolusTooltip {...props} bolus={withAutoTarget} />);

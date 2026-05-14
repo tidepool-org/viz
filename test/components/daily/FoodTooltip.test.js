@@ -105,6 +105,16 @@ const manual = {
   tags: { dexcom: true, manual: true },
 };
 
+const trio = {
+  ...normal,
+  tags: { trio: true },
+  name: 'triofood',
+  nutrition: {
+    ...normal.nutrition,
+    estimatedAbsorptionDuration: 10800,
+  },
+};
+
 const props = {
   position: { top: 200, left: 200 },
   timePrefs: { timezoneAware: false },
@@ -201,6 +211,18 @@ describe('FoodTooltip', () => {
       const wrapper = mount(<FoodTooltip {...props} food={manual} />);
       expect(wrapper.find(row).at(1).find(rowLabel).text()).to.contain('Source');
       expect(wrapper.find(row).at(1).find(rowValue).text()).to.contain('Manual');
+    });
+  });
+
+  describe('trio food', () => {
+    // eslint-disable-next-line max-len
+    const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
+    it('should include the food name and absorption time for a Trio food value', () => {
+      const wrapper = mount(<FoodTooltip {...props} food={trio} />);
+      expect(getName(trio)).to.equal('triofood');
+      expect(getAbsorptionTime(trio)).to.equal(3);
+      expect(wrapper.find(rowValue).at(0).text()).to.contain('triofood');
+      expect(wrapper.find(rowValue).at(1).text()).to.contain('3');
     });
   });
 });
