@@ -1,4 +1,5 @@
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import {
   AUTOMATED_BASAL_DEVICE_MODELS,
@@ -7,6 +8,8 @@ import {
 } from './constants';
 
 import { deviceName } from './settings/data';
+
+const t = i18next.t.bind(i18next);
 
 /**
  * Get the latest upload datum
@@ -173,6 +176,43 @@ export function getPumpVocabulary(manufacturer) {
     _.get(vocabulary, getUppercasedManufacturer(manufacturer), {}),
     vocabulary.default
   );
+}
+
+/**
+ * Derive the display label for a device from its deviceId and the upload that owns its
+ * current labeling (typically the upload pointed at by the latest pumpSettings, with a
+ * newest-upload fallback). Returns the deviceId itself when no upload is available or
+ * neither manufacturer/model nor a recognized origin signal is present.
+ *
+ * @param {String} deviceId
+ * @param {Object|null} upload  upload datum or null
+ * @returns {String}
+ */
+export function deriveLabel(deviceId, upload) {
+  if (!upload) return deviceId;
+
+  const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
+  const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
+  const deviceModel = _.get(upload, 'deviceModel', '');
+  let label = deviceId;
+
+  if (deviceManufacturer || deviceModel) {
+    if (deviceManufacturer === 'Dexcom' && isContinuous) {
+      label = t('Dexcom API');
+    } else if (deviceManufacturer === 'Abbott' && isContinuous) {
+      label = t('FreeStyle Libre (from LibreView)');
+    } else if (deviceManufacturer === 'Sequel' && isContinuous) {
+      label = t('twiist');
+    } else {
+      label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
+    }
+  } else if (isTrio(upload)) {
+    label = 'Trio';
+  }
+
+  if (deviceId.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
+
+  return label;
 }
 
 /**

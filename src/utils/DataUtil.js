@@ -6,6 +6,7 @@ import i18next from 'i18next';
 import sundial from 'sundial';
 
 import {
+  deriveLabel,
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isControlIQ,
@@ -116,8 +117,7 @@ export class DataUtil {
 
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
-    this.deviceUploadMap = this.deviceUploadMap || {};
-    this.deviceUploadTimeMap = this.deviceUploadTimeMap || {};
+    this.knownDeviceIds = this.knownDeviceIds || new Set();
     this.uploadToDeviceIdMap = this.uploadToDeviceIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
@@ -348,12 +348,11 @@ export class DataUtil {
       const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
       d.deviceId = dexDeviceId.join(' ');
     }
-    if (d.deviceId && d.uploadId && !this.uploadToDeviceIdMap[d.uploadId]) {
-      this.uploadToDeviceIdMap[d.uploadId] = d.deviceId;
-    }
-    if (d.deviceId && d.time > _.get(this.deviceUploadTimeMap, d.deviceId, -1)) {
-      this.deviceUploadMap[d.deviceId] = d.uploadId;
-      this.deviceUploadTimeMap[d.deviceId] = d.time;
+    if (d.deviceId && d.uploadId) {
+      if (!this.uploadToDeviceIdMap[d.uploadId]) {
+        this.uploadToDeviceIdMap[d.uploadId] = d.deviceId;
+      }
+      this.knownDeviceIds.add(d.deviceId);
     }
   };
 
@@ -1262,8 +1261,7 @@ export class DataUtil {
       this.log('Reinitializing');
       this.bolusDatumsByIdMap = {};
       this.bolusToWizardIdMap = {};
-      this.deviceUploadMap = {};
-      this.deviceUploadTimeMap = {};
+      this.knownDeviceIds?.clear();
       this.latestDatumByType = {};
       this.pumpSettingsDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
@@ -1732,78 +1730,50 @@ export class DataUtil {
   /* eslint-disable no-param-reassign */
   setDevices = () => {
     this.startTimer('setDevices');
-    const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
 
-    // Build a map of the newest fetched upload per deviceId via uploadToDeviceIdMap, used as
-    // a fallback when neither the latest-pumpSettings pointer nor the deviceUploadMap entry
-    // resolves to a fetched upload.
-    const newestFetchedUploadByDeviceId = _.reduce(uploadsById, (acc, upload) => {
-      const deviceId = this.uploadToDeviceIdMap[upload.uploadId];
-      if (deviceId && (!acc[deviceId] || upload.time > acc[deviceId].time)) {
-        acc[deviceId] = upload;
-      }
-      return acc;
-    }, {});
+    const uploads = this.filter.byType('upload').top(Infinity);
 
-    // The latest pumpSettings's uploadId is the most authoritative signal for which upload
-    // represents the "current" device/app, since pumpSettings is the canonical record of the
-    // device's active configuration. When multiple fetched uploads share a deviceId (e.g.
-    // Trio + Loop on the same iPhone), upload datums often lack `deviceId` so they don't
-    // populate deviceUploadMap themselves, and a newer upload session doesn't necessarily
-    // mean a new configuration — so neither the deviceUploadMap entry nor an upload-time
-    // tiebreak reliably picks the upload that owns the current settings.
-    const latestPumpSettingsUploadId = _.get(this.latestDatumByType, 'pumpSettings.uploadId');
-    const latestPumpSettingsDeviceId = latestPumpSettingsUploadId
-      ? this.uploadToDeviceIdMap[latestPumpSettingsUploadId]
-      : null;
+    // Group uploads by the deviceId they represent. Upload datums often lack their own
+    // `deviceId`, so fall back to uploadToDeviceIdMap (populated during ingest from any
+    // datum that linked uploadId → deviceId).
+    const uploadsByDeviceId = _.groupBy(
+      uploads,
+      u => u.deviceId || this.uploadToDeviceIdMap[u.uploadId]
+    );
 
-    this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const pumpSettingsUpload = (latestPumpSettingsDeviceId === key)
-        ? uploadsById[latestPumpSettingsUploadId]
-        : null;
-      const upload = pumpSettingsUpload || newestFetchedUploadByDeviceId[key] || uploadsById[value];
-      let device = { id: key };
+    const deviceIds = [...this.knownDeviceIds];
 
-      if (upload) {
-        const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
-        const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
-        const deviceModel = _.get(upload, 'deviceModel', '');
-        const deviceName = _.get(upload, 'deviceName', '');
-        let label = key;
+    this.devices = _.map(deviceIds, deviceId => {
+      const deviceUploads = uploadsByDeviceId[deviceId] || [];
 
-        if (deviceManufacturer || deviceModel) {
-          if (deviceManufacturer === 'Dexcom' && isContinuous) {
-            label = t('Dexcom API');
-          } else if (deviceManufacturer === 'Abbott' && isContinuous) {
-            label = t('FreeStyle Libre (from LibreView)');
-          } else if (deviceManufacturer === 'Sequel' && isContinuous) {
-            label = t('twiist');
-          } else {
-            label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
-          }
-        } else if (isTrio(upload)) {
-          label = 'Trio';
-        }
+      // The most recent pumpSettings for this device points at the upload that owns its
+      // current configuration — the authoritative source for label/deviceName when multiple
+      // uploads share a deviceId (e.g. Trio + Loop on the same iPhone).
+      const pumpSettingsForDevice = _(this.pumpSettingsDatumsByIdMap)
+        .filter(ps => this.uploadToDeviceIdMap[ps.uploadId] === deviceId)
+        .maxBy('time');
 
-        if (key.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
+      const labelingUpload =
+        _.find(deviceUploads, { uploadId: pumpSettingsForDevice?.uploadId })
+        || _.maxBy(deviceUploads, 'time')
+        || null;
 
-        device = {
-          bgm: _.includes(upload.deviceTags, 'bgm'),
-          cgm: _.includes(upload.deviceTags, 'cgm'),
-          oneMinCgmSampleInterval: isOneMinCGMSampleIntervalDevice(upload),
-          id: key,
-          deviceName,
-          label,
-          pump: _.includes(upload.deviceTags, 'insulin-pump'),
-          serialNumber: upload.deviceSerialNumber,
-        };
-      }
+      // Capability flags are the union over all uploads for this device, not just the
+      // labeling one — a device that's had both bgm and cgm sessions is truly both.
+      const allDeviceTags = _.flatMap(deviceUploads, 'deviceTags');
 
-      result.push(device);
-      return result;
-    }, []);
+      return {
+        bgm: _.includes(allDeviceTags, 'bgm'),
+        cgm: _.includes(allDeviceTags, 'cgm'),
+        oneMinCgmSampleInterval: _.some(deviceUploads, isOneMinCGMSampleIntervalDevice),
+        id: deviceId,
+        deviceName: labelingUpload?.deviceName || '',
+        label: deriveLabel(deviceId, labelingUpload),
+        pump: _.includes(allDeviceTags, 'insulin-pump'),
+        serialNumber: labelingUpload?.deviceSerialNumber,
+      };
+    });
 
-    const allDeviceIds = _.keys(this.deviceUploadMap);
     const excludedDevices = this.excludedDevices || [];
 
     _.each(this.devices, device => {
@@ -1811,7 +1781,7 @@ export class DataUtil {
         // Exclude pre-control-iq tandem uploads by default if we have data from the same device
         // from a version of uploader supports control-iq data. Otherwise, we have duplicate data.
         const preCIQDeviceID = device.id.replace('tandemCIQ', 'tandem');
-        if (_.includes(allDeviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
+        if (_.includes(deviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
       }
 
       if (device.id.indexOf('HealthKit twiist') !== -1) {

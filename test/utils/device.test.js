@@ -505,4 +505,49 @@ describe('device utility functions', () => {
       expect(device.getDeviceName(deviceObject)).to.be.null;
     });
   });
+
+  describe('deriveLabel', () => {
+    it('returns the deviceId when no upload is provided', () => {
+      expect(device.deriveLabel('SomeDeviceId', null)).to.equal('SomeDeviceId');
+    });
+
+    it('returns "Dexcom API" for a continuous Dexcom-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Dexcom'] };
+      expect(device.deriveLabel('Dexcom-XXX', upload)).to.equal('Dexcom API');
+    });
+
+    it('returns "FreeStyle Libre (from LibreView)" for a continuous Abbott-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Abbott'] };
+      expect(device.deriveLabel('AbbottFreeStyleLibre-XXX', upload)).to.equal('FreeStyle Libre (from LibreView)');
+    });
+
+    it('returns "twiist" for a continuous Sequel-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Sequel'] };
+      expect(device.deriveLabel('twiist-XXX', upload)).to.equal('twiist');
+    });
+
+    it('joins manufacturer and model for non-special-cased uploads', () => {
+      const upload = { deviceManufacturers: ['Tandem'], deviceModel: '12345' };
+      expect(device.deriveLabel('tandem12345', upload)).to.equal('Tandem 12345');
+    });
+
+    it('uses model alone when manufacturer is missing', () => {
+      const upload = { deviceModel: '12345' };
+      expect(device.deriveLabel('tandem12345', upload)).to.equal('12345');
+    });
+
+    it('returns "Trio" when manufacturer/model are absent and origin matches Trio', () => {
+      const upload = { origin: { name: 'org.nightscout.Trio' } };
+      expect(device.deriveLabel('MyTrio123', upload)).to.equal('Trio');
+    });
+
+    it('falls back to the deviceId when no manufacturer/model/Trio signal is present', () => {
+      expect(device.deriveLabel('MysteryDevice', {})).to.equal('MysteryDevice');
+    });
+
+    it('appends "(Control-IQ)" when the deviceId starts with "tandemCIQ"', () => {
+      const upload = { deviceManufacturers: ['Tandem'], deviceModel: '12345' };
+      expect(device.deriveLabel('tandemCIQ12345', upload)).to.equal('Tandem 12345 (Control-IQ)');
+    });
+  });
 });

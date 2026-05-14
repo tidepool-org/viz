@@ -810,27 +810,22 @@ describe('DataUtil', () => {
         expect(dataUtil.latestDatumByType.any.id).to.equal(3);
       });
 
-      it('should point `deviceUploadMap[deviceId]` at the uploadId of the newest datum seen for that device, regardless of ingestion order', () => {
+      it('should add every datum-linked deviceId to `knownDeviceIds`', () => {
         dataUtil.validateDatumIn = sinon.stub().returns(true);
-        dataUtil.deviceUploadMap = {};
-        dataUtil.deviceUploadTimeMap = {};
+        dataUtil.knownDeviceIds = new Set();
 
-        const initialDatum = { type: 'any', deviceId: 'device-1', uploadId: 'upload-initial', time: '2018-02-01T01:00:00' };
-        dataUtil.normalizeDatumIn(initialDatum);
-        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-initial');
+        const datumA = { type: 'any', deviceId: 'device-1', uploadId: 'upload-a', time: '2018-02-01T01:00:00' };
+        dataUtil.normalizeDatumIn(datumA);
+        expect([...dataUtil.knownDeviceIds]).to.eql(['device-1']);
 
-        const olderDatum = { type: 'any', deviceId: 'device-1', uploadId: 'upload-older', time: '2018-02-01T00:00:00' };
-        dataUtil.normalizeDatumIn(olderDatum);
-        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-initial');
+        // Adding more datums for the same device does not duplicate.
+        const datumB = { type: 'any', deviceId: 'device-1', uploadId: 'upload-b', time: '2018-02-01T02:00:00' };
+        dataUtil.normalizeDatumIn(datumB);
+        expect([...dataUtil.knownDeviceIds]).to.eql(['device-1']);
 
-        const newerDatum = { type: 'any', deviceId: 'device-1', uploadId: 'upload-newer', time: '2018-02-01T02:00:00' };
-        dataUtil.normalizeDatumIn(newerDatum);
-        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-newer');
-
-        const otherDeviceDatum = { type: 'any', deviceId: 'device-2', uploadId: 'upload-other', time: '2018-02-01T00:30:00' };
-        dataUtil.normalizeDatumIn(otherDeviceDatum);
-        expect(dataUtil.deviceUploadMap['device-1']).to.equal('upload-newer');
-        expect(dataUtil.deviceUploadMap['device-2']).to.equal('upload-other');
+        const datumC = { type: 'any', deviceId: 'device-2', uploadId: 'upload-c', time: '2018-02-01T00:30:00' };
+        dataUtil.normalizeDatumIn(datumC);
+        expect([...dataUtil.knownDeviceIds].sort()).to.eql(['device-1', 'device-2']);
       });
     });
 
@@ -3466,8 +3461,7 @@ describe('DataUtil', () => {
       it('should reset the id maps and latestDatumByType', () => {
         dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
         dataUtil.bolusToWizardIdMap = { foo: 'bar' };
-        dataUtil.deviceUploadMap = { foo: 'bar' };
-        dataUtil.deviceUploadTimeMap = { foo: 1 };
+        dataUtil.knownDeviceIds = new Set(['foo']);
         dataUtil.latestDatumByType = { foo: 'bar' };
         dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
         dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
@@ -3478,8 +3472,7 @@ describe('DataUtil', () => {
         dataUtil.removeData();
         expect(dataUtil.bolusDatumsByIdMap).to.eql({});
         expect(dataUtil.bolusToWizardIdMap).to.eql({});
-        expect(dataUtil.deviceUploadMap).to.eql({});
-        expect(dataUtil.deviceUploadTimeMap).to.eql({});
+        expect(dataUtil.knownDeviceIds.size).to.equal(0);
         expect(dataUtil.latestDatumByType).to.eql({});
         expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
         expect(dataUtil.wizardDatumsByIdMap).to.eql({});
@@ -4530,7 +4523,10 @@ describe('DataUtil', () => {
       delete(dataUtil.devices);
 
       dataUtil.setDevices();
-      expect(dataUtil.devices).to.eql([{ id: 'device1' }, { id: 'device2' }]);
+      expect(dataUtil.devices).to.eql([
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'device1', label: 'device1', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'device2', label: 'device2', deviceName: '', pump: false, serialNumber: undefined },
+      ]);
     });
 
     it('should add (Control-IQ) to a control-iq device label', () => {
@@ -4762,7 +4758,7 @@ describe('DataUtil', () => {
       ]);
     });
 
-    it('should fall back to a fetched upload via uploadToDeviceIdMap when deviceUploadMap points at an unfetched upload', () => {
+    it('should resolve a device via a fetched upload even when later datums reference an unfetched uploadId', () => {
       const trioUpload = {
         ...uploadData[3],
         uploadId: 'trio-upload-id',
@@ -4773,8 +4769,8 @@ describe('DataUtil', () => {
       };
 
       // A more recent datum that references an upload we don't have in the data set.
-      // Its newer time makes it win in deviceUploadMap, pointing the device at an
-      // unfetched uploadId — which would yield no label without the fallback.
+      // Without grouping uploads by deviceId via uploadToDeviceIdMap (and instead following
+      // a single "latest uploadId per device" pointer), this would yield no label.
       const newerDatumReferencingUnfetchedUpload = new Types.Basal({
         ...useRawData,
         deviceTime: '2018-02-05T00:00:00',
@@ -4786,8 +4782,8 @@ describe('DataUtil', () => {
       delete(dataUtil.devices);
       dataUtil.setDevices();
 
-      expect(dataUtil.deviceUploadMap.MyTrio123).to.equal('unfetched-upload-id');
       expect(dataUtil.uploadToDeviceIdMap['trio-upload-id']).to.equal('MyTrio123');
+      expect(dataUtil.knownDeviceIds.has('MyTrio123')).to.be.true;
 
       expect(dataUtil.devices).to.eql([
         {
@@ -4805,13 +4801,10 @@ describe('DataUtil', () => {
 
     it('should resolve a device via the latest pumpSettings uploadId when multiple fetched uploads share a deviceId', () => {
       // Mirrors the real-world scenario where a patient's data carries both a Trio upload and
-      // a Loop upload for the same physical device. Both upload datums lack `deviceId`, so
-      // neither directly populates deviceUploadMap; the map gets pointed at the Loop upload by
-      // an older non-upload datum. The Loop upload also happens to be chronologically newer than
-      // the Trio upload (in the user's real case, this came from `time` being stamped at
-      // ingestion via `if (!d.time) d.time = moment.utc()`), which would otherwise let it win
-      // the reverse-lookup tiebreak. The latest pumpSettings references the Trio uploadId and
-      // is the authoritative signal — it should win regardless of the other two paths.
+      // a Loop upload for the same physical device. The Loop upload is chronologically newer
+      // than the Trio upload, so a maxBy('time') tiebreak would pick Loop. The latest
+      // pumpSettings references the Trio uploadId and is the authoritative signal — it should
+      // win regardless of the upload-time ordering.
       const trioUpload = {
         type: 'upload',
         id: 'trio-upload',
@@ -4863,10 +4856,8 @@ describe('DataUtil', () => {
       delete(dataUtil.devices);
       dataUtil.setDevices();
 
-      // Confirm the ambiguous setup that should otherwise resolve to Loop:
-      // deviceUploadMap was pointed at Loop by the later linking datum, and Loop's upload time
-      // is the newest among fetched uploads, so the reverse-lookup tiebreak would also pick it.
-      expect(dataUtil.deviceUploadMap['Apple Inc._iPhone']).to.equal('loop-upload-id');
+      // Confirm the ambiguous setup that should otherwise resolve to Loop: Loop's upload time
+      // is the newest among fetched uploads, so a maxBy('time') tiebreak would also pick it.
       expect(dataUtil.uploadToDeviceIdMap['trio-upload-id']).to.equal('Apple Inc._iPhone');
       expect(dataUtil.uploadToDeviceIdMap['loop-upload-id']).to.equal('Apple Inc._iPhone');
       expect(dataUtil.latestDatumByType.pumpSettings.uploadId).to.equal('trio-upload-id');
@@ -4883,6 +4874,41 @@ describe('DataUtil', () => {
           serialNumber: undefined,
         },
       ]);
+    });
+
+    it('should report the union of deviceTags across all uploads for a device', () => {
+      // Same deviceId, two upload sessions with different deviceTags. The previous
+      // implementation picked one upload via a single tiebreak and reported its flags;
+      // the refactor reports the union so a device that has done both bgm and cgm
+      // sessions is consistently flagged for both.
+      const bgmUpload = new Types.Upload({
+        ...useRawData,
+        deviceTags: ['bgm'],
+        deviceManufacturers: ['Acme'],
+        deviceModel: 'meter',
+        deviceTime: '2018-02-01T00:00:00',
+        uploadId: 'bgm-upload-id',
+        deviceId: 'MultiDevice',
+      });
+
+      const cgmUpload = new Types.Upload({
+        ...useRawData,
+        deviceTags: ['cgm'],
+        deviceManufacturers: ['Acme'],
+        deviceModel: 'sensor',
+        deviceTime: '2018-02-02T00:00:00',
+        uploadId: 'cgm-upload-id',
+        deviceId: 'MultiDevice',
+      });
+
+      initDataUtil([bgmUpload, cgmUpload]);
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      const device = _.find(dataUtil.devices, { id: 'MultiDevice' });
+      expect(device).to.exist;
+      expect(device.bgm).to.be.true;
+      expect(device.cgm).to.be.true;
     });
   });
 
@@ -6106,12 +6132,12 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: false, serialNumber: undefined },
-        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
-        { id: 'Dexcom-XXX-XXXX' },
-        { id: 'OneTouch-XXX-XXXX' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
         { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -6141,12 +6167,12 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: false, serialNumber: undefined },
-        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
-        { id: 'Dexcom-XXX-XXXX' },
-        { id: 'OneTouch-XXX-XXXX' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
         { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
