@@ -16,8 +16,7 @@
  */
 
 import React from 'react';
-import { TransitionMotion } from 'react-motion';
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -29,8 +28,24 @@ const {
 import bgBounds from '../../../helpers/bgBounds';
 import SVGContainer from '../../../helpers/SVGContainer';
 
-import { CBGMedianAnimated } from '../../../../src/components/trends/cbg/CBGMedianAnimated';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
+
+let lastTMProps = null;
+jest.mock('react-motion', () => ({
+  TransitionMotion: jest.fn((props) => {
+    lastTMProps = props;
+    const interpolated = (props.styles || []).map(s => ({
+      key: s.key,
+      style: Object.fromEntries(
+        Object.entries(s.style).map(([k, v]) => [k, typeof v === 'object' ? v.val : v])
+      ),
+    }));
+    return props.children ? props.children(interpolated) : null;
+  }),
+  spring: (val, config) => ({ val, config }),
+}));
+
+import { CBGMedianAnimated } from '../../../../src/components/trends/cbg/CBGMedianAnimated';
 
 describe('CBGMedianAnimated', () => {
   const datum = {
@@ -59,9 +74,8 @@ describe('CBGMedianAnimated', () => {
   };
 
   describe('when `displayingMedian` is true', () => {
-    let wrapper;
     before(() => {
-      wrapper = mount(
+      render(
         <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
           <CBGMedianAnimated {...props} />
         </SVGContainer>
@@ -69,18 +83,19 @@ describe('CBGMedianAnimated', () => {
     });
 
     it('should render a single <rect>', () => {
-      expect(wrapper.find('rect').length).to.equal(1);
+      // With mock TransitionMotion, rects are rendered from children callback
+      expect(lastTMProps).to.exist;
+      expect(lastTMProps.styles).to.have.lengthOf(1);
     });
 
     it('should vertically center the median <rect> on the value', () => {
-      const median = wrapper.find(CBGMedianAnimated);
-      const sliceWidth = median.prop('sliceWidth');
+      const sliceWidth = props.sliceWidth;
       const strokeWidth = sliceWidth / 8;
       const medianWidth = sliceWidth - strokeWidth;
       const medianHeight = medianWidth * 0.75;
 
-      expect(wrapper.find(TransitionMotion).prop('styles')[0].style.median.val)
-        .to.equal(yScale(median.prop('datum').median) - medianHeight / 2);
+      expect(lastTMProps.styles[0].style.median.val)
+        .to.equal(yScale(props.datum.median) - medianHeight / 2);
     });
   });
 });

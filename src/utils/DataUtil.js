@@ -157,6 +157,11 @@ export class DataUtil {
     _.each(data, this.joinBolusAndDosingDecision);
     this.endTimer('joinBolusAndDosingDecision');
 
+    // Join food and dosingDecision datums
+    this.startTimer('joinFoodAndDosingDecision');
+    _.each(data, this.joinFoodAndDosingDecision);
+    this.endTimer('joinFoodAndDosingDecision');
+
     // Add missing suppressed basals to select basal datums
     this.startTimer('addMissingSuppressedBasals');
     this.addMissingSuppressedBasals(data);
@@ -422,12 +427,7 @@ export class DataUtil {
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
         // Translate relevant dosing decision data onto expected bolus fields
-        d.carbInput = d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net ??
-              d.dosingDecision.food?.nutrition?.carbohydrate?.net; // use originalFood if present, as this is the original value present at time of bolus
-
-        if (_.isFinite(d.carbInput)) {
-          d.carbInputGeneratedFromFoodData = true;
-        }
+        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
 
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
@@ -438,6 +438,23 @@ export class DataUtil {
 
         if ((!d.expectedNormal && requestedNormal) && (d.normal !== requestedNormal)) {
           d.expectedNormal = requestedNormal;
+        }
+      }
+    }
+  };
+
+  joinFoodAndDosingDecision = d => {
+    if (d.type === 'food' && !!this.dosingDecisionDataSetsByIdMap[d.uploadId]) {
+      const matchingDosingDecisions = _.filter(
+        _.values(this.bolusDosingDecisionDatumsByIdMap),
+        ({ associations = [] }) => _.some(associations, { reason: 'food', id: d.id })
+      );
+
+      if (matchingDosingDecisions.length) {
+        const sorted = _.orderBy(matchingDosingDecisions, 'time', 'asc');
+        d.dosingDecision = sorted[sorted.length - 1];
+        if (sorted.length > 1) {
+          d.originalDosingDecision = sorted[0];
         }
       }
     }
@@ -667,12 +684,19 @@ export class DataUtil {
     }
 
     if (d.type === 'bolus') {
-      const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food?.nutrition?.carbohydrate?.net;
+      const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food;
+      const carbInputGeneratedFromFoodData = _.isFinite(d.carbInput) && !!d.dosingDecision;
+
+      const foodTimeMs = d.dosingDecision?.food?.time ? Date.parse(d.dosingDecision.food.time) : null;
+      const foodTimeDiffers = _.isFinite(foodTimeMs)
+        && Math.abs(foodTimeMs - d.time) > 5 * MS_IN_MIN;
 
       d.tags = {
         automated: isAutomated(d),
+        carbInputGeneratedFromFoodData,
         correction: isCorrection(d),
         extended: hasExtended(d),
+        foodTimeDiffers,
         interrupted: isInterruptedBolus(d),
         manual: !isWizardOrDosingDecision && !isAutomated(d),
         override: isOverride(d),
@@ -707,11 +731,23 @@ export class DataUtil {
     }
 
     if (d.type === 'food') {
+      const { dosingDecision, originalDosingDecision } = d;
+      const currentCarbs = d.nutrition?.carbohydrate?.net;
+      const originalCarbs = dosingDecision?.originalFood?.nutrition?.carbohydrate?.net
+        ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
+      const carbsEdited = originalCarbs != null && originalCarbs !== currentCarbs;
+
+      const entryTimeDiffExceedsThreshold = dosingDecision
+        && Math.abs(dosingDecision.time - d.time) > 5 * MS_IN_MIN
+        && (!originalDosingDecision || Math.abs(originalDosingDecision.time - d.time) > 5 * MS_IN_MIN);
+
       d.tags = {
         loop: isLoopDatum,
         trio: isTrioDatum,
         dexcom: isDexcomDatum,
         manual: isDexcomDatum,
+        carbsEdited,
+        entryTimeDiffers: !!entryTimeDiffExceedsThreshold,
       };
     }
 
@@ -1732,6 +1768,7 @@ export class DataUtil {
         const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
         const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
         const deviceModel = _.get(upload, 'deviceModel', '');
+        const deviceName = _.get(upload, 'deviceName', '');
         let label = key;
 
         if (deviceManufacturer || deviceModel) {
@@ -1755,6 +1792,7 @@ export class DataUtil {
           cgm: _.includes(upload.deviceTags, 'cgm'),
           oneMinCgmSampleInterval: isOneMinCGMSampleIntervalDevice(upload),
           id: key,
+          deviceName,
           label,
           pump: _.includes(upload.deviceTags, 'insulin-pump'),
           serialNumber: upload.deviceSerialNumber,
@@ -1774,6 +1812,11 @@ export class DataUtil {
         // from a version of uploader supports control-iq data. Otherwise, we have duplicate data.
         const preCIQDeviceID = device.id.replace('tandemCIQ', 'tandem');
         if (_.includes(allDeviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
+      }
+
+      if (device.id.indexOf('HealthKit twiist') !== -1) {
+        // Exclude HealthKit twiist devices, as the twiist data will be duplicated
+        excludedDevices.push(device.id);
       }
     });
 
