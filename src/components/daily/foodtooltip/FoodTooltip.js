@@ -17,12 +17,13 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
+import moment from 'moment';
 import _ from 'lodash';
 import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { MS_IN_HOUR } from '../../../utils/constants';
-import { isLoop } from '../../../utils/device';
+import { isLoop, isTrio } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './FoodTooltip.css';
@@ -61,10 +62,12 @@ const FoodTooltip = (props) => {
       );
     }
 
-    if (isLoop(food)) {
+    if (isLoop(food) || isTrio(food)) {
       const { dosingDecision, originalDosingDecision } = food;
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
+      const latestUpdatedTime = food.payload?.userUpdatedDate;
+      const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
       if (absorptionTime > 0) {
         rows.unshift(
@@ -161,6 +164,36 @@ const FoodTooltip = (props) => {
               </div>
             </div>
           );
+        }
+      }
+
+      if (latestUpdatedTime || timeOfEntry) {
+        rows.push(<div key={'divider'} className={styles.divider} />);
+
+        if (latestUpdatedTime) {
+          rows.push((
+            <div key={'latestUpdatedTime'} className={styles.row}>
+              <div className={styles.label}>{t('Last Edited')}</div>
+              <div className={styles.value}>
+                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'h:mm')}
+              </div>
+              <div className={styles.units}>
+                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'a')}
+              </div>
+            </div>
+          ));
+        } else {
+          rows.push((
+            <div key={'timeOfEntry'} className={styles.row}>
+              <div className={styles.label}>{t('Time of Entry')}</div>
+              <div className={styles.value}>
+                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'h:mm')}
+              </div>
+              <div className={styles.units}>
+                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'a')}
+              </div>
+            </div>
+          ));
         }
       }
     }

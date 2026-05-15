@@ -518,6 +518,12 @@ const withTwiistLoopDosingDecision = {
   origin: { name: 'com.dekaresearch.twiist' },
 };
 
+const withTrioDosingDecision = {
+  ...withLoopDosingDecision,
+  origin: { name: 'org.nightscout.Trio' },
+  tags: { trio: true },
+};
+
 const insulin = {
   type: 'insulin',
   dose: { total: 5 },
@@ -766,6 +772,16 @@ describe('BolusTooltip', () => {
     });
   });
 
+  it('should render appropriate fields for a bolus with a Trio dosing decision', () => {
+    const { container } = rtlRender(<BolusTooltip {...props} bolus={withTrioDosingDecision} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.interrupted))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.bg))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.iob))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.isf))).to.have.length(1);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
+  });
+
   it('should render appropriate fields for a manual insulin delivery', () => {
     const { container } = rtlRender(<BolusTooltip {...props} bolus={insulinRapidActing} />);
     expect(container.querySelectorAll(formatClassesAsSelector(styles.delivered))).to.have.length(1);
@@ -817,6 +833,15 @@ describe('BolusTooltip', () => {
       const result = getTarget(withLoopDosingDecision, props.bgPrefs, props.timePrefs);
       expect(result.type).to.equal('div');
       expect(container.querySelector(targetValue).textContent).to.equal('155-165');
+    });
+    it('should return a single div for Trio style target with "Glucose Targets" label', () => {
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withTrioDosingDecision} />);
+      const result = getTarget(withTrioDosingDecision, props.bgPrefs, props.timePrefs);
+      expect(result.type).to.equal('div');
+      expect(container.querySelector(targetValue).textContent).to.equal('155-165');
+      // eslint-disable-next-line max-len
+      const targetLabel = `${formatClassesAsSelector(styles.target)} ${formatClassesAsSelector(styles.label)}`;
+      expect(container.querySelector(targetLabel).textContent).to.contain('Glucose Targets');
     });
     it('should return "Auto" for a bolus with an automated wizard annotation', () => {
       const { container } = rtlRender(<BolusTooltip {...props} bolus={withAutoTarget} />);

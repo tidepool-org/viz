@@ -284,6 +284,13 @@ describe('DataUtil', () => {
       deviceName: 'Tidepool Loop DeviceName',
       ...useRawData,
     }),
+    new Types.Upload({
+      dataSetType: 'continuous',
+      deviceTime: '2018-02-05T00:00:00',
+      uploadId: 'upload-5',
+      client: { name: 'org.nightscout.Trio' },
+      ...useRawData,
+    }),
   ], _.toPlainObject);
 
   const pumpSettingsData = [
@@ -464,27 +471,29 @@ describe('DataUtil', () => {
       expect(dataUtil.wizardToBolusIdMap[newWizard.id]).to.equal(newBolus.id);
     });
 
-    it('should create and/or update the `loopDataSetsByIdMap`', () => {
-      delete dataUtil.loopDataSetsByIdMap;
-      expect(dataUtil.loopDataSetsByIdMap).to.be.undefined;
+    it('should create and/or update the `dosingDecisionDataSetsByIdMap`', () => {
+      delete dataUtil.dosingDecisionDataSetsByIdMap;
+      expect(dataUtil.dosingDecisionDataSetsByIdMap).to.be.undefined;
 
       dataUtil.addData(defaultData, defaultPatientId);
 
-      expect(dataUtil.loopDataSetsByIdMap).to.be.an('object').and.have.keys([
+      expect(dataUtil.dosingDecisionDataSetsByIdMap).to.be.an('object').and.have.keys([
         uploadData[3].id,
         uploadData[4].id,
+        uploadData[5].id,
       ]);
 
       const newUpload = new Types.Upload({ ...useRawData, dataSetType: 'continuous', client: { name: 'com.loopkit.Loop' } });
       dataUtil.addData([newUpload], defaultPatientId);
 
-      expect(dataUtil.loopDataSetsByIdMap).to.be.an('object').and.have.keys([
+      expect(dataUtil.dosingDecisionDataSetsByIdMap).to.be.an('object').and.have.keys([
         uploadData[3].id,
         uploadData[4].id,
+        uploadData[5].id,
         newUpload.id,
       ]);
 
-      expect(dataUtil.loopDataSetsByIdMap[newUpload.id].id).to.equal(newUpload.id);
+      expect(dataUtil.dosingDecisionDataSetsByIdMap[newUpload.id].id).to.equal(newUpload.id);
     });
 
     it('should create and/or update the `bolusDatumsByIdMap`', () => {
@@ -800,6 +809,24 @@ describe('DataUtil', () => {
         dataUtil.normalizeDatumIn(newerDatum);
         expect(dataUtil.latestDatumByType.any.id).to.equal(3);
       });
+
+      it('should add every datum-linked deviceId to `knownDeviceIds`', () => {
+        dataUtil.validateDatumIn = sinon.stub().returns(true);
+        dataUtil.knownDeviceIds = new Set();
+
+        const datumA = { type: 'any', deviceId: 'device-1', uploadId: 'upload-a', time: '2018-02-01T01:00:00' };
+        dataUtil.normalizeDatumIn(datumA);
+        expect([...dataUtil.knownDeviceIds]).to.eql(['device-1']);
+
+        // Adding more datums for the same device does not duplicate.
+        const datumB = { type: 'any', deviceId: 'device-1', uploadId: 'upload-b', time: '2018-02-01T02:00:00' };
+        dataUtil.normalizeDatumIn(datumB);
+        expect([...dataUtil.knownDeviceIds]).to.eql(['device-1']);
+
+        const datumC = { type: 'any', deviceId: 'device-2', uploadId: 'upload-c', time: '2018-02-01T00:30:00' };
+        dataUtil.normalizeDatumIn(datumC);
+        expect([...dataUtil.knownDeviceIds].sort()).to.eql(['device-1', 'device-2']);
+      });
     });
 
     context('basal', () => {
@@ -859,11 +886,18 @@ describe('DataUtil', () => {
         expect(uploadWithoutTime.time).to.be.a('number');
       });
 
-      it('should add a loop datum to `loopDataSetsByIdMap`', () => {
+      it('should add a loop datum to `dosingDecisionDataSetsByIdMap`', () => {
         const loopUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.tidepool.Loop' }, ...useRawData }), id: 'foo' };
-        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.undefined;
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[loopUpload.id]).to.be.undefined;
         dataUtil.normalizeDatumIn(loopUpload);
-        expect(dataUtil.loopDataSetsByIdMap[loopUpload.id]).to.be.an('object').and.have.property('id', loopUpload.id);
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[loopUpload.id]).to.be.an('object').and.have.property('id', loopUpload.id);
+      });
+
+      it('should add a trio datum to `dosingDecisionDataSetsByIdMap`', () => {
+        const trioUpload = { ...new Types.Upload({ dataSetType: 'continuous', client: { name: 'org.nightscout.Trio' }, ...useRawData }), id: 'trio-foo' };
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[trioUpload.id]).to.be.undefined;
+        dataUtil.normalizeDatumIn(trioUpload);
+        expect(dataUtil.dosingDecisionDataSetsByIdMap[trioUpload.id]).to.be.an('object').and.have.property('id', trioUpload.id);
       });
 
       it('should add a dexcom datum to `dexcomDataSetsByIdMap`', () => {
@@ -1195,7 +1229,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
-      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
 
       _.each([bolus, bolus2], dataUtil.joinBolusAndDosingDecision);
       // should not attach dosing decision to bolus that is not associated
@@ -1236,7 +1270,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
-      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
 
       dataUtil.joinBolusAndDosingDecision(bolus);
       // should attach associated pump settings to dosingDecisions
@@ -1273,7 +1307,7 @@ describe('DataUtil', () => {
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
-      dataUtil.loopDataSetsByIdMap = { [uploadId]: upload };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
 
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.dosingDecision).to.eql(dosingDecision);
@@ -1311,7 +1345,7 @@ describe('DataUtil', () => {
         food: { nutrition: { carbohydrate: { net: 30 } } },
       };
 
-      dataUtil.loopDataSetsByIdMap = {
+      dataUtil.dosingDecisionDataSetsByIdMap = {
         upload1: { client: { name: 'org.tidepool.Loop' } },
       };
 
@@ -1329,7 +1363,7 @@ describe('DataUtil', () => {
         origin: { name: 'org.tidepool.Loop' },
       };
 
-      dataUtil.loopDataSetsByIdMap = {
+      dataUtil.dosingDecisionDataSetsByIdMap = {
         upload1: { client: { name: 'org.tidepool.Loop' } },
       };
 
@@ -1352,7 +1386,7 @@ describe('DataUtil', () => {
     const uploadId = 'upload1';
 
     beforeEach(() => {
-      dataUtil.loopDataSetsByIdMap = {
+      dataUtil.dosingDecisionDataSetsByIdMap = {
         upload1: { client: { name: 'org.tidepool.Loop' } },
       };
     });
@@ -1452,6 +1486,42 @@ describe('DataUtil', () => {
       dataUtil.joinFoodAndDosingDecision(food);
 
       expect(food.dosingDecision).to.be.undefined;
+    });
+
+    it('should join trio dosing decisions to boluses from trio uploads', () => {
+      const uploadId = 'upload-trio';
+      const upload = { type: 'upload', id: uploadId, dataSetType: 'continuous', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.nightscout.Trio' } };
+      const bolus = { type: 'bolus', id: 'bolus1', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), origin: { name: 'org.nightscout.Trio' } };
+      const pumpSettings = { ...loopMultirate, id: 'pumpSettings1' };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        origin: { name: 'org.nightscout.Trio' },
+        associations: [
+          { reason: 'bolus', id: 'bolus1' },
+          { reason: 'pumpSettings', id: 'pumpSettings1' },
+        ],
+        requestedBolus: { normal: 12 },
+        insulinOnBoard: { amount: 4 },
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        bgHistorical: [
+          { value: 100 },
+          { value: 110 },
+        ],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
+
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.dosingDecision).to.eql(dosingDecision);
+      expect(bolus.dosingDecision.pumpSettings).to.eql(pumpSettings);
+      expect(bolus.carbInput).to.equal(30);
+      expect(bolus.bgInput).to.equal(110);
+      expect(bolus.insulinOnBoard).to.equal(4);
     });
   });
 
@@ -1669,12 +1739,25 @@ describe('DataUtil', () => {
       it('should tag a loop bolus with `loop`', () => {
         const loopUploadId = 'upload1';
         const loopUpload = { type: 'upload', id: loopUploadId, dataSetType: 'continuous', uploadId: loopUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
-        dataUtil.loopDataSetsByIdMap = { [loopUploadId]: loopUpload };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [loopUploadId]: loopUpload };
         const loopBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', uploadId: loopUploadId };
 
         expect(loopBolus.tags).to.be.undefined;
         dataUtil.tagDatum(loopBolus);
         expect(loopBolus.tags.loop).to.be.true;
+        expect(loopBolus.tags.trio).to.be.false;
+      });
+
+      it('should tag a trio bolus with `trio` and not `loop`', () => {
+        const trioUploadId = 'upload-trio';
+        const trioUpload = { type: 'upload', id: trioUploadId, dataSetType: 'continuous', uploadId: trioUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.nightscout.Trio' } };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [trioUploadId]: trioUpload };
+        const trioBolus = { ...bolus, deviceTime: '2018-02-02T01:00:00', uploadId: trioUploadId };
+
+        expect(trioBolus.tags).to.be.undefined;
+        dataUtil.tagDatum(trioBolus);
+        expect(trioBolus.tags.trio).to.be.true;
+        expect(trioBolus.tags.loop).to.be.false;
       });
 
       it('should tag `carbInputGeneratedFromFoodData` true when bolus has carbInput from dosingDecision', () => {
@@ -1748,7 +1831,7 @@ describe('DataUtil', () => {
       const underrideWizard = { ...wizard, bolus: { normal: 1 }, recommended: { net: 2 } };
 
       beforeEach(() => {
-        dataUtil.loopDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
+        dataUtil.dosingDecisionDataSetsByIdMap = { 'upload-3': { id: 'upload-3' } };
       });
 
       it('should tag an extended wizard with `extended`', () => {
@@ -1812,12 +1895,25 @@ describe('DataUtil', () => {
       it('should tag a loop food datum with `loop`', () => {
         const loopUploadId = 'upload1';
         const loopUpload = { type: 'upload', id: loopUploadId, dataSetType: 'continuous', uploadId: loopUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.tidepool.Loop' } };
-        dataUtil.loopDataSetsByIdMap = { [loopUploadId]: loopUpload };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [loopUploadId]: loopUpload };
         const loopFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: loopUploadId, ...useRawData });
 
         expect(loopFood.tags).to.be.undefined;
         dataUtil.tagDatum(loopFood);
         expect(loopFood.tags.loop).to.be.true;
+        expect(loopFood.tags.trio).to.be.false;
+      });
+
+      it('should tag a trio food datum with `trio` and not `loop`', () => {
+        const trioUploadId = 'upload-trio';
+        const trioUpload = { type: 'upload', id: trioUploadId, dataSetType: 'continuous', uploadId: trioUploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), client: { name: 'org.nightscout.Trio' } };
+        dataUtil.dosingDecisionDataSetsByIdMap = { [trioUploadId]: trioUpload };
+        const trioFood = new Types.Food({ deviceTime: '2018-02-01T01:00:00', uploadId: trioUploadId, ...useRawData });
+
+        expect(trioFood.tags).to.be.undefined;
+        dataUtil.tagDatum(trioFood);
+        expect(trioFood.tags.trio).to.be.true;
+        expect(trioFood.tags.loop).to.be.false;
       });
 
       it('should tag a dexcom food datum with `dexcom` and `manual`', () => {
@@ -3341,23 +3437,23 @@ describe('DataUtil', () => {
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as a function', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(37);
+        expect(dataUtil.data.size()).to.equal(38);
         dataUtil.removeData(d => (d.type === 'basal'));
-        expect(dataUtil.data.size()).to.equal(34);
+        expect(dataUtil.data.size()).to.equal(35);
       });
 
       it('should remove selective data from the crossfilter when predicate arg is supplied as an object', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(37);
+        expect(dataUtil.data.size()).to.equal(38);
         dataUtil.removeData({ type: 'basal' });
-        expect(dataUtil.data.size()).to.equal(34);
+        expect(dataUtil.data.size()).to.equal(35);
       });
     });
 
     context('predicate not provided', () => {
       it('should remove all data from the crossfilter', () => {
         initDataUtil(defaultData);
-        expect(dataUtil.data.size()).to.equal(37);
+        expect(dataUtil.data.size()).to.equal(38);
         dataUtil.removeData();
         expect(dataUtil.data.size()).to.equal(0);
       });
@@ -3365,23 +3461,23 @@ describe('DataUtil', () => {
       it('should reset the id maps and latestDatumByType', () => {
         dataUtil.bolusDatumsByIdMap = { foo: 'bar' };
         dataUtil.bolusToWizardIdMap = { foo: 'bar' };
-        dataUtil.deviceUploadMap = { foo: 'bar' };
+        dataUtil.knownDeviceIds = new Set(['foo']);
         dataUtil.latestDatumByType = { foo: 'bar' };
         dataUtil.pumpSettingsDatumsByIdMap = { foo: 'bar' };
         dataUtil.wizardDatumsByIdMap = { foo: 'bar' };
         dataUtil.wizardToBolusIdMap = { foo: 'bar' };
-        dataUtil.loopDataSetsByIdMap = { foo: 'bar' };
+        dataUtil.dosingDecisionDataSetsByIdMap = { foo: 'bar' };
         dataUtil.dexcomDataSetsByIdMap = { foo: 'bar' };
         dataUtil.bolusDosingDecisionDatumsByIdMap = { foo: 'bar' };
         dataUtil.removeData();
         expect(dataUtil.bolusDatumsByIdMap).to.eql({});
         expect(dataUtil.bolusToWizardIdMap).to.eql({});
-        expect(dataUtil.deviceUploadMap).to.eql({});
+        expect(dataUtil.knownDeviceIds.size).to.equal(0);
         expect(dataUtil.latestDatumByType).to.eql({});
         expect(dataUtil.pumpSettingsDatumsByIdMap).to.eql({});
         expect(dataUtil.wizardDatumsByIdMap).to.eql({});
         expect(dataUtil.wizardToBolusIdMap).to.eql({});
-        expect(dataUtil.loopDataSetsByIdMap).to.eql({});
+        expect(dataUtil.dosingDecisionDataSetsByIdMap).to.eql({});
         expect(dataUtil.dexcomDataSetsByIdMap).to.eql({});
         expect(dataUtil.bolusDosingDecisionDatumsByIdMap).to.eql({});
       });
@@ -4113,6 +4209,7 @@ describe('DataUtil', () => {
         uploadData[2].uploadId,
         uploadData[3].uploadId,
         uploadData[4].uploadId,
+        uploadData[5].uploadId,
       ]);
 
       expect(dataUtil.uploadMap[uploadData[0].uploadId]).to.eql({
@@ -4137,6 +4234,11 @@ describe('DataUtil', () => {
 
       expect(dataUtil.uploadMap[uploadData[4].uploadId]).to.eql({
         source: 'diy loop',
+        deviceSerialNumber: 'Unknown',
+      });
+
+      expect(dataUtil.uploadMap[uploadData[5].uploadId]).to.eql({
+        source: 'Unknown',
         deviceSerialNumber: 'Unknown',
       });
     });
@@ -4421,7 +4523,10 @@ describe('DataUtil', () => {
       delete(dataUtil.devices);
 
       dataUtil.setDevices();
-      expect(dataUtil.devices).to.eql([{ id: 'device1' }, { id: 'device2' }]);
+      expect(dataUtil.devices).to.eql([
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'device1', label: 'device1', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'device2', label: 'device2', deviceName: '', pump: false, serialNumber: undefined },
+      ]);
     });
 
     it('should add (Control-IQ) to a control-iq device label', () => {
@@ -4624,6 +4729,186 @@ describe('DataUtil', () => {
           serialNumber: undefined
         },
       ]);
+    });
+
+    it('should set the proper device label for Trio data', () => {
+      initDataUtil([{
+        ...uploadData[3],
+        origin: {
+          name: 'org.nightscout.Trio',
+        },
+        deviceId: 'MyTrio123',
+        dataSetType: 'continuous',
+      }]);
+
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          oneMinCgmSampleInterval: false,
+          id: 'MyTrio123',
+          deviceName: 'Tidepool Loop DeviceName',
+          label: 'Trio',
+          pump: false,
+          serialNumber: undefined
+        },
+      ]);
+    });
+
+    it('should resolve a device via a fetched upload even when later datums reference an unfetched uploadId', () => {
+      const trioUpload = {
+        ...uploadData[3],
+        uploadId: 'trio-upload-id',
+        origin: { name: 'org.nightscout.Trio' },
+        deviceId: 'MyTrio123',
+        dataSetType: 'continuous',
+        deviceTime: '2018-02-01T00:00:00',
+      };
+
+      // A more recent datum that references an upload we don't have in the data set.
+      // Without grouping uploads by deviceId via uploadToDeviceIdMap (and instead following
+      // a single "latest uploadId per device" pointer), this would yield no label.
+      const newerDatumReferencingUnfetchedUpload = new Types.Basal({
+        ...useRawData,
+        deviceTime: '2018-02-05T00:00:00',
+        deviceId: 'MyTrio123',
+        uploadId: 'unfetched-upload-id',
+      });
+
+      initDataUtil([trioUpload, newerDatumReferencingUnfetchedUpload]);
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      expect(dataUtil.uploadToDeviceIdMap['trio-upload-id']).to.equal('MyTrio123');
+      expect(dataUtil.knownDeviceIds.has('MyTrio123')).to.be.true;
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          oneMinCgmSampleInterval: false,
+          id: 'MyTrio123',
+          deviceName: 'Tidepool Loop DeviceName',
+          label: 'Trio',
+          pump: false,
+          serialNumber: undefined,
+        },
+      ]);
+    });
+
+    it('should resolve a device via the latest pumpSettings uploadId when multiple fetched uploads share a deviceId', () => {
+      // Mirrors the real-world scenario where a patient's data carries both a Trio upload and
+      // a Loop upload for the same physical device. The Loop upload is chronologically newer
+      // than the Trio upload, so a maxBy('time') tiebreak would pick Loop. The latest
+      // pumpSettings references the Trio uploadId and is the authoritative signal — it should
+      // win regardless of the upload-time ordering.
+      const trioUpload = {
+        type: 'upload',
+        id: 'trio-upload',
+        uploadId: 'trio-upload-id',
+        dataSetType: 'continuous',
+        client: { name: 'org.nightscout.Trio' },
+        time: '2026-05-08T21:18:15.000Z',
+      };
+
+      const loopUpload = {
+        type: 'upload',
+        id: 'loop-upload',
+        uploadId: 'loop-upload-id',
+        dataSetType: 'continuous',
+        client: { name: 'com.loopkit.Loop' },
+        time: '2026-05-08T21:19:47.000Z',
+      };
+
+      const datumLinkingTrioUploadToDeviceId = new Types.Basal({
+        ...useRawData,
+        deviceTime: '2026-05-01T00:00:00',
+        deviceId: 'Apple Inc._iPhone',
+        uploadId: 'trio-upload-id',
+      });
+
+      const datumLinkingLoopUploadToDeviceId = new Types.Basal({
+        ...useRawData,
+        deviceTime: '2026-05-04T00:00:00',
+        deviceId: 'Apple Inc._iPhone',
+        uploadId: 'loop-upload-id',
+      });
+
+      const latestPumpSettings = {
+        ...loopMultirate,
+        id: 'latest-pumpSettings',
+        uploadId: 'trio-upload-id',
+        deviceTime: '2026-05-03T12:00:00',
+        time: '2026-05-03T12:00:00.000Z',
+        origin: { name: 'org.nightscout.Trio' },
+      };
+
+      initDataUtil([
+        trioUpload,
+        loopUpload,
+        datumLinkingTrioUploadToDeviceId,
+        datumLinkingLoopUploadToDeviceId,
+        latestPumpSettings,
+      ]);
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      // Confirm the ambiguous setup that should otherwise resolve to Loop: Loop's upload time
+      // is the newest among fetched uploads, so a maxBy('time') tiebreak would also pick it.
+      expect(dataUtil.uploadToDeviceIdMap['trio-upload-id']).to.equal('Apple Inc._iPhone');
+      expect(dataUtil.uploadToDeviceIdMap['loop-upload-id']).to.equal('Apple Inc._iPhone');
+      expect(dataUtil.latestDatumByType.pumpSettings.uploadId).to.equal('trio-upload-id');
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: false,
+          oneMinCgmSampleInterval: false,
+          id: 'Apple Inc._iPhone',
+          deviceName: '',
+          label: 'Trio',
+          pump: false,
+          serialNumber: undefined,
+        },
+      ]);
+    });
+
+    it('should report the union of deviceTags across all uploads for a device', () => {
+      // Same deviceId, two upload sessions with different deviceTags. The previous
+      // implementation picked one upload via a single tiebreak and reported its flags;
+      // the refactor reports the union so a device that has done both bgm and cgm
+      // sessions is consistently flagged for both.
+      const bgmUpload = new Types.Upload({
+        ...useRawData,
+        deviceTags: ['bgm'],
+        deviceManufacturers: ['Acme'],
+        deviceModel: 'meter',
+        deviceTime: '2018-02-01T00:00:00',
+        uploadId: 'bgm-upload-id',
+        deviceId: 'MultiDevice',
+      });
+
+      const cgmUpload = new Types.Upload({
+        ...useRawData,
+        deviceTags: ['cgm'],
+        deviceManufacturers: ['Acme'],
+        deviceModel: 'sensor',
+        deviceTime: '2018-02-02T00:00:00',
+        uploadId: 'cgm-upload-id',
+        deviceId: 'MultiDevice',
+      });
+
+      initDataUtil([bgmUpload, cgmUpload]);
+      delete(dataUtil.devices);
+      dataUtil.setDevices();
+
+      const device = _.find(dataUtil.devices, { id: 'MultiDevice' });
+      expect(device).to.exist;
+      expect(device.bgm).to.be.true;
+      expect(device.cgm).to.be.true;
     });
   });
 
@@ -5844,15 +6129,15 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings).to.eql(dataUtil.latestPumpUpload.settings);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(37);
+      expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { id: 'Test Page Data - 123' },
-        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
-        { id: 'Dexcom-XXX-XXXX' },
-        { id: 'OneTouch-XXX-XXXX' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
         { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -5879,15 +6164,15 @@ describe('DataUtil', () => {
       expect(result.latestDatumByType.smbg.id).to.equal(dataUtil.latestDatumByType.smbg.id);
       expect(result.latestPumpUpload.settings).to.eql(dataUtil.latestPumpUpload.settings);
       expect(result.patientId).to.equal(defaultPatientId);
-      expect(result.size).to.equal(37);
+      expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { id: 'Test Page Data - 123' },
-        { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
-        { id: 'Dexcom-XXX-XXXX' },
-        { id: 'OneTouch-XXX-XXXX' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
         { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { id: 'DevId0987654321' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
       ]);
 
       expect(result.excludedDevices).to.eql([]);

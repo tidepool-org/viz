@@ -27,6 +27,7 @@ import {
   MICROTECH,
   TIDEPOOL_LOOP,
   DIY_LOOP,
+  TRIO,
   pumpVocabulary,
   SLEEP,
   PHYSICAL_ACTIVITY,
@@ -116,6 +117,42 @@ describe('device utility functions', () => {
     it('should return `false` for a non-matching pattern within `client.name`', () => {
       const datum = { client: { name: 'org.loopkit.Loop' } };
       expect(device.isDIYLoop(datum)).to.be.false;
+    });
+  });
+
+  describe('isTrio', () => {
+    it('should return `true` for a matching pattern within `origin.name`', () => {
+      const datum = { origin: { name: 'org.nightscout.Trio' } };
+      const datum2 = { origin: { name: 'org.nightscout.Trio.xyz' } };
+      expect(device.isTrio(datum)).to.be.true;
+      expect(device.isTrio(datum2)).to.be.true;
+    });
+
+    it('should return `false` for a non-matching pattern within `origin.name`', () => {
+      const datum = { origin: { name: 'com.nightscout.Trio' } };
+      const datum2 = { origin: { name: 'com.loopkit.Loop' } };
+      expect(device.isTrio(datum)).to.be.false;
+      expect(device.isTrio(datum2)).to.be.false;
+    });
+
+    it('should return `true` for a matching pattern within `client.name`', () => {
+      const datum = { client: { name: 'org.nightscout.Trio' } };
+      expect(device.isTrio(datum)).to.be.true;
+    });
+
+    it('should return `false` for a non-matching pattern within `client.name`', () => {
+      const datum = { client: { name: 'com.nightscout.Trio' } };
+      expect(device.isTrio(datum)).to.be.false;
+    });
+
+    it('should return `true` for a datum with `tags.trio` set', () => {
+      const datum = { tags: { trio: true } };
+      expect(device.isTrio(datum)).to.be.true;
+    });
+
+    it('should return `false` for a datum with `tags.trio` not set', () => {
+      const datum = { tags: { loop: true } };
+      expect(device.isTrio(datum)).to.be.false;
     });
   });
 
@@ -313,6 +350,7 @@ describe('device utility functions', () => {
       expect(device.isAutomatedBasalDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
       expect(device.isAutomatedBasalDevice('tidepool loop', { origin: { name: 'org.tidepool.Loop' } })).to.be.true;
       expect(device.isAutomatedBasalDevice('diy loop', { origin: { name: 'com.loopkit.Loop' } })).to.be.true;
+      expect(device.isAutomatedBasalDevice('trio', { origin: { name: 'org.nightscout.Trio' } })).to.be.true;
       expect(device.isAutomatedBasalDevice('twiist', { origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
     });
 
@@ -325,6 +363,7 @@ describe('device utility functions', () => {
     it('should return `true` for an upload record for a pump with automated bolus delivery capabilities', () => {
       expect(device.isAutomatedBolusDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
       expect(device.isAutomatedBolusDevice('diy loop', { origin: { name: 'com.loopkit.Loop' } })).to.be.true;
+      expect(device.isAutomatedBolusDevice('trio', { origin: { name: 'org.nightscout.Trio' } })).to.be.true;
     });
 
     it('should return `false` for an upload record for a pump without automated bolus delivery capabilities', () => {
@@ -344,6 +383,7 @@ describe('device utility functions', () => {
 
     it('should return `false` for an upload record for a pump without settings override capabilities', () => {
       expect(device.isSettingsOverrideDevice('tandem', { deviceId: 'tandem123456' })).to.be.false;
+      expect(device.isSettingsOverrideDevice('trio', { origin: { name: 'org.nightscout.Trio' } })).to.be.false;
     });
   });
 
@@ -380,6 +420,7 @@ describe('device utility functions', () => {
         TANDEM,
         TIDEPOOL_LOOP,
         DIY_LOOP,
+        TRIO,
         MICROTECH,
         'default',
       ];
@@ -434,6 +475,7 @@ describe('device utility functions', () => {
       expect(device.getUppercasedManufacturer('tandem')).to.equal('Tandem');
       expect(device.getUppercasedManufacturer('tidepool loop')).to.equal('Tidepool Loop');
       expect(device.getUppercasedManufacturer('diy loop')).to.equal('DIY Loop');
+      expect(device.getUppercasedManufacturer('trio')).to.equal('Trio');
     });
   });
 
@@ -461,6 +503,51 @@ describe('device utility functions', () => {
     it('returns null if id doesn\'t exist', () => {
       const deviceObject = { foo: 'bar' };
       expect(device.getDeviceName(deviceObject)).to.be.null;
+    });
+  });
+
+  describe('deriveLabel', () => {
+    it('returns the deviceId when no upload is provided', () => {
+      expect(device.deriveLabel('SomeDeviceId', null)).to.equal('SomeDeviceId');
+    });
+
+    it('returns "Dexcom API" for a continuous Dexcom-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Dexcom'] };
+      expect(device.deriveLabel('Dexcom-XXX', upload)).to.equal('Dexcom API');
+    });
+
+    it('returns "FreeStyle Libre (from LibreView)" for a continuous Abbott-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Abbott'] };
+      expect(device.deriveLabel('AbbottFreeStyleLibre-XXX', upload)).to.equal('FreeStyle Libre (from LibreView)');
+    });
+
+    it('returns "twiist" for a continuous Sequel-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Sequel'] };
+      expect(device.deriveLabel('twiist-XXX', upload)).to.equal('twiist');
+    });
+
+    it('joins manufacturer and model for non-special-cased uploads', () => {
+      const upload = { deviceManufacturers: ['Tandem'], deviceModel: '12345' };
+      expect(device.deriveLabel('tandem12345', upload)).to.equal('Tandem 12345');
+    });
+
+    it('uses model alone when manufacturer is missing', () => {
+      const upload = { deviceModel: '12345' };
+      expect(device.deriveLabel('tandem12345', upload)).to.equal('12345');
+    });
+
+    it('returns "Trio" when manufacturer/model are absent and origin matches Trio', () => {
+      const upload = { origin: { name: 'org.nightscout.Trio' } };
+      expect(device.deriveLabel('MyTrio123', upload)).to.equal('Trio');
+    });
+
+    it('falls back to the deviceId when no manufacturer/model/Trio signal is present', () => {
+      expect(device.deriveLabel('MysteryDevice', {})).to.equal('MysteryDevice');
+    });
+
+    it('appends "(Control-IQ)" when the deviceId starts with "tandemCIQ"', () => {
+      const upload = { deviceManufacturers: ['Tandem'], deviceModel: '12345' };
+      expect(device.deriveLabel('tandemCIQ12345', upload)).to.equal('Tandem 12345 (Control-IQ)');
     });
   });
 });
