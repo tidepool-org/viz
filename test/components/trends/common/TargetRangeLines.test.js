@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -32,7 +32,7 @@ import SVGContainer from '../../../helpers/SVGContainer';
 import TargetRangeLines from '../../../../src/components/trends/common/TargetRangeLines';
 
 describe('TargetRangeLines', () => {
-  let wrapper;
+  let container;
   const props = {
     bgBounds,
     smbgOpts: {
@@ -44,30 +44,30 @@ describe('TargetRangeLines', () => {
   };
 
   before(() => {
-    wrapper = mount(
+    ({ container } = render(
       <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
         <TargetRangeLines {...props} />
       </SVGContainer>
-    );
+    ));
   });
 
   it('should render two lines', () => {
-    expect(wrapper.find('line')).to.have.length(2);
+    expect(container.querySelectorAll('line')).to.have.length(2);
   });
 
   describe('highThreshold', () => {
     it('should have y1 and y2 at targetUpperBound on provided yScale', () => {
-      const highThreshold = wrapper.find('#highThreshold');
-      expect(highThreshold.prop('y1')).to.equal(yScale(props.bgBounds.targetUpperBound));
-      expect(highThreshold.prop('y2')).to.equal(yScale(props.bgBounds.targetUpperBound));
+      const highThreshold = container.querySelector('#highThreshold');
+      expect(Number(highThreshold.getAttribute('y1'))).to.equal(yScale(props.bgBounds.targetUpperBound));
+      expect(Number(highThreshold.getAttribute('y2'))).to.equal(yScale(props.bgBounds.targetUpperBound));
     });
   });
 
   describe('lowThreshold', () => {
     it('should have y1 and y2 at targetLowerBound on provided yScale', () => {
-      const lowThreshold = wrapper.find('#lowThreshold');
-      expect(lowThreshold.prop('y1')).to.equal(yScale(props.bgBounds.targetLowerBound));
-      expect(lowThreshold.prop('y2')).to.equal(yScale(props.bgBounds.targetLowerBound));
+      const lowThreshold = container.querySelector('#lowThreshold');
+      expect(Number(lowThreshold.getAttribute('y1'))).to.equal(yScale(props.bgBounds.targetLowerBound));
+      expect(Number(lowThreshold.getAttribute('y2'))).to.equal(yScale(props.bgBounds.targetLowerBound));
     });
   });
 });

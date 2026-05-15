@@ -16,8 +16,8 @@
  */
 
 import React from 'react';
-import moment from 'moment';
-import { mount } from 'enzyme';
+import _ from 'lodash';
+import { render } from '@testing-library/react/pure';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 
@@ -84,20 +84,84 @@ const loop = {
   },
 };
 
-const loopTimeOfEntry = {
+const loopWithDosingDecision = {
   ...loop,
-  payload: {
-    userCreatedDate: '2024-02-02T14:00:00.000Z',
+  tags: { ...loop.tags, entryTimeDiffers: true },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T17:00:00.000Z'), // 5:00 pm UTC
+    food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
   },
-  normalTime: '2024-02-02T01:00:00.000Z',
 };
 
-const loopEdited = {
+const loopWithDosingDecisionWithinThreshold = {
   ...loop,
-  payload: {
-    userUpdatedDate: '2024-02-02T03:00:00.000Z',
+  tags: { ...loop.tags, entryTimeDiffers: false },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T18:02:00.000Z'), // 6:02 pm UTC
+    food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
   },
-  normalTime: '2024-02-02T02:00:00.000Z',
+};
+
+// tags.carbsEdited set by DataUtil.tagDatum; set directly here since tests bypass DataUtil
+const loopWithEditedCarbs = {
+  ...loop,
+  tags: { ...loop.tags, carbsEdited: true, entryTimeDiffers: false },
+  nutrition: {
+    ...loop.nutrition,
+    carbohydrate: { net: 10, units: 'grams' },
+  },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T17:00:00.000Z'),
+    food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 10 } } },
+    originalFood: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
+};
+
+const loopWithMultipleDosingDecisions = {
+  ...loop,
+  tags: { ...loop.tags, carbsEdited: true, entryTimeDiffers: true },
+  nutrition: {
+    ...loop.nutrition,
+    carbohydrate: { net: 80, units: 'grams' },
+  },
+  originalDosingDecision: {
+    time: Date.parse('2024-02-02T18:00:00.000Z'), // Time Entered (6:00 pm UTC)
+    food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+  },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T19:00:00.000Z'), // Time Last Edited (7:00 pm UTC)
+    food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
+    originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+  },
+};
+
+// No name/absorption so row[0]=Initial Carb Amount, row[1]=Time Entered, row[2]=Time Last Edited
+const loopEdited = {
+  type: 'food',
+  origin: { name: 'com.loopkit.Loop' },
+  nutrition: {
+    carbohydrate: { net: 10, units: 'grams' },
+  },
+  tags: { carbsEdited: true, entryTimeDiffers: true },
+  originalDosingDecision: {
+    time: Date.parse('2024-02-02T01:00:00.000Z'), // 1:00 am UTC
+    food: { time: '2024-02-02T00:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T03:00:00.000Z'), // 3:00 am UTC
+    food: { time: '2024-02-02T00:00:00.000Z', nutrition: { carbohydrate: { net: 10 } } },
+    originalFood: { time: '2024-02-02T00:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
+};
+
+// Has name+absorption so row[0]=Type, row[1]=Absorption Time, row[2]=Time Entered
+const loopTimeOfEntry = {
+  ...loop,
+  tags: { entryTimeDiffers: true },
+  dosingDecision: {
+    time: Date.parse('2024-02-02T14:00:00.000Z'), // 2:00 pm UTC
+    food: { time: '2024-02-02T14:00:00.000Z', nutrition: { carbohydrate: { net: 5 } } },
+  },
 };
 
 const manual = {
@@ -112,37 +176,37 @@ const props = {
 
 describe('FoodTooltip', () => {
   it('should render without issue when all properties provided', () => {
-    const wrapper = mount(<FoodTooltip {...props} food={normal} />);
-    expect(wrapper.find(formatClassesAsSelector(styles.carb))).to.have.length(1);
+    const { container } = render(<FoodTooltip {...props} food={normal} />);
+    expect(container.querySelectorAll(formatClassesAsSelector(styles.carb))).to.have.length(1);
   });
 
   describe('getCarbs', () => {
     // eslint-disable-next-line max-len
     const carbValue = `${formatClassesAsSelector(styles.carb)} ${formatClassesAsSelector(styles.value)}`;
     it('should return 5 for a 5 gram net food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={normal} />);
+      const { container } = render(<FoodTooltip {...props} food={normal} />);
       expect(getCarbs(normal)).to.equal(5);
-      expect(wrapper.find(carbValue).text()).to.equal('5');
+      expect(container.querySelector(carbValue).textContent).to.equal('5');
     });
     it('should return 200 for a 200 gram net food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={large} />);
+      const { container } = render(<FoodTooltip {...props} food={large} />);
       expect(getCarbs(large)).to.equal(200);
-      expect(wrapper.find(carbValue).text()).to.equal('200');
+      expect(container.querySelector(carbValue).textContent).to.equal('200');
     });
     it('should return 15 for a 15.04 gram net food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={roundToInt} />);
+      const { container } = render(<FoodTooltip {...props} food={roundToInt} />);
       expect(getCarbs(roundToInt)).to.equal(15);
-      expect(wrapper.find(carbValue).text()).to.equal('15');
+      expect(container.querySelector(carbValue).textContent).to.equal('15');
     });
     it('should return 15.1 for a 15.05 gram net food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={roundTo1DecimalPlace} />);
+      const { container } = render(<FoodTooltip {...props} food={roundTo1DecimalPlace} />);
       expect(getCarbs(roundTo1DecimalPlace)).to.equal(15.1);
-      expect(wrapper.find(carbValue).text()).to.equal('15.1');
+      expect(container.querySelector(carbValue).textContent).to.equal('15.1');
     });
     it('should return 0 for a non-carbohydrate food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={nonCarb} />);
+      const { container } = render(<FoodTooltip {...props} food={nonCarb} />);
       expect(getCarbs(nonCarb)).to.equal(0);
-      expect(wrapper.find(carbValue).text()).to.equal('0');
+      expect(container.querySelector(carbValue).textContent).to.equal('0');
     });
   });
 
@@ -150,9 +214,9 @@ describe('FoodTooltip', () => {
     // eslint-disable-next-line max-len
     const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
     it('should include the food name for a Loop food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={loop} />);
+      const { container } = render(<FoodTooltip {...props} food={loop} />);
       expect(getName(loop)).to.equal('myfood');
-      expect(wrapper.find(rowValue).at(0).text()).to.contain('myfood');
+      expect(container.querySelectorAll(rowValue)[0].textContent).to.contain('myfood');
     });
   });
 
@@ -160,22 +224,85 @@ describe('FoodTooltip', () => {
     // eslint-disable-next-line max-len
     const rowValue = `${formatClassesAsSelector(styles.row)} ${formatClassesAsSelector(styles.value)}`;
     it('should include the absorption time for a Loop food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={loop} />);
+      const { container } = render(<FoodTooltip {...props} food={loop} />);
       expect(getAbsorptionTime(loop)).to.equal(3);
-      expect(wrapper.find(rowValue).at(1).text()).to.contain('3');
+      expect(container.querySelectorAll(rowValue)[1].textContent).to.contain('3');
     });
   });
 
-  describe('edited', () => {
+  describe('dosingDecision-based time/edit display', () => {
     const row = formatClassesAsSelector(styles.row);
     const rowLabel = formatClassesAsSelector(styles.label);
     const rowValue = formatClassesAsSelector(styles.value);
     const rowUnits = formatClassesAsSelector(styles.units);
+    const carbLabel = `${formatClassesAsSelector(styles.carb)} ${formatClassesAsSelector(styles.label)}`;
+
+    it('should show "Total Carbs" label for Loop food with dosingDecision', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithDosingDecision} />);
+      expect(container.querySelector(carbLabel).textContent).to.contain('Total Carbs');
+    });
+
     it('should include the edited time for an edited Loop food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={loopEdited} />);
-      expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Last Edited');
-      expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('3:00');
-      expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('am');
+      const { container } = render(<FoodTooltip {...props} food={loopEdited} />);
+      expect(container.querySelectorAll(row)[2].querySelector(rowLabel).textContent).to.contain('Last Edited');
+      expect(container.querySelectorAll(row)[2].querySelector(rowValue).textContent).to.contain('3:00');
+      expect(container.querySelectorAll(row)[2].querySelector(rowUnits).textContent).to.contain('am');
+    });
+
+    it('should show "Time Entered" when dosingDecision time differs from normalTime by >5min', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithDosingDecision} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const timeRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Entered'));
+      expect(timeRow).to.have.length(1);
+      expect(timeRow[0].querySelector(rowValue).textContent).to.contain('5:00');
+      expect(timeRow[0].querySelector(rowUnits).textContent).to.contain('pm');
+    });
+
+    it('should not show "Time Entered" when dosingDecision time is within 5min of normalTime', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithDosingDecisionWithinThreshold} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const timeRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Entered'));
+      expect(timeRow).to.have.length(0);
+    });
+
+    it('should show "Total Carbs (Edited)" label when originalFood differs from current carbs', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
+      expect(container.querySelector(carbLabel).textContent).to.contain('Total Carbs (Edited)');
+    });
+
+    it('should show "Initial Carb Amount" with the original carb value', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const initialCarbRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Initial Carb Amount'));
+      expect(initialCarbRow).to.have.length(1);
+      expect(initialCarbRow[0].querySelector(rowValue).textContent).to.equal('5');
+    });
+
+    it('should show "Time Edited" for single dosingDecision with originalFood', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const timeRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Edited'));
+      expect(timeRow).to.have.length(1);
+      expect(timeRow[0].querySelector(rowValue).textContent).to.contain('5:00');
+      expect(timeRow[0].querySelector(rowUnits).textContent).to.contain('pm');
+    });
+
+    it('should show "Time Entered" and "Time Last Edited" for multiple dosingDecisions', () => {
+      const { container } = render(<FoodTooltip {...props} food={loopWithMultipleDosingDecisions} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const timeEnteredRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Entered'));
+      const timeLastEditedRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Last Edited'));
+      expect(timeEnteredRow).to.have.length(1);
+      expect(timeLastEditedRow).to.have.length(1);
+    });
+
+    it('should not show time/edit rows when dosingDecisions are absent', () => {
+      const { container } = render(<FoodTooltip {...props} food={loop} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const timeEnteredRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Entered'));
+      const timeEditedRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Edited'));
+      expect(timeEnteredRow).to.have.length(0);
+      expect(timeEditedRow).to.have.length(0);
     });
   });
 
@@ -186,10 +313,10 @@ describe('FoodTooltip', () => {
     const rowUnits = formatClassesAsSelector(styles.units);
     // eslint-disable-next-line max-len
     it('should include the time of entry for a Loop food value that was given a different time of entry', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={loopTimeOfEntry} />);
-      expect(wrapper.find(row).at(3).find(rowLabel).text()).to.contain('Time of Entry');
-      expect(wrapper.find(row).at(3).find(rowValue).text()).to.contain('2:00');
-      expect(wrapper.find(row).at(3).find(rowUnits).text()).to.contain('pm');
+      const { container } = render(<FoodTooltip {...props} food={loopTimeOfEntry} />);
+      expect(container.querySelectorAll(row)[2].querySelector(rowLabel).textContent).to.contain('Time Entered');
+      expect(container.querySelectorAll(row)[2].querySelector(rowValue).textContent).to.contain('2:00');
+      expect(container.querySelectorAll(row)[2].querySelector(rowUnits).textContent).to.contain('pm');
     });
   });
 
@@ -198,9 +325,9 @@ describe('FoodTooltip', () => {
     const rowLabel = formatClassesAsSelector(styles.label);
     const rowValue = formatClassesAsSelector(styles.value);
     it('should include the manual source for a manual food value', () => {
-      const wrapper = mount(<FoodTooltip {...props} food={manual} />);
-      expect(wrapper.find(row).at(1).find(rowLabel).text()).to.contain('Source');
-      expect(wrapper.find(row).at(1).find(rowValue).text()).to.contain('Manual');
+      const { container } = render(<FoodTooltip {...props} food={manual} />);
+      expect(container.querySelectorAll(row)[0].querySelector(rowLabel).textContent).to.contain('Source');
+      expect(container.querySelectorAll(row)[0].querySelector(rowValue).textContent).to.contain('Manual');
     });
   });
 });

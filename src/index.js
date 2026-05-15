@@ -65,6 +65,7 @@ import {
 } from './utils/datetime';
 
 import { deviceName } from './utils/settings/data';
+import { getDeviceName } from './utils/device';
 
 import {
   commonStats,
@@ -180,6 +181,7 @@ const utils = {
   },
   settings: {
     deviceName,
+    getDeviceName,
   },
   aggregation: {
     defineBasicsAggregations,

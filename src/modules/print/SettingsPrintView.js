@@ -36,7 +36,7 @@ import {
   target,
 } from '../../utils/settings/nonTandemData';
 
-import { getPumpVocabulary, isControlIQ, isLoop } from '../../utils/device';
+import { getPumpVocabulary, getDeviceName, isControlIQ, isLoop } from '../../utils/device';
 import { INSULIN_MODEL_LABELS } from '../../utils/constants';
 
 import {
@@ -53,6 +53,9 @@ class SettingsPrintView extends PrintView {
     this.isTandem = this.manufacturer === 'tandem';
     this.deviceMeta = getDeviceMeta(this.latestPumpUpload.settings, this.timePrefs);
     this.deviceLabels = getPumpVocabulary(this.manufacturer);
+
+    const devices = data?.metaData?.devices || [];
+    this.deviceInMetaData = _.find(devices, d => d.serialNumber === this.deviceMeta.serial);
 
     this.doc.addPage();
   }
@@ -76,14 +79,16 @@ class SettingsPrintView extends PrintView {
   }
 
   renderDeviceMeta() {
-    const device = deviceName(this.manufacturer) || t('Unknown');
+    const sourceName = deviceName(this.manufacturer) || t('Unknown');
+    const friendlyName = getDeviceName(this.deviceInMetaData || {});
+
     const { serial } = this.deviceMeta;
     const serialText = serial === 'Unknown' ? '' : ` › ${t('Serial Number: {{serial}}', { serial })}`;
 
     this.doc
       .font(this.boldFont)
       .fontSize(this.defaultFontSize)
-      .text(device, { continued: true })
+      .text(friendlyName || sourceName, { continued: true })
       .font(this.font)
       .text(serialText)
       .moveDown();

@@ -655,6 +655,7 @@ describe('basics data utils', () => {
       timePrefs,
       metaData: {
         devices: [
+          { id: 'deviceWithNiceName', deviceName: 'Device-Friendly Name', label: 'Hidden Label' },
           { id: 'deviceWithLabelId', label: 'Device With Label' },
           { id: 'deviceWithoutLabelId' },
           { id: 'deviceNotUsedInCurrentDataId' },
@@ -662,6 +663,7 @@ describe('basics data utils', () => {
         matchedDevices: {
           deviceWithLabelId: true,
           deviceWithoutLabelId: true,
+          deviceWithNiceName: true,
         },
       },
     };
@@ -738,7 +740,7 @@ describe('basics data utils', () => {
 
     it('should return formatted text for Basics data', () => {
       const result = dataUtils.basicsText(patient, data, stats, aggregations);
-      expect(result).to.equal('Basics Header, Basics Dates, Basics Line, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, Basics Line, Basics Line, Basics Line, ');
+      expect(result).to.equal('Basics Header, Basics Dates, Basics Line, Stats Text, Basics Table, Basics Table, Basics Table, Basics Table, Basics Line, Basics Line, Basics Line, Basics Line, ');
     });
 
     it('should build the document header section', () => {
@@ -827,6 +829,7 @@ describe('basics data utils', () => {
     it('should output devices found in the current data set used for the report', () => {
       dataUtils.basicsText(patient, data, stats, aggregations);
       sinon.assert.calledWith(textUtilStub.buildTextLine, '\nDevices Uploaded');
+      sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device-Friendly Name');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'Device With Label');
       sinon.assert.calledWith(textUtilStub.buildTextLine, 'deviceWithoutLabelId');
       sinon.assert.neverCalledWith(textUtilStub.buildTextLine, 'deviceNotUsedInCurrentDataId');

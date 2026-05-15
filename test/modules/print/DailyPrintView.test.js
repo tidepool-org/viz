@@ -301,6 +301,188 @@ describe('DailyPrintView', () => {
       const automatedBasalItem = _.find(legendItems, item => item.type === 'basals');
       expect(automatedBasalItem.labels).to.deep.equal(['Basals', 'automated &', 'manual']);
     });
+
+    it('should include carbsEdited legend item when food has carbsEdited tag and carbs > 0', () => {
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            food: [
+              {
+                nutrition: { carbohydrate: { net: 85 } },
+                tags: { carbsEdited: true },
+              },
+            ],
+          },
+        },
+      };
+
+      const legendItems = Renderer.getLegendItems();
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('carbsEdited');
+
+      const editedItem = _.find(legendItems, item => item.type === 'carbsEdited');
+      expect(editedItem.labels).to.deep.equal(['Carbs', 'edited']);
+    });
+
+    it('should include carbsEditedTime legend item when food has entryTimeDiffers tag but no carbsEdited', () => {
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            food: [
+              {
+                nutrition: { carbohydrate: { net: 45 } },
+                tags: { entryTimeDiffers: true },
+              },
+            ],
+          },
+        },
+      };
+
+      const legendItems = Renderer.getLegendItems();
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('carbsEditedTime');
+
+      const timeItem = _.find(legendItems, item => item.type === 'carbsEditedTime');
+      expect(timeItem.labels).to.deep.equal(['Carbs, time', 'differs']);
+    });
+
+    it('should not include carbsEditedTime legend item when food has both entryTimeDiffers and carbsEdited', () => {
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            food: [
+              {
+                nutrition: { carbohydrate: { net: 45 } },
+                tags: { entryTimeDiffers: true, carbsEdited: true },
+              },
+            ],
+          },
+        },
+      };
+
+      const legendItems = Renderer.getLegendItems();
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).not.to.include('carbsEditedTime');
+    });
+
+    it('should include carbsDeleted legend item when food has carbsEdited tag and no carbs', () => {
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            food: [
+              {
+                nutrition: { carbohydrate: { net: 0 } },
+                tags: { carbsEdited: true },
+              },
+            ],
+          },
+        },
+      };
+
+      const legendItems = Renderer.getLegendItems();
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include('carbsDeleted');
+
+      const deletedItem = _.find(legendItems, item => item.type === 'carbsDeleted');
+      expect(deletedItem.labels).to.deep.equal(['Carbs', 'deleted']);
+    });
+
+    context('override legend show logic for dosing decision boluses', () => {
+      function getLegendItemsWithBoluses(boluses) {
+        const bolusData = _.assign({}, data, {
+          data: {
+            current: {
+              ...data.data.current,
+              aggregationsByDate: {
+                statsByDate: {},
+                dataByDate: {
+                  '2017-01-02': {
+                    ...data.data.current.aggregationsByDate.dataByDate['2017-01-02'],
+                    bolus: boluses,
+                  },
+                },
+              },
+            },
+          },
+        });
+        return new DailyPrintView(new Doc({ margin: MARGIN }), bolusData, opts).getLegendItems();
+      }
+
+      it('should not include override legend when no bolus is an override or underride', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'wizard',
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            recommended: { net: 5, carb: 5, correction: 0 },
+            bolus: { type: 'bolus', normal: 5, normalTime: 1483313400000 },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.not.include('override');
+      });
+
+      it('should not include override legend for simple boluses without dosing decisions', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          { type: 'bolus', normal: 2.5, normalTime: 1483313400000, threeHrBin: 21 },
+          { type: 'bolus', normal: 1.0, normalTime: 1483317000000, threeHrBin: 24 },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.not.include('override');
+      });
+
+      it('should include override legend when a bolus is an override (programmed > recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'wizard',
+            carbInput: 20,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            recommended: { net: 0.5, carb: 2, correction: -1.5 },
+            bolus: { type: 'bolus', normal: 2, normalTime: 1483313400000 },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+
+      it('should include override legend when a bolus is an underride (programmed < recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'wizard',
+            carbInput: 80,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            recommended: { net: 10, carb: 8, correction: 2 },
+            bolus: { type: 'bolus', normal: 8, normalTime: 1483313400000 },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+
+      it('should include override legend when a dosingDecision bolus is an override (programmed > recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'bolus',
+            normal: 3,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            dosingDecision: { recommendedBolus: { amount: 0.5 } },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+
+      it('should include override legend when a dosingDecision bolus is an underride (programmed < recommended)', () => {
+        const legendItems = getLegendItemsWithBoluses([
+          {
+            type: 'bolus',
+            normal: 2,
+            normalTime: 1483313400000,
+            threeHrBin: 21,
+            dosingDecision: { recommendedBolus: { amount: 5 } },
+          },
+        ]);
+        expect(_.map(legendItems, item => item.type)).to.include('override');
+      });
+    });
   });
 
   describe('calculateChartMinimums', () => {
@@ -802,7 +984,7 @@ describe('DailyPrintView', () => {
     });
 
     it('should graph only the bolus if the carb input was generated from food data', () => {
-      Renderer.chartsByDate[sampleDate].data.bolus[2].carbInputGeneratedFromFoodData = true;
+      Renderer.chartsByDate[sampleDate].data.bolus[2].tags = { carbInputGeneratedFromFoodData: true };
       expect(Renderer.chartsByDate[sampleDate].data.bolus[2].carbInput).to.equal(80);
 
       const bolusCount = Renderer.chartsByDate[sampleDate].data.bolus.length;
@@ -835,6 +1017,117 @@ describe('DailyPrintView', () => {
 
       sinon.assert.calledOnce(Renderer.doc.circle);
       sinon.assert.calledWith(Renderer.doc.text, 65);
+    });
+
+    it('should render an obround with stacked struck-through original and current value for carbsEdited food (carbs > 0)', () => {
+      const chart = {
+        ...Renderer.chartsByDate[sampleDate],
+        data: {
+          ...Renderer.chartsByDate[sampleDate].data,
+          food: [
+            {
+              normalTime: 0,
+              nutrition: { carbohydrate: { net: 85 } },
+              tags: { carbsEdited: true },
+              dosingDecision: { originalFood: { nutrition: { carbohydrate: { net: 60 } } } },
+            },
+          ],
+        },
+      };
+
+      Renderer.renderFoodCarbs(chart);
+
+      // Edited carbs use a rounded obround (fill + dashed stroke), not a circle
+      sinon.assert.notCalled(Renderer.doc.circle);
+      sinon.assert.calledTwice(Renderer.doc.roundedRect);
+      sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.calledWith(Renderer.doc.stroke, 'black');
+      sinon.assert.calledWith(Renderer.doc.dash, 1.6, { space: 1.6 });
+      // Struck-through original text and bottom current value
+      sinon.assert.calledWith(Renderer.doc.text, '60');
+      sinon.assert.calledWith(Renderer.doc.text, '85');
+      sinon.assert.calledWith(Renderer.doc.fillColor, Renderer.colors.carbsStrikeText);
+      sinon.assert.calledWith(Renderer.doc.stroke, Renderer.colors.carbsStrikeLine);
+    });
+
+    it('should render a dashed circle with single value for entryTimeDiffers food', () => {
+      const chart = {
+        ...Renderer.chartsByDate[sampleDate],
+        data: {
+          ...Renderer.chartsByDate[sampleDate].data,
+          food: [
+            {
+              normalTime: 0,
+              nutrition: { carbohydrate: { net: 45 } },
+              tags: { entryTimeDiffers: true },
+            },
+          ],
+        },
+      };
+
+      Renderer.renderFoodCarbs(chart);
+
+      // Solid gold fill + dashed black outline, but both circles (not obround)
+      sinon.assert.calledTwice(Renderer.doc.circle);
+      sinon.assert.notCalled(Renderer.doc.roundedRect);
+      sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.carbs);
+      sinon.assert.calledWith(Renderer.doc.stroke, 'black');
+      sinon.assert.calledWith(Renderer.doc.dash, 1.65, { space: 1.65 });
+      sinon.assert.calledWith(Renderer.doc.text, 45);
+    });
+
+    it('should render an obround with struck-through original and "0" for deleted carbs', () => {
+      const chart = {
+        ...Renderer.chartsByDate[sampleDate],
+        data: {
+          ...Renderer.chartsByDate[sampleDate].data,
+          food: [
+            {
+              normalTime: 0,
+              nutrition: { carbohydrate: { net: 0 } },
+              tags: { carbsEdited: true },
+              dosingDecision: { originalFood: { nutrition: { carbohydrate: { net: 20 } } } },
+            },
+          ],
+        },
+      };
+
+      Renderer.renderFoodCarbs(chart);
+
+      sinon.assert.notCalled(Renderer.doc.circle);
+      sinon.assert.calledTwice(Renderer.doc.roundedRect);
+      sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.carbsDeleted);
+      sinon.assert.calledWith(Renderer.doc.stroke, 'black');
+      sinon.assert.calledWith(Renderer.doc.dash, 1.6, { space: 1.6 });
+      // Struck-through original value + "0"
+      sinon.assert.calledWith(Renderer.doc.text, '20');
+      sinon.assert.calledWith(Renderer.doc.text, '0');
+      sinon.assert.calledWith(Renderer.doc.fillColor, Renderer.colors.carbsStrikeText);
+      sinon.assert.calledWith(Renderer.doc.stroke, Renderer.colors.carbsStrikeLine);
+      // Strikethrough uses moveTo/lineTo
+      sinon.assert.called(Renderer.doc.moveTo);
+      sinon.assert.called(Renderer.doc.lineTo);
+    });
+
+    it('should skip food events with no carbs and no carbsEdited tag', () => {
+      const chart = {
+        ...Renderer.chartsByDate[sampleDate],
+        data: {
+          ...Renderer.chartsByDate[sampleDate].data,
+          food: [
+            {
+              normalTime: 0,
+              nutrition: { carbohydrate: { net: 0 } },
+              tags: {},
+            },
+          ],
+        },
+      };
+
+      Renderer.renderFoodCarbs(chart);
+
+      sinon.assert.notCalled(Renderer.doc.circle);
+      sinon.assert.notCalled(Renderer.doc.roundedRect);
     });
   });
 

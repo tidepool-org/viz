@@ -242,6 +242,7 @@ describe('DataUtil', () => {
       deviceSerialNumber: 'sn-0',
       deviceTime: '2018-01-01T00:00:00',
       deviceId: 'tandemCIQ12345',
+      deviceName: 'Tandem CIQ',
       uploadId: 'upload-0',
       ...useRawData,
     }),
@@ -252,6 +253,7 @@ describe('DataUtil', () => {
       deviceModel: 'dash',
       deviceSerialNumber: 'sn-1',
       deviceTime: '2018-01-02T00:00:00',
+      deviceName: 'Insulet Dash',
       uploadId: 'upload-1',
       ...useRawData,
     }),
@@ -262,6 +264,7 @@ describe('DataUtil', () => {
       deviceModel: '1780',
       deviceSerialNumber: 'sn-2',
       deviceTime: '2018-02-02T00:00:00',
+      deviceName: 'Medtronic Pumpname',
       uploadId: 'upload-2',
       ...useRawData,
     }),
@@ -270,6 +273,7 @@ describe('DataUtil', () => {
       deviceTime: '2018-02-03T00:00:00',
       uploadId: 'upload-3',
       client: { name: 'org.tidepool.Loop' },
+      deviceName: 'Tidepool Loop DeviceName',
       ...useRawData,
     }),
     new Types.Upload({
@@ -277,6 +281,7 @@ describe('DataUtil', () => {
       deviceTime: '2018-02-04T00:00:00',
       uploadId: 'upload-4',
       client: { name: 'com.loopkit.Loop' },
+      deviceName: 'Tidepool Loop DeviceName',
       ...useRawData,
     }),
   ], _.toPlainObject);
@@ -357,6 +362,7 @@ describe('DataUtil', () => {
     nextDays: 1,
     prevDays: 1,
     timePrefs: defaultTimePrefs,
+    activeDays: [0, 1, 2, 3, 4, 5, 6],
   };
 
   const defaultPatientId = 'abc123';
@@ -1286,7 +1292,7 @@ describe('DataUtil', () => {
       expect(bolus.dosingDecision).to.be.undefined;
     });
 
-    it('should use originalFood.nutrition.carbohydrate.net when present, and fall back to food.nutrition.carbohydrate.net otherwise, preserving the original carbs associated with the bolus', () => {
+    it('should use food.nutrition.carbohydrate.net for carbInput', () => {
       const bolus = {
         type: 'bolus',
         id: 'bolus1',
@@ -1309,26 +1315,143 @@ describe('DataUtil', () => {
         upload1: { client: { name: 'org.tidepool.Loop' } },
       };
 
-      // originalFood = 42 → overrides food
-      const dd1 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 42 } } } };
-      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd1 };
-      dataUtil.joinBolusAndDosingDecision(bolus);
-      expect(bolus.carbInput).to.equal(42);
-      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
-
-      // originalFood = null → falls back to food
-      const dd2 = { ...base, originalFood: null };
-      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd2 };
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: base };
       dataUtil.joinBolusAndDosingDecision(bolus);
       expect(bolus.carbInput).to.equal(30);
-      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
+    });
 
-      // originalFood = 0 → explicit zero honored
-      const dd3 = { ...base, originalFood: { nutrition: { carbohydrate: { net: 0 } } } };
-      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd3 };
+    it('should use food.nutrition.carbohydrate.net even when originalFood is present', () => {
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus1',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'org.tidepool.Loop' },
+      };
+
+      dataUtil.loopDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.Loop' } },
+      };
+
+      const dd = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        associations: [],
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        originalFood: { nutrition: { carbohydrate: { net: 42 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd };
       dataUtil.joinBolusAndDosingDecision(bolus);
-      expect(bolus.carbInput).to.equal(0);
-      expect(bolus.carbInputGeneratedFromFoodData).to.be.true;
+      expect(bolus.carbInput).to.equal(30);
+    });
+  });
+
+  describe('joinFoodAndDosingDecision', () => {
+    const uploadId = 'upload1';
+
+    beforeEach(() => {
+      dataUtil.loopDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.Loop' } },
+      };
+    });
+
+    it('should set dosingDecision on food datum by explicit food association', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId,
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 25 } },
+      };
+
+      const dosingDecision1 = {
+        type: 'dosingDecision',
+        id: 'dd1',
+        time: Date.parse('2024-02-02T17:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+        food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 25 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecision.id).to.equal('dd1');
+      expect(food.originalDosingDecision).to.be.undefined;
+    });
+
+    it('should set dosingDecision (latest) and originalDosingDecision (earliest) when multiple match', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId,
+        time: Date.parse('2024-02-02T17:30:00.000Z'),
+        nutrition: { carbohydrate: { net: 80 } },
+      };
+
+      const dd1 = {
+        id: 'dd1',
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+        food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+      };
+
+      const dd2 = {
+        id: 'dd2',
+        time: Date.parse('2024-02-02T19:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+        food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
+        originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd2, dd1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecision.id).to.equal('dd2');
+      expect(food.originalDosingDecision.id).to.equal('dd1');
+    });
+
+    it('should not join dosingDecisions to non-Loop food datums', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId: 'non-loop-upload',
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 25 } },
+      };
+
+      const dosingDecision1 = {
+        id: 'dd1',
+        time: Date.parse('2024-02-02T17:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food1' }],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecision).to.be.undefined;
+    });
+
+    it('should not attach dosingDecision when no association references the food datum', () => {
+      const food = {
+        type: 'food',
+        id: 'food1',
+        uploadId,
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 25 } },
+      };
+
+      const dosingDecision1 = {
+        id: 'dd1',
+        time: Date.parse('2024-02-02T17:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'food-other' }],
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd1: dosingDecision1 };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecision).to.be.undefined;
     });
   });
 
@@ -1553,6 +1676,58 @@ describe('DataUtil', () => {
         dataUtil.tagDatum(loopBolus);
         expect(loopBolus.tags.loop).to.be.true;
       });
+
+      it('should tag `carbInputGeneratedFromFoodData` true when bolus has carbInput from dosingDecision', () => {
+        const bolusWithDD = {
+          ...bolus,
+          carbInput: 30,
+          dosingDecision: { food: { nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.carbInputGeneratedFromFoodData).to.be.true;
+      });
+
+      it('should tag `carbInputGeneratedFromFoodData` false when bolus has no dosingDecision', () => {
+        const bolusWithoutDD = { ...bolus, carbInput: 30 };
+        dataUtil.tagDatum(bolusWithoutDD);
+        expect(bolusWithoutDD.tags.carbInputGeneratedFromFoodData).to.be.false;
+      });
+
+      it('should tag `foodTimeDiffers` true when dosingDecision food.time differs from bolus time by >5min', () => {
+        const bolusTime = Date.parse('2024-02-02T18:00:00.000Z');
+        const foodTime = '2024-02-02T17:50:00.000Z'; // 10min before bolus
+        const bolusWithDD = {
+          ...bolus,
+          time: bolusTime,
+          carbInput: 30,
+          dosingDecision: { food: { time: foodTime, nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.true;
+      });
+
+      it('should tag `foodTimeDiffers` false when dosingDecision food.time is within 5min of bolus time', () => {
+        const bolusTime = Date.parse('2024-02-02T18:00:00.000Z');
+        const foodTime = '2024-02-02T18:02:00.000Z'; // 2min after bolus
+        const bolusWithDD = {
+          ...bolus,
+          time: bolusTime,
+          carbInput: 30,
+          dosingDecision: { food: { time: foodTime, nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.false;
+      });
+
+      it('should tag `foodTimeDiffers` false when dosingDecision has no food.time', () => {
+        const bolusWithDD = {
+          ...bolus,
+          carbInput: 30,
+          dosingDecision: { food: { nutrition: { carbohydrate: { net: 30 } } } },
+        };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.false;
+      });
     });
 
     context('insulin', () => {
@@ -1655,6 +1830,67 @@ describe('DataUtil', () => {
         dataUtil.tagDatum(dexcomFood);
         expect(dexcomFood.tags.dexcom).to.be.true;
         expect(dexcomFood.tags.manual).to.be.true;
+      });
+
+      it('should tag a food datum with `carbsEdited: true` when dosingDecision has originalFood with different carbs', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.nutrition = { carbohydrate: { net: 75 } };
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T00:30:00'),
+          food: { nutrition: { carbohydrate: { net: 75 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 50 } } },
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.carbsEdited).to.be.true;
+      });
+
+      it('should tag a food datum with `carbsEdited: false` when carbs were not edited', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.nutrition = { carbohydrate: { net: 25 } };
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T00:30:00'),
+          food: { nutrition: { carbohydrate: { net: 25 } } },
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.carbsEdited).to.be.false;
+      });
+
+      it('should tag a food datum with `entryTimeDiffers: true` when dosingDecision time differs from food time by >5min', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.time = Date.parse('2018-02-01T01:00:00'); // carb time (1:00am)
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T00:30:00'), // entered at 12:30am — 30min before
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.entryTimeDiffers).to.be.true;
+      });
+
+      it('should tag a food datum with `entryTimeDiffers: false` when dosingDecision time is within 5min of food time', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.time = Date.parse('2018-02-01T01:00:00');
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T01:02:00'), // only 2min apart
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.entryTimeDiffers).to.be.false;
+      });
+
+      it('should tag a food datum with `entryTimeDiffers: false` when originalDosingDecision time is within 5min of food time', () => {
+        const food = new Types.Food({ deviceTime: '2018-02-01T01:00:00', ...useRawData });
+        food.time = Date.parse('2018-02-01T01:00:00');
+        food.dosingDecision = {
+          time: Date.parse('2018-02-01T02:00:00'), // 1hr after — exceeds threshold on its own
+        };
+        food.originalDosingDecision = {
+          time: Date.parse('2018-02-01T01:02:00'), // only 2min from food time — pulls entryTimeDiffers to false
+        };
+
+        dataUtil.tagDatum(food);
+        expect(food.tags.entryTimeDiffers).to.be.false;
       });
     });
 
@@ -4200,6 +4436,7 @@ describe('DataUtil', () => {
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
+          deviceName: 'Tandem CIQ',
           pump: true,
           serialNumber: 'sn-0',
         },
@@ -4207,7 +4444,13 @@ describe('DataUtil', () => {
     });
 
     it('should exclude a non-Control-IQ device upload if a Control-IQ upload exists', () => {
-      initDataUtil([{ ...uploadData[0], deviceId: 'tandem12345' }]);
+      const nonCIQUploadDatum = _.cloneDeep(uploadData[0]);
+      nonCIQUploadDatum.id = 'nonCIQUploadId';
+      nonCIQUploadDatum.deviceId = 'tandem12345';
+      nonCIQUploadDatum.deviceName = 'Tandem Non-CIQ';
+      nonCIQUploadDatum.uploadId = 'upload-1';
+
+      initDataUtil([nonCIQUploadDatum]);
       delete(dataUtil.devices);
       delete(dataUtil.excludedDevices);
 
@@ -4220,6 +4463,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandem12345',
+          deviceName: 'Tandem Non-CIQ',
           label: 'Tandem 12345',
           pump: true,
           serialNumber: 'sn-0',
@@ -4238,6 +4482,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandem12345',
+          deviceName: 'Tandem Non-CIQ',
           label: 'Tandem 12345',
           pump: true,
           serialNumber: 'sn-0',
@@ -4247,6 +4492,7 @@ describe('DataUtil', () => {
           cgm: false,
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
+          deviceName: 'Tandem CIQ',
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
           serialNumber: 'sn-0',
@@ -4254,6 +4500,36 @@ describe('DataUtil', () => {
       ]);
 
       expect(dataUtil.excludedDevices).to.eql(['tandem12345']);
+    });
+
+    it('should exclude HealthKit twiist devices by default', () => {
+      initDataUtil([{
+        ...uploadData[0],
+        deviceId: 'HealthKit twiist 12345',
+        deviceName: 'twiist',
+        deviceManufacturers: ['Sequel'],
+        dataSetType: 'continuous',
+        deviceTags: ['cgm'],
+      }]);
+      delete(dataUtil.devices);
+      delete(dataUtil.excludedDevices);
+
+      dataUtil.setDevices();
+
+      expect(dataUtil.devices).to.eql([
+        {
+          bgm: false,
+          cgm: true,
+          oneMinCgmSampleInterval: false,
+          id: 'HealthKit twiist 12345',
+          deviceName: 'twiist',
+          label: 'twiist',
+          pump: false,
+          serialNumber: 'sn-0',
+        },
+      ]);
+
+      expect(dataUtil.excludedDevices).to.eql(['HealthKit twiist 12345']);
     });
 
     it('should add set the proper device label for LibreView data', () => {
@@ -4266,6 +4542,7 @@ describe('DataUtil', () => {
           'bgm',
           'cgm'
         ],
+        deviceName: 'Abbott DeviceName',
       }]);
 
       delete(dataUtil.devices);
@@ -4278,6 +4555,7 @@ describe('DataUtil', () => {
           oneMinCgmSampleInterval: false,
           id: 'MyAbbott123',
           label: 'FreeStyle Libre (from LibreView)',
+          deviceName: 'Abbott DeviceName',
           pump: false,
           serialNumber: undefined
         },
@@ -4299,6 +4577,7 @@ describe('DataUtil', () => {
           'cgm',
           'insulin-pump',
         ],
+        deviceName: 'Sequel DeviceName',
       }]);
 
       delete(dataUtil.devices);
@@ -4310,6 +4589,7 @@ describe('DataUtil', () => {
           cgm: true,
           oneMinCgmSampleInterval: true,
           id: 'MySequel123',
+          deviceName: 'Sequel DeviceName',
           label: 'twiist',
           pump: true,
           serialNumber: undefined
@@ -4326,6 +4606,7 @@ describe('DataUtil', () => {
         deviceTags: [
           'cgm'
         ],
+        deviceName: 'Dexcom DeviceName',
       }]);
 
       delete(dataUtil.devices);
@@ -4338,6 +4619,7 @@ describe('DataUtil', () => {
           oneMinCgmSampleInterval: false,
           id: 'MyDexcom123',
           label: 'Dexcom API',
+          deviceName: 'Dexcom DeviceName',
           pump: false,
           serialNumber: undefined
         },
@@ -5569,7 +5851,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
@@ -5604,7 +5886,7 @@ describe('DataUtil', () => {
         { id: 'AbbottFreeStyleLibre-XXX-XXXX' },
         { id: 'Dexcom-XXX-XXXX' },
         { id: 'OneTouch-XXX-XXXX' },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
         { id: 'DevId0987654321' },
       ]);
 
@@ -6065,6 +6347,29 @@ describe('DataUtil', () => {
         expect(result).to.be.an('array').and.have.lengthOf(4);
         expect(result).to.eql(expectedNormalizedBasalData);
       });
+
+      it('should not add the overlapping basal datum when the endpoints start day is not in activeDays', () => {
+        const basalDataClone = _.cloneDeep(basalData);
+        const basalDatumOverlappingStartClone = _.cloneDeep(basalDatumOverlappingStart);
+
+        const expectedNormalizedBasalData = _.map(basalDataClone, normalizeExpectedDatum);
+
+        dataUtil.addData([basalDatumOverlappingStartClone.asObject()], defaultPatientId);
+
+        // dayEndpoints[0] is 2018-02-01 (Thursday = day 4); activeDays is set to Wednesday (3) only
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+          activeDays: [3],
+        }));
+
+        dataUtil.activeEndpoints = dataUtil.endpoints.current;
+
+        const result = dataUtil.addBasalOverlappingStart(basalDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(3);
+        expect(result).to.eql(expectedNormalizedBasalData);
+      });
     });
   });
 
@@ -6135,6 +6440,29 @@ describe('DataUtil', () => {
         const result = dataUtil.addPumpSettingsOverrideOverlappingStart(deviceEventDataClone);
 
         expect(result).to.be.an('array').and.have.lengthOf(4);
+        expect(result).to.eql(expectedNormalizedDeviceEventData);
+      });
+
+      it('should not add the overlapping pump settings override datum when the endpoints start day is not in activeDays', () => {
+        const deviceEventDataClone = _.cloneDeep(deviceEventData);
+        const settingsOverrideDatumOverlappingStartClone = _.cloneDeep(settingsOverrideDatumOverlappingStart);
+
+        const expectedNormalizedDeviceEventData = _.map(deviceEventDataClone, normalizeExpectedDatum);
+
+        dataUtil.addData([settingsOverrideDatumOverlappingStartClone.asObject()], defaultPatientId);
+
+        // dayEndpoints[0] is 2018-02-01 (Thursday = day 4); activeDays is set to Wednesday (3) only
+        dataUtil.query(createQuery({
+          timePrefs: { timeZoneAware: false },
+          endpoints: dayEndpoints,
+          activeDays: [3],
+        }));
+
+        dataUtil.activeEndpoints = dataUtil.endpoints.current;
+
+        const result = dataUtil.addPumpSettingsOverrideOverlappingStart(deviceEventDataClone);
+
+        expect(result).to.be.an('array').and.have.lengthOf(3);
         expect(result).to.eql(expectedNormalizedDeviceEventData);
       });
     });

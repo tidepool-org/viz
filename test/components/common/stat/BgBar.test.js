@@ -1,15 +1,52 @@
 import React from 'react';
-import { mount } from 'enzyme';
+import { render as rtlRender, cleanup } from '@testing-library/react/pure';
 import _ from 'lodash';
-import { Rect } from 'victory-core';
 
 import BgBar from '../../../../src/components/common/stat/BgBar';
 import colors from '../../../../src/styles/colors.css';
 import { MGDL_CLAMP_TOP } from '../../../../src/utils/constants';
 
-describe('BgBar', () => {
-  let wrapper;
+// Mock Victory primitives to render simple elements exposing props for assertion
+jest.mock('victory', () => {
+  const actual = jest.requireActual('victory');
+  return {
+    ...actual,
+    Rect: (props) => (
+      <rect
+        data-testid="Rect"
+        data-x={props.x}
+        data-y={props.y}
+        data-width={props.width}
+        data-height={props.height}
+        data-style={JSON.stringify(props.style || {})}
+      />
+    ),
+    Point: (props) => (
+      <circle
+        data-testid="Point"
+        data-x={props.x}
+        data-y={props.y}
+        data-style={JSON.stringify(props.style || {})}
+        data-size={props.size}
+      />
+    ),
+  };
+});
 
+jest.mock('victory-core', () => {
+  const actual = jest.requireActual('victory-core');
+  return {
+    ...actual,
+    Arc: (props) => (
+      <path
+        data-testid="Arc"
+        data-style={JSON.stringify(props.style || {})}
+      />
+    ),
+  };
+});
+
+describe('BgBar', () => {
   const avgGlucoseDatum = {
     _y: 100,
   };
@@ -58,100 +95,106 @@ describe('BgBar', () => {
 
   const props = overrides => _.assign({}, defaultProps, overrides);
 
-  beforeEach(() => {
-    wrapper = mount(<BgBar {...defaultProps} />);
+  afterEach(() => {
+    cleanup();
   });
 
   it('should render without errors when required props provided', () => {
-    expect(wrapper.find('BgBar')).to.have.length(1);
+    const { container } = rtlRender(<BgBar {...defaultProps} />);
+    expect(container.querySelector('.bgBar')).to.not.be.null;
   });
 
   context('showing Average Glucose', () => {
-    beforeEach(() => {
-      wrapper.setProps(props({ datum: avgGlucoseDatum }));
-    });
-
     it('should render the `bgScale` element', () => {
-      expect(wrapper.find('.bgScale')).to.have.length(1);
+      const { container } = rtlRender(<BgBar {...props({ datum: avgGlucoseDatum })} />);
+      expect(container.querySelectorAll('.bgScale')).to.have.length(1);
     });
 
     it('should render the `bgMean` element', () => {
-      expect(wrapper.find('.bgMean')).to.have.length(1);
+      const { container } = rtlRender(<BgBar {...props({ datum: avgGlucoseDatum })} />);
+      expect(container.querySelectorAll('.bgMean')).to.have.length(1);
     });
 
     it('should not render the `bgMean` element when disabled', () => {
-      wrapper.setProps(props({ datum: avgGlucoseDatumDisabled }));
-      expect(wrapper.find('.bgMean')).to.have.length(0);
+      const { container } = rtlRender(<BgBar {...props({ datum: avgGlucoseDatumDisabled })} />);
+      expect(container.querySelectorAll('.bgMean')).to.have.length(0);
     });
 
     it('should not render the `bgDeviation` element', () => {
-      expect(wrapper.find('.bgDeviation')).to.have.length(0);
+      const { container } = rtlRender(<BgBar {...props({ datum: avgGlucoseDatum })} />);
+      expect(container.querySelectorAll('.bgDeviation')).to.have.length(0);
     });
   });
 
   context('showing Standard Deviation', () => {
-    beforeEach(() => {
-      wrapper.setProps(props({ datum: stdDevDatum }));
-    });
-
     it('should render the `bgScale` element', () => {
-      expect(wrapper.find('.bgScale')).to.have.length(1);
+      const { container } = rtlRender(<BgBar {...props({ datum: stdDevDatum })} />);
+      expect(container.querySelectorAll('.bgScale')).to.have.length(1);
     });
 
     it('should render the `bgDeviation` element', () => {
-      expect(wrapper.find('.bgDeviation')).to.have.length(1);
+      const { container } = rtlRender(<BgBar {...props({ datum: stdDevDatum })} />);
+      expect(container.querySelectorAll('.bgDeviation')).to.have.length(1);
     });
 
     it('should not render the `bgDeviation` element when disabled', () => {
-      wrapper.setProps(props({ datum: stdDevDatumDisabled }));
-      expect(wrapper.find('.bgDeviation')).to.have.length(0);
+      const { container } = rtlRender(<BgBar {...props({ datum: stdDevDatumDisabled })} />);
+      expect(container.querySelectorAll('.bgDeviation')).to.have.length(0);
     });
 
     it('should not render the `bgMean` element', () => {
-      expect(wrapper.find('.bgMean')).to.have.length(0);
+      const { container } = rtlRender(<BgBar {...props({ datum: stdDevDatum })} />);
+      expect(container.querySelectorAll('.bgMean')).to.have.length(0);
     });
   });
 
   describe('bgScale', () => {
-    let bgScale;
-
-    beforeEach(() => {
-      bgScale = () => wrapper.find('.bgScale');
-    });
+    const getBgScale = (container) => container.querySelector('.bgScale');
 
     it('should render a three-bar scale with arcs on each end', () => {
-      expect(bgScale().children()).to.have.length(5);
-      expect(bgScale().childAt(0).is('Arc')).to.be.true;
-      expect(bgScale().childAt(1).is(Rect)).to.be.true;
-      expect(bgScale().childAt(2).is(Rect)).to.be.true;
-      expect(bgScale().childAt(3).is(Rect)).to.be.true;
-      expect(bgScale().childAt(4).is('Arc')).to.be.true;
+      const { container } = rtlRender(<BgBar {...defaultProps} />);
+      const bgScale = getBgScale(container);
+      const children = bgScale.children;
+      expect(children).to.have.length(5);
+      expect(children[0].getAttribute('data-testid')).to.equal('Arc');
+      expect(children[1].getAttribute('data-testid')).to.equal('Rect');
+      expect(children[2].getAttribute('data-testid')).to.equal('Rect');
+      expect(children[3].getAttribute('data-testid')).to.equal('Rect');
+      expect(children[4].getAttribute('data-testid')).to.equal('Arc');
     });
 
     it('should render the three-bar scale with the proper colors', () => {
-      expect(bgScale().childAt(0).props().style.fill).to.equal(colors.low);
-      expect(bgScale().childAt(1).props().style.fill).to.equal(colors.low);
-      expect(bgScale().childAt(2).props().style.fill).to.equal(colors.target);
-      expect(bgScale().childAt(3).props().style.fill).to.equal(colors.high);
-      expect(bgScale().childAt(4).props().style.fill).to.equal(colors.high);
+      const { container } = rtlRender(<BgBar {...defaultProps} />);
+      const bgScale = getBgScale(container);
+      const children = bgScale.children;
+      expect(JSON.parse(children[0].getAttribute('data-style')).fill).to.equal(colors.low);
+      expect(JSON.parse(children[1].getAttribute('data-style')).fill).to.equal(colors.low);
+      expect(JSON.parse(children[2].getAttribute('data-style')).fill).to.equal(colors.target);
+      expect(JSON.parse(children[3].getAttribute('data-style')).fill).to.equal(colors.high);
+      expect(JSON.parse(children[4].getAttribute('data-style')).fill).to.equal(colors.high);
     });
 
     it('should render the three-bar scale with the disabled color when disabled', () => {
-      wrapper.setProps(props({ datum: avgGlucoseDatumDisabled }));
-
-      expect(bgScale().childAt(0).props().style.fill).to.equal(colors.statDisabled);
-      expect(bgScale().childAt(1).props().style.fill).to.equal(colors.statDisabled);
-      expect(bgScale().childAt(2).props().style.fill).to.equal(colors.statDisabled);
-      expect(bgScale().childAt(3).props().style.fill).to.equal(colors.statDisabled);
-      expect(bgScale().childAt(4).props().style.fill).to.equal(colors.statDisabled);
+      const { container } = rtlRender(<BgBar {...props({ datum: avgGlucoseDatumDisabled })} />);
+      const bgScale = getBgScale(container);
+      const children = bgScale.children;
+      expect(JSON.parse(children[0].getAttribute('data-style')).fill).to.equal(colors.statDisabled);
+      expect(JSON.parse(children[1].getAttribute('data-style')).fill).to.equal(colors.statDisabled);
+      expect(JSON.parse(children[2].getAttribute('data-style')).fill).to.equal(colors.statDisabled);
+      expect(JSON.parse(children[3].getAttribute('data-style')).fill).to.equal(colors.statDisabled);
+      expect(JSON.parse(children[4].getAttribute('data-style')).fill).to.equal(colors.statDisabled);
     });
 
     it('should render proper widths for each section of the three-bar scale', () => {
+      const { container } = rtlRender(<BgBar {...defaultProps} />);
+      const bgScale = getBgScale(container);
+      const children = bgScale.children;
+
       const {
         width,
         bgPrefs: { bgBounds },
         chartLabelWidth,
-      } = wrapper.props();
+      } = defaultProps;
 
       // actual chart rendering width is corrected due to the chart labels taking some space
       const barRadius = 2;
@@ -164,144 +207,122 @@ describe('BgBar', () => {
         high: (MGDL_CLAMP_TOP - bgBounds.targetUpperBound) * widthCorrection,
       };
 
-      expect(bgScale().childAt(1).props().width).to.equal(expectedWidths.low - barRadius);
-      expect(bgScale().childAt(2).props().width).to.equal(expectedWidths.target);
-      expect(bgScale().childAt(3).props().width).to.equal(expectedWidths.high - barRadius);
+      expect(Number(children[1].getAttribute('data-width'))).to.equal(expectedWidths.low - barRadius);
+      expect(Number(children[2].getAttribute('data-width'))).to.equal(expectedWidths.target);
+      expect(Number(children[3].getAttribute('data-width'))).to.equal(expectedWidths.high - barRadius);
     });
   });
 
   describe('bgMean', () => {
-    let bgMean;
-
-    beforeEach(() => {
-      bgMean = () => wrapper.find('.bgMean');
-    });
+    const getBgMean = (container) => container.querySelector('.bgMean');
 
     it('should render a bgMean point', () => {
-      expect(bgMean().children()).to.have.length(1);
-      expect(bgMean().childAt(0).is('Point')).to.be.true;
+      const { container } = rtlRender(<BgBar {...defaultProps} />);
+      const bgMean = getBgMean(container);
+      expect(bgMean.children).to.have.length(1);
+      expect(bgMean.children[0].getAttribute('data-testid')).to.equal('Point');
     });
 
     it('should render the bg mean with the proper colors', () => {
       // target
-      expect(bgMean().childAt(0).props().style.fill).to.equal(colors.target);
+      const { container, rerender } = rtlRender(<BgBar {...defaultProps} />);
+      let bgMean = getBgMean(container);
+      expect(JSON.parse(bgMean.children[0].getAttribute('data-style')).fill).to.equal(colors.target);
 
       // veryLow
-      wrapper.setProps(props({ datum: {
-        _y: 53,
-      } }));
-      expect(bgMean().childAt(0).props().style.fill).to.equal(colors.low);
+      rerender(<BgBar {...props({ datum: { _y: 53 } })} />);
+      bgMean = getBgMean(container);
+      expect(JSON.parse(bgMean.children[0].getAttribute('data-style')).fill).to.equal(colors.low);
 
       // low
-      wrapper.setProps(props({ datum: {
-        _y: 69,
-      } }));
-      expect(bgMean().childAt(0).props().style.fill).to.equal(colors.low);
+      rerender(<BgBar {...props({ datum: { _y: 69 } })} />);
+      bgMean = getBgMean(container);
+      expect(JSON.parse(bgMean.children[0].getAttribute('data-style')).fill).to.equal(colors.low);
 
       // high
-      wrapper.setProps(props({ datum: {
-        _y: 181,
-      } }));
-      expect(bgMean().childAt(0).props().style.fill).to.equal(colors.high);
+      rerender(<BgBar {...props({ datum: { _y: 181 } })} />);
+      bgMean = getBgMean(container);
+      expect(JSON.parse(bgMean.children[0].getAttribute('data-style')).fill).to.equal(colors.high);
 
       // veryHigh
-      wrapper.setProps(props({ datum: {
-        _y: 251,
-      } }));
-      expect(bgMean().childAt(0).props().style.fill).to.equal(colors.high);
+      rerender(<BgBar {...props({ datum: { _y: 251 } })} />);
+      bgMean = getBgMean(container);
+      expect(JSON.parse(bgMean.children[0].getAttribute('data-style')).fill).to.equal(colors.high);
     });
   });
 
   describe('bgDeviation', () => {
-    let bgDeviation;
-
-    beforeEach(() => {
-      wrapper.setProps(props({ datum: stdDevDatum }));
-      bgDeviation = () => wrapper.find('.bgDeviation');
-    });
+    const getBgDeviation = (container) => container.querySelector('.bgDeviation');
 
     it('should render 2 standard deviation markers', () => {
-      expect(bgDeviation().children()).to.have.length(2);
-      expect(bgDeviation().childAt(0).is(Rect)).to.be.true;
-      expect(bgDeviation().childAt(1).is(Rect)).to.be.true;
+      const { container } = rtlRender(<BgBar {...props({ datum: stdDevDatum })} />);
+      const bgDeviation = getBgDeviation(container);
+      expect(bgDeviation.children).to.have.length(2);
+      expect(bgDeviation.children[0].getAttribute('data-testid')).to.equal('Rect');
+      expect(bgDeviation.children[1].getAttribute('data-testid')).to.equal('Rect');
     });
 
     it('should render the deviation markers with the proper colors', () => {
       // target - target
-      expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.target);
-      expect(bgDeviation().childAt(1).props().style.fill).to.equal(colors.target);
+      const { container, rerender } = rtlRender(<BgBar {...props({ datum: stdDevDatum })} />);
+      let bgDeviation = getBgDeviation(container);
+      expect(JSON.parse(bgDeviation.children[0].getAttribute('data-style')).fill).to.equal(colors.target);
+      expect(JSON.parse(bgDeviation.children[1].getAttribute('data-style')).fill).to.equal(colors.target);
 
       // veryLow - low
-      wrapper.setProps(props({ datum: {
-        _y: 50,
-        deviation: { value: 18 },
-      } }));
-      expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.low);
-      expect(bgDeviation().childAt(1).props().style.fill).to.equal(colors.low);
+      rerender(<BgBar {...props({ datum: { _y: 50, deviation: { value: 18 } } })} />);
+      bgDeviation = getBgDeviation(container);
+      expect(JSON.parse(bgDeviation.children[0].getAttribute('data-style')).fill).to.equal(colors.low);
+      expect(JSON.parse(bgDeviation.children[1].getAttribute('data-style')).fill).to.equal(colors.low);
 
       // low - target
-      wrapper.setProps(props({ datum: {
-        _y: 70,
-        deviation: { value: 40 },
-      } }));
-      expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.low);
-      expect(bgDeviation().childAt(1).props().style.fill).to.equal(colors.target);
+      rerender(<BgBar {...props({ datum: { _y: 70, deviation: { value: 40 } } })} />);
+      bgDeviation = getBgDeviation(container);
+      expect(JSON.parse(bgDeviation.children[0].getAttribute('data-style')).fill).to.equal(colors.low);
+      expect(JSON.parse(bgDeviation.children[1].getAttribute('data-style')).fill).to.equal(colors.target);
 
       // target - high
-      wrapper.setProps(props({ datum: {
-        _y: 160,
-        deviation: { value: 40 },
-      } }));
-      expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.target);
-      expect(bgDeviation().childAt(1).props().style.fill).to.equal(colors.high);
+      rerender(<BgBar {...props({ datum: { _y: 160, deviation: { value: 40 } } })} />);
+      bgDeviation = getBgDeviation(container);
+      expect(JSON.parse(bgDeviation.children[0].getAttribute('data-style')).fill).to.equal(colors.target);
+      expect(JSON.parse(bgDeviation.children[1].getAttribute('data-style')).fill).to.equal(colors.high);
 
       // high - veryHigh
-      wrapper.setProps(props({ datum: {
-        _y: 240,
-        deviation: { value: 18 },
-      } }));
-      expect(bgDeviation().childAt(0).props().style.fill).to.equal(colors.high);
-      expect(bgDeviation().childAt(1).props().style.fill).to.equal(colors.high);
+      rerender(<BgBar {...props({ datum: { _y: 240, deviation: { value: 18 } } })} />);
+      bgDeviation = getBgDeviation(container);
+      expect(JSON.parse(bgDeviation.children[0].getAttribute('data-style')).fill).to.equal(colors.high);
+      expect(JSON.parse(bgDeviation.children[1].getAttribute('data-style')).fill).to.equal(colors.high);
     });
 
-    it('should not render when the deviation is >0 the mean, resulting in a negative low bar value', () => {
+    it('should not render when the deviation is greater than the mean, resulting in a negative low bar value', () => {
       // -1 low value
-      wrapper.setProps(props({ datum: {
-        _y: 50,
-        deviation: { value: 51 },
-      } }));
-      expect(bgDeviation().children()).to.have.lengthOf(0);
+      const { container, rerender } = rtlRender(<BgBar {...props({ datum: { _y: 50, deviation: { value: 51 } } })} />);
+      let bgDeviation = getBgDeviation(container);
+      expect(bgDeviation).to.be.null;
 
       // 0 low value
-      wrapper.setProps(props({ datum: {
-        _y: 50,
-        deviation: { value: 50 },
-      } }));
-
-      expect(bgDeviation().children()).to.have.lengthOf(0);
+      rerender(<BgBar {...props({ datum: { _y: 50, deviation: { value: 50 } } })} />);
+      bgDeviation = getBgDeviation(container);
+      expect(bgDeviation).to.be.null;
 
       // 1 low value
-      wrapper.setProps(props({ datum: {
-        _y: 50,
-        deviation: { value: 49 },
-      } }));
-
-      expect(bgDeviation().children()).to.have.lengthOf(2);
+      rerender(<BgBar {...props({ datum: { _y: 50, deviation: { value: 49 } } })} />);
+      bgDeviation = getBgDeviation(container);
+      expect(bgDeviation).to.not.be.null;
+      expect(bgDeviation.children).to.have.lengthOf(2);
     });
 
     it('should constrain the bars to render within the scale when the deviation would cause them to render outside of it', () => {
       // 1 to 499 -- scale only shows 0 to 400
-      wrapper.setProps(props({ datum: {
-        _y: 250,
-        deviation: { value: 249 },
-      } }));
+      const { container } = rtlRender(<BgBar {...props({ datum: { _y: 250, deviation: { value: 249 } } })} />);
+      const bgDeviation = getBgDeviation(container);
 
       const scaleWidth = defaultProps.width - defaultProps.chartLabelWidth;
 
-      expect(bgDeviation().childAt(0).props().x).to.equal(0);
+      expect(Number(bgDeviation.children[0].getAttribute('data-x'))).to.equal(0);
 
       expect(scaleWidth).to.equal(220);
-      expect(bgDeviation().childAt(1).props().x).to.equal(217); // scaleWidth - 3 for bar thickness
+      expect(Number(bgDeviation.children[1].getAttribute('data-x'))).to.equal(217); // scaleWidth - 3 for bar thickness
     });
   });
 });

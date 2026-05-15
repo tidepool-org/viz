@@ -492,8 +492,18 @@ const withLoopDosingDecision = {
           },
         ],
       },
-    }
+    },
+    food: {
+      time: '2017-11-11T04:00:00.000Z',
+      nutrition: { carbohydrate: { net: 24 } },
+    },
   },
+};
+
+// Same as withLoopDosingDecision but food time is >5min before bolus (normalTime at 5:20am UTC)
+const withLoopDosingDecisionFoodTime = {
+  ...withLoopDosingDecision,
+  normalTime: '2017-11-11T05:20:00.000Z',
 };
 
 const insulinDose = {
@@ -751,6 +761,12 @@ storiesOf('BolusTooltip', module)
     <div>
       {refDiv}
       <BolusTooltip {...props} bolus={withLoopDosingDecision} />
+    </div>
+  ))
+  .add('withLoopDosingDecisionFoodTime', () => (
+    <div>
+      {refDiv}
+      <BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTime} />
     </div>
   ))
   .add('insulin', () => (
