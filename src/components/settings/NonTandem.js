@@ -36,6 +36,7 @@ const t = i18next.t.bind(i18next);
 
 const NonTandem = (props) => {
   const {
+    data,
     bgUnits,
     copySettingsClicked,
     deviceKey,
@@ -262,7 +263,7 @@ const NonTandem = (props) => {
         <ClipboardButton
           buttonTitle={t('For email or notes')}
           onSuccess={copySettingsClicked}
-          getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
+          getText={nonTandemText.bind(this, user, data, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
       <div className={styles.settingsContainer}>

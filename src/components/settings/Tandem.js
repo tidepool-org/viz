@@ -37,6 +37,7 @@ const t = i18next.t.bind(i18next);
 
 const Tandem = (props) => {
   const {
+    data,
     bgUnits,
     copySettingsClicked,
     openedSections,
@@ -108,7 +109,7 @@ const Tandem = (props) => {
         <ClipboardButton
           buttonTitle={t('For email or notes')}
           onSuccess={copySettingsClicked}
-          getText={tandemText.bind(this, user, pumpSettings, bgUnits)}
+          getText={tandemText.bind(this, user, data, pumpSettings, bgUnits)}
         />
       </div>
       <div>
