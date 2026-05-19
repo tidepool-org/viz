@@ -17,6 +17,7 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
+import { useSelector } from 'react-redux';
 import _ from 'lodash';
 
 import ClipboardButton from '../common/controls/ClipboardButton';
@@ -36,7 +37,6 @@ const t = i18next.t.bind(i18next);
 
 const NonTandem = (props) => {
   const {
-    data,
     bgUnits,
     copySettingsClicked,
     deviceKey,
@@ -46,6 +46,8 @@ const NonTandem = (props) => {
     toggleBasalScheduleExpansion,
     user,
   } = props;
+
+  const data = useSelector(state => state.blip.data);
 
   let lookupKey = deviceKey;
 

@@ -17,6 +17,7 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
+import { useSelector } from 'react-redux';
 import _ from 'lodash';
 
 import styles from './Tandem.css';
@@ -37,7 +38,6 @@ const t = i18next.t.bind(i18next);
 
 const Tandem = (props) => {
   const {
-    data,
     bgUnits,
     copySettingsClicked,
     openedSections,
@@ -47,6 +47,8 @@ const Tandem = (props) => {
     user,
     deviceDisplayName,
   } = props;
+
+  const data = useSelector(state => state.blip.data);
 
   function openSection(sectionName) {
     return _.get(openedSections, sectionName, false);

@@ -40,7 +40,7 @@ export class PumpSettingsContainer extends PureComponent {
   }
 
   render() {
-    const { settingsState, user, data } = this.props;
+    const { settingsState, user } = this.props;
     if (_.isEmpty(settingsState)) {
       return null;
     }
@@ -58,7 +58,6 @@ export class PumpSettingsContainer extends PureComponent {
     if (manufacturerKey === 'tandem') {
       return (
         <Tandem
-          data={data}
           bgUnits={bgUnits}
           copySettingsClicked={copySettingsClicked}
           deviceKey={manufacturerKey}
@@ -72,7 +71,6 @@ export class PumpSettingsContainer extends PureComponent {
     } else if (_.includes(supportedNonTandemPumps, manufacturerKey)) {
       return (
         <NonTandem
-          data={data}
           bgUnits={bgUnits}
           copySettingsClicked={copySettingsClicked}
           deviceKey={manufacturerKey}
