@@ -142,5 +142,19 @@ export function tandemText(patient, data, settings, units) {
     );
   });
 
+  const metaData = data?.metaData || {};
+  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
+
+  if (devices.length) {
+    const textLines = [
+      `\n${t('Devices Uploaded')}`,
+      ..._.map(devices, d => getDeviceName(d)),
+    ];
+
+    _.each(textLines, line => {
+      settingsString += textUtil.buildTextLine(line);
+    });
+  }
+
   return settingsString;
 }
