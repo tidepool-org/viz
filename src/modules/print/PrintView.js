@@ -687,6 +687,8 @@ class PrintView {
 
     table.onRowAdded(this.onRowAdded.bind(this));
 
+    table.onHeaderAdd(this.onHeaderAdd.bind(this));
+
     table.onBodyAdded(this.onBodyAdded.bind(this));
 
     table
@@ -711,14 +713,13 @@ class PrintView {
   }
 
   onPageAdded(tb, row) {
-    const tableLabel = _.get(row, '_renderedContent.data.label', undefined);
-    const tableData = _.get(row, '_renderedContent.data.value', undefined);
-
-    const isPageBreakAtTableStart = !_.isNil(tableLabel) && _.isNil(tableData);
-
-    if (isPageBreakAtTableStart) return; // prevent double header on new page
+    if (row?._isHeader) return; // eslint-disable-line no-underscore-dangle
 
     tb.addHeader();
+  }
+
+  onHeaderAdd(tb, row) {
+    row._isHeader = true; // eslint-disable-line no-underscore-dangle, no-param-reassign
   }
 
   onBodyAdded(tb) {
@@ -937,7 +938,7 @@ class PrintView {
 
     this.renderTable(tableColumns, rows, {
       showHeaders: false,
-      bottomMargin: 10,
+      bottomMargin: 30,
     });
 
     this.doc.y = this.chartArea.topEdge + this.deviceNamesHeader.height;
