@@ -1211,6 +1211,7 @@ describe('PrintView', () => {
         this.onCellBorderAdded = sinon.stub().resolves(true);
         this.onRowAdd = sinon.stub().resolves(true);
         this.onRowAdded = sinon.stub().resolves(true);
+        this.onHeaderAdd = sinon.stub().resolves(true);
         this.onPageAdd = sinon.stub().resolves(true);
         this.onPageAdded = sinon.stub().resolves(true);
         this.onBodyAdded = sinon.stub().resolves(true);
