@@ -22,7 +22,6 @@ import TextUtil from '../text/TextUtil';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
 import { insulinSettings, presetSettings } from './data';
-import { getDeviceName } from '../device';
 
 const t = i18next.t.bind(i18next);
 
