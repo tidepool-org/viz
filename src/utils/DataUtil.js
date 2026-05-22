@@ -1416,7 +1416,6 @@ export class DataUtil {
           'cbg',
           'wizard',
           'food',
-          'pumpSettings',
         ], this.dimension.byType.currentFilter())) {
           _.each(this.dimension.byDeviceId.top(Infinity), datum => {
             const { deviceId, origin } = datum;

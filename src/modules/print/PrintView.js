@@ -938,7 +938,7 @@ class PrintView {
 
     this.renderTable(tableColumns, rows, {
       showHeaders: false,
-      bottomMargin: 30,
+      bottomMargin: 10,
     });
 
     this.doc.y = this.chartArea.topEdge + this.deviceNamesHeader.height;
