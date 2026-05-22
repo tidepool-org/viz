@@ -19,7 +19,6 @@
 
 import React from 'react';
 // because the component is wrapped, can't use shallow
-import { Provider } from 'react-redux';
 import { render as rtlRender, cleanup, fireEvent } from '@testing-library/react/pure';
 import _ from 'lodash';
 
@@ -29,7 +28,6 @@ import { formatDecimalNumber } from '../../../src/utils/format';
 
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import styles from '../../../src/components/settings/NonTandem.css';
-import mockStore from '../../helpers/mockStore';
 
 // Mock child components to expose props for testing
 jest.mock('../../../src/components/settings/common/Header', () => (props) => (
@@ -79,21 +77,13 @@ afterEach(() => {
 describe('NonTandem', () => {
   const activeAtUploadText = 'Active at upload';
 
-  const store = mockStore({
-    blip: { data: {} }
-  });
-
-  const renderWithProvider = (ui) => rtlRender(
-    <Provider store={store}>{ui}</Provider>
-  );
-
   afterEach(() => {
     cleanup();
   });
 
   describe('Animas', () => {
     it('should have a header', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -109,7 +99,7 @@ describe('NonTandem', () => {
     });
 
     it('should have Animas as the Header deviceDisplayName', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -126,7 +116,7 @@ describe('NonTandem', () => {
 
     // these tables are the bolus settings + basal schedules
     it('should have six Tables', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -143,7 +133,7 @@ describe('NonTandem', () => {
 
     // these containers are the basal schedules
     it('should have three CollapsibleContainers', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -159,7 +149,7 @@ describe('NonTandem', () => {
     });
 
     it('should preserve user capitalization of schedule name', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -179,7 +169,7 @@ describe('NonTandem', () => {
     });
 
     it('should have `Active at Upload` text somewhere', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -197,7 +187,7 @@ describe('NonTandem', () => {
     });
 
     it('should have a button to copy settings', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -216,7 +206,7 @@ describe('NonTandem', () => {
     });
     describe('bolus settings', () => {
       it('should surface the expected value for ISF', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -238,7 +228,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected target & range values for BG Target', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -263,7 +253,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected value for I:C Ratio', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -286,7 +276,7 @@ describe('NonTandem', () => {
 
   describe('Insulet', () => {
     it('should have a header', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -302,7 +292,7 @@ describe('NonTandem', () => {
     });
 
     it('should have OmniPod as the Header deviceDisplayName', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -319,7 +309,7 @@ describe('NonTandem', () => {
 
     // these tables are the insulin settings, bolus settings + basal schedules
     it('should have six Tables', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -336,7 +326,7 @@ describe('NonTandem', () => {
 
     // these containers are the basal schedules
     it('should have two CollapsibleContainers', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -352,7 +342,7 @@ describe('NonTandem', () => {
     });
 
     it('should preserve user capitalization of schedule name', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -370,7 +360,7 @@ describe('NonTandem', () => {
     });
 
     it('should have `Active at Upload` text somewhere', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -389,7 +379,7 @@ describe('NonTandem', () => {
 
     describe('bolus settings', () => {
       it('should surface the expected value for Correction factor', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -411,7 +401,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected target & correct above values for Target BG', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -439,7 +429,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected value for IC ratio', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -459,7 +449,7 @@ describe('NonTandem', () => {
       });
 
       it('should have a button to copy settings', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -482,7 +472,7 @@ describe('NonTandem', () => {
       let insulinSettingsTable;
 
       beforeEach(() => {
-        const rendered = renderWithProvider(
+        const rendered = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -527,7 +517,7 @@ describe('NonTandem', () => {
 
   describe('CareLink/Medtronic', () => {
     it('should have a header', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -543,7 +533,7 @@ describe('NonTandem', () => {
     });
 
     it('should have Medtronic as the Header deviceDisplayName', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -560,7 +550,7 @@ describe('NonTandem', () => {
 
     // these tables are the insulin settings, bolus settings + basal schedules
     it('should have seven Tables', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -577,7 +567,7 @@ describe('NonTandem', () => {
 
     // these containers are the basal schedules
     it('should have three CollapsibleContainers', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -593,7 +583,7 @@ describe('NonTandem', () => {
     });
 
     it('should capitalize all basal schedule names', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -615,7 +605,7 @@ describe('NonTandem', () => {
     });
 
     it('should have `Active at Upload` text somewhere', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -636,7 +626,7 @@ describe('NonTandem', () => {
       const originalConsoleError = console.error;
       console.error = sinon.spy();
       expect(console.error.callCount).to.equal(0);
-      renderWithProvider(
+      rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -653,7 +643,7 @@ describe('NonTandem', () => {
     });
 
     it('should have a button to copy settings', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -673,7 +663,7 @@ describe('NonTandem', () => {
 
     describe('automated basal', () => {
       it('should display the automated basal heading when active at upload', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MGDL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -696,7 +686,7 @@ describe('NonTandem', () => {
       });
 
       it('should display the automated basal heading when and deviceKey is carelink', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MGDL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -723,7 +713,7 @@ describe('NonTandem', () => {
           activeSchedule: 'Standard',
         });
 
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MGDL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -746,7 +736,7 @@ describe('NonTandem', () => {
 
     describe('bolus settings', () => {
       it('should surface the expected value for Sensitivity', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -768,7 +758,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected low & high values for BG Target', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -817,7 +807,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected values for Carb Ratios', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -852,7 +842,7 @@ describe('NonTandem', () => {
       let insulinSettingsTable;
 
       beforeEach(() => {
-        const rendered = renderWithProvider(
+        const rendered = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -896,7 +886,7 @@ describe('NonTandem', () => {
 
   describe('Equil', () => {
     it('should have a header', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -912,7 +902,7 @@ describe('NonTandem', () => {
     });
 
     it('should have Equil as the Header deviceDisplayName', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -929,7 +919,7 @@ describe('NonTandem', () => {
 
     // these tables are the bolus settings + basal schedules
     it('should have six Tables', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -946,7 +936,7 @@ describe('NonTandem', () => {
 
     // these containers are the basal schedules
     it('should have three CollapsibleContainers', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -962,7 +952,7 @@ describe('NonTandem', () => {
     });
 
     it('should preserve user capitalization of schedule name', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -980,7 +970,7 @@ describe('NonTandem', () => {
     });
 
     it('should have `Active at Upload` text somewhere', () => {
-      const { container } = renderWithProvider(
+      const { container } = rtlRender(
         <NonTandem
           bgUnits={MGDL_UNITS}
           copySettingsClicked={copySettingsClicked}
@@ -999,7 +989,7 @@ describe('NonTandem', () => {
 
     describe('bolus settings', () => {
       it('should surface the expected value for Insulin Sensitivity', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -1021,7 +1011,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected lower & upper values for Target BG', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -1069,7 +1059,7 @@ describe('NonTandem', () => {
       });
 
       it('should surface the expected value for carb ratio', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}
@@ -1092,7 +1082,7 @@ describe('NonTandem', () => {
       });
 
       it('should have a button to copy settings', () => {
-        const { container } = renderWithProvider(
+        const { container } = rtlRender(
           <NonTandem
             bgUnits={MMOLL_UNITS}
             copySettingsClicked={copySettingsClicked}

@@ -21,12 +21,10 @@ import React from 'react';
 import { render as rtlRender, cleanup, fireEvent } from '@testing-library/react/pure';
 
 import Tandem from '../../../src/components/settings/Tandem';
-import { Provider } from 'react-redux';
 import styles from '../../../src/components/settings/Tandem.css';
 import { formatClassesAsSelector } from '../../helpers/cssmodules';
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../src/utils/constants';
 import { formatDecimalNumber } from '../../../src/utils/format';
-import mockStore from '../../helpers/mockStore';
 
 jest.mock('../../../src/components/settings/common/Header', () => (props) => (
   <div data-testid="Header" data-device-display-name={props.deviceDisplayName}>{props.children}</div>
@@ -64,14 +62,6 @@ let container;
 let props;
 
 describe('Tandem', () => {
-  const store = mockStore({
-    blip: { data: {} }
-  });
-
-  const renderWithProvider = (ui) => rtlRender(
-    <Provider store={store}>{ui}</Provider>
-  );
-
   beforeEach(() => {
     props = {
       bgUnits: MGDL_UNITS,
@@ -83,7 +73,9 @@ describe('Tandem', () => {
       toggleProfileExpansion: () => {},
     };
 
-    const rendered = renderWithProvider(<Tandem {...props} />);
+    const rendered = rtlRender(
+      <Tandem {...props} />
+    );
     container = rendered.container;
   });
 
@@ -97,7 +89,9 @@ describe('Tandem', () => {
     console.error = sinon.spy();
     expect(console.error.callCount).to.equal(0);
     cleanup();
-    renderWithProvider(<Tandem {...props} />);
+    rtlRender(
+      <Tandem {...props} />
+    );
     expect(console.error.callCount).to.equal(0);
     console.error = originalConsoleError;
   });
@@ -123,7 +117,9 @@ describe('Tandem', () => {
     cleanup();
     props.pumpSettings = flatrateData;
     props.openedSections = { [flatrateData.activeSchedule]: true };
-    const { container: c } = renderWithProvider(<Tandem {...props} />);
+    const { container: c } = rtlRender(
+      <Tandem {...props} />
+    );
     const labels = Array.from(c.querySelectorAll('.label'));
     expect(labels.some(n => (n.textContent.search('Normal') !== -1)))
       .to.be.true;
@@ -152,7 +148,9 @@ describe('Tandem', () => {
       props.pumpSettings = flatrateData;
       props.bgUnits = MMOLL_UNITS;
       props.openedSections = { [flatrateData.activeSchedule]: true };
-      const rendered = renderWithProvider(<Tandem {...props} />);
+      const rendered = rtlRender(
+        <Tandem {...props} />
+      );
       timedContainer = rendered.container;
 
       sickProfileTable = Array.from(timedContainer.querySelectorAll('table')).filter(
@@ -198,7 +196,9 @@ describe('Tandem', () => {
       props.pumpSettings = flatrateData;
       props.bgUnits = MMOLL_UNITS;
       props.openedSections = { [flatrateData.activeSchedule]: true };
-      const rendered = renderWithProvider(<Tandem {...props} />);
+      const rendered = rtlRender(
+        <Tandem {...props} />
+      );
 
       insulinSettingsTable = Array.from(rendered.container.querySelectorAll('table')).find(
         n => (n.textContent.search('Insulin Settings') !== -1)
@@ -230,7 +230,9 @@ describe('Tandem', () => {
       props.pumpSettings = { ...flatrateData, deviceId: 'tandemCIQ123' };
       props.bgUnits = MMOLL_UNITS;
       props.openedSections = { [flatrateData.activeSchedule]: true };
-      const rendered = renderWithProvider(<Tandem {...props} />);
+      const rendered = rtlRender(
+        <Tandem {...props} />
+      );
       ciqContainer = rendered.container;
     });
 

@@ -48,8 +48,6 @@ const Tandem = (props) => {
     deviceDisplayName,
   } = props;
 
-  const data = useSelector(state => state.blip.data);
-
   function openSection(sectionName) {
     return _.get(openedSections, sectionName, false);
   }
@@ -111,7 +109,7 @@ const Tandem = (props) => {
         <ClipboardButton
           buttonTitle={t('For email or notes')}
           onSuccess={copySettingsClicked}
-          getText={tandemText.bind(this, user, data, pumpSettings, bgUnits)}
+          getText={tandemText.bind(this, user, pumpSettings, bgUnits)}
         />
       </div>
       <div>

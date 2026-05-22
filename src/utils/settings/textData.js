@@ -34,7 +34,7 @@ const t = i18next.t.bind(i18next);
  *
  * @return {String}               non tandem settings as a string table
  */
-export function nonTandemText(patient, data, settings, units, manufacturer) {
+export function nonTandemText(patient, settings, units, manufacturer) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
@@ -90,20 +90,6 @@ export function nonTandemText(patient, data, settings, units, manufacturer) {
     );
   }
 
-  const metaData = data?.metaData || {};
-  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
-
-  if (devices.length) {
-    const textLines = [
-      `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, d => getDeviceName(d)),
-    ];
-
-    _.each(textLines, line => {
-      settingsString += textUtil.buildTextLine(line);
-    });
-  }
-
   return settingsString;
 }
 
@@ -115,7 +101,7 @@ export function nonTandemText(patient, data, settings, units, manufacturer) {
  *
  * @return {String}             tandem settings as a string table
  */
-export function tandemText(patient, data, settings, units) {
+export function tandemText(patient, settings, units) {
   const textUtil = new TextUtil(patient);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
@@ -141,20 +127,6 @@ export function tandemText(patient, data, settings, units) {
       { showHeader: false }
     );
   });
-
-  const metaData = data?.metaData || {};
-  const devices = _.filter(metaData?.devices, ({ id }) => metaData?.matchedDevices?.[id]);
-
-  if (devices.length) {
-    const textLines = [
-      `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, d => getDeviceName(d)),
-    ];
-
-    _.each(textLines, line => {
-      settingsString += textUtil.buildTextLine(line);
-    });
-  }
 
   return settingsString;
 }

@@ -47,8 +47,6 @@ const NonTandem = (props) => {
     user,
   } = props;
 
-  const data = useSelector(state => state.blip.data);
-
   let lookupKey = deviceKey;
 
   if (deviceKey === 'carelink') {
@@ -265,7 +263,7 @@ const NonTandem = (props) => {
         <ClipboardButton
           buttonTitle={t('For email or notes')}
           onSuccess={copySettingsClicked}
-          getText={nonTandemText.bind(this, user, data, pumpSettings, bgUnits, lookupKey)}
+          getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
         />
       </div>
       <div className={styles.settingsContainer}>
