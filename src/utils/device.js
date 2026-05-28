@@ -190,6 +190,10 @@ export function getPumpVocabulary(manufacturer) {
  * @returns {String}
  */
 export function deriveLabel(deviceId, upload) {
+  const dexcomC2CRegex = /^DexcomG\d+_.+$/;
+
+  if (!upload && dexcomC2CRegex.test(deviceId)) return DEXCOM_API_DEVICE_LABEL;
+
   if (!upload) return deviceId;
 
   const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
