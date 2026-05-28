@@ -3,6 +3,7 @@ import i18next from 'i18next';
 
 import {
   AUTOMATED_BASAL_DEVICE_MODELS,
+  DEXCOM_API_DEVICE_LABEL,
   pumpVocabulary,
   settingsOverrides,
 } from './constants';
@@ -198,7 +199,7 @@ export function deriveLabel(deviceId, upload) {
 
   if (deviceManufacturer || deviceModel) {
     if (deviceManufacturer === 'Dexcom' && isContinuous) {
-      label = t('Dexcom API');
+      label = DEXCOM_API_DEVICE_LABEL;
     } else if (deviceManufacturer === 'Abbott' && isContinuous) {
       label = t('FreeStyle Libre (from LibreView)');
     } else if (deviceManufacturer === 'Sequel' && isContinuous) {

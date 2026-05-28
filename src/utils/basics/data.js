@@ -27,7 +27,7 @@ import {
   isTidepoolLoop,
   isTrio,
   isTwiistLoop,
-  getDeviceName,
+  getDeviceNames,
 } from '../device';
 
 import {
@@ -54,6 +54,7 @@ import {
   pumpVocabulary,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
+  DEXCOM_API_DEVICE_LABEL,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';
@@ -540,7 +541,7 @@ export function basicsText(patient, data, stats, aggregations, copyAsTextMetadat
   if (devices.length) {
     const textLines = [
       `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, d => getDeviceName(d)),
+      ...getDeviceNames(devices),
     ];
 
     _.each(textLines, line => {

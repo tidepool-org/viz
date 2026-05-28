@@ -350,3 +350,5 @@ export const INSULIN_MODEL_LABELS = {
   lyumjev: t('Lyumjev'),
   afrezza: t('Afrezza'),
 };
+
+export const DEXCOM_API_DEVICE_LABEL = t('Dexcom (from Dexcom Account)');
