@@ -54,7 +54,6 @@ import {
   pumpVocabulary,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
-  DEXCOM_API_DEVICE_LABEL,
 } from '../constants';
 
 import TextUtil from '../text/TextUtil';

@@ -240,7 +240,7 @@ export function getDeviceName(device) {
  * @param {Array<Object>} deviceList an array of device objects from the DataUtil instance "devices" property
  * @returns {Array<String>} unique array of render-friendly names for each device
  */
-export function getDeviceNames(deviceList) {
+export function getDeviceNames(deviceList = []) {
   return _.chain(deviceList)
     .map(d => getDeviceName(d))
     .compact()
