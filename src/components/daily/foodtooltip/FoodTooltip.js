@@ -94,8 +94,14 @@ const FoodTooltip = (props) => {
 
       if (dosingDecision) {
         const currentCarbs = getCarbs(food);
-        const originalCarbs = dosingDecision.originalFood?.nutrition?.carbohydrate?.net
-          ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
+        // Initial carb amount comes from the earliest DD in the edit chain,
+        // preferring its immutable `originalFood` snapshot over `food`. On
+        // multi-edit chains the latest DD has no originalFood, and intermediate
+        // DDs' food has been rewritten to the final value -- so reading either
+        // of those would surface the post-edit number.
+        const earliestDosingDecision = originalDosingDecision || dosingDecision;
+        const originalCarbs = earliestDosingDecision.originalFood?.nutrition?.carbohydrate?.net
+          ?? earliestDosingDecision.food?.nutrition?.carbohydrate?.net;
         const carbsWereEdited = food.tags?.carbsEdited;
         const editedLabel = currentCarbs === 0 ? t('Deleted') : t('Edited');
         const entryTimeDiffExceedsThreshold = food.tags?.entryTimeDiffers;
@@ -142,8 +148,8 @@ const FoodTooltip = (props) => {
           }
 
           rows.push(
-            <div key={originalDosingDecision ? 'timeLastEdited' : 'timeEdited'} className={styles.row}>
-              <div className={styles.label}>{originalDosingDecision ? t('Time Last Edited') : t('Time Edited')}</div>
+            <div key={'timeEdited'} className={styles.row}>
+              <div className={styles.label}>{t('Time Edited')}</div>
               <div className={styles.value}>
                 {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
               </div>
@@ -153,21 +159,28 @@ const FoodTooltip = (props) => {
             </div>
           );
         } else if (entryTimeDiffExceedsThreshold) {
+          // Prefer the original-entry decision's time (a time edit's original entry);
+          // fall back to the lone decision's time for a back-logged entry with no lineage.
+          const enteredTimeDecision = originalDosingDecision || dosingDecision;
           rows.push(
             <div key={'timeEntered'} className={styles.row}>
               <div className={styles.label}>{t('Time Entered')}</div>
               <div className={styles.value}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+                {formatLocalizedFromUTC(enteredTimeDecision.time, props.timePrefs, 'h:mm')}
               </div>
               <div className={styles.units}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
+                {formatLocalizedFromUTC(enteredTimeDecision.time, props.timePrefs, 'a')}
               </div>
             </div>
           );
         }
       }
 
-      if (latestUpdatedTime || timeOfEntry) {
+      // Skip the payload-based timestamp row when carbs were edited — the DD-driven
+      // "Time Edited" row above already conveys the latest edit time,
+      // so emitting `food.payload.userUpdatedDate` here would produce a duplicate.
+      const carbsEditedHandledAbove = !!dosingDecision && food.tags?.carbsEdited;
+      if (!carbsEditedHandledAbove && (latestUpdatedTime || timeOfEntry)) {
         rows.push(<div key={'divider'} className={styles.divider} />);
 
         if (latestUpdatedTime) {

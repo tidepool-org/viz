@@ -378,7 +378,13 @@ export function isCorrection(insulinEvent) {
   const recommended = insulinEvent.dosingDecision
     ? {
       correction: _.get(insulinEvent, 'dosingDecision.recommendedBolus.amount'),
-      carb: _.get(insulinEvent, 'dosingDecision.food.nutrition.carbohydrate.net', 0),
+      // Prefer originalFood (immutable pre-edit snapshot) over food, which may be a
+      // post-edit value on intermediate DDs in an edit chain.
+      carb: _.get(
+        insulinEvent,
+        'dosingDecision.originalFood.nutrition.carbohydrate.net',
+        _.get(insulinEvent, 'dosingDecision.food.nutrition.carbohydrate.net', 0)
+      ),
     }
     : _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
   return !!(recommended && recommended.correction > 0 && recommended.carb === 0);

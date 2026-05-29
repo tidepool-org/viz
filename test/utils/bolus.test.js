@@ -1131,6 +1131,30 @@ describe('bolus utilities', () => {
         wizard: correctionUnderride,
       })).to.be.true;
     });
+
+    it('should prefer dosingDecision.originalFood over food when reading carbs', () => {
+      const withOriginalFoodCarbs = {
+        type: 'bolus',
+        dosingDecision: {
+          recommendedBolus: { amount: 1.5 },
+          // post-edit DD has been zeroed out, but originalFood still holds the
+          // pre-edit carb count -> NOT a correction-only bolus
+          food: { nutrition: { carbohydrate: { net: 0 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 40 } } },
+        },
+      };
+      expect(bolusUtils.isCorrection(withOriginalFoodCarbs)).to.be.false;
+
+      const withOriginalFoodZeroCarbs = {
+        type: 'bolus',
+        dosingDecision: {
+          recommendedBolus: { amount: 1.5 },
+          // originalFood absent -> fall back to food, which is zero -> correction
+          food: { nutrition: { carbohydrate: { net: 0 } } },
+        },
+      };
+      expect(bolusUtils.isCorrection(withOriginalFoodZeroCarbs)).to.be.true;
+    });
   });
 
   describe('isAutomated', () => {
