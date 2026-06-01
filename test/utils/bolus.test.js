@@ -338,6 +338,7 @@ const withDosingDecisionUnderride = {
 
 const withDosingDecisionCorrection = {
   ...withDosingDecision,
+  carbInput: 0, // correction-only bolus: no carbs (consistent with food.net 0)
   dosingDecision: {
     ...withDosingDecision.dosingDecision,
     recommendedBolus: { amount: 0.5 },
@@ -1132,13 +1133,41 @@ describe('bolus utilities', () => {
       })).to.be.true;
     });
 
-    it('should prefer dosingDecision.originalFood over food when reading carbs', () => {
+    it('should prefer the device-gated carbInput over the dosingDecision snapshot when present', () => {
+      // Loop interim bolus: DataUtil annotates carbInput 0 (device food-first) even though
+      // originalFood still holds a pre-edit 40. The bolus dosed for 0 carbs -> correction.
+      const loopZeroCarbInput = {
+        type: 'bolus',
+        carbInput: 0,
+        dosingDecision: {
+          recommendedBolus: { amount: 1.5 },
+          food: { nutrition: { carbohydrate: { net: 0 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 40 } } },
+        },
+      };
+      expect(bolusUtils.isCorrection(loopZeroCarbInput)).to.be.true;
+
+      // carbInput annotated non-zero -> dosed for carbs -> NOT a correction, regardless
+      // of the decision snapshots.
+      const loopNonZeroCarbInput = {
+        type: 'bolus',
+        carbInput: 35,
+        dosingDecision: {
+          recommendedBolus: { amount: 1.5 },
+          food: { nutrition: { carbohydrate: { net: 35 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 25 } } },
+        },
+      };
+      expect(bolusUtils.isCorrection(loopNonZeroCarbInput)).to.be.false;
+    });
+
+    it('should fall back to dosingDecision originalFood over food when carbInput is absent', () => {
+      // No carbInput annotated (e.g. a raw bolus not run through DataUtil): prefer
+      // originalFood (immutable pre-edit snapshot) over a possibly-rewritten food.
       const withOriginalFoodCarbs = {
         type: 'bolus',
         dosingDecision: {
           recommendedBolus: { amount: 1.5 },
-          // post-edit DD has been zeroed out, but originalFood still holds the
-          // pre-edit carb count -> NOT a correction-only bolus
           food: { nutrition: { carbohydrate: { net: 0 } } },
           originalFood: { nutrition: { carbohydrate: { net: 40 } } },
         },
