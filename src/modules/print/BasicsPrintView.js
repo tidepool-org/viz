@@ -446,7 +446,7 @@ class BasicsPrintView extends PrintView {
         font: this.boldFont,
         align: 'left',
         border: 'TBLR',
-        header: t('Devices'),
+        header: deviceNames.length === 1 ? t('Device') : t('Devices'),
       },
     ];
 
