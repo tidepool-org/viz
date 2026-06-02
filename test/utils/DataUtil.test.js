@@ -1230,6 +1230,9 @@ describe('DataUtil', () => {
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
       dataUtil.pumpSettingsDatumsByIdMap = { pumpSettings1: pumpSettings };
       dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: upload };
+      // Mirrors production: normalizeDatumIn populates bolusDatumsByIdMap for every bolus
+      // before joins run, so the decision is recognized as claimed by the real bolus2.
+      dataUtil.bolusDatumsByIdMap = { bolus1: bolus, bolus2 };
 
       _.each([bolus, bolus2], dataUtil.joinBolusAndDosingDecision);
       // should not attach dosing decision to bolus that is not associated
@@ -1326,6 +1329,57 @@ describe('DataUtil', () => {
       expect(bolus.dosingDecision).to.be.undefined;
     });
 
+    it('should join a proximate, normal-matching bolus to a dosing decision whose `bolus` association is dangling (resolves to no bolus datum)', () => {
+      // Reproduces the twiist original-entry bolus: the decision references a bolus by an
+      // id that does not survive normalization, so the definitive match fails and the
+      // dangling association must not block the time+normal proximity match.
+      const uploadId = 'upload1';
+      const bolus = { type: 'bolus', id: 'realBolus', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), normal: 1.17, origin: { name: 'com.dekaresearch.twiist' } };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:53.000Z'),
+        origin: { name: 'com.dekaresearch.twiist' },
+        associations: [{ reason: 'bolus', id: 'ghostBolusThatDoesNotExist' }],
+        requestedBolus: { normal: 1.17 },
+        insulinOnBoard: { amount: 3.4 },
+        food: { nutrition: { carbohydrate: { net: 31 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.bolusDatumsByIdMap = { realBolus: bolus };
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: { client: { name: 'com.dekaresearch.twiist' } } };
+
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.dosingDecision).to.eql(dosingDecision);
+      expect(bolus.carbInput).to.equal(31);
+      expect(bolus.insulinOnBoard).to.equal(3.4);
+    });
+
+    it('should not steal a dosing decision already claimed by a different, real bolus', () => {
+      const uploadId = 'upload1';
+      const bolusA = { type: 'bolus', id: 'bolusA', uploadId, time: Date.parse('2024-02-02T10:05:59.000Z'), normal: 0.5, origin: { name: 'com.dekaresearch.twiist' } };
+      const bolusB = { type: 'bolus', id: 'bolusB', uploadId, time: Date.parse('2024-02-02T10:05:50.000Z'), normal: 0.5, origin: { name: 'com.dekaresearch.twiist' } };
+
+      const dosingDecision = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:53.000Z'),
+        origin: { name: 'com.dekaresearch.twiist' },
+        associations: [{ reason: 'bolus', id: 'bolusB' }],
+        requestedBolus: { normal: 0.5 },
+        food: { nutrition: { carbohydrate: { net: 20 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dosingDecision };
+      dataUtil.bolusDatumsByIdMap = { bolusA, bolusB }; // bolusB exists → decision is genuinely claimed
+      dataUtil.dosingDecisionDataSetsByIdMap = { [uploadId]: { client: { name: 'com.dekaresearch.twiist' } } };
+
+      dataUtil.joinBolusAndDosingDecision(bolusA);
+      expect(bolusA.dosingDecision).to.be.undefined;
+    });
+
     it('should use food.nutrition.carbohydrate.net for carbInput', () => {
       const bolus = {
         type: 'bolus',
@@ -1354,7 +1408,93 @@ describe('DataUtil', () => {
       expect(bolus.carbInput).to.equal(30);
     });
 
-    it('should use food.nutrition.carbohydrate.net even when originalFood is present', () => {
+    it('should prefer originalFood over food for a twiist bolus (originalFood is the at-bolus snapshot)', () => {
+      // twiist rewrites a prior decision's food to the final value and stores the
+      // at-bolus value in originalFood, so carbInput must come from originalFood.
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus1',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'com.dekaresearch.twiist' },
+      };
+
+      dataUtil.dosingDecisionDataSetsByIdMap = {
+        upload1: { client: { name: 'com.dekaresearch.twiist' } },
+      };
+
+      const dd = {
+        type: 'dosingDecision',
+        id: 'dosingDecision1',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        associations: [],
+        food: { nutrition: { carbohydrate: { net: 30 } } },
+        originalFood: { nutrition: { carbohydrate: { net: 42 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(42);
+    });
+
+    it('should prefer food over originalFood for a Tidepool Loop interim-edit bolus (value at this bolus, not the prior)', () => {
+      // Tidepool/DIY Loop keeps each decision's food at the value that decision's bolus
+      // was computed on, with originalFood holding the PRIOR value. The 2nd bolus of a
+      // 25→35 edit must read 35, not the pre-edit 25.
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus2',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'org.tidepool.diy.Loop' },
+      };
+
+      dataUtil.dosingDecisionDataSetsByIdMap = {
+        upload1: { client: { name: 'org.tidepool.diy.Loop' } },
+      };
+
+      const dd = {
+        type: 'dosingDecision',
+        id: 'dd2',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        associations: [],
+        food: { nutrition: { carbohydrate: { net: 35 } } },
+        originalFood: { nutrition: { carbohydrate: { net: 25 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd2: dd };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(35);
+    });
+
+    it('should prefer food over originalFood for a DIY Loop (loopkit) interim-edit bolus', () => {
+      const bolus = {
+        type: 'bolus',
+        id: 'bolus2',
+        uploadId: 'upload1',
+        time: Date.parse('2024-02-02T10:05:59.000Z'),
+        origin: { name: 'com.loopkit.Loop' },
+      };
+
+      dataUtil.dosingDecisionDataSetsByIdMap = {
+        upload1: { client: { name: 'com.loopkit.Loop' } },
+      };
+
+      const dd = {
+        type: 'dosingDecision',
+        id: 'dd2',
+        time: Date.parse('2024-02-02T10:05:00.000Z'),
+        associations: [],
+        food: { nutrition: { carbohydrate: { net: 35 } } },
+        originalFood: { nutrition: { carbohydrate: { net: 25 } } },
+      };
+
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { dd2: dd };
+      dataUtil.joinBolusAndDosingDecision(bolus);
+      expect(bolus.carbInput).to.equal(35);
+    });
+
+    it('should fall back to food.nutrition.carbohydrate.net when originalFood is absent', () => {
       const bolus = {
         type: 'bolus',
         id: 'bolus1',
@@ -1373,7 +1513,6 @@ describe('DataUtil', () => {
         time: Date.parse('2024-02-02T10:05:00.000Z'),
         associations: [],
         food: { nutrition: { carbohydrate: { net: 30 } } },
-        originalFood: { nutrition: { carbohydrate: { net: 42 } } },
       };
 
       dataUtil.bolusDosingDecisionDatumsByIdMap = { dosingDecision1: dd };
@@ -1486,6 +1625,137 @@ describe('DataUtil', () => {
       dataUtil.joinFoodAndDosingDecision(food);
 
       expect(food.dosingDecision).to.be.undefined;
+    });
+
+    it('should attach an orphaned pre-edit decision as originalDosingDecision on a time-only edit', () => {
+      // Backdate: entered 31g eaten at 18:33, edited eat-time to 18:23. Only the final
+      // food (18:23) survives; the original-entry decision keeps food.time 18:33.
+      const food = {
+        type: 'food',
+        id: 'foodFinal',
+        uploadId,
+        time: Date.parse('2024-02-02T18:23:00.000Z'),
+        nutrition: { carbohydrate: { net: 31 } },
+      };
+      const editDd = {
+        id: 'ddEdit',
+        uploadId,
+        time: Date.parse('2024-02-02T18:45:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodFinal' }],
+        food: { time: '2024-02-02T18:23:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+      const origDd = {
+        id: 'ddOrig',
+        uploadId,
+        time: Date.parse('2024-02-02T18:33:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodSuperseded' }],
+        food: { time: '2024-02-02T18:33:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+
+      dataUtil.foodDatumTimes = new Set([Date.parse('2024-02-02T18:23:00.000Z')]);
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { ddEdit: editDd, ddOrig: origDd };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecision.id).to.equal('ddEdit');
+      expect(food.originalDosingDecision.id).to.equal('ddOrig');
+    });
+
+    it('should map every lineage decision to the surviving food time in canonicalFoodTimeByDecisionId', () => {
+      // Same shape as the orphan-attach case: food survives at 18:23; the original-entry
+      // decision keeps food.time 18:33. Both decisions must point at the surviving food's
+      // time so a bolus on either shows the meal's canonical eaten time.
+      const food = {
+        type: 'food', id: 'foodFinal', uploadId,
+        time: Date.parse('2024-02-02T18:23:00.000Z'),
+        nutrition: { carbohydrate: { net: 31 } },
+      };
+      const editDd = {
+        id: 'ddEdit', uploadId,
+        time: Date.parse('2024-02-02T18:45:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodFinal' }],
+        food: { time: '2024-02-02T18:23:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+      const origDd = {
+        id: 'ddOrig', uploadId,
+        time: Date.parse('2024-02-02T18:33:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodSuperseded' }],
+        food: { time: '2024-02-02T18:33:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+
+      dataUtil.foodDatumTimes = new Set([Date.parse('2024-02-02T18:23:00.000Z')]);
+      dataUtil.canonicalFoodTimeByDecisionId = {};
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { ddEdit: editDd, ddOrig: origDd };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(dataUtil.canonicalFoodTimeByDecisionId.ddEdit).to.equal(food.time);
+      expect(dataUtil.canonicalFoodTimeByDecisionId.ddOrig).to.equal(food.time);
+    });
+
+    it('should NOT merge two distinct same-size entries (each keeps its own surviving food)', () => {
+      const foodA = {
+        type: 'food', id: 'foodA', uploadId,
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        nutrition: { carbohydrate: { net: 31 } },
+      };
+      const ddA = {
+        id: 'ddA', uploadId,
+        time: Date.parse('2024-02-02T18:00:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodA' }],
+        food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+      // A separate 31g entry 30 min later — it has its OWN surviving food, so its decision's
+      // eat-time is NOT orphaned and must not be pulled into foodA's lineage.
+      const ddB = {
+        id: 'ddB', uploadId,
+        time: Date.parse('2024-02-02T18:30:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodB' }],
+        food: { time: '2024-02-02T18:30:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+
+      dataUtil.foodDatumTimes = new Set([
+        Date.parse('2024-02-02T18:00:00.000Z'),
+        Date.parse('2024-02-02T18:30:00.000Z'),
+      ]);
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { ddA, ddB };
+      dataUtil.joinFoodAndDosingDecision(foodA);
+
+      expect(foodA.dosingDecision.id).to.equal('ddA');
+      expect(foodA.originalDosingDecision).to.be.undefined;
+    });
+
+    it('should pick the earliest decision as originalDosingDecision across a multi-time-edit chain', () => {
+      // Entered eaten 11:47, backdated to 11:37, postdated to 11:57 (final/surviving).
+      const food = {
+        type: 'food', id: 'foodFinal', uploadId,
+        time: Date.parse('2024-02-02T11:57:00.000Z'),
+        nutrition: { carbohydrate: { net: 31 } },
+      };
+      const ddOrig = {
+        id: 'ddOrig', uploadId,
+        time: Date.parse('2024-02-02T11:47:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodV1' }],
+        food: { time: '2024-02-02T11:47:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+      const ddBack = {
+        id: 'ddBack', uploadId,
+        time: Date.parse('2024-02-02T11:58:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodV2' }],
+        food: { time: '2024-02-02T11:37:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+      const ddFinal = {
+        id: 'ddFinal', uploadId,
+        time: Date.parse('2024-02-02T12:09:00.000Z'),
+        associations: [{ reason: 'food', id: 'foodFinal' }],
+        food: { time: '2024-02-02T11:57:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+      };
+
+      dataUtil.foodDatumTimes = new Set([Date.parse('2024-02-02T11:57:00.000Z')]);
+      dataUtil.bolusDosingDecisionDatumsByIdMap = { ddBack, ddFinal, ddOrig };
+      dataUtil.joinFoodAndDosingDecision(food);
+
+      expect(food.dosingDecision.id).to.equal('ddFinal');
+      expect(food.originalDosingDecision.id).to.equal('ddOrig');
+      expect(food.originalDosingDecision.food.time).to.equal('2024-02-02T11:47:00.000Z');
     });
 
     it('should join trio dosing decisions to boluses from trio uploads', () => {
@@ -1810,6 +2080,26 @@ describe('DataUtil', () => {
         };
         dataUtil.tagDatum(bolusWithDD);
         expect(bolusWithDD.tags.foodTimeDiffers).to.be.false;
+      });
+
+      it('should use the canonical lineage food time (and stamp `foodTime`) even when the bolus snapshot is concurrent', () => {
+        const bolusTime = Date.parse('2024-02-02T18:00:00.000Z');
+        // This bolus's own decision snapshot eaten time equals its delivery time (a concurrent
+        // entry bolus), but the meal's eaten time was edited later. The canonical lineage time
+        // (18:10) differs by >5min, so the eaten-at must surface consistently on this bolus too.
+        const bolusWithDD = {
+          ...bolus,
+          time: bolusTime,
+          carbInput: 30,
+          dosingDecision: {
+            id: 'ddEntry',
+            food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 30 } } },
+          },
+        };
+        dataUtil.canonicalFoodTimeByDecisionId = { ddEntry: Date.parse('2024-02-02T18:10:00.000Z') };
+        dataUtil.tagDatum(bolusWithDD);
+        expect(bolusWithDD.tags.foodTimeDiffers).to.be.true;
+        expect(bolusWithDD.foodTime).to.equal(Date.parse('2024-02-02T18:10:00.000Z'));
       });
     });
 

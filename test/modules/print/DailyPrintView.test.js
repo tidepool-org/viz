@@ -1129,6 +1129,69 @@ describe('DailyPrintView', () => {
       sinon.assert.notCalled(Renderer.doc.circle);
       sinon.assert.notCalled(Renderer.doc.roundedRect);
     });
+
+    // Edited-carb obround initial-value priority.
+    it('should prefer originalDosingDecision.originalFood for the initial value on a multi-edit chain', () => {
+      const chart = {
+        ...Renderer.chartsByDate[sampleDate],
+        data: {
+          ...Renderer.chartsByDate[sampleDate].data,
+          food: [
+            {
+              normalTime: 0,
+              nutrition: { carbohydrate: { net: 80 } },
+              tags: { carbsEdited: true },
+              // earliest DD records the 20g entry (must win)
+              originalDosingDecision: {
+                originalFood: { nutrition: { carbohydrate: { net: 20 } } },
+                food: { nutrition: { carbohydrate: { net: 20 } } },
+              },
+              // latest DD's originalFood points to immediate predecessor (60g) — must NOT win
+              dosingDecision: {
+                originalFood: { nutrition: { carbohydrate: { net: 60 } } },
+                food: { nutrition: { carbohydrate: { net: 80 } } },
+              },
+            },
+          ],
+        },
+      };
+
+      Renderer.renderFoodCarbs(chart);
+
+      sinon.assert.calledTwice(Renderer.doc.roundedRect);
+      sinon.assert.calledWith(Renderer.doc.text, '20');
+      sinon.assert.calledWith(Renderer.doc.text, '80');
+      sinon.assert.neverCalledWith(Renderer.doc.text, '60');
+    });
+
+    it('should fall back to originalDosingDecision.food when its originalFood is absent', () => {
+      const chart = {
+        ...Renderer.chartsByDate[sampleDate],
+        data: {
+          ...Renderer.chartsByDate[sampleDate].data,
+          food: [
+            {
+              normalTime: 0,
+              nutrition: { carbohydrate: { net: 45 } },
+              tags: { carbsEdited: true },
+              originalDosingDecision: {
+                food: { nutrition: { carbohydrate: { net: 25 } } },
+              },
+              dosingDecision: {
+                originalFood: { nutrition: { carbohydrate: { net: 35 } } },
+                food: { nutrition: { carbohydrate: { net: 45 } } },
+              },
+            },
+          ],
+        },
+      };
+
+      Renderer.renderFoodCarbs(chart);
+
+      sinon.assert.calledWith(Renderer.doc.text, '25');
+      sinon.assert.calledWith(Renderer.doc.text, '45');
+      sinon.assert.neverCalledWith(Renderer.doc.text, '35');
+    });
   });
 
   describe('renderBolusDetails', () => {
