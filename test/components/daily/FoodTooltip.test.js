@@ -129,13 +129,13 @@ const loopWithMultipleDosingDecisions = {
     food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
   },
   dosingDecision: {
-    time: Date.parse('2024-02-02T19:00:00.000Z'), // Time Last Edited (7:00 pm UTC)
+    time: Date.parse('2024-02-02T19:00:00.000Z'), // Time Edited (7:00 pm UTC)
     food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
     originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 40 } } },
   },
 };
 
-// No name/absorption so row[0]=Initial Carb Amount, row[1]=Time Entered, row[2]=Time Last Edited
+// No name/absorption so row[0]=Initial Carb Amount, row[1]=Time Entered, row[2]=Time Edited
 const loopEdited = {
   type: 'food',
   origin: { name: 'com.loopkit.Loop' },
@@ -254,7 +254,7 @@ describe('FoodTooltip', () => {
 
     it('should include the edited time for an edited Loop food value', () => {
       const { container } = render(<FoodTooltip {...props} food={loopEdited} />);
-      expect(container.querySelectorAll(row)[2].querySelector(rowLabel).textContent).to.contain('Last Edited');
+      expect(container.querySelectorAll(row)[2].querySelector(rowLabel).textContent).to.contain('Time Edited');
       expect(container.querySelectorAll(row)[2].querySelector(rowValue).textContent).to.contain('3:00');
       expect(container.querySelectorAll(row)[2].querySelector(rowUnits).textContent).to.contain('am');
     });
@@ -266,6 +266,29 @@ describe('FoodTooltip', () => {
       expect(timeRow).to.have.length(1);
       expect(timeRow[0].querySelector(rowValue).textContent).to.contain('5:00');
       expect(timeRow[0].querySelector(rowUnits).textContent).to.contain('pm');
+    });
+
+    it('should show the original-entry decision time for "Time Entered" on a time-only edit with lineage', () => {
+      // Backdate: entered 31g at 4:33pm UTC, edited eat-time later; the heuristic attaches
+      // the original-entry decision so "Time Entered" shows 4:33, not the 4:45 edit time.
+      const timeEditedWithLineage = {
+        ...loop,
+        tags: { carbsEdited: false, entryTimeDiffers: true },
+        nutrition: { ...loop.nutrition, carbohydrate: { net: 31, units: 'grams' } },
+        originalDosingDecision: {
+          time: Date.parse('2024-02-02T16:33:00.000Z'), // original entry, 4:33 pm UTC
+          food: { time: '2024-02-02T16:33:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+        },
+        dosingDecision: {
+          time: Date.parse('2024-02-02T16:45:00.000Z'), // edit decision, 4:45 pm UTC
+          food: { time: '2024-02-02T16:23:00.000Z', nutrition: { carbohydrate: { net: 31 } } },
+        },
+      };
+      const { container } = render(<FoodTooltip {...props} food={timeEditedWithLineage} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      const timeRow = rows.filter(n => n.querySelector(rowLabel)?.textContent === 'Time Entered');
+      expect(timeRow).to.have.length(1);
+      expect(timeRow[0].querySelector(rowValue).textContent).to.contain('4:33'); // original entry, not the 4:45 edit
     });
 
     it('should not show "Time Entered" when dosingDecision time is within 5min of normalTime', () => {
@@ -297,13 +320,13 @@ describe('FoodTooltip', () => {
       expect(timeRow[0].querySelector(rowUnits).textContent).to.contain('pm');
     });
 
-    it('should show "Time Entered" and "Time Last Edited" for multiple dosingDecisions', () => {
+    it('should show "Time Entered" and "Time Edited" for multiple dosingDecisions', () => {
       const { container } = render(<FoodTooltip {...props} food={loopWithMultipleDosingDecisions} />);
       const rows = Array.from(container.querySelectorAll(row));
-      const timeEnteredRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Entered'));
-      const timeLastEditedRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Last Edited'));
+      const timeEnteredRow = rows.filter(n => n.querySelector(rowLabel)?.textContent === 'Time Entered');
+      const timeEditedRow = rows.filter(n => n.querySelector(rowLabel)?.textContent === 'Time Edited');
       expect(timeEnteredRow).to.have.length(1);
-      expect(timeLastEditedRow).to.have.length(1);
+      expect(timeEditedRow).to.have.length(1);
     });
 
     it('should not show time/edit rows when dosingDecisions are absent', () => {
@@ -313,6 +336,141 @@ describe('FoodTooltip', () => {
       const timeEditedRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Edited'));
       expect(timeEnteredRow).to.have.length(0);
       expect(timeEditedRow).to.have.length(0);
+    });
+  });
+
+  // Edited-carb food hovers.
+  describe('edited-carb chains', () => {
+    const row = formatClassesAsSelector(styles.row);
+    const rowLabel = formatClassesAsSelector(styles.label);
+    const rowValue = formatClassesAsSelector(styles.value);
+    const carbLabel = `${formatClassesAsSelector(styles.carb)} ${formatClassesAsSelector(styles.label)}`;
+    const carbValue = `${formatClassesAsSelector(styles.carb)} ${formatClassesAsSelector(styles.value)}`;
+
+    const fourEditChain = {
+      type: 'food',
+      origin: { name: 'com.loopkit.Loop' },
+      normalTime: Date.parse('2024-02-02T17:30:00.000Z'),
+      tags: { carbsEdited: true, entryTimeDiffers: false },
+      nutrition: { carbohydrate: { net: 80, units: 'grams' } },
+      // earliest DD captures the 20g entry
+      originalDosingDecision: {
+        time: Date.parse('2024-02-02T17:30:00.000Z'),
+        food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 20 } } },
+        originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 20 } } },
+      },
+      // latest DD captures the final 80g state; its originalFood reflects the
+      // immediate predecessor (60g), so the tooltip must NOT read initial from here.
+      dosingDecision: {
+        time: Date.parse('2024-02-02T20:00:00.000Z'),
+        food: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 80 } } },
+        originalFood: { time: '2024-02-02T17:30:00.000Z', nutrition: { carbohydrate: { net: 60 } } },
+      },
+    };
+
+    it('4-edit chain shows initial = earliest DD value (20), final = 80, Time Edited from latest DD', () => {
+      const { container } = render(<FoodTooltip {...props} food={fourEditChain} />);
+      expect(container.querySelector(carbValue).textContent).to.equal('80');
+      const rows = Array.from(container.querySelectorAll(row));
+      const initial = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Initial Carb Amount'));
+      expect(initial).to.have.length(1);
+      expect(initial[0].querySelector(rowValue).textContent).to.equal('20');
+      const lastEdited = rows.filter(n => n.querySelector(rowLabel)?.textContent === 'Time Edited');
+      expect(lastEdited).to.have.length(1);
+      expect(lastEdited[0].querySelector(rowValue).textContent).to.contain('8:00');
+    });
+
+    it('single decrease edit (25→35→45) shows initial = 25 and final = 45', () => {
+      // Two edits — originalDosingDecision present.
+      const decreaseChain = {
+        type: 'food',
+        origin: { name: 'com.loopkit.Loop' },
+        normalTime: Date.parse('2024-02-02T08:53:00.000Z'),
+        tags: { carbsEdited: true, entryTimeDiffers: false },
+        nutrition: { carbohydrate: { net: 45, units: 'grams' } },
+        originalDosingDecision: {
+          time: Date.parse('2024-02-02T08:53:00.000Z'),
+          food: { time: '2024-02-02T08:53:00.000Z', nutrition: { carbohydrate: { net: 25 } } },
+        },
+        dosingDecision: {
+          time: Date.parse('2024-02-02T09:10:00.000Z'),
+          food: { time: '2024-02-02T08:53:00.000Z', nutrition: { carbohydrate: { net: 45 } } },
+          originalFood: { time: '2024-02-02T08:53:00.000Z', nutrition: { carbohydrate: { net: 35 } } },
+        },
+      };
+      const { container } = render(<FoodTooltip {...props} food={decreaseChain} />);
+      expect(container.querySelector(carbValue).textContent).to.equal('45');
+      const rows = Array.from(container.querySelectorAll(row));
+      const initial = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Initial Carb Amount'));
+      expect(initial[0].querySelector(rowValue).textContent).to.equal('25');
+    });
+
+    it('unedited entry renders only the standard "Total Carbs" row (no Initial / Last-Edited)', () => {
+      const unedited = {
+        type: 'food',
+        origin: { name: 'com.loopkit.Loop' },
+        normalTime: Date.parse('2024-02-02T18:00:00.000Z'),
+        tags: {},
+        nutrition: { carbohydrate: { net: 45, units: 'grams' } },
+        dosingDecision: {
+          time: Date.parse('2024-02-02T18:00:00.000Z'),
+          food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 45 } } },
+        },
+      };
+      const { container } = render(<FoodTooltip {...props} food={unedited} />);
+      expect(container.querySelector(carbLabel).textContent).to.equal('Total Carbs');
+      const rows = Array.from(container.querySelectorAll(row));
+      expect(rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Initial Carb Amount'))).to.have.length(0);
+      expect(rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Last Edited'))).to.have.length(0);
+    });
+
+    it('deleted entry (carbsEdited && carbs === 0) renders "Total Carbs (Deleted)" label', () => {
+      const deleted = {
+        type: 'food',
+        origin: { name: 'com.loopkit.Loop' },
+        normalTime: Date.parse('2024-02-02T18:00:00.000Z'),
+        tags: { carbsEdited: true },
+        nutrition: { carbohydrate: { net: 0, units: 'grams' } },
+        dosingDecision: {
+          time: Date.parse('2024-02-02T18:30:00.000Z'),
+          food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 0 } } },
+          originalFood: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 30 } } },
+        },
+      };
+      const { container } = render(<FoodTooltip {...props} food={deleted} />);
+      expect(container.querySelector(carbLabel).textContent).to.contain('Total Carbs (Deleted)');
+    });
+
+    it('0.1g entry renders the normal "Total Carbs" row and a 0.1 value (NOT "Deleted")', () => {
+      const tinyEntry = {
+        type: 'food',
+        origin: { name: 'com.loopkit.Loop' },
+        normalTime: Date.parse('2024-02-02T18:00:00.000Z'),
+        tags: {},
+        nutrition: { carbohydrate: { net: 0.1, units: 'grams' } },
+        dosingDecision: {
+          time: Date.parse('2024-02-02T18:00:00.000Z'),
+          food: { time: '2024-02-02T18:00:00.000Z', nutrition: { carbohydrate: { net: 0.1 } } },
+        },
+      };
+      const { container } = render(<FoodTooltip {...props} food={tinyEntry} />);
+      expect(container.querySelector(carbLabel).textContent).to.equal('Total Carbs');
+      expect(container.querySelector(carbValue).textContent).to.equal('0.1');
+    });
+
+    it('does not render the payload-based "Last Edited" row when the DD-based "Time Edited" row already shows', () => {
+      const editedWithPayload = {
+        ...fourEditChain,
+        payload: { userUpdatedDate: '2024-02-02T20:00:00.000Z' },
+      };
+      const { container } = render(<FoodTooltip {...props} food={editedWithPayload} />);
+      const rows = Array.from(container.querySelectorAll(row));
+      // The payload-derived "Last Edited" row must be suppressed.
+      const payloadLastEditedRows = rows.filter(n => n.querySelector(rowLabel)?.textContent === 'Last Edited');
+      expect(payloadLastEditedRows).to.have.length(0);
+      // Only the DD-derived "Time Edited" row should remain.
+      const timeEditedRows = rows.filter(n => n.querySelector(rowLabel)?.textContent === 'Time Edited');
+      expect(timeEditedRows).to.have.length(1);
     });
   });
 

@@ -504,6 +504,16 @@ const withLoopDosingDecisionFoodTimeWithinThreshold = {
   tags: { ...(withLoopDosingDecision.tags || {}), foodTimeDiffers: false },
 };
 
+// Entry bolus delivered concurrently with its own decision snapshot (food.time 4:00am ≈ bolus
+// 4:00am), but the meal's eaten time was edited later; DataUtil stamps the canonical foodTime
+// (4:15am) + foodTimeDiffers=true. The label must reflect the canonical time, not the snapshot.
+const withLoopCanonicalFoodTime = {
+  ...withLoopDosingDecision,
+  normalTime: Date.parse('2017-11-11T04:00:00.000Z'),
+  foodTime: Date.parse('2017-11-11T04:15:00.000Z'),
+  tags: { ...(withLoopDosingDecision.tags || {}), foodTimeDiffers: true },
+};
+
 // dosingDecision has no food field — plain "Carbs" label
 const withLoopDosingDecisionNoFoodTime = {
   ...withLoopDosingDecision,
@@ -770,6 +780,13 @@ describe('BolusTooltip', () => {
       const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopDosingDecisionFoodTimeWithinThreshold} />);
       expect(container.querySelector(carbsLabel).textContent).to.equal('Carbs');
     });
+
+    it('should show the canonical eaten time from bolus.foodTime, not the bolus\'s own decision snapshot', () => {
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={withLoopCanonicalFoodTime} />);
+      const label = container.querySelector(carbsLabel).textContent;
+      expect(label).to.contain('Carbs (eaten at');
+      expect(label).to.contain('4:15'); // the canonical foodTime, not the 4:00 snapshot
+    });
   });
 
   it('should render appropriate fields for a bolus with a Trio dosing decision', () => {
@@ -789,6 +806,93 @@ describe('BolusTooltip', () => {
     expect(container.querySelector(formatClassesAsSelector(styles.actingType)).textContent).to.contain('Short-acting insulin');
     expect(container.querySelectorAll(formatClassesAsSelector(styles.source))).to.have.length(1);
     expect(container.querySelector(formatClassesAsSelector(styles.source)).textContent).to.contain('Manual');
+  });
+
+  // Edited-carb bolus hovers.
+  // BolusTooltip reads `bolus.carbInput`, which DataUtil annotates as
+  // dosingDecision.originalFood?.nutrition?.carbohydrate?.net ?? dosingDecision.food?…
+  describe('edited-carb dosing decisions', () => {
+    const carbsValue = `${formatClassesAsSelector(styles.carbs)} ${formatClassesAsSelector(styles.value)}`;
+
+    const makeLoopBolus = (overrides = {}) => ({
+      ...withLoopDosingDecision,
+      ...overrides,
+      dosingDecision: {
+        ...withLoopDosingDecision.dosingDecision,
+        ...(overrides.dosingDecision || {}),
+      },
+    });
+
+    it('first bolus on an upward edit shows the original (pre-edit) grams', () => {
+      const firstBolus = makeLoopBolus({
+        carbInput: 20,
+        dosingDecision: {
+          food: { nutrition: { carbohydrate: { net: 80 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 20 } } },
+        },
+      });
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={firstBolus} />);
+      expect(container.querySelector(carbsValue).textContent).to.equal('20');
+    });
+
+    it('second bolus on a single edit shows the final (post-edit) grams', () => {
+      const secondBolus = makeLoopBolus({
+        carbInput: 80,
+        dosingDecision: {
+          food: { nutrition: { carbohydrate: { net: 80 } } },
+          // post-edit DD: no originalFood -> falls back to food
+        },
+      });
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={secondBolus} />);
+      expect(container.querySelector(carbsValue).textContent).to.equal('80');
+    });
+
+    it('4-edit chain shows each bolus\'s live grams on its own DD (20→40→60→80)', () => {
+      const ladder = [
+        { carbInput: 20, original: 20, food: 80 },
+        { carbInput: 40, original: 40, food: 80 },
+        { carbInput: 60, original: 60, food: 80 },
+        { carbInput: 80, original: undefined, food: 80 },
+      ];
+      ladder.forEach(({ carbInput, original, food }) => {
+        const bolus = makeLoopBolus({
+          carbInput,
+          dosingDecision: {
+            food: { nutrition: { carbohydrate: { net: food } } },
+            ...(original !== undefined && { originalFood: { nutrition: { carbohydrate: { net: original } } } }),
+          },
+        });
+        const { container } = rtlRender(<BolusTooltip {...props} bolus={bolus} />);
+        expect(container.querySelector(carbsValue).textContent).to.equal(`${carbInput}`);
+      });
+    });
+
+    it('edited-carb bolus hover renders the Correction Range row even when bgInput is absent', () => {
+      const noBgEditedBolus = makeLoopBolus({
+        bgInput: null,
+        carbInput: 20,
+        dosingDecision: {
+          food: { nutrition: { carbohydrate: { net: 80 } } },
+          originalFood: { nutrition: { carbohydrate: { net: 20 } } },
+        },
+      });
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={noBgEditedBolus} />);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(1);
+      expect(container.querySelector(formatClassesAsSelector(styles.target)).textContent).to.contain('Correction Range');
+    });
+
+    it('Loop bolus with no dosing decision renders no target row (no NaN, no Correction Range)', () => {
+      const loopBolusNoDD = {
+        type: 'bolus',
+        origin: { name: 'com.loopkit.Loop' },
+        normal: 1,
+        normalTime: Date.parse('2017-11-11T05:45:52.000Z'),
+      };
+      const { container } = rtlRender(<BolusTooltip {...props} bolus={loopBolusNoDD} />);
+      expect(container.querySelectorAll(formatClassesAsSelector(styles.target))).to.have.length(0);
+      expect(container.textContent).to.not.contain('Correction Range');
+      expect(container.textContent).to.not.contain('NaN');
+    });
   });
 
   describe('getTarget', () => {
@@ -848,6 +952,14 @@ describe('BolusTooltip', () => {
       const result = getTarget(withAutoTarget, props.bgPrefs, props.timePrefs);
       expect(result.type).to.equal('div');
       expect(container.querySelector(targetValue).textContent).to.equal('Auto');
+    });
+    it('should return null for a Loop bolus with no target schedule', () => {
+      const loopNoSchedule = {
+        type: 'bolus',
+        origin: { name: 'com.loopkit.Loop' },
+        normalTime: Date.parse('2017-11-11T05:45:52.000Z'),
+      };
+      expect(getTarget(loopNoSchedule, props.bgPrefs, props.timePrefs)).to.equal(null);
     });
   });
 
