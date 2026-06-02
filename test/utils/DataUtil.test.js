@@ -5013,7 +5013,7 @@ describe('DataUtil', () => {
           cgm: true,
           oneMinCgmSampleInterval: false,
           id: 'MyDexcom123',
-          label: 'Dexcom API',
+          label: 'Dexcom (from Dexcom Account)',
           deviceName: 'Dexcom DeviceName',
           pump: false,
           serialNumber: undefined

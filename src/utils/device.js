@@ -3,6 +3,7 @@ import i18next from 'i18next';
 
 import {
   AUTOMATED_BASAL_DEVICE_MODELS,
+  DEXCOM_API_DEVICE_LABEL,
   pumpVocabulary,
   settingsOverrides,
 } from './constants';
@@ -189,6 +190,10 @@ export function getPumpVocabulary(manufacturer) {
  * @returns {String}
  */
 export function deriveLabel(deviceId, upload) {
+  const dexcomC2CRegex = /^DexcomG\d+_.+$/;
+
+  if (!upload && dexcomC2CRegex.test(deviceId)) return DEXCOM_API_DEVICE_LABEL;
+
   if (!upload) return deviceId;
 
   const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
@@ -198,7 +203,7 @@ export function deriveLabel(deviceId, upload) {
 
   if (deviceManufacturer || deviceModel) {
     if (deviceManufacturer === 'Dexcom' && isContinuous) {
-      label = t('Dexcom API');
+      label = DEXCOM_API_DEVICE_LABEL;
     } else if (deviceManufacturer === 'Abbott' && isContinuous) {
       label = t('FreeStyle Libre (from LibreView)');
     } else if (deviceManufacturer === 'Sequel' && isContinuous) {
@@ -235,7 +240,7 @@ export function getDeviceName(device) {
  * @param {Array<Object>} deviceList an array of device objects from the DataUtil instance "devices" property
  * @returns {Array<String>} unique array of render-friendly names for each device
  */
-export function getDeviceNames(deviceList) {
+export function getDeviceNames(deviceList = []) {
   return _.chain(deviceList)
     .map(d => getDeviceName(d))
     .compact()
