@@ -147,17 +147,26 @@ const FoodTooltip = (props) => {
             );
           }
 
-          rows.push(
-            <div key={'timeEdited'} className={styles.row}>
-              <div className={styles.label}>{t('Time Edited')}</div>
-              <div className={styles.value}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+          // Only show "Time Edited" when a genuine later edit decision exists. An
+          // originalDosingDecision means a multi-decision chain, so `dosingDecision` is a
+          // real post-entry edit. For a single-decision edit -- e.g. a twiist deletion,
+          // which encodes the whole change in one decision -- `dosingDecision` IS the entry
+          // decision, so its time is the entry time, not the edit. The source doesn't carry
+          // the edit time on a linkable record there, so suppress rather than mislabel; the
+          // payload-based "Last Edited" row below still surfaces a real edit time if present.
+          if (originalDosingDecision) {
+            rows.push(
+              <div key={'timeEdited'} className={styles.row}>
+                <div className={styles.label}>{t('Time Edited')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
+                </div>
               </div>
-              <div className={styles.units}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
-              </div>
-            </div>
-          );
+            );
+          }
         } else if (entryTimeDiffExceedsThreshold) {
           // Prefer the original-entry decision's time (a time edit's original entry);
           // fall back to the lone decision's time for a back-logged entry with no lineage.
@@ -176,10 +185,11 @@ const FoodTooltip = (props) => {
         }
       }
 
-      // Skip the payload-based timestamp row when carbs were edited — the DD-driven
-      // "Time Edited" row above already conveys the latest edit time,
-      // so emitting `food.payload.userUpdatedDate` here would produce a duplicate.
-      const carbsEditedHandledAbove = !!dosingDecision && food.tags?.carbsEdited;
+      // Skip the payload-based timestamp row only when the DD-driven "Time Edited" row
+      // above actually rendered (a multi-decision chain), to avoid a duplicate. For a
+      // single-decision edit we suppressed "Time Edited" above, so let the payload
+      // "Last Edited" row surface here when the source carries one.
+      const carbsEditedHandledAbove = !!originalDosingDecision && food.tags?.carbsEdited;
       if (!carbsEditedHandledAbove && (latestUpdatedTime || timeOfEntry)) {
         rows.push(<div key={'divider'} className={styles.divider} />);
 

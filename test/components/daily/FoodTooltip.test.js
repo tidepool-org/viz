@@ -311,13 +311,37 @@ describe('FoodTooltip', () => {
       expect(initialCarbRow[0].querySelector(rowValue).textContent).to.equal('5');
     });
 
-    it('should show "Time Edited" for single dosingDecision with originalFood', () => {
+    it('should NOT show "Time Edited" for a single-decision edited carb (no later edit decision)', () => {
+      // The lone dosingDecision encodes the edit (food 10 / originalFood 5) but its time is
+      // the entry/bolus time, not an edit -> suppress rather than mislabel the entry time.
       const { container } = render(<FoodTooltip {...props} food={loopWithEditedCarbs} />);
       const rows = Array.from(container.querySelectorAll(row));
       const timeRow = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Edited'));
-      expect(timeRow).to.have.length(1);
-      expect(timeRow[0].querySelector(rowValue).textContent).to.contain('5:00');
-      expect(timeRow[0].querySelector(rowUnits).textContent).to.contain('pm');
+      expect(timeRow).to.have.length(0);
+      // Initial Carb Amount still renders.
+      const initial = rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Initial Carb Amount'));
+      expect(initial).to.have.length(1);
+    });
+
+    it('should NOT show "Time Edited" for a single-decision deletion, but still labels it Deleted', () => {
+      // twiist deletion: one decision (food 0 / originalFood 30), no later decision, no
+      // payload -> the 2:26 edit time isn't in the data, so show no time row rather than
+      // the 2:15 entry decision time.
+      const deletedCarb = {
+        ...loop,
+        tags: { ...loop.tags, carbsEdited: true, entryTimeDiffers: false },
+        nutrition: { ...loop.nutrition, carbohydrate: { net: 0, units: 'grams' } },
+        dosingDecision: {
+          time: Date.parse('2024-02-02T18:15:00.000Z'), // entry/bolus decision, not the edit
+          food: { time: '2024-02-02T18:14:48.000Z', nutrition: { carbohydrate: { net: 0 } } },
+          originalFood: { time: '2024-02-02T18:14:48.000Z', nutrition: { carbohydrate: { net: 30 } } },
+        },
+      };
+      const { container } = render(<FoodTooltip {...props} food={deletedCarb} />);
+      expect(container.querySelector(carbLabel).textContent).to.contain('Deleted');
+      const rows = Array.from(container.querySelectorAll(row));
+      expect(rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Initial Carb Amount'))).to.have.length(1);
+      expect(rows.filter(n => n.querySelector(rowLabel)?.textContent.includes('Time Edited'))).to.have.length(0);
     });
 
     it('should show "Time Entered" and "Time Edited" for multiple dosingDecisions', () => {
