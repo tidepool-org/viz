@@ -27,7 +27,7 @@ import {
   isTidepoolLoop,
   isTrio,
   isTwiistLoop,
-  getDeviceName,
+  getDeviceNames,
 } from '../device';
 
 import {
@@ -540,7 +540,7 @@ export function basicsText(patient, data, stats, aggregations, copyAsTextMetadat
   if (devices.length) {
     const textLines = [
       `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, d => getDeviceName(d)),
+      ...getDeviceNames(devices),
     ];
 
     _.each(textLines, line => {

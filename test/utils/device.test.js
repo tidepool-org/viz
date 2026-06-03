@@ -513,7 +513,7 @@ describe('device utility functions', () => {
 
     it('returns "Dexcom API" for a continuous Dexcom-manufactured upload', () => {
       const upload = { dataSetType: 'continuous', deviceManufacturers: ['Dexcom'] };
-      expect(device.deriveLabel('Dexcom-XXX', upload)).to.equal('Dexcom API');
+      expect(device.deriveLabel('Dexcom-XXX', upload)).to.equal('Dexcom (from Dexcom Account)');
     });
 
     it('returns "FreeStyle Libre (from LibreView)" for a continuous Abbott-manufactured upload', () => {
