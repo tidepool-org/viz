@@ -66,7 +66,6 @@ const FoodTooltip = (props) => {
       const { dosingDecision, originalDosingDecision } = food;
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
-      const latestUpdatedTime = food.payload?.userUpdatedDate;
       const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
       if (absorptionTime > 0) {
@@ -147,13 +146,12 @@ const FoodTooltip = (props) => {
             );
           }
 
-          // Only show "Time Edited" when a genuine later edit decision exists. An
+          // Show "Time Edited" only when a genuine later edit decision exists. An
           // originalDosingDecision means a multi-decision chain, so `dosingDecision` is a
-          // real post-entry edit. For a single-decision edit -- e.g. a twiist deletion,
-          // which encodes the whole change in one decision -- `dosingDecision` IS the entry
-          // decision, so its time is the entry time, not the edit. The source doesn't carry
-          // the edit time on a linkable record there, so suppress rather than mislabel; the
-          // payload-based "Last Edited" row below still surfaces a real edit time if present.
+          // real post-entry edit. For a single-decision edit -- e.g. a twiist deletion that
+          // encodes the whole change in one decision -- `dosingDecision` IS the entry
+          // decision, so its time is the entry time, not the edit; omit the row rather than
+          // show the entry time as an edit.
           if (originalDosingDecision) {
             rows.push(
               <div key={'timeEdited'} className={styles.row}>
@@ -185,39 +183,24 @@ const FoodTooltip = (props) => {
         }
       }
 
-      // Skip the payload-based timestamp row only when the DD-driven "Time Edited" row
-      // above actually rendered (a multi-decision chain), to avoid a duplicate. For a
-      // single-decision edit we suppressed "Time Edited" above, so let the payload
-      // "Last Edited" row surface here when the source carries one.
-      const carbsEditedHandledAbove = !!originalDosingDecision && food.tags?.carbsEdited;
-      if (!carbsEditedHandledAbove && (latestUpdatedTime || timeOfEntry)) {
+      // Show "Time of Entry" for a back-logged entry (payload userCreatedDate differs from
+      // the eaten time), unless the dosing-decision rows above ("Time Entered"/"Time Edited")
+      // already convey an amount or time edit.
+      const editHandledAbove = !!dosingDecision
+        && ((food.tags?.carbsEdited && !!originalDosingDecision) || food.tags?.entryTimeDiffers);
+      if (!editHandledAbove && timeOfEntry) {
         rows.push(<div key={'divider'} className={styles.divider} />);
-
-        if (latestUpdatedTime) {
-          rows.push((
-            <div key={'latestUpdatedTime'} className={styles.row}>
-              <div className={styles.label}>{t('Last Edited')}</div>
-              <div className={styles.value}>
-                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'h:mm')}
-              </div>
-              <div className={styles.units}>
-                {formatLocalizedFromUTC(latestUpdatedTime, props.timePrefs, 'a')}
-              </div>
+        rows.push((
+          <div key={'timeOfEntry'} className={styles.row}>
+            <div className={styles.label}>{t('Time of Entry')}</div>
+            <div className={styles.value}>
+              {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'h:mm')}
             </div>
-          ));
-        } else {
-          rows.push((
-            <div key={'timeOfEntry'} className={styles.row}>
-              <div className={styles.label}>{t('Time of Entry')}</div>
-              <div className={styles.value}>
-                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'h:mm')}
-              </div>
-              <div className={styles.units}>
-                {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'a')}
-              </div>
+            <div className={styles.units}>
+              {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'a')}
             </div>
-          ));
-        }
+          </div>
+        ));
       }
     }
 
