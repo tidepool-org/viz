@@ -16,19 +16,19 @@
  */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import Header from '../../../../src/components/settings/common/Header';
 
 describe('Header', () => {
   it('should render the device upload date', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Header
         deviceDisplayName="Testing"
         deviceMeta={{ name: 'SN123', uploaded: 'Jul 12th 2016' }}
         printView={false}
       />
     );
-    expect(wrapper.find('span').text()).to.equal('Active at Upload on Jul 12th 2016');
+    expect(container.querySelector('span').textContent).to.equal('Active at Upload on Jul 12th 2016');
   });
 });

@@ -165,6 +165,9 @@ class DailyPrintView extends PrintView {
         other: '#BFBFBF',
       },
       carbs: '#F8D48E',
+      carbsDeleted: colors.gray05,
+      carbsStrikeText: '#454545',
+      carbsStrikeLine: '#ADADAD',
       carbExchanges: '#FFB686',
       lightDividers: '#D8D8D8',
     });
@@ -227,10 +230,11 @@ class DailyPrintView extends PrintView {
     // kick off the dynamic calculation of chart area based on font sizes for header and footer
     this.setHeaderSize().setFooterSize().calculateChartMinimums(this.chartArea);
 
-    // calculate heights and place charts in preparation for rendering
     _.each(selectedDates, (date) => {
       this.calculateDateChartHeight(this.chartsByDate[date]);
     });
+
+    this.deviceNamesHeader = this.generateDeviceNamesHeader();
 
     while (this.chartsPlaced < selectedDates.length) {
       this.placeChartsOnPage();
@@ -309,6 +313,27 @@ class DailyPrintView extends PrintView {
           _.some(dateData.food || [], event => _.get(event, 'nutrition.carbohydrate.net'))
         ) || this.hasCarbExchanges,
         labels: this.hasCarbExchanges ? [t('Carbs (g)'), t('Carb exch.')] : [t('Carbs (g)')],
+      },
+      {
+        type: 'carbsEdited',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
+          _.some(dateData.food || [], event => _.get(event, 'tags.carbsEdited') && _.get(event, 'nutrition.carbohydrate.net') > 0)
+        ),
+        labels: [t('Carbs'), t('edited')],
+      },
+      {
+        type: 'carbsEditedTime',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
+          _.some(dateData.food || [], event => _.get(event, 'tags.entryTimeDiffers') && !_.get(event, 'tags.carbsEdited'))
+        ),
+        labels: [t('Carbs, time'), t('differs')],
+      },
+      {
+        type: 'carbsDeleted',
+        show: _.some(this.aggregationsByDate?.dataByDate, dateData =>
+          _.some(dateData.food || [], event => _.get(event, 'tags.carbsEdited') && !_.get(event, 'nutrition.carbohydrate.net'))
+        ),
+        labels: [t('Carbs'), t('deleted')],
       },
       {
         type: EVENT_PHYSICAL_ACTIVITY,
@@ -460,7 +485,13 @@ class DailyPrintView extends PrintView {
   }
 
   placeChartsOnPage() {
-    const { topEdge, bottomEdge } = this.chartArea;
+    const hasDeviceNamesHeader = this.currentPageIndex === -1; // Rendered only on first page
+
+    const bottomEdge = this.chartArea.bottomEdge;
+    let topEdge = this.chartArea.topEdge;
+
+    if (hasDeviceNamesHeader) topEdge += this.deviceNamesHeader.height;
+
     let totalChartHeight = 0;
     const dates = _.keys(this.chartsByDate);
     const startingIndexThisPage = this.chartIndex;
@@ -482,8 +513,8 @@ class DailyPrintView extends PrintView {
       const chart = this.chartsByDate[dates[i]];
       chart.page = this.currentPageIndex + 1;
       if (i === startingIndexThisPage) {
-        chart.topEdge = this.chartArea.topEdge;
-        chart.bottomEdge = this.chartArea.topEdge + chart.chartHeight;
+        chart.topEdge = topEdge;
+        chart.bottomEdge = topEdge + chart.chartHeight;
       } else {
         chart.topEdge =
           this.chartsByDate[dates[i - 1]].bottomEdge + this.chartMinimums.paddingBelow;
@@ -530,8 +561,14 @@ class DailyPrintView extends PrintView {
   }
 
   render() {
+    let chartIndex = 0;
+
     _.each(this.chartsByDate, (dateChart) => {
       this.goToPage(dateChart.page);
+
+      // only rendered on first page
+      if (chartIndex === 0) this.renderDeviceNamesHeader();
+
       this.renderSummary(dateChart)
         .renderXAxes(dateChart)
         .renderYAxes(dateChart)
@@ -545,6 +582,8 @@ class DailyPrintView extends PrintView {
         .renderBasalRates(dateChart)
         .renderPumpSettingsOverrides(dateChart)
         .renderChartDivider(dateChart);
+
+      chartIndex++;
     });
 
     if (this.hasAlarms) this.renderAlarmsFootnote();
@@ -1020,52 +1059,174 @@ class DailyPrintView extends PrintView {
 
       const carbs = getCarbs(insulinEvent);
 
-      if (carbs && !insulinEvent.carbInputGeneratedFromFoodData) {
+      if (carbs && !insulinEvent.tags?.carbInputGeneratedFromFoodData) {
         const circleOffset = 1;
-        const textOffset = 1.75;
         const carbUnits = _.get(getWizardFromInsulinEvent(insulinEvent), 'carbUnits');
-        const carbFillColor = (carbUnits === 'exchanges') ? this.colors.carbExchanges : this.colors.carbs;
+        const fillColor = (carbUnits === 'exchanges') ? this.colors.carbExchanges : this.colors.carbs;
         const carbsX = xScale(getBolusFromInsulinEvent(insulinEvent).normalTime);
         const carbsY = bolusScale(getMaxValue(insulinEvent)) - this.carbRadius - circleOffset;
-        this.doc.circle(carbsX, carbsY, this.carbRadius)
-          .fill(carbFillColor);
-        this.doc.font(this.font)
-          .fontSize(this.carbsFontSize)
-          .fillColor('black')
-          .text(
-            carbs,
-            carbsX - this.carbRadius * 2,
-            carbsY - textOffset,
-            { align: 'center', width: this.carbRadius * 4 }
-          );
+        this.renderCarbCircle(carbsX, carbsY, carbs, { fillColor });
       }
     });
 
     return this;
   }
 
-  renderFoodCarbs({ data: { food }, xScale, topEdge }) {
-    const carbsY = topEdge + 15;
-    const textOffset = 1.75;
+  /**
+   * Renders a single carb circle at the given center position.
+   *
+   * @param {number} x - Horizontal center of the circle.
+   * @param {number} centerY - Vertical center of the circle.
+   * @param {string|number} value - The carb value to display.
+   * @param {Object} [opts] - Optional rendering overrides.
+   * @param {string} [opts.fillColor=this.colors.carbs] - Circle fill color.
+   * @param {boolean} [opts.dashed=false] - Whether to add a dashed black outline.
+   */
+  renderCarbCircle(x, centerY, value, opts = {}) {
+    const { fillColor = this.colors.carbs, dashed = false } = opts;
+    const textOffset = this.carbRadius / 2;
+
+    this.doc.circle(x, centerY, this.carbRadius)
+      .fill(fillColor);
+
+    if (dashed) {
+      this.doc.save();
+      this.doc.circle(x, centerY, this.carbRadius)
+        .lineWidth(0.6)
+        .dash(1.65, { space: 1.65 })
+        .stroke('black');
+      this.doc.restore();
+    }
+
+    this.doc.font(this.font)
+      .fontSize(this.carbsFontSize)
+      .fillColor('black')
+      .text(
+        value,
+        x - this.carbRadius * 2,
+        centerY - textOffset,
+        { align: 'center', width: this.carbRadius * 4 }
+      );
+
+    this.resetText();
+  }
+
+  /**
+   * Renders a carb obround (pill shape) with two stacked values — a struck-through
+   * original on top and the current value on the bottom — with a dashed outline.
+   *
+   * @param {number} x - Horizontal center of the obround.
+   * @param {number} centerY - Vertical center of the obround.
+   * @param {string|number} originalValue - Top value (struck-through).
+   * @param {string|number} currentValue - Bottom value.
+   * @param {Object} [opts] - Optional rendering overrides.
+   * @param {string} [opts.fillColor=this.colors.carbs] - Obround fill color.
+   */
+  renderCarbObround(x, centerY, originalValue, currentValue, opts = {}) {
+    const { fillColor = this.colors.carbs } = opts;
+
+    const obroundWidth = (Math.round(originalValue) >= 100 || Math.round(currentValue) >= 100)
+      ? this.carbRadius * 2 + 2.5
+      : this.carbRadius * 2;
+
+    const obroundPad = 1.5;
+    const obroundHeight = obroundPad * 3 + this.carbsFontSize * 2 - 1;
+    const obroundX = x - obroundWidth / 2;
+    const obroundY = centerY - obroundHeight / 2;
+
+    this.doc.roundedRect(obroundX, obroundY, obroundWidth, obroundHeight, obroundWidth / 2)
+      .fill(fillColor);
+    this.doc.save();
+    this.doc.roundedRect(obroundX, obroundY, obroundWidth, obroundHeight, obroundWidth / 2)
+      .lineWidth(0.65)
+      .dash(1.6, { space: 1.6 })
+      .stroke('black');
+
+    const topTextY = obroundY + obroundPad + 0.5;
+    const bottomTextY = topTextY + this.carbsFontSize + 0.5;
+
+    const strikeY = topTextY + (this.carbsFontSize / 2) - 0.5;
+    const strikeHalfWidth = (obroundWidth / 2) - 1;
+    this.doc.moveTo(x - strikeHalfWidth, strikeY)
+      .lineTo(x + strikeHalfWidth, strikeY)
+      .lineWidth(0.65)
+      .stroke(this.colors.carbsStrikeLine);
+    this.doc.restore();
+
+    this.doc.font(this.italicFont)
+      .fontSize(this.carbsFontSize)
+      .fillColor(this.colors.carbsStrikeText)
+      .text(
+        originalValue,
+        x - this.carbRadius * 2,
+        topTextY,
+        { align: 'center', width: this.carbRadius * 4 }
+      );
+
+    this.doc.font(this.boldFont)
+      .fontSize(this.carbsFontSize)
+      .fillColor('black')
+      .text(
+        currentValue,
+        x - this.carbRadius * 2,
+        bottomTextY,
+        { align: 'center', width: this.carbRadius * 4 }
+      );
+
+    this.resetText();
+  }
+
+  renderFoodCarbs({ data, xScale, bolusScale, topEdge }) {
+    const food = data?.food || [];
+    if (!food.length) return this;
+
+    // Position food carbs just above the tallest bolus on this chart, with
+    // a small gap. Circle-bottoms and obround-bottoms both align to this line.
+    const allInsulinEvents = [...(data?.insulin || []), ...(data?.bolus || [])];
+    const chartMaxBolus = _.max(_.map(allInsulinEvents, getMaxValue)) || 0;
+    const gap = 2;
+    let carbBottomY;
+    if (chartMaxBolus > 0) {
+      carbBottomY = bolusScale(chartMaxBolus) - gap;
+    } else if (bolusScale) {
+      carbBottomY = bolusScale.range()[1] - gap;
+    } else {
+      carbBottomY = topEdge + 15;
+    }
+
+    const circleCenterY = carbBottomY - this.carbRadius;
+    const obroundPad = 2;
+    const obroundHeight = obroundPad * 3 + this.carbsFontSize * 2 - 1;
+    const obroundCenterY = carbBottomY - obroundHeight / 2;
 
     _.each(food, foodEvent => {
       const carbs = _.get(foodEvent, 'nutrition.carbohydrate.net');
+      const carbsEdited = _.get(foodEvent, 'tags.carbsEdited');
+      const entryTimeDiffers = _.get(foodEvent, 'tags.entryTimeDiffers');
 
-      if (carbs) {
-        const carbsX = xScale(foodEvent.normalTime);
+      if (!carbs && !carbsEdited) return;
 
-        this.doc.circle(carbsX, carbsY, this.carbRadius)
-          .fill(this.colors.carbs);
+      const carbsX = xScale(foodEvent.normalTime);
 
-        this.doc.font(this.font)
-          .fontSize(this.carbsFontSize)
-          .fillColor('black')
-          .text(
-            Math.round(carbs),
-            carbsX - this.carbRadius * 2,
-            carbsY - textOffset,
-            { align: 'center', width: this.carbRadius * 4 }
-          );
+      if (carbsEdited) {
+        const isDeleted = !carbs;
+        const fillColor = isDeleted ? this.colors.carbsDeleted : this.colors.carbs;
+        // Initial value comes from the earliest DD in the edit chain. Prefer
+        // its immutable `originalFood` snapshot over `food`; on multi-edit
+        // chains the latest DD has no originalFood and intermediate DDs' food
+        // is rewritten to the final value, so neither would label correctly.
+        const earliestDosingDecision = _.get(foodEvent, 'originalDosingDecision')
+          ?? _.get(foodEvent, 'dosingDecision');
+        const originalCarbs = _.get(earliestDosingDecision, 'originalFood.nutrition.carbohydrate.net')
+          ?? _.get(earliestDosingDecision, 'food.nutrition.carbohydrate.net');
+        const originalValue = String(Math.round(originalCarbs ?? 0));
+        const currentValue = isDeleted ? '0' : String(Math.round(carbs));
+
+        this.renderCarbObround(carbsX, obroundCenterY, originalValue, currentValue, { fillColor });
+      } else if (entryTimeDiffers) {
+        this.renderCarbCircle(carbsX, circleCenterY, Math.round(carbs), { dashed: true });
+      } else {
+        this.renderCarbCircle(carbsX, circleCenterY, Math.round(carbs));
       }
     });
 
@@ -1429,62 +1590,31 @@ class DailyPrintView extends PrintView {
     // Calculate available width for legend items
     const availableWidth = this.width - (legendXPadding * 2);
 
+    // Icon widths by legend item type
+    const iconWidths = {
+      cbg: 16,
+      smbg: this.smbgRadius * 3,
+      bolus: this.isAutomatedBolusDevice ? this.bolusWidth * 3 : this.bolusWidth,
+      override: this.bolusWidth * 3,
+      interrupted: this.bolusWidth,
+      extended: (this.bolusWidth / 2) + 10,
+      insulin: this.bolusWidth,
+      basals: 23,
+      carbs: this.carbRadius,
+      carbsEdited: this.carbRadius,
+      carbsEditedTime: this.carbRadius,
+      carbsDeleted: this.carbRadius,
+      [EVENT_PHYSICAL_ACTIVITY]: this.eventRadius * 2,
+      [EVENT_NOTES]: this.eventRadius * 2,
+      [EVENT_HEALTH]: this.eventRadius * 2,
+      alarms: this.eventRadius * 2,
+    };
+
     // Function to calculate item width
     const getItemWidth = (item) => {
-      let itemWidth = 0;
-      switch (item.type) {
-        case 'cbg':
-          itemWidth = 16 + 4 + this.doc.widthOfString(t('CGM'));
-          break;
-        case 'smbg':
-          itemWidth = (this.smbgRadius * 3) + 4 + this.doc.widthOfString(t('BGM'));
-          break;
-        case 'bolus':
-          if (this.isAutomatedBolusDevice) {
-            itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('automated'));
-          } else {
-            itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Bolus'));
-          }
-          break;
-        case 'override':
-          itemWidth = (this.bolusWidth * 3) + 4 + this.doc.widthOfString(t('up & down'));
-          break;
-        case 'interrupted':
-          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Interrupted'));
-          break;
-        case 'extended':
-          itemWidth = (this.bolusWidth / 2) + 10 + 4 + this.doc.widthOfString(t('Extended'));
-          break;
-        case 'insulin':
-          itemWidth = this.bolusWidth + 4 + this.doc.widthOfString(t('Insulin, other'));
-          break;
-        case 'basals':
-          if (this.isAutomatedBasalDevice) {
-            itemWidth = 23 + 4 + this.doc.widthOfString(t('automated'));
-          } else {
-            itemWidth = 23 + 4 + this.doc.widthOfString(t('Basals'));
-          }
-          break;
-        case 'carbs':
-          itemWidth = this.carbRadius + 4 + this.doc.widthOfString(t('Carbs (g)'));
-          break;
-        case EVENT_PHYSICAL_ACTIVITY:
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Exercise'));
-          break;
-        case EVENT_NOTES:
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Note'));
-          break;
-        case EVENT_HEALTH:
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Health'));
-          break;
-        case 'alarms':
-          itemWidth = (this.eventRadius * 2) + 4 + this.doc.widthOfString(t('Alarm'));
-          break;
-        default:
-          itemWidth = 0;
-          break;
-      }
-      return itemWidth;
+      const iconWidth = iconWidths[item.type] ?? 0;
+      const maxLabelWidth = _.max(_.map(item.labels, label => this.doc.widthOfString(label))) || 0;
+      return iconWidth + 4 + maxLabelWidth;
     };
 
     // Chunk items into rows based on available width
@@ -1859,32 +1989,42 @@ class DailyPrintView extends PrintView {
           }
 
           case 'carbs': {
-            const carbsYPos = {
-              circle: rowVerticalMiddle,
-              carbs: rowVerticalMiddle - this.carbRadius / 2,
-            };
+            let carbsCircleY = rowVerticalMiddle;
 
             if (this.hasCarbExchanges) {
-              carbsYPos.circle -= (paddedLineHeight / 2 + 1);
-              carbsYPos.carbs -= (paddedLineHeight / 2 + 1);
+              carbsCircleY -= (paddedLineHeight / 2 + 1);
             }
 
-            this.doc.circle(cursor, carbsYPos.circle, this.carbRadius).fill(this.colors.carbs);
-
-            this.doc.fillColor('black').fontSize(this.carbsFontSize)
-              .text('25', cursor - this.carbRadius, carbsYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+            this.renderCarbCircle(cursor, carbsCircleY, '25');
 
             if (this.hasCarbExchanges) {
-              const exchangesYPos = {
-                circle: carbsYPos.circle + paddedLineHeight,
-                carbs: carbsYPos.carbs + paddedLineHeight,
-              };
-
-              this.doc.circle(cursor, exchangesYPos.circle, this.carbRadius).fill(this.colors.carbExchanges);
-
-              this.doc.fillColor('black').fontSize(this.carbsFontSize)
-                .text('2', cursor - this.carbRadius, exchangesYPos.carbs, { align: 'center', width: this.carbRadius * 2 });
+              const exchangesCircleY = carbsCircleY + paddedLineHeight;
+              this.renderCarbCircle(cursor, exchangesCircleY, '2', { fillColor: this.colors.carbExchanges });
             }
+
+            cursor += this.carbRadius;
+            cursor = renderLabels(item, cursor, rowIndex);
+            break;
+          }
+
+          case 'carbsEdited': {
+            this.renderCarbObround(cursor, rowVerticalMiddle, '60', '85');
+
+            cursor += this.carbRadius;
+            cursor = renderLabels(item, cursor, rowIndex);
+            break;
+          }
+
+          case 'carbsEditedTime': {
+            this.renderCarbCircle(cursor, rowVerticalMiddle, '25', { dashed: true });
+
+            cursor += this.carbRadius;
+            cursor = renderLabels(item, cursor, rowIndex);
+            break;
+          }
+
+          case 'carbsDeleted': {
+            this.renderCarbObround(cursor, rowVerticalMiddle, '20', '0', { fillColor: this.colors.carbsDeleted });
 
             cursor += this.carbRadius;
             cursor = renderLabels(item, cursor, rowIndex);

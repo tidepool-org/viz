@@ -478,4 +478,76 @@ describe('device utility functions', () => {
       expect(device.getUppercasedManufacturer('trio')).to.equal('Trio');
     });
   });
+
+  describe('getDeviceName', () => {
+    it('returns the device friendly name if it exists', () => {
+      const deviceObject = { deviceName: 'Cooltec Alpha Super Ultra', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha Super Ultra');
+    });
+
+    it('returns the device label if device friendly name doesn\'t exist', () => {
+      const deviceObject = { label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha A1');
+    });
+
+    it('returns the device label if device friendly name is `Unknown`', () => {
+      const deviceObject = { deviceName: 'Unknown', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('Cooltec Alpha A1');
+    });
+
+    it('returns the device id if label doesn\'t exist', () => {
+      const deviceObject = { deviceName: 'Unknown', id: 'cool-c-a1' };
+      expect(device.getDeviceName(deviceObject)).to.equal('cool-c-a1');
+    });
+
+    it('returns null if id doesn\'t exist', () => {
+      const deviceObject = { foo: 'bar' };
+      expect(device.getDeviceName(deviceObject)).to.be.null;
+    });
+  });
+
+  describe('deriveLabel', () => {
+    it('returns the deviceId when no upload is provided', () => {
+      expect(device.deriveLabel('SomeDeviceId', null)).to.equal('SomeDeviceId');
+    });
+
+    it('returns "Dexcom API" for a continuous Dexcom-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Dexcom'] };
+      expect(device.deriveLabel('Dexcom-XXX', upload)).to.equal('Dexcom (from Dexcom Account)');
+    });
+
+    it('returns "FreeStyle Libre (from LibreView)" for a continuous Abbott-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Abbott'] };
+      expect(device.deriveLabel('AbbottFreeStyleLibre-XXX', upload)).to.equal('FreeStyle Libre (from LibreView)');
+    });
+
+    it('returns "twiist" for a continuous Sequel-manufactured upload', () => {
+      const upload = { dataSetType: 'continuous', deviceManufacturers: ['Sequel'] };
+      expect(device.deriveLabel('twiist-XXX', upload)).to.equal('twiist');
+    });
+
+    it('joins manufacturer and model for non-special-cased uploads', () => {
+      const upload = { deviceManufacturers: ['Tandem'], deviceModel: '12345' };
+      expect(device.deriveLabel('tandem12345', upload)).to.equal('Tandem 12345');
+    });
+
+    it('uses model alone when manufacturer is missing', () => {
+      const upload = { deviceModel: '12345' };
+      expect(device.deriveLabel('tandem12345', upload)).to.equal('12345');
+    });
+
+    it('returns "Trio" when manufacturer/model are absent and origin matches Trio', () => {
+      const upload = { origin: { name: 'org.nightscout.Trio' } };
+      expect(device.deriveLabel('MyTrio123', upload)).to.equal('Trio');
+    });
+
+    it('falls back to the deviceId when no manufacturer/model/Trio signal is present', () => {
+      expect(device.deriveLabel('MysteryDevice', {})).to.equal('MysteryDevice');
+    });
+
+    it('appends "(Control-IQ)" when the deviceId starts with "tandemCIQ"', () => {
+      const upload = { deviceManufacturers: ['Tandem'], deviceModel: '12345' };
+      expect(device.deriveLabel('tandemCIQ12345', upload)).to.equal('Tandem 12345 (Control-IQ)');
+    });
+  });
 });

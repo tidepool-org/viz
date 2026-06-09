@@ -17,7 +17,7 @@
 
 import React from 'react';
 
-import { mount } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -32,7 +32,7 @@ import { TWENTY_FOUR_HRS } from '../../../../src/utils/datetime';
 import XAxisLabels from '../../../../src/components/trends/common/XAxisLabels';
 
 describe('XAxisLabels', () => {
-  let wrapper;
+  let container;
   const props = {
     margins: {
       top: 0,
@@ -45,20 +45,19 @@ describe('XAxisLabels', () => {
   };
 
   before(() => {
-    wrapper = mount(
+    ({ container } = render(
       <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
         <XAxisLabels {...props} />
       </SVGContainer>
-    );
+    ));
   });
 
   it('should render eight text labels at three hour intervals', () => {
-    const labels = wrapper.find('text');
+    const labels = container.querySelectorAll('text');
     expect(labels).to.have.length(8);
-    // Enzyme forEach cannot be replaced by _.forEach
     // eslint-disable-next-line lodash/prefer-lodash-method
     labels.forEach((label, i) => {
-      expect(label.prop('x')).to.equal(xScale(i * (TWENTY_FOUR_HRS / 8)));
+      expect(Number(label.getAttribute('x'))).to.equal(xScale(i * (TWENTY_FOUR_HRS / 8)));
     });
   });
 });

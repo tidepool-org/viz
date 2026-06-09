@@ -126,6 +126,10 @@ export const getTarget = (bolus, bgPrefs, timePrefs, unitStyles) => {
     // loop / trio
     const schedules = _.get(bolus, 'dosingDecision.bgTargetSchedule', []);
     const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < msPer24);
+    if (!range || (!_.isFinite(range.low) && !_.isFinite(range.high))) {
+      // no dosing decision / no target schedule -> nothing to show
+      return null;
+    }
     const label = isTrio(bolus) ? t('Glucose Targets') : t('Correction Range');
     return (
       <div className={styles.target}>
@@ -265,9 +269,13 @@ const BolusTooltip = (props) => {
         <div className={unitStyles} />
       </div>
     );
+    const foodTime = wizard?.foodTime ?? wizard?.dosingDecision?.food?.time;
+    const carbsLabel = wizard?.tags?.foodTimeDiffers
+      ? t('Carbs (eaten at {{time}})', { time: formatLocalizedFromUTC(foodTime, props.timePrefs, 'h:mm a') })
+      : t('Carbs');
     const carbsLine = !!carbsValue && (
       <div className={styles.carbs}>
-        <div className={styles.label}>{t('Carbs')}</div>
+        <div className={styles.label}>{carbsLabel}</div>
         <div className={styles.value}>{carbsValue}</div>
         <div className={unitStyles}>{carbUnits}</div>
       </div>
@@ -302,6 +310,8 @@ const BolusTooltip = (props) => {
         <div className={unitStyles} />
       </div>
     );
+    const targetLine = (!!bg || isLoop(wizard) || isTrio(wizard))
+      && getTarget(wizard, props.bgPrefs, props.timePrefs, unitStyles);
 
     return (
       <div className={styles.container}>
@@ -314,12 +324,12 @@ const BolusTooltip = (props) => {
         {overrideLine}
         {interruptedLine}
         {deliveredLine}
-        {(icRatioLine || isfLine || bg || isAnimasExtendedValue || isMedronicDeconvertedExchangeValue) && (
+        {(icRatioLine || isfLine || targetLine || isAnimasExtendedValue || isMedronicDeconvertedExchangeValue) && (
           <div className={styles.divider} />
         )}
         {icRatioLine}
         {isfLine}
-        {!!bg && getTarget(wizard, props.bgPrefs, unitStyles)}
+        {targetLine}
         {animasExtendedAnnotationMessage(wizard)}
         {medronicDeconvertedExchangeMessage(wizard)}
       </div>

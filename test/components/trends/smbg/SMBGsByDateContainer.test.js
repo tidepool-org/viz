@@ -18,7 +18,7 @@
 import _ from 'lodash';
 import React from 'react';
 
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { THREE_HRS } from '../../../../src/utils/datetime';
 
@@ -29,14 +29,25 @@ const {
   trendsYScale: yScale,
 } = scales.trends;
 
-import SMBGDateLineAnimated from '../../../../src/components/trends/smbg/SMBGDateLineAnimated';
-import SMBGDatePointsAnimated from '../../../../src/components/trends/smbg/SMBGDatePointsAnimated';
+// eslint-disable-next-line arrow-body-style
+jest.mock('../../../../src/components/trends/smbg/SMBGDateLineAnimated', () => {
+  return function MockSMBGDateLineAnimated() {
+    return <div data-testid="smbg-date-line-animated" />;
+  };
+});
+
+// eslint-disable-next-line arrow-body-style
+jest.mock('../../../../src/components/trends/smbg/SMBGDatePointsAnimated', () => {
+  return function MockSMBGDatePointsAnimated() {
+    return <div data-testid="smbg-date-points-animated" />;
+  };
+});
 
 import SMBGsByDateContainer
   from '../../../../src/components/trends/smbg/SMBGsByDateContainer';
 
 describe('SMBGsByDateContainer', () => {
-  let wrapper;
+  let container;
 
   const props = {
     bgBounds,
@@ -59,32 +70,32 @@ describe('SMBGsByDateContainer', () => {
   };
 
   before(() => {
-    wrapper = shallow(<SMBGsByDateContainer {...props} />);
+    container = render(<SMBGsByDateContainer {...props} />).container;
   });
 
   describe('when data is provided', () => {
     it('should render an SMBGLineAnimated for each date in dates', () => {
-      expect(wrapper.find(SMBGDateLineAnimated).length).to.equal(props.dates.length);
+      expect(container.querySelectorAll('[data-testid="smbg-date-line-animated"]').length).to.equal(props.dates.length);
     });
 
     it('should render an SMBGDatePointsAnimated for each date in dates', () => {
-      expect(wrapper.find(SMBGDatePointsAnimated).length).to.equal(props.dates.length);
+      expect(container.querySelectorAll('[data-testid="smbg-date-points-animated"]').length).to.equal(props.dates.length);
     });
   });
 
   describe('when no data is provided', () => {
-    let noDataWrapper;
+    let noDataContainer;
     before(() => {
       const noDataProps = _.assign({}, props, { data: [] });
-      noDataWrapper = shallow(<SMBGsByDateContainer {...noDataProps} />);
+      noDataContainer = render(<SMBGsByDateContainer {...noDataProps} />).container;
     });
 
     it('should (still) render an SMBGLineAnimated for each date in dates', () => {
-      expect(noDataWrapper.find(SMBGDateLineAnimated).length).to.equal(props.dates.length);
+      expect(noDataContainer.querySelectorAll('[data-testid="smbg-date-line-animated"]').length).to.equal(props.dates.length);
     });
 
     it('should (still) render an SMBGDatePointsAnimated for each date in dates', () => {
-      expect(noDataWrapper.find(SMBGDatePointsAnimated).length).to.equal(props.dates.length);
+      expect(noDataContainer.querySelectorAll('[data-testid="smbg-date-points-animated"]').length).to.equal(props.dates.length);
     });
   });
 });

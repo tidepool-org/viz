@@ -18,7 +18,7 @@
 /* eslint-disable max-len */
 
 import React from 'react';
-import { shallow } from 'enzyme';
+import { render } from '@testing-library/react/pure';
 
 import { detail } from '../../../helpers/scales';
 const { detailXScale, detailBasalScale } = detail;
@@ -29,36 +29,36 @@ import { singleSuspend, multipleSuspends, suspendsWithoutDuration } from '../../
 
 describe('Suspend', () => {
   it('should return `null` if input `suspends` prop is empty', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Suspend suspends={[]} xScale={detailXScale} yScale={detailBasalScale} />
     );
-    expect(wrapper.html()).to.be.null;
+    expect(container.firstChild).to.be.null;
   });
 
   it('should return a `<g>` with as many markers as required', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Suspend suspends={singleSuspend} xScale={detailXScale} yScale={detailBasalScale} />
     );
-    expect(wrapper.find(`#suspends-${singleSuspend[0].id}-thru-${singleSuspend[singleSuspend.length - 1].id}`).length).to.equal(1);
-    expect(wrapper.find('line').length).to.equal(singleSuspend.length * 2);
-    expect(wrapper.find('circle').length).to.equal(singleSuspend.length * 2);
-    expect(wrapper.find('text').length).to.equal(singleSuspend.length * 2);
-    const multiWrapper = shallow(
+    expect(container.querySelectorAll(`#suspends-${singleSuspend[0].id}-thru-${singleSuspend[singleSuspend.length - 1].id}`).length).to.equal(1);
+    expect(container.querySelectorAll('line').length).to.equal(singleSuspend.length * 2);
+    expect(container.querySelectorAll('circle').length).to.equal(singleSuspend.length * 2);
+    expect(container.querySelectorAll('text').length).to.equal(singleSuspend.length * 2);
+    const { container: multiContainer } = render(
       <Suspend suspends={multipleSuspends} xScale={detailXScale} yScale={detailBasalScale} />
     );
-    expect(multiWrapper.find(`#suspends-${multipleSuspends[0].id}-thru-${multipleSuspends[multipleSuspends.length - 1].id}`).length).to.equal(1);
-    expect(multiWrapper.find('line').length).to.equal(multipleSuspends.length * 2);
-    expect(multiWrapper.find('circle').length).to.equal(multipleSuspends.length * 2);
-    expect(multiWrapper.find('text').length).to.equal(multipleSuspends.length * 2);
+    expect(multiContainer.querySelectorAll(`#suspends-${multipleSuspends[0].id}-thru-${multipleSuspends[multipleSuspends.length - 1].id}`).length).to.equal(1);
+    expect(multiContainer.querySelectorAll('line').length).to.equal(multipleSuspends.length * 2);
+    expect(multiContainer.querySelectorAll('circle').length).to.equal(multipleSuspends.length * 2);
+    expect(multiContainer.querySelectorAll('text').length).to.equal(multipleSuspends.length * 2);
   });
 
   it('should not render suspend markers for suspends without durations', () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Suspend suspends={suspendsWithoutDuration} xScale={detailXScale} yScale={detailBasalScale} />
     );
-    expect(wrapper.find(`#suspends-${suspendsWithoutDuration[0].id}-thru-${suspendsWithoutDuration[suspendsWithoutDuration.length - 1].id}`).length).to.equal(1);
-    expect(wrapper.find('line').length).to.equal(2);
-    expect(wrapper.find('circle').length).to.equal(2);
-    expect(wrapper.find('text').length).to.equal(2);
+    expect(container.querySelectorAll(`#suspends-${suspendsWithoutDuration[0].id}-thru-${suspendsWithoutDuration[suspendsWithoutDuration.length - 1].id}`).length).to.equal(1);
+    expect(container.querySelectorAll('line').length).to.equal(2);
+    expect(container.querySelectorAll('circle').length).to.equal(2);
+    expect(container.querySelectorAll('text').length).to.equal(2);
   });
 });

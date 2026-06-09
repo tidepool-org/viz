@@ -19,7 +19,17 @@ import _ from 'lodash';
 import moment from 'moment';
 import i18next from 'i18next';
 
-import { getPumpVocabulary, getUppercasedManufacturer, isDIYLoop, isLoop, isTidepoolLoop, isTrio, isTwiistLoop } from '../device';
+import {
+  getPumpVocabulary,
+  getUppercasedManufacturer,
+  isDIYLoop,
+  isLoop,
+  isTidepoolLoop,
+  isTrio,
+  isTwiistLoop,
+  getDeviceNames,
+} from '../device';
+
 import {
   generateBgRangeLabels,
   reshapeBgClassesToBgBounds,
@@ -530,7 +540,7 @@ export function basicsText(patient, data, stats, aggregations, copyAsTextMetadat
   if (devices.length) {
     const textLines = [
       `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, ({ id, label }) => label || id),
+      ...getDeviceNames(devices),
     ];
 
     _.each(textLines, line => {

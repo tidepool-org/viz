@@ -108,6 +108,7 @@ describe('PrintView', () => {
   beforeEach(() => {
     doc = new Doc({ margin: MARGIN });
     Renderer = new PrintView(doc, data, opts);
+    Renderer.doc.font.resetHistory();
   });
 
   describe('class constructor', () => {
@@ -1210,6 +1211,7 @@ describe('PrintView', () => {
         this.onCellBorderAdded = sinon.stub().resolves(true);
         this.onRowAdd = sinon.stub().resolves(true);
         this.onRowAdded = sinon.stub().resolves(true);
+        this.onHeaderAdd = sinon.stub().resolves(true);
         this.onPageAdd = sinon.stub().resolves(true);
         this.onPageAdded = sinon.stub().resolves(true);
         this.onBodyAdded = sinon.stub().resolves(true);
@@ -1294,6 +1296,11 @@ describe('PrintView', () => {
       sinon.assert.calledOnce(Renderer.table.onPageAdded);
     });
 
+    it('should add a listener for the `onHeaderAdd` table event', () => {
+      Renderer.renderTable([], [], {}, TableStub, FitColumnStub);
+      sinon.assert.calledOnce(Renderer.table.onHeaderAdd);
+    });
+
     it('should add a listener for the `onCellBackgroundAdd` table event', () => {
       Renderer.renderTable([], [], {}, TableStub, FitColumnStub);
       sinon.assert.calledOnce(Renderer.table.onCellBackgroundAdd);
@@ -1372,12 +1379,28 @@ describe('PrintView', () => {
     });
 
     describe('onPageAdded', () => {
-      it('should add a table header', () => {
+      it('should add a table header when row is not a header row', () => {
         Renderer.renderTable([], [], {}, TableStub, FitColumnStub);
         sinon.assert.notCalled(Renderer.table.addHeader);
 
         Renderer.onPageAdded(Renderer.table);
         sinon.assert.calledOnce(Renderer.table.addHeader);
+      });
+
+      it('should not add a table header when row is a header row', () => {
+        Renderer.renderTable([], [], {}, TableStub, FitColumnStub);
+        sinon.assert.notCalled(Renderer.table.addHeader);
+
+        Renderer.onPageAdded(Renderer.table, { _isHeader: true });
+        sinon.assert.notCalled(Renderer.table.addHeader);
+      });
+    });
+
+    describe('onHeaderAdd', () => {
+      it('should set _isHeader to true on the row', () => {
+        const row = {};
+        Renderer.onHeaderAdd(Renderer.table, row);
+        expect(row._isHeader).to.be.true; // eslint-disable-line no-underscore-dangle
       });
     });
 
