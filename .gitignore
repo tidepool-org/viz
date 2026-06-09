@@ -17,3 +17,7 @@ package-lock.json
 !.yarn/versions
 
 .codegpt
+.claude/settings.local.json
+.pi
+.pi-lens
+.apo

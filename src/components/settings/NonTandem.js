@@ -27,7 +27,7 @@ import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
 import { deviceName, insulinSettings, presetSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
-import { isLoop } from '../../utils/device';
+import { isLoop, isTrio } from '../../utils/device';
 
 import styles from './NonTandem.css';
 
@@ -52,7 +52,7 @@ const NonTandem = (props) => {
     lookupKey = 'medtronic';
   }
 
-  const showCategoryTitle = !isLoop(pumpSettings);
+  const showCategoryTitle = !isLoop(pumpSettings) && !isTrio(pumpSettings);
 
   function buildTable(rows, columns, title, tableStyle, annotations) {
     return (
@@ -140,7 +140,7 @@ const NonTandem = (props) => {
         );
       }
 
-      if (isLoop(pumpSettings)) {
+      if (isLoop(pumpSettings) || isTrio(pumpSettings)) {
         labelClass = styles.basalScheduleHeader;
         basal.title.secondary = basal.title.secondary.toLowerCase();
 
@@ -295,7 +295,7 @@ const NonTandem = (props) => {
 NonTandem.propTypes = {
   bgUnits: PropTypes.oneOf([MMOLL_UNITS, MGDL_UNITS]).isRequired,
   copySettingsClicked: PropTypes.func.isRequired,
-  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'tidepool loop', 'twiist']).isRequired,
+  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist']).isRequired,
   openedSections: PropTypes.object.isRequired,
   pumpSettings: PropTypes.shape({
     activeSchedule: PropTypes.string.isRequired,

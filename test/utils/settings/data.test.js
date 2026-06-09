@@ -15,6 +15,7 @@
  * == BSD2 LICENSE ==
  */
 
+import _ from 'lodash';
 import * as data from '../../../src/utils/settings/data';
 
 const medtronicMultirateData = require('../../../data/pumpSettings/medtronic/multirate.json');
@@ -22,6 +23,7 @@ const omnipodMultirateData = require('../../../data/pumpSettings/omnipod/multira
 const tandemFlatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
 const tandemMultirateData = require('../../../data/pumpSettings/tandem/multirate.json');
 const loopMultirateData = require('../../../data/pumpSettings/loop/multirate.json');
+const trioMultirateData = require('../../../data/pumpSettings/trio/multirate.json');
 
 describe('[settings] data utils', () => {
   describe('noData', () => {
@@ -454,6 +456,49 @@ describe('[settings] data utils', () => {
           },
         ],
       });
+    });
+
+    it('should return columns and rows for insulin settings from Trio pump settings with safety limit and insulin model', () => {
+      expect(data.insulinSettings(trioMultirateData, 'trio')).to.eql({
+        columns: [
+          { key: 'setting' },
+          { key: 'value' },
+        ],
+        rows: [
+          {
+            setting: 'Minimum Safety Threshold',
+            value: '4.2 mmol/L',
+          },
+          { setting: 'Maximum Basal Rate', value: '3.55 U/hr' },
+          { setting: 'Maximum Bolus', value: '10 U' },
+          {
+            annotations: [
+              'The Rapid-Acting - Adults model assumes peak activity at 75 minutes.',
+            ],
+            setting: 'Insulin Model',
+            value: 'Rapid-Acting - Adults',
+          },
+        ],
+      });
+    });
+
+    it('should not include safety limit row for Trio when bgSafetyLimit is missing', () => {
+      const trioWithoutSafetyLimit = { ...trioMultirateData };
+      delete trioWithoutSafetyLimit.bgSafetyLimit;
+
+      const result = data.insulinSettings(trioWithoutSafetyLimit, 'trio');
+      const settingNames = _.map(result.rows, r => r.setting);
+      expect(settingNames).to.not.include('Minimum Safety Threshold');
+      expect(settingNames).to.not.include('Glucose Safety Limit');
+    });
+
+    it('should not include insulin model row for Trio when insulinModel.modelType is missing', () => {
+      const trioWithoutModel = { ...trioMultirateData, insulinModel: {} };
+
+      const result = data.insulinSettings(trioWithoutModel, 'trio');
+      const settingNames = _.map(result.rows, r => r.setting);
+      expect(settingNames).to.not.include('Insulin Model');
+      expect(settingNames).to.include('Insulin Duration');
     });
 
     it('should return columns and rows with default labels and empty settings placeholder', () => {

@@ -17,12 +17,13 @@
 
 import PropTypes from 'prop-types';
 import React from 'react';
+import moment from 'moment';
 import _ from 'lodash';
 import i18next from 'i18next';
 
 import { formatLocalizedFromUTC } from '../../../utils/datetime';
 import { MS_IN_HOUR } from '../../../utils/constants';
-import { isLoop } from '../../../utils/device';
+import { isLoop, isTrio } from '../../../utils/device';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
 import styles from './FoodTooltip.css';
@@ -61,10 +62,11 @@ const FoodTooltip = (props) => {
       );
     }
 
-    if (isLoop(food)) {
+    if (isLoop(food) || isTrio(food)) {
       const { dosingDecision, originalDosingDecision } = food;
       const absorptionTime = getAbsorptionTime(food);
       const name = getName(food);
+      const timeOfEntry = moment.utc(food.payload?.userCreatedDate).valueOf() !== food.normalTime ? food.payload?.userCreatedDate : undefined;
 
       if (absorptionTime > 0) {
         rows.unshift(
@@ -91,8 +93,14 @@ const FoodTooltip = (props) => {
 
       if (dosingDecision) {
         const currentCarbs = getCarbs(food);
-        const originalCarbs = dosingDecision.originalFood?.nutrition?.carbohydrate?.net
-          ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
+        // Initial carb amount comes from the earliest DD in the edit chain,
+        // preferring its immutable `originalFood` snapshot over `food`. On
+        // multi-edit chains the latest DD has no originalFood, and intermediate
+        // DDs' food has been rewritten to the final value -- so reading either
+        // of those would surface the post-edit number.
+        const earliestDosingDecision = originalDosingDecision || dosingDecision;
+        const originalCarbs = earliestDosingDecision.originalFood?.nutrition?.carbohydrate?.net
+          ?? earliestDosingDecision.food?.nutrition?.carbohydrate?.net;
         const carbsWereEdited = food.tags?.carbsEdited;
         const editedLabel = currentCarbs === 0 ? t('Deleted') : t('Edited');
         const entryTimeDiffExceedsThreshold = food.tags?.entryTimeDiffers;
@@ -138,30 +146,61 @@ const FoodTooltip = (props) => {
             );
           }
 
-          rows.push(
-            <div key={originalDosingDecision ? 'timeLastEdited' : 'timeEdited'} className={styles.row}>
-              <div className={styles.label}>{originalDosingDecision ? t('Time Last Edited') : t('Time Edited')}</div>
-              <div className={styles.value}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+          // Show "Time Edited" only when a genuine later edit decision exists. An
+          // originalDosingDecision means a multi-decision chain, so `dosingDecision` is a
+          // real post-entry edit. For a single-decision edit -- e.g. a twiist deletion that
+          // encodes the whole change in one decision -- `dosingDecision` IS the entry
+          // decision, so its time is the entry time, not the edit; omit the row rather than
+          // show the entry time as an edit.
+          if (originalDosingDecision) {
+            rows.push(
+              <div key={'timeEdited'} className={styles.row}>
+                <div className={styles.label}>{t('Time Edited')}</div>
+                <div className={styles.value}>
+                  {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+                </div>
+                <div className={styles.units}>
+                  {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
+                </div>
               </div>
-              <div className={styles.units}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
-              </div>
-            </div>
-          );
+            );
+          }
         } else if (entryTimeDiffExceedsThreshold) {
+          // Prefer the original-entry decision's time (a time edit's original entry);
+          // fall back to the lone decision's time for a back-logged entry with no lineage.
+          const enteredTimeDecision = originalDosingDecision || dosingDecision;
           rows.push(
             <div key={'timeEntered'} className={styles.row}>
               <div className={styles.label}>{t('Time Entered')}</div>
               <div className={styles.value}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'h:mm')}
+                {formatLocalizedFromUTC(enteredTimeDecision.time, props.timePrefs, 'h:mm')}
               </div>
               <div className={styles.units}>
-                {formatLocalizedFromUTC(dosingDecision.time, props.timePrefs, 'a')}
+                {formatLocalizedFromUTC(enteredTimeDecision.time, props.timePrefs, 'a')}
               </div>
             </div>
           );
         }
+      }
+
+      // Show "Time of Entry" for a back-logged entry (payload userCreatedDate differs from
+      // the eaten time), unless the dosing-decision rows above ("Time Entered"/"Time Edited")
+      // already convey an amount or time edit.
+      const editHandledAbove = !!dosingDecision
+        && ((food.tags?.carbsEdited && !!originalDosingDecision) || food.tags?.entryTimeDiffers);
+      if (!editHandledAbove && timeOfEntry) {
+        rows.push(<div key={'divider'} className={styles.divider} />);
+        rows.push((
+          <div key={'timeOfEntry'} className={styles.row}>
+            <div className={styles.label}>{t('Time of Entry')}</div>
+            <div className={styles.value}>
+              {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'h:mm')}
+            </div>
+            <div className={styles.units}>
+              {formatLocalizedFromUTC(timeOfEntry, props.timePrefs, 'a')}
+            </div>
+          </div>
+        ));
       }
     }
 

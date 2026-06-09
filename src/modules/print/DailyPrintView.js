@@ -1211,8 +1211,14 @@ class DailyPrintView extends PrintView {
       if (carbsEdited) {
         const isDeleted = !carbs;
         const fillColor = isDeleted ? this.colors.carbsDeleted : this.colors.carbs;
-        const originalCarbs = _.get(foodEvent, 'dosingDecision.originalFood.nutrition.carbohydrate.net')
-          ?? _.get(foodEvent, 'originalDosingDecision.food.nutrition.carbohydrate.net');
+        // Initial value comes from the earliest DD in the edit chain. Prefer
+        // its immutable `originalFood` snapshot over `food`; on multi-edit
+        // chains the latest DD has no originalFood and intermediate DDs' food
+        // is rewritten to the final value, so neither would label correctly.
+        const earliestDosingDecision = _.get(foodEvent, 'originalDosingDecision')
+          ?? _.get(foodEvent, 'dosingDecision');
+        const originalCarbs = _.get(earliestDosingDecision, 'originalFood.nutrition.carbohydrate.net')
+          ?? _.get(earliestDosingDecision, 'food.nutrition.carbohydrate.net');
         const originalValue = String(Math.round(originalCarbs ?? 0));
         const currentValue = isDeleted ? '0' : String(Math.round(carbs));
 
