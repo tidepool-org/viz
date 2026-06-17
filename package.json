@@ -4,7 +4,7 @@
     "node": "24.15.0"
   },
   "packageManager": "yarn@3.6.4",
-  "version": "1.56.0",
+  "version": "1.57.0-web-3359.4",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
@@ -84,7 +84,7 @@
     "reductio": "1.0.0",
     "redux": "4.2.1",
     "serialize-svg-path": "0.1.0",
-    "sundial": "1.7.1",
+    "sundial": "1.7.6",
     "svg-to-pdfkit": "0.1.8",
     "text-table": "0.2.0",
     "translate-svg-path": "0.0.1",
