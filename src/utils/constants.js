@@ -182,6 +182,7 @@ export const TANDEM = 'Tandem';
 export const ANIMAS = 'Animas';
 export const TIDEPOOL_LOOP = 'Tidepool Loop';
 export const DIY_LOOP = 'DIY Loop';
+export const TRIO = 'Trio';
 export const TWIIST_LOOP = 'twiist';
 export const MEDTRONIC = 'Medtronic';
 export const MICROTECH = 'Microtech';
@@ -254,6 +255,13 @@ export const pumpVocabulary = {
     [SCHEDULED_DELIVERY]: t('Manual'),
     [SETTINGS_OVERRIDE]: t('Preset'),
     [PHYSICAL_ACTIVITY]: { label: t('Workout'), marker: t('W') },
+    [MAX_BOLUS]: t('Maximum Bolus'),
+    [MAX_BASAL]: t('Maximum Basal Rate'),
+  },
+  [TRIO]: {
+    [AUTOMATED_DELIVERY]: t('Automation'),
+    [AUTOMATED_MODE_EXITED]: t('Off'),
+    [SCHEDULED_DELIVERY]: t('Manual'),
     [MAX_BOLUS]: t('Maximum Bolus'),
     [MAX_BASAL]: t('Maximum Basal Rate'),
   },
@@ -342,3 +350,5 @@ export const INSULIN_MODEL_LABELS = {
   lyumjev: t('Lyumjev'),
   afrezza: t('Afrezza'),
 };
+
+export const DEXCOM_API_DEVICE_LABEL = t('Dexcom (from Dexcom Account)');

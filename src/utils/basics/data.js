@@ -25,8 +25,9 @@ import {
   isDIYLoop,
   isLoop,
   isTidepoolLoop,
+  isTrio,
   isTwiistLoop,
-  getDeviceName,
+  getDeviceNames,
 } from '../device';
 
 import {
@@ -46,6 +47,7 @@ import {
   TANDEM,
   ANIMAS,
   DIY_LOOP,
+  TRIO,
   MEDTRONIC,
   MICROTECH,
   ONE_BUTTON_BOLUS,
@@ -140,7 +142,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3, hideEmpty: !pumpUpload.isAutomatedBolusDevice },
         ];
 
-        if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings)) {
+        if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings) || isTrio(pumpUpload.settings)) {
           dimensions[1].label = t('Meal');
           dimensions.splice(3, 1);
           dimensions[2].selectorIndex = 6;
@@ -245,7 +247,7 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
     if (!_.includes(allowedSources, siteChangeSource)) {
       siteChangeSource = SITE_CHANGE_RESERVOIR;
     }
-  } else if (_.includes(_.map([DIY_LOOP, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
+  } else if (_.includes(_.map([DIY_LOOP, TRIO, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
     siteChangeSource = SITE_CHANGE_TUBING;
   }
 
@@ -538,7 +540,7 @@ export function basicsText(patient, data, stats, aggregations, copyAsTextMetadat
   if (devices.length) {
     const textLines = [
       `\n${t('Devices Uploaded')}`,
-      ..._.map(devices, d => getDeviceName(d)),
+      ...getDeviceNames(devices),
     ];
 
     _.each(textLines, line => {

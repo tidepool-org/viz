@@ -395,6 +395,13 @@ describe('constants', () => {
           [constants.MAX_BOLUS]: 'Maximum Bolus',
           [constants.MAX_BASAL]: 'Maximum Basal Rate',
         },
+        [constants.TRIO]: {
+          [constants.AUTOMATED_DELIVERY]: 'Automation',
+          [constants.AUTOMATED_MODE_EXITED]: 'Off',
+          [constants.SCHEDULED_DELIVERY]: 'Manual',
+          [constants.MAX_BOLUS]: 'Maximum Bolus',
+          [constants.MAX_BASAL]: 'Maximum Basal Rate',
+        },
         [constants.MICROTECH]: {
           [constants.SITE_CHANGE_RESERVOIR]: 'Rewind',
           [constants.SITE_CHANGE_TUBING]: 'Reservoir Prime',

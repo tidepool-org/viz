@@ -6,7 +6,7 @@ import * as bolusUtils from '../../../utils/bolus';
 import { AUTOMATED_BOLUS, ONE_BUTTON_BOLUS } from '../../../utils/constants';
 import { formatLocalizedFromUTC, formatDuration, getMsPer24 } from '../../../utils/datetime';
 import { formatInsulin, formatBgValue } from '../../../utils/format';
-import { getPumpVocabulary, isLoop, isTwiistLoop } from '../../../utils/device';
+import { getPumpVocabulary, isLoop, isTrio, isTwiistLoop } from '../../../utils/device';
 import { getAnnotationMessages } from '../../../utils/annotations';
 import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../styles/colors.css';
@@ -122,11 +122,15 @@ export const getTarget = (bolus, bgPrefs, timePrefs, unitStyles) => {
       </div>,
     ];
   }
-  if (isLoop(bolus)) {
-    // loop
+  if (isLoop(bolus) || isTrio(bolus)) {
+    // loop / trio
     const schedules = _.get(bolus, 'dosingDecision.bgTargetSchedule', []);
     const range = _.findLast(_.sortBy(schedules, 'start'), ({ start }) => start < msPer24);
-    const label = t('Correction Range');
+    if (!range || (!_.isFinite(range.low) && !_.isFinite(range.high))) {
+      // no dosing decision / no target schedule -> nothing to show
+      return null;
+    }
+    const label = isTrio(bolus) ? t('Glucose Targets') : t('Correction Range');
     return (
       <div className={styles.target}>
         <div className={styles.label}>{label} ({bgUnits})</div>
@@ -211,7 +215,7 @@ const BolusTooltip = (props) => {
     let carbRatio = wizard?.insulinCarbRatio || null;
     let isf = wizard?.insulinSensitivity || null;
 
-    if (isLoop(wizard)) {
+    if (isLoop(wizard) || isTrio(wizard)) {
       const { activeSchedule, carbRatios, insulinSensitivities } = wizard?.dosingDecision?.pumpSettings || {};
       carbRatio = _.findLast(_.sortBy(carbRatios?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || carbRatio;
       isf = _.findLast(_.sortBy(insulinSensitivities?.[activeSchedule] || [], 'start'), ({ start }) => start < msPer24)?.amount || isf;
@@ -265,9 +269,13 @@ const BolusTooltip = (props) => {
         <div className={unitStyles} />
       </div>
     );
+    const foodTime = wizard?.foodTime ?? wizard?.dosingDecision?.food?.time;
+    const carbsLabel = wizard?.tags?.foodTimeDiffers
+      ? t('Carbs (eaten at {{time}})', { time: formatLocalizedFromUTC(foodTime, props.timePrefs, 'h:mm a') })
+      : t('Carbs');
     const carbsLine = !!carbsValue && (
       <div className={styles.carbs}>
-        <div className={styles.label}>{t('Carbs')}</div>
+        <div className={styles.label}>{carbsLabel}</div>
         <div className={styles.value}>{carbsValue}</div>
         <div className={unitStyles}>{carbUnits}</div>
       </div>
@@ -302,6 +310,8 @@ const BolusTooltip = (props) => {
         <div className={unitStyles} />
       </div>
     );
+    const targetLine = (!!bg || isLoop(wizard) || isTrio(wizard))
+      && getTarget(wizard, props.bgPrefs, props.timePrefs, unitStyles);
 
     return (
       <div className={styles.container}>
@@ -314,12 +324,12 @@ const BolusTooltip = (props) => {
         {overrideLine}
         {interruptedLine}
         {deliveredLine}
-        {(icRatioLine || isfLine || bg || isAnimasExtendedValue || isMedronicDeconvertedExchangeValue) && (
+        {(icRatioLine || isfLine || targetLine || isAnimasExtendedValue || isMedronicDeconvertedExchangeValue) && (
           <div className={styles.divider} />
         )}
         {icRatioLine}
         {isfLine}
-        {!!bg && getTarget(wizard, props.bgPrefs, unitStyles)}
+        {targetLine}
         {animasExtendedAnnotationMessage(wizard)}
         {medronicDeconvertedExchangeMessage(wizard)}
       </div>
