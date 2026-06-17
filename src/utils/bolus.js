@@ -375,10 +375,22 @@ export function isUnderride(insulinEvent) {
  * @return {Boolean} whether the bolus programmed a recommended bg correction without carb entry
  */
 export function isCorrection(insulinEvent) {
+  // The per-bolus carb amount is already device-gated onto `carbInput` by DataUtil
+  // (food-first for Loop/DIY, originalFood-first for twiist), so prefer it -- it reflects
+  // what THIS bolus was dosed on and stays consistent with getCarbs. Fall back to the
+  // decision snapshot only when carbInput isn't annotated (e.g. a raw bolus not run through
+  // DataUtil), preferring originalFood over a possibly-rewritten intermediate food.
+  const carbInput = getCarbs(insulinEvent);
   const recommended = insulinEvent.dosingDecision
     ? {
       correction: _.get(insulinEvent, 'dosingDecision.recommendedBolus.amount'),
-      carb: _.get(insulinEvent, 'dosingDecision.food.nutrition.carbohydrate.net', 0),
+      carb: _.isFinite(carbInput)
+        ? carbInput
+        : _.get(
+          insulinEvent,
+          'dosingDecision.originalFood.nutrition.carbohydrate.net',
+          _.get(insulinEvent, 'dosingDecision.food.nutrition.carbohydrate.net', 0)
+        ),
     }
     : _.get(insulinEvent, 'wizard.recommended', insulinEvent.recommended);
   return !!(recommended && recommended.correction > 0 && recommended.carb === 0);

@@ -6,6 +6,7 @@ import i18next from 'i18next';
 import sundial from 'sundial';
 
 import {
+  deriveLabel,
   getLatestPumpUpload,
   getLastManualBasalSchedule,
   isControlIQ,
@@ -15,6 +16,7 @@ import {
   isAutomatedBolusDevice,
   isSettingsOverrideDevice,
   isDIYLoop,
+  isTrio,
   isTidepoolLoop,
   isTwiistLoop,
   isOneMinCGMSampleIntervalDevice,
@@ -45,6 +47,7 @@ import {
   MS_IN_MIN,
   MGDL_UNITS,
   DIY_LOOP,
+  TRIO,
   TIDEPOOL_LOOP,
   TWIIST_LOOP,
   SITE_CHANGE_RESERVOIR,
@@ -113,13 +116,16 @@ export class DataUtil {
     this.startTimer('addData');
 
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
+    this.foodDatumTimes = this.foodDatumTimes || new Set();
+    this.canonicalFoodTimeByDecisionId = this.canonicalFoodTimeByDecisionId || {};
     this.bolusToWizardIdMap = this.bolusToWizardIdMap || {};
-    this.deviceUploadMap = this.deviceUploadMap || {};
+    this.knownDeviceIds = this.knownDeviceIds || new Set();
+    this.uploadToDeviceIdMap = this.uploadToDeviceIdMap || {};
     this.latestDatumByType = this.latestDatumByType || {};
     this.pumpSettingsDatumsByIdMap = this.pumpSettingsDatumsByIdMap || {};
     this.wizardDatumsByIdMap = this.wizardDatumsByIdMap || {};
     this.wizardToBolusIdMap = this.wizardToBolusIdMap || {};
-    this.loopDataSetsByIdMap = this.loopDataSetsByIdMap || {};
+    this.dosingDecisionDataSetsByIdMap = this.dosingDecisionDataSetsByIdMap || {};
     this.dexcomDataSetsByIdMap = this.dexcomDataSetsByIdMap || {};
     this.bolusDosingDecisionDatumsByIdMap = this.bolusDosingDecisionDatumsByIdMap || {};
     this.matchedDevices = this.matchedDevices || {};
@@ -233,7 +239,7 @@ export class DataUtil {
 
     if (d.type === 'upload') {
       if (d.dataSetType === 'continuous') {
-        if (isLoop(d)) this.loopDataSetsByIdMap[d.id] = d;
+        if (isLoop(d) || isTrio(d)) this.dosingDecisionDataSetsByIdMap[d.id] = d;
         if (isDexcom(d)) this.dexcomDataSetsByIdMap[d.id] = d;
         if (!d.time) d.time = moment.utc().toISOString();
       } else {
@@ -327,6 +333,12 @@ export class DataUtil {
       this.bolusDatumsByIdMap[d.id] = d;
     }
 
+    // Track surviving food eat-times so joinFoodAndDosingDecision can recognize a
+    // dosing decision whose food.time was superseded by an edit (matches no surviving food).
+    if (d.type === 'food' && _.isFinite(d.time)) {
+      this.foodDatumTimes.add(d.time);
+    }
+
     if (d.type === 'pumpSettings') {
       this.pumpSettingsDatumsByIdMap[d.id] = d;
     }
@@ -344,8 +356,11 @@ export class DataUtil {
       const dexDeviceId = ['Dexcom', d.uploadId.slice(0, 6)];
       d.deviceId = dexDeviceId.join(' ');
     }
-    if (d.deviceId && !this.deviceUploadMap[d.deviceId]) {
-      this.deviceUploadMap[d.deviceId] = d.uploadId;
+    if (d.deviceId && d.uploadId) {
+      if (!this.uploadToDeviceIdMap[d.uploadId]) {
+        this.uploadToDeviceIdMap[d.uploadId] = d.deviceId;
+      }
+      this.knownDeviceIds.add(d.deviceId);
     }
   };
 
@@ -374,7 +389,7 @@ export class DataUtil {
   };
 
   joinBolusAndDosingDecision = d => {
-    if (d.type === 'bolus' && !!this.loopDataSetsByIdMap[d.uploadId]) {
+    if (d.type === 'bolus' && !!this.dosingDecisionDataSetsByIdMap[d.uploadId]) {
       const timeThreshold = MS_IN_MIN;
 
       // Find the dosing decision that matches the bolus by checking if there is a definitive association
@@ -389,9 +404,17 @@ export class DataUtil {
         const proximateDosingDecisions = _.filter(
           _.mapValues(this.bolusDosingDecisionDatumsByIdMap),
           ({ time, associations }) => {
-            // If there is a definitive association, we skip this decision, as it would have been
-            // associated with the bolus already in the code above if the id matched
-            if (_.some(associations, { reason: 'bolus' })) return false;
+            // Skip a decision only if it is already claimed by a DIFFERENT, real bolus —
+            // that bolus would have matched it via the definitive association above. We
+            // must NOT skip on a dangling `bolus` association whose id resolves to no
+            // normalized bolus datum (e.g. twiist references an original-entry bolus by an
+            // id that doesn't survive normalization); otherwise the carb's original-entry
+            // bolus can never match its decision and renders with no carbs/IOB.
+            const claimedByOtherBolus = _.some(
+              associations,
+              a => a.reason === 'bolus' && a.id !== d.id && !!this.bolusDatumsByIdMap[a.id]
+            );
+            if (claimedByOtherBolus) return false;
 
             const timeOffset = Math.abs(time - d.time);
             return timeOffset <= timeThreshold;
@@ -418,8 +441,20 @@ export class DataUtil {
         const associatedPumpSettingsId = _.find(d.dosingDecision.associations, { reason: 'pumpSettings' })?.id;
         d.dosingDecision.pumpSettings = this.pumpSettingsDatumsByIdMap[associatedPumpSettingsId];
 
-        // Translate relevant dosing decision data onto expected bolus fields
-        d.carbInput = d.dosingDecision.food?.nutrition?.carbohydrate?.net;
+        // Carbs the bolus was computed on — the field differs by device:
+        //   • twiist rewrites every prior decision's `food` to the FINAL value and stores
+        //     the at-bolus snapshot in `originalFood`, so `originalFood` is the value at
+        //     this bolus's decision (prefer it).
+        //   • Tidepool / DIY Loop instead leave each decision's `food` at the value that
+        //     decision (and its bolus) was computed on, with `originalFood` holding the
+        //     PRIOR value — so prefer `food`, else an interim-edit bolus surfaces the
+        //     pre-edit count (e.g. 25g on a bolus actually dosed for 35g).
+        const carbsFromFoodFirst = isTidepoolLoop(d) || isDIYLoop(d);
+        d.carbInput = carbsFromFoodFirst
+          ? (d.dosingDecision.food?.nutrition?.carbohydrate?.net
+            ?? d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net)
+          : (d.dosingDecision.originalFood?.nutrition?.carbohydrate?.net
+            ?? d.dosingDecision.food?.nutrition?.carbohydrate?.net);
 
         d.bgInput = d?.dosingDecision?.smbg?.value || _.last(d.dosingDecision.bgHistorical || [])?.value;
         d.insulinOnBoard = d.dosingDecision.insulinOnBoard?.amount;
@@ -436,10 +471,38 @@ export class DataUtil {
   };
 
   joinFoodAndDosingDecision = d => {
-    if (d.type === 'food' && !!this.loopDataSetsByIdMap[d.uploadId]) {
+    if (d.type === 'food' && !!this.dosingDecisionDataSetsByIdMap[d.uploadId]) {
+      // Each carb edit creates a new food datum (new id), but only the final
+      // one survives, so matching by the surviving food id alone collapses an
+      // edit lineage to a single (often arbitrary) decision. The eat-time
+      // (food.time / originalFood.time) is stable across edits because the
+      // platform rewrites every prior DD's nested food to the final value and
+      // preserves the pre-edit snapshot in originalFood, so group by it too.
+      // Nested food.time is still an ISO string here.
       const matchingDosingDecisions = _.filter(
         _.values(this.bolusDosingDecisionDatumsByIdMap),
-        ({ associations = [] }) => _.some(associations, { reason: 'food', id: d.id })
+        (dd) => {
+          if (_.some(dd.associations || [], { reason: 'food', id: d.id })) return true;
+          const ddFoodTime = dd.food?.time ? Date.parse(dd.food.time) : null;
+          const ddOriginalFoodTime = dd.originalFood?.time ? Date.parse(dd.originalFood.time) : null;
+          if (ddFoodTime === d.time || ddOriginalFoodTime === d.time) return true;
+
+          // Time-only edit: eat-time is the join key above, but a time edit changes
+          // exactly that key, so the pre-edit decision never matches directly. Treat a
+          // decision as a pre-edit version of THIS entry when it shares the upload and
+          // carb amount and its eat-time was superseded -- i.e. matches no surviving food
+          // datum (only the final food survives an edit, so a genuinely distinct same-size
+          // entry keeps its own food and won't look orphaned). Window-bounded to the
+          // largest eaten-time edit we'll attribute to one entry (30 min); a larger edit
+          // simply isn't recovered and the entry falls back to its post-edit time. This is
+          // best-effort recovery of the original entry time, which the source doesn't carry
+          // on a linkable record.
+          const sameUpload = dd.uploadId === d.uploadId;
+          const sameCarbs = dd.food?.nutrition?.carbohydrate?.net === d.nutrition?.carbohydrate?.net;
+          const orphanedEatTime = _.isFinite(ddFoodTime) && !this.foodDatumTimes.has(ddFoodTime);
+          const withinWindow = _.isFinite(ddFoodTime) && Math.abs(ddFoodTime - d.time) <= 30 * MS_IN_MIN;
+          return sameUpload && sameCarbs && orphanedEatTime && withinWindow;
+        }
       );
 
       if (matchingDosingDecisions.length) {
@@ -448,6 +511,13 @@ export class DataUtil {
         if (sorted.length > 1) {
           d.originalDosingDecision = sorted[0];
         }
+        // Map every decision in this carb's edit lineage to the surviving food's eaten
+        // time, so each bolus in the lineage can display the meal's canonical (final)
+        // eaten time rather than its own at-bolus snapshot, which diverges after a time
+        // edit. Lets a clinician trace every dose back to the one food datum.
+        _.each(matchingDosingDecisions, (dd) => {
+          this.canonicalFoodTimeByDecisionId[dd.id] = d.time;
+        });
       }
     }
   };
@@ -663,7 +733,9 @@ export class DataUtil {
   };
 
   tagDatum = d => {
-    const isLoopDatum = !!this.loopDataSetsByIdMap[d.uploadId];
+    const dosingDecisionUpload = this.dosingDecisionDataSetsByIdMap[d.uploadId];
+    const isLoopDatum = !!dosingDecisionUpload && isLoop(dosingDecisionUpload);
+    const isTrioDatum = !!dosingDecisionUpload && isTrio(dosingDecisionUpload);
     const isDexcomDatum = !!this.dexcomDataSetsByIdMap[d.uploadId];
 
     if (d.type === 'basal') {
@@ -677,7 +749,13 @@ export class DataUtil {
       const isWizardOrDosingDecision = d.wizard || d.dosingDecision?.food;
       const carbInputGeneratedFromFoodData = _.isFinite(d.carbInput) && !!d.dosingDecision;
 
-      const foodTimeMs = d.dosingDecision?.food?.time ? Date.parse(d.dosingDecision.food.time) : null;
+      // Prefer the meal's canonical (final) eaten time -- shared across every bolus in the
+      // carb's edit lineage -- so a time edit shows consistently on all of a meal's boluses;
+      // fall back to this bolus's own decision snapshot when no lineage was resolved.
+      const ownFoodTimeMs = d.dosingDecision?.food?.time ? Date.parse(d.dosingDecision.food.time) : null;
+      const canonicalFoodTimeMs = this.canonicalFoodTimeByDecisionId?.[d.dosingDecision?.id];
+      const foodTimeMs = _.isFinite(canonicalFoodTimeMs) ? canonicalFoodTimeMs : ownFoodTimeMs;
+      d.foodTime = foodTimeMs;
       const foodTimeDiffers = _.isFinite(foodTimeMs)
         && Math.abs(foodTimeMs - d.time) > 5 * MS_IN_MIN;
 
@@ -692,7 +770,8 @@ export class DataUtil {
         override: isOverride(d),
         underride: isUnderride(d),
         wizard: !!isWizardOrDosingDecision,
-        loop: !!this.loopDataSetsByIdMap[d.uploadId],
+        loop: isLoopDatum,
+        trio: isTrioDatum,
         oneButton: isOneButton(d),
       };
     }
@@ -722,16 +801,30 @@ export class DataUtil {
     if (d.type === 'food') {
       const { dosingDecision, originalDosingDecision } = d;
       const currentCarbs = d.nutrition?.carbohydrate?.net;
-      const originalCarbs = dosingDecision?.originalFood?.nutrition?.carbohydrate?.net
-        ?? originalDosingDecision?.food?.nutrition?.carbohydrate?.net;
+      // True initial value lives in the EARLIEST DD's originalFood. The latest
+      // DD has no originalFood, and on multi-edit chains intermediate DDs'
+      // .food has been rewritten to the final value -- so reading either of
+      // those would mis-detect edits or surface the post-edit number.
+      const earliestDosingDecision = originalDosingDecision || dosingDecision;
+      const originalCarbs = earliestDosingDecision?.originalFood?.nutrition?.carbohydrate?.net
+        ?? earliestDosingDecision?.food?.nutrition?.carbohydrate?.net;
       const carbsEdited = originalCarbs != null && originalCarbs !== currentCarbs;
 
-      const entryTimeDiffExceedsThreshold = dosingDecision
+      // A time-only edit changes the eaten time: the earliest decision's food.time
+      // (original eat-time) differs from the surviving food's time. The decision-vs-food
+      // check below still flags back-logged entries that have no edit lineage.
+      const originalEatTimeMs = originalDosingDecision?.food?.time
+        ? Date.parse(originalDosingDecision.food.time)
+        : null;
+      const eatTimeEdited = _.isFinite(originalEatTimeMs)
+        && Math.abs(originalEatTimeMs - d.time) > 5 * MS_IN_MIN;
+      const entryTimeDiffExceedsThreshold = eatTimeEdited || (dosingDecision
         && Math.abs(dosingDecision.time - d.time) > 5 * MS_IN_MIN
-        && (!originalDosingDecision || Math.abs(originalDosingDecision.time - d.time) > 5 * MS_IN_MIN);
+        && (!originalDosingDecision || Math.abs(originalDosingDecision.time - d.time) > 5 * MS_IN_MIN));
 
       d.tags = {
         loop: isLoopDatum,
+        trio: isTrioDatum,
         dexcom: isDexcomDatum,
         manual: isDexcomDatum,
         carbsEdited,
@@ -1249,13 +1342,15 @@ export class DataUtil {
     } else {
       this.log('Reinitializing');
       this.bolusDatumsByIdMap = {};
+      this.foodDatumTimes = new Set();
+      this.canonicalFoodTimeByDecisionId = {};
       this.bolusToWizardIdMap = {};
-      this.deviceUploadMap = {};
+      this.knownDeviceIds?.clear();
       this.latestDatumByType = {};
       this.pumpSettingsDatumsByIdMap = {};
       this.wizardDatumsByIdMap = {};
       this.wizardToBolusIdMap = {};
-      this.loopDataSetsByIdMap = {};
+      this.dosingDecisionDataSetsByIdMap = {};
       this.dexcomDataSetsByIdMap = {};
       this.bolusDosingDecisionDatumsByIdMap = {};
       this.clearMatchedDevices();
@@ -1605,6 +1700,8 @@ export class DataUtil {
         }
       } else if (isTidepoolLoop(pumpSettings)) {
         source = TIDEPOOL_LOOP.toLowerCase();
+      } else if (isTrio(pumpSettings)) {
+        source = TRIO.toLowerCase();
       } else if (isDIYLoop(pumpSettings)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {
@@ -1717,50 +1814,50 @@ export class DataUtil {
   /* eslint-disable no-param-reassign */
   setDevices = () => {
     this.startTimer('setDevices');
-    const uploadsById = _.keyBy(this.sort.byTime(this.filter.byType('upload').top(Infinity)), 'uploadId');
 
-    this.devices = _.reduce(this.deviceUploadMap, (result, value, key) => {
-      const upload = uploadsById[value];
-      let device = { id: key };
+    const uploads = this.filter.byType('upload').top(Infinity);
 
-      if (upload) {
-        const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
-        const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
-        const deviceModel = _.get(upload, 'deviceModel', '');
-        const deviceName = _.get(upload, 'deviceName', '');
-        let label = key;
+    // Group uploads by the deviceId they represent. Upload datums often lack their own
+    // `deviceId`, so fall back to uploadToDeviceIdMap (populated during ingest from any
+    // datum that linked uploadId → deviceId).
+    const uploadsByDeviceId = _.groupBy(
+      uploads,
+      u => u.deviceId || this.uploadToDeviceIdMap[u.uploadId]
+    );
 
-        if (deviceManufacturer || deviceModel) {
-          if (deviceManufacturer === 'Dexcom' && isContinuous) {
-            label = t('Dexcom API');
-          } else if (deviceManufacturer === 'Abbott' && isContinuous) {
-            label = t('FreeStyle Libre (from LibreView)');
-          } else if (deviceManufacturer === 'Sequel' && isContinuous) {
-            label = t('twiist');
-          } else {
-            label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
-          }
-        }
+    const deviceIds = [...this.knownDeviceIds];
 
-        if (key.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
+    this.devices = _.map(deviceIds, deviceId => {
+      const deviceUploads = uploadsByDeviceId[deviceId] || [];
 
-        device = {
-          bgm: _.includes(upload.deviceTags, 'bgm'),
-          cgm: _.includes(upload.deviceTags, 'cgm'),
-          oneMinCgmSampleInterval: isOneMinCGMSampleIntervalDevice(upload),
-          id: key,
-          deviceName,
-          label,
-          pump: _.includes(upload.deviceTags, 'insulin-pump'),
-          serialNumber: upload.deviceSerialNumber,
-        };
-      }
+      // The most recent pumpSettings for this device points at the upload that owns its
+      // current configuration — the authoritative source for label/deviceName when multiple
+      // uploads share a deviceId (e.g. Trio + Loop on the same iPhone).
+      const pumpSettingsForDevice = _(this.pumpSettingsDatumsByIdMap)
+        .filter(ps => this.uploadToDeviceIdMap[ps.uploadId] === deviceId)
+        .maxBy('time');
 
-      result.push(device);
-      return result;
-    }, []);
+      const labelingUpload =
+        _.find(deviceUploads, { uploadId: pumpSettingsForDevice?.uploadId })
+        || _.maxBy(deviceUploads, 'time')
+        || null;
 
-    const allDeviceIds = _.keys(this.deviceUploadMap);
+      // Capability flags are the union over all uploads for this device, not just the
+      // labeling one — a device that's had both bgm and cgm sessions is truly both.
+      const allDeviceTags = _.flatMap(deviceUploads, 'deviceTags');
+
+      return {
+        bgm: _.includes(allDeviceTags, 'bgm'),
+        cgm: _.includes(allDeviceTags, 'cgm'),
+        oneMinCgmSampleInterval: _.some(deviceUploads, isOneMinCGMSampleIntervalDevice),
+        id: deviceId,
+        deviceName: labelingUpload?.deviceName || '',
+        label: deriveLabel(deviceId, labelingUpload),
+        pump: _.includes(allDeviceTags, 'insulin-pump'),
+        serialNumber: labelingUpload?.deviceSerialNumber,
+      };
+    });
+
     const excludedDevices = this.excludedDevices || [];
 
     _.each(this.devices, device => {
@@ -1768,7 +1865,7 @@ export class DataUtil {
         // Exclude pre-control-iq tandem uploads by default if we have data from the same device
         // from a version of uploader supports control-iq data. Otherwise, we have duplicate data.
         const preCIQDeviceID = device.id.replace('tandemCIQ', 'tandem');
-        if (_.includes(allDeviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
+        if (_.includes(deviceIds, preCIQDeviceID)) excludedDevices.push(preCIQDeviceID);
       }
 
       if (device.id.indexOf('HealthKit twiist') !== -1) {

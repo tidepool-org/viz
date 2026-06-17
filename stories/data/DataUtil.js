@@ -133,6 +133,8 @@ stories.add('Query Generator', (opts, props) => {
     time: 'time',
     _time: '_time',
     uploadId: 'uploadId',
+    client: 'client',
+    origin: 'origin',
   };
 
   const computedFields = {

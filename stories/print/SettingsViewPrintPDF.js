@@ -49,17 +49,21 @@ import omnipodDataMultiRate from '../../data/pumpSettings/omnipod/multirate.json
 import omnipodDataFlatRate from '../../data/pumpSettings/omnipod/flatrate.json';
 import tandemDataMultiRate from '../../data/pumpSettings/tandem/multirate.json';
 import tandemDataFlatRate from '../../data/pumpSettings/tandem/flatrate.json';
+import trioDataMultiRate from '../../data/pumpSettings/trio/multirate.json';
 
 function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
   const doc = new PDFDocument({ autoFirstPage: false, bufferPages: true, margin: MARGIN });
 
-  const opts = {
-    bgPrefs: queries.settings.bgPrefs,
-    timePrefs: queries.settings.timePrefs,
-    patient,
-  };
-  let data = queries.settings ? dataUtil.query(queries.settings) : {};
+  let data;
+  const opts = { patient };
+
   if (dataFixture) {
+    const bgUnits = dataFixture.units?.bg || 'mg/dL';
+    opts.bgPrefs = { bgUnits };
+    opts.timePrefs = {
+      timezoneAware: true,
+      timezoneName: dataFixture.timezone || 'UTC',
+    };
     data = {
       metaData: {
         latestPumpUpload: {
@@ -67,8 +71,12 @@ function openPDF(dataUtil, { patient }, dataFixture, manufacturer) {
           settings: { ...dataFixture, normalTime: dataFixture.time },
         },
       },
-      bgPrefs: { bgUnits: dataFixture.units?.bg },
+      bgPrefs: { bgUnits },
     };
+  } else {
+    opts.bgPrefs = queries.settings.bgPrefs;
+    opts.timePrefs = queries.settings.timePrefs;
+    data = queries.settings ? dataUtil.query(queries.settings) : {};
   }
 
   createPrintView('settings', data, opts, doc).render();
@@ -166,6 +174,12 @@ stories.add('tandem flat rate', (opts, { dataUtil }) => (
 
 stories.add('tandem multi rate', (opts, { dataUtil }) => (
   <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, tandemDataMultiRate, 'tandem')}>
+    Open PDF in new tab
+  </button>
+), { notes });
+
+stories.add('trio multi rate', (opts, { dataUtil }) => (
+  <button onClick={() => openPDF(dataUtil, { patient: profiles.longName }, trioDataMultiRate, 'trio')}>
     Open PDF in new tab
   </button>
 ), { notes });

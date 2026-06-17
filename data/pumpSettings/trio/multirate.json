@@ -1,0 +1,209 @@
+{
+  "activeSchedule": "Default",
+  "automatedDelivery": true,
+  "basal": {
+    "rateMaximum": {
+      "units": "Units/hour",
+      "value": 3.55000000235
+    }
+  },
+  "basalSchedules": [
+    {
+      "name": "Default",
+      "value": [
+        {
+          "rate": 1,
+          "start": 0
+        },
+        {
+          "rate": 1.125,
+          "start": 28800000
+        },
+        {
+          "rate": 1.25,
+          "start": 36000000
+        },
+        {
+          "rate": 1.5,
+          "start": 43200000
+        },
+        {
+          "rate": 1.25,
+          "start": 50400000
+        },
+        {
+          "rate": 1.5,
+          "start": 57600000
+        },
+        {
+          "rate": 1.25,
+          "start": 64800000
+        },
+        {
+          "rate": 1,
+          "start": 75600000
+        }
+      ]
+    }
+  ],
+  "bgSafetyLimit": 4.16306,
+  "bgTargets": {
+    "Default": [
+      {
+        "high": 6.10582,
+        "low": 5.55075,
+        "start": 0
+      },
+      {
+        "high": 5.82829,
+        "low": 5.27321,
+        "start": 28800000
+      },
+      {
+        "high": 5.55075,
+        "low": 4.99567,
+        "start": 36000000
+      },
+      {
+        "high": 5.82829,
+        "low": 5.27321,
+        "start": 43200000
+      },
+      {
+        "high": 5.82829,
+        "low": 5.27321,
+        "start": 50400000
+      },
+      {
+        "high": 6.10582,
+        "low": 5.55075,
+        "start": 57600000
+      },
+      {
+        "high": 5.55075,
+        "low": 4.99567,
+        "start": 64800000
+      },
+      {
+        "high": 6.6609,
+        "low": 6.10582,
+        "start": 75600000
+      }
+    ]
+  },
+  "bolus": {
+    "amountMaximum": {
+      "units": "Units",
+      "value": 10
+    }
+  },
+  "carbRatios": {
+    "Default": [
+      {
+        "amount": 10,
+        "start": 0
+      },
+      {
+        "amount": 12,
+        "start": 28800000
+      },
+      {
+        "amount": 9,
+        "start": 36000000
+      },
+      {
+        "amount": 10,
+        "start": 43200000
+      },
+      {
+        "amount": 11,
+        "start": 50400000
+      },
+      {
+        "amount": 12,
+        "start": 57600000
+      },
+      {
+        "amount": 8,
+        "start": 64800000
+      },
+      {
+        "amount": 10,
+        "start": 75600000
+      }
+    ]
+  },
+  "display": {
+    "bloodGlucose": {
+      "units": "mg/dL"
+    }
+  },
+  "id": "a88372f1239de0ef49f9cd76faa563be",
+  "insulinModel": {
+    "actionDelay": 600,
+    "actionDuration": 21600,
+    "actionPeakOffset": 4500,
+    "modelType": "rapidAdult"
+  },
+  "insulinSensitivities": {
+    "Default": [
+      {
+        "amount": 2.49784,
+        "start": 0
+      },
+      {
+        "amount": 2.2203,
+        "start": 28800000
+      },
+      {
+        "amount": 1.94276,
+        "start": 36000000
+      },
+      {
+        "amount": 1.66522,
+        "start": 43200000
+      },
+      {
+        "amount": 1.94276,
+        "start": 50400000
+      },
+      {
+        "amount": 2.2203,
+        "start": 57600000
+      },
+      {
+        "amount": 2.49784,
+        "start": 64800000
+      },
+      {
+        "amount": 2.77537,
+        "start": 75600000
+      }
+    ]
+  },
+  "name": "MockPumpManager",
+  "origin": {
+    "id": "C27A9EFD-DAEE-47DE-B819-8819E15DDCA1:pumpSettings",
+    "name": "org.nightscout.Trio",
+    "type": "application",
+    "version": "0.3.0"
+  },
+  "softwareVersion": "0.3.0",
+  "time": 1714164586837,
+  "timezone": "America/Los_Angeles",
+  "timezoneOffset": -420,
+  "type": "pumpSettings",
+  "units": {
+    "bg": "mmol/L",
+    "carb": "grams",
+    "insulin": "Units"
+  },
+  "uploadId": "e97ae01bd45f03d6372d471a0413dd7a",
+  "_time": "2024-04-26T20:49:46.837Z",
+  "_deviceTime": "2024-04-26T20:49:46.837Z",
+  "deviceTime": 1714164586837,
+  "normalTime": 1714164586837,
+  "displayOffset": -240,
+  "deviceSerialNumber": "Unknown",
+  "source": "trio"
+}

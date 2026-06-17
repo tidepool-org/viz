@@ -1,12 +1,16 @@
 import _ from 'lodash';
+import i18next from 'i18next';
 
 import {
   AUTOMATED_BASAL_DEVICE_MODELS,
+  DEXCOM_API_DEVICE_LABEL,
   pumpVocabulary,
   settingsOverrides,
 } from './constants';
 
 import { deviceName } from './settings/data';
+
+const t = i18next.t.bind(i18next);
 
 /**
  * Get the latest upload datum
@@ -32,6 +36,13 @@ export function getLastManualBasalSchedule(basalData = []) {
  */
 export function isDIYLoop(datum = {}) {
   return (/^com\.[a-zA-Z0-9]*\.?loopkit\.Loop/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
+}
+
+/**
+ * Check to see if datum is from Trio
+ */
+export function isTrio(datum = {}) {
+  return datum.tags?.trio || (/^org\.nightscout\.Trio/).test(_.get(datum, 'origin.name', datum?.client?.name || ''));
 }
 
 /**
@@ -92,7 +103,8 @@ export function isDexcom(datum = {}) {
 export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, deviceModel) {
   return _.includes(_.get(AUTOMATED_BASAL_DEVICE_MODELS, deviceName(manufacturer), []), deviceModel)
     || (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
-    || isLoop(pumpSettingsOrUpload);
+    || isLoop(pumpSettingsOrUpload)
+    || isTrio(pumpSettingsOrUpload);
 }
 
 /**
@@ -103,7 +115,8 @@ export function isAutomatedBasalDevice(manufacturer, pumpSettingsOrUpload = {}, 
  */
 export function isAutomatedBolusDevice(manufacturer, pumpSettingsOrUpload = {}) {
   return (manufacturer === 'tandem' && isControlIQ(pumpSettingsOrUpload))
-    || isDIYLoop(pumpSettingsOrUpload);
+    || isDIYLoop(pumpSettingsOrUpload)
+    || isTrio(pumpSettingsOrUpload);
 }
 
 /**
@@ -167,6 +180,47 @@ export function getPumpVocabulary(manufacturer) {
 }
 
 /**
+ * Derive the display label for a device from its deviceId and the upload that owns its
+ * current labeling (typically the upload pointed at by the latest pumpSettings, with a
+ * newest-upload fallback). Returns the deviceId itself when no upload is available or
+ * neither manufacturer/model nor a recognized origin signal is present.
+ *
+ * @param {String} deviceId
+ * @param {Object|null} upload  upload datum or null
+ * @returns {String}
+ */
+export function deriveLabel(deviceId, upload) {
+  const dexcomC2CRegex = /^DexcomG\d+_.+$/;
+
+  if (!upload && dexcomC2CRegex.test(deviceId)) return DEXCOM_API_DEVICE_LABEL;
+
+  if (!upload) return deviceId;
+
+  const isContinuous = _.get(upload, 'dataSetType') === 'continuous';
+  const deviceManufacturer = _.get(upload, 'deviceManufacturers.0', '');
+  const deviceModel = _.get(upload, 'deviceModel', '');
+  let label = deviceId;
+
+  if (deviceManufacturer || deviceModel) {
+    if (deviceManufacturer === 'Dexcom' && isContinuous) {
+      label = DEXCOM_API_DEVICE_LABEL;
+    } else if (deviceManufacturer === 'Abbott' && isContinuous) {
+      label = t('FreeStyle Libre (from LibreView)');
+    } else if (deviceManufacturer === 'Sequel' && isContinuous) {
+      label = t('twiist');
+    } else {
+      label = _.reject([deviceManufacturer, deviceModel], _.isEmpty).join(' ');
+    }
+  } else if (isTrio(upload)) {
+    label = 'Trio';
+  }
+
+  if (deviceId.indexOf('tandemCIQ') === 0) label = [label, `(${t('Control-IQ')})`].join(' ');
+
+  return label;
+}
+
+/**
  * Get the render-friendly name for a device
  * @param {Object} device a device object from the DataUtil instance "devices" property
  * @returns {String|null} render-friendly name for device or null if unable
@@ -186,7 +240,7 @@ export function getDeviceName(device) {
  * @param {Array<Object>} deviceList an array of device objects from the DataUtil instance "devices" property
  * @returns {Array<String>} unique array of render-friendly names for each device
  */
-export function getDeviceNames(deviceList) {
+export function getDeviceNames(deviceList = []) {
   return _.chain(deviceList)
     .map(d => getDeviceName(d))
     .compact()
