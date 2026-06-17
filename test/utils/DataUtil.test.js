@@ -740,6 +740,32 @@ describe('DataUtil', () => {
       sinon.assert.notCalled(dataUtil.setMetaData);
       sinon.assert.notCalled(dataUtil.getMetaData);
     });
+
+    context('syncTimePrefs param', () => {
+      const timeZoneData = [
+        { ...new Types.Upload({ ...useRawData }), time: '2024-01-01T11:00:00.000Z', timezone: 'US/Pacific' },
+      ];
+
+      it('should sync `timePrefs` to the latest timezone when `syncTimePrefs` is true', () => {
+        const setTimePrefsSpy = sinon.spy(dataUtil, 'setTimePrefs');
+
+        dataUtil.addData(timeZoneData, defaultPatientId, false, true);
+
+        expect(dataUtil.latestTimeZone.name).to.equal('US/Pacific');
+        sinon.assert.calledWith(setTimePrefsSpy, { timezoneAware: true, timezoneName: 'US/Pacific' });
+        expect(dataUtil.timePrefs).to.eql({ timezoneAware: true, timezoneName: 'US/Pacific' });
+      });
+
+      it('should not sync `timePrefs` when `syncTimePrefs` is false (default)', () => {
+        const setTimePrefsSpy = sinon.spy(dataUtil, 'setTimePrefs');
+
+        dataUtil.addData(timeZoneData, defaultPatientId);
+
+        expect(dataUtil.latestTimeZone.name).to.equal('US/Pacific');
+        sinon.assert.neverCalledWith(setTimePrefsSpy, { timezoneAware: true, timezoneName: 'US/Pacific' });
+        expect(_.get(dataUtil, 'timePrefs.timezoneName')).to.be.undefined;
+      });
+    });
   });
 
   describe('normalizeDatumIn', () => {
