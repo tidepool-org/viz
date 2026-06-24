@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE_CANNULA } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -482,6 +482,43 @@ describe('DailyPrintView', () => {
         ]);
         expect(_.map(legendItems, item => item.type)).to.include('override');
       });
+    });
+
+    it('should include the site change legend item when site changes are present', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
+            ],
+          },
+        },
+      };
+
+      const legendItems = Renderer.getLegendItems();
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include(SITE_CHANGE);
+
+      const siteChangeItem = _.find(legendItems, item => item.type === SITE_CHANGE);
+      expect(siteChangeItem.labels).to.deep.equal(['Site', 'Change']);
+    });
+
+    it('should not include the site change legend item when no site changes are present', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'calibration', normalTime: 50, tags: {} },
+            ],
+          },
+        },
+      };
+
+      expect(_.map(Renderer.getLegendItems(), item => item.type)).to.not.include(SITE_CHANGE);
     });
   });
 

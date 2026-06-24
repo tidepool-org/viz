@@ -70,6 +70,7 @@ import {
   PHYSICAL_ACTIVITY,
   PREPRANDIAL,
   SCHEDULED_DELIVERY,
+  SITE_CHANGE,
   SITE_CHANGE_CANNULA,
   SITE_CHANGE_RESERVOIR,
   SITE_CHANGE_TUBING,
@@ -411,6 +412,15 @@ class DailyPrintView extends PrintView {
           _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
         ),
         labels: [t('Note')],
+      },
+      {
+        type: SITE_CHANGE,
+        show: !!this.siteChangeSource
+          && !!getSiteChangeImage(this.siteChangeSource, this.manufacturer)
+          && _.some(this.aggregationsByDate.dataByDate, dateData =>
+            _.some(dateData.deviceEvent || [], d => getSiteChangeSubType(d) === this.siteChangeSource)
+          ),
+        labels: [t('Site'), t('Change')],
       },
       {
         type: 'alarms',
@@ -1685,6 +1695,7 @@ class DailyPrintView extends PrintView {
       [EVENT_PHYSICAL_ACTIVITY]: this.eventRadius * 2,
       [EVENT_NOTES]: this.eventRadius * 2,
       [EVENT_HEALTH]: this.eventRadius * 2,
+      [SITE_CHANGE]: this.eventRadius * 2,
       alarms: this.eventRadius * 2,
     };
 
@@ -2163,6 +2174,16 @@ class DailyPrintView extends PrintView {
 
           case EVENT_NOTES: {
             this.doc.image(eventImages[EVENT_NOTES], cursor, rowVerticalMiddle - this.eventRadius, {
+              width: this.eventRadius * 2,
+            });
+
+            cursor += this.eventRadius * 2;
+            cursor = renderLabels(item, cursor, rowIndex);
+            break;
+          }
+
+          case SITE_CHANGE: {
+            this.doc.image(getSiteChangeImage(this.siteChangeSource, this.manufacturer), cursor, rowVerticalMiddle - this.eventRadius, {
               width: this.eventRadius * 2,
             });
 
