@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE_CANNULA } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -924,6 +924,59 @@ describe('DailyPrintView', () => {
         sinon.assert.calledWith(Renderer.doc.text, '3.9');
         sinon.assert.calledWith(Renderer.doc.text, '3.0');
       });
+    });
+  });
+
+  describe('renderDeviceEvents', () => {
+    const renderArgs = deviceEvent => ({
+      xScale: x => x,
+      topEdge: 100,
+      data: { deviceEvent, physicalActivity: [], reportedState: [] },
+    });
+
+    it('renders the selected site-change subtype icon, ignoring other subtypes', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 80, tags: {} },
+        { subType: 'reservoirChange', normalTime: 90, tags: {} },
+      ]));
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-cannula.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-reservoir.png');
+    });
+
+    it('renders no site-change icons when no source is selected', () => {
+      Renderer.siteChangeSource = undefined;
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
+      ]));
+
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-cannula.png');
+    });
+
+    it('dedupes site changes within 5 minutes, anchoring on the last kept icon', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+      Renderer.doc.image.resetHistory();
+
+      // 0, 4min, 8min: 4min drops (within 5 of the kept 0); 8min is kept because
+      // it is >= 5 min after the kept 0, though only 4 min after the dropped 4min.
+      // A chained collapse would keep only 0, so this pins the last-kept anchor.
+      const minute = 60 * 1000;
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 0, tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 4 * minute, tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 8 * minute, tags: {} },
+      ]));
+
+      const cannulaImageCalls = Renderer.doc.image.getCalls()
+        .filter(call => call.args[0] === 'images/sitechange-cannula.png');
+      expect(cannulaImageCalls).to.have.length(2);
     });
   });
 

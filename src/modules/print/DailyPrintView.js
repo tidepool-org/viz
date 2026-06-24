@@ -61,6 +61,7 @@ import {
 import {
   ALARM,
   AUTOMATED_DELIVERY,
+  DIY_LOOP,
   EVENT_HEALTH,
   EVENT_NOTES,
   EVENT_PHYSICAL_ACTIVITY,
@@ -69,8 +70,15 @@ import {
   PHYSICAL_ACTIVITY,
   PREPRANDIAL,
   SCHEDULED_DELIVERY,
+  SITE_CHANGE_CANNULA,
+  SITE_CHANGE_RESERVOIR,
+  SITE_CHANGE_TUBING,
   SLEEP,
+  TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from '../../utils/constants';
+
+import { getSiteChangeSource } from '../../utils/basics/data';
 
 import {
   processBasalRange,
@@ -90,6 +98,50 @@ const eventImages = {
   [EVENT_NOTES]: 'images/event-notes.png',
 };
 
+// Site-change sprites. Loop uses the loop-tubing variant, twiist the
+// twiist-cassette variant; manufacturer variants keyed `<manufacturer>_<subtype>`.
+const siteChangeImages = {
+  [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
+  [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
+  [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
+  [`${_.lowerCase(TIDEPOOL_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${_.lowerCase(DIY_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${_.lowerCase(TWIIST_LOOP)}_${SITE_CHANGE_RESERVOIR}`]: 'images/sitechange-twiist-cassette.png',
+};
+
+// Resolve a deviceEvent to a SITE_CHANGE_* subtype. Daily data records site
+// changes as subType `reservoirChange` or `prime` (+ `primeTarget`); also
+// tolerate the already-keyed subTypes and boolean `tags`.
+function getSiteChangeSubType(d) {
+  if (d.subType === SITE_CHANGE_RESERVOIR) return SITE_CHANGE_RESERVOIR;
+  if (d.subType === 'prime' && d.primeTarget === 'cannula') return SITE_CHANGE_CANNULA;
+  if (d.subType === 'prime' && d.primeTarget === 'tubing') return SITE_CHANGE_TUBING;
+  if (_.includes([SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING, SITE_CHANGE_RESERVOIR], d.subType)) return d.subType;
+  if (_.get(d, 'tags.reservoirChange')) return SITE_CHANGE_RESERVOIR;
+  if (_.get(d, 'tags.cannulaPrime')) return SITE_CHANGE_CANNULA;
+  if (_.get(d, 'tags.tubingPrime')) return SITE_CHANGE_TUBING;
+  return null;
+}
+
+// Resolve the site-change image from subtype + manufacturer, matching getSiteChangeSource's
+// `_.lowerCase` normalization. Loop/twiist fall back to the base icon when no variant exists.
+function getSiteChangeImage(subType, manufacturer) {
+  return siteChangeImages[`${_.lowerCase(manufacturer)}_${subType}`] || siteChangeImages[subType];
+}
+
+const SITE_CHANGE_DEDUP_WINDOW_MS = 5 * MS_IN_MIN;
+
+// Site changes within 5 minutes of one another count as the same change; keep only
+// the first (sorted by time), so at most one icon prints per 5-minute window.
+function dedupeSiteChangesWithinWindow(siteChanges) {
+  const sorted = _.sortBy(siteChanges, 'normalTime');
+  return _.reduce(sorted, (kept, d) => {
+    const last = _.last(kept);
+    if (!last || (d.normalTime - last.normalTime) >= SITE_CHANGE_DEDUP_WINDOW_MS) kept.push(d);
+    return kept;
+  }, []);
+}
+
 class DailyPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
@@ -106,6 +158,10 @@ class DailyPrintView extends PrintView {
       _.get(data, 'data.current.data.deviceEvent', []),
       d => !!d.tags?.alarm
     );
+
+    // The site-change subtype the clinician selected (defaulted per manufacturer),
+    // so the daily charts show the matching site-change icon.
+    this.siteChangeSource = getSiteChangeSource(this.patient, this.manufacturer);
 
     const deviceLabels = getPumpVocabulary(this.manufacturer);
 
@@ -1260,6 +1316,28 @@ class DailyPrintView extends PrintView {
         width: this.eventRadius * 2,
       });
     });
+
+    // Site changes matching the selected subtype, alongside the other events.
+    const siteChangeImage = this.siteChangeSource
+      && getSiteChangeImage(this.siteChangeSource, this.manufacturer);
+
+    if (siteChangeImage) {
+      const siteChanges = dedupeSiteChangesWithinWindow(
+        _.filter(deviceEvent, d => getSiteChangeSubType(d) === this.siteChangeSource)
+      );
+
+      _.each(siteChanges, siteChange => {
+        const siteChangeX = xScale(siteChange.normalTime) - this.eventRadius;
+
+        this.doc
+          .circle(siteChangeX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + 1)
+          .fill('white');
+
+        this.doc.image(siteChangeImage, siteChangeX, eventY, {
+          width: this.eventRadius * 2,
+        });
+      });
+    }
 
     return this;
   }

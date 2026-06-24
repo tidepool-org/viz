@@ -1,11 +1,7 @@
 import React from 'react';
-import { render, cleanup } from '@testing-library/react/pure';
-
-import { formatClassesAsSelector } from '../../helpers/cssmodules';
+import { render, screen, cleanup } from '@testing-library/react/pure';
 
 import EventTooltip from '../../../src/components/daily/eventtooltip/EventTooltip';
-import detailedEventStyles from '../../../src/components/daily/eventtooltip/DetailedEventTooltip.css';
-import standardEventStyles from '../../../src/components/daily/eventtooltip/StandardEventTooltip.css';
 
 const props = {
   position: { top: 200, left: 200 },
@@ -24,24 +20,19 @@ describe('EventTooltip', () => {
       source: 'tandem',
     };
 
-    const styles = detailedEventStyles;
-
     it('should render the event title', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.eventTitle))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.eventTitle)).textContent).to.equal('Prior to this time, the pump was shut down');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Prior to this time, the pump was shut down')).to.exist;
     });
 
     it('should render the event description', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.eventDescription))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.eventDescription)).textContent).to.contain('Tidepool does not show data from before a pump is shut down.');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText(/Tidepool does not show data from before a pump is shut down/)).to.exist;
     });
 
     it('should render the event image with an overridden label for twiist', () => {
-      const { container } = render(<EventTooltip {...props} event={{ ...event, source: 'twiist' }} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.image))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.image)).querySelector('img').getAttribute('alt')).to.equal('Pump Shutdown');
+      render(<EventTooltip {...props} event={{ ...event, source: 'twiist' }} />);
+      expect(screen.getByAltText('Pump Shutdown')).to.exist;
     });
   });
 
@@ -53,31 +44,25 @@ describe('EventTooltip', () => {
       notes: ['Felt dizzy', 'Had two drinks'],
     };
 
-    const styles = standardEventStyles;
-
     it('should render the event time', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.time))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.time)).textContent).to.equal('12:00 pm');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('12:00 pm')).to.exist;
     });
 
     it('should render the event title', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.title))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.title)).textContent).to.equal('Health');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Health')).to.exist;
     });
 
     it('should render the event label', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.label))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.label)).textContent).to.equal('Alcohol');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Alcohol')).to.exist;
     });
 
     it('should render the event notes', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.notes))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.notes)).textContent).to.contain('Felt dizzy');
-      expect(container.querySelector(formatClassesAsSelector(styles.notes)).textContent).to.contain('Had two drinks');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Felt dizzy')).to.exist;
+      expect(screen.getByText('Had two drinks')).to.exist;
     });
   });
 
@@ -89,26 +74,20 @@ describe('EventTooltip', () => {
       duration: { value: 30, units: 'minutes' }
     };
 
-    const styles = standardEventStyles;
-
     it('should render the event time', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.time))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.time)).textContent).to.equal('12:00 pm');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('12:00 pm')).to.exist;
     });
 
     it('should render the event title', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.title))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.title)).textContent).to.equal('Exercise');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Exercise')).to.exist;
     });
 
     it('should render the event intensity and duration', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.label))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.label)).textContent).to.equal('Light');
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.value))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.value)).textContent).to.equal('30m');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Light')).to.exist;
+      expect(screen.getByText('30m')).to.exist;
     });
   });
 
@@ -119,13 +98,41 @@ describe('EventTooltip', () => {
       notes: ['Felt dizzy', 'Had two drinks'],
     };
 
-    const styles = standardEventStyles;
-
     it('should render the event notes', () => {
-      const { container } = render(<EventTooltip {...props} event={event} />);
-      expect(container.querySelectorAll(formatClassesAsSelector(styles.notes))).to.have.length(1);
-      expect(container.querySelector(formatClassesAsSelector(styles.notes)).textContent).to.contain('Felt dizzy');
-      expect(container.querySelector(formatClassesAsSelector(styles.notes)).textContent).to.contain('Had two drinks');
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Felt dizzy')).to.exist;
+      expect(screen.getByText('Had two drinks')).to.exist;
+    });
+  });
+
+  context('site change event', () => {
+    const event = {
+      tags: { siteChange: true },
+      normalTime: new Date('2023-01-01T12:00:00Z').valueOf(),
+      displayLabel: 'Cannula Fill',
+      daysSince: 3.5,
+    };
+
+    it('should render the combined "Site Change: <label>" title', () => {
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('Site Change: Cannula Fill')).to.exist;
+    });
+
+    it('should render the daysSince duration value when provided', () => {
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('3d 12h')).to.exist;
+    });
+
+    it('should omit the duration value when daysSince is null', () => {
+      render(<EventTooltip {...props} event={{ ...event, daysSince: null }} />);
+      // Title still renders via the same code path; the duration is simply absent.
+      expect(screen.getByText('Site Change: Cannula Fill')).to.exist;
+      expect(screen.queryByText('3d 12h')).to.be.null;
+    });
+
+    it('should fall back to "Site Change" when no displayLabel is present', () => {
+      render(<EventTooltip {...props} event={{ ...event, displayLabel: undefined }} />);
+      expect(screen.getByText('Site Change')).to.exist;
     });
   });
 });

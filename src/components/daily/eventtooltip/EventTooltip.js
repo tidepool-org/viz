@@ -7,7 +7,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../colors';
 import detailedEventStyles from './DetailedEventTooltip.css';
 import standardEventStyles from './StandardEventTooltip.css';
-import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN, MS_IN_MIN } from '../../../utils/constants';
+import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN, MS_IN_DAY, MS_IN_MIN } from '../../../utils/constants';
 import { formatClocktimeFromMsPer24, formatDuration, getMsPer24 } from '../../../utils/datetime';
 
 import tandemShutDownImage from './images/tandemShutDownImage.png';
@@ -45,6 +45,21 @@ const renderStandardEvent = (content = {}) => (
 const getEventContent = (event, timePrefs) => {
   const msPer24 = getMsPer24(event?.normalTime, timePrefs?.timezoneName);
   const time = formatClocktimeFromMsPer24(msPer24);
+
+  if (event?.tags?.siteChange) {
+    const daysSinceText = event.daysSince != null
+      ? formatDuration(event.daysSince * MS_IN_DAY, { condensed: true })
+      : null;
+
+    return {
+      time,
+      title: event.displayLabel
+        ? t('Site Change: {{displayLabel}}', { displayLabel: event.displayLabel })
+        : t('Site Change'),
+      value: daysSinceText,
+      renderer: renderStandardEvent,
+    };
+  }
 
   switch (event?.tags?.event) {
     case EVENT_PUMP_SHUTDOWN:
@@ -151,7 +166,7 @@ EventTooltip.propTypes = {
   showDividers: PropTypes.bool,
   event: PropTypes.shape({
     tags: PropTypes.shape({
-      event: PropTypes.string.isRequired,
+      event: PropTypes.string,
     }).isRequired,
     normalTime: PropTypes.number.isRequired,
   }).isRequired,
