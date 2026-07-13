@@ -112,7 +112,12 @@ export class DataUtil {
     this.endTimer('init total');
   };
 
-  addData = (rawData = [], patientId, returnData = false) => {
+  addData = (
+    rawData = [],
+    patientId,
+    returnData = false,
+    syncTimePrefs = false // set the dataUtil timePrefs to timezone of most recent data
+  ) => {
     this.startTimer('addData');
 
     this.bolusDatumsByIdMap = this.bolusDatumsByIdMap || {};
@@ -194,6 +199,11 @@ export class DataUtil {
     if (rejectedData.length) this.log('rejectedData', rejectedData);
 
     this.setMetaData();
+
+    if (syncTimePrefs && _.get(this, 'latestTimeZone.name')) {
+      this.setTimePrefs({ timezoneAware: true, timezoneName: this.latestTimeZone.name });
+    }
+
     this.endTimer('addData');
 
     const result = {
