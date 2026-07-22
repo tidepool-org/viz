@@ -21,8 +21,8 @@
 // Do not import i18next, lodash, or anything else from here — keeping this
 // module side-effect-free is what lets it load in plain Node.
 
-const MGDL_UNITS = 'mg/dL';
-const MMOLL_UNITS = 'mmol/L';
+export const MGDL_UNITS = 'mg/dL';
+export const MMOLL_UNITS = 'mmol/L';
 
 export const GLYCEMIC_RANGES_PRESET = {
   ADA_STANDARD: 'adaStandard',

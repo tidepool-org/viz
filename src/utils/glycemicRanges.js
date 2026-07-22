@@ -22,6 +22,8 @@ export {
   DEFAULT_BG_BOUNDS,
   GLYCEMIC_RANGES_PRESET,
   GLYCEMIC_RANGES_TYPE,
+  MGDL_UNITS,
+  MMOLL_UNITS,
 } from './glycemicRangeConstants';
 
 /**
