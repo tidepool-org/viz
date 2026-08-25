@@ -26,6 +26,12 @@ import { insulinSettings, presetSettings } from './data';
 
 const t = i18next.t.bind(i18next);
 
+/**
+ * renderedDevices
+ * @param  {Object} [metaData]  upload metaData carrying devices and excludedDevices
+ *
+ * @return {Array}              devices with pump settings that are not excluded
+ */
 function renderedDevices(metaData) {
   return _.filter(metaData?.devices, ({ id, hasPumpSettings }) => (
     hasPumpSettings && !_.includes(metaData?.excludedDevices, id)
