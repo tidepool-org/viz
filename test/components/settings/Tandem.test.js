@@ -39,9 +39,15 @@ jest.mock('../../../src/components/settings/common/CollapsibleContainer', () => 
     {props.children}
   </div>
 ));
-jest.mock('../../../src/components/common/controls/ClipboardButton', () => (props) => (
-  <button data-testid="ClipboardButton" onClick={() => props.onSuccess && props.onSuccess()}>Copy</button>
-));
+
+let mockCapturedGetText;
+
+jest.mock('../../../src/components/common/controls/ClipboardButton', () => (props) => {
+  mockCapturedGetText = props.getText;
+  return (
+    <button data-testid="ClipboardButton" onClick={() => props.onSuccess && props.onSuccess()}>Copy</button>
+  );
+});
 
 
 const flatrateData = require('../../../data/pumpSettings/tandem/flatrate.json');
@@ -81,6 +87,7 @@ describe('Tandem', () => {
 
   afterEach(() => {
     copySettingsClicked.resetHistory();
+    mockCapturedGetText = undefined;
     cleanup();
   });
 
@@ -243,6 +250,89 @@ describe('Tandem', () => {
     it('should render an annotation', () => {
       const annotation = ciqContainer.querySelector(formatClassesAsSelector(styles.annotations));
       expect(annotation.textContent).contains('Tandem\'s Control-IQ Technology uses its own preset');
+    });
+  });
+
+  describe('copy-as-text props', () => {
+    const patient = {
+      profile: {
+        fullName: 'Patient Prop Name',
+        patient: {
+          birthday: '1983-01-31',
+          mrn: 'MRN123',
+        },
+      },
+    };
+
+    const copyAsTextMetadata = {
+      diagnosisTypeLabel: 'Type 1',
+      patientTags: [{ id: 't1', name: 'Zebra' }, { id: 't2', name: 'Alpha' }],
+      sites: [{ id: 's1', name: 'Site B' }, { id: 's2', name: 'Site A' }],
+    };
+
+    // `matchedDevices` stays empty for the settings query.
+    const metaData = {
+      devices: [
+        { id: 'dev-pump', deviceName: 'Uploaded Pump', pump: true, hasPumpSettings: true },
+        { id: 'dev-excluded', deviceName: 'Excluded Pump', pump: true, hasPumpSettings: true },
+        { id: 'dev-cgm', deviceName: 'Uploaded CGM', cgm: true, hasPumpSettings: false },
+      ],
+      excludedDevices: ['dev-excluded'],
+      matchedDevices: {},
+    };
+
+    const renderWith = (extraProps) => {
+      cleanup();
+      rtlRender(
+        <Tandem {...props} {...extraProps} />
+      );
+    };
+
+    it('should build the four patient header fields when `copyAsTextMetadata` is supplied', () => {
+      renderWith({ patient, copyAsTextMetadata });
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Diabetes Type: Type 1');
+      expect(text).to.include('MRN: MRN123');
+      expect(text).to.include('Patient Tags: Alpha, Zebra');
+      expect(text).to.include('Clinic Sites: Site A, Site B');
+    });
+
+    it('should build the `Devices Uploaded` block when `metaData` supplies a device', () => {
+      renderWith({ patient, metaData });
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Devices Uploaded');
+      expect(text).to.include('Uploaded Pump');
+      expect(text).to.not.include('Excluded Pump');
+      expect(text).to.not.include('Uploaded CGM');
+    });
+
+    it('should prefer `patient` over `user` when both are supplied', () => {
+      renderWith({ patient });
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Patient Prop Name');
+      expect(text).to.not.include('Mary Smith');
+    });
+
+    it('should fall back to `user` when `patient` is absent', () => {
+      renderWith({});
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Mary Smith');
+      expect(text).to.not.include('Patient Prop Name');
+    });
+
+    it('should build neither the header fields nor the device block without the new props', () => {
+      renderWith({});
+      const text = mockCapturedGetText();
+
+      expect(text).to.not.include('Diabetes Type');
+      expect(text).to.not.include('MRN');
+      expect(text).to.not.include('Patient Tags');
+      expect(text).to.not.include('Clinic Sites');
+      expect(text).to.not.include('Devices Uploaded');
     });
   });
 });
