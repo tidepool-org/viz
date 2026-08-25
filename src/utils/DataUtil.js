@@ -1859,6 +1859,7 @@ export class DataUtil {
       return {
         bgm: _.includes(allDeviceTags, 'bgm'),
         cgm: _.includes(allDeviceTags, 'cgm'),
+        hasPumpSettings: !!pumpSettingsForDevice,
         oneMinCgmSampleInterval: _.some(deviceUploads, isOneMinCGMSampleIntervalDevice),
         id: deviceId,
         deviceName: labelingUpload?.deviceName || '',
