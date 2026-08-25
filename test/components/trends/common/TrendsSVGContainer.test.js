@@ -53,14 +53,23 @@ jest.mock('../../../../src/components/trends/common/YAxisLabelsAndTicks', () => 
   default: () => require('react').createElement('g', { 'data-testid': 'YAxisLabelsAndTicks' }),
 }));
 
+let mockCBGSlicesProps;
+let mockCBGDateTracesProps;
+
 jest.mock('../../../../src/components/trends/cbg/CBGSlicesContainer', () => ({
   __esModule: true,
-  default: () => require('react').createElement('g', { 'data-testid': 'CBGSlicesContainer' }),
+  default: (slicesProps) => {
+    mockCBGSlicesProps = slicesProps;
+    return require('react').createElement('g', { 'data-testid': 'CBGSlicesContainer' });
+  },
 }));
 
 jest.mock('../../../../src/components/trends/cbg/CBGDateTracesAnimationContainer', () => ({
   __esModule: true,
-  default: () => require('react').createElement('g', { 'data-testid': 'CBGDateTracesAnimationContainer' }),
+  default: (dateTracesProps) => {
+    mockCBGDateTracesProps = dateTracesProps;
+    return require('react').createElement('g', { 'data-testid': 'CBGDateTracesAnimationContainer' });
+  },
 }));
 
 jest.mock('../../../../src/components/trends/cbg/FocusedCBGSliceSegment', () => ({
@@ -387,6 +396,62 @@ describe('TrendsSVGContainer', () => {
           TrendsSVGContainer.prototype.setState.restore();
         });
       });
+    });
+  });
+
+  describe('single bounded data source', () => {
+    // msPer24 and value place the first two inside `focusedSlice` below, not the third
+    const boundedCbgData = [
+      { id: 'trace-1', localDate: '2019-11-25', msPer24: 6000, value: 180 },
+      { id: 'trace-2', localDate: '2019-11-26', msPer24: 7000, value: 120 },
+      { id: 'outside-segment', localDate: '2019-11-27', msPer24: 50000, value: 180 },
+    ];
+    const cbgLocalDates = _.map(boundedCbgData, 'localDate');
+    const dateWithoutCbgData = '2019-12-31';
+
+    const focusedSlice = {
+      data: {
+        msFrom: 0,
+        msTo: 10000,
+        upperQuantile: 200,
+        thirdQuartile: 75,
+      },
+    };
+    const focusedSliceKeys = ['thirdQuartile', 'upperQuantile'];
+
+    const boundedProps = _.assign({}, props, {
+      cbgData: boundedCbgData,
+      dates: [...cbgLocalDates, dateWithoutCbgData],
+      showingCbgDateTraces: true,
+    });
+
+    beforeEach(() => {
+      // the focus must arrive on a rerender: the grouping is derived in
+      // UNSAFE_componentWillReceiveProps, not on mount
+      const { rerender } = rtlRender(React.createElement(TrendsSVGContainer, boundedProps));
+      rerender(React.createElement(TrendsSVGContainer, _.assign({}, boundedProps, {
+        focusedSlice,
+        focusedSliceKeys,
+      })));
+    });
+
+    afterEach(() => {
+      mockCBGSlicesProps = undefined;
+      mockCBGDateTracesProps = undefined;
+    });
+
+    it('should pass the `cbgData` prop through to CBGSlicesContainer unmodified', () => {
+      expect(mockCBGSlicesProps.data).to.equal(boundedCbgData);
+    });
+
+    it('should derive the focused segment\'s grouped dates from `cbgData`, not the wider `dates` prop', () => {
+      const { data, dates } = mockCBGDateTracesProps;
+      // without a date `cbgData` has no datum for, following `dates` would not show up here
+      expect(boundedProps.dates).to.include(dateWithoutCbgData);
+      expect(dates).to.have.length.above(0);
+      expect(_.difference(dates, cbgLocalDates)).to.deep.equal([]);
+      expect(_.difference(_.map(_.flatten(_.values(data)), 'id'), _.map(boundedCbgData, 'id')))
+        .to.deep.equal([]);
     });
   });
 
