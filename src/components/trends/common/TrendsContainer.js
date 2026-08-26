@@ -269,31 +269,12 @@ export class TrendsContainer extends PureComponent {
   }
 
   mountData(props = this.props) {
-    const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop, mostRecentDatetimeLocation } = props;
-
-    // find initial date domain (based on initialDatetimeLocation or current time)
-    const { extentSize, initialDatetimeLocation, timePrefs } = props;
-    const timezone = datetime.getTimezoneFromTimePrefs(timePrefs);
-
-    const end = initialDatetimeLocation || mostRecentDatetimeLocation;
-    const start = moment(end).tz(timezone).subtract(extentSize, 'days').toISOString();
-    const dateDomain = [start, end];
-
-    const dates = getAllDatesInRange(start, end, timePrefs);
-    const activeDates = _.filter(dates, date => (
-      props.activeDays[moment.utc(date, 'YYYY-MM-DD').format('dddd').toLowerCase()]
-    ));
-
-    const allBg = _.sortBy(
-      _.filter(
-        _.cloneDeep(_.get(props, 'data.data.combined', [])),
-        d => _.includes(activeDates, d.localDate)
-      ),
-      'normalTime'
-    );
+    const allBg = _.sortBy(_.cloneDeep(_.get(props, 'data.data.combined', [])), 'normalTime');
     const bgDomain = extent(allBg, d => d.value);
     const currentCbgData = _.filter(allBg, { type: 'cbg' });
     const currentSmbgData = _.filter(allBg, { type: 'smbg' });
+
+    const { bgPrefs: { bgBounds, bgUnits }, yScaleClampTop, mostRecentDatetimeLocation } = props;
 
     const upperBound = yScaleClampTop[bgUnits];
     const yScaleDomain = [bgDomain[0], upperBound];
@@ -302,6 +283,15 @@ export class TrendsContainer extends PureComponent {
       yScaleDomain[0] = lowestThreshold;
     }
     const yScale = scaleLinear().domain(yScaleDomain).clamp(true);
+
+    // find initial date domain (based on initialDatetimeLocation or current time)
+    const { extentSize, initialDatetimeLocation, timePrefs } = props;
+    const timezone = datetime.getTimezoneFromTimePrefs(timePrefs);
+
+    const end = initialDatetimeLocation || mostRecentDatetimeLocation;
+
+    const start = moment(end).tz(timezone).subtract(extentSize, 'days').toISOString();
+    const dateDomain = [start, end];
 
     const state = {
       bgDomain: { lo: bgDomain[0], hi: bgDomain[1] },

@@ -25,7 +25,6 @@ import React from 'react';
 import { render as rtlRender, cleanup, act } from '@testing-library/react/pure';
 
 import { MGDL_UNITS, MMOLL_UNITS } from '../../../../src/utils/constants';
-import { getTimezoneFromTimePrefs } from '../../../../src/utils/datetime';
 import DummyComponent from '../../../helpers/DummyComponent';
 
 import {
@@ -34,16 +33,10 @@ import {
   getLocalizedNoonBeforeUTC,
   getLocalizedOffset,
 } from '../../../../src/components/trends/common/TrendsContainer';
-
-let mockTrendsSVGProps;
-
 // Mock TrendsSVGContainer to avoid rendering its deep component tree
 jest.mock('../../../../src/components/trends/common/TrendsSVGContainer', () => ({
   __esModule: true,
-  default: (svgProps) => {
-    mockTrendsSVGProps = svgProps;
-    return require('react').createElement('div', { 'data-testid': 'TrendsSVGContainer' });
-  },
+  default: () => require('react').createElement('div', { 'data-testid': 'TrendsSVGContainer' }),
 }));
 
 // Helper to create a render wrapper with instance access and setProps
@@ -165,57 +158,6 @@ describe('TrendsContainer', () => {
     const extentSize = 7;
     const timezone = 'US/Pacific';
 
-    const activeDays = {
-      monday: true,
-      tuesday: true,
-      wednesday: true,
-      thursday: true,
-      friday: true,
-      saturday: false,
-      sunday: false,
-    };
-    const timePrefs = {
-      timezoneAware: false,
-      timezoneName: timezone,
-    };
-    const mostRecentDatetimeLocation = '2019-12-01T11:40:00.000Z';
-
-    function domainDates(forProps) {
-      const { extentSize: size, timePrefs: prefs } = forProps;
-      const end = forProps.initialDatetimeLocation || forProps.mostRecentDatetimeLocation;
-      const start = moment(end)
-        .tz(getTimezoneFromTimePrefs(prefs))
-        .subtract(size, 'days')
-        .toISOString();
-      return getAllDatesInRange(start, end, prefs);
-    }
-
-    function datesInView(forProps) {
-      const { activeDays: days } = forProps;
-      return _.filter(
-        domainDates(forProps),
-        date => days[_.toLower(moment.utc(date, 'YYYY-MM-DD').format('dddd'))]
-      );
-    }
-
-    const domainSpec = {
-      activeDays,
-      extentSize,
-      timePrefs,
-      mostRecentDatetimeLocation,
-    };
-    const datesInDomain = domainDates(domainSpec);
-    const activeDatesInView = datesInView(domainSpec);
-
-    // Each datum needs a `localDate` or the bound under test filters it out. This
-    // gives each one a date guaranteed to be in view; which one does not matter.
-    function spreadOverDatesInView(datums) {
-      return _.map(datums, (datum, i) => ({
-        ...datum,
-        localDate: activeDatesInView[i % activeDatesInView.length],
-      }));
-    }
-
     const devices = {
       dexcom: {
         id: 'DexG4Rec_XXXXXXXXX',
@@ -227,15 +169,15 @@ describe('TrendsContainer', () => {
       },
     };
 
-    const justOneDatum = (device = devices.dexcom, type = 'cbg') => spreadOverDatesInView([{
+    const justOneDatum = (device = devices.dexcom, type = 'cbg') => [{
       id: chance.hash({ length: 6 }),
       deviceId: device.id,
       msPer24: chance.integer({ min: 0, max: 864e5 }),
       type,
       value: 100,
-    }]);
+    }];
     const lowestBg = 25;
-    const sevenDaysData = (device = devices.dexcom, type = 'cbg') => spreadOverDatesInView(
+    const sevenDaysData = (device = devices.dexcom, type = 'cbg') => (
       _.map(range(0, device.cgmInDay * extentSize), () => ({
         id: chance.hash({ length: 6 }),
         deviceId: device.id,
@@ -245,7 +187,7 @@ describe('TrendsContainer', () => {
       }))
     );
 
-    const sevenDaysDataMixedMinimum = (type = 'cbg') => spreadOverDatesInView(
+    const sevenDaysDataMixedMinimum = (type = 'cbg') => (
       _.map(range(0, (devices.dexcom.cgmInDay / 4) * extentSize), () => ({
         id: chance.hash({ length: 6 }),
         deviceId: devices.dexcom.id,
@@ -261,15 +203,15 @@ describe('TrendsContainer', () => {
       })))
     );
 
-    const justOneDatumMmol = (device = devices.dexcom, type = 'cbg') => spreadOverDatesInView([{
+    const justOneDatumMmol = (device = devices.dexcom, type = 'cbg') => [{
       id: chance.hash({ length: 6 }),
       deviceId: device.id,
       msPer24: chance.integer({ min: 0, max: 864e5 }),
       type,
       value: 5.2,
-    }]);
+    }];
     const lowestBgMmol = 3.1;
-    const sevenDaysDataMmol = (device = devices.dexcom, type = 'cbg') => spreadOverDatesInView(
+    const sevenDaysDataMmol = (device = devices.dexcom, type = 'cbg') => (
       _.map(range(0, device.cgmInDay * extentSize), () => ({
         id: chance.hash({ length: 6 }),
         deviceId: device.id,
@@ -297,7 +239,15 @@ describe('TrendsContainer', () => {
     const unfocusSmbgRangeAvg = sinon.spy();
 
     const props = {
-      activeDays,
+      activeDays: {
+        monday: true,
+        tuesday: true,
+        wednesday: true,
+        thursday: true,
+        friday: true,
+        saturday: false,
+        sunday: false,
+      },
       currentPatientInViewId: 'a1b2c3',
       extentSize,
       loading: false,
@@ -307,12 +257,15 @@ describe('TrendsContainer', () => {
       smbgGrouped: true,
       smbgLines: false,
       smbgTrendsComponent: DummyComponent,
-      timePrefs,
+      timePrefs: {
+        timezoneAware: false,
+        timezoneName: timezone,
+      },
       yScaleClampTop: {
         [MGDL_UNITS]: 300,
         [MMOLL_UNITS]: 25,
       },
-      mostRecentDatetimeLocation,
+      mostRecentDatetimeLocation: '2019-12-01T11:40:00.000Z',
       onDatetimeLocationChange,
       onSelectDate: sinon.stub(),
       onSwitchBgDataSource,
@@ -473,102 +426,6 @@ describe('TrendsContainer', () => {
           ...makeDataProp(justOneDatum()),
         }));
         expect(onSwitchBgDataSource.callCount).to.equal(0);
-      });
-    });
-
-    describe('view bound', () => {
-      // two different weekdays, so deselecting one is distinguishable from
-      // emptying the view
-      const firstInView = activeDatesInView[0];
-      const secondInView = activeDatesInView[1];
-      const firstInViewWeekday = _.toLower(moment.utc(firstInView, 'YYYY-MM-DD').format('dddd'));
-
-      const deselectedWeekday = _.first(_.difference(datesInDomain, activeDatesInView));
-
-      // step to the nearest *selected* weekday, not the adjacent day, so the
-      // date range is the only reason these fall out of view
-      function nearestActiveDateOutsideDomain(from, step) {
-        let candidate = moment.utc(from, 'YYYY-MM-DD');
-        do {
-          candidate = candidate.add(step, 'days');
-        } while (!activeDays[_.toLower(candidate.format('dddd'))]);
-        return candidate.format('YYYY-MM-DD');
-      }
-      const beforeDomainStart = nearestActiveDateOutsideDomain(_.first(datesInDomain), -1);
-      const afterDomainEnd = nearestActiveDateOutsideDomain(_.last(datesInDomain), 1);
-
-      // the excluded values must stay outside [retainedLow, retainedHigh], or the
-      // `bgDomain` and yScale cases go vacuous. 25 is below veryLowThreshold.
-      const retainedLow = 120;
-      const retainedHigh = 130;
-      const boundData = type => ([
-        { id: `${type}-in-view-first`, localDate: firstInView, msPer24: 36e5, type, value: retainedLow },
-        { id: `${type}-in-view-second`, localDate: secondInView, msPer24: 72e5, type, value: retainedHigh },
-        { id: `${type}-before-start`, localDate: beforeDomainStart, msPer24: 36e5, type, value: 25 },
-        { id: `${type}-after-end`, localDate: afterDomainEnd, msPer24: 36e5, type, value: 525 },
-        { id: `${type}-deselected-weekday`, localDate: deselectedWeekday, msPer24: 36e5, type, value: 30 },
-      ]);
-
-      const boundedProps = {
-        ...props,
-        ...mgdl,
-        ...makeDataProp([...boundData('cbg'), ...boundData('smbg')]),
-      };
-
-      let bounded;
-      let boundedSVGProps;
-      let toggled;
-
-      before(() => {
-        bounded = renderTrends(boundedProps);
-        boundedSVGProps = mockTrendsSVGProps;
-      });
-
-      afterEach(() => {
-        mockTrendsSVGProps = undefined;
-      });
-
-      it('should retain the in-view cbg datums and exclude every out-of-view one', () => {
-        expect(_.map(bounded.state().currentCbgData, 'id'))
-          .to.deep.equal(['cbg-in-view-first', 'cbg-in-view-second']);
-      });
-
-      it('should retain the in-view smbg datums and exclude every out-of-view one', () => {
-        expect(_.map(bounded.state().currentSmbgData, 'id'))
-          .to.deep.equal(['smbg-in-view-first', 'smbg-in-view-second']);
-      });
-
-      it('should leave `bgDomain` unstretched by an out-of-window extreme value', () => {
-        expect(bounded.state().bgDomain).to.deep.equal({ lo: retainedLow, hi: retainedHigh });
-      });
-
-      it('should leave the yScale domain unstretched by an out-of-window extreme value', () => {
-        expect(bounded.state().yScale.domain()).to.deep.equal([
-          mgdl.bgPrefs.bgBounds.veryLowThreshold,
-          props.yScaleClampTop[MGDL_UNITS],
-        ]);
-      });
-
-      it('should hand `TrendsSVGContainer` only dates present in its `dates` prop', () => {
-        const { cbgData, smbgData, dates } = boundedSVGProps;
-        expect(cbgData).to.have.length.above(0);
-        expect(smbgData).to.have.length.above(0);
-        expect(_.difference(_.uniq(_.map(cbgData, 'localDate')), dates)).to.deep.equal([]);
-        expect(_.difference(_.uniq(_.map(smbgData, 'localDate')), dates)).to.deep.equal([]);
-      });
-
-      it('should drop a weekday\'s datums when `activeDays` changes with a `queryDataCount` bump', () => {
-        toggled = renderTrends(boundedProps);
-        expect(_.map(toggled.state().currentCbgData, 'id')).to.include('cbg-in-view-first');
-
-        toggled.setProps({
-          activeDays: { ...activeDays, [firstInViewWeekday]: false },
-          queryDataCount: props.queryDataCount + 1,
-        });
-
-        const ids = _.map(toggled.state().currentCbgData, 'id');
-        expect(ids).to.not.include('cbg-in-view-first');
-        expect(ids).to.include('cbg-in-view-second');
       });
     });
 
