@@ -1,5 +1,5 @@
 import _ from 'lodash';
-import { TweenMax } from 'gsap';
+import { gsap } from 'gsap';
 import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 
@@ -34,6 +34,7 @@ export class CBGDateTraceAnimated extends PureComponent {
     onSelectDate: PropTypes.func.isRequired,
     topMargin: PropTypes.number.isRequired,
     unfocusDateTrace: PropTypes.func.isRequired,
+    unfocusSlice: PropTypes.func.isRequired,
     xScale: PropTypes.func.isRequired,
     yScale: PropTypes.func.isRequired,
   };
@@ -46,19 +47,31 @@ export class CBGDateTraceAnimated extends PureComponent {
   }
 
   componentWillEnter(cb) {
-    const { animationDuration, data } = this.props;
-    const targets = _.map(data, (d) => (this[d.id]));
-    TweenMax.staggerTo(
-      targets, animationDuration, { opacity: 1, onComplete: cb }, animationDuration / targets.length
-    );
+    this.animateOpacity(1, cb);
   }
 
   componentWillLeave(cb) {
+    this.animateOpacity(0, cb);
+  }
+
+  /*
+   * NB: `cb` MUST be invoked when the animation finishes, or TransitionGroupPlus will never
+   * unmount a leaving date trace and its (invisible) circles stay in the DOM and hoverable.
+   */
+  animateOpacity(opacity, cb) {
     const { animationDuration, data } = this.props;
-    const targets = _.map(data, (d) => (this[d.id]));
-    TweenMax.staggerTo(
-      targets, animationDuration, { opacity: 0, onComplete: cb }, animationDuration / targets.length
-    );
+    const targets = _.compact(_.map(data, (d) => (this[d.id])));
+    if (_.isEmpty(targets)) {
+      cb();
+      return;
+    }
+    gsap.to(targets, {
+      opacity,
+      duration: animationDuration,
+      stagger: animationDuration / targets.length,
+      overwrite: true,
+      onComplete: cb,
+    });
   }
 
   handleClick() {
@@ -66,9 +79,16 @@ export class CBGDateTraceAnimated extends PureComponent {
     onSelectDate(date);
   }
 
-  handleMouseOut() {
-    const { unfocusDateTrace } = this.props;
+  handleMouseOut(e) {
+    const { unfocusDateTrace, unfocusSlice } = this.props;
     unfocusDateTrace();
+    // the slice segment we rolled off of to get here skipped its own unfocus (see
+    // CBGSliceSegment.handleMouseOut), so unless we're moving onto another cbg or a slice
+    // (which will focus itself), the slice must be unfocused from here or it stays focused indefinitely
+    const relatedId = _.get(e, 'relatedTarget.id', '');
+    if (relatedId.search('cbgCircle') === -1 && relatedId.search('cbgSlice') === -1) {
+      unfocusSlice();
+    }
   }
 
   render() {
