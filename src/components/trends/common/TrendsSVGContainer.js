@@ -184,6 +184,7 @@ export class TrendsSVGContainer extends PureComponent {
           dates={_.keys(focusedSegmentDataGroupedByDate) || []}
           focusCbgDateTrace={this.props.focusCbgDateTrace}
           unfocusCbgDateTrace={this.props.unfocusCbgDateTrace}
+          unfocusCbgSlice={this.props.unfocusCbgSlice}
           onSelectDate={this.props.onSelectDate}
           topMargin={this.props.margins.top}
           xScale={this.props.xScale}
