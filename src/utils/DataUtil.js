@@ -2420,6 +2420,27 @@ export class DataUtil {
     return previousSiteChangeDatums;
   };
 
+  addSiteChangeDaysSince = (deviceEventData = []) => {
+    const siteChanges = _.filter(deviceEventData, d => d.tags?.siteChange);
+    if (!siteChanges.length) return;
+
+    const timezoneName = _.get(this, 'timePrefs.timezoneName', 'UTC');
+    const getLocalDay = d => Date.parse(moment.utc(d[this.activeTimeField]).tz(timezoneName).format('YYYY-MM-DD'));
+    const subTypes = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING, SITE_CHANGE_RESERVOIR];
+
+    // Anchor each subtype on the last site change before the loaded window. One call is enough:
+    // subsequent in-window site changes anchor on their predecessor in this sorted list.
+    const anchors = this.getPreviousSiteChangeDatums(siteChanges[0]);
+
+    _.each(siteChanges, d => {
+      const subType = _.find(subTypes, key => d.tags[key]);
+      const anchor = subType && anchors[subType];
+      // eslint-disable-next-line no-param-reassign
+      d.daysSince = anchor ? Math.round((getLocalDay(d) - getLocalDay(anchor)) / MS_IN_DAY) : null;
+      if (subType) anchors[subType] = d;
+    });
+  };
+
   getTypeData = types => {
     const generatedData = {};
 
@@ -2444,6 +2465,7 @@ export class DataUtil {
       this.startTimer(`normalize | ${type} | ${this.activeRange}`);
       if (_.includes(['basal', 'deviceEvent'], type)) {
         typeData = this.sort.byTime(typeData);
+        if (type === 'deviceEvent') this.addSiteChangeDaysSince(typeData);
 
         const trimOverlappingStart = () => {
           // Normalize the data data and add any datums overlapping the start

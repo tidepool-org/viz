@@ -107,27 +107,48 @@ describe('EventTooltip', () => {
 
   context('site change event', () => {
     const event = {
-      tags: { siteChange: true },
+      type: 'deviceEvent',
+      subType: 'prime',
+      primeTarget: 'cannula',
+      source: 'Tandem',
       normalTime: new Date('2023-01-01T12:00:00Z').valueOf(),
+      tags: {
+        automatedSuspend: false,
+        calibration: false,
+        siteChange: true,
+        reservoirChange: false,
+        cannulaPrime: true,
+        tubingPrime: false,
+      },
       displayLabel: 'Cannula Fill',
-      daysSince: 3.5,
+      daysSince: 3,
     };
+
+    it('should render the event time', () => {
+      render(<EventTooltip {...props} event={event} />);
+      expect(screen.getByText('12:00 pm')).to.exist;
+    });
 
     it('should render the combined "Site Change: <label>" title', () => {
       render(<EventTooltip {...props} event={event} />);
       expect(screen.getByText('Site Change: Cannula Fill')).to.exist;
     });
 
-    it('should render the daysSince duration value when provided', () => {
+    it('should render whole days for a multi-day gap', () => {
       render(<EventTooltip {...props} event={event} />);
-      expect(screen.getByText('3d 12h')).to.exist;
+      expect(screen.getByText('3 days')).to.exist;
+    });
+
+    it('should render the singular "1 day" for a one-day gap', () => {
+      render(<EventTooltip {...props} event={{ ...event, daysSince: 1 }} />);
+      expect(screen.getByText('1 day')).to.exist;
     });
 
     it('should omit the duration value when daysSince is null', () => {
       render(<EventTooltip {...props} event={{ ...event, daysSince: null }} />);
       // Title still renders via the same code path; the duration is simply absent.
       expect(screen.getByText('Site Change: Cannula Fill')).to.exist;
-      expect(screen.queryByText('3d 12h')).to.be.null;
+      expect(screen.queryByText(/days?$/)).to.be.null;
     });
 
     it('should fall back to "Site Change" when no displayLabel is present', () => {

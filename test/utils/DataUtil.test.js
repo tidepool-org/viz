@@ -6641,6 +6641,83 @@ describe('DataUtil', () => {
     });
   });
 
+  describe('addSiteChangeDaysSince', () => {
+    const siteChangeEndpoints = [
+      '2018-02-01T00:00:00.000Z',
+      '2018-02-04T00:00:00.000Z',
+    ];
+
+    // The 01-20 cannula prime sits outside siteChangeEndpoints on purpose: it is the anchor
+    // that only getPreviousSiteChangeDatums can see.
+    const cannulaPrimeJan20 = new Types.DeviceEvent({ deviceTime: '2018-01-20T01:00:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+    const cannulaPrimeFeb01 = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+    const cannulaPrimeFeb03 = new Types.DeviceEvent({ deviceTime: '2018-02-03T01:00:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+    const tubingPrimeFeb02 = new Types.DeviceEvent({ deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing', ...useRawData });
+    const reservoirChangeFeb02 = new Types.DeviceEvent({ deviceTime: '2018-02-02T02:00:00', subType: 'reservoirChange', ...useRawData });
+    const calibrationFeb01 = new Types.DeviceEvent({ deviceTime: '2018-02-01T03:00:00', subType: 'calibration', ...useRawData });
+
+    const siteChangeData = _.map([
+      cannulaPrimeJan20,
+      cannulaPrimeFeb01,
+      cannulaPrimeFeb03,
+      tubingPrimeFeb02,
+      reservoirChangeFeb02,
+      calibrationFeb01,
+    ], _.toPlainObject);
+
+    const queryDeviceEvents = (overrides = {}) => {
+      const result = dataUtil.query(createQuery({
+        endpoints: siteChangeEndpoints,
+        types: { deviceEvent: { select: '*' } },
+        ...overrides,
+      }));
+
+      return _.keyBy(result.data.current.data.deviceEvent, 'id');
+    };
+
+    beforeEach(() => {
+      initDataUtil(siteChangeData);
+    });
+
+    it('should measure the first in-window site change from an anchor outside the endpoints', () => {
+      expect(queryDeviceEvents()[cannulaPrimeFeb01.id].daysSince).to.equal(12);
+    });
+
+    it('should anchor a later in-window site change on the previous in-window datum of the same subtype', () => {
+      expect(queryDeviceEvents()[cannulaPrimeFeb03.id].daysSince).to.equal(2);
+    });
+
+    // The next two look alike but pin different halves of the anchor map: cannula and tubing
+    // are discriminated by primeTarget within one prime query, reservoirChange has its own.
+    it('should not anchor a tubing prime on the cannula primes, having no prior tubing prime', () => {
+      expect(queryDeviceEvents()[tubingPrimeFeb02.id].daysSince).to.be.null;
+    });
+
+    it('should not anchor a reservoir change on the prime datums, having no prior reservoir change', () => {
+      expect(queryDeviceEvents()[reservoirChangeFeb02.id].daysSince).to.be.null;
+    });
+
+    it('should not add a daysSince field to deviceEvents that are not site changes', () => {
+      expect(queryDeviceEvents()[calibrationFeb01.id]).to.not.have.property('daysSince');
+    });
+
+    it('should count calendar days in the display timezone, not UTC days', () => {
+      // 23:30 and 00:30 the next day in US/Eastern, which are the same UTC calendar day.
+      const eveningPrime = new Types.DeviceEvent({ deviceTime: '2018-02-02T04:30:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+      const nextMorningPrime = new Types.DeviceEvent({ deviceTime: '2018-02-02T05:30:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+
+      initDataUtil(_.map([eveningPrime, nextMorningPrime], _.toPlainObject));
+
+      const datums = queryDeviceEvents({
+        endpoints: ['2018-02-02T00:00:00.000Z', '2018-02-03T00:00:00.000Z'],
+        timePrefs: { timezoneAware: true, timezoneName: 'US/Eastern' },
+      });
+
+      expect(datums[eveningPrime.id].daysSince).to.be.null;
+      expect(datums[nextMorningPrime.id].daysSince).to.equal(1);
+    });
+  });
+
   describe('getTypeData', () => {
     beforeEach(() => {
       initDataUtil(defaultData);

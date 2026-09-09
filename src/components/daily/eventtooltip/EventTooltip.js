@@ -7,7 +7,7 @@ import Tooltip from '../../common/tooltips/Tooltip';
 import colors from '../../../colors';
 import detailedEventStyles from './DetailedEventTooltip.css';
 import standardEventStyles from './StandardEventTooltip.css';
-import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN, MS_IN_DAY, MS_IN_MIN } from '../../../utils/constants';
+import { EVENT_HEALTH, EVENT_NOTES, EVENT_PHYSICAL_ACTIVITY, EVENT_PUMP_SHUTDOWN, MS_IN_MIN } from '../../../utils/constants';
 import { formatClocktimeFromMsPer24, formatDuration, getMsPer24 } from '../../../utils/datetime';
 
 import tandemShutDownImage from './images/tandemShutDownImage.png';
@@ -47,9 +47,12 @@ const getEventContent = (event, timePrefs) => {
   const time = formatClocktimeFromMsPer24(msPer24);
 
   if (event?.tags?.siteChange) {
-    const daysSinceText = event.daysSince != null
-      ? formatDuration(event.daysSince * MS_IN_DAY, { condensed: true })
-      : null;
+    let daysSinceText = null;
+    if (event.daysSince != null) {
+      daysSinceText = event.daysSince === 1
+        ? t('1 day')
+        : t('{{daysSince}} days', { daysSince: event.daysSince });
+    }
 
     return {
       time,
@@ -167,8 +170,11 @@ EventTooltip.propTypes = {
   event: PropTypes.shape({
     tags: PropTypes.shape({
       event: PropTypes.string,
+      siteChange: PropTypes.bool,
     }).isRequired,
     normalTime: PropTypes.number.isRequired,
+    displayLabel: PropTypes.string,
+    daysSince: PropTypes.number,
   }).isRequired,
   timePrefs: PropTypes.object.isRequired,
 };
