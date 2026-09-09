@@ -28,7 +28,7 @@ import PrintView from './PrintView';
 import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
-import { getPumpVocabulary } from '../../utils/device';
+import { getPumpVocabulary, manufacturerKey } from '../../utils/device';
 import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
   classifyBgValue,
@@ -105,9 +105,9 @@ const siteChangeImages = {
   [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
   [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
   [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
-  [`${_.lowerCase(TIDEPOOL_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
-  [`${_.lowerCase(DIY_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
-  [`${_.lowerCase(TWIIST_LOOP)}_${SITE_CHANGE_RESERVOIR}`]: 'images/sitechange-twiist-cassette.png',
+  [`${manufacturerKey(TIDEPOOL_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${manufacturerKey(DIY_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${manufacturerKey(TWIIST_LOOP)}_${SITE_CHANGE_RESERVOIR}`]: 'images/sitechange-twiist-cassette.png',
 };
 
 // Resolve a deviceEvent to a SITE_CHANGE_* subtype. Daily data records site
@@ -124,10 +124,9 @@ function getSiteChangeSubType(d) {
   return null;
 }
 
-// Resolve the site-change image from subtype + manufacturer, matching getSiteChangeSource's
-// `_.lowerCase` normalization. Loop/twiist fall back to the base icon when no variant exists.
+// Loop/twiist fall back to the base icon when no variant exists.
 function getSiteChangeImage(subType, manufacturer) {
-  return siteChangeImages[`${_.lowerCase(manufacturer)}_${subType}`] || siteChangeImages[subType];
+  return siteChangeImages[`${manufacturerKey(manufacturer)}_${subType}`] || siteChangeImages[subType];
 }
 
 const SITE_CHANGE_DEDUP_WINDOW_MS = 5 * MS_IN_MIN;
@@ -1327,16 +1326,18 @@ class DailyPrintView extends PrintView {
       });
     });
 
-    // Site changes matching the selected subtype, alongside the other events.
-    const siteChangeImage = this.siteChangeSource
-      && getSiteChangeImage(this.siteChangeSource, this.manufacturer);
-
-    if (siteChangeImage) {
+    // Site changes matching the selected subtype, alongside the other events. The
+    // icon comes from each datum's own source, so a day fed by two uploads prints
+    // both devices' icons, as the Daily plot does.
+    if (this.siteChangeSource) {
       const siteChanges = dedupeSiteChangesWithinWindow(
         _.filter(deviceEvent, d => getSiteChangeSubType(d) === this.siteChangeSource)
       );
 
       _.each(siteChanges, siteChange => {
+        const siteChangeImage = getSiteChangeImage(this.siteChangeSource, siteChange.source);
+        if (!siteChangeImage) return;
+
         const siteChangeX = xScale(siteChange.normalTime) - this.eventRadius;
 
         this.doc

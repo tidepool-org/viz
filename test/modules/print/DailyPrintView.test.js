@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -976,9 +976,9 @@ describe('DailyPrintView', () => {
       Renderer.manufacturer = 'tandem';
 
       Renderer.renderDeviceEvents(renderArgs([
-        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
-        { subType: 'prime', primeTarget: 'tubing', normalTime: 80, tags: {} },
-        { subType: 'reservoirChange', normalTime: 90, tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 80, source: 'Tandem', tags: {} },
+        { subType: 'reservoirChange', normalTime: 90, source: 'Tandem', tags: {} },
       ]));
 
       sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-cannula.png');
@@ -986,11 +986,38 @@ describe('DailyPrintView', () => {
       sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-reservoir.png');
     });
 
+    it('renders each site change with its own device icon on a mixed-upload day', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.doc.image.resetHistory();
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 10 * 60 * 1000, source: 'Tidepool Loop', tags: {} },
+      ]));
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+    });
+
+    it('falls back to the base subtype icon for a source with no variant', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tidepool loop';
+      Renderer.doc.image.resetHistory();
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+      ]));
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+    });
+
     it('renders no site-change icons when no source is selected', () => {
       Renderer.siteChangeSource = undefined;
 
       Renderer.renderDeviceEvents(renderArgs([
-        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, source: 'Tandem', tags: {} },
       ]));
 
       sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-cannula.png');
@@ -1006,14 +1033,61 @@ describe('DailyPrintView', () => {
       // A chained collapse would keep only 0, so this pins the last-kept anchor.
       const minute = 60 * 1000;
       Renderer.renderDeviceEvents(renderArgs([
-        { subType: 'prime', primeTarget: 'cannula', normalTime: 0, tags: {} },
-        { subType: 'prime', primeTarget: 'cannula', normalTime: 4 * minute, tags: {} },
-        { subType: 'prime', primeTarget: 'cannula', normalTime: 8 * minute, tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 0, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 4 * minute, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 8 * minute, source: 'Tandem', tags: {} },
       ]));
 
       const cannulaImageCalls = Renderer.doc.image.getCalls()
         .filter(call => call.args[0] === 'images/sitechange-cannula.png');
       expect(cannulaImageCalls).to.have.length(2);
+    });
+
+    describe('5-minute dedup window', () => {
+      // Boundary cases for the window: keep the first datum, then measure each
+      // subsequent decision from the last kept one rather than the previous datum.
+      const dedupCases = [
+        { name: 'single', input: [{ id: 'a', normalTime: 0 }], expectedIds: ['a'] },
+        { name: 'exactly-window-apart', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 300000 }], expectedIds: ['a', 'b'] },
+        { name: 'one-ms-inside-window', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 299999 }], expectedIds: ['a'] },
+        { name: 'burst-of-four-inside-window', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 60000 }, { id: 'c', normalTime: 120000 }, { id: 'd', normalTime: 240000 }], expectedIds: ['a'] },
+        { name: 'anchor-on-last-kept-not-previous-datum', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 299999 }, { id: 'c', normalTime: 599998 }], expectedIds: ['a', 'c'] },
+        { name: 'chain-each-just-inside', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 200000 }, { id: 'c', normalTime: 400000 }, { id: 'd', normalTime: 600000 }], expectedIds: ['a', 'c'] },
+        { name: 'unsorted-input', input: [{ id: 'c', normalTime: 600000 }, { id: 'a', normalTime: 0 }, { id: 'b', normalTime: 300000 }], expectedIds: ['a', 'b', 'c'] },
+        { name: 'duplicate-timestamps', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 0 }], expectedIds: ['a'] },
+        { name: 'empty', input: [], expectedIds: [] },
+      ];
+
+      _.each(dedupCases, ({ name, input, expectedIds }) => {
+        it(`keeps the expected site changes: ${name}`, () => {
+          Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+          Renderer.manufacturer = 'tandem';
+          Renderer.doc.image.resetHistory();
+
+          Renderer.renderDeviceEvents(renderArgs(_.map(input, datum => ({
+            ...datum,
+            subType: 'prime',
+            primeTarget: 'cannula',
+            source: 'Tandem',
+            tags: {},
+          }))));
+
+          const drawnTimes = _.map(
+            _.filter(
+              Renderer.doc.image.getCalls(),
+              call => call.args[0] === 'images/sitechange-cannula.png'
+            ),
+            call => call.args[1] + Renderer.eventRadius
+          );
+
+          const expectedTimes = _.map(
+            expectedIds,
+            id => _.find(input, { id }).normalTime
+          );
+
+          expect(drawnTimes).to.deep.equal(expectedTimes);
+        });
+      });
     });
   });
 
@@ -1494,6 +1568,29 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
       sinon.assert.calledWith(Renderer.doc.text, 'manual &');
       sinon.assert.calledWith(Renderer.doc.text, 'automated');
+    });
+
+    it('should render the site change legend icon from the manufacturer, not a datum source', () => {
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tidepool loop';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+            ],
+          },
+        },
+      };
+      Renderer.legendItems = Renderer.getLegendItems();
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
     });
 
     it('should render the legend with pump alarms when present in dataset', () => {
