@@ -415,6 +415,24 @@ describe('datetime', () => {
       expect(datetime.formatDuration(60 * 36e5, condensed)).to.equal('2d 12h');
     });
 
+    it('should properly format day durations past a month with condensed formatting', () => {
+      const ONE_DAY = 24 * 36e5;
+
+      expect(datetime.formatDuration(30 * ONE_DAY, condensed)).to.equal('30d');
+      expect(datetime.formatDuration(31 * ONE_DAY, condensed)).to.equal('31d');
+      expect(datetime.formatDuration(45 * ONE_DAY, condensed)).to.equal('45d');
+      expect(datetime.formatDuration(61 * ONE_DAY, condensed)).to.equal('61d');
+      expect(datetime.formatDuration(90 * ONE_DAY, condensed)).to.equal('90d');
+      expect(datetime.formatDuration(365 * ONE_DAY, condensed)).to.equal('365d');
+      expect(datetime.formatDuration(31 * ONE_DAY + 12 * 36e5, condensed)).to.equal('31d 12h');
+    });
+
+    it('should not report a day component for a sub-day negative duration with condensed formatting', () => {
+      const ONE_MIN = 6e4;
+
+      expect(datetime.formatDuration(-90 * ONE_MIN, condensed)).to.equal('-1h -30m');
+    });
+
     it('should properly round minute durations with condensed formatting', () => {
       const ONE_MIN = 6e4;
 
