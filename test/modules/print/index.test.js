@@ -15,6 +15,7 @@
  * == BSD2 LICENSE ==
  */
 
+import _ from 'lodash';
 import MemoryStream from 'memorystream';
 
 import * as Module from '../../../src/modules/print';
@@ -129,6 +130,9 @@ describe('print module', () => {
         data.basics,
         {
           patient: opts.patient,
+          patientTags: [],
+          sites: [],
+          showHeaderBadges: true,
           title: 'The Basics',
         },
       );
@@ -140,6 +144,9 @@ describe('print module', () => {
         data.daily,
         {
           patient: opts.patient,
+          patientTags: [],
+          sites: [],
+          showHeaderBadges: true,
           title: 'Daily Charts',
         },
       );
@@ -151,6 +158,9 @@ describe('print module', () => {
         data.bgLog,
         {
           patient: opts.patient,
+          patientTags: [],
+          sites: [],
+          showHeaderBadges: true,
           title: 'BG Log',
         },
       );
@@ -162,6 +172,8 @@ describe('print module', () => {
         data.settings,
         {
           patient: opts.patient,
+          patientTags: [],
+          sites: [],
           title: 'Pump Settings',
         },
       );
@@ -173,6 +185,8 @@ describe('print module', () => {
         data.agpCGM,
         {
           patient: opts.patient,
+          patientTags: [],
+          sites: [],
         },
       );
       sinon.assert.calledWithMatch(
@@ -186,6 +200,66 @@ describe('print module', () => {
 
       expect(_result.url).to.equal(pdf.url);
       expect(_result.blob).to.be.instanceof(Blob);
+    });
+  });
+
+  it('should pass patientTags and sites through to every view in the order received', () => {
+    const patientTags = [{ id: 't2', name: 'Zeta' }, { id: 't1', name: 'alpha' }];
+    const sites = [{ id: 's1', name: 'North' }, { id: 's2', name: 'Downtown' }];
+
+    const result = Module.createPrintPDFPackage(data, { ...opts, patientTags, sites });
+
+    return result.then(() => {
+      _.each([
+        Module.utils.BasicsPrintView,
+        Module.utils.DailyPrintView,
+        Module.utils.BgLogPrintView,
+        Module.utils.SettingsPrintView,
+        Module.utils.AGPPrintView,
+      ], View => {
+        const renderOpts = View.firstCall.args[2];
+        expect(renderOpts.patientTags).to.eql(patientTags);
+        expect(renderOpts.sites).to.eql(sites);
+      });
+    });
+  });
+
+  it('should default patientTags and sites to empty arrays when omitted from opts', () => {
+    const result = Module.createPrintPDFPackage(data, opts);
+
+    return result.then(() => {
+      _.each([
+        Module.utils.BasicsPrintView,
+        Module.utils.DailyPrintView,
+        Module.utils.BgLogPrintView,
+        Module.utils.SettingsPrintView,
+        Module.utils.AGPPrintView,
+      ], View => {
+        const renderOpts = View.firstCall.args[2];
+        expect(renderOpts.patientTags).to.eql([]);
+        expect(renderOpts.sites).to.eql([]);
+      });
+    });
+  });
+
+  it('should set showHeaderBadges only for the basics, daily, and bgLog views', () => {
+    const result = Module.createPrintPDFPackage(data, opts);
+
+    return result.then(() => {
+      expect(Module.utils.BasicsPrintView.firstCall.args[2].showHeaderBadges).to.be.true;
+      expect(Module.utils.DailyPrintView.firstCall.args[2].showHeaderBadges).to.be.true;
+      expect(Module.utils.BgLogPrintView.firstCall.args[2].showHeaderBadges).to.be.true;
+      expect(Module.utils.SettingsPrintView.firstCall.args[2].showHeaderBadges).to.be.undefined;
+      expect(Module.utils.AGPPrintView.firstCall.args[2].showHeaderBadges).to.be.undefined;
+      expect(Module.utils.AGPPrintView.secondCall.args[2].showHeaderBadges).to.be.undefined;
+    });
+  });
+
+  it('should not set showHeaderBadges for the prescription view', () => {
+    const result = Module.createPrintPDFPackage(data, { pdfType: 'prescription' });
+
+    return result.then(() => {
+      expect(Module.utils.PrescriptionPrintView.firstCall.args[2].showHeaderBadges).to.be.undefined;
     });
   });
 

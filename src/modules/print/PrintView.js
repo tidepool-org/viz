@@ -113,10 +113,29 @@ class PrintView {
     this.height = opts.height || HEIGHT;
 
     this.patient = opts.patient;
+    this.patientTags = opts.patientTags || [];
+    this.sites = opts.sites || [];
+    this.showHeaderBadges = !!opts.showHeaderBadges;
     this.patientInfoBox = {
       width: 0,
       height: 0,
     };
+
+    this.headerLayout = {
+      logoWidth: 108,
+      titleGap: 10,
+      dateGap: 10,
+      dateWidth: 150,
+      badgeWidth: 149,
+      dividerGap: 8,
+      patientWidth: 87,
+      ruleGap: 4,
+    };
+
+    this.logoWidth = this.headerLayout.logoWidth;
+    this.logoHeight = this.logoWidth * (46 / 408); // calculated from the actual image ratio
+    this.titleHeight = 0;
+    this.dateTextHeight = 0;
 
     this.colors = {
       ...BG_COLORS,
@@ -138,7 +157,8 @@ class PrintView {
       faintGrey: '#D9D9D9',
       lightGrey: '#979797',
       darkGrey: '#4E4E4F',
-      primaryText: '#4F6A92'
+      primaryText: '#4F6A92',
+      badge: '#707070',
     };
 
     this.tableSettings = {
@@ -444,6 +464,138 @@ class PrintView {
 
     this.resetText();
     this.doc.moveDown(moveDown);
+  }
+
+  renderBadge(text, x, y, opts = {}) {
+    const {
+      fillColor = this.colors.badge,
+      textColor = 'white',
+      font = this.boldFont,
+      fontSize = 7,
+      paddingX = 4.7,
+      paddingY = 2.3,
+      radius = 2.3,
+      draw = true,
+    } = opts;
+
+    this.doc.font(font).fontSize(fontSize);
+
+    const textWidth = this.doc.widthOfString(text);
+    const lineHeight = this.doc.currentLineHeight();
+    const width = textWidth + paddingX * 2;
+    const height = lineHeight + paddingY * 2;
+
+    if (draw) {
+      this.doc
+        .roundedRect(x, y, width, height, radius)
+        .fill(fillColor);
+
+      this.doc
+        .fillColor(textColor)
+        .text(text, x + paddingX, y + paddingY, { lineBreak: false });
+    }
+
+    this.resetText();
+
+    return { width, height };
+  }
+
+  renderHeaderBadges(opts = {}) {
+    const {
+      x = this.margins.left,
+      y = this.margins.top,
+      width = 149,
+      gap = 3.5,
+      maxRows = 2,
+      countFontSize = 5.8,
+      draw = true,
+    } = opts;
+
+    this.badgeBlock = { width, height: 0, hiddenCount: 0 };
+
+    const items = _.map([...this.patientTags, ...this.sites], 'name');
+    if (!items.length) return this.badgeBlock;
+
+    const badges = _.map(items, name => ({
+      name,
+      ...this.renderBadge(name, 0, 0, { draw: false }),
+    }));
+
+    const badgeHeight = badges[0].height;
+
+    // Greedy left-to-right placement; null when the entries need more than maxRows rows
+    const placeRows = entries => {
+      const rows = [[]];
+      let rowWidth = 0;
+
+      for (let i = 0; i < entries.length; i++) {
+        const entry = entries[i];
+        const fitsOnRow = rowWidth === 0 || rowWidth + gap + entry.width <= width;
+
+        if (!fitsOnRow) {
+          if (rows.length === maxRows) return null;
+          rows.push([]);
+          rowWidth = 0;
+        }
+
+        _.last(rows).push(entry);
+        rowWidth += (rowWidth === 0 ? 0 : gap) + entry.width;
+      }
+
+      return rows;
+    };
+
+    const measureCountLabel = count => {
+      const label = t('+{{count}}', { count });
+      const labelWidth = this.doc.font(this.boldFont).fontSize(countFontSize).widthOfString(label);
+      const labelHeight = this.doc.currentLineHeight();
+      this.resetText();
+      return { label, width: labelWidth, height: labelHeight, isCount: true };
+    };
+
+    let visibleCount = badges.length;
+    let countLabel = null;
+    let rows = placeRows(badges);
+
+    // Hide trailing items one at a time until the visible pills plus the +N label fit
+    while (!rows && visibleCount > 0) {
+      visibleCount--;
+      countLabel = measureCountLabel(badges.length - visibleCount);
+      rows = placeRows([...badges.slice(0, visibleCount), countLabel]);
+    }
+
+    if (!rows) return this.badgeBlock;
+
+    this.badgeBlock.height = rows.length * badgeHeight + (rows.length - 1) * gap;
+    this.badgeBlock.hiddenCount = badges.length - visibleCount;
+
+    if (!draw) return this.badgeBlock;
+
+    _.each(rows, (row, rowIndex) => {
+      const rowWidth = _.sumBy(row, 'width') + gap * (row.length - 1);
+      const rowY = y + rowIndex * (badgeHeight + gap);
+      let entryX = x + width - rowWidth;
+
+      _.each(row, entry => {
+        if (entry.isCount) {
+          this.doc
+            .font(this.boldFont)
+            .fontSize(countFontSize)
+            .fillColor(this.colors.badge)
+            .text(entry.label, entryX, rowY + (badgeHeight - entry.height) / 2, {
+              lineBreak: false,
+            });
+
+          this.resetText();
+        } else {
+          this.renderBadge(entry.name, entryX, rowY);
+        }
+
+        entryX += entry.width + gap;
+      });
+    });
+
+    return this.badgeBlock;
   }
 
   renderCellStripe(data = {}, column = {}, pos = {}, isHeader = false) {
@@ -809,59 +961,53 @@ class PrintView {
     this.resetText();
   }
 
-  renderPatientInfo() {
+  renderPatientInfo(opts = {}) {
+    const {
+      x = this.rightEdge - this.headerLayout.patientWidth,
+      y = this.margins.top,
+      width = this.headerLayout.patientWidth,
+      fontSize = 9,
+      lineGap = 0,
+    } = opts;
+
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
-    const xOffset = this.margins.left;
-    const yOffset = this.margins.top;
 
-    this.doc
-      .lineWidth(1)
-      .fontSize(10)
-      .text(patientName, xOffset, yOffset, {
-        lineGap: 2,
-      });
+    this.doc.font(this.boldFont).fontSize(fontSize).lineGap(lineGap);
+    const lineHeight = this.doc.currentLineHeight(true);
 
-    const patientNameWidth = this.doc.widthOfString(patientName);
-    const patientDOB = t('DOB: {{birthdate}}', { birthdate: patientBirthdate });
-
-    this.doc
-      .fontSize(10)
-      .text(patientDOB);
-
-    const patientBirthdayWidth = this.doc.widthOfString(patientDOB);
-    this.patientInfoBox.height = this.doc.y;
-
-    let patientMRNWidth = 0;
+    // Name may wrap to a second line; overflow is clipped with an ellipsis so the block
+    // never grows past four lines, which is what keeps the header inside its fixed budget
+    this.doc.text(patientName, x, y, { width, height: lineHeight * 2 + lineGap, ellipsis: true });
 
     if (patientMRN) {
       if (patientMRN.length > 15) {
         patientMRN = `${patientMRN.slice(0, 5)}\u2026${patientMRN.slice(-7)}`;
       }
 
-      const patientMRNText = t('MRN: {{mrn}}', { mrn: patientMRN });
-
-      this.doc
-        .moveDown(0.15)
-        .fontSize(10)
-        .text(patientMRNText);
-
-      patientMRNWidth = this.doc.widthOfString(patientMRNText);
-      this.patientInfoBox.height = this.doc.y;
+      this.renderPatientInfoLine(t('MRN: '), patientMRN, x, { width, fontSize, lineHeight });
     }
 
-    this.patientInfoBox.width = _.max([patientNameWidth, patientBirthdayWidth, patientMRNWidth]);
+    this.renderPatientInfoLine(t('DOB: '), patientBirthdate, x, { width, fontSize, lineHeight });
 
-    // Render the divider between the patient info and title
-    const padding = 10;
+    this.patientInfoBox = {
+      width,
+      height: this.doc.y - y,
+    };
+
+    this.resetText();
+  }
+
+  renderPatientInfoLine(label, value, x, opts = {}) {
+    const { width, fontSize = 9, lineHeight } = opts;
 
     this.doc
-      .moveTo(this.margins.left + this.patientInfoBox.width + padding, this.margins.top)
-      .lineTo(this.margins.left + this.patientInfoBox.width + padding, this.patientInfoBox.height)
-      .stroke('black');
-
-    this.dividerWidth = padding * 2 + 1;
+      .font(this.font)
+      .fontSize(fontSize)
+      .text(label, x, this.doc.y, { width, height: lineHeight, ellipsis: true, continued: true })
+      .font(this.boldFont)
+      .text(value);
   }
 
   generateDeviceNamesHeader() {
@@ -945,99 +1091,62 @@ class PrintView {
   }
 
   renderTitle(opts = {}) {
-    _.defaults(opts, { titleOffset: 21 });
-    const lineHeight = this.doc.fontSize(14).currentLineHeight();
-    const xOffset = this.margins.left + this.patientInfoBox.width + opts.titleOffset;
-
-    const yOffset = (
-      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2))
-    );
+    const {
+      x = this.margins.left,
+      y = this.margins.top + this.logoHeight + this.headerLayout.titleGap,
+      fontSize = 11.5,
+    } = opts;
 
     const title = this.currentPageIndex === 0
       ? this.title
       : t('{{title}} (cont.)', { title: this.title });
 
-    this.doc.text(title, xOffset, yOffset);
+    this.doc
+      .font(this.font)
+      .fontSize(fontSize)
+      .text(title, x, y, { lineBreak: false });
+
     this.titleWidth = this.doc.widthOfString(title);
+    this.titleHeight = this.doc.currentLineHeight();
+    this.resetText();
   }
 
-  renderDateText(dateText = '') {
-    const MAX_CHARS_PER_LINE = 45;
-    const TOP_PADDING = 2.5;
-    const lineHeight = this.doc.fontSize(14).currentLineHeight();
+  renderDateText(dateText = '', opts = {}) {
+    const {
+      x = this.margins.left + this.logoWidth + this.headerLayout.dateGap,
+      y = this.margins.top,
+      width = this.headerLayout.dateWidth,
+      fontSize = 9,
+      lineGap = 3,
+      blockHeight = this.getHeaderBlockHeight(),
+    } = opts;
 
-    // Calculate the remaining available width so we can
-    // center the print text between the patient/title text and the logo
-    const availableWidth = this.doc.page.width - _.reduce([
-      this.patientInfoBox.width,
-      this.dividerWidth,
-      this.titleWidth,
-      this.logoWidth,
-      this.margins.left,
-      this.margins.right,
-    ], (a, b) => (a + b), 0);
+    this.doc.font(this.font).fontSize(fontSize);
 
-    const xOffset = (
-      this.margins.left + this.patientInfoBox.width + this.dividerWidth + this.titleWidth
-    );
+    const textHeight = this.doc.heightOfString(dateText, { width, lineGap });
+    const yOffset = _.max([0, (blockHeight - textHeight) / 2]);
 
-    const yOffset = (
-      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2))
-    );
+    this.doc.text(dateText, x, y + yOffset, { width, align: 'left', lineGap });
 
-    const shouldSplitLines = dateText.length > MAX_CHARS_PER_LINE && dateText.includes(' - ');
-
-    if (!shouldSplitLines) {
-      this.doc
-        .fontSize(10)
-        .text(dateText, xOffset, yOffset + TOP_PADDING, {
-          width: availableWidth,
-          align: 'center',
-        });
-
-      return;
-    }
-
-    // Date is too long to render on one line, we need to render on 2 lines
-    const [
-      yOffsetLine1,
-      yOffsetLine2
-    ] = [
-      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - lineHeight),
-      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2)
-    ];
-
-    const lines = dateText.split(' - ');
-    const dateTextLine1 = lines[0].concat(' - ');
-    const dateTextLine2 = lines[1] || '';
-
-    const RIGHT_PADDING = 20;
-
-    this.doc
-      .fontSize(10)
-      .text(dateTextLine1, xOffset - RIGHT_PADDING, yOffsetLine1 + TOP_PADDING, {
-        width: availableWidth,
-        align: 'right',
-      });
-
-    this.doc
-      .fontSize(10)
-      .text(dateTextLine2, xOffset - RIGHT_PADDING, yOffsetLine2 + TOP_PADDING, {
-        width: availableWidth,
-        align: 'right',
-      });
+    this.dateTextHeight = textHeight;
+    this.resetText();
   }
 
   renderLogo() {
-    this.logoWidth = 100;
-    const lineHeight = this.doc.fontSize(14).currentLineHeight();
-    const xOffset = this.doc.page.width - this.logoWidth - this.margins.right;
+    this.logoWidth = this.headerLayout.logoWidth;
+    this.logoHeight = this.logoWidth * (46 / 408); // computing from known logo size ratio
 
-    const yOffset = (
-      this.margins.top + ((this.patientInfoBox.height - this.margins.top) / 2 - (lineHeight / 2 + 1))
-    );
+    this.doc.image('images/tidepool-logo-408x46.png', this.margins.left, this.margins.top, {
+      width: this.logoWidth,
+    });
+  }
 
-    this.doc.image('images/tidepool-logo-408x46.png', xOffset, yOffset, { width: this.logoWidth });
+  getHeaderBlockHeight() {
+    return _.max([
+      this.logoHeight + this.headerLayout.titleGap + this.titleHeight,
+      _.get(this, 'badgeBlock.height', 0),
+      this.patientInfoBox.height,
+    ]);
   }
 
   renderDebugGrid() {
@@ -1083,36 +1192,71 @@ class PrintView {
   }
 
   renderHeader(dateText, opts = {}) {
-    if (opts.showProfile) {
-      this.renderPatientInfo();
-    } else {
-      this.patientInfoBox.width = 0;
-      this.patientInfoBox.height = 70;
-      _.defaults(opts, { titleOffset: 0 });
-    }
+    const {
+      badgeWidth,
+      dividerGap,
+      patientWidth,
+      ruleGap,
+    } = this.headerLayout;
 
-    this.renderTitle(opts);
+    this.patientInfoBox = { width: 0, height: 0 };
+    this.badgeBlock = { width: badgeWidth, height: 0, hiddenCount: 0 };
 
     this.renderLogo();
+    this.renderTitle();
 
-    if (dateText) this.renderDateText(dateText);
+    const patientX = this.rightEdge - patientWidth;
+    const badgeX = patientX - dividerGap * 2 - badgeWidth;
+    const showBadges = opts.showProfile && this.showHeaderBadges
+      && (this.patientTags.length || this.sites.length);
 
-    this.doc.moveDown();
+    if (opts.showProfile) this.renderPatientInfo({ x: patientX, width: patientWidth });
 
-    const lineHeight = this.doc.fontSize(14).currentLineHeight();
-    const height = lineHeight * 0.25 + this.patientInfoBox.height;
+    // Measure the badge block before drawing so it can be centred on the block height
+    if (showBadges) this.renderHeaderBadges({ x: badgeX, width: badgeWidth, draw: false });
+
+    const blockHeight = this.getHeaderBlockHeight();
+
+    if (showBadges) {
+      this.renderHeaderBadges({
+        x: badgeX,
+        y: this.margins.top + (blockHeight - this.badgeBlock.height) / 2,
+        width: badgeWidth,
+      });
+    }
+
+    if (dateText) this.renderDateText(dateText, { blockHeight });
+
+    const contentHeight = _.max([blockHeight, this.dateTextHeight || 0]);
+
+    // Must stay below chartArea.topEdge, which setHeaderSize fixed in the constructor
+    const headerBottom = this.margins.top + contentHeight + ruleGap;
+
+    if (opts.showProfile) {
+      this.doc
+        .lineWidth(1)
+        .moveTo(patientX - dividerGap, this.margins.top)
+        .lineTo(patientX - dividerGap, headerBottom)
+        .stroke('black');
+    }
+
     this.doc
-      .moveTo(this.margins.left, height)
-      .lineTo(this.margins.left + this.width, height)
+      .lineWidth(1)
+      .moveTo(this.margins.left, headerBottom)
+      .lineTo(this.rightEdge, headerBottom)
       .stroke('black');
 
-    // TODO: remove this; it is just for exposing/debugging the chartArea.topEdge adjustment
+    this.headerBottom = headerBottom;
+
     if (this.debug) {
+      const lineHeight = this.doc.fontSize(this.headerFontSize).currentLineHeight();
       this.doc
         .fillColor('#E8E8E8', 0.3333333333)
         .rect(this.margins.left, this.margins.top, this.width, lineHeight * 4)
         .fill();
     }
+
+    this.resetText();
 
     return this;
   }

@@ -66,6 +66,8 @@ export const utils = {
 export function createPrintView(type, data, opts, doc) {
   const {
     patient,
+    patientTags = [],
+    sites = [],
     svgDataURLS,
   } = opts;
 
@@ -81,6 +83,8 @@ export function createPrintView(type, data, opts, doc) {
     height: constants.HEIGHT,
     margins: constants.MARGINS,
     patient,
+    patientTags,
+    sites,
     smallFontSize: constants.SMALL_FONT_SIZE,
     svgDataURLS: svgDataURLS?.[type],
     width: constants.WIDTH,
@@ -92,6 +96,7 @@ export function createPrintView(type, data, opts, doc) {
 
       renderOpts = _.assign(renderOpts, {
         chartsPerPage: 3,
+        showHeaderBadges: true,
         summaryHeaderFontSize: 10,
         summaryWidthAsPercentage: 0.18,
         title: t('Daily Charts'),
@@ -102,6 +107,7 @@ export function createPrintView(type, data, opts, doc) {
       Renderer = utils.BasicsPrintView;
 
       renderOpts = _.assign(renderOpts, {
+        showHeaderBadges: true,
         title: t('The Basics'),
       });
       break;
@@ -110,6 +116,7 @@ export function createPrintView(type, data, opts, doc) {
       Renderer = utils.BgLogPrintView;
 
       renderOpts = _.assign(renderOpts, {
+        showHeaderBadges: true,
         title: t('BG Log'),
       });
       break;
