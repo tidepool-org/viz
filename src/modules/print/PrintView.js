@@ -115,7 +115,6 @@ class PrintView {
     this.patient = opts.patient;
     this.patientTags = opts.patientTags || [];
     this.sites = opts.sites || [];
-    this.showHeaderBadges = !!opts.showHeaderBadges;
     this.patientInfoBox = {
       width: 0,
       height: 0,
@@ -1097,9 +1096,13 @@ class PrintView {
       fontSize = 11.5,
     } = opts;
 
+    // escapeValue off so a title containing & survives interpolation as itself
     const title = this.currentPageIndex === 0
       ? this.title
-      : t('{{title}} (cont.)', { title: this.title });
+      : t('{{title}} (cont.)', {
+        title: this.title,
+        interpolation: { escapeValue: false },
+      });
 
     this.doc
       .font(this.font)
@@ -1207,8 +1210,8 @@ class PrintView {
 
     const patientX = this.rightEdge - patientWidth;
     const badgeX = patientX - dividerGap * 2 - badgeWidth;
-    const showBadges = opts.showProfile && this.showHeaderBadges
-      && (this.patientTags.length || this.sites.length);
+    // The badge row is part of the patient identifier block, so it follows showProfile
+    const showBadges = opts.showProfile && (this.patientTags.length || this.sites.length);
 
     if (opts.showProfile) this.renderPatientInfo({ x: patientX, width: patientWidth });
 

@@ -179,26 +179,19 @@ describe('PrintView', () => {
       });
     });
 
-    it('should set patientTags, sites, and showHeaderBadges from constructor args', () => {
+    it('should set patientTags and sites from constructor args', () => {
       const patientTags = [{ id: 't2', name: 'Zeta' }, { id: 't1', name: 'alpha' }];
       const sites = [{ id: 's1', name: 'North' }, { id: 's2', name: 'Downtown' }];
 
-      const badgeRenderer = new PrintView(doc, data, {
-        ...opts,
-        patientTags,
-        sites,
-        showHeaderBadges: true,
-      });
+      const badgeRenderer = new PrintView(doc, data, { ...opts, patientTags, sites });
 
       expect(badgeRenderer.patientTags).to.eql(patientTags);
       expect(badgeRenderer.sites).to.eql(sites);
-      expect(badgeRenderer.showHeaderBadges).to.be.true;
     });
 
-    it('should default patientTags and sites to empty arrays and showHeaderBadges to false', () => {
+    it('should default patientTags and sites to empty arrays', () => {
       expect(Renderer.patientTags).to.eql([]);
       expect(Renderer.sites).to.eql([]);
-      expect(Renderer.showHeaderBadges).to.be.false;
     });
 
     it('should set data to an empty object when not provided to constructor', () => {
@@ -2078,8 +2071,8 @@ describe('PrintView', () => {
         sinon.assert.calledWith(Renderer.doc.lineTo, dividerX, Renderer.headerBottom);
       });
 
-      it('should measure then draw `renderHeaderBadges` centred between the date column and the divider when the flag is set and items exist', () => {
-        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites, showHeaderBadges: true });
+      it('should measure then draw `renderHeaderBadges` centred between the date column and the divider when items exist', () => {
+        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites });
         spyHeaderParts(Renderer);
 
         Renderer.renderHeader(null, { showProfile: true });
@@ -2095,16 +2088,8 @@ describe('PrintView', () => {
         });
       });
 
-      it('should not call `renderHeaderBadges` when the flag is false', () => {
-        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites, showHeaderBadges: false });
-        spyHeaderParts(Renderer);
-
-        Renderer.renderHeader(null, { showProfile: true });
-        sinon.assert.notCalled(Renderer.renderHeaderBadges);
-      });
-
       it('should not call `renderHeaderBadges` when both arrays are empty', () => {
-        Renderer = new PrintView(doc, data, { ...opts, patientTags: [], sites: [], showHeaderBadges: true });
+        Renderer = new PrintView(doc, data, { ...opts, patientTags: [], sites: [] });
         spyHeaderParts(Renderer);
 
         Renderer.renderHeader(null, { showProfile: true });
@@ -2113,7 +2098,7 @@ describe('PrintView', () => {
 
       it('should keep the header rule above the chart area for a two-row badge block', () => {
         const manyTags = _.times(5, i => ({ id: `t${i}`, name: `Tag ${i}` }));
-        Renderer = new PrintView(doc, data, { ...opts, patientTags: manyTags, sites, showHeaderBadges: true });
+        Renderer = new PrintView(doc, data, { ...opts, patientTags: manyTags, sites });
 
         Renderer.renderHeader('Date range: Jan 1, 2026 - Feb 1, 2026', { showProfile: true });
 
@@ -2124,7 +2109,7 @@ describe('PrintView', () => {
 
     context('`showProfile` option is false', () => {
       it('should skip the patient block, divider, and badges but still draw the rule', () => {
-        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites, showHeaderBadges: true });
+        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites });
         spyHeaderParts(Renderer);
 
         Renderer.renderHeader(null, { showProfile: false });
