@@ -224,6 +224,33 @@ export function getChartDateBoundFormat(startDate, endDate) {
 }
 
 /**
+ * formatChartDateBounds
+ * @param {Number} startDate - hammertime of the chart's start bound
+ * @param {Number} endDate - hammertime of the chart's (exclusive) end bound
+ * @param {String} timezone - named timezone to display the bounds in
+ * @param {String} monthFormat - moment format token for the month, e.g. 'MMM' or 'MMMM'
+ *
+ * @return {String} formatted range. Bounds snapped to local midnight are shown as calendar
+ * dates only, with the end bound shifted back into the last included day. Bounds offset from
+ * midnight also show the time of day.
+ */
+export function formatChartDateBounds(startDate, endDate, timezone = 'UTC', monthFormat = 'MMM') {
+  const start = moment.utc(startDate).tz(timezone);
+  const end = moment.utc(endDate).tz(timezone);
+  const showTime = getChartDateBoundFormat(start, end) === CHART_DATE_BOUND_FORMAT.DATE_AND_TIME;
+
+  if (!showTime) end.subtract(1, 'ms');
+
+  const timeSuffix = showTime ? ' (h:mm A)' : '';
+  const isSameYear = start.isSame(end, 'year');
+  const isSameDay = start.isSame(end, 'day');
+  const startFormat = start.format(`${monthFormat} D${isSameYear ? '' : ', YYYY'}${timeSuffix}`);
+  const endFormat = end.format(`${monthFormat} D, YYYY${timeSuffix}`);
+
+  return isSameDay && !showTime ? endFormat : `${startFormat} - ${endFormat}`;
+}
+
+/**
  * formatDuration
  * @param {Number} duration - positive integer duration in milliseconds
  * @param {String} format - one of [hoursFractional, condensed]

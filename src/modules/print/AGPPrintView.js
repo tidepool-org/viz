@@ -23,7 +23,7 @@ import {
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { bankersRound } from '../../utils/format';
-import { formatBirthdate, getOffset } from '../../utils/datetime';
+import { formatBirthdate, formatChartDateBounds, getOffset } from '../../utils/datetime';
 import { formatDatum } from '../../utils/stat';
 
 const t = i18next.t.bind(i18next);
@@ -216,7 +216,7 @@ class AGPPrintView extends PrintView {
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
     const { sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
-    const { bgDaysWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
+    const { bgDaysWorn = 0, newestDatum } = this.stats.bgExtents?.data?.raw || {};
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
 
     let reportDaysText = bgDaysWorn === 1
@@ -226,7 +226,7 @@ class AGPPrintView extends PrintView {
     if (bgDaysWorn >= 1) {
       reportDaysText += `: ${bgDaysWorn === 1
         ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
-        : this.getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM')
+        : formatChartDateBounds(this.endpoints.range?.[0], this.endpoints.range?.[1], this.timezone, 'MMMM')
       }`;
     }
 
