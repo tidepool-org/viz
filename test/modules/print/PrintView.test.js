@@ -179,6 +179,30 @@ describe('PrintView', () => {
       });
     });
 
+    it('should set patientTags and sites from constructor args', () => {
+      const patientTags = [{ id: 't2', name: 'Zeta' }, { id: 't1', name: 'alpha' }];
+      const sites = [{ id: 's1', name: 'North' }, { id: 's2', name: 'Downtown' }];
+
+      const badgeRenderer = new PrintView(doc, data, { ...opts, patientTags, sites });
+
+      expect(badgeRenderer.patientTags).to.eql(patientTags);
+      expect(badgeRenderer.sites).to.eql(sites);
+    });
+
+    it('should derive the header badge width from the space left between the date column and the patient block', () => {
+      const { logoWidth, dateGap, dateWidth, dividerGap, patientWidth, badgeWidth } = Renderer.headerLayout;
+      const dateRight = Renderer.leftEdge + logoWidth + dateGap + dateWidth;
+      const badgeRight = Renderer.rightEdge - patientWidth - dividerGap * 2;
+
+      expect(badgeWidth).to.equal(badgeRight - dateRight - dividerGap);
+      expect(badgeWidth).to.equal(161);
+    });
+
+    it('should default patientTags and sites to empty arrays', () => {
+      expect(Renderer.patientTags).to.eql([]);
+      expect(Renderer.sites).to.eql([]);
+    });
+
     it('should set data to an empty object when not provided to constructor', () => {
       const noDataRenderer = new PrintView(doc, undefined, opts);
       expect(noDataRenderer.data).to.eql({});
@@ -194,10 +218,7 @@ describe('PrintView', () => {
         { prop: 'leftEdge', type: 'number', value: Renderer.margins.left },
         { prop: 'rightEdge', type: 'number', value: Renderer.margins.left + Renderer.width },
         { prop: 'bottomEdge', type: 'number', value: Renderer.margins.top + Renderer.height },
-        { prop: 'patientInfoBox', type: 'object', value: {
-          width: 0,
-          height: 0,
-        } },
+        { prop: 'patientInfoBox', type: 'object', value: { height: 0 } },
         { prop: 'chartArea', type: 'object' },
         { prop: 'initialChartArea', type: 'object' },
         { prop: 'totalPages', type: 'number', value: 0 },
@@ -666,6 +687,193 @@ describe('PrintView', () => {
 
       Renderer.renderSectionHeading('hello', { moveDown: 3.5 });
       sinon.assert.calledWith(Renderer.doc.moveDown, 3.5);
+    });
+  });
+
+  describe('renderBadge', () => {
+    it('should draw a rounded rect in the badge colour with the text on top', () => {
+      Renderer.renderBadge('Zeta', 100, 50, { maxWidth: 100 });
+
+      sinon.assert.calledOnce(Renderer.doc.roundedRect);
+      sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.badge);
+      sinon.assert.calledWith(Renderer.doc.font, Renderer.boldFont);
+      sinon.assert.calledWith(Renderer.doc.fillColor, 'white');
+      sinon.assert.calledWith(Renderer.doc.text, 'Zeta');
+    });
+
+    it('should honour colour and font overrides', () => {
+      Renderer.renderBadge('Zeta', 10, 20, {
+        fillColor: '#123456', textColor: '#abcdef', fontSize: 12, maxWidth: 100,
+      });
+
+      sinon.assert.calledWith(Renderer.doc.fill, '#123456');
+      sinon.assert.calledWith(Renderer.doc.fillColor, '#abcdef');
+      sinon.assert.calledWith(Renderer.doc.fontSize, 12);
+    });
+
+    it('should return the badge size, and only measure when `draw` is false', () => {
+      const { width, height } = Renderer.renderBadge('Zeta', 10, 20, { maxWidth: 100, draw: false });
+
+      expect(width).to.be.above(Renderer.doc.widthOfString());
+      expect(height).to.be.above(Renderer.doc.currentLineHeight());
+      sinon.assert.notCalled(Renderer.doc.roundedRect);
+      sinon.assert.notCalled(Renderer.doc.text);
+    });
+
+    it('should cap the badge at `maxWidth` and ellipsize text that would overflow it', () => {
+      const { width } = Renderer.renderBadge('Zeta', 10, 20, { maxWidth: 19.4 });
+
+      const textOpts = Renderer.doc.text.lastCall.args[3];
+      expect(width).to.be.closeTo(19.4, 0.001);
+      expect(textOpts.width).to.be.closeTo(10, 0.001);
+      expect(textOpts).to.include({ height: 10, ellipsis: true });
+    });
+  });
+
+  describe('renderHeaderBadges', () => {
+    const patientTags = [{ id: 't2', name: 'Zeta' }, { id: 't1', name: 'alpha' }];
+    const sites = [{ id: 's1', name: 'North' }, { id: 's2', name: 'Downtown' }];
+
+    // Stubbed widthOfString returns 20 and currentLineHeight 10, so every
+    // default badge measures 29.4 x 14.6 and four fit on one 149pt row
+    const badgeWidth = 29.4;
+    const badgeHeight = 14.6;
+    const gap = 3.5;
+    const blockX = 200;
+    const blockY = 36;
+    const blockOpts = { x: blockX, y: blockY, width: 149 };
+
+    const makeItems = (count, prefix) => _.times(count, i => ({ id: `${prefix}${i}`, name: `${prefix} ${i}` }));
+
+    const drawnBadges = renderer => _.filter(
+      renderer.renderBadge.getCalls(),
+      call => _.get(call.args[3], 'draw') !== false
+    );
+
+    const countLabelCalls = renderer => _.filter(
+      renderer.doc.text.getCalls(),
+      call => _.startsWith(call.args[0], '+')
+    );
+
+    const createRenderer = (tags, sitesArg) => {
+      const badgeRenderer = new PrintView(doc, data, { ...opts, patientTags: tags, sites: sitesArg });
+      sinon.spy(badgeRenderer, 'renderBadge');
+      return badgeRenderer;
+    };
+
+    it('should render one badge per item, tags first then sites, in the order received', () => {
+      Renderer = createRenderer(patientTags, sites);
+      Renderer.renderHeaderBadges(blockOpts);
+
+      const drawn = drawnBadges(Renderer);
+      expect(_.map(drawn, 'args[0]')).to.eql(['Zeta', 'alpha', 'North', 'Downtown']);
+      sinon.assert.callCount(Renderer.doc.roundedRect, 4);
+      expect(Renderer.badgeBlock).to.eql({ width: 149, height: badgeHeight, hiddenCount: 0 });
+    });
+
+    it('should right-align each row inside the block', () => {
+      Renderer = createRenderer(patientTags, []);
+      Renderer.renderHeaderBadges(blockOpts);
+
+      const rowWidth = badgeWidth * 2 + gap;
+      const drawn = drawnBadges(Renderer);
+      expect(drawn[0].args[1]).to.be.closeTo(blockX + 149 - rowWidth, 0.001);
+      expect(drawn[1].args[1]).to.be.closeTo(blockX + 149 - badgeWidth, 0.001);
+      expect(drawn[0].args[2]).to.equal(blockY);
+    });
+
+    it('should wrap to a second row when the pills exceed the block width', () => {
+      Renderer = createRenderer(makeItems(3, 'tag'), makeItems(2, 'site'));
+      const block = Renderer.renderHeaderBadges(blockOpts);
+
+      const drawn = drawnBadges(Renderer);
+      expect(drawn).to.have.lengthOf(5);
+      expect(_.map(drawn.slice(0, 4), 'args[2]')).to.eql([blockY, blockY, blockY, blockY]);
+      expect(drawn[4].args[2]).to.be.closeTo(blockY + badgeHeight + gap, 0.001);
+      expect(block.height).to.be.closeTo(badgeHeight * 2 + gap, 0.001);
+      expect(block.hiddenCount).to.equal(0);
+      expect(countLabelCalls(Renderer)).to.have.lengthOf(0);
+    });
+
+    it('should stop after two rows and write a single +N counting hidden tags and sites together', () => {
+      Renderer = createRenderer(makeItems(7, 'tag'), makeItems(5, 'site'));
+      Renderer.doc.widthOfString.callsFake(text => (_.startsWith(text, '+') ? 8 : 20));
+
+      const block = Renderer.renderHeaderBadges(blockOpts);
+
+      expect(drawnBadges(Renderer)).to.have.lengthOf(8);
+      const labels = countLabelCalls(Renderer);
+      expect(labels).to.have.lengthOf(1);
+      expect(labels[0].args[0]).to.equal('+4');
+      sinon.assert.calledWith(Renderer.doc.fontSize, 5.8);
+      sinon.assert.calledWith(Renderer.doc.fillColor, Renderer.colors.badge);
+      expect(block.hiddenCount).to.equal(4);
+      expect(block.height).to.be.closeTo(badgeHeight * 2 + gap, 0.001);
+    });
+
+    it('should drop the last visible pill when the +N label would not otherwise fit', () => {
+      Renderer = createRenderer(makeItems(9, 'tag'), []);
+      const block = Renderer.renderHeaderBadges(blockOpts);
+
+      expect(drawnBadges(Renderer)).to.have.lengthOf(7);
+      const labels = countLabelCalls(Renderer);
+      expect(labels).to.have.lengthOf(1);
+      expect(labels[0].args[0]).to.equal('+2');
+      expect(block.hiddenCount).to.equal(2);
+    });
+
+    it('should truncate a pill wider than the block so later items still wrap onto the second row', () => {
+      Renderer = createRenderer(makeItems(3, 'tag'), [{ name: 'long' }, ...makeItems(2, 'site')]);
+      Renderer.doc.widthOfString.callsFake(text => ({ long: 400, '+6': 8, '+2': 8 }[text] || 20));
+
+      const block = Renderer.renderHeaderBadges(blockOpts);
+
+      const drawn = drawnBadges(Renderer);
+      expect(_.map(drawn, 'args[0]')).to.eql(['tag 0', 'tag 1', 'tag 2', 'long']);
+      expect(drawn[3].args[2]).to.be.closeTo(blockY + badgeHeight + gap, 0.001);
+      expect(drawn[3].args[3]).to.eql({ maxWidth: 149 - gap - 8 });
+      expect(countLabelCalls(Renderer)[0].args[0]).to.equal('+2');
+      expect(block.hiddenCount).to.equal(2);
+      expect(block.height).to.be.closeTo(badgeHeight * 2 + gap, 0.001);
+    });
+
+    it('should lay out without drawing when only `layoutHeaderBadges` is called', () => {
+      Renderer = createRenderer(makeItems(7, 'tag'), makeItems(5, 'site'));
+      const layout = Renderer.layoutHeaderBadges({ width: 149 });
+
+      expect(layout.rows).to.have.lengthOf(2);
+      expect(layout.hiddenCount).to.be.above(0);
+      expect(Renderer.badgeBlock).to.eql({ width: 149, height: layout.height, hiddenCount: layout.hiddenCount });
+      sinon.assert.notCalled(Renderer.doc.roundedRect);
+      sinon.assert.notCalled(Renderer.doc.text);
+    });
+
+    it('should draw a previously computed layout instead of measuring again', () => {
+      Renderer = createRenderer(patientTags, sites);
+      const layout = Renderer.layoutHeaderBadges({ width: 149 });
+      sinon.spy(Renderer, 'layoutHeaderBadges');
+
+      Renderer.renderHeaderBadges({ x: blockX, y: blockY, layout });
+
+      sinon.assert.notCalled(Renderer.layoutHeaderBadges);
+      expect(drawnBadges(Renderer)).to.have.lengthOf(4);
+    });
+
+    it('should default the block width to the derived header badge width', () => {
+      Renderer = createRenderer(patientTags, sites);
+      const block = Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+
+      expect(block.width).to.equal(Renderer.headerLayout.badgeWidth);
+    });
+
+    it('should draw nothing and return height 0 when both arrays are empty', () => {
+      Renderer = createRenderer([], []);
+      const block = Renderer.renderHeaderBadges(blockOpts);
+
+      expect(block).to.eql({ width: 149, height: 0, hiddenCount: 0 });
+      sinon.assert.notCalled(Renderer.renderBadge);
+      sinon.assert.notCalled(Renderer.doc.roundedRect);
+      sinon.assert.notCalled(Renderer.doc.text);
     });
   });
 
@@ -1662,18 +1870,79 @@ describe('PrintView', () => {
   });
 
   describe('renderPatientInfo', () => {
-    it('should render patient information', () => {
-      Renderer.doc.y = 32;
-      Renderer.renderPatientInfo();
-      sinon.assert.calledWith(Renderer.doc.text, getPatientFullName(opts.patient));
-      sinon.assert.calledWith(Renderer.doc.text, `DOB: ${formatBirthdate(opts.patient)}`);
-      sinon.assert.calledWith(Renderer.doc.text, 'MRN: mrn123');
+    const textCalls = () => _.map(Renderer.doc.text.getCalls(), 'args[0]');
 
-      expect(Renderer.patientInfoBox.width).to.be.a('number');
-      expect(Renderer.patientInfoBox.width > 0).to.be.true;
+    it('should render the patient name, then the MRN line, then the DOB line', () => {
+      Renderer.renderPatientInfo();
+
+      expect(textCalls()).to.eql([
+        getPatientFullName(opts.patient),
+        'MRN: ',
+        'mrn123',
+        'DOB: ',
+        formatBirthdate(opts.patient),
+      ]);
+    });
+
+    it('should render the name in bold and each label regular with a bold value', () => {
+      Renderer.renderPatientInfo();
+
+      const fontBeforeText = _.map(Renderer.doc.text.getCalls(), call => (
+        _.last(_.filter(Renderer.doc.font.getCalls(), fontCall => fontCall.calledBefore(call))).args[0]
+      ));
+
+      expect(fontBeforeText).to.eql([
+        Renderer.boldFont,
+        Renderer.font,
+        Renderer.boldFont,
+        Renderer.font,
+        Renderer.boldFont,
+      ]);
+
+      sinon.assert.calledWith(Renderer.doc.fontSize, 9);
+    });
+
+    it('should lay the block out from the right edge within the configured patient width', () => {
+      Renderer.doc.y = Renderer.margins.top;
+      Renderer.renderPatientInfo();
+
+      const patientX = Renderer.rightEdge - Renderer.headerLayout.patientWidth;
+      sinon.assert.calledWith(Renderer.doc.text, getPatientFullName(opts.patient), patientX, Renderer.margins.top, {
+        width: Renderer.headerLayout.patientWidth,
+        height: sinon.match.number,
+        ellipsis: true,
+      });
+      sinon.assert.calledWith(Renderer.doc.text, 'MRN: ', patientX, sinon.match.number, {
+        width: Renderer.headerLayout.patientWidth,
+        height: sinon.match.number,
+        ellipsis: true,
+        continued: true,
+      });
 
       expect(Renderer.patientInfoBox.height).to.be.a('number');
-      expect(Renderer.patientInfoBox.height > 0).to.be.true;
+    });
+
+    it('should cap the name at two lines and the MRN and DOB lines at one line, clipped with an ellipsis', () => {
+      Renderer.doc.currentLineHeight.returns(12);
+      Renderer.renderPatientInfo();
+
+      const optionsFor = text => _.find(Renderer.doc.text.getCalls(), call => call.args[0] === text).args[3];
+
+      expect(optionsFor(getPatientFullName(opts.patient))).to.include({ height: 24, ellipsis: true });
+      expect(optionsFor('MRN: ')).to.include({ height: 12, ellipsis: true, continued: true });
+      expect(optionsFor('DOB: ')).to.include({ height: 12, ellipsis: true, continued: true });
+      sinon.assert.calledWith(Renderer.doc.lineGap, 0);
+    });
+
+    it('should skip the MRN line when the patient has no MRN', () => {
+      const patient = _.cloneDeep(opts.patient);
+      delete patient.profile.patient.mrn;
+
+      Renderer = new PrintView(doc, data, { ...opts, patient });
+      Renderer.renderPatientInfo();
+
+      expect(textCalls()).to.not.include('MRN: ');
+      expect(textCalls()).to.include('DOB: ');
     });
 
     it('should render a truncated MRN if over 15 characters', () => {
@@ -1686,7 +1955,13 @@ describe('PrintView', () => {
       });
 
       Renderer.renderPatientInfo();
-      sinon.assert.calledWith(Renderer.doc.text, 'MRN: 12345…0123456');
+      sinon.assert.calledWith(Renderer.doc.text, '12345…0123456');
+    });
+
+    it('should reset the text styles after rendering', () => {
+      Renderer.renderPatientInfo();
+      sinon.assert.calledWith(Renderer.doc.font.lastCall, Renderer.font);
+      sinon.assert.calledWith(Renderer.doc.fontSize.lastCall, Renderer.defaultFontSize);
     });
   });
 
@@ -1695,10 +1970,15 @@ describe('PrintView', () => {
       expect(Renderer.renderTitle).to.be.a('function');
     });
 
-    it('should default the `titleOffset` option to 21', () => {
-      const options = {};
-      Renderer.renderTitle(options);
-      expect(options.titleOffset).to.equal(21);
+    it('should render the title under the logo at the left margin, independent of the patient box', () => {
+      Renderer.patientInfoBox = { height: 500 };
+      Renderer.currentPageIndex = 0;
+      Renderer.renderTitle();
+
+      const y = Renderer.margins.top + Renderer.logoHeight + Renderer.headerLayout.titleGap;
+      sinon.assert.calledWith(Renderer.doc.text, 'Print View', Renderer.margins.left, y, { lineBreak: false });
+      sinon.assert.calledWith(Renderer.doc.fontSize, 11.5);
+      sinon.assert.calledWith(Renderer.doc.font, Renderer.font);
     });
 
     it('should render the page title as is for the first rendered page', () => {
@@ -1715,19 +1995,44 @@ describe('PrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Print View (cont.)');
     });
 
-    it('should calculate the width of the title', () => {
+    it('should calculate the width and height of the title', () => {
       Renderer.renderTitle();
       expect(Renderer.titleWidth).to.be.a('number');
       expect(Renderer.titleWidth > 0).to.be.true;
+      expect(Renderer.titleHeight).to.be.a('number');
+      expect(Renderer.titleHeight > 0).to.be.true;
     });
   });
 
   describe('renderDateText', () => {
-    it('should render the provided date text', () => {
+    it('should render the date text once, left aligned in the configured column beside the logo', () => {
       const text = 'Date range';
 
       Renderer.renderDateText(text);
-      sinon.assert.calledWith(Renderer.doc.text, text);
+
+      const x = Renderer.margins.left + Renderer.logoWidth + Renderer.headerLayout.dateGap;
+      sinon.assert.calledOnce(Renderer.doc.text);
+      sinon.assert.calledWith(Renderer.doc.text, text, x, sinon.match.number, {
+        width: Renderer.headerLayout.dateWidth,
+        align: 'left',
+        lineGap: 3,
+      });
+      sinon.assert.calledWith(Renderer.doc.fontSize, 9);
+    });
+
+    it('should vertically centre the text on the provided block height', () => {
+      Renderer.doc.heightOfString.returns(10);
+      Renderer.renderDateText('Date range', { blockHeight: 30 });
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Date range', sinon.match.number, Renderer.margins.top + 10);
+      expect(Renderer.dateTextHeight).to.equal(10);
+    });
+
+    it('should not offset the text above the header top when it is taller than the block', () => {
+      Renderer.doc.heightOfString.returns(40);
+      Renderer.renderDateText('Date range', { blockHeight: 30 });
+
+      sinon.assert.calledWith(Renderer.doc.text, 'Date range', sinon.match.number, Renderer.margins.top);
     });
   });
 
@@ -1736,9 +2041,18 @@ describe('PrintView', () => {
       expect(Renderer.renderLogo).to.be.a('function');
     });
 
-    it('should render the Tidepool logo', () => {
+    it('should render the Tidepool logo at the top left margin at the configured width', () => {
       Renderer.renderLogo();
       sinon.assert.calledOnce(Renderer.doc.image);
+      sinon.assert.calledWith(
+        Renderer.doc.image,
+        'images/tidepool-logo-408x46.png',
+        Renderer.margins.left,
+        Renderer.margins.top,
+        { width: 108 }
+      );
+      expect(Renderer.logoWidth).to.equal(108);
+      expect(Renderer.logoHeight).to.be.closeTo(108 * (46 / 408), 0.001);
     });
   });
 
@@ -1752,37 +2066,131 @@ describe('PrintView', () => {
   });
 
   describe('renderHeader', () => {
+    const patientTags = [{ id: 't2', name: 'Zeta' }, { id: 't1', name: 'alpha' }];
+    const sites = [{ id: 's1', name: 'North' }, { id: 's2', name: 'Downtown' }];
+
+    const spyHeaderParts = renderer => {
+      sinon.spy(renderer, 'layoutHeaderBadges');
+      sinon.spy(renderer, 'renderPatientInfo');
+      sinon.spy(renderer, 'renderTitle');
+      sinon.spy(renderer, 'renderLogo');
+      sinon.spy(renderer, 'renderDateText');
+      sinon.spy(renderer, 'renderHeaderBadges');
+    };
+
+    const ruleCall = renderer => _.find(
+      renderer.doc.moveTo.getCalls(),
+      call => call.args[0] === renderer.margins.left && call.args[1] > renderer.margins.top
+    );
+
     it('should be a function', () => {
       expect(Renderer.renderHeader).to.be.a('function');
     });
 
-    it('should render the header', () => {
-      sinon.spy(Renderer, 'renderPatientInfo');
-      sinon.spy(Renderer, 'renderTitle');
-      sinon.spy(Renderer, 'renderLogo');
-      sinon.spy(Renderer, 'renderDateText');
+    it('should render the logo and title but skip the profile, badges, and date by default', () => {
+      spyHeaderParts(Renderer);
 
       Renderer.renderHeader();
 
-      sinon.assert.notCalled(Renderer.renderPatientInfo);
-      sinon.assert.calledOnce(Renderer.renderTitle);
       sinon.assert.calledOnce(Renderer.renderLogo);
+      sinon.assert.calledOnce(Renderer.renderTitle);
+      sinon.assert.notCalled(Renderer.renderPatientInfo);
+      sinon.assert.notCalled(Renderer.renderHeaderBadges);
       sinon.assert.notCalled(Renderer.renderDateText);
     });
 
+    it('should draw the horizontal rule under the header content and store its position', () => {
+      Renderer.renderHeader();
+
+      const rule = ruleCall(Renderer);
+      expect(rule).to.be.an('object');
+      expect(Renderer.headerBottom).to.equal(rule.args[1]);
+      sinon.assert.calledWith(Renderer.doc.lineTo, Renderer.rightEdge, Renderer.headerBottom);
+      sinon.assert.calledWith(Renderer.doc.stroke, 'black');
+    });
+
+    it('should reset the text styles after rendering', () => {
+      Renderer.renderHeader('my date', { showProfile: true });
+      sinon.assert.calledWith(Renderer.doc.font.lastCall, Renderer.font);
+      sinon.assert.calledWith(Renderer.doc.fontSize.lastCall, Renderer.defaultFontSize);
+      sinon.assert.calledWith(Renderer.doc.fillColor.lastCall, 'black');
+    });
+
     context('`showProfile` option is true', () => {
-      it('should should call `renderPatientInfo`', () => {
-        sinon.spy(Renderer, 'renderPatientInfo');
+      it('should call `renderPatientInfo` at the right edge and draw the vertical divider', () => {
+        spyHeaderParts(Renderer);
         Renderer.renderHeader(null, { showProfile: true });
+
+        const patientX = Renderer.rightEdge - Renderer.headerLayout.patientWidth;
         sinon.assert.calledOnce(Renderer.renderPatientInfo);
+        sinon.assert.calledWith(Renderer.renderPatientInfo, {
+          x: patientX,
+          width: Renderer.headerLayout.patientWidth,
+        });
+
+        const dividerX = patientX - Renderer.headerLayout.dividerGap;
+        sinon.assert.calledWith(Renderer.doc.moveTo, dividerX, Renderer.margins.top);
+        sinon.assert.calledWith(Renderer.doc.lineTo, dividerX, Renderer.headerBottom);
+      });
+
+      it('should lay the badges out once, then draw them centred between the date column and the divider', () => {
+        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites });
+        spyHeaderParts(Renderer);
+
+        Renderer.renderHeader(null, { showProfile: true });
+
+        const { badgeWidth, dividerGap, patientWidth } = Renderer.headerLayout;
+        const x = Renderer.rightEdge - patientWidth - dividerGap * 2 - badgeWidth;
+        sinon.assert.calledOnceWithExactly(Renderer.layoutHeaderBadges, { width: badgeWidth });
+
+        const layout = Renderer.layoutHeaderBadges.firstCall.returnValue;
+        sinon.assert.calledOnceWithExactly(Renderer.renderHeaderBadges, {
+          x,
+          y: Renderer.margins.top + (Renderer.getHeaderBlockHeight() - layout.height) / 2,
+          layout,
+        });
+      });
+
+      it('should not call `renderHeaderBadges` when both arrays are empty', () => {
+        Renderer = new PrintView(doc, data, { ...opts, patientTags: [], sites: [] });
+        spyHeaderParts(Renderer);
+
+        Renderer.renderHeader(null, { showProfile: true });
+        sinon.assert.notCalled(Renderer.renderHeaderBadges);
+      });
+
+      it('should keep the header rule above the chart area for a two-row badge block', () => {
+        const manyTags = _.times(5, i => ({ id: `t${i}`, name: `Tag ${i}` }));
+        Renderer = new PrintView(doc, data, { ...opts, patientTags: manyTags, sites });
+
+        Renderer.renderHeader('Date range: Jan 1, 2026 - Feb 1, 2026', { showProfile: true });
+
+        expect(Renderer.badgeBlock.height).to.be.above(Renderer.badgeBlock.width / 10);
+        expect(Renderer.headerBottom).to.be.below(Renderer.chartArea.topEdge);
+      });
+    });
+
+    context('`showProfile` option is false', () => {
+      it('should skip the patient block, divider, and badges but still draw the rule', () => {
+        Renderer = new PrintView(doc, data, { ...opts, patientTags, sites });
+        spyHeaderParts(Renderer);
+
+        Renderer.renderHeader(null, { showProfile: false });
+
+        sinon.assert.notCalled(Renderer.renderPatientInfo);
+        sinon.assert.notCalled(Renderer.renderHeaderBadges);
+        sinon.assert.calledOnce(Renderer.doc.moveTo);
+        expect(ruleCall(Renderer)).to.be.an('object');
+        expect(Renderer.headerBottom).to.be.above(Renderer.margins.top + Renderer.logoHeight);
+        expect(Renderer.headerBottom).to.be.below(Renderer.chartArea.topEdge);
       });
     });
 
     context('`dateText` arg is provided', () => {
-      it('should should call `renderDateText` with `dateText`', () => {
-        sinon.spy(Renderer, 'renderDateText');
-        Renderer.renderHeader('my date');
-        sinon.assert.calledWith(Renderer.renderDateText, 'my date');
+      it('should call `renderDateText` with `dateText` and the measured block height', () => {
+        spyHeaderParts(Renderer);
+        Renderer.renderHeader('my date', { showProfile: true });
+        sinon.assert.calledWith(Renderer.renderDateText, 'my date', { blockHeight: sinon.match.number });
       });
     });
   });
