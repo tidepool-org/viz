@@ -477,12 +477,15 @@ class PrintView {
       paddingX = 4.7,
       paddingY = 2.3,
       radius = 2.3,
+      maxWidth,
       draw = true,
     } = opts;
 
     this.doc.font(font).fontSize(fontSize);
 
-    const textWidth = this.doc.widthOfString(text);
+    const fullTextWidth = this.doc.widthOfString(text);
+    const truncated = fullTextWidth > maxWidth - paddingX * 2;
+    const textWidth = truncated ? maxWidth - paddingX * 2 : fullTextWidth;
     const lineHeight = this.doc.currentLineHeight();
     const width = textWidth + paddingX * 2;
     const height = lineHeight + paddingY * 2;
@@ -494,7 +497,9 @@ class PrintView {
 
       this.doc
         .fillColor(textColor)
-        .text(text, x + paddingX, y + paddingY, { lineBreak: false });
+        .text(text, x + paddingX, y + paddingY, truncated
+          ? { width: textWidth, height: lineHeight, ellipsis: true }
+          : { lineBreak: false });
     }
 
     this.resetText();
@@ -518,9 +523,22 @@ class PrintView {
     const items = _.map([...this.patientTags, ...this.sites], 'name');
     if (!items.length) return layout;
 
+    const measureCountLabel = hidden => {
+      const label = `+${hidden}`;
+      const labelWidth = this.doc.font(this.boldFont).fontSize(countFontSize).widthOfString(label);
+      const labelHeight = this.doc.currentLineHeight();
+      this.resetText();
+      return { label, width: labelWidth, height: labelHeight, isCount: true };
+    };
+
+    // Cap each pill so it can always share a row with the +N label; otherwise one long name
+    // claims a row to itself and the overflow pass collapses the block back to one row
+    const maxWidth = width - gap - measureCountLabel(items.length).width;
+
     const badges = _.map(items, name => ({
       name,
-      ...this.renderBadge(name, 0, 0, { draw: false }),
+      maxWidth,
+      ...this.renderBadge(name, 0, 0, { maxWidth, draw: false }),
     }));
 
     const badgeHeight = badges[0].height;
@@ -545,14 +563,6 @@ class PrintView {
       }
 
       return rows;
-    };
-
-    const measureCountLabel = hidden => {
-      const label = `+${hidden}`;
-      const labelWidth = this.doc.font(this.boldFont).fontSize(countFontSize).widthOfString(label);
-      const labelHeight = this.doc.currentLineHeight();
-      this.resetText();
-      return { label, width: labelWidth, height: labelHeight, isCount: true };
     };
 
     let visibleCount = badges.length;
@@ -602,7 +612,7 @@ class PrintView {
 
           this.resetText();
         } else {
-          this.renderBadge(entry.name, entryX, rowY);
+          this.renderBadge(entry.name, entryX, rowY, { maxWidth: entry.maxWidth });
         }
 
         entryX += entry.width + gap;

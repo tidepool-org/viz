@@ -692,7 +692,7 @@ describe('PrintView', () => {
 
   describe('renderBadge', () => {
     it('should draw a rounded rect in the badge colour with the text on top', () => {
-      Renderer.renderBadge('Zeta', 100, 50);
+      Renderer.renderBadge('Zeta', 100, 50, { maxWidth: 100 });
 
       sinon.assert.calledOnce(Renderer.doc.roundedRect);
       sinon.assert.calledWith(Renderer.doc.fill, Renderer.colors.badge);
@@ -702,7 +702,9 @@ describe('PrintView', () => {
     });
 
     it('should honour colour and font overrides', () => {
-      Renderer.renderBadge('Zeta', 10, 20, { fillColor: '#123456', textColor: '#abcdef', fontSize: 12 });
+      Renderer.renderBadge('Zeta', 10, 20, {
+        fillColor: '#123456', textColor: '#abcdef', fontSize: 12, maxWidth: 100,
+      });
 
       sinon.assert.calledWith(Renderer.doc.fill, '#123456');
       sinon.assert.calledWith(Renderer.doc.fillColor, '#abcdef');
@@ -710,12 +712,21 @@ describe('PrintView', () => {
     });
 
     it('should return the badge size, and only measure when `draw` is false', () => {
-      const { width, height } = Renderer.renderBadge('Zeta', 10, 20, { draw: false });
+      const { width, height } = Renderer.renderBadge('Zeta', 10, 20, { maxWidth: 100, draw: false });
 
       expect(width).to.be.above(Renderer.doc.widthOfString());
       expect(height).to.be.above(Renderer.doc.currentLineHeight());
       sinon.assert.notCalled(Renderer.doc.roundedRect);
       sinon.assert.notCalled(Renderer.doc.text);
+    });
+
+    it('should cap the badge at `maxWidth` and ellipsize text that would overflow it', () => {
+      const { width } = Renderer.renderBadge('Zeta', 10, 20, { maxWidth: 19.4 });
+
+      const textOpts = Renderer.doc.text.lastCall.args[3];
+      expect(width).to.be.closeTo(19.4, 0.001);
+      expect(textOpts.width).to.be.closeTo(10, 0.001);
+      expect(textOpts).to.include({ height: 10, ellipsis: true });
     });
   });
 
@@ -809,6 +820,21 @@ describe('PrintView', () => {
       expect(labels).to.have.lengthOf(1);
       expect(labels[0].args[0]).to.equal('+2');
       expect(block.hiddenCount).to.equal(2);
+    });
+
+    it('should truncate a pill wider than the block so later items still wrap onto the second row', () => {
+      Renderer = createRenderer(makeItems(3, 'tag'), [{ name: 'long' }, ...makeItems(2, 'site')]);
+      Renderer.doc.widthOfString.callsFake(text => ({ long: 400, '+6': 8, '+2': 8 }[text] || 20));
+
+      const block = Renderer.renderHeaderBadges(blockOpts);
+
+      const drawn = drawnBadges(Renderer);
+      expect(_.map(drawn, 'args[0]')).to.eql(['tag 0', 'tag 1', 'tag 2', 'long']);
+      expect(drawn[3].args[2]).to.be.closeTo(blockY + badgeHeight + gap, 0.001);
+      expect(drawn[3].args[3]).to.eql({ maxWidth: 149 - gap - 8 });
+      expect(countLabelCalls(Renderer)[0].args[0]).to.equal('+2');
+      expect(block.hiddenCount).to.equal(2);
+      expect(block.height).to.be.closeTo(badgeHeight * 2 + gap, 0.001);
     });
 
     it('should lay out without drawing when only `layoutHeaderBadges` is called', () => {
