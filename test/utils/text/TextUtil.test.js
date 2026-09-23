@@ -21,7 +21,8 @@ describe('TextUtil', () => {
 
   const copyAsTextMetadata = {
     diagnosisTypeLabel: 'Type 3c',
-    patientTags: [{ id: '5', name: 'Yankee' }, { id: '6', name: 'Zulu' }],
+    // Deliberately unsorted so the "order received" assertions cannot pass by accident
+    patientTags: [{ id: '6', name: 'Zulu' }, { id: '5', name: 'Yankee' }],
     sites: [{ id: '2', name: 'Bravo' }, { id: '1', name: 'Alpha' }],
   };
 
@@ -81,18 +82,18 @@ describe('TextUtil', () => {
       expect(result).to.include('MRN: mrn123');
     });
 
-    it('should print the patient\'s tags', () => {
+    it('should print the patient\'s tags in the order received', () => {
       sinon.spy(textUtil, 'buildTextLine');
       const result = textUtil.buildDocumentHeader();
-      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Patient Tags', value: 'Yankee, Zulu' });
-      expect(result).to.include('Patient Tags: Yankee, Zulu');
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Patient Tags', value: 'Zulu, Yankee' });
+      expect(result).to.include('Patient Tags: Zulu, Yankee');
     });
 
-    it('should print the patient\'s sites', () => {
+    it('should print the patient\'s sites in the order received', () => {
       sinon.spy(textUtil, 'buildTextLine');
       const result = textUtil.buildDocumentHeader();
-      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Clinic Sites', value: 'Alpha, Bravo' });
-      expect(result).to.include('Clinic Sites: Alpha, Bravo');
+      sinon.assert.calledWith(textUtil.buildTextLine, { label: 'Clinic Sites', value: 'Bravo, Alpha' });
+      expect(result).to.include('Clinic Sites: Bravo, Alpha');
     });
 
     context('patient profile is missing fields', () => {
