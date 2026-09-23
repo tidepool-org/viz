@@ -125,7 +125,6 @@ class PrintView {
       titleGap: 10,
       dateGap: 10,
       dateWidth: 150,
-      badgeWidth: 149,
       dividerGap: 8,
       patientWidth: 87,
       ruleGap: 4,
@@ -175,6 +174,13 @@ class PrintView {
     this.rightEdge = this.margins.left + this.width;
     this.topEdge = this.margins.top;
     this.bottomEdge = this.margins.top + this.height;
+
+    // The badge block takes whatever the fixed header columns leave between the date column
+    // and the patient block, less one divider gap on its left
+    const { logoWidth, dateGap, dateWidth, dividerGap, patientWidth } = this.headerLayout;
+    const dateRight = this.leftEdge + logoWidth + dateGap + dateWidth;
+    const badgeRight = this.rightEdge - patientWidth - dividerGap * 2;
+    this.headerLayout.badgeWidth = badgeRight - dateRight - dividerGap;
 
     this.chartArea = {
       bottomEdge: this.margins.top + opts.height,
@@ -503,7 +509,7 @@ class PrintView {
     const {
       x = this.margins.left,
       y = this.margins.top,
-      width = 149,
+      width = this.headerLayout.badgeWidth,
       gap = 3.5,
       maxRows = 2,
       countFontSize = 5.8,

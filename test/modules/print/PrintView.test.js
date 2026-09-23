@@ -189,6 +189,15 @@ describe('PrintView', () => {
       expect(badgeRenderer.sites).to.eql(sites);
     });
 
+    it('should derive the header badge width from the space left between the date column and the patient block', () => {
+      const { logoWidth, dateGap, dateWidth, dividerGap, patientWidth, badgeWidth } = Renderer.headerLayout;
+      const dateRight = Renderer.leftEdge + logoWidth + dateGap + dateWidth;
+      const badgeRight = Renderer.rightEdge - patientWidth - dividerGap * 2;
+
+      expect(badgeWidth).to.equal(badgeRight - dateRight - dividerGap);
+      expect(badgeWidth).to.equal(161);
+    });
+
     it('should default patientTags and sites to empty arrays', () => {
       expect(Renderer.patientTags).to.eql([]);
       expect(Renderer.sites).to.eql([]);
@@ -724,6 +733,7 @@ describe('PrintView', () => {
     const gap = 3.5;
     const blockX = 200;
     const blockY = 36;
+    const blockOpts = { x: blockX, y: blockY, width: 149 };
 
     const makeItems = (count, prefix) => _.times(count, i => ({ id: `${prefix}${i}`, name: `${prefix} ${i}` }));
 
@@ -745,7 +755,7 @@ describe('PrintView', () => {
 
     it('should render one badge per item, tags first then sites, in the order received', () => {
       Renderer = createRenderer(patientTags, sites);
-      Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+      Renderer.renderHeaderBadges(blockOpts);
 
       const drawn = drawnBadges(Renderer);
       expect(_.map(drawn, 'args[0]')).to.eql(['Zeta', 'alpha', 'North', 'Downtown']);
@@ -755,7 +765,7 @@ describe('PrintView', () => {
 
     it('should right-align each row inside the block', () => {
       Renderer = createRenderer(patientTags, []);
-      Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+      Renderer.renderHeaderBadges(blockOpts);
 
       const rowWidth = badgeWidth * 2 + gap;
       const drawn = drawnBadges(Renderer);
@@ -766,7 +776,7 @@ describe('PrintView', () => {
 
     it('should wrap to a second row when the pills exceed the block width', () => {
       Renderer = createRenderer(makeItems(3, 'tag'), makeItems(2, 'site'));
-      const block = Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+      const block = Renderer.renderHeaderBadges(blockOpts);
 
       const drawn = drawnBadges(Renderer);
       expect(drawn).to.have.lengthOf(5);
@@ -781,7 +791,7 @@ describe('PrintView', () => {
       Renderer = createRenderer(makeItems(7, 'tag'), makeItems(5, 'site'));
       Renderer.doc.widthOfString.callsFake(text => (_.startsWith(text, '+') ? 8 : 20));
 
-      const block = Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+      const block = Renderer.renderHeaderBadges(blockOpts);
 
       expect(drawnBadges(Renderer)).to.have.lengthOf(8);
       const labels = countLabelCalls(Renderer);
@@ -795,7 +805,7 @@ describe('PrintView', () => {
 
     it('should drop the last visible pill when the +N label would not otherwise fit', () => {
       Renderer = createRenderer(makeItems(9, 'tag'), []);
-      const block = Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+      const block = Renderer.renderHeaderBadges(blockOpts);
 
       expect(drawnBadges(Renderer)).to.have.lengthOf(7);
       const labels = countLabelCalls(Renderer);
@@ -804,9 +814,16 @@ describe('PrintView', () => {
       expect(block.hiddenCount).to.equal(2);
     });
 
+    it('should default the block width to the derived header badge width', () => {
+      Renderer = createRenderer(patientTags, sites);
+      const block = Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+
+      expect(block.width).to.equal(Renderer.headerLayout.badgeWidth);
+    });
+
     it('should draw nothing and return height 0 when both arrays are empty', () => {
       Renderer = createRenderer([], []);
-      const block = Renderer.renderHeaderBadges({ x: blockX, y: blockY });
+      const block = Renderer.renderHeaderBadges(blockOpts);
 
       expect(block).to.eql({ width: 149, height: 0, hiddenCount: 0 });
       sinon.assert.notCalled(Renderer.renderBadge);
