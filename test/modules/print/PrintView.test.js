@@ -218,10 +218,7 @@ describe('PrintView', () => {
         { prop: 'leftEdge', type: 'number', value: Renderer.margins.left },
         { prop: 'rightEdge', type: 'number', value: Renderer.margins.left + Renderer.width },
         { prop: 'bottomEdge', type: 'number', value: Renderer.margins.top + Renderer.height },
-        { prop: 'patientInfoBox', type: 'object', value: {
-          width: 0,
-          height: 0,
-        } },
+        { prop: 'patientInfoBox', type: 'object', value: { height: 0 } },
         { prop: 'chartArea', type: 'object' },
         { prop: 'initialChartArea', type: 'object' },
         { prop: 'totalPages', type: 'number', value: 0 },
@@ -812,6 +809,28 @@ describe('PrintView', () => {
       expect(labels).to.have.lengthOf(1);
       expect(labels[0].args[0]).to.equal('+2');
       expect(block.hiddenCount).to.equal(2);
+    });
+
+    it('should lay out without drawing when only `layoutHeaderBadges` is called', () => {
+      Renderer = createRenderer(makeItems(7, 'tag'), makeItems(5, 'site'));
+      const layout = Renderer.layoutHeaderBadges({ width: 149 });
+
+      expect(layout.rows).to.have.lengthOf(2);
+      expect(layout.hiddenCount).to.be.above(0);
+      expect(Renderer.badgeBlock).to.eql({ width: 149, height: layout.height, hiddenCount: layout.hiddenCount });
+      sinon.assert.notCalled(Renderer.doc.roundedRect);
+      sinon.assert.notCalled(Renderer.doc.text);
+    });
+
+    it('should draw a previously computed layout instead of measuring again', () => {
+      Renderer = createRenderer(patientTags, sites);
+      const layout = Renderer.layoutHeaderBadges({ width: 149 });
+      sinon.spy(Renderer, 'layoutHeaderBadges');
+
+      Renderer.renderHeaderBadges({ x: blockX, y: blockY, layout });
+
+      sinon.assert.notCalled(Renderer.layoutHeaderBadges);
+      expect(drawnBadges(Renderer)).to.have.lengthOf(4);
     });
 
     it('should default the block width to the derived header badge width', () => {
@@ -1874,7 +1893,6 @@ describe('PrintView', () => {
         continued: true,
       });
 
-      expect(Renderer.patientInfoBox.width).to.equal(Renderer.headerLayout.patientWidth);
       expect(Renderer.patientInfoBox.height).to.be.a('number');
     });
 
@@ -1927,7 +1945,7 @@ describe('PrintView', () => {
     });
 
     it('should render the title under the logo at the left margin, independent of the patient box', () => {
-      Renderer.patientInfoBox = { width: 500, height: 500 };
+      Renderer.patientInfoBox = { height: 500 };
       Renderer.currentPageIndex = 0;
       Renderer.renderTitle();
 
@@ -2026,6 +2044,7 @@ describe('PrintView', () => {
     const sites = [{ id: 's1', name: 'North' }, { id: 's2', name: 'Downtown' }];
 
     const spyHeaderParts = renderer => {
+      sinon.spy(renderer, 'layoutHeaderBadges');
       sinon.spy(renderer, 'renderPatientInfo');
       sinon.spy(renderer, 'renderTitle');
       sinon.spy(renderer, 'renderLogo');
@@ -2088,7 +2107,7 @@ describe('PrintView', () => {
         sinon.assert.calledWith(Renderer.doc.lineTo, dividerX, Renderer.headerBottom);
       });
 
-      it('should measure then draw `renderHeaderBadges` centred between the date column and the divider when items exist', () => {
+      it('should lay the badges out once, then draw them centred between the date column and the divider', () => {
         Renderer = new PrintView(doc, data, { ...opts, patientTags, sites });
         spyHeaderParts(Renderer);
 
@@ -2096,12 +2115,13 @@ describe('PrintView', () => {
 
         const { badgeWidth, dividerGap, patientWidth } = Renderer.headerLayout;
         const x = Renderer.rightEdge - patientWidth - dividerGap * 2 - badgeWidth;
-        sinon.assert.calledTwice(Renderer.renderHeaderBadges);
-        sinon.assert.calledWith(Renderer.renderHeaderBadges.firstCall, { x, width: badgeWidth, draw: false });
-        sinon.assert.calledWith(Renderer.renderHeaderBadges.secondCall, {
+        sinon.assert.calledOnceWithExactly(Renderer.layoutHeaderBadges, { width: badgeWidth });
+
+        const layout = Renderer.layoutHeaderBadges.firstCall.returnValue;
+        sinon.assert.calledOnceWithExactly(Renderer.renderHeaderBadges, {
           x,
-          y: Renderer.margins.top + (Renderer.getHeaderBlockHeight() - Renderer.badgeBlock.height) / 2,
-          width: badgeWidth,
+          y: Renderer.margins.top + (Renderer.getHeaderBlockHeight() - layout.height) / 2,
+          layout,
         });
       });
 

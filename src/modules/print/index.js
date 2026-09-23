@@ -198,16 +198,14 @@ export function createPrintPDFPackage(data, opts) {
 
     // The page belongs to the AGP report rather than standing on its own, so it needs an
     // AGP section to follow as well as something to list.
-    const tagsAndSites = {
-      disabled: (agpCGM.disabled && agpBGM.disabled)
-        || (_.isEmpty(patientTags) && _.isEmpty(sites)),
-    };
+    const showTagsAndSites = (!agpCGM.disabled || !agpBGM.disabled)
+      && !(_.isEmpty(patientTags) && _.isEmpty(sites));
 
     if (pdfType === 'combined') {
       if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
       if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
 
-      if (!tagsAndSites.disabled) {
+      if (showTagsAndSites) {
         const agpData = agpBGM.disabled ? data.agpCGM : data.agpBGM;
         createPrintView('tagsAndSites', _.pick(agpData, ['timePrefs']), pdfOpts, doc).render();
       }

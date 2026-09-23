@@ -123,10 +123,7 @@ describe('DailyPrintView', () => {
         { prop: 'gapBtwnSummaryAndChartAsPercentage', type: 'number' },
         { prop: 'rightEdge', type: 'number', value: Renderer.margins.left + Renderer.width },
         { prop: 'bottomEdge', type: 'number', value: Renderer.margins.top + Renderer.height },
-        { prop: 'patientInfoBox', type: 'object', value: {
-          width: 0,
-          height: 0,
-        } },
+        { prop: 'patientInfoBox', type: 'object', value: { height: 0 } },
         { prop: 'summaryArea', type: 'object', value: {
           rightEdge: opts.margins.left + opts.summaryWidthAsPercentage * Renderer.width,
           width: (opts.margins.left + opts.summaryWidthAsPercentage * Renderer.width)

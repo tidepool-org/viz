@@ -115,10 +115,7 @@ class PrintView {
     this.patient = opts.patient;
     this.patientTags = opts.patientTags || [];
     this.sites = opts.sites || [];
-    this.patientInfoBox = {
-      width: 0,
-      height: 0,
-    };
+    this.patientInfoBox = { height: 0 };
 
     this.headerLayout = {
       logoWidth: 108,
@@ -505,21 +502,21 @@ class PrintView {
     return { width, height };
   }
 
-  renderHeaderBadges(opts = {}) {
+  layoutHeaderBadges(opts = {}) {
     const {
-      x = this.margins.left,
-      y = this.margins.top,
       width = this.headerLayout.badgeWidth,
       gap = 3.5,
       maxRows = 2,
       countFontSize = 5.8,
-      draw = true,
     } = opts;
 
-    this.badgeBlock = { width, height: 0, hiddenCount: 0 };
+    const layout = {
+      width, height: 0, hiddenCount: 0, rows: [], badgeHeight: 0, gap, countFontSize,
+    };
+    this.badgeBlock = _.pick(layout, ['width', 'height', 'hiddenCount']);
 
     const items = _.map([...this.patientTags, ...this.sites], 'name');
-    if (!items.length) return this.badgeBlock;
+    if (!items.length) return layout;
 
     const badges = _.map(items, name => ({
       name,
@@ -550,8 +547,8 @@ class PrintView {
       return rows;
     };
 
-    const measureCountLabel = count => {
-      const label = t('+{{count}}', { count });
+    const measureCountLabel = hidden => {
+      const label = `+${hidden}`;
       const labelWidth = this.doc.font(this.boldFont).fontSize(countFontSize).widthOfString(label);
       const labelHeight = this.doc.currentLineHeight();
       this.resetText();
@@ -559,27 +556,39 @@ class PrintView {
     };
 
     let visibleCount = badges.length;
-    let countLabel = null;
     let rows = placeRows(badges);
 
     // Hide trailing items one at a time until the visible pills plus the +N label fit
     while (!rows && visibleCount > 0) {
       visibleCount--;
-      countLabel = measureCountLabel(badges.length - visibleCount);
+      const countLabel = measureCountLabel(badges.length - visibleCount);
       rows = placeRows([...badges.slice(0, visibleCount), countLabel]);
     }
 
-    if (!rows) return this.badgeBlock;
+    if (!rows) return layout;
 
-    this.badgeBlock.height = rows.length * badgeHeight + (rows.length - 1) * gap;
-    this.badgeBlock.hiddenCount = badges.length - visibleCount;
+    layout.rows = rows;
+    layout.badgeHeight = badgeHeight;
+    layout.height = rows.length * badgeHeight + (rows.length - 1) * gap;
+    layout.hiddenCount = badges.length - visibleCount;
+    this.badgeBlock = _.pick(layout, ['width', 'height', 'hiddenCount']);
 
-    if (!draw) return this.badgeBlock;
+    return layout;
+  }
+
+  renderHeaderBadges(opts = {}) {
+    const {
+      x = this.margins.left,
+      y = this.margins.top,
+      layout = this.layoutHeaderBadges(opts),
+    } = opts;
+
+    const { rows, badgeHeight, gap, countFontSize } = layout;
 
     _.each(rows, (row, rowIndex) => {
       const rowWidth = _.sumBy(row, 'width') + gap * (row.length - 1);
       const rowY = y + rowIndex * (badgeHeight + gap);
-      let entryX = x + width - rowWidth;
+      let entryX = x + layout.width - rowWidth;
 
       _.each(row, entry => {
         if (entry.isCount) {
@@ -996,10 +1005,7 @@ class PrintView {
 
     this.renderPatientInfoLine(t('DOB: '), patientBirthdate, x, { width, fontSize, lineHeight });
 
-    this.patientInfoBox = {
-      width,
-      height: this.doc.y - y,
-    };
+    this.patientInfoBox = { height: this.doc.y - y };
 
     this.resetText();
   }
@@ -1102,13 +1108,9 @@ class PrintView {
       fontSize = 11.5,
     } = opts;
 
-    // escapeValue off so a title containing & survives interpolation as itself
     const title = this.currentPageIndex === 0
       ? this.title
-      : t('{{title}} (cont.)', {
-        title: this.title,
-        interpolation: { escapeValue: false },
-      });
+      : t('{{title}} (cont.)', { title: this.title });
 
     this.doc
       .font(this.font)
@@ -1142,9 +1144,6 @@ class PrintView {
   }
 
   renderLogo() {
-    this.logoWidth = this.headerLayout.logoWidth;
-    this.logoHeight = this.logoWidth * (46 / 408); // computing from known logo size ratio
-
     this.doc.image('images/tidepool-logo-408x46.png', this.margins.left, this.margins.top, {
       width: this.logoWidth,
     });
@@ -1208,7 +1207,7 @@ class PrintView {
       ruleGap,
     } = this.headerLayout;
 
-    this.patientInfoBox = { width: 0, height: 0 };
+    this.patientInfoBox = { height: 0 };
     this.badgeBlock = { width: badgeWidth, height: 0, hiddenCount: 0 };
 
     this.renderLogo();
@@ -1221,16 +1220,15 @@ class PrintView {
 
     if (opts.showProfile) this.renderPatientInfo({ x: patientX, width: patientWidth });
 
-    // Measure the badge block before drawing so it can be centred on the block height
-    if (showBadges) this.renderHeaderBadges({ x: badgeX, width: badgeWidth, draw: false });
-
+    // Lay the badges out before drawing so the block can be centred on the header height
+    const badgeLayout = showBadges ? this.layoutHeaderBadges({ width: badgeWidth }) : null;
     const blockHeight = this.getHeaderBlockHeight();
 
-    if (showBadges) {
+    if (badgeLayout) {
       this.renderHeaderBadges({
         x: badgeX,
-        y: this.margins.top + (blockHeight - this.badgeBlock.height) / 2,
-        width: badgeWidth,
+        y: this.margins.top + (blockHeight - badgeLayout.height) / 2,
+        layout: badgeLayout,
       });
     }
 
@@ -1238,7 +1236,8 @@ class PrintView {
 
     const contentHeight = _.max([blockHeight, this.dateTextHeight || 0]);
 
-    // Must stay below chartArea.topEdge, which setHeaderSize fixed in the constructor
+    // setHeaderSize reserves four header-font lines above chartArea.topEdge; the column
+    // widths and row caps above are chosen so the content fits inside that budget
     const headerBottom = this.margins.top + contentHeight + ruleGap;
 
     if (opts.showProfile) {
