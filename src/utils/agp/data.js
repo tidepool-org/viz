@@ -27,8 +27,8 @@ import { BG_DISPLAY_MINIMUM_INCREMENTS, MS_IN_MIN, MS_IN_HOUR } from '../constan
 import {
   getOffset,
   getTimezoneFromTimePrefs,
-  formatChartDateBounds,
   formatCurrentDate,
+  formatDateRange,
 } from '../datetime';
 
 const t = i18next.t.bind(i18next);
@@ -47,6 +47,18 @@ export function agpCGMText(patient, data, opts = {}) {
 
   if (!data || !patient) return '';
 
+  const getDateRange = (startDate, endDate, dateParseFormat, _prefix, monthFormat, timezone) => {
+    let start = startDate;
+    let end = endDate;
+
+    if (_.isNumber(startDate) && _.isNumber(endDate)) {
+      start = startDate - getOffset(startDate, timezone) * MS_IN_MIN;
+      end = endDate - getOffset(endDate, timezone) * MS_IN_MIN;
+    }
+
+    return formatDateRange(start, end, dateParseFormat, monthFormat);
+  };
+
   const { fullName, birthDate } = patient;
 
   const {
@@ -54,9 +66,8 @@ export function agpCGMText(patient, data, opts = {}) {
     bgPrefs,
     data: {
       current: {
-        endpoints: { range: endpointsRange = [] } = {},
         stats: {
-          bgExtents: { newestDatum, bgDaysWorn },
+          bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
           averageGlucose: { averageGlucose },
           timeInRange: { counts },
           glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
@@ -79,7 +90,7 @@ export function agpCGMText(patient, data, opts = {}) {
 
   const reportDaysText = bgDaysWorn === 1
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
-    : formatChartDateBounds(endpointsRange[0], endpointsRange[1], timezone, 'MMMM');
+    : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
 
   const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
   const highLowerBound = targetUpperBound + minimumIncrement;
