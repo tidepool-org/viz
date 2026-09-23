@@ -28,7 +28,7 @@ import {
   getOffset,
   getTimezoneFromTimePrefs,
   formatCurrentDate,
-  formatDateRange,
+  formatDataDateRange,
 } from '../datetime';
 
 const t = i18next.t.bind(i18next);
@@ -46,18 +46,6 @@ export function agpCGMText(patient, data, opts = {}) {
   });
 
   if (!data || !patient) return '';
-
-  const getDateRange = (startDate, endDate, dateParseFormat, _prefix, monthFormat, timezone) => {
-    let start = startDate;
-    let end = endDate;
-
-    if (_.isNumber(startDate) && _.isNumber(endDate)) {
-      start = startDate - getOffset(startDate, timezone) * MS_IN_MIN;
-      end = endDate - getOffset(endDate, timezone) * MS_IN_MIN;
-    }
-
-    return formatDateRange(start, end, dateParseFormat, monthFormat);
-  };
 
   const { fullName, birthDate } = patient;
 
@@ -90,7 +78,7 @@ export function agpCGMText(patient, data, opts = {}) {
 
   const reportDaysText = bgDaysWorn === 1
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
-    : getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM', timezone);
+    : formatDataDateRange(oldestDatum?.time, newestDatum?.time, { timezone });
 
   const minimumIncrement = BG_DISPLAY_MINIMUM_INCREMENTS[bgUnits];
   const highLowerBound = targetUpperBound + minimumIncrement;
