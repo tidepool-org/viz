@@ -82,7 +82,19 @@ export class StatUtil {
     if (rawBgData.length < 2) {
       bgDaysWorn = rawBgData.length;
     } else {
-      bgDaysWorn = moment.utc(newestDatum?.localDate).diff(moment.utc(oldestDatum?.localDate), 'days', true) + 1;
+      // Count the 24-hour periods containing data, aligned to the start of the queried range so
+      // that a range offset from midnight counts periods rather than calendar dates. A range
+      // starting at midnight, or no range at all, counts calendar days as before.
+      const timezone = getTimezoneFromTimePrefs(this.timePrefs);
+      const [rangeStart] = this.endpoints || [];
+
+      const periodStart = _.isFinite(rangeStart) && rangeStart > 0
+        ? moment.utc(rangeStart).tz(timezone)
+        : moment.utc(oldestDatum.time).tz(timezone).startOf('day');
+
+      const periodIndex = time => Math.floor(moment.utc(time).tz(timezone).diff(periodStart, 'days', true));
+
+      bgDaysWorn = periodIndex(newestDatum.time) - periodIndex(oldestDatum.time) + 1;
     }
 
     const data = {
