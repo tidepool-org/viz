@@ -66,6 +66,7 @@ import {
 } from './constants';
 
 import {
+  getEffectiveDisplayFields,
   getMsPer24,
   getOffset,
   getTimezoneFromTimePrefs,
@@ -1013,7 +1014,8 @@ export class DataUtil {
       }
 
       if (normalizeAllFields || _.includes(fields, 'localDate')) {
-        d.localDate = moment.utc(d[this.activeTimeField]).tz(timezoneName || 'UTC').format('YYYY-MM-DD');
+        const localTime = d[this.activeTimeField] + d.displayOffset * MS_IN_MIN;
+        d.localDate = new Date(localTime).toISOString().slice(0, 10);
       }
     }
 
@@ -1088,12 +1090,12 @@ export class DataUtil {
 
     if (d.type === 'fill') {
       const localTime = d.normalTime + d.displayOffset * MS_IN_MIN;
-      const normalTimeISO = moment.utc(d.normalTime).toISOString();
+      const normalTimeISO = new Date(d.normalTime).toISOString();
 
       d.normalEnd = d.normalTime + d.duration;
       d.msPer24 = getMsPer24(d.normalTime, timezoneName);
       d.hourOfDay = d.msPer24 / MS_IN_HOUR;
-      d.fillDate = moment.utc(localTime).toISOString().slice(0, 10);
+      d.fillDate = new Date(localTime).toISOString().slice(0, 10);
       d.id = `fill_${normalTimeISO.replace(/[^\w\s]|_/g, '')}`;
     }
 
@@ -1120,6 +1122,18 @@ export class DataUtil {
         d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
       }
     }
+
+    const {
+      effectiveOffset,
+      effectiveOffsetBasis,
+      effectiveDisplayTime,
+      effectiveDisplayDate,
+    } = getEffectiveDisplayFields(d, d.displayOffset);
+
+    d.effectiveOffset = effectiveOffset;
+    d.effectiveOffsetBasis = effectiveOffsetBasis;
+    d.effectiveDisplayTime = effectiveDisplayTime;
+    d.effectiveDisplayDate = effectiveDisplayDate;
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {

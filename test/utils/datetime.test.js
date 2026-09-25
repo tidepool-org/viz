@@ -16,6 +16,7 @@
  */
 
 /* eslint-disable max-len */
+import _ from 'lodash';
 import { timeParse } from 'd3-time-format';
 import moment from 'moment-timezone';
 
@@ -73,6 +74,95 @@ describe('datetime', () => {
 
     it('should return 420 given a DST datetime in Pacific', () => {
       expect(datetime.getOffset(new Date('2014-03-10T07:00:00.000Z'), 'US/Pacific')).to.equal(420);
+    });
+  });
+
+  describe('isValidUtcOffset', () => {
+    it('should return true for integers from -720 to 840', () => {
+      _.each([-720, 0, 330, 345, 525, 840], (offset) => {
+        expect(datetime.isValidUtcOffset(offset), `${offset}`).to.be.true;
+      });
+    });
+
+    it('should return false for out-of-range, non-integer, and missing values', () => {
+      _.each([-721, 841, NaN, '300', 300.5, null, undefined], (offset) => {
+        expect(datetime.isValidUtcOffset(offset), `${offset}`).to.be.false;
+      });
+    });
+  });
+
+  describe('getEffectiveDisplayFields', () => {
+    const noon = Date.parse('2018-02-01T12:00:00Z');
+
+    it('should use a valid positive timezoneOffset with basis datum', () => {
+      expect(datetime.getEffectiveDisplayFields({ time: noon, timezoneOffset: 120 }, 0)).to.eql({
+        effectiveOffset: 120,
+        effectiveOffsetBasis: 'datum',
+        effectiveDisplayTime: noon + 120 * 60000,
+        effectiveDisplayDate: '2018-02-01',
+      });
+    });
+
+    it('should use a valid negative timezoneOffset with basis datum', () => {
+      expect(datetime.getEffectiveDisplayFields({ time: noon, timezoneOffset: -300 }, 0)).to.eql({
+        effectiveOffset: -300,
+        effectiveOffsetBasis: 'datum',
+        effectiveDisplayTime: noon - 300 * 60000,
+        effectiveDisplayDate: '2018-02-01',
+      });
+    });
+
+    it('should accept half-hour and 45-minute offsets', () => {
+      const cases = [
+        ['2018-02-01T20:00:00Z', 330],
+        ['2018-02-01T18:30:00Z', 345],
+        ['2018-02-01T15:15:00Z', 525],
+      ];
+      _.each(cases, ([iso, timezoneOffset]) => {
+        const time = Date.parse(iso);
+        const result = datetime.getEffectiveDisplayFields({ time, timezoneOffset }, 0);
+        expect(result.effectiveOffsetBasis, `${timezoneOffset}`).to.equal('datum');
+        expect(result.effectiveDisplayTime, `${timezoneOffset}`).to.equal(time + timezoneOffset * 60000);
+        expect(result.effectiveDisplayDate, `${timezoneOffset}`).to.equal('2018-02-02');
+      });
+    });
+
+    it('should roll the date forward when the offset crosses midnight', () => {
+      const time = Date.parse('2018-02-01T23:30:00Z');
+      expect(datetime.getEffectiveDisplayFields({ time, timezoneOffset: 60 }, 0).effectiveDisplayDate).to.equal('2018-02-02');
+    });
+
+    it('should roll the date backward when the offset crosses midnight', () => {
+      const time = Date.parse('2018-02-01T00:30:00Z');
+      expect(datetime.getEffectiveDisplayFields({ time, timezoneOffset: -60 }, 0).effectiveDisplayDate).to.equal('2018-01-31');
+    });
+
+    it('should fall back with basis fallback when timezoneOffset is missing', () => {
+      _.each([undefined, null], (timezoneOffset) => {
+        expect(datetime.getEffectiveDisplayFields({ time: noon, timezoneOffset }, -300), `${timezoneOffset}`).to.eql({
+          effectiveOffset: -300,
+          effectiveOffsetBasis: 'fallback',
+          effectiveDisplayTime: noon - 300 * 60000,
+          effectiveDisplayDate: '2018-02-01',
+        });
+      });
+    });
+
+    it('should fall back with basis rejected when timezoneOffset is invalid', () => {
+      _.each([-721, 841, NaN, '300', 300.5], (timezoneOffset) => {
+        const result = datetime.getEffectiveDisplayFields({ time: noon, timezoneOffset }, -300);
+        expect(result.effectiveOffset, `${timezoneOffset}`).to.equal(-300);
+        expect(result.effectiveOffsetBasis, `${timezoneOffset}`).to.equal('rejected');
+        expect(result.effectiveDisplayTime, `${timezoneOffset}`).to.equal(noon - 300 * 60000);
+      });
+    });
+
+    it('should accept the boundary offsets -720 and 840', () => {
+      _.each([-720, 840], (timezoneOffset) => {
+        const result = datetime.getEffectiveDisplayFields({ time: noon, timezoneOffset }, 0);
+        expect(result.effectiveOffset, `${timezoneOffset}`).to.equal(timezoneOffset);
+        expect(result.effectiveOffsetBasis, `${timezoneOffset}`).to.equal('datum');
+      });
     });
   });
 

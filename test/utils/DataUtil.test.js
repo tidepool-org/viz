@@ -2521,6 +2521,7 @@ describe('DataUtil', () => {
     });
 
     it('should add the `deviceSerialNumber` from the `uploadMap` when `uploadId` is present and the field is requested', () => {
+      sinon.stub(dataUtil, 'normalizeDatumOutTime');
       const datum = { type: 'foo' };
       const uploadIdDatum = { ...datum, uploadId: '12345' };
       const uploadIdDatum2 = { ...uploadIdDatum };
@@ -2542,6 +2543,7 @@ describe('DataUtil', () => {
     });
 
     it('should add the `source` from the `uploadMap` when available, else set to `Unspecified Data Source`', () => {
+      sinon.stub(dataUtil, 'normalizeDatumOutTime');
       const datum = { type: 'foo' };
       const uploadWithSourceDatum = { ...datum, uploadId: '12345' };
       const uploadWithoutSourceDatum = { ...datum, uploadId: '678910' };
@@ -2559,6 +2561,7 @@ describe('DataUtil', () => {
     });
 
     it('should call setDataAnnotations with the datum', () => {
+      sinon.stub(dataUtil, 'normalizeDatumOutTime');
       const datum = { type: 'foo' };
       sinon.stub(dataUtil, 'setDataAnnotations');
       dataUtil.normalizeDatumOut(datum);
@@ -2651,6 +2654,7 @@ describe('DataUtil', () => {
       });
 
       it('should copy `deliveryType` to `subType`', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         const datum = { type: 'basal', deliveryType: 'temp' };
 
         dataUtil.normalizeDatumOut(datum);
@@ -2689,6 +2693,7 @@ describe('DataUtil', () => {
 
       context('suppressed basal(s) present', () => {
         it('should call itself recursively as needed', () => {
+          sinon.stub(dataUtil, 'normalizeDatumOutTime');
           const datum = { time: Date.parse('2018-02-01T00:00:00'), type: 'basal', suppressed: { type: 'basal', suppressed: { type: 'scheduled' } } };
           const fields = ['suppressed'];
 
@@ -2698,6 +2703,25 @@ describe('DataUtil', () => {
 
           sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed, fields);
           sinon.assert.calledWithMatch(dataUtil.normalizeDatumOut, datum.suppressed.suppressed, fields);
+        });
+
+        it('should assign effective display fields to the suppressed basal', () => {
+          const time = Date.parse('2018-02-01T00:00:00Z');
+          const datum = {
+            type: 'basal',
+            time,
+            duration: MS_IN_HOUR,
+            suppressed: { type: 'basal', deliveryType: 'scheduled', time, duration: MS_IN_HOUR, timezoneOffset: 60 },
+          };
+
+          dataUtil.timePrefs = { timezoneAware: true, timezoneName: 'UTC' };
+          dataUtil.normalizeDatumOut(datum, '*');
+
+          expect(datum.effectiveOffsetBasis).to.equal('fallback');
+          expect(datum.suppressed.effectiveOffset).to.equal(60);
+          expect(datum.suppressed.effectiveOffsetBasis).to.equal('datum');
+          expect(datum.suppressed.effectiveDisplayTime).to.equal(time + 60 * MS_IN_MIN);
+          expect(datum.suppressed.effectiveDisplayDate).to.equal('2018-02-01');
         });
       });
     });
@@ -2712,6 +2736,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` on bgTarget field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumBgUnits');
         const datum = { type: 'deviceEvent' };
         dataUtil.normalizeDatumOut(datum);
@@ -2741,6 +2766,7 @@ describe('DataUtil', () => {
 
     context('cbg', () => {
       it('should call `normalizeDatumBgUnits` with the provided datum', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'cbg' };
@@ -2804,6 +2830,7 @@ describe('DataUtil', () => {
 
     context('smbg', () => {
       it('should call `normalizeDatumBgUnits` with the provided datum', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'smbg' };
@@ -2867,6 +2894,7 @@ describe('DataUtil', () => {
 
     context('pumpSettings', () => {
       it('should call `normalizeDatumBgUnits` with keypaths and keys for bg target settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'pumpSettings' };
@@ -2881,6 +2909,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` with keypaths and keys for insulin settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'pumpSettings' };
@@ -2895,6 +2924,7 @@ describe('DataUtil', () => {
       });
 
       it('should set basalSchedules object to an array sorted by name: `standard` first, then alphabetical', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         const datum = {
           type: 'pumpSettings',
           basalSchedules: {
@@ -2917,6 +2947,7 @@ describe('DataUtil', () => {
 
     context('wizard', () => {
       it('should call `normalizeDatumBgUnits` with keypaths and keys for bg input settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'wizard' };
@@ -2931,6 +2962,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` with keypaths and keys for bg target settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'wizard' };
@@ -2945,6 +2977,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` with keypaths and keys for insulin sensitivity settings', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.stub(dataUtil, 'normalizeDatumBgUnits');
 
         const datum = { type: 'wizard' };
@@ -2959,6 +2992,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumOut` on bolus field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumOut');
 
         const datumWithBolusString = { type: 'wizard', bolus: 'some-string-id' };
@@ -2974,6 +3008,7 @@ describe('DataUtil', () => {
 
       context('needsCarbToExchangeConversion is `true`', () => {
         it('should convert the carbInput and insulinCarbRatio to exchanges', () => {
+          sinon.stub(dataUtil, 'normalizeDatumOutTime');
           sinon.stub(dataUtil, 'needsCarbToExchangeConversion').returns(true);
 
           const datum = {
@@ -2989,6 +3024,7 @@ describe('DataUtil', () => {
         });
 
         it('should add an annotation to the bolus object if it exists', () => {
+          sinon.stub(dataUtil, 'normalizeDatumOutTime');
           sinon.stub(dataUtil, 'needsCarbToExchangeConversion').returns(true);
 
           const datumWithoutBolus = {
@@ -3029,6 +3065,7 @@ describe('DataUtil', () => {
 
       context('needsCarbToExchangeConversion is `false`', () => {
         it('should not convert the carbInput and insulinCarbRatio to exchanges', () => {
+          sinon.stub(dataUtil, 'normalizeDatumOutTime');
           sinon.stub(dataUtil, 'needsCarbToExchangeConversion').returns(false);
 
           const datum = {
@@ -3047,6 +3084,7 @@ describe('DataUtil', () => {
 
     context('dosingDecision', () => {
       it('should call `normalizeDatumOut` on pumpSettings field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumOut');
 
         const datumWithPumpSettingsString = { type: 'dosingDecision', pumpSettings: 'some-string-id' };
@@ -3061,6 +3099,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` on bgTargetSchedule field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumBgUnits');
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
@@ -3068,6 +3107,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` on bgForecast field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumBgUnits');
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
@@ -3075,6 +3115,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` on bgHistorical field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumBgUnits');
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
@@ -3082,6 +3123,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` on smbg field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumBgUnits');
         const datum = { type: 'dosingDecision' };
         dataUtil.normalizeDatumOut(datum);
@@ -3091,6 +3133,7 @@ describe('DataUtil', () => {
 
     context('bolus', () => {
       it('should call `normalizeDatumOut` on wizard field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumOut');
 
         const datumWithWizardString = { type: 'bolus', wizard: 'some-string-id' };
@@ -3105,6 +3148,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumOut` on dosingDecision field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumOut');
 
         const datumWithDosingDecisionString = { type: 'bolus', dosingDecision: 'some-string-id' };
@@ -3119,6 +3163,7 @@ describe('DataUtil', () => {
       });
 
       it('should call `normalizeDatumBgUnits` on bgInput field objects', () => {
+        sinon.stub(dataUtil, 'normalizeDatumOutTime');
         sinon.spy(dataUtil, 'normalizeDatumBgUnits');
         const datum = { type: 'bolus' };
         dataUtil.normalizeDatumOut(datum);
@@ -3127,6 +3172,16 @@ describe('DataUtil', () => {
     });
 
     context('fill', () => {
+      it('should report the fallback offset basis on generated fill datums', () => {
+        dataUtil.timePrefs = { timezoneAware: true, timezoneName: 'UTC' };
+        const datum = { type: 'fill', time: Date.parse('2018-02-01T00:00:00Z'), duration: MS_IN_HOUR };
+
+        dataUtil.normalizeDatumOut(datum);
+        expect(datum.effectiveOffset).to.equal(0);
+        expect(datum.effectiveOffsetBasis).to.equal('fallback');
+        expect(datum.effectiveDisplayDate).to.equal('2018-02-01');
+      });
+
       it('should set `normalEnd` by adding the `normalTime` and `duration` fields', () => {
         sinon.stub(dataUtil, 'normalizeDatumOutTime');
         const datum = { type: 'fill', normalTime: 1000, displayOffset: 0, duration: 500 };
@@ -3244,6 +3299,65 @@ describe('DataUtil', () => {
         dataUtil.timePrefs = { timezoneName: 'US/Pacific' };
         dataUtil.normalizeDatumOutTime(datum);
         expect(datum.displayOffset).to.equal(-8 * MS_IN_HOUR / MS_IN_MIN); // GMT-8 for US/Pacific
+      });
+    });
+
+    context('effective display fields', () => {
+      const time = Date.parse('2018-02-01T00:00:00Z');
+
+      it('should use a valid datum `timezoneOffset` over the viewing-zone `displayOffset`', () => {
+        const datum = { time, timezoneOffset: -480 };
+        dataUtil.timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOutTime(datum);
+
+        expect(datum.displayOffset).to.equal(-300);
+        expect(datum.effectiveOffset).to.equal(-480);
+        expect(datum.effectiveOffsetBasis).to.equal('datum');
+        expect(datum.effectiveDisplayTime).to.equal(time - 480 * MS_IN_MIN);
+        expect(datum.effectiveDisplayDate).to.equal('2018-01-31');
+      });
+
+      it('should fall back to `displayOffset` when `timezoneOffset` is missing', () => {
+        const datum = { time };
+        dataUtil.timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOutTime(datum);
+
+        expect(datum.displayOffset).to.equal(-300);
+        expect(datum.effectiveOffset).to.equal(-300);
+        expect(datum.effectiveOffsetBasis).to.equal('fallback');
+        expect(datum.effectiveDisplayTime).to.equal(time - 300 * MS_IN_MIN);
+        expect(datum.effectiveDisplayDate).to.equal('2018-01-31');
+      });
+
+      it('should fall back to `displayOffset` when `timezoneOffset` is rejected', () => {
+        const datum = { time, timezoneOffset: 841 };
+        dataUtil.timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+        dataUtil.normalizeDatumOutTime(datum);
+
+        expect(datum.displayOffset).to.equal(-300);
+        expect(datum.effectiveOffset).to.equal(-300);
+        expect(datum.effectiveOffsetBasis).to.equal('rejected');
+      });
+
+      it('should fall back to 0 when not timezone-aware and `timezoneOffset` is missing', () => {
+        const datum = { time };
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOutTime(datum);
+
+        expect(datum.effectiveOffset).to.equal(0);
+        expect(datum.effectiveOffsetBasis).to.equal('fallback');
+        expect(datum.effectiveDisplayTime).to.equal(time);
+        expect(datum.effectiveDisplayDate).to.equal('2018-02-01');
+      });
+
+      it('should use a valid datum `timezoneOffset` when not timezone-aware', () => {
+        const datum = { time, timezoneOffset: -480, conversionOffset: 0 };
+        delete(dataUtil.timePrefs);
+        dataUtil.normalizeDatumOutTime(datum);
+
+        expect(datum.displayOffset).to.equal(0);
+        expect(datum.effectiveOffset).to.equal(-480);
+        expect(datum.effectiveOffsetBasis).to.equal('datum');
       });
     });
   });
@@ -5230,6 +5344,7 @@ describe('DataUtil', () => {
 
   describe('setDataAnnotations', () => {
     it('should set a list of unique data annotations by code if trackDataAnnotations is `true`', () => {
+      sinon.stub(dataUtil, 'normalizeDatumOutTime');
       const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
       const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
 
@@ -5251,6 +5366,7 @@ describe('DataUtil', () => {
     });
 
     it('should not track unique data annotations by code if trackDataAnnotations is `false`', () => {
+      sinon.stub(dataUtil, 'normalizeDatumOutTime');
       const datum1 = { type: 'foo', annotations: [{ code: 'A', value: 'A value' }, { code: 'B', value: 'B value' }] };
       const datum2 = { type: 'bar', annotations: [{ code: 'B', value: 'B value 2' }, { code: 'C', value: 'C value' }] };
 
@@ -6895,6 +7011,10 @@ describe('DataUtil', () => {
       d.normalTime = d.deviceTime;
       d.normalEnd = d.normalTime + d.duration;
       d.displayOffset = 0;
+      d.effectiveOffset = d.timezoneOffset;
+      d.effectiveOffsetBasis = 'datum';
+      d.effectiveDisplayTime = d.time + d.timezoneOffset * MS_IN_MIN;
+      d.effectiveDisplayDate = moment.utc(d.effectiveDisplayTime).toISOString().slice(0, 10);
       d.subType = d.deliveryType;
       d.tags = { suspend: false, temp: false };
       return d;
@@ -6984,6 +7104,10 @@ describe('DataUtil', () => {
       d.normalTime = d.deviceTime;
       d.normalEnd = d.normalTime + d.duration;
       d.displayOffset = 0;
+      d.effectiveOffset = d.timezoneOffset;
+      d.effectiveOffsetBasis = 'datum';
+      d.effectiveDisplayTime = d.time + d.timezoneOffset * MS_IN_MIN;
+      d.effectiveDisplayDate = moment.utc(d.effectiveDisplayTime).toISOString().slice(0, 10);
       d.tags = {
         automatedSuspend: false,
         calibration: false,

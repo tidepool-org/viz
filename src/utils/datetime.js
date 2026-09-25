@@ -46,6 +46,7 @@ import { utcFormat, timeFormat } from 'd3-time-format';
 import moment from 'moment-timezone';
 import sundial from 'sundial';
 import i18next from 'i18next';
+import { MS_IN_DAY, MS_IN_MIN } from './constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -55,31 +56,67 @@ export const THREE_HRS = 10800000;
 export const TWENTY_FOUR_HRS = 86400000;
 
 /**
- * getMsPer24
- * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
- * @param {String} timezoneName - valid timezoneName String
- * @returns
+ * isValidUtcOffset
+ * @param {*} offset - candidate UTC offset in minutes east of UTC
+ * @returns {Boolean} true for an integer from -720 (UTC-12:00) to 840 (UTC+14:00)
  */
-export function getMsPer24(utc, timezoneName = 'UTC') {
-  const localized = moment.utc(utc).tz(timezoneName);
-  const hrsToMs = localized.hours() * 1000 * 60 * 60;
-  const minToMs = localized.minutes() * 1000 * 60;
-  const secToMs = localized.seconds() * 1000;
-  const ms = localized.milliseconds();
-  return hrsToMs + minToMs + secToMs + ms;
+export function isValidUtcOffset(offset) {
+  return Number.isInteger(offset) && offset >= -720 && offset <= 840;
 }
+
+// Formatting a date string per datum is the dominant cost on the query path; one entry per
+// calendar day present in the data is all the cache ever holds.
+const getUtcDate = _.memoize(day => new Date(day * MS_IN_DAY).toISOString().slice(0, 10));
+
+/**
+ * getEffectiveDisplayFields
+ * @param {Object} datum - datum with numeric `time` (hammertime) and optional `timezoneOffset`
+ * @param {Number} fallbackOffset - offset in minutes used when `timezoneOffset` is absent
+ *                                  or invalid
+ * @returns {Object} effectiveOffset, effectiveOffsetBasis ('datum' | 'fallback' | 'rejected'),
+ *                   effectiveDisplayTime (hammertime shifted by the offset),
+ *                   effectiveDisplayDate ('YYYY-MM-DD')
+ */
+export function getEffectiveDisplayFields(datum, fallbackOffset) {
+  const { time, timezoneOffset } = datum;
+  let effectiveOffsetBasis = 'datum';
+  if (timezoneOffset == null) effectiveOffsetBasis = 'fallback';
+  else if (!isValidUtcOffset(timezoneOffset)) effectiveOffsetBasis = 'rejected';
+
+  const effectiveOffset = effectiveOffsetBasis === 'datum' ? timezoneOffset : fallbackOffset;
+  const effectiveDisplayTime = time + effectiveOffset * MS_IN_MIN;
+  const effectiveDisplayDate = getUtcDate(Math.floor(effectiveDisplayTime / MS_IN_DAY));
+
+  return { effectiveOffset, effectiveOffsetBasis, effectiveDisplayTime, effectiveDisplayDate };
+}
+
+// Resolving a zone by name is the main cost of getOffset on the per-datum path
+const getZone = _.memoize(name => moment.tz.zone(name));
 
 /**
  * getOffset
  * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
  * @param {String} timezoneName - valid timezoneName String
  *
- * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
- *                  if utc is already local midnight, returns utc
+ * @return {Number} the zone's offset from UTC in minutes at `utc`, positive west of UTC
+ *                  (the moment-timezone convention); 0 for an unknown zone name
  */
 export function getOffset(utc, timezoneName) {
   const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
-  return moment.tz.zone(timezoneName).utcOffset(utcHammertime);
+  const zone = getZone(timezoneName);
+  return zone ? zone.utcOffset(utcHammertime) : 0;
+}
+
+/**
+ * getMsPer24
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezoneName - valid timezoneName String
+ * @returns
+ */
+export function getMsPer24(utc, timezoneName = 'UTC') {
+  const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
+  const localTime = utcHammertime - getOffset(utcHammertime, timezoneName) * MS_IN_MIN;
+  return ((localTime % MS_IN_DAY) + MS_IN_DAY) % MS_IN_DAY;
 }
 
 /**
