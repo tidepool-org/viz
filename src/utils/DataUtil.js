@@ -66,6 +66,7 @@ import {
 } from './constants';
 
 import {
+  getEffectiveDisplayFields,
   getMsPer24,
   getOffset,
   getTimezoneFromTimePrefs,
@@ -1120,6 +1121,18 @@ export class DataUtil {
         d.warning = 'Combining `time` and `timezoneOffset` does not yield `deviceTime`.';
       }
     }
+
+    const {
+      effectiveOffset,
+      effectiveOffsetBasis,
+      effectiveDisplayTime,
+      effectiveDisplayDate,
+    } = getEffectiveDisplayFields(d, d.displayOffset);
+
+    d.effectiveOffset = effectiveOffset;
+    d.effectiveOffsetBasis = effectiveOffsetBasis;
+    d.effectiveDisplayTime = effectiveDisplayTime;
+    d.effectiveDisplayDate = effectiveDisplayDate;
   };
 
   normalizeDatumBgUnits = (d, keysPaths = [], keys = ['value']) => {

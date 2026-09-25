@@ -46,6 +46,7 @@ import { utcFormat, timeFormat } from 'd3-time-format';
 import moment from 'moment-timezone';
 import sundial from 'sundial';
 import i18next from 'i18next';
+import { MS_IN_DAY, MS_IN_MIN } from './constants';
 
 const t = i18next.t.bind(i18next);
 
@@ -53,6 +54,53 @@ export const THIRTY_MINS = 1800000;
 export const ONE_HR = 3600000;
 export const THREE_HRS = 10800000;
 export const TWENTY_FOUR_HRS = 86400000;
+
+/**
+ * isValidUtcOffset
+ * @param {*} offset - candidate UTC offset in minutes east of UTC
+ * @returns {Boolean} true for an integer from -720 (UTC-12:00) to 840 (UTC+14:00)
+ */
+export function isValidUtcOffset(offset) {
+  return Number.isInteger(offset) && offset >= -720 && offset <= 840;
+}
+
+// ponytail: one-entry memo for the date string; datums arrive time-sorted so nearly every
+// call hits. Unsorted input just pays the full Date formatting cost per call.
+let lastDisplayDay = NaN;
+let lastDisplayDate = '';
+
+/**
+ * getEffectiveDisplayFields
+ * @param {Object} datum - datum with numeric `time` (hammertime) and optional `timezoneOffset`
+ * @param {Number} fallbackOffset - offset in minutes used when `timezoneOffset` is absent
+ *                                  or invalid
+ * @returns {Object} effectiveOffset, effectiveOffsetBasis ('datum' | 'fallback' | 'rejected'),
+ *                   effectiveDisplayTime (hammertime shifted by the offset),
+ *                   effectiveDisplayDate ('YYYY-MM-DD')
+ */
+export function getEffectiveDisplayFields(datum, fallbackOffset) {
+  const { time, timezoneOffset } = datum;
+  let effectiveOffsetBasis = 'datum';
+  if (timezoneOffset == null) effectiveOffsetBasis = 'fallback';
+  else if (!isValidUtcOffset(timezoneOffset)) effectiveOffsetBasis = 'rejected';
+
+  const effectiveOffset = effectiveOffsetBasis === 'datum' ? timezoneOffset : fallbackOffset;
+  const effectiveDisplayTime = time + effectiveOffset * MS_IN_MIN;
+
+  // memoization: only format the date once per day in order to avoid the cost of Date formatting on every call
+  const displayDay = Math.floor(effectiveDisplayTime / MS_IN_DAY);
+  if (displayDay !== lastDisplayDay) {
+    lastDisplayDay = displayDay;
+    lastDisplayDate = new Date(displayDay * MS_IN_DAY).toISOString().slice(0, 10);
+  }
+
+  return {
+    effectiveOffset,
+    effectiveOffsetBasis,
+    effectiveDisplayTime,
+    effectiveDisplayDate: lastDisplayDate,
+  };
+}
 
 /**
  * getMsPer24
