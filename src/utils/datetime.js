@@ -64,10 +64,9 @@ export function isValidUtcOffset(offset) {
   return Number.isInteger(offset) && offset >= -720 && offset <= 840;
 }
 
-// ponytail: one-entry memo for the date string; datums arrive time-sorted so nearly every
-// call hits. Unsorted input just pays the full Date formatting cost per call.
-let lastDisplayDay = NaN;
-let lastDisplayDate = '';
+// Formatting a date string per datum is the dominant cost on the query path; one entry per
+// calendar day present in the data is all the cache ever holds.
+const getUtcDate = _.memoize(day => new Date(day * MS_IN_DAY).toISOString().slice(0, 10));
 
 /**
  * getEffectiveDisplayFields
@@ -86,20 +85,26 @@ export function getEffectiveDisplayFields(datum, fallbackOffset) {
 
   const effectiveOffset = effectiveOffsetBasis === 'datum' ? timezoneOffset : fallbackOffset;
   const effectiveDisplayTime = time + effectiveOffset * MS_IN_MIN;
+  const effectiveDisplayDate = getUtcDate(Math.floor(effectiveDisplayTime / MS_IN_DAY));
 
-  // memoization: only format the date once per day in order to avoid the cost of Date formatting on every call
-  const displayDay = Math.floor(effectiveDisplayTime / MS_IN_DAY);
-  if (displayDay !== lastDisplayDay) {
-    lastDisplayDay = displayDay;
-    lastDisplayDate = new Date(displayDay * MS_IN_DAY).toISOString().slice(0, 10);
-  }
+  return { effectiveOffset, effectiveOffsetBasis, effectiveDisplayTime, effectiveDisplayDate };
+}
 
-  return {
-    effectiveOffset,
-    effectiveOffsetBasis,
-    effectiveDisplayTime,
-    effectiveDisplayDate: lastDisplayDate,
-  };
+// Resolving a zone by name is the main cost of getOffset on the per-datum path
+const getZone = _.memoize(name => moment.tz.zone(name));
+
+/**
+ * getOffset
+ * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
+ * @param {String} timezoneName - valid timezoneName String
+ *
+ * @return {Number} the zone's offset from UTC in minutes at `utc`, positive west of UTC
+ *                  (the moment-timezone convention); 0 for an unknown zone name
+ */
+export function getOffset(utc, timezoneName) {
+  const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
+  const zone = getZone(timezoneName);
+  return zone ? zone.utcOffset(utcHammertime) : 0;
 }
 
 /**
@@ -109,25 +114,9 @@ export function getEffectiveDisplayFields(datum, fallbackOffset) {
  * @returns
  */
 export function getMsPer24(utc, timezoneName = 'UTC') {
-  const localized = moment.utc(utc).tz(timezoneName);
-  const hrsToMs = localized.hours() * 1000 * 60 * 60;
-  const minToMs = localized.minutes() * 1000 * 60;
-  const secToMs = localized.seconds() * 1000;
-  const ms = localized.milliseconds();
-  return hrsToMs + minToMs + secToMs + ms;
-}
-
-/**
- * getOffset
- * @param {String} utc - Zulu timestamp (Integer hammertime also OK)
- * @param {String} timezoneName - valid timezoneName String
- *
- * @return {Object} a JavaScript Date, the closest (future) midnight according to timePrefs;
- *                  if utc is already local midnight, returns utc
- */
-export function getOffset(utc, timezoneName) {
   const utcHammertime = (typeof utc === 'string') ? Date.parse(utc) : utc;
-  return moment.tz.zone(timezoneName).utcOffset(utcHammertime);
+  const localTime = utcHammertime - getOffset(utcHammertime, timezoneName) * MS_IN_MIN;
+  return ((localTime % MS_IN_DAY) + MS_IN_DAY) % MS_IN_DAY;
 }
 
 /**
