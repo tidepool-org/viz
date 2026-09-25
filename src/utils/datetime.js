@@ -236,15 +236,15 @@ export function getChartDateBoundFormat(startDate, endDate) {
 export function formatDataDateRange(startDate, endDate, opts = {}) {
   const {
     timezone = 'UTC',
-    monthFormat = 'MMMM'
+    monthFormat = 'MMM'
   } = opts;
 
   const start = moment.utc(startDate).tz(timezone);
   const end = moment.utc(endDate).tz(timezone);
 
   const isSameYear = start.isSame(end, 'year');
-  const startFormat = start.format(`${monthFormat} D${isSameYear ? '' : ', YYYY'} (h:mm A)`);
-  const endFormat = end.format(`${monthFormat} D, YYYY (h:mm A)`);
+  const startFormat = start.format(`${monthFormat} D${isSameYear ? '' : ', YYYY'} h:mm A`);
+  const endFormat = end.format(`${monthFormat} D, YYYY h:mm A`);
 
   return `${startFormat} - ${endFormat}`;
 }
