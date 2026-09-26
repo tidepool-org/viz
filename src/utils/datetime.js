@@ -224,6 +224,32 @@ export function getChartDateBoundFormat(startDate, endDate) {
 }
 
 /**
+ * formatDataDateRange
+ * @param {Number} startDate - hammertime of the oldest datum in the range
+ * @param {Number} endDate - hammertime of the newest datum in the range
+ * @param {Object} opts
+ * @param {String} [opts.timezone='UTC'] - named timezone to display the range in
+ *
+ * @return {String} formatted range of the data, including the time of day of each datum,
+ * e.g. 'Mar 3 12:02 AM - March 16, 2023 10:22 AM'
+ */
+export function formatDataDateRange(startDate, endDate, opts = {}) {
+  const {
+    timezone = 'UTC',
+    monthFormat = 'MMM'
+  } = opts;
+
+  const start = moment.utc(startDate).tz(timezone);
+  const end = moment.utc(endDate).tz(timezone);
+
+  const isSameYear = start.isSame(end, 'year');
+  const startFormat = start.format(`${monthFormat} D${isSameYear ? '' : ', YYYY'} h:mm A`);
+  const endFormat = end.format(`${monthFormat} D, YYYY h:mm A`);
+
+  return `${startFormat} - ${endFormat}`;
+}
+
+/**
  * formatDuration
  * @param {Number} duration - positive integer duration in milliseconds
  * @param {String} format - one of [hoursFractional, condensed]

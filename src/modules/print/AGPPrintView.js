@@ -23,7 +23,7 @@ import {
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { bankersRound } from '../../utils/format';
-import { formatBirthdate, getOffset } from '../../utils/datetime';
+import { formatBirthdate, formatDataDateRange, getOffset } from '../../utils/datetime';
 import { formatDatum } from '../../utils/stat';
 
 const t = i18next.t.bind(i18next);
@@ -226,7 +226,7 @@ class AGPPrintView extends PrintView {
     if (bgDaysWorn >= 1) {
       reportDaysText += `: ${bgDaysWorn === 1
         ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
-        : this.getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM')
+        : formatDataDateRange(oldestDatum?.time, newestDatum?.time, { timezone: this.timezone })
       }`;
     }
 
