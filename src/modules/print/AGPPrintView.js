@@ -216,15 +216,15 @@ class AGPPrintView extends PrintView {
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
     const { sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
-    const { bg24hPeriodsWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
+    const { bgDaysWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
 
-    let reportDaysText = bg24hPeriodsWorn === 1
-      ? t('{{bgDaysWorn}} Day', { bgDaysWorn: bg24hPeriodsWorn })
-      : t('{{bgDaysWorn}} Days', { bgDaysWorn: bg24hPeriodsWorn });
+    let reportDaysText = bgDaysWorn === 1
+      ? t('{{bgDaysWorn}} Day', { bgDaysWorn })
+      : t('{{bgDaysWorn}} Days', { bgDaysWorn });
 
-    if (bg24hPeriodsWorn >= 1) {
-      reportDaysText += `: ${bg24hPeriodsWorn === 1
+    if (bgDaysWorn >= 1) {
+      reportDaysText += `: ${bgDaysWorn === 1
         ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
         : formatDataDateRange(oldestDatum?.time, newestDatum?.time, { timezone: this.timezone })
       }`;
