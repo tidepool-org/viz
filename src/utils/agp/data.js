@@ -55,7 +55,7 @@ export function agpCGMText(patient, data, opts = {}) {
     data: {
       current: {
         stats: {
-          bgExtents: { newestDatum, oldestDatum, bgDaysWorn },
+          bgExtents: { newestDatum, oldestDatum, bg24hPeriodsWorn },
           averageGlucose: { averageGlucose },
           timeInRange: { counts },
           glucoseManagementIndicator: { glucoseManagementIndicatorAGP },
@@ -76,7 +76,7 @@ export function agpCGMText(patient, data, opts = {}) {
 
   const currentDate = formatCurrentDate();
 
-  const reportDaysText = bgDaysWorn === 1
+  const reportDaysText = bg24hPeriodsWorn === 1
     ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, timezone) * MS_IN_MIN).format('MMMM D, YYYY')
     : formatDataDateRange(oldestDatum?.time, newestDatum?.time, { timezone });
 

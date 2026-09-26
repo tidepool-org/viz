@@ -231,7 +231,7 @@ export function getChartDateBoundFormat(startDate, endDate) {
  * @param {String} [opts.timezone='UTC'] - named timezone to display the range in
  *
  * @return {String} formatted range of the data, including the time of day of each datum,
- * e.g. 'March 3 (12:02 AM) - March 16, 2023 (10:22 AM)'
+ * e.g. 'Mar 3 12:02 AM - March 16, 2023 10:22 AM'
  */
 export function formatDataDateRange(startDate, endDate, opts = {}) {
   const {
