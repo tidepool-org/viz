@@ -1046,6 +1046,7 @@ describe('DailyPrintView', () => {
     describe('5-minute dedup window', () => {
       // Boundary cases for the window: keep the first datum, then measure each
       // subsequent decision from the last kept one rather than the previous datum.
+      // Mirrors the cases in tideline test/plot/sitechange.test.js; keep the two in sync.
       const dedupCases = [
         { name: 'single', input: [{ id: 'a', normalTime: 0 }], expectedIds: ['a'] },
         { name: 'exactly-window-apart', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 300000 }], expectedIds: ['a', 'b'] },
