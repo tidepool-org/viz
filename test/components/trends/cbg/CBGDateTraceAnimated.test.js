@@ -33,6 +33,7 @@ import SVGContainer from '../../../helpers/SVGContainer';
 import {
   CBGDateTraceAnimated,
 } from '../../../../src/components/trends/cbg/CBGDateTraceAnimated';
+import { CBGSliceSegment } from '../../../../src/components/trends/cbg/CBGSliceSegment';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('CBGDateTraceAnimated', () => {
@@ -202,9 +203,24 @@ describe('CBGDateTraceAnimated', () => {
 
         it('should not fire unfocusSlice when moving onto a cbg slice segment', () => {
           const circle = container.querySelectorAll('circle')[0];
-          const slice = document.createElement('rect');
-          slice.id = 'cbgSlice-abc-innerQuartiles';
+          // render a real slice segment so this breaks if its id convention changes
+          const { container: sliceContainer, unmount } = render(
+            <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
+              <CBGSliceSegment
+                classes="foo"
+                datum={{ id: 'abc' }}
+                focusSlice={sinon.spy()}
+                interpolated={{ key: 'innerQuartiles', style: {} }}
+                segment={{ height: 'h', heightKeys: [], y: 'y' }}
+                unfocusSlice={sinon.spy()}
+                width={10}
+                x={0}
+              />
+            </SVGContainer>
+          );
+          const slice = sliceContainer.querySelector('rect');
           fireEvent.mouseOut(circle, { relatedTarget: slice });
+          unmount();
           expect(props.unfocusDateTrace.callCount).to.equal(1);
           expect(props.unfocusSlice.callCount).to.equal(0);
         });

@@ -57,6 +57,8 @@ export class CBGDateTraceAnimated extends PureComponent {
   /*
    * NB: `cb` MUST be invoked when the animation finishes, or TransitionGroupPlus will never
    * unmount a leaving date trace and its (invisible) circles stay in the DOM and hoverable.
+   * Don't use gsap 3's legacy `TweenMax.staggerTo`: it overwrites `vars.onComplete` with its
+   * `onCompleteAll` arg, so `cb` never fired (broken since the gsap 2 -> 3 bump).
    */
   animateOpacity(opacity, cb) {
     const { animationDuration, data } = this.props;
