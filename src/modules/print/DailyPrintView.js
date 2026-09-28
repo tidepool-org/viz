@@ -130,6 +130,7 @@ function getSiteChangeImage(subType, manufacturer) {
 }
 
 const SITE_CHANGE_DEDUP_WINDOW_MS = 5 * MS_IN_MIN;
+const SITE_CHANGE_LEGEND_ICON_GAP = 2;
 
 // Site changes within 5 minutes of one another count as the same change; keep only
 // the first (sorted by time), so at most one icon prints per 5-minute window.
@@ -313,6 +314,15 @@ class DailyPrintView extends PrintView {
   }
 
   getLegendItems() {
+    // One legend icon per distinct site-change image printed anywhere in the
+    // document, so a document spanning two pumps shows both devices' icons.
+    const siteChangeImagesInDocument = this.siteChangeSource
+      ? _.uniq(_.flatMap(this.aggregationsByDate.dataByDate, dateData => _.map(
+        _.filter(dateData.deviceEvent || [], d => getSiteChangeSubType(d) === this.siteChangeSource),
+        d => getSiteChangeImage(this.siteChangeSource, d.source)
+      )))
+      : [];
+
     const legendItems = [
       {
         type: 'cbg',
@@ -414,11 +424,10 @@ class DailyPrintView extends PrintView {
       },
       {
         type: SITE_CHANGE,
-        show: !!this.siteChangeSource
-          && !!getSiteChangeImage(this.siteChangeSource, this.manufacturer)
-          && _.some(this.aggregationsByDate.dataByDate, dateData =>
-            _.some(dateData.deviceEvent || [], d => getSiteChangeSubType(d) === this.siteChangeSource)
-          ),
+        show: siteChangeImagesInDocument.length > 0,
+        images: siteChangeImagesInDocument,
+        iconWidth: (siteChangeImagesInDocument.length * this.eventRadius * 2)
+          + ((siteChangeImagesInDocument.length - 1) * SITE_CHANGE_LEGEND_ICON_GAP),
         labels: [t('Site'), t('Change')],
       },
       {
@@ -1696,13 +1705,12 @@ class DailyPrintView extends PrintView {
       [EVENT_PHYSICAL_ACTIVITY]: this.eventRadius * 2,
       [EVENT_NOTES]: this.eventRadius * 2,
       [EVENT_HEALTH]: this.eventRadius * 2,
-      [SITE_CHANGE]: this.eventRadius * 2,
       alarms: this.eventRadius * 2,
     };
 
     // Function to calculate item width
     const getItemWidth = (item) => {
-      const iconWidth = iconWidths[item.type] ?? 0;
+      const iconWidth = item.iconWidth ?? iconWidths[item.type] ?? 0;
       const maxLabelWidth = _.max(_.map(item.labels, label => this.doc.widthOfString(label))) || 0;
       return iconWidth + 4 + maxLabelWidth;
     };
@@ -2184,11 +2192,13 @@ class DailyPrintView extends PrintView {
           }
 
           case SITE_CHANGE: {
-            this.doc.image(getSiteChangeImage(this.siteChangeSource, this.manufacturer), cursor, rowVerticalMiddle - this.eventRadius, {
-              width: this.eventRadius * 2,
+            _.each(item.images, (image, index) => {
+              this.doc.image(image, cursor + index * (this.eventRadius * 2 + SITE_CHANGE_LEGEND_ICON_GAP), rowVerticalMiddle - this.eventRadius, {
+                width: this.eventRadius * 2,
+              });
             });
 
-            cursor += this.eventRadius * 2;
+            cursor += item.iconWidth;
             cursor = renderLabels(item, cursor, rowIndex);
             break;
           }

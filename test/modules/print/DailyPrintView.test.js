@@ -520,6 +520,27 @@ describe('DailyPrintView', () => {
 
       expect(_.map(Renderer.getLegendItems(), item => item.type)).to.not.include(SITE_CHANGE);
     });
+
+    it('should list each distinct site change icon once, sized to fit them', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 90, source: 'Medtronic', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 99, source: 'Tidepool Loop', tags: {} },
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 99, source: 'Tidepool Loop', tags: {} },
+            ],
+          },
+        },
+      };
+
+      const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
+      expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png', 'images/sitechange-loop-tubing.png']);
+      expect(siteChangeItem.iconWidth).to.equal((Renderer.eventRadius * 4) + 2);
+    });
   });
 
   describe('calculateChartMinimums', () => {
@@ -1571,7 +1592,7 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'automated');
     });
 
-    it('should render the site change legend icon from the manufacturer, not a datum source', () => {
+    it('should render the site change legend icon from the datum source, not the manufacturer', () => {
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
 
@@ -1590,8 +1611,41 @@ describe('DailyPrintView', () => {
 
       Renderer.renderLegend();
 
-      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
-      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+    });
+
+    it('should render one site change legend icon per distinct device icon in the document', () => {
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+            ],
+          },
+          '2017-01-03': {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tidepool Loop', tags: {} },
+            ],
+          },
+        },
+      };
+      Renderer.legendItems = Renderer.getLegendItems();
+
+      Renderer.renderLegend();
+
+      const tubingCall = Renderer.doc.image.getCalls().find(call => call.args[0] === 'images/sitechange-tubing.png');
+      const loopCall = Renderer.doc.image.getCalls().find(call => call.args[0] === 'images/sitechange-loop-tubing.png');
+      expect(tubingCall).to.exist;
+      expect(loopCall).to.exist;
+      // The icons sit side by side, not stacked: the second starts one icon width
+      // plus SITE_CHANGE_LEGEND_ICON_GAP (2) after the first. args[1] is the x position.
+      expect(loopCall.args[1]).to.equal(tubingCall.args[1] + (Renderer.eventRadius * 2) + 2);
     });
 
     it('should render the legend with pump alarms when present in dataset', () => {
