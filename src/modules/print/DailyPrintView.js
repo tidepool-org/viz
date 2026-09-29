@@ -177,8 +177,6 @@ class DailyPrintView extends PrintView {
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
 
-    this.legendItems = this.getLegendItems();
-
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
     this.eventFontSize = 7.5;
@@ -198,6 +196,8 @@ class DailyPrintView extends PrintView {
     this.interruptedLineThickness = 0.5;
     this.smbgRadius = 3;
     this.triangleHeight = 1.25;
+
+    this.legendItems = this.getLegendItems();
 
     const undelivered = '#B2B2B2';
 
