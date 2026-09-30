@@ -77,10 +77,10 @@ export class StatUtil {
     if (newestDatum) this.dataUtil.normalizeDatumOut(newestDatum, ['msPer24', 'localDate']);
     if (oldestDatum) this.dataUtil.normalizeDatumOut(oldestDatum, ['msPer24', 'localDate']);
 
-    let bgDaysWorn;
+    let bg24hPeriodsWorn;
 
     if (rawBgData.length < 2) {
-      bgDaysWorn = rawBgData.length;
+      bg24hPeriodsWorn = rawBgData.length;
     } else {
       // Count the 24-hour periods containing data, aligned to the start of the queried range, so
       // that a range offset from midnight counts periods rather than the calendar dates the data
@@ -95,13 +95,13 @@ export class StatUtil {
       const newestDatumPeriodIdx = Math.floor(moment.utc(newestDatum.time).tz(timezone).diff(periodStart, 'days', true));
       const oldestDatumPeriodIdx = Math.floor(moment.utc(oldestDatum.time).tz(timezone).diff(periodStart, 'days', true));
 
-      bgDaysWorn = newestDatumPeriodIdx - oldestDatumPeriodIdx + 1;
+      bg24hPeriodsWorn = newestDatumPeriodIdx - oldestDatumPeriodIdx + 1;
     }
 
     const data = {
       bgMax: _.get(_.maxBy(bgData, 'value'), 'value', null),
       bgMin: _.get(_.minBy(bgData, 'value'), 'value', null),
-      bgDaysWorn,
+      bg24hPeriodsWorn,
       newestDatum,
       oldestDatum,
     };

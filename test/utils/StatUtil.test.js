@@ -558,7 +558,7 @@ describe('StatUtil', () => {
       const result = statUtil.getBgExtentsData();
       expect(result.bgMin).to.equal(49.99999999999999);
       expect(result.bgMax).to.equal(260);
-      expect(result.bgDaysWorn).to.equal(1);
+      expect(result.bg24hPeriodsWorn).to.equal(1);
       expect(result.newestDatum.id).to.equal(cbgData[4].id);
       expect(result.oldestDatum.id).to.equal(cbgData[0].id);
     });
@@ -568,7 +568,7 @@ describe('StatUtil', () => {
       const result = statUtil.getBgExtentsData();
       expect(result.bgMin).to.equal(60);
       expect(result.bgMax).to.equal(270);
-      expect(result.bgDaysWorn).to.equal(1);
+      expect(result.bg24hPeriodsWorn).to.equal(1);
       expect(result.newestDatum.id).to.equal(smbgData[4].id);
       expect(result.oldestDatum.id).to.equal(smbgData[0].id);
     });

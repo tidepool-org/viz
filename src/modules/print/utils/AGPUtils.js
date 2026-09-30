@@ -54,7 +54,7 @@ export const createAnnotation = options => {
 
 export const calculateCGMDataSufficiency = (data = {}) => {
   const { statsByDate } = data.data?.current?.aggregationsByDate;
-  const { newestDatum, bgDaysWorn } = data.data?.current?.stats?.bgExtents || {};
+  const { newestDatum, bg24hPeriodsWorn } = data.data?.current?.stats?.bgExtents || {};
 
   const {
     count,
@@ -91,7 +91,7 @@ export const calculateCGMDataSufficiency = (data = {}) => {
     };
   }
 
-  const cgmCalendarDays = _.map(_.range(_.max([bgDaysWorn, 7])), (val, index) => (
+  const cgmCalendarDays = _.map(_.range(_.max([bg24hPeriodsWorn, 7])), (val, index) => (
     moment.utc(newestDatum.time).tz(getTimezoneFromTimePrefs(data.timePrefs)).subtract(index, 'days').format('YYYY-MM-DD')
   )).reverse();
 

@@ -40,7 +40,7 @@ const data = {
         bgExtents: {
           bgMax: 401.00001001500004,
           bgMin: 38.9999690761,
-          bgDaysWorn: 30,
+          bg24hPeriodsWorn: 30,
           newestDatum: { time: 1736783190269 },
           oldestDatum: { time: 1734249705225 },
         },
