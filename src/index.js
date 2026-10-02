@@ -81,7 +81,7 @@ import {
   statFetchMethods,
 } from './utils/stat';
 
-import { getGlycemicRangesPreset } from './utils/glycemicRanges';
+import { getGlycemicRangesPreset, getBgBoundsForGlycemicRanges } from './utils/glycemicRanges';
 
 import { bgLogText } from './utils/bgLog/data';
 import { trendsText } from './utils/trends/data';
@@ -200,6 +200,8 @@ const utils = {
   },
   glycemicRanges: {
     getGlycemicRangesPreset,
+    getBgBoundsForGlycemicRanges,
+    DEFAULT_BG_BOUNDS,
   }
 };
 
