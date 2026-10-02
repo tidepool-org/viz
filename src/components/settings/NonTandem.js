@@ -37,9 +37,12 @@ const t = i18next.t.bind(i18next);
 const NonTandem = (props) => {
   const {
     bgUnits,
+    copyAsTextMetadata,
     copySettingsClicked,
     deviceKey,
+    metaData,
     openedSections,
+    patient,
     pumpSettings,
     timePrefs,
     toggleBasalScheduleExpansion,
@@ -262,7 +265,14 @@ const NonTandem = (props) => {
         <ClipboardButton
           buttonTitle={t('For email or notes')}
           onSuccess={copySettingsClicked}
-          getText={nonTandemText.bind(this, user, pumpSettings, bgUnits, lookupKey)}
+          getText={nonTandemText.bind(
+            this,
+            patient || user,
+            pumpSettings,
+            bgUnits,
+            lookupKey,
+            { copyAsTextMetadata, metaData }
+          )}
         />
       </div>
       <div className={styles.settingsContainer}>
@@ -294,9 +304,16 @@ const NonTandem = (props) => {
 
 NonTandem.propTypes = {
   bgUnits: PropTypes.oneOf([MMOLL_UNITS, MGDL_UNITS]).isRequired,
+  copyAsTextMetadata: PropTypes.shape({
+    diagnosisTypeLabel: PropTypes.string,
+    patientTags: PropTypes.array,
+    sites: PropTypes.array,
+  }),
   copySettingsClicked: PropTypes.func.isRequired,
+  metaData: PropTypes.object,
   deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist']).isRequired,
   openedSections: PropTypes.object.isRequired,
+  patient: PropTypes.object,
   pumpSettings: PropTypes.shape({
     activeSchedule: PropTypes.string.isRequired,
     units: PropTypes.object.isRequired,

@@ -38,8 +38,11 @@ const t = i18next.t.bind(i18next);
 const Tandem = (props) => {
   const {
     bgUnits,
+    copyAsTextMetadata,
     copySettingsClicked,
+    metaData,
     openedSections,
+    patient,
     pumpSettings,
     timePrefs,
     toggleProfileExpansion,
@@ -108,7 +111,13 @@ const Tandem = (props) => {
         <ClipboardButton
           buttonTitle={t('For email or notes')}
           onSuccess={copySettingsClicked}
-          getText={tandemText.bind(this, user, pumpSettings, bgUnits)}
+          getText={tandemText.bind(
+            this,
+            patient || user,
+            pumpSettings,
+            bgUnits,
+            { copyAsTextMetadata, metaData }
+          )}
         />
       </div>
       <div>
@@ -121,10 +130,17 @@ const Tandem = (props) => {
 
 Tandem.propTypes = {
   bgUnits: PropTypes.oneOf([MMOLL_UNITS, MGDL_UNITS]).isRequired,
+  copyAsTextMetadata: PropTypes.shape({
+    diagnosisTypeLabel: PropTypes.string,
+    patientTags: PropTypes.array,
+    sites: PropTypes.array,
+  }),
   copySettingsClicked: PropTypes.func.isRequired,
   deviceKey: PropTypes.oneOf(['tandem']).isRequired,
   deviceDisplayName: PropTypes.string.isRequired,
+  metaData: PropTypes.object,
   openedSections: PropTypes.object.isRequired,
+  patient: PropTypes.object,
   pumpSettings: PropTypes.shape({
     activeSchedule: PropTypes.string.isRequired,
     units: PropTypes.object.isRequired,

@@ -10,10 +10,17 @@ import Tandem from '../Tandem';
 export class PumpSettingsContainer extends PureComponent {
   static propTypes = {
     bgUnits: PropTypes.oneOf([MGDL_UNITS, MMOLL_UNITS]).isRequired,
+    copyAsTextMetadata: PropTypes.shape({
+      diagnosisTypeLabel: PropTypes.string,
+      patientTags: PropTypes.array,
+      sites: PropTypes.array,
+    }),
     copySettingsClicked: PropTypes.func.isRequired,
     manufacturerKey: PropTypes.oneOf(
       ['animas', 'carelink', 'insulet', 'medtronic', 'tandem', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist']
     ).isRequired,
+    metaData: PropTypes.object,
+    patient: PropTypes.object,
     // see more specific schema in NonTandem and Tandem components!
     pumpSettings: PropTypes.shape({
       activeSchedule: PropTypes.string.isRequired,
@@ -46,8 +53,11 @@ export class PumpSettingsContainer extends PureComponent {
     }
     const {
       bgUnits,
+      copyAsTextMetadata,
       copySettingsClicked,
       manufacturerKey,
+      metaData,
+      patient,
       pumpSettings,
       timePrefs,
       toggleSettingsSection,
@@ -59,9 +69,12 @@ export class PumpSettingsContainer extends PureComponent {
       return (
         <Tandem
           bgUnits={bgUnits}
+          copyAsTextMetadata={copyAsTextMetadata}
           copySettingsClicked={copySettingsClicked}
           deviceKey={manufacturerKey}
+          metaData={metaData}
           openedSections={settingsState[manufacturerKey]}
+          patient={patient}
           pumpSettings={pumpSettings}
           timePrefs={timePrefs}
           toggleProfileExpansion={toggleFn}
@@ -72,9 +85,12 @@ export class PumpSettingsContainer extends PureComponent {
       return (
         <NonTandem
           bgUnits={bgUnits}
+          copyAsTextMetadata={copyAsTextMetadata}
           copySettingsClicked={copySettingsClicked}
           deviceKey={manufacturerKey}
+          metaData={metaData}
           openedSections={settingsState[manufacturerKey]}
+          patient={patient}
           pumpSettings={pumpSettings}
           timePrefs={timePrefs}
           toggleBasalScheduleExpansion={toggleFn}
