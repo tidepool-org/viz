@@ -91,52 +91,73 @@ export const calculateCGMDataSufficiency = (data = {}) => {
     };
   }
 
-  const cgmCalendarDays = _.map(_.range(_.max([bg24hPeriodsWorn, 7])), (val, index) => (
-    moment.utc(newestDatum.time).tz(getTimezoneFromTimePrefs(data.timePrefs)).subtract(index, 'days').format('YYYY-MM-DD')
-  )).reverse();
+  const timezone = getTimezoneFromTimePrefs(data.timePrefs);
+  const rangeEnd = data.data?.current?.endpoints?.range?.[1];
 
-  const sensorUsageByDate = _.map(cgmCalendarDays, (date, index) => {
+  const periodsEnd = _.isFinite(rangeEnd) && rangeEnd > 0
+    ? moment.utc(rangeEnd).tz(timezone)
+    : moment.utc(newestDatum.time).tz(timezone).startOf('day').add(1, 'day');
+
+  // The newest datum may fall some periods before the end of the range, so the periods assessed
+  // are the ones ending with the period that contains it, not the ones ending with the range.
+  const newestDatumPeriodOffset = _.max([
+    periodsEnd.diff(moment.utc(newestDatum.time).tz(timezone), 'days'),
+    0,
+  ]);
+
+  const cgmPeriods = _.map(_.range(_.max([bg24hPeriodsWorn, 7])), (val, index) => {
+    const periodOffset = newestDatumPeriodOffset + index;
+    const start = periodsEnd.clone().subtract(periodOffset + 1, 'days');
+    const end = periodsEnd.clone().subtract(periodOffset, 'days');
+    return { date: start.format('YYYY-MM-DD'), start: start.valueOf(), end: end.valueOf() };
+  }).reverse();
+
+  const sensorUsageByPeriod = _.map(cgmPeriods, ({ date, start, end }, index) => {
     const {
-      count: countForDate,
-      sampleInterval: sampleFrequencyForDate,
+      count: countForPeriod,
+      sampleInterval: sampleFrequencyForPeriod,
     } = statsByDate[date]?.sensorUsage || {};
 
     const {
-      newestDatum: newestDatumForDate = {},
-      oldestDatum: oldestDatumForDate = {},
+      newestDatum: newestDatumForPeriod = {},
+      oldestDatum: oldestDatumForPeriod = {},
     } = statsByDate[date]?.bgExtents || {};
 
-    if (!sampleFrequencyForDate || !countForDate) {
+    if (!sampleFrequencyForPeriod || !countForPeriod) {
       return { sufficiencyMet: false, sensorUsage: 0 };
     }
 
-    const minCount = MS_IN_HOUR / sampleFrequencyForDate;
+    const minCount = MS_IN_HOUR / sampleFrequencyForPeriod;
 
     let maxPossibleReadings = 0;
     if (index === 0) {
-      maxPossibleReadings = bankersRound((MS_IN_DAY - oldestDatumForDate.msPer24) / sampleFrequencyForDate);
-    } else if (index === cgmCalendarDays.length - 1) {
-      maxPossibleReadings = bankersRound(newestDatumForDate.msPer24 / sampleFrequencyForDate);
+      // First period: readings are only possible from the oldest datum until the period end
+      const startBound = oldestDatumForPeriod.time;
+      maxPossibleReadings = bankersRound((end - startBound) / sampleFrequencyForPeriod);
+    } else if (index === cgmPeriods.length - 1) {
+      // Last period: readings are only possible from the period start until the newest datum
+      const endBound = newestDatumForPeriod.time;
+      maxPossibleReadings = bankersRound((endBound - start) / sampleFrequencyForPeriod);
     } else {
-      maxPossibleReadings = bankersRound(MS_IN_DAY / sampleFrequencyForDate);
+      maxPossibleReadings = bankersRound(MS_IN_DAY / sampleFrequencyForPeriod);
     }
 
-    const sensorUsage = maxPossibleReadings > 0 ? countForDate / maxPossibleReadings * 100 : 0;
-    const sufficiencyMet = countForDate >= minCount;
+    const sensorUsage = maxPossibleReadings > 0 ? countForPeriod / maxPossibleReadings * 100 : 0;
+    const sufficiencyMet = countForPeriod >= minCount;
 
-    return ({ count: countForDate, date, maxPossibleReadings, sensorUsage, sufficiencyMet });
+    return ({ count: countForPeriod, date, maxPossibleReadings, sensorUsage, sufficiencyMet });
   });
 
-  // AGP section requires that each day in the top 7 have at least an hour of data, and an average
-  // sensore usage of 70%
-  const sufficientDays = _.filter(sensorUsageByDate, { sufficiencyMet: true });
-  const topSevenSufficientDays = _.slice(_.orderBy(sufficientDays, ['sensorUsage'], ['desc']), 0, 7);
+  // AGP section requires that each 24-hour period in the top 7 have at least an hour of data
+  // and an average sensor usage of 70%
+  const sufficientPeriods = _.filter(sensorUsageByPeriod, { sufficiencyMet: true });
+  const topSevenSufficientPeriods = _.slice(_.orderBy(sufficientPeriods, ['sensorUsage'], ['desc']), 0, 7);
 
-  if (topSevenSufficientDays.length < 7) {
+  if (topSevenSufficientPeriods.length < 7) {
     sufficiencyBySection.ambulatoryGlucoseProfile = false;
   } else {
-    const topSevenDaysSensorUsageMean = _.meanBy(topSevenSufficientDays, 'sensorUsage');
-    sufficiencyBySection.ambulatoryGlucoseProfile = topSevenDaysSensorUsageMean >= 70;
+    const topSevenPeriodsSensorUsageMean = _.meanBy(topSevenSufficientPeriods, 'sensorUsage');
+    sufficiencyBySection.ambulatoryGlucoseProfile = topSevenPeriodsSensorUsageMean >= 70;
   }
 
   return sufficiencyBySection;

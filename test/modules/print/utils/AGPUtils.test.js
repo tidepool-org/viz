@@ -100,6 +100,35 @@ describe('AGPUtils', () => {
       top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate[date].sensorUsage.count = maxPossibleReadings * 0.69;
     });
 
+    // A 7-period window offset from midnight: the periods run 10:00 - 10:00 US/Eastern, ending
+    // 2023-03-17 10:00 EDT, and the statsByDate entries are keyed by the date each period starts on.
+    // The newest datum falls on 2023-03-17, a calendar date with no statsByDate entry of its own.
+    const tenHours = MS_IN_MIN * 60 * 10;
+    const exactly7OffsetPeriodsGreaterThan1HourDataEach = _.cloneDeep(cbgAGPData);
+    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.endpoints = {
+      range: [1678424400000 + tenHours, 1679025600000 + tenHours],
+      days: 7,
+      activeDays: 7,
+    };
+    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
+    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.stats.bgExtents.newestDatum.time = 1679059365000; // 2023-03-17 09:22:45 EDT
+    _.each(['2023-03-03', '2023-03-04', '2023-03-05', '2023-03-06', '2023-03-07', '2023-03-08', '2023-03-09'], date => {
+      delete exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsByDate[date];
+    });
+    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].bgExtents.newestDatum.time = 1679059365000;
+    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-10'].bgExtents.oldestDatum.time = 1678460554000; // 2023-03-10 10:02:34 EST
+
+    // A 14-day range whose newest datum falls 3 days before the end of the range, with exactly 7
+    // periods worn: 2023-03-07 through 2023-03-13
+    const exactly7PeriodsEndingBeforeRangeEnd = _.cloneDeep(cbgAGPData);
+    exactly7PeriodsEndingBeforeRangeEnd.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
+    exactly7PeriodsEndingBeforeRangeEnd.data.current.stats.bgExtents.newestDatum = _.cloneDeep(
+      exactly7PeriodsEndingBeforeRangeEnd.data.current.aggregationsByDate.statsByDate['2023-03-13'].bgExtents.newestDatum
+    );
+    _.each(['2023-03-03', '2023-03-04', '2023-03-05', '2023-03-06', '2023-03-14', '2023-03-15', '2023-03-16'], date => {
+      delete exactly7PeriodsEndingBeforeRangeEnd.data.current.aggregationsByDate.statsByDate[date];
+    });
+
     context('fully sufficient data', () => {
       it('should return `true` for all sections ', () => {
         expect(AGPUtils.calculateCGMDataSufficiency(cbgAGPData)).to.eql({
@@ -166,6 +195,27 @@ describe('AGPUtils', () => {
       it('should return `false` for agp, true for other sections', () => {
         expect(AGPUtils.calculateCGMDataSufficiency(top7DaysLessThan70PercentMeanUsage)).to.eql({
           ambulatoryGlucoseProfile: false,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+    });
+
+    context('exactly 7 24-hour periods offset from midnight with greater than 1 hour of cgm data each', () => {
+      it('should assess the 24-hour periods of the queried range rather than calendar dates', () => {
+        expect(AGPUtils.calculateCGMDataSufficiency(exactly7OffsetPeriodsGreaterThan1HourDataEach)).to.eql({
+          ambulatoryGlucoseProfile: true,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+    });
+    context('exactly 7 24-hour periods ending before the end of the queried range', () => {
+      it('should assess the periods ending with the one containing the newest datum', () => {
+        expect(AGPUtils.calculateCGMDataSufficiency(exactly7PeriodsEndingBeforeRangeEnd)).to.eql({
+          ambulatoryGlucoseProfile: true,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
           percentInRanges: true,
