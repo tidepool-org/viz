@@ -86,12 +86,12 @@ describe('AGPUtils', () => {
     sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
 
     const top7DaysLessThan1HourDataEach = _.cloneDeep(cbgAGPData);
-    top7DaysLessThan1HourDataEach.data.current.stats.bgExtents.bgDaysWorn = 7;
+    top7DaysLessThan1HourDataEach.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
     top7DaysLessThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].sensorUsage.count = 0;
     sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
 
     const exactly7DaysGreaterThan1HourDataEach = _.cloneDeep(cbgAGPData);
-    exactly7DaysGreaterThan1HourDataEach.data.current.stats.bgExtents.bgDaysWorn = 7;
+    exactly7DaysGreaterThan1HourDataEach.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
 
     const top7DaysLessThan70PercentMeanUsage = _.cloneDeep(cbgAGPData);
     delete top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate['2023-03-16'];

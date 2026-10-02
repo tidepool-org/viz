@@ -55,6 +55,7 @@ import {
 import colors from './colors';
 
 import {
+  formatDataDateRange,
   formatDateRange,
   formatTimeAgo,
   getLocalizedCeiling,
@@ -157,6 +158,7 @@ const utils = {
   },
   datetime: {
     findBasicsStart,
+    formatDataDateRange,
     formatDateRange,
     formatTimeAgo,
     getLocalizedCeiling,

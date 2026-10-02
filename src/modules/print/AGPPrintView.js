@@ -23,7 +23,7 @@ import {
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../utils/constants';
 import { getPatientFullName } from '../../utils/misc';
 import { bankersRound } from '../../utils/format';
-import { formatBirthdate, getOffset } from '../../utils/datetime';
+import { formatBirthdate, formatDataDateRange, getOffset } from '../../utils/datetime';
 import { formatDatum } from '../../utils/stat';
 
 const t = i18next.t.bind(i18next);
@@ -216,17 +216,17 @@ class AGPPrintView extends PrintView {
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
     const patientBirthdate = formatBirthdate(this.patient);
     const { sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
-    const { bgDaysWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
+    const { bg24hPeriodsWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
 
-    let reportDaysText = bgDaysWorn === 1
-      ? t('{{bgDaysWorn}} Day', { bgDaysWorn })
-      : t('{{bgDaysWorn}} Days', { bgDaysWorn });
+    let reportDaysText = bg24hPeriodsWorn === 1
+      ? t('{{bg24hPeriodsWorn}} Day', { bg24hPeriodsWorn })
+      : t('{{bg24hPeriodsWorn}} Days', { bg24hPeriodsWorn });
 
-    if (bgDaysWorn >= 1) {
-      reportDaysText += `: ${bgDaysWorn === 1
+    if (bg24hPeriodsWorn >= 1) {
+      reportDaysText += `: ${bg24hPeriodsWorn === 1
         ? moment.utc(newestDatum?.time - getOffset(newestDatum?.time, this.timezone) * MS_IN_MIN).format('MMMM D, YYYY')
-        : this.getDateRange(oldestDatum?.time, newestDatum?.time, undefined, '', 'MMMM')
+        : formatDataDateRange(oldestDatum?.time, newestDatum?.time, { timezone: this.timezone })
       }`;
     }
 

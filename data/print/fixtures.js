@@ -1144,7 +1144,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 37365000,
                 localDate: '2023-03-16',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678939365000,
                 msPer24: 165000,
@@ -1166,7 +1166,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86266000,
                 localDate: '2023-03-15',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678852964000,
                 msPer24: 164000,
@@ -1188,7 +1188,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86264000,
                 localDate: '2023-03-14',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678766561000,
                 msPer24: 161000,
@@ -1210,7 +1210,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86261000,
                 localDate: '2023-03-13',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678680159000,
                 msPer24: 159000,
@@ -1232,7 +1232,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86259000,
                 localDate: '2023-03-12',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678597358000,
                 msPer24: 158000,
@@ -1254,7 +1254,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86259000,
                 localDate: '2023-03-11',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678510958000,
                 msPer24: 158000,
@@ -1276,7 +1276,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86257000,
                 localDate: '2023-03-10',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678424554000,
                 msPer24: 154000,
@@ -1298,7 +1298,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86254000,
                 localDate: '2023-03-09',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678338154000,
                 msPer24: 154000,
@@ -1320,7 +1320,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86254000,
                 localDate: '2023-03-08',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678251751000,
                 msPer24: 151000,
@@ -1342,7 +1342,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86252000,
                 localDate: '2023-03-07',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678171950000,
                 msPer24: 6750000,
@@ -1364,7 +1364,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 84450000,
                 localDate: '2023-03-06',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1678078948000,
                 msPer24: 148000,
@@ -1386,7 +1386,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86248000,
                 localDate: '2023-03-05',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1677992546000,
                 msPer24: 146000,
@@ -1408,7 +1408,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86246000,
                 localDate: '2023-03-04',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1677906146000,
                 msPer24: 146000,
@@ -1430,7 +1430,7 @@ export const createAGPData = bgSource => ({
                 msPer24: 86246000,
                 localDate: '2023-03-03',
               },
-              bgDaysWorn: 1,
+              bg24hPeriodsWorn: 1,
               oldestDatum: {
                 time: 1677819745000,
                 msPer24: 145000,
@@ -1485,7 +1485,7 @@ export const createAGPData = bgSource => ({
             msPer24: 37365000,
             localDate: '2023-03-16',
           },
-          bgDaysWorn: 14,
+          bg24hPeriodsWorn: 14,
           bgMin: 52,
           bgMax: 238,
           oldestDatum: {
