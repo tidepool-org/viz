@@ -300,7 +300,7 @@ describe('AGPPrintView', () => {
     });
 
     it('should render the report date range', () => {
-      sinon.assert.calledWithMatch(Renderer.doc.text, '14 Days: March 3 - March 16, 2023');
+      sinon.assert.calledWithMatch(Renderer.doc.text, '14 Days: Mar 3 12:02 AM - Mar 16, 2023 10:22 AM');
     });
 
     it('should render the sensor usage', () => {

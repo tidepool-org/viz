@@ -572,6 +572,22 @@ describe('StatUtil', () => {
       expect(result.newestDatum.id).to.equal(smbgData[4].id);
       expect(result.oldestDatum.id).to.equal(smbgData[0].id);
     });
+
+    describe('bg24hPeriodsWorn', () => {
+      it('should count 24h periods aligned to the range start', () => {
+        // Excludes the first two cbg datums, leaving data from 2018-02-01T00:30 to 2018-02-02T00:00
+        const offsetEndpoints = [
+          '2018-02-01T00:20:00.000Z',
+          '2018-02-08T00:20:00.000Z',
+        ];
+
+        filterEndpoints(offsetEndpoints);
+        statUtil.bgSource = 'cbg';
+
+        // Data touches 2 calendar dates (Feb 1 and Feb 2), but falls within 1 period of 24h from 00:20
+        expect(statUtil.getBgExtentsData().bg24hPeriodsWorn).to.equal(1);
+      });
+    });
   });
 
   describe('getCarbsData', () => {

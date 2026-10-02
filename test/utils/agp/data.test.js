@@ -156,7 +156,7 @@ describe('[agp] data utils', () => {
 Date of birth: 2001-01-01
 Exported from Tidepool TIDE: ${formatCurrentDate()}
 
-Reporting Period: December 15, 2024 - January 13, 2025
+Reporting Period: Dec 15, 2024 12:01 AM - Jan 13, 2025 7:46 AM
 
 Avg. Daily Time In Range (mg/dL)
 >250   4%
@@ -181,7 +181,7 @@ GMI (CGM): 6.2%
 Date of birth: 2001-01-01
 Exported from Tidepool TIDE: ${formatCurrentDate()}
 
-Reporting Period: December 15, 2024 - January 13, 2025
+Reporting Period: Dec 15, 2024 12:01 AM - Jan 13, 2025 7:46 AM
 
 Total CGM data recorded: 29d 7h 30m — Meets ≥72-hour requirement for CPT 95251
 
@@ -211,7 +211,7 @@ GMI (CGM): 6.2%
 Date of birth: 2001-01-01
 Exported from Tidepool TIDE: ${formatCurrentDate()}
 
-Reporting Period: December 15, 2024 - January 13, 2025
+Reporting Period: Dec 15, 2024 12:01 AM - Jan 13, 2025 7:46 AM
 
 Total CGM data recorded: 1d 17h 40m
 

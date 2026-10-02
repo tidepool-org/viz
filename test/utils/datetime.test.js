@@ -298,6 +298,30 @@ describe('datetime', () => {
     });
   });
 
+  describe('formatDataDateRange', () => {
+    it('should format using the time of day of each datum', () => {
+      let start;
+      let end;
+
+      start = Date.parse('2023-03-03T00:02:00.000Z');
+      end = Date.parse('2023-03-16T10:22:00.000Z');
+
+      expect(datetime.formatDataDateRange(start, end)).to.equal('Mar 3 12:02 AM - Mar 16, 2023 10:22 AM');
+
+      start = Date.parse('2023-03-03T08:02:00.000Z'); // 12:02 AM Pacific
+      end = Date.parse('2023-03-16T17:22:00.000Z'); // 10:22 AM Pacific
+
+      expect(datetime.formatDataDateRange(start, end, { timezone: 'US/Pacific' })).to.equal('Mar 3 12:02 AM - Mar 16, 2023 10:22 AM');
+    });
+
+    it('should include the year on the start date when the start and end are in different years', () => {
+      const start = Date.parse('2024-12-15T00:01:00.000Z');
+      const end = Date.parse('2025-01-13T07:46:00.000Z');
+
+      expect(datetime.formatDataDateRange(start, end)).to.equal('Dec 15, 2024 12:01 AM - Jan 13, 2025 7:46 AM');
+    });
+  });
+
   describe('formatCurrentDate', () => {
     let clock;
 
