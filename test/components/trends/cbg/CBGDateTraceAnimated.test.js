@@ -17,7 +17,8 @@
 
 import _ from 'lodash';
 import React from 'react';
-import { render, fireEvent } from '@testing-library/react/pure';
+import { render, fireEvent, waitFor } from '@testing-library/react/pure';
+import TransitionGroupPlus from 'react-transition-group-plus';
 
 import * as scales from '../../../helpers/scales';
 const {
@@ -32,6 +33,7 @@ import SVGContainer from '../../../helpers/SVGContainer';
 import {
   CBGDateTraceAnimated,
 } from '../../../../src/components/trends/cbg/CBGDateTraceAnimated';
+import { CBGSliceSegment } from '../../../../src/components/trends/cbg/CBGSliceSegment';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
 describe('CBGDateTraceAnimated', () => {
@@ -53,6 +55,7 @@ describe('CBGDateTraceAnimated', () => {
     focusDateTrace: sinon.spy(),
     onSelectDate: sinon.spy(),
     unfocusDateTrace: sinon.spy(),
+    unfocusSlice: sinon.spy(),
     userId: 'z1y2x3',
     xScale,
     yScale,
@@ -72,6 +75,63 @@ describe('CBGDateTraceAnimated', () => {
     it('should render a <g> with nothing in it', () => {
       expect(container.querySelectorAll(`#cbgDateTrace-${props.date}`)).to.have.length(1);
       expect(container.querySelectorAll('circle')).to.have.length(0);
+    });
+  });
+
+  describe('transition lifecycle', () => {
+    // fast so the tests don't wait on the real default duration
+    const animatedProps = _.assign({}, props, { animationDuration: 0.01 });
+
+    it('should invoke the enter callback synchronously when there is nothing to animate', () => {
+      const ref = React.createRef();
+      render(
+        <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
+          <CBGDateTraceAnimated {...animatedProps} data={[]} ref={ref} />
+        </SVGContainer>
+      );
+      const cb = sinon.spy();
+      ref.current.componentWillEnter(cb);
+      expect(cb.callCount).to.equal(1);
+      ref.current.componentWillLeave(cb);
+      expect(cb.callCount).to.equal(2);
+    });
+
+    it('should invoke the enter and leave callbacks once the animation completes', async () => {
+      const ref = React.createRef();
+      render(
+        <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
+          <CBGDateTraceAnimated {...animatedProps} ref={ref} />
+        </SVGContainer>
+      );
+      const enterCb = sinon.spy();
+      ref.current.componentWillEnter(enterCb);
+      expect(enterCb.callCount).to.equal(0);
+      await waitFor(() => expect(enterCb.callCount).to.equal(1));
+
+      const leaveCb = sinon.spy();
+      ref.current.componentWillLeave(leaveCb);
+      expect(leaveCb.callCount).to.equal(0);
+      await waitFor(() => expect(leaveCb.callCount).to.equal(1));
+    });
+
+    it('should be removed from a TransitionGroupPlus after leaving', async () => {
+      const renderGroup = (dates) => (
+        <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
+          <TransitionGroupPlus component="g" transitionMode="simultaneous">
+            {_.map(dates, (date) => (
+              <CBGDateTraceAnimated {...animatedProps} key={date} date={date} />
+            ))}
+          </TransitionGroupPlus>
+        </SVGContainer>
+      );
+      const { container, rerender } = render(renderGroup([props.date]));
+      expect(container.querySelectorAll('circle')).to.have.length(2);
+
+      rerender(renderGroup([]));
+      // still present while the leave animation runs...
+      expect(container.querySelectorAll('circle')).to.have.length(2);
+      // ...and gone once it has completed
+      await waitFor(() => expect(container.querySelectorAll('circle')).to.have.length(0));
     });
   });
 
@@ -122,11 +182,47 @@ describe('CBGDateTraceAnimated', () => {
       });
 
       describe('onMouseOut', () => {
-        it('should fire the unfocusDateTrace function', () => {
+        beforeEach(() => {
+          props.unfocusDateTrace.resetHistory();
+          props.unfocusSlice.resetHistory();
+        });
+
+        it('should fire the unfocusDateTrace and unfocusSlice functions', () => {
           const circle = container.querySelectorAll('circle')[0];
-          expect(props.unfocusDateTrace.callCount).to.equal(0);
           fireEvent.mouseOut(circle);
           expect(props.unfocusDateTrace.callCount).to.equal(1);
+          expect(props.unfocusSlice.callCount).to.equal(1);
+        });
+
+        it('should not fire unfocusSlice when moving onto another cbg circle', () => {
+          const [circle, other] = container.querySelectorAll('circle');
+          fireEvent.mouseOut(circle, { relatedTarget: other });
+          expect(props.unfocusDateTrace.callCount).to.equal(1);
+          expect(props.unfocusSlice.callCount).to.equal(0);
+        });
+
+        it('should not fire unfocusSlice when moving onto a cbg slice segment', () => {
+          const circle = container.querySelectorAll('circle')[0];
+          // render a real slice segment so this breaks if its id convention changes
+          const { container: sliceContainer, unmount } = render(
+            <SVGContainer dimensions={{ width: trendsWidth, height: trendsHeight }}>
+              <CBGSliceSegment
+                classes="foo"
+                datum={{ id: 'abc' }}
+                focusSlice={sinon.spy()}
+                interpolated={{ key: 'innerQuartiles', style: {} }}
+                segment={{ height: 'h', heightKeys: [], y: 'y' }}
+                unfocusSlice={sinon.spy()}
+                width={10}
+                x={0}
+              />
+            </SVGContainer>
+          );
+          const slice = sliceContainer.querySelector('rect');
+          fireEvent.mouseOut(circle, { relatedTarget: slice });
+          unmount();
+          expect(props.unfocusDateTrace.callCount).to.equal(1);
+          expect(props.unfocusSlice.callCount).to.equal(0);
         });
       });
     });
