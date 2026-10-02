@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -480,6 +480,96 @@ describe('DailyPrintView', () => {
         expect(_.map(legendItems, item => item.type)).to.include('override');
       });
     });
+
+    it('should include the site change legend item when site changes are present', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
+            ],
+          },
+        },
+      };
+
+      const legendItems = Renderer.getLegendItems();
+      const itemIds = _.map(legendItems, item => item.type);
+      expect(itemIds).to.include(SITE_CHANGE);
+
+      const siteChangeItem = _.find(legendItems, item => item.type === SITE_CHANGE);
+      expect(siteChangeItem.labels).to.deep.equal(['Site', 'Change']);
+    });
+
+    it('should not include the site change legend item when no site changes are present', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'calibration', normalTime: 50, tags: {} },
+            ],
+          },
+        },
+      };
+
+      expect(_.map(Renderer.getLegendItems(), item => item.type)).to.not.include(SITE_CHANGE);
+    });
+
+    it('should list each distinct site change icon once, sized to fit them', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 5 * MS_IN_MIN, source: 'Medtronic', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 10 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 10 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
+            ],
+          },
+        },
+      };
+
+      const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
+      expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png', 'images/sitechange-loop-tubing.png']);
+      expect(siteChangeItem.iconWidth).to.equal((Renderer.eventRadius * 4) + 2);
+    });
+
+    it('should list one site change icon for sources within the same 5-minute window', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 2 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
+            ],
+          },
+        },
+      };
+
+      const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
+      expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png']);
+    });
+
+    it('should size the site change legend icon from the constructor', () => {
+      // Guards the constructor ordering: legendItems must be built after eventRadius is set.
+      // Otherwise iconWidth is NaN and the render throws inside the PDF worker, where blip
+      // never sees the error and the print dialog spins forever.
+      const siteChangeData = _.cloneDeep(data);
+      const [date] = _.keys(siteChangeData.data.current.aggregationsByDate.dataByDate);
+      siteChangeData.data.current.aggregationsByDate.dataByDate[date].deviceEvent = [
+        { subType: 'reservoirChange', normalTime: 50, source: 'Insulet', tags: {} },
+      ];
+
+      const item = _.find(new DailyPrintView(doc, siteChangeData, opts).legendItems, { type: SITE_CHANGE });
+      expect(item.iconWidth).to.equal(Renderer.eventRadius * 2);
+    });
   });
 
   describe('calculateChartMinimums', () => {
@@ -920,6 +1010,134 @@ describe('DailyPrintView', () => {
         sinon.assert.calledWith(Renderer.doc.text, '10.0');
         sinon.assert.calledWith(Renderer.doc.text, '3.9');
         sinon.assert.calledWith(Renderer.doc.text, '3.0');
+      });
+    });
+  });
+
+  describe('renderDeviceEvents', () => {
+    const renderArgs = deviceEvent => ({
+      xScale: x => x,
+      topEdge: 100,
+      data: { deviceEvent, physicalActivity: [], reportedState: [] },
+    });
+
+    it('renders the selected site-change subtype icon, ignoring other subtypes', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 80, source: 'Tandem', tags: {} },
+        { subType: 'reservoirChange', normalTime: 90, source: 'Tandem', tags: {} },
+      ]));
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-cannula.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-reservoir.png');
+    });
+
+    it('renders each site change with its own device icon on a mixed-upload day', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.doc.image.resetHistory();
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 10 * 60 * 1000, source: 'Tidepool Loop', tags: {} },
+      ]));
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+    });
+
+    it('falls back to the base subtype icon for a source with no variant', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tidepool loop';
+      Renderer.doc.image.resetHistory();
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+      ]));
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+    });
+
+    it('renders no site-change icons when no source is selected', () => {
+      Renderer.siteChangeSource = undefined;
+
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 50, source: 'Tandem', tags: {} },
+      ]));
+
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-cannula.png');
+    });
+
+    it('dedupes site changes within 5 minutes, anchoring on the last kept icon', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'tandem';
+      Renderer.doc.image.resetHistory();
+
+      // 0, 4min, 8min: 4min drops (within 5 of the kept 0); 8min is kept because
+      // it is >= 5 min after the kept 0, though only 4 min after the dropped 4min.
+      // A chained collapse would keep only 0, so this pins the last-kept anchor.
+      const minute = 60 * 1000;
+      Renderer.renderDeviceEvents(renderArgs([
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 0, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 4 * minute, source: 'Tandem', tags: {} },
+        { subType: 'prime', primeTarget: 'cannula', normalTime: 8 * minute, source: 'Tandem', tags: {} },
+      ]));
+
+      const cannulaImageCalls = Renderer.doc.image.getCalls()
+        .filter(call => call.args[0] === 'images/sitechange-cannula.png');
+      expect(cannulaImageCalls).to.have.length(2);
+    });
+
+    describe('5-minute dedup window', () => {
+      // Boundary cases for the window: keep the first datum, then measure each
+      // subsequent decision from the last kept one rather than the previous datum.
+      // Mirrors the cases in tideline test/plot/sitechange.test.js; keep the two in sync.
+      const dedupCases = [
+        { name: 'single', input: [{ id: 'a', normalTime: 0 }], expectedIds: ['a'] },
+        { name: 'exactly-window-apart', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 300000 }], expectedIds: ['a', 'b'] },
+        { name: 'one-ms-inside-window', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 299999 }], expectedIds: ['a'] },
+        { name: 'burst-of-four-inside-window', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 60000 }, { id: 'c', normalTime: 120000 }, { id: 'd', normalTime: 240000 }], expectedIds: ['a'] },
+        { name: 'anchor-on-last-kept-not-previous-datum', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 299999 }, { id: 'c', normalTime: 599998 }], expectedIds: ['a', 'c'] },
+        { name: 'chain-each-just-inside', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 200000 }, { id: 'c', normalTime: 400000 }, { id: 'd', normalTime: 600000 }], expectedIds: ['a', 'c'] },
+        { name: 'unsorted-input', input: [{ id: 'c', normalTime: 600000 }, { id: 'a', normalTime: 0 }, { id: 'b', normalTime: 300000 }], expectedIds: ['a', 'b', 'c'] },
+        { name: 'duplicate-timestamps', input: [{ id: 'a', normalTime: 0 }, { id: 'b', normalTime: 0 }], expectedIds: ['a'] },
+        { name: 'empty', input: [], expectedIds: [] },
+      ];
+
+      _.each(dedupCases, ({ name, input, expectedIds }) => {
+        it(`keeps the expected site changes: ${name}`, () => {
+          Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+          Renderer.manufacturer = 'tandem';
+          Renderer.doc.image.resetHistory();
+
+          Renderer.renderDeviceEvents(renderArgs(_.map(input, datum => ({
+            ...datum,
+            subType: 'prime',
+            primeTarget: 'cannula',
+            source: 'Tandem',
+            tags: {},
+          }))));
+
+          const drawnTimes = _.map(
+            _.filter(
+              Renderer.doc.image.getCalls(),
+              call => call.args[0] === 'images/sitechange-cannula.png'
+            ),
+            call => call.args[1] + Renderer.eventRadius
+          );
+
+          const expectedTimes = _.map(
+            expectedIds,
+            id => _.find(input, { id }).normalTime
+          );
+
+          expect(drawnTimes).to.deep.equal(expectedTimes);
+        });
       });
     });
   });
@@ -1401,6 +1619,62 @@ describe('DailyPrintView', () => {
       sinon.assert.calledWith(Renderer.doc.text, 'Bolus');
       sinon.assert.calledWith(Renderer.doc.text, 'manual &');
       sinon.assert.calledWith(Renderer.doc.text, 'automated');
+    });
+
+    it('should render the site change legend icon from the datum source, not the manufacturer', () => {
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tidepool loop';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+            ],
+          },
+        },
+      };
+      Renderer.legendItems = Renderer.getLegendItems();
+
+      Renderer.renderLegend();
+
+      sinon.assert.calledWith(Renderer.doc.image, 'images/sitechange-tubing.png');
+      sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
+    });
+
+    it('should render one site change legend icon per distinct device icon in the document', () => {
+      sinon.stub(Renderer, 'renderEventPath');
+      sinon.stub(Renderer, 'renderBasalPaths');
+
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+            ],
+          },
+          '2017-01-03': {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tidepool Loop', tags: {} },
+            ],
+          },
+        },
+      };
+      Renderer.legendItems = Renderer.getLegendItems();
+
+      Renderer.renderLegend();
+
+      const tubingCall = Renderer.doc.image.getCalls().find(call => call.args[0] === 'images/sitechange-tubing.png');
+      const loopCall = Renderer.doc.image.getCalls().find(call => call.args[0] === 'images/sitechange-loop-tubing.png');
+      expect(tubingCall).to.exist;
+      expect(loopCall).to.exist;
+      // The icons sit side by side, not stacked: the second starts one icon width
+      // plus SITE_CHANGE_LEGEND_ICON_GAP (2) after the first. args[1] is the x position.
+      expect(loopCall.args[1]).to.equal(tubingCall.args[1] + (Renderer.eventRadius * 2) + 2);
     });
 
     it('should render the legend with pump alarms when present in dataset', () => {

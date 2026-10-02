@@ -140,6 +140,16 @@ export function isOneMinCGMSampleIntervalDevice(pumpSettingsOrUpload = {}) {
 }
 
 /**
+ * Normalize a manufacturer name to the key form used to match site-change variants.
+ *
+ * @param {String} manufacturer Manufacturer name
+ * @returns {String} manufacturer key
+ */
+export function manufacturerKey(manufacturer = '') {
+  return manufacturer.toLowerCase();
+}
+
+/**
  * Get the uppercased manufacturer name
  * @param {String} manufacturer Manufacturer name
  */
