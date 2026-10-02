@@ -27,6 +27,7 @@ import DailyPrintView from './DailyPrintView';
 import BgLogPrintView from './BgLogPrintView';
 import SettingsPrintView from './SettingsPrintView';
 import AGPPrintView from './AGPPrintView';
+import TagsAndSitesPrintView from './TagsAndSitesPrintView';
 import PrescriptionPrintView from './PrescriptionPrintView';
 import { base64ToArrayBuffer, waitForData } from '../print/pdfkitHelpers';
 
@@ -50,6 +51,7 @@ export const utils = {
   SettingsPrintView,
   PrescriptionPrintView,
   AGPPrintView,
+  TagsAndSitesPrintView,
 };
 
 /**
@@ -66,6 +68,8 @@ export const utils = {
 export function createPrintView(type, data, opts, doc) {
   const {
     patient,
+    patientTags = [],
+    sites = [],
     svgDataURLS,
   } = opts;
 
@@ -81,6 +85,8 @@ export function createPrintView(type, data, opts, doc) {
     height: constants.HEIGHT,
     margins: constants.MARGINS,
     patient,
+    patientTags,
+    sites,
     smallFontSize: constants.SMALL_FONT_SIZE,
     svgDataURLS: svgDataURLS?.[type],
     width: constants.WIDTH,
@@ -111,6 +117,14 @@ export function createPrintView(type, data, opts, doc) {
 
       renderOpts = _.assign(renderOpts, {
         title: t('BG Log'),
+      });
+      break;
+
+    case 'tagsAndSites':
+      Renderer = utils.TagsAndSitesPrintView;
+
+      renderOpts = _.assign(renderOpts, {
+        title: t('Tags & Sites'),
       });
       break;
 
@@ -156,7 +170,9 @@ export function createPrintView(type, data, opts, doc) {
 export function createPrintPDFPackage(data, opts) {
   const {
     patient,
+    patientTags = [],
     pdfType = 'combined',
+    sites = [],
     basics = {},
     daily = {},
     bgLog = {},
@@ -180,9 +196,20 @@ export function createPrintPDFPackage(data, opts) {
     */
     const doc = new DocLib({ autoFirstPage: false, bufferPages: true, margin: constants.MARGIN });
 
+    // The page belongs to the AGP report rather than standing on its own, so it needs an
+    // AGP section to follow as well as something to list.
+    const showTagsAndSites = (!agpCGM.disabled || !agpBGM.disabled)
+      && !(_.isEmpty(patientTags) && _.isEmpty(sites));
+
     if (pdfType === 'combined') {
       if (!agpCGM.disabled) await createPrintView('agpCGM', data.agpCGM, pdfOpts, doc).render();
       if (!agpBGM.disabled) await createPrintView('agpBGM', data.agpBGM, pdfOpts, doc).render();
+
+      if (showTagsAndSites) {
+        const agpData = agpBGM.disabled ? data.agpCGM : data.agpBGM;
+        createPrintView('tagsAndSites', _.pick(agpData, ['timePrefs']), pdfOpts, doc).render();
+      }
+
       if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
       if (!daily.disabled) createPrintView('daily', data.daily, pdfOpts, doc).render();
       if (!bgLog.disabled) createPrintView('bgLog', data.bgLog, pdfOpts, doc).render();

@@ -231,7 +231,7 @@ export function getChartDateBoundFormat(startDate, endDate) {
  */
 export function formatDuration(duration, opts = {}) {
   const momentDuration = moment.duration(duration);
-  const days = momentDuration.days();
+  const days = Math.trunc(momentDuration.asDays());
   const hours = momentDuration.hours();
   const minutes = momentDuration.minutes();
   const seconds = momentDuration.seconds();

@@ -1141,7 +1141,7 @@ describe('stat', () => {
       it('should return annotations for `timeInRange` stat', () => {
         expect(stat.getStatAnnotations(data, commonStats.timeInRange, multiDayOpts)).to.have.ordered.members([
           '**Time in Range (TIR):** Percentage of time readings falling within the target range over the selected period.',
-          '**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (181-250 mg&#x2F;dL) category per AGP guidance to maintain consistency.',
+          '**How we calculate this:**\n\n Percentages are calculated using deduplicated data, rounded to the nearest whole percent. In rare cases where rounding causes totals to exceed or fall short of 100%, we add or subtract 1% from the High (181-250 mg/dL) category per AGP guidance to maintain consistency.',
         ]);
       });
     });
