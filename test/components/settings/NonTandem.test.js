@@ -1156,8 +1156,8 @@ describe('NonTandem', () => {
 
       expect(text).to.include('Diabetes Type: Type 1');
       expect(text).to.include('MRN: MRN123');
-      expect(text).to.include('Patient Tags: Alpha, Zebra');
-      expect(text).to.include('Clinic Sites: Site A, Site B');
+      expect(text).to.include('Patient Tags: Zebra, Alpha');
+      expect(text).to.include('Clinic Sites: Site B, Site A');
     });
 
     it('should build the `Devices Uploaded` block when `metaData` supplies a device', () => {

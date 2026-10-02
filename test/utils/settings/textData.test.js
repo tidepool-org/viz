@@ -87,12 +87,12 @@ describe('[settings] text data utils', () => {
           expect(buildText({ copyAsTextMetadata })).to.include('MRN: MRN123');
         });
 
-        it('should include the patient tag names in localeCompare order', () => {
-          expect(buildText({ copyAsTextMetadata })).to.include('Patient Tags: Alpha, Zebra');
+        it('should include the patient tag names in the order received', () => {
+          expect(buildText({ copyAsTextMetadata })).to.include('Patient Tags: Zebra, Alpha');
         });
 
-        it('should include the clinic site names in localeCompare order', () => {
-          expect(buildText({ copyAsTextMetadata })).to.include('Clinic Sites: Site A, Site B');
+        it('should include the clinic site names in the order received', () => {
+          expect(buildText({ copyAsTextMetadata })).to.include('Clinic Sites: Site B, Site A');
         });
 
         it('should omit the tag and site lines when both arrays are empty', () => {
@@ -109,7 +109,7 @@ describe('[settings] text data utils', () => {
           const text = buildText({ copyAsTextMetadata: _.omit(copyAsTextMetadata, 'diagnosisTypeLabel') });
 
           expect(text).to.not.include('Diabetes Type');
-          expect(text).to.include('Patient Tags: Alpha, Zebra');
+          expect(text).to.include('Patient Tags: Zebra, Alpha');
         });
 
         it('should keep the name, birthdate and source label when opts is omitted', () => {
