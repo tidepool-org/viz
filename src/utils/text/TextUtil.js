@@ -39,8 +39,9 @@ export class TextUtil {
     const mrn = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
     const mrnText = mrn ? this.buildTextLine({ label: t('MRN'), value: mrn }) : '';
 
-    const tagNames = _.map(patientTags, tag => tag.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
-    const siteNames = _.map(sites, site => site.name).toSorted((a, b) => a.localeCompare(b)).join(', ');
+    // Rendered in the order received; the caller sorts, as it does for the PDF header
+    const tagNames = _.map(patientTags, 'name').join(', ');
+    const siteNames = _.map(sites, 'name').join(', ');
 
     const tagsText = patientTags.length ? this.buildTextLine({ label: t('Patient Tags'), value: tagNames }) : '';
     const sitesText = sites.length ? this.buildTextLine({ label: t('Clinic Sites'), value: siteNames }) : '';

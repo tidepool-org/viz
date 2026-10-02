@@ -19,7 +19,11 @@ const i18next = require('i18next');
 const _ = require('lodash');
 
 if (_.get(i18next, 'options.returnEmptyString') === undefined) {
-  i18next.init({ returnEmptyString: false, nsSeparator: '|' });
+  i18next.init({
+    returnEmptyString: false,
+    nsSeparator: '|',
+    interpolation: { escapeValue: false },
+  });
 }
 
 // Setup Jest DOM matchers
