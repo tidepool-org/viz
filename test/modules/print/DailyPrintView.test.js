@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -528,10 +528,10 @@ describe('DailyPrintView', () => {
         dataByDate: {
           [sampleDate]: {
             deviceEvent: [
-              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
-              { subType: 'prime', primeTarget: 'tubing', normalTime: 90, source: 'Medtronic', tags: {} },
-              { subType: 'prime', primeTarget: 'tubing', normalTime: 99, source: 'Tidepool Loop', tags: {} },
-              { subType: 'prime', primeTarget: 'cannula', normalTime: 99, source: 'Tidepool Loop', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 5 * MS_IN_MIN, source: 'Medtronic', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 10 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 10 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
             ],
           },
         },
@@ -540,6 +540,38 @@ describe('DailyPrintView', () => {
       const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
       expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png', 'images/sitechange-loop-tubing.png']);
       expect(siteChangeItem.iconWidth).to.equal((Renderer.eventRadius * 4) + 2);
+    });
+
+    it('should list one site change icon for sources within the same 5-minute window', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 0, source: 'Tandem', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 2 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
+            ],
+          },
+        },
+      };
+
+      const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
+      expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png']);
+    });
+
+    it('should size the site change legend icon from the constructor', () => {
+      // Guards the constructor ordering: legendItems must be built after eventRadius is set.
+      // Otherwise iconWidth is NaN and the render throws inside the PDF worker, where blip
+      // never sees the error and the print dialog spins forever.
+      const siteChangeData = _.cloneDeep(data);
+      const [date] = _.keys(siteChangeData.data.current.aggregationsByDate.dataByDate);
+      siteChangeData.data.current.aggregationsByDate.dataByDate[date].deviceEvent = [
+        { subType: 'reservoirChange', normalTime: 50, source: 'Insulet', tags: {} },
+      ];
+
+      const item = _.find(new DailyPrintView(doc, siteChangeData, opts).legendItems, { type: SITE_CHANGE });
+      expect(item.iconWidth).to.equal(Renderer.eventRadius * 2);
     });
   });
 

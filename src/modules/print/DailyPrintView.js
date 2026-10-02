@@ -318,7 +318,10 @@ class DailyPrintView extends PrintView {
     // document, so a document spanning two pumps shows both devices' icons.
     const siteChangeImagesInDocument = this.siteChangeSource
       ? _.uniq(_.flatMap(this.aggregationsByDate.dataByDate, dateData => _.map(
-        _.filter(dateData.deviceEvent || [], d => getSiteChangeSubType(d) === this.siteChangeSource),
+        dedupeSiteChangesWithinWindow(_.filter(
+          dateData.deviceEvent || [],
+          d => getSiteChangeSubType(d) === this.siteChangeSource
+        )),
         d => getSiteChangeImage(this.siteChangeSource, d.source)
       )))
       : [];
