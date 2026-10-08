@@ -1708,11 +1708,11 @@ export class DataUtil {
         } else {
           source = upload.deviceManufacturers[0];
         }
-      } else if (isTidepoolLoop(pumpSettings)) {
+      } else if (isTidepoolLoop(upload)) {
         source = TIDEPOOL_LOOP.toLowerCase();
-      } else if (isTrio(pumpSettings)) {
+      } else if (isTrio(upload)) {
         source = TRIO.toLowerCase();
-      } else if (isDIYLoop(pumpSettings)) {
+      } else if (isDIYLoop(upload)) {
         source = DIY_LOOP.toLowerCase();
       } else if (isTwiistLoop(upload)) {
         // We still need to check here for pre-3.0.0 uploads, which do not include the deviceManufacturers array
