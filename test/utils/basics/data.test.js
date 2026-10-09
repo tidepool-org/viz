@@ -135,7 +135,7 @@ describe('basics data utils', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isOneButtonBolusDevice: false });
         const oneButtonFilter = _.find(result.boluses.dimensions, { key: 'oneButton' });
         expect(oneButtonFilter.hideEmpty).to.be.true;
-        expect(oneButtonFilter.selectorIndex).to.equal(7);
+        expect(oneButtonFilter.selectorIndex).to.equal(8);
       });
 
       it('should show the one-button bolus dimension for pumps with the capability', () => {
@@ -174,7 +174,7 @@ describe('basics data utils', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
         expect(result.boluses.dimensions[9].key).to.equal('automated');
         expect(result.boluses.dimensions[9].percentage).to.be.false;
-        expect(result.boluses.dimensions[9].selectorIndex).to.equal(8);
+        expect(result.boluses.dimensions[9].selectorIndex).to.equal(9);
       });
     });
 
@@ -257,7 +257,7 @@ describe('basics data utils', () => {
       it('should add a one-button bolus selector', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
         expect(result.boluses.dimensions[8].key).to.equal('oneButton');
-        expect(result.boluses.dimensions[8].selectorIndex).to.equal(7);
+        expect(result.boluses.dimensions[8].selectorIndex).to.equal(8);
       });
 
       it('should show the one-button bolus selector when the pump has the capability', () => {

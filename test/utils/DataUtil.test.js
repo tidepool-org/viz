@@ -4269,8 +4269,8 @@ describe('DataUtil', () => {
     });
 
     it('should only flag a one-button bolus capable pump when its latest upload is from a Tidepool Uploader version that tags one-button boluses', () => {
-      const oneButtonFlagForUploaderVersion = version => {
-        const upload = { ..._.cloneDeep(uploadData[2]), client: { name: 'org.tidepool.uploader', version } };
+      const oneButtonFlagForUploadClient = client => {
+        const upload = { ..._.omit(_.cloneDeep(uploadData[2]), 'client'), ...(client ? { client } : {}) };
         initDataUtil(_.map(defaultData, d => (d === uploadData[2] ? upload : d)));
 
         dataUtil.latestDatumByType.pumpSettings = {
@@ -4289,8 +4289,11 @@ describe('DataUtil', () => {
         return dataUtil.latestPumpUpload.isOneButtonBolusDevice;
       };
 
-      expect(oneButtonFlagForUploaderVersion('2.68.0')).to.be.false;
-      expect(oneButtonFlagForUploaderVersion('2.69.0')).to.be.true;
+      expect(oneButtonFlagForUploadClient({ name: 'org.tidepool.uploader', version: '2.68.0' })).to.be.false;
+      expect(oneButtonFlagForUploadClient({ name: 'org.tidepool.uploader', version: '2.69.0' })).to.be.true;
+
+      // Uploads without a client (non-uploader paths) are not version-gated
+      expect(oneButtonFlagForUploadClient(undefined)).to.be.true;
     });
 
     it('should return the make, model, latest settings, and automated delivery and settings override capabilities using latest pump data when available, else fallback to latest upload', () => {

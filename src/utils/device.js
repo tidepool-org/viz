@@ -137,9 +137,13 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}
  * @returns {Boolean}
  */
 export function isOneButtonBolusDevice(manufacturer, pumpSettingsOrUpload = {}) {
+  // Only the uploader's medtronic600 driver writes an `MMT-` deviceId prefix
+  const deviceId = _.get(pumpSettingsOrUpload, 'deviceId');
+  const isMedtronic600Series = _.startsWith(deviceId, 'MMT-');
+
   return isTwiistLoop(pumpSettingsOrUpload)
     || manufacturer === 'tandem'
-    || (manufacturer === 'medtronic' && _.startsWith(_.get(pumpSettingsOrUpload, 'deviceId'), 'MMT-'));
+    || (manufacturer === 'medtronic' && isMedtronic600Series);
 }
 
 /**
@@ -149,7 +153,8 @@ export function isOneButtonBolusDevice(manufacturer, pumpSettingsOrUpload = {}) 
  */
 export function isPreOneButtonBolusUpload(upload = {}) {
   if (_.get(upload, 'client.name') !== 'org.tidepool.uploader') return false;
-  const [major, minor] = _.map(_.split(_.get(upload, 'client.version', '0.0'), '.'), _.toInteger);
+  const versionParts = _.split(_.get(upload, 'client.version', ''), '.');
+  const [major, minor] = _.map(versionParts, part => parseInt(part, 10) || 0);
   return major < 2 || (major === 2 && minor < 69);
 }
 

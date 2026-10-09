@@ -392,6 +392,7 @@ describe('device utility functions', () => {
       expect(device.isOneButtonBolusDevice('twiist', { origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
       expect(device.isOneButtonBolusDevice('tandem', { deviceId: 'tandem123456' })).to.be.true;
       expect(device.isOneButtonBolusDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
+      expect(device.isOneButtonBolusDevice('tandem', {})).to.be.true;
       expect(device.isOneButtonBolusDevice('medtronic', { deviceId: 'MMT-1780:123456' })).to.be.true;
     });
 
@@ -411,8 +412,15 @@ describe('device utility functions', () => {
       expect(device.isPreOneButtonBolusUpload(uploaderUpload('1.99.0'))).to.be.true;
     });
 
+    it('should return `true` for a Tidepool Uploader upload with a missing or unparseable version', () => {
+      expect(device.isPreOneButtonBolusUpload({ type: 'upload', client: { name: 'org.tidepool.uploader' } })).to.be.true;
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('unknown'))).to.be.true;
+    });
+
     it('should return `false` for a tagging Tidepool Uploader version, a non-uploader client, or an upload without a client', () => {
       expect(device.isPreOneButtonBolusUpload(uploaderUpload('2.69.0'))).to.be.false;
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('2.69.0-one-button-bolus.1'))).to.be.false;
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('2.69-rc.1'))).to.be.false;
       expect(device.isPreOneButtonBolusUpload(uploaderUpload('3.0.0'))).to.be.false;
       expect(device.isPreOneButtonBolusUpload({ type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } })).to.be.false;
       expect(device.isPreOneButtonBolusUpload({})).to.be.false;
