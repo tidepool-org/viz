@@ -4840,8 +4840,8 @@ describe('DataUtil', () => {
 
       dataUtil.setDevices();
       expect(dataUtil.devices).to.eql([
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'device1', label: 'device1', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'device2', label: 'device2', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'device1', label: 'device1', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'device2', label: 'device2', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
       ]);
     });
 
@@ -4861,6 +4861,7 @@ describe('DataUtil', () => {
           deviceName: 'Tandem CIQ',
           pump: true,
           serialNumber: 'sn-0',
+          uploadIds: ['upload-0'],
         },
       ]);
     });
@@ -4890,6 +4891,7 @@ describe('DataUtil', () => {
           label: 'Tandem 12345',
           pump: true,
           serialNumber: 'sn-0',
+          uploadIds: ['upload-1'],
         },
       ]);
 
@@ -4910,6 +4912,7 @@ describe('DataUtil', () => {
           label: 'Tandem 12345',
           pump: true,
           serialNumber: 'sn-0',
+          uploadIds: ['upload-1'],
         },
         {
           bgm: false,
@@ -4921,6 +4924,7 @@ describe('DataUtil', () => {
           label: 'Tandem 12345 (Control-IQ)',
           pump: true,
           serialNumber: 'sn-0',
+          uploadIds: ['upload-0'],
         },
       ]);
 
@@ -4952,6 +4956,7 @@ describe('DataUtil', () => {
           label: 'twiist',
           pump: false,
           serialNumber: 'sn-0',
+          uploadIds: ['upload-0'],
         },
       ]);
 
@@ -4984,7 +4989,8 @@ describe('DataUtil', () => {
           label: 'FreeStyle Libre (from LibreView)',
           deviceName: 'Abbott DeviceName',
           pump: false,
-          serialNumber: undefined
+          serialNumber: undefined,
+          uploadIds: ['upload-3'],
         },
       ]);
     });
@@ -5020,7 +5026,8 @@ describe('DataUtil', () => {
           deviceName: 'Sequel DeviceName',
           label: 'twiist',
           pump: true,
-          serialNumber: undefined
+          serialNumber: undefined,
+          uploadIds: ['upload-3'],
         },
       ]);
     });
@@ -5050,7 +5057,8 @@ describe('DataUtil', () => {
           label: 'Dexcom (from Dexcom Account)',
           deviceName: 'Dexcom DeviceName',
           pump: false,
-          serialNumber: undefined
+          serialNumber: undefined,
+          uploadIds: ['upload-3'],
         },
       ]);
     });
@@ -5078,7 +5086,8 @@ describe('DataUtil', () => {
           deviceName: 'Tidepool Loop DeviceName',
           label: 'Trio',
           pump: false,
-          serialNumber: undefined
+          serialNumber: undefined,
+          uploadIds: ['upload-3'],
         },
       ]);
     });
@@ -5121,6 +5130,7 @@ describe('DataUtil', () => {
           label: 'Trio',
           pump: false,
           serialNumber: undefined,
+          uploadIds: ['trio-upload-id'],
         },
       ]);
     });
@@ -5199,6 +5209,7 @@ describe('DataUtil', () => {
           label: 'Trio',
           pump: false,
           serialNumber: undefined,
+          uploadIds: ['loop-upload-id', 'trio-upload-id'],
         },
       ]);
     });
@@ -6459,12 +6470,12 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined, uploadIds: ['upload-5', 'upload-4', 'upload-3', 'upload-2', 'upload-1'] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0', uploadIds: ['upload-0'] },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -6494,12 +6505,12 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined, uploadIds: ['upload-5', 'upload-4', 'upload-3', 'upload-2', 'upload-1'] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0', uploadIds: ['upload-0'] },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined, uploadIds: [] },
       ]);
 
       expect(result.excludedDevices).to.eql([]);

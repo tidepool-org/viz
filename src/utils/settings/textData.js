@@ -19,7 +19,7 @@ import _ from 'lodash';
 import i18next from 'i18next';
 
 import TextUtil from '../text/TextUtil';
-import { getDeviceNames } from '../device';
+import { getDeviceName } from '../device';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
 import { insulinSettings, presetSettings } from './data';
@@ -27,15 +27,14 @@ import { insulinSettings, presetSettings } from './data';
 const t = i18next.t.bind(i18next);
 
 /**
- * renderedDevices
- * @param  {Object} [metaData]  upload metaData carrying devices and excludedDevices
+ * displayedDevice
+ * @param  {Object} [metaData]  upload metaData carrying devices
+ * @param  {Object} settings    the pumpSettings datum currently displayed
  *
- * @return {Array}              devices with pump settings that are not excluded
+ * @return {Object|undefined}   the device entry whose uploads include the settings' uploadId
  */
-function renderedDevices(metaData) {
-  return _.filter(metaData?.devices, ({ id, hasPumpSettings }) => (
-    hasPumpSettings && !_.includes(metaData?.excludedDevices, id)
-  ));
+function displayedDevice(metaData, settings) {
+  return _.find(metaData?.devices, ({ uploadIds }) => _.includes(uploadIds, settings?.uploadId));
 }
 
 /**
@@ -45,7 +44,7 @@ function renderedDevices(metaData) {
  * @param  {String} manufacturer  one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist
  * @param  {Object} [opts]        optional inputs for the document header
  * @param  {Object} [opts.copyAsTextMetadata] header fields: diagnosisTypeLabel, patientTags, sites
- * @param  {Object} [opts.metaData] upload metaData carrying devices and excludedDevices
+ * @param  {Object} [opts.metaData] upload metaData carrying devices
  *
  * @return {String}               non tandem settings as a string table
  */
@@ -106,12 +105,12 @@ export function nonTandemText(patient, settings, units, manufacturer, opts = {})
     );
   }
 
-  const devices = renderedDevices(metaData);
+  const device = displayedDevice(metaData, settings);
 
-  if (devices.length) {
+  if (device) {
     const textLines = [
-      `\n${t('Devices Uploaded')}`,
-      ...getDeviceNames(devices),
+      `\n${t('Device')}`,
+      getDeviceName(device),
     ];
 
     _.each(textLines, line => {
@@ -129,7 +128,7 @@ export function nonTandemText(patient, settings, units, manufacturer, opts = {})
  * @param  {String} units       MGDL_UNITS or MMOLL_UNITS
  * @param  {Object} [opts]      optional inputs for the document header
  * @param  {Object} [opts.copyAsTextMetadata] header fields: diagnosisTypeLabel, patientTags, sites
- * @param  {Object} [opts.metaData] upload metaData carrying devices and excludedDevices
+ * @param  {Object} [opts.metaData] upload metaData carrying devices
  *
  * @return {String}             tandem settings as a string table
  */
@@ -161,12 +160,12 @@ export function tandemText(patient, settings, units, opts = {}) {
     );
   });
 
-  const devices = renderedDevices(metaData);
+  const device = displayedDevice(metaData, settings);
 
-  if (devices.length) {
+  if (device) {
     const textLines = [
-      `\n${t('Devices Uploaded')}`,
-      ...getDeviceNames(devices),
+      `\n${t('Device')}`,
+      getDeviceName(device),
     ];
 
     _.each(textLines, line => {

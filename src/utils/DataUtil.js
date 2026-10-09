@@ -1866,6 +1866,7 @@ export class DataUtil {
         label: deriveLabel(deviceId, labelingUpload),
         pump: _.includes(allDeviceTags, 'insulin-pump'),
         serialNumber: labelingUpload?.deviceSerialNumber,
+        uploadIds: _.map(deviceUploads, 'uploadId'),
       };
     });
 

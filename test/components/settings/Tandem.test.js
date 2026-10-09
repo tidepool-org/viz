@@ -270,16 +270,10 @@ describe('Tandem', () => {
       sites: [{ id: 's1', name: 'Site B' }, { id: 's2', name: 'Site A' }],
     };
 
-    // `matchedDevices` stays empty for the settings query.
-    const metaData = {
-      devices: [
-        { id: 'dev-pump', deviceName: 'Uploaded Pump', pump: true, hasPumpSettings: true },
-        { id: 'dev-excluded', deviceName: 'Excluded Pump', pump: true, hasPumpSettings: true },
-        { id: 'dev-cgm', deviceName: 'Uploaded CGM', cgm: true, hasPumpSettings: false },
-      ],
-      excludedDevices: ['dev-excluded'],
-      matchedDevices: {},
-    };
+    const deviceBlockHeading = '\nDevice\n';
+    const displayedDevice = { id: 'dev-pump', deviceName: 'Uploaded Pump', uploadIds: [multirateData.uploadId] };
+    const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', uploadIds: ['other-upload'] };
+    const metaData = { devices: [otherDevice, displayedDevice] };
 
     const renderWith = (extraProps) => {
       cleanup();
@@ -298,14 +292,12 @@ describe('Tandem', () => {
       expect(text).to.include('Clinic Sites: Site B, Site A');
     });
 
-    it('should build the `Devices Uploaded` block when `metaData` supplies a device', () => {
+    it('should build the `Device` block with only the pump that uploaded the displayed settings', () => {
       renderWith({ patient, metaData });
       const text = mockCapturedGetText();
 
-      expect(text).to.include('Devices Uploaded');
-      expect(text).to.include('Uploaded Pump');
-      expect(text).to.not.include('Excluded Pump');
-      expect(text).to.not.include('Uploaded CGM');
+      expect(text).to.include(`${deviceBlockHeading}Uploaded Pump\n`);
+      expect(text).to.not.include('Other Pump');
     });
 
     it('should prefer `patient` over `user` when both are supplied', () => {
@@ -332,7 +324,7 @@ describe('Tandem', () => {
       expect(text).to.not.include('MRN');
       expect(text).to.not.include('Patient Tags');
       expect(text).to.not.include('Clinic Sites');
-      expect(text).to.not.include('Devices Uploaded');
+      expect(text).to.not.include(deviceBlockHeading);
     });
   });
 });

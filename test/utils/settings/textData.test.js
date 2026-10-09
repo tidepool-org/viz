@@ -26,27 +26,6 @@ const copyAsTextMetadata = {
   sites: [{ id: 's1', name: 'Site B' }, { id: 's2', name: 'Site A' }],
 };
 
-// `matchedDevices` stays empty — the all-time settings query never populates it.
-const metaData = {
-  devices: [
-    { id: 'dev-pump', deviceName: 'Uploaded Pump', pump: true, hasPumpSettings: true },
-    // Known only from its settings, so the capability flags are false but the settings exist.
-    { id: 'dev-flagless', deviceName: 'Settings Only Pump', pump: false, hasPumpSettings: true },
-  ],
-  matchedDevices: {},
-};
-
-const excludedDevice = {
-  id: 'dev-excluded', deviceName: 'Excluded Pump', pump: true, hasPumpSettings: true,
-};
-
-const cgmDevice = { id: 'dev-cgm', deviceName: 'Uploaded CGM', cgm: true, hasPumpSettings: false };
-const bgmDevice = { id: 'dev-bgm', deviceName: 'Uploaded Meter', bgm: true, hasPumpSettings: false };
-const pumpNoSettings = {
-  id: 'dev-pump-nosettings', deviceName: 'Pump Without Settings', pump: true,
-  hasPumpSettings: false,
-};
-
 // Each builder is exercised through the same case list. `lastTableHeading` names a table heading
 // the fixture definitely emits and which lands last — confirmed by reading the built strings:
 // neither non-Tandem fixture has preset rows, so `Insulin Settings` is the final table for all
@@ -54,6 +33,7 @@ const pumpNoSettings = {
 const builders = [
   {
     label: 'nonTandemText (medtronic)',
+    settings: medtronicMultirateData,
     buildText: opts => textData.nonTandemText(
       patient, medtronicMultirateData, MGDL_UNITS, 'medtronic', opts
     ),
@@ -61,6 +41,7 @@ const builders = [
   },
   {
     label: 'nonTandemText (omnipod)',
+    settings: omnipodMultirateData,
     buildText: opts => textData.nonTandemText(
       patient, omnipodMultirateData, MGDL_UNITS, 'insulet', opts
     ),
@@ -68,6 +49,7 @@ const builders = [
   },
   {
     label: 'tandemText (tandem)',
+    settings: tandemMultirateData,
     buildText: opts => textData.tandemText(
       patient, tandemMultirateData, MGDL_UNITS, opts
     ),
@@ -75,9 +57,17 @@ const builders = [
   },
 ];
 
+const deviceBlockHeading = '\nDevice\n';
+
 describe('[settings] text data utils', () => {
-  _.each(builders, ({ label, buildText, lastTableHeading }) => {
+  _.each(builders, ({ label, settings, buildText, lastTableHeading }) => {
     describe(label, () => {
+      const displayedDevice = {
+        id: 'dev-pump', deviceName: 'Uploaded Pump', uploadIds: ['older-upload', settings.uploadId],
+      };
+      const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', uploadIds: ['other-upload'] };
+      const metaData = { devices: [otherDevice, displayedDevice] };
+
       describe('document header', () => {
         it('should include the diagnosis type when copyAsTextMetadata supplies a label', () => {
           expect(buildText({ copyAsTextMetadata })).to.include('Diabetes Type: Type 1');
@@ -124,84 +114,51 @@ describe('[settings] text data utils', () => {
         });
       });
 
-      describe('devices uploaded', () => {
-        it('should list every pump device in metaData.devices even when matchedDevices is empty', () => {
+      describe('device block', () => {
+        it('should list only the device whose uploadIds include the settings uploadId', () => {
           const text = buildText({ metaData });
 
-          expect(text).to.include('Devices Uploaded');
-          expect(text).to.include('Uploaded Pump');
+          expect(text).to.include(`${deviceBlockHeading}Uploaded Pump\n`);
+          expect(text).to.not.include('Other Pump');
         });
 
-        it('should keep a settings-bearing device whose capability flags are all false', () => {
-          const text = buildText({ metaData });
-
-          expect(text).to.include('Settings Only Pump');
-        });
-
-        it('should drop cgm and bgm devices, which the view renders no settings for', () => {
-          const text = buildText({
-            metaData: { ...metaData, devices: [...metaData.devices, cgmDevice, bgmDevice] },
-          });
-
-          expect(text).to.include('Uploaded Pump');
-          expect(text).to.not.include('Uploaded CGM');
-          expect(text).to.not.include('Uploaded Meter');
-        });
-
-        it('should drop a pump-tagged device that contributed no settings', () => {
-          const text = buildText({
-            metaData: { ...metaData, devices: [...metaData.devices, pumpNoSettings] },
-          });
-
-          expect(text).to.include('Uploaded Pump');
-          expect(text).to.not.include('Pump Without Settings');
-        });
-
-        it('should omit the heading when no device contributed settings', () => {
-          const text = buildText({ metaData: { devices: [cgmDevice, bgmDevice, pumpNoSettings] } });
-
-          expect(text).to.not.include('Devices Uploaded');
-        });
-
-        it('should drop the devices listed in metaData.excludedDevices', () => {
+        it('should list the matched device regardless of hasPumpSettings or excludedDevices', () => {
           const text = buildText({
             metaData: {
-              ...metaData,
-              devices: [...metaData.devices, excludedDevice],
-              excludedDevices: [excludedDevice.id],
+              devices: [{ ...displayedDevice, pump: false, hasPumpSettings: false }],
+              excludedDevices: [displayedDevice.id],
             },
           });
 
-          expect(text).to.include('Devices Uploaded');
-          expect(text).to.include('Uploaded Pump');
-          expect(text).to.include('Settings Only Pump');
-          expect(text).to.not.include('Excluded Pump');
+          expect(text).to.include(`${deviceBlockHeading}Uploaded Pump\n`);
         });
 
-        it('should place the heading after the last settings table', () => {
+        it('should fall back to the device label when the matched device has no deviceName', () => {
+          const text = buildText({
+            metaData: { devices: [{ ..._.omit(displayedDevice, 'deviceName'), label: 'Pump Label' }] },
+          });
+
+          expect(text).to.include(`${deviceBlockHeading}Pump Label\n`);
+        });
+
+        it('should place the block after the last settings table', () => {
           const text = buildText({ metaData });
 
-          expect(text.indexOf('Devices Uploaded')).to.be.above(text.lastIndexOf(lastTableHeading));
+          expect(text.indexOf(deviceBlockHeading)).to.be.above(text.lastIndexOf(lastTableHeading));
         });
 
-        it('should omit the heading when no device survives the exclusions', () => {
+        it('should omit the block when no device uploaded the displayed settings', () => {
           const noBlockOpts = [
             undefined,
             {},
             { metaData: {} },
             { metaData: { devices: [] } },
-            { metaData: { devices: [], excludedDevices: [] } },
-            { metaData: { matchedDevices: { 'dev-pump': true } } },
-            {
-              metaData: {
-                devices: metaData.devices,
-                excludedDevices: _.map(metaData.devices, 'id'),
-              },
-            },
+            { metaData: { devices: [otherDevice] } },
+            { metaData: { devices: [_.omit(displayedDevice, 'uploadIds')] } },
           ];
 
           _.each(noBlockOpts, (opts) => {
-            expect(buildText(opts)).to.not.include('Devices Uploaded');
+            expect(buildText(opts)).to.not.include(deviceBlockHeading);
           });
         });
       });
