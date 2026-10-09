@@ -131,6 +131,29 @@ export function isSettingsOverrideDevice(manufacturer, pumpSettingsOrUpload = {}
 }
 
 /**
+ * Check if the provided datum was for a one-button bolus capable device
+ * @param {String} manufacturer Manufacturer name
+ * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
+ * @returns {Boolean}
+ */
+export function isOneButtonBolusDevice(manufacturer, pumpSettingsOrUpload = {}) {
+  return isTwiistLoop(pumpSettingsOrUpload)
+    || manufacturer === 'tandem'
+    || (manufacturer === 'medtronic' && _.startsWith(_.get(pumpSettingsOrUpload, 'deviceId'), 'MMT-'));
+}
+
+/**
+ * Check if the provided upload is from a Tidepool Uploader version that predates one-button bolus tagging
+ * @param {Object} upload Tidepool upload datum
+ * @returns {Boolean}
+ */
+export function isPreOneButtonBolusUpload(upload = {}) {
+  if (_.get(upload, 'client.name') !== 'org.tidepool.uploader') return false;
+  const [major, minor] = _.map(_.split(_.get(upload, 'client.version', '0.0'), '.'), _.toInteger);
+  return major < 2 || (major === 2 && minor < 69);
+}
+
+/**
  * Check if the provided datum was for a 1-minute CGM sample interval device
  * @param {Object} pumpSettingsOrUpload Tidepool pumpSettings or upload datum
  * @returns {Boolean}

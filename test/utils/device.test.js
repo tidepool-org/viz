@@ -387,6 +387,38 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('isOneButtonBolusDevice', () => {
+    it('should return `true` for an upload record for a pump with one-button bolus capabilities', () => {
+      expect(device.isOneButtonBolusDevice('twiist', { origin: { name: 'com.dekaresearch.twiist' } })).to.be.true;
+      expect(device.isOneButtonBolusDevice('tandem', { deviceId: 'tandem123456' })).to.be.true;
+      expect(device.isOneButtonBolusDevice('tandem', { deviceId: 'tandemCIQ123456' })).to.be.true;
+      expect(device.isOneButtonBolusDevice('medtronic', { deviceId: 'MMT-1780:123456' })).to.be.true;
+    });
+
+    it('should return `false` for an upload record for a pump without one-button bolus capabilities', () => {
+      expect(device.isOneButtonBolusDevice('medtronic', { deviceId: 'MedT-723-123456' })).to.be.false;
+      expect(device.isOneButtonBolusDevice('medtronic', {})).to.be.false;
+      expect(device.isOneButtonBolusDevice('insulet', { deviceId: 'InsOmn-123456' })).to.be.false;
+    });
+  });
+
+  describe('isPreOneButtonBolusUpload', () => {
+    const uploaderUpload = version => ({ type: 'upload', client: { name: 'org.tidepool.uploader', version } });
+
+    it('should return `true` for a Tidepool Uploader upload from a version that predates one-button bolus tagging', () => {
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('2.68.0'))).to.be.true;
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('2.68.0-one-button-bolus.1'))).to.be.true;
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('1.99.0'))).to.be.true;
+    });
+
+    it('should return `false` for a tagging Tidepool Uploader version, a non-uploader client, or an upload without a client', () => {
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('2.69.0'))).to.be.false;
+      expect(device.isPreOneButtonBolusUpload(uploaderUpload('3.0.0'))).to.be.false;
+      expect(device.isPreOneButtonBolusUpload({ type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } })).to.be.false;
+      expect(device.isPreOneButtonBolusUpload({})).to.be.false;
+    });
+  });
+
   describe('isOneMinCGMSampleIntervalDevice', () => {
     it('should return `true` for an upload record for a device upload with one minute cgm interval capabilities', () => {
       expect(device.isOneMinCGMSampleIntervalDevice({ type: 'upload', client: { name: 'com.sequelmedtech.tidepool-service', version: '2.0.0' } })).to.be.true;

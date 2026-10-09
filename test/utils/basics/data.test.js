@@ -113,8 +113,9 @@ describe('basics data utils', () => {
         });
       });
 
-      it('should not add dimensions for manual and automated boluses', () => {
+      it('should hide the manual bolus dimension when empty and not add the automated bolus dimension', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: false });
+        expect(_.find(result.boluses.dimensions, { key: 'manual' }).hideEmpty).to.be.true;
         expect(_.map(result.boluses.dimensions, 'key')).to.eql([
           'total',
           'wizard',
@@ -124,7 +125,22 @@ describe('basics data utils', () => {
           'override',
           'underride',
           'manual',
+          'oneButton',
         ]);
+      });
+    });
+
+    context('one-button bolus dimension', () => {
+      it('should hide the one-button bolus dimension when empty for pumps without the capability', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isOneButtonBolusDevice: false });
+        const oneButtonFilter = _.find(result.boluses.dimensions, { key: 'oneButton' });
+        expect(oneButtonFilter.hideEmpty).to.be.true;
+        expect(oneButtonFilter.selectorIndex).to.equal(7);
+      });
+
+      it('should show the one-button bolus dimension for pumps with the capability', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isOneButtonBolusDevice: true });
+        expect(_.find(result.boluses.dimensions, { key: 'oneButton' }).hideEmpty).to.be.false;
       });
     });
 
@@ -137,8 +153,9 @@ describe('basics data utils', () => {
         });
       });
 
-      it('should add dimensions for manual and automated boluses', () => {
+      it('should always show the manual bolus dimension and add the automated bolus dimension', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
+        expect(_.find(result.boluses.dimensions, { key: 'manual' }).hideEmpty).to.be.false;
         expect(_.map(result.boluses.dimensions, 'key')).to.eql([
           'total',
           'wizard',
@@ -148,14 +165,16 @@ describe('basics data utils', () => {
           'override',
           'underride',
           'manual',
+          'oneButton',
           'automated',
         ]);
       });
 
       it('should set percentage to `false` for automated bolus dimension', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MGDL_UNITS], 'tandem', { isAutomatedBolusDevice: true });
-        expect(result.boluses.dimensions[8].key).to.equal('automated');
-        expect(result.boluses.dimensions[8].percentage).to.be.false;
+        expect(result.boluses.dimensions[9].key).to.equal('automated');
+        expect(result.boluses.dimensions[9].percentage).to.be.false;
+        expect(result.boluses.dimensions[9].selectorIndex).to.equal(8);
       });
     });
 
@@ -238,6 +257,12 @@ describe('basics data utils', () => {
       it('should add a one-button bolus selector', () => {
         const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } } });
         expect(result.boluses.dimensions[8].key).to.equal('oneButton');
+        expect(result.boluses.dimensions[8].selectorIndex).to.equal(7);
+      });
+
+      it('should show the one-button bolus selector when the pump has the capability', () => {
+        const result = dataUtils.defineBasicsAggregations(bgPrefs[MMOLL_UNITS], 'twiist', { settings: { origin: { name: 'com.dekaresearch.twiist' } }, isOneButtonBolusDevice: true });
+        expect(result.boluses.dimensions[8].hideEmpty).to.be.false;
       });
 
       it('should set `selectorIndex` for underrides to render directly after overrides', () => {

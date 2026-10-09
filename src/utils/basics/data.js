@@ -141,6 +141,7 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
           { path: 'summary.subtotals', key: 'override', label: t('Override'), percentage: true, selectorIndex: 2 },
           { path: 'summary.subtotals', key: 'underride', label: t('Underride'), percentage: true, selectorIndex: 6 },
           { path: 'summary.subtotals', key: 'manual', label: t('Manual'), percentage: true, selectorIndex: 3, hideEmpty: !pumpUpload.isAutomatedBolusDevice },
+          { path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 7, hideEmpty: !pumpUpload.isOneButtonBolusDevice },
         ];
 
         if (isTidepoolLoop(pumpUpload.settings) || isDIYLoop(pumpUpload.settings) || isTrio(pumpUpload.settings)) {
@@ -152,14 +153,13 @@ export function defineBasicsAggregations(bgPrefs, manufacturer, pumpUpload = {})
 
         if (isTwiistLoop(pumpUpload.settings)) {
           dimensions[1].label = t('Meal');
-          dimensions.push({ path: 'summary.subtotals', key: 'oneButton', label: deviceLabels[ONE_BUTTON_BOLUS], percentage: true, selectorIndex: 6 });
           dimensions[6].selectorIndex = 3; // Move the 'Underride' filter next to the 'Override'
           perRow = 4;
         }
 
         if (pumpUpload.isAutomatedBolusDevice) {
           dimensions.push(...[
-            { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 7 },
+            { path: 'summary.subtotals', key: 'automated', label: t('Automated'), percentage: false, selectorIndex: 8 },
           ]);
           perRow = 4;
         }
