@@ -22,19 +22,23 @@ import TextUtil from '../text/TextUtil';
 import { getDeviceName } from '../device';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
-import { insulinSettings, presetSettings } from './data';
+import { deviceName, insulinSettings, presetSettings } from './data';
 
 const t = i18next.t.bind(i18next);
 
 /**
- * displayedDevice
- * @param  {Object} [metaData]  upload metaData carrying devices
- * @param  {Object} settings    the pumpSettings datum currently displayed
+ * displayedDeviceName
+ * @param  {Object} [metaData]    upload metaData carrying devices
+ * @param  {Object} settings      the pumpSettings datum currently displayed
+ * @param  {String} manufacturer  manufacturer key of the displayed settings
  *
- * @return {Object|undefined}   the device entry whose uploads include the settings' uploadId
+ * @return {String}  name of the device sharing the settings' serial number, else the manufacturer's display name
  */
-function displayedDevice(metaData, settings) {
-  return _.find(metaData?.devices, ({ uploadIds }) => _.includes(uploadIds, settings?.uploadId));
+function displayedDeviceName(metaData, settings, manufacturer) {
+  // Loop-family uploads report `Unknown`, which several devices can share
+  const serial = settings?.deviceSerialNumber;
+  const device = serial && serial !== 'Unknown' && _.find(metaData?.devices, { serialNumber: serial });
+  return (device && getDeviceName(device)) || deviceName(manufacturer);
 }
 
 /**
@@ -105,18 +109,8 @@ export function nonTandemText(patient, settings, units, manufacturer, opts = {})
     );
   }
 
-  const device = displayedDevice(metaData, settings);
-
-  if (device) {
-    const textLines = [
-      `\n${t('Device')}`,
-      getDeviceName(device),
-    ];
-
-    _.each(textLines, line => {
-      settingsString += textUtil.buildTextLine(line);
-    });
-  }
+  settingsString += textUtil.buildTextLine(`\n${t('Device')}`);
+  settingsString += textUtil.buildTextLine(displayedDeviceName(metaData, settings, manufacturer));
 
   return settingsString;
 }
@@ -160,18 +154,8 @@ export function tandemText(patient, settings, units, opts = {}) {
     );
   });
 
-  const device = displayedDevice(metaData, settings);
-
-  if (device) {
-    const textLines = [
-      `\n${t('Device')}`,
-      getDeviceName(device),
-    ];
-
-    _.each(textLines, line => {
-      settingsString += textUtil.buildTextLine(line);
-    });
-  }
+  settingsString += textUtil.buildTextLine(`\n${t('Device')}`);
+  settingsString += textUtil.buildTextLine(displayedDeviceName(metaData, settings, 'tandem'));
 
   return settingsString;
 }

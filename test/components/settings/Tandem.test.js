@@ -271,8 +271,8 @@ describe('Tandem', () => {
     };
 
     const deviceBlockHeading = '\nDevice\n';
-    const displayedDevice = { id: 'dev-pump', deviceName: 'Uploaded Pump', uploadIds: [multirateData.uploadId] };
-    const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', uploadIds: ['other-upload'] };
+    const displayedDevice = { id: 'dev-pump', deviceName: 'Uploaded Pump', serialNumber: multirateData.deviceSerialNumber };
+    const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', serialNumber: 'other-serial' };
     const metaData = { devices: [otherDevice, displayedDevice] };
 
     const renderWith = (extraProps) => {
@@ -292,7 +292,7 @@ describe('Tandem', () => {
       expect(text).to.include('Clinic Sites: Site B, Site A');
     });
 
-    it('should build the `Device` block with only the pump that uploaded the displayed settings', () => {
+    it('should build the `Device` block with only the pump sharing the displayed settings\' serial number', () => {
       renderWith({ patient, metaData });
       const text = mockCapturedGetText();
 
@@ -316,7 +316,7 @@ describe('Tandem', () => {
       expect(text).to.not.include('Patient Prop Name');
     });
 
-    it('should build neither the header fields nor the device block without the new props', () => {
+    it('should omit the header fields and name the device by manufacturer without the new props', () => {
       renderWith({});
       const text = mockCapturedGetText();
 
@@ -324,7 +324,7 @@ describe('Tandem', () => {
       expect(text).to.not.include('MRN');
       expect(text).to.not.include('Patient Tags');
       expect(text).to.not.include('Clinic Sites');
-      expect(text).to.not.include(deviceBlockHeading);
+      expect(text).to.include(`${deviceBlockHeading}Tandem\n`);
     });
   });
 });

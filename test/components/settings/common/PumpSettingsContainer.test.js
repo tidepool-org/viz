@@ -306,7 +306,7 @@ describe('PumpSettingsContainer', () => {
       };
 
       const metaData = {
-        devices: [{ id: 'dev-pump', deviceName: 'Uploaded Pump', pump: true, hasPumpSettings: true, uploadIds: ['SampleUploadId'] }],
+        devices: [{ id: 'dev-pump', deviceName: 'Uploaded Pump', pump: true, hasPumpSettings: true }],
         excludedDevices: [],
         matchedDevices: {},
       };

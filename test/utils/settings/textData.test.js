@@ -34,25 +34,28 @@ const builders = [
   {
     label: 'nonTandemText (medtronic)',
     settings: medtronicMultirateData,
-    buildText: opts => textData.nonTandemText(
-      patient, medtronicMultirateData, MGDL_UNITS, 'medtronic', opts
+    buildText: (opts, settings = medtronicMultirateData) => textData.nonTandemText(
+      patient, settings, MGDL_UNITS, 'medtronic', opts
     ),
+    deviceDisplayName: 'Medtronic',
     lastTableHeading: 'Insulin Settings',
   },
   {
     label: 'nonTandemText (omnipod)',
     settings: omnipodMultirateData,
-    buildText: opts => textData.nonTandemText(
-      patient, omnipodMultirateData, MGDL_UNITS, 'insulet', opts
+    buildText: (opts, settings = omnipodMultirateData) => textData.nonTandemText(
+      patient, settings, MGDL_UNITS, 'insulet', opts
     ),
+    deviceDisplayName: 'OmniPod',
     lastTableHeading: 'Insulin Settings',
   },
   {
     label: 'tandemText (tandem)',
     settings: tandemMultirateData,
-    buildText: opts => textData.tandemText(
-      patient, tandemMultirateData, MGDL_UNITS, opts
+    buildText: (opts, settings = tandemMultirateData) => textData.tandemText(
+      patient, settings, MGDL_UNITS, opts
     ),
+    deviceDisplayName: 'Tandem',
     lastTableHeading: 'Insulin Settings',
   },
 ];
@@ -60,12 +63,12 @@ const builders = [
 const deviceBlockHeading = '\nDevice\n';
 
 describe('[settings] text data utils', () => {
-  _.each(builders, ({ label, settings, buildText, lastTableHeading }) => {
+  _.each(builders, ({ label, settings, buildText, lastTableHeading, deviceDisplayName }) => {
     describe(label, () => {
       const displayedDevice = {
-        id: 'dev-pump', deviceName: 'Uploaded Pump', uploadIds: ['older-upload', settings.uploadId],
+        id: 'dev-pump', deviceName: 'Uploaded Pump', serialNumber: settings.deviceSerialNumber,
       };
-      const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', uploadIds: ['other-upload'] };
+      const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', serialNumber: 'other-serial' };
       const metaData = { devices: [otherDevice, displayedDevice] };
 
       describe('document header', () => {
@@ -115,14 +118,14 @@ describe('[settings] text data utils', () => {
       });
 
       describe('device block', () => {
-        it('should list only the device whose uploadIds include the settings uploadId', () => {
+        it('should name only the device sharing the displayed settings\' serial number', () => {
           const text = buildText({ metaData });
 
           expect(text).to.include(`${deviceBlockHeading}Uploaded Pump\n`);
           expect(text).to.not.include('Other Pump');
         });
 
-        it('should list the matched device regardless of hasPumpSettings or excludedDevices', () => {
+        it('should name the matched device regardless of hasPumpSettings or excludedDevices', () => {
           const text = buildText({
             metaData: {
               devices: [{ ...displayedDevice, pump: false, hasPumpSettings: false }],
@@ -147,19 +150,38 @@ describe('[settings] text data utils', () => {
           expect(text.indexOf(deviceBlockHeading)).to.be.above(text.lastIndexOf(lastTableHeading));
         });
 
-        it('should omit the block when no device uploaded the displayed settings', () => {
-          const noBlockOpts = [
+        it('should fall back to the manufacturer display name when no device shares the serial number', () => {
+          const fallbackOpts = [
             undefined,
             {},
             { metaData: {} },
             { metaData: { devices: [] } },
             { metaData: { devices: [otherDevice] } },
-            { metaData: { devices: [_.omit(displayedDevice, 'uploadIds')] } },
           ];
 
-          _.each(noBlockOpts, (opts) => {
-            expect(buildText(opts)).to.not.include(deviceBlockHeading);
+          _.each(fallbackOpts, (opts) => {
+            expect(buildText(opts)).to.include(`${deviceBlockHeading}${deviceDisplayName}\n`);
           });
+        });
+
+        it('should not match a device on an `Unknown` serial number', () => {
+          const text = buildText(
+            { metaData: { devices: [{ ...displayedDevice, serialNumber: 'Unknown' }] } },
+            { ...settings, deviceSerialNumber: 'Unknown' }
+          );
+
+          expect(text).to.include(`${deviceBlockHeading}${deviceDisplayName}\n`);
+          expect(text).to.not.include('Uploaded Pump');
+        });
+
+        it('should not match a device on a missing serial number', () => {
+          const text = buildText(
+            { metaData: { devices: [_.omit(displayedDevice, 'serialNumber')] } },
+            _.omit(settings, 'deviceSerialNumber')
+          );
+
+          expect(text).to.include(`${deviceBlockHeading}${deviceDisplayName}\n`);
+          expect(text).to.not.include('Uploaded Pump');
         });
       });
     });
