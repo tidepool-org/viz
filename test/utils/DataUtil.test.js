@@ -4993,7 +4993,7 @@ describe('DataUtil', () => {
           label: 'FreeStyle Libre (from LibreView)',
           deviceName: 'Abbott DeviceName',
           pump: false,
-          serialNumber: undefined,
+          serialNumber: undefined
         },
       ]);
     });
@@ -5029,7 +5029,7 @@ describe('DataUtil', () => {
           deviceName: 'Sequel DeviceName',
           label: 'twiist',
           pump: true,
-          serialNumber: undefined,
+          serialNumber: undefined
         },
       ]);
     });
@@ -5059,7 +5059,7 @@ describe('DataUtil', () => {
           label: 'Dexcom (from Dexcom Account)',
           deviceName: 'Dexcom DeviceName',
           pump: false,
-          serialNumber: undefined,
+          serialNumber: undefined
         },
       ]);
     });
@@ -5087,7 +5087,7 @@ describe('DataUtil', () => {
           deviceName: 'Tidepool Loop DeviceName',
           label: 'Trio',
           pump: false,
-          serialNumber: undefined,
+          serialNumber: undefined
         },
       ]);
     });
