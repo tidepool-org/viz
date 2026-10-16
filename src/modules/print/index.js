@@ -207,7 +207,7 @@ export function createPrintPDFPackage(data, opts) {
 
       if (showTagsAndSites) {
         const agpData = agpBGM.disabled ? data.agpCGM : data.agpBGM;
-        createPrintView('tagsAndSites', _.pick(agpData, ['timePrefs']), pdfOpts, doc).render();
+        createPrintView('tagsAndSites', _.pick(agpData, ['timePrefs', 'data.current.endpoints']), pdfOpts, doc).render();
       }
 
       if (!basics.disabled) createPrintView('basics', data.basics, pdfOpts, doc).render();
