@@ -538,7 +538,7 @@ describe('print module', () => {
     const cgmEndpoints = { range: [Date.UTC(2026, 5, 1), Date.UTC(2026, 5, 15)] };
     const bgmEndpoints = { range: [Date.UTC(2026, 4, 1), Date.UTC(2026, 4, 31)] };
 
-    const agpSectionData = endpoints => ({ current: { endpoints, data: { cbg: [{ value: 100 }] } } });
+    const agpSectionData = endpoints => ({ current: { endpoints } });
 
     const dataWithTimePrefs = {
       ...data,
