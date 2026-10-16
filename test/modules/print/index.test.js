@@ -535,23 +535,28 @@ describe('print module', () => {
     const cgmTimePrefs = { timezoneAware: true, timezoneName: 'US/Pacific' };
     const bgmTimePrefs = { timezoneAware: true, timezoneName: 'Europe/London' };
 
+    const cgmEndpoints = { range: [Date.UTC(2026, 5, 1), Date.UTC(2026, 5, 15)] };
+    const bgmEndpoints = { range: [Date.UTC(2026, 4, 1), Date.UTC(2026, 4, 31)] };
+
+    const agpSectionData = endpoints => ({ current: { endpoints, data: { cbg: [{ value: 100 }] } } });
+
     const dataWithTimePrefs = {
       ...data,
-      agpCGM: { ...data.agpCGM, timePrefs: cgmTimePrefs },
-      agpBGM: { ...data.agpBGM, timePrefs: bgmTimePrefs },
+      agpCGM: { ...data.agpCGM, timePrefs: cgmTimePrefs, data: agpSectionData(cgmEndpoints) },
+      agpBGM: { ...data.agpBGM, timePrefs: bgmTimePrefs, data: agpSectionData(bgmEndpoints) },
       basics: { ...data.basics, timePrefs: { timezoneAware: true, timezoneName: 'Asia/Tokyo' } },
     };
 
-    it('should give it the timePrefs of the agp section it follows', () => {
+    it('should pass only the timePrefs and date range of the agp section it follows', () => {
       const result = Module.createPrintPDFPackage(dataWithTimePrefs, { ...opts, patientTags, sites });
 
       return result.then(() => {
         expect(Module.utils.TagsAndSitesPrintView.firstCall.args[1])
-          .to.eql({ timePrefs: bgmTimePrefs });
+          .to.eql({ timePrefs: bgmTimePrefs, data: { current: { endpoints: bgmEndpoints } } });
       });
     });
 
-    it('should take the agp CGM timePrefs when the agp BGM section is disabled', () => {
+    it('should pass only the agp CGM timePrefs and date range when the agp BGM section is disabled', () => {
       const result = Module.createPrintPDFPackage(dataWithTimePrefs, {
         ...opts,
         patientTags,
@@ -561,7 +566,7 @@ describe('print module', () => {
 
       return result.then(() => {
         expect(Module.utils.TagsAndSitesPrintView.firstCall.args[1])
-          .to.eql({ timePrefs: cgmTimePrefs });
+          .to.eql({ timePrefs: cgmTimePrefs, data: { current: { endpoints: cgmEndpoints } } });
       });
     });
   });

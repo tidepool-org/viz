@@ -211,6 +211,10 @@ describe('datetime', () => {
     it('should format birthdate extracted from fake child account patient object', () => {
       expect(datetime.formatBirthdate(fakeChildAcct)).to.equal('Jan 31, 1983');
     });
+
+    it('should format birthdate with a provided format', () => {
+      expect(datetime.formatBirthdate(standard, '%Y-%m-%d')).to.equal('1983-01-31');
+    });
   });
 
   describe('formatClocktimeFromMsPer24', () => {
