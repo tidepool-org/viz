@@ -147,6 +147,8 @@ describe('TagsAndSitesPrintView', () => {
 
       const [, , tableOpts] = tableSpy.getCall(0).args;
       expect(tableOpts.columnDefaults.zebra).to.be.true;
+      expect(Renderer.tableSettings.colors.zebraEven).to.equal('#FFFFFF');
+      expect(Renderer.tableSettings.colors.zebraOdd).to.equal('#F6F6F6');
     });
 
     it('should omit the tags section when there are no tags', () => {
