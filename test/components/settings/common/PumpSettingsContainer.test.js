@@ -26,12 +26,17 @@ import { PumpSettingsContainer, mapStateToProps }
   from '../../../../src/components/settings/common/PumpSettingsContainer';
 import { MGDL_UNITS } from '../../../../src/utils/constants';
 
-jest.mock('../../../../src/components/settings/NonTandem', () => (props) => (
-  <div data-testid="NonTandem" data-device-key={props.deviceKey}>NonTandem</div>
-));
-jest.mock('../../../../src/components/settings/Tandem', () => (props) => (
-  <div data-testid="Tandem">Tandem</div>
-));
+let mockNonTandemProps;
+let mockTandemProps;
+
+jest.mock('../../../../src/components/settings/NonTandem', () => (props) => {
+  mockNonTandemProps = props;
+  return <div data-testid="NonTandem" data-device-key={props.deviceKey}>NonTandem</div>;
+});
+jest.mock('../../../../src/components/settings/Tandem', () => (props) => {
+  mockTandemProps = props;
+  return <div data-testid="Tandem">Tandem</div>;
+});
 
 const animasSettings = require('../../../../data/pumpSettings/animas/multirate.json');
 const medtronicSettings = require('../../../../data/pumpSettings/medtronic/multirate.json');
@@ -83,6 +88,8 @@ describe('PumpSettingsContainer', () => {
     afterEach(() => {
       markSettingsViewed.resetHistory();
       toggleSettingsSection.resetHistory();
+      mockNonTandemProps = undefined;
+      mockTandemProps = undefined;
       cleanup();
     });
 
@@ -277,6 +284,77 @@ describe('PumpSettingsContainer', () => {
         expect(container.firstChild).to.be.null;
         expect(console.warn.callCount).to.equal(1);
         expect(console.warn.args[0][0]).to.equal('Unknown manufacturer key: [foo]!');
+      });
+    });
+
+    describe('copy-as-text props', () => {
+      const patient = {
+        profile: {
+          fullName: 'Patient Prop Name',
+          patient: {
+            diagnosisDate: '1990-01-31',
+            birthday: '1983-01-31',
+            mrn: 'MRN123',
+          },
+        },
+      };
+
+      const copyAsTextMetadata = {
+        diagnosisTypeLabel: 'Type 1',
+        patientTags: [{ id: 't1', name: 'Zebra' }],
+        sites: [{ id: 's1', name: 'Site B' }],
+      };
+
+      const metaData = {
+        devices: [{ id: 'dev-pump', deviceName: 'Uploaded Pump', pump: true, hasPumpSettings: true }],
+        excludedDevices: [],
+        matchedDevices: {},
+      };
+
+      const renderWith = (manufacturerKey, pumpSettings, extraProps) => rtlRender(
+        <PumpSettingsContainer
+          {...props}
+          {...extraProps}
+          manufacturerKey={manufacturerKey}
+          pumpSettings={pumpSettings}
+          settingsState={touched(pumpSettings, manufacturerKey)}
+        />
+      );
+
+      it('should forward `patient`, `copyAsTextMetadata` and `metaData` to `NonTandem`', () => {
+        renderWith('medtronic', medtronicSettings, { patient, copyAsTextMetadata, metaData, user });
+
+        expect(mockNonTandemProps.patient).to.equal(patient);
+        expect(mockNonTandemProps.copyAsTextMetadata).to.equal(copyAsTextMetadata);
+        expect(mockNonTandemProps.metaData).to.equal(metaData);
+        expect(mockNonTandemProps.user).to.equal(user);
+      });
+
+      it('should forward `patient`, `copyAsTextMetadata` and `metaData` to `Tandem`', () => {
+        renderWith('tandem', tandemSettings, { patient, copyAsTextMetadata, metaData, user });
+
+        expect(mockTandemProps.patient).to.equal(patient);
+        expect(mockTandemProps.copyAsTextMetadata).to.equal(copyAsTextMetadata);
+        expect(mockTandemProps.metaData).to.equal(metaData);
+        expect(mockTandemProps.user).to.equal(user);
+      });
+
+      it('should still pass `user` to `NonTandem` when the three new props are omitted', () => {
+        renderWith('medtronic', medtronicSettings, { user });
+
+        expect(mockNonTandemProps.user).to.equal(user);
+        expect(mockNonTandemProps.patient).to.be.undefined;
+        expect(mockNonTandemProps.copyAsTextMetadata).to.be.undefined;
+        expect(mockNonTandemProps.metaData).to.be.undefined;
+      });
+
+      it('should still pass `user` to `Tandem` when the three new props are omitted', () => {
+        renderWith('tandem', tandemSettings, { user });
+
+        expect(mockTandemProps.user).to.equal(user);
+        expect(mockTandemProps.patient).to.be.undefined;
+        expect(mockTandemProps.copyAsTextMetadata).to.be.undefined;
+        expect(mockTandemProps.metaData).to.be.undefined;
       });
     });
   });

@@ -479,6 +479,25 @@ describe('device utility functions', () => {
     });
   });
 
+  describe('manufacturerKey', () => {
+    it('should normalize a manufacturer name to its lookup key', () => {
+      expect(device.manufacturerKey('Tidepool Loop')).to.equal('tidepool loop');
+      expect(device.manufacturerKey('Tandem')).to.equal('tandem');
+      expect(device.manufacturerKey('DIY Loop')).to.equal('diy loop');
+    });
+
+    it('should fold case only, leaving separators intact', () => {
+      expect(device.manufacturerKey('t:slim X2')).to.equal('t:slim x2');
+      expect(device.manufacturerKey('Medtronic-600')).to.equal('medtronic-600');
+      expect(device.manufacturerKey('twiist 2.0')).to.equal('twiist 2.0');
+    });
+
+    it('should return an empty string for a missing manufacturer', () => {
+      expect(device.manufacturerKey()).to.equal('');
+      expect(device.manufacturerKey(undefined)).to.equal('');
+    });
+  });
+
   describe('getDeviceName', () => {
     it('returns the device friendly name if it exists', () => {
       const deviceObject = { deviceName: 'Cooltec Alpha Super Ultra', label: 'Cooltec Alpha A1', id: 'cool-c-a1' };

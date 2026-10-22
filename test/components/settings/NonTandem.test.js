@@ -45,9 +45,14 @@ jest.mock('../../../src/components/settings/common/CollapsibleContainer', () => 
   </div>
 ));
 
-jest.mock('../../../src/components/common/controls/ClipboardButton', () => (props) => (
-  <button data-testid="ClipboardButton" onClick={() => props.onSuccess && props.onSuccess()}>Copy</button>
-));
+let mockCapturedGetText;
+
+jest.mock('../../../src/components/common/controls/ClipboardButton', () => (props) => {
+  mockCapturedGetText = props.getText;
+  return (
+    <button data-testid="ClipboardButton" onClick={() => props.onSuccess && props.onSuccess()}>Copy</button>
+  );
+});
 
 const animasFlatRateData = require('../../../data/pumpSettings/animas/flatrate.json');
 const animasMultiRateData = require('../../../data/pumpSettings/animas/multirate.json');
@@ -72,6 +77,7 @@ const user = {
 
 afterEach(() => {
   copySettingsClicked.resetHistory();
+  mockCapturedGetText = undefined;
 });
 
 describe('NonTandem', () => {
@@ -1099,6 +1105,88 @@ describe('NonTandem', () => {
         fireEvent.click(clipBoardButton);
         expect(copySettingsClicked.callCount).to.equal(1);
       });
+    });
+  });
+
+  describe('copy-as-text props', () => {
+    const patient = {
+      profile: {
+        fullName: 'Patient Prop Name',
+        patient: {
+          birthday: '1983-01-31',
+          mrn: 'MRN123',
+        },
+      },
+    };
+
+    const copyAsTextMetadata = {
+      diagnosisTypeLabel: 'Type 1',
+      patientTags: [{ id: 't1', name: 'Zebra' }, { id: 't2', name: 'Alpha' }],
+      sites: [{ id: 's1', name: 'Site B' }, { id: 's2', name: 'Site A' }],
+    };
+
+    const deviceBlockHeading = '\nDevice\n';
+    const displayedDevice = { id: 'dev-pump', deviceName: 'Uploaded Pump', serialNumber: medtronicMultiRateData.deviceSerialNumber };
+    const otherDevice = { id: 'dev-other', deviceName: 'Other Pump', serialNumber: 'other-serial' };
+    const metaData = { devices: [otherDevice, displayedDevice] };
+
+    const renderWith = (extraProps) => rtlRender(
+      <NonTandem
+        bgUnits={MGDL_UNITS}
+        copySettingsClicked={copySettingsClicked}
+        deviceKey={'medtronic'}
+        openedSections={{ [medtronicMultiRateData.activeSchedule]: true }}
+        pumpSettings={medtronicMultiRateData}
+        timePrefs={timePrefs}
+        user={user}
+        toggleBasalScheduleExpansion={() => {}}
+        {...extraProps}
+      />
+    );
+
+    it('should build the four patient header fields when `copyAsTextMetadata` is supplied', () => {
+      renderWith({ patient, copyAsTextMetadata });
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Diabetes Type: Type 1');
+      expect(text).to.include('MRN: MRN123');
+      expect(text).to.include('Patient Tags: Zebra, Alpha');
+      expect(text).to.include('Clinic Sites: Site B, Site A');
+    });
+
+    it('should build the `Device` block with only the pump sharing the displayed settings\' serial number', () => {
+      renderWith({ patient, metaData });
+      const text = mockCapturedGetText();
+
+      expect(text).to.include(`${deviceBlockHeading}Uploaded Pump\n`);
+      expect(text).to.not.include('Other Pump');
+    });
+
+    it('should prefer `patient` over `user` when both are supplied', () => {
+      renderWith({ patient });
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Patient Prop Name');
+      expect(text).to.not.include('Mary Smith');
+    });
+
+    it('should fall back to `user` when `patient` is absent', () => {
+      renderWith({});
+      const text = mockCapturedGetText();
+
+      expect(text).to.include('Mary Smith');
+      expect(text).to.not.include('Patient Prop Name');
+    });
+
+    it('should omit the header fields and name the device by manufacturer without the new props', () => {
+      renderWith({});
+      const text = mockCapturedGetText();
+
+      expect(text).to.not.include('Diabetes Type');
+      expect(text).to.not.include('MRN');
+      expect(text).to.not.include('Patient Tags');
+      expect(text).to.not.include('Clinic Sites');
+      expect(text).to.include(`${deviceBlockHeading}Medtronic\n`);
     });
   });
 });

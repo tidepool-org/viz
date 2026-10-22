@@ -28,7 +28,7 @@ import PrintView from './PrintView';
 import { calculateBasalPath, getBasalSequencePaths } from '../render/basal';
 import getBolusPaths from '../render/bolus';
 import { getBasalPathGroups, getBasalPathGroupType } from '../../utils/basal';
-import { getPumpVocabulary } from '../../utils/device';
+import { getPumpVocabulary, manufacturerKey } from '../../utils/device';
 import { formatDatum, getStatDefinition, statFormats } from '../../utils/stat';
 import {
   classifyBgValue,
@@ -61,6 +61,7 @@ import {
 import {
   ALARM,
   AUTOMATED_DELIVERY,
+  DIY_LOOP,
   EVENT_HEALTH,
   EVENT_NOTES,
   EVENT_PHYSICAL_ACTIVITY,
@@ -69,8 +70,16 @@ import {
   PHYSICAL_ACTIVITY,
   PREPRANDIAL,
   SCHEDULED_DELIVERY,
+  SITE_CHANGE,
+  SITE_CHANGE_CANNULA,
+  SITE_CHANGE_RESERVOIR,
+  SITE_CHANGE_TUBING,
   SLEEP,
+  TIDEPOOL_LOOP,
+  TWIIST_LOOP,
 } from '../../utils/constants';
+
+import { getSiteChangeSource } from '../../utils/basics/data';
 
 import {
   processBasalRange,
@@ -90,6 +99,50 @@ const eventImages = {
   [EVENT_NOTES]: 'images/event-notes.png',
 };
 
+// Site-change sprites. Loop uses the loop-tubing variant, twiist the
+// twiist-cassette variant; manufacturer variants keyed `<manufacturer>_<subtype>`.
+const siteChangeImages = {
+  [SITE_CHANGE_CANNULA]: 'images/sitechange-cannula.png',
+  [SITE_CHANGE_RESERVOIR]: 'images/sitechange-reservoir.png',
+  [SITE_CHANGE_TUBING]: 'images/sitechange-tubing.png',
+  [`${manufacturerKey(TIDEPOOL_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${manufacturerKey(DIY_LOOP)}_${SITE_CHANGE_TUBING}`]: 'images/sitechange-loop-tubing.png',
+  [`${manufacturerKey(TWIIST_LOOP)}_${SITE_CHANGE_RESERVOIR}`]: 'images/sitechange-twiist-cassette.png',
+};
+
+// Resolve a deviceEvent to a SITE_CHANGE_* subtype. Daily data records site
+// changes as subType `reservoirChange` or `prime` (+ `primeTarget`); also
+// tolerate the already-keyed subTypes and boolean `tags`.
+function getSiteChangeSubType(d) {
+  if (d.subType === SITE_CHANGE_RESERVOIR) return SITE_CHANGE_RESERVOIR;
+  if (d.subType === 'prime' && d.primeTarget === 'cannula') return SITE_CHANGE_CANNULA;
+  if (d.subType === 'prime' && d.primeTarget === 'tubing') return SITE_CHANGE_TUBING;
+  if (_.includes([SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING, SITE_CHANGE_RESERVOIR], d.subType)) return d.subType;
+  if (_.get(d, 'tags.reservoirChange')) return SITE_CHANGE_RESERVOIR;
+  if (_.get(d, 'tags.cannulaPrime')) return SITE_CHANGE_CANNULA;
+  if (_.get(d, 'tags.tubingPrime')) return SITE_CHANGE_TUBING;
+  return null;
+}
+
+// Loop/twiist fall back to the base icon when no variant exists.
+function getSiteChangeImage(subType, manufacturer) {
+  return siteChangeImages[`${manufacturerKey(manufacturer)}_${subType}`] || siteChangeImages[subType];
+}
+
+const SITE_CHANGE_DEDUP_WINDOW_MS = 5 * MS_IN_MIN;
+const SITE_CHANGE_LEGEND_ICON_GAP = 2;
+
+// Site changes within 5 minutes of one another count as the same change; keep only
+// the first (sorted by time), so at most one icon prints per 5-minute window.
+function dedupeSiteChangesWithinWindow(siteChanges) {
+  const sorted = _.sortBy(siteChanges, 'normalTime');
+  return _.reduce(sorted, (kept, d) => {
+    const last = _.last(kept);
+    if (!last || (d.normalTime - last.normalTime) >= SITE_CHANGE_DEDUP_WINDOW_MS) kept.push(d);
+    return kept;
+  }, []);
+}
+
 class DailyPrintView extends PrintView {
   constructor(doc, data, opts) {
     super(doc, data, opts);
@@ -107,6 +160,10 @@ class DailyPrintView extends PrintView {
       d => !!d.tags?.alarm
     );
 
+    // The site-change subtype the clinician selected (defaulted per manufacturer),
+    // so the daily charts show the matching site-change icon.
+    this.siteChangeSource = getSiteChangeSource(this.patient, this.manufacturer);
+
     const deviceLabels = getPumpVocabulary(this.manufacturer);
 
     this.basalGroupLabels = {
@@ -119,8 +176,6 @@ class DailyPrintView extends PrintView {
       [PHYSICAL_ACTIVITY]: deviceLabels[PHYSICAL_ACTIVITY],
       [PREPRANDIAL]: deviceLabels[PREPRANDIAL],
     };
-
-    this.legendItems = this.getLegendItems();
 
     this.bgAxisFontSize = 5;
     this.carbsFontSize = 5.5;
@@ -141,6 +196,8 @@ class DailyPrintView extends PrintView {
     this.interruptedLineThickness = 0.5;
     this.smbgRadius = 3;
     this.triangleHeight = 1.25;
+
+    this.legendItems = this.getLegendItems();
 
     const undelivered = '#B2B2B2';
 
@@ -257,6 +314,18 @@ class DailyPrintView extends PrintView {
   }
 
   getLegendItems() {
+    // One legend icon per distinct site-change image printed anywhere in the
+    // document, so a document spanning two pumps shows both devices' icons.
+    const siteChangeImagesInDocument = this.siteChangeSource
+      ? _.uniq(_.flatMap(this.aggregationsByDate.dataByDate, dateData => _.map(
+        dedupeSiteChangesWithinWindow(_.filter(
+          dateData.deviceEvent || [],
+          d => getSiteChangeSubType(d) === this.siteChangeSource
+        )),
+        d => getSiteChangeImage(this.siteChangeSource, d.source)
+      )))
+      : [];
+
     const legendItems = [
       {
         type: 'cbg',
@@ -355,6 +424,14 @@ class DailyPrintView extends PrintView {
           _.some([...(dateData.reportedState || []), ...(dateData.deviceEvent || [])], event => event.tags?.event === EVENT_NOTES)
         ),
         labels: [t('Note')],
+      },
+      {
+        type: SITE_CHANGE,
+        show: siteChangeImagesInDocument.length > 0,
+        images: siteChangeImagesInDocument,
+        iconWidth: (siteChangeImagesInDocument.length * this.eventRadius * 2)
+          + ((siteChangeImagesInDocument.length - 1) * SITE_CHANGE_LEGEND_ICON_GAP),
+        labels: [t('Site'), t('Change')],
       },
       {
         type: 'alarms',
@@ -1261,6 +1338,30 @@ class DailyPrintView extends PrintView {
       });
     });
 
+    // Site changes matching the selected subtype, alongside the other events. The
+    // icon comes from each datum's own source, so a day fed by two uploads prints
+    // both devices' icons, as the Daily plot does.
+    if (this.siteChangeSource) {
+      const siteChanges = dedupeSiteChangesWithinWindow(
+        _.filter(deviceEvent, d => getSiteChangeSubType(d) === this.siteChangeSource)
+      );
+
+      _.each(siteChanges, siteChange => {
+        const siteChangeImage = getSiteChangeImage(this.siteChangeSource, siteChange.source);
+        if (!siteChangeImage) return;
+
+        const siteChangeX = xScale(siteChange.normalTime) - this.eventRadius;
+
+        this.doc
+          .circle(siteChangeX + this.eventRadius, eventY + this.eventRadius, this.eventRadius + 1)
+          .fill('white');
+
+        this.doc.image(siteChangeImage, siteChangeX, eventY, {
+          width: this.eventRadius * 2,
+        });
+      });
+    }
+
     return this;
   }
 
@@ -1612,7 +1713,7 @@ class DailyPrintView extends PrintView {
 
     // Function to calculate item width
     const getItemWidth = (item) => {
-      const iconWidth = iconWidths[item.type] ?? 0;
+      const iconWidth = item.iconWidth ?? iconWidths[item.type] ?? 0;
       const maxLabelWidth = _.max(_.map(item.labels, label => this.doc.widthOfString(label))) || 0;
       return iconWidth + 4 + maxLabelWidth;
     };
@@ -2089,6 +2190,18 @@ class DailyPrintView extends PrintView {
             });
 
             cursor += this.eventRadius * 2;
+            cursor = renderLabels(item, cursor, rowIndex);
+            break;
+          }
+
+          case SITE_CHANGE: {
+            _.each(item.images, (image, index) => {
+              this.doc.image(image, cursor + index * (this.eventRadius * 2 + SITE_CHANGE_LEGEND_ICON_GAP), rowVerticalMiddle - this.eventRadius, {
+                width: this.eventRadius * 2,
+              });
+            });
+
+            cursor += item.iconWidth;
             cursor = renderLabels(item, cursor, rowIndex);
             break;
           }

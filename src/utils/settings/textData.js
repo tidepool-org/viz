@@ -19,22 +19,42 @@ import _ from 'lodash';
 import i18next from 'i18next';
 
 import TextUtil from '../text/TextUtil';
+import { getDeviceName } from '../device';
 import * as tandemData from './tandemData';
 import * as nonTandemData from './nonTandemData';
-import { insulinSettings, presetSettings } from './data';
+import { deviceName, insulinSettings, presetSettings } from './data';
 
 const t = i18next.t.bind(i18next);
+
+/**
+ * displayedDeviceName
+ * @param  {Object} [metaData]    upload metaData carrying devices
+ * @param  {Object} settings      the pumpSettings datum currently displayed
+ * @param  {String} manufacturer  manufacturer key of the displayed settings
+ *
+ * @return {String}  name of the device sharing the settings' serial number, else the manufacturer's display name
+ */
+function displayedDeviceName(metaData, settings, manufacturer) {
+  // Loop-family uploads report `Unknown`, which several devices can share
+  const serial = settings?.deviceSerialNumber;
+  const device = serial && serial !== 'Unknown' && _.find(metaData?.devices, { serialNumber: serial });
+  return (device && getDeviceName(device)) || deviceName(manufacturer);
+}
 
 /**
  * nonTandemText
  * @param  {Object} patient     the patient object that contains the profile
  * @param  {String} units         MGDL_UNITS or MMOLL_UNITS
  * @param  {String} manufacturer  one of: animas, carelink, insulet, medtronic, microtech, tidepool loop, diy loop, twiist
+ * @param  {Object} [opts]        optional inputs for the document header
+ * @param  {Object} [opts.copyAsTextMetadata] header fields: diagnosisTypeLabel, patientTags, sites
+ * @param  {Object} [opts.metaData] upload metaData carrying devices
  *
  * @return {String}               non tandem settings as a string table
  */
-export function nonTandemText(patient, settings, units, manufacturer) {
-  const textUtil = new TextUtil(patient);
+export function nonTandemText(patient, settings, units, manufacturer, opts = {}) {
+  const { copyAsTextMetadata, metaData } = opts;
+  const textUtil = new TextUtil(patient, undefined, undefined, copyAsTextMetadata);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
   _.map(nonTandemData.basalSchedules(settings), (schedule) => {
@@ -89,6 +109,9 @@ export function nonTandemText(patient, settings, units, manufacturer) {
     );
   }
 
+  settingsString += textUtil.buildTextLine(`\n${t('Device')}`);
+  settingsString += textUtil.buildTextLine(displayedDeviceName(metaData, settings, manufacturer));
+
   return settingsString;
 }
 
@@ -97,11 +120,15 @@ export function nonTandemText(patient, settings, units, manufacturer) {
  * @param  {Object} patient     the patient object that contains the profile
  * @param  {Object} settings    all settings data
  * @param  {String} units       MGDL_UNITS or MMOLL_UNITS
+ * @param  {Object} [opts]      optional inputs for the document header
+ * @param  {Object} [opts.copyAsTextMetadata] header fields: diagnosisTypeLabel, patientTags, sites
+ * @param  {Object} [opts.metaData] upload metaData carrying devices
  *
  * @return {String}             tandem settings as a string table
  */
-export function tandemText(patient, settings, units) {
-  const textUtil = new TextUtil(patient);
+export function tandemText(patient, settings, units, opts = {}) {
+  const { copyAsTextMetadata, metaData } = opts;
+  const textUtil = new TextUtil(patient, undefined, undefined, copyAsTextMetadata);
   let settingsString = textUtil.buildDocumentHeader('Device Settings');
 
   const styles = {
@@ -126,6 +153,9 @@ export function tandemText(patient, settings, units) {
       { showHeader: false }
     );
   });
+
+  settingsString += textUtil.buildTextLine(`\n${t('Device')}`);
+  settingsString += textUtil.buildTextLine(displayedDeviceName(metaData, settings, 'tandem'));
 
   return settingsString;
 }

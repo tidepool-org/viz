@@ -95,6 +95,8 @@ import {
   findBasicsStart,
   defineBasicsAggregations,
   processBasicsAggregations,
+  getSiteChangeSource,
+  getSiteChangeSourceLabel,
 } from './utils/basics/data';
 
 const i18next = require('i18next');
@@ -186,6 +188,8 @@ const utils = {
   aggregation: {
     defineBasicsAggregations,
     processBasicsAggregations,
+    getSiteChangeSource,
+    getSiteChangeSourceLabel,
   },
   text: {
     TextUtil,

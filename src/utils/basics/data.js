@@ -22,6 +22,7 @@ import i18next from 'i18next';
 import {
   getPumpVocabulary,
   getUppercasedManufacturer,
+  manufacturerKey,
   isDIYLoop,
   isLoop,
   isTidepoolLoop,
@@ -231,23 +232,23 @@ export function getSiteChangeSource(patient = {}, manufacturer) {
 
   let siteChangeSource = SITE_CHANGE_TYPE_UNDECLARED;
 
-  if (_.includes(_.map([ANIMAS, MEDTRONIC, TANDEM], _.lowerCase), manufacturer)) {
+  if (_.includes(_.map([ANIMAS, MEDTRONIC, TANDEM], manufacturerKey), manufacturer)) {
     siteChangeSource = _.get(settings, 'siteChangeSource');
     const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING];
 
     if (!_.includes(allowedSources, siteChangeSource)) {
       siteChangeSource = SITE_CHANGE_CANNULA;
     }
-  } else if (_.includes(_.map([INSULET, MICROTECH], _.lowerCase), manufacturer)) {
+  } else if (_.includes(_.map([INSULET, MICROTECH], manufacturerKey), manufacturer)) {
     siteChangeSource = SITE_CHANGE_RESERVOIR;
-  } else if (_.includes(_.map([TWIIST_LOOP], _.lowerCase), manufacturer)) {
+  } else if (_.includes(_.map([TWIIST_LOOP], manufacturerKey), manufacturer)) {
     siteChangeSource = _.get(settings, 'siteChangeSource');
     const allowedSources = [SITE_CHANGE_CANNULA, SITE_CHANGE_RESERVOIR];
 
     if (!_.includes(allowedSources, siteChangeSource)) {
       siteChangeSource = SITE_CHANGE_RESERVOIR;
     }
-  } else if (_.includes(_.map([DIY_LOOP, TRIO, TIDEPOOL_LOOP], _.lowerCase), manufacturer)) {
+  } else if (_.includes(_.map([DIY_LOOP, TRIO, TIDEPOOL_LOOP], manufacturerKey), manufacturer)) {
     siteChangeSource = SITE_CHANGE_TUBING;
   }
 

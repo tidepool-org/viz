@@ -8,7 +8,7 @@ const EventsInfoTooltip = props => {
 
   const content = {
     title: t('Events Shown'),
-    subtitle: t('Tidepool displays certain pump alarms, device time changes, and notes.'),
+    subtitle: t('Tidepool displays certain pump alarms, device time changes, site changes and notes.'),
     sections: [
       {
         title: t('Pump Alarms Shown'),

@@ -277,7 +277,7 @@ describe('AGPPrintView', () => {
 
     it('should render the patient DOB', () => {
       sinon.assert.calledWithMatch(Renderer.doc.text, 'DOB:');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Jan 31, 1983');
+      sinon.assert.calledWithMatch(Renderer.doc.text, '1983-01-31');
     });
 
     it('should render the patient MRN', () => {
@@ -295,8 +295,8 @@ describe('AGPPrintView', () => {
       });
 
       Renderer.renderPatientInfo();
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'MRN:');
-      sinon.assert.calledWith(Renderer.doc.text, 'MRN: 12345…0123456');
+      sinon.assert.calledWithMatch(Renderer.doc.text, 'MRN: ');
+      sinon.assert.calledWith(Renderer.doc.text, '12345…0123456');
     });
 
     it('should render the report date range', () => {

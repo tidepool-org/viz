@@ -4554,9 +4554,18 @@ describe('DataUtil', () => {
       });
 
       expect(dataUtil.uploadMap[uploadData[5].uploadId]).to.eql({
-        source: 'Unknown',
+        source: 'trio',
         deviceSerialNumber: 'Unknown',
       });
+    });
+
+    it('should set `source` for a Loop upload from its own client name when no pumpSettings share its uploadId', () => {
+      dataUtil.removeData({ type: 'pumpSettings', uploadId: uploadData[3].uploadId });
+      dataUtil.removeData({ type: 'pumpSettings', uploadId: uploadData[4].uploadId });
+
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap[uploadData[3].uploadId].source).to.equal('tidepool loop');
+      expect(dataUtil.uploadMap[uploadData[4].uploadId].source).to.equal('diy loop');
     });
 
     it('should set `deviceSerialNumber` from the `pumpSettings.serialNumber` associated with an upload when not available on the upload', () => {
@@ -4840,8 +4849,8 @@ describe('DataUtil', () => {
 
       dataUtil.setDevices();
       expect(dataUtil.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'device1', label: 'device1', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'device2', label: 'device2', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'device1', label: 'device1', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'device2', label: 'device2', deviceName: '', pump: false, serialNumber: undefined },
       ]);
     });
 
@@ -4854,6 +4863,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           label: 'Tandem 12345 (Control-IQ)',
@@ -4882,6 +4892,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'tandem12345',
           deviceName: 'Tandem Non-CIQ',
@@ -4901,6 +4912,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'tandem12345',
           deviceName: 'Tandem Non-CIQ',
@@ -4911,6 +4923,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'tandemCIQ12345',
           deviceName: 'Tandem CIQ',
@@ -4941,6 +4954,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: true,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'HealthKit twiist 12345',
           deviceName: 'twiist',
@@ -4973,6 +4987,7 @@ describe('DataUtil', () => {
         {
           bgm: true,
           cgm: true,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'MyAbbott123',
           label: 'FreeStyle Libre (from LibreView)',
@@ -5008,6 +5023,7 @@ describe('DataUtil', () => {
         {
           bgm: true,
           cgm: true,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: true,
           id: 'MySequel123',
           deviceName: 'Sequel DeviceName',
@@ -5037,6 +5053,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: true,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'MyDexcom123',
           label: 'Dexcom (from Dexcom Account)',
@@ -5064,6 +5081,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'MyTrio123',
           deviceName: 'Tidepool Loop DeviceName',
@@ -5105,6 +5123,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: false,
           oneMinCgmSampleInterval: false,
           id: 'MyTrio123',
           deviceName: 'Tidepool Loop DeviceName',
@@ -5182,6 +5201,7 @@ describe('DataUtil', () => {
         {
           bgm: false,
           cgm: false,
+          hasPumpSettings: true,
           oneMinCgmSampleInterval: false,
           id: 'Apple Inc._iPhone',
           deviceName: '',
@@ -6448,12 +6468,12 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -6483,12 +6503,12 @@ describe('DataUtil', () => {
       expect(result.size).to.equal(38);
 
       expect(result.devices).to.eql([
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
-        { bgm: false, cgm: false, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'Test Page Data - 123', label: 'Test Page Data - 123', deviceName: 'Tidepool Loop DeviceName', pump: true, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'AbbottFreeStyleLibre-XXX-XXXX', label: 'AbbottFreeStyleLibre-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'Dexcom-XXX-XXXX', label: 'Dexcom-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'OneTouch-XXX-XXXX', label: 'OneTouch-XXX-XXXX', deviceName: '', pump: false, serialNumber: undefined },
+        { bgm: false, cgm: false, hasPumpSettings: false, oneMinCgmSampleInterval: false, id: 'tandemCIQ12345', label: 'Tandem 12345 (Control-IQ)', deviceName: 'Tandem CIQ', pump: true, serialNumber: 'sn-0' },
+        { bgm: false, cgm: false, hasPumpSettings: true, oneMinCgmSampleInterval: false, id: 'DevId0987654321', label: 'DevId0987654321', deviceName: '', pump: false, serialNumber: undefined },
       ]);
 
       expect(result.excludedDevices).to.eql([]);
@@ -6664,6 +6684,83 @@ describe('DataUtil', () => {
       expect(result.reservoirChange.id).to.equal(reservoirChange.id);
       expect(result.cannulaPrime.id).to.equal(cannulaPrime.id);
       expect(result.tubingPrime).to.be.undefined;
+    });
+  });
+
+  describe('addSiteChangeDaysSince', () => {
+    const siteChangeEndpoints = [
+      '2018-02-01T00:00:00.000Z',
+      '2018-02-04T00:00:00.000Z',
+    ];
+
+    // The 01-20 cannula prime sits outside siteChangeEndpoints on purpose: it is the anchor
+    // that only getPreviousSiteChangeDatums can see.
+    const cannulaPrimeJan20 = new Types.DeviceEvent({ deviceTime: '2018-01-20T01:00:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+    const cannulaPrimeFeb01 = new Types.DeviceEvent({ deviceTime: '2018-02-01T01:00:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+    const cannulaPrimeFeb03 = new Types.DeviceEvent({ deviceTime: '2018-02-03T01:00:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+    const tubingPrimeFeb02 = new Types.DeviceEvent({ deviceTime: '2018-02-02T01:00:00', subType: 'prime', primeTarget: 'tubing', ...useRawData });
+    const reservoirChangeFeb02 = new Types.DeviceEvent({ deviceTime: '2018-02-02T02:00:00', subType: 'reservoirChange', ...useRawData });
+    const calibrationFeb01 = new Types.DeviceEvent({ deviceTime: '2018-02-01T03:00:00', subType: 'calibration', ...useRawData });
+
+    const siteChangeData = _.map([
+      cannulaPrimeJan20,
+      cannulaPrimeFeb01,
+      cannulaPrimeFeb03,
+      tubingPrimeFeb02,
+      reservoirChangeFeb02,
+      calibrationFeb01,
+    ], _.toPlainObject);
+
+    const queryDeviceEvents = (overrides = {}) => {
+      const result = dataUtil.query(createQuery({
+        endpoints: siteChangeEndpoints,
+        types: { deviceEvent: { select: '*' } },
+        ...overrides,
+      }));
+
+      return _.keyBy(result.data.current.data.deviceEvent, 'id');
+    };
+
+    beforeEach(() => {
+      initDataUtil(siteChangeData);
+    });
+
+    it('should measure the first in-window site change from an anchor outside the endpoints', () => {
+      expect(queryDeviceEvents()[cannulaPrimeFeb01.id].daysSince).to.equal(12);
+    });
+
+    it('should anchor a later in-window site change on the previous in-window datum of the same subtype', () => {
+      expect(queryDeviceEvents()[cannulaPrimeFeb03.id].daysSince).to.equal(2);
+    });
+
+    // The next two look alike but pin different halves of the anchor map: cannula and tubing
+    // are discriminated by primeTarget within one prime query, reservoirChange has its own.
+    it('should not anchor a tubing prime on the cannula primes, having no prior tubing prime', () => {
+      expect(queryDeviceEvents()[tubingPrimeFeb02.id].daysSince).to.be.null;
+    });
+
+    it('should not anchor a reservoir change on the prime datums, having no prior reservoir change', () => {
+      expect(queryDeviceEvents()[reservoirChangeFeb02.id].daysSince).to.be.null;
+    });
+
+    it('should not add a daysSince field to deviceEvents that are not site changes', () => {
+      expect(queryDeviceEvents()[calibrationFeb01.id]).to.not.have.property('daysSince');
+    });
+
+    it('should count calendar days in the display timezone, not UTC days', () => {
+      // 23:30 and 00:30 the next day in US/Eastern, which are the same UTC calendar day.
+      const eveningPrime = new Types.DeviceEvent({ deviceTime: '2018-02-02T04:30:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+      const nextMorningPrime = new Types.DeviceEvent({ deviceTime: '2018-02-02T05:30:00', subType: 'prime', primeTarget: 'cannula', ...useRawData });
+
+      initDataUtil(_.map([eveningPrime, nextMorningPrime], _.toPlainObject));
+
+      const datums = queryDeviceEvents({
+        endpoints: ['2018-02-02T00:00:00.000Z', '2018-02-03T00:00:00.000Z'],
+        timePrefs: { timezoneAware: true, timezoneName: 'US/Eastern' },
+      });
+
+      expect(datums[eveningPrime.id].daysSince).to.be.null;
+      expect(datums[nextMorningPrime.id].daysSince).to.equal(1);
     });
   });
 

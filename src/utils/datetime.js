@@ -113,13 +113,14 @@ export function getTimezoneFromTimePrefs(timePrefs = {}) {
 /**
  * formatBirthdate
  * @param {Object} patient - Tidepool patient object containing profile
+ * @param {String} [format] - optional d3 time format string; default is '%b %-d, %Y'
  *
  * @return {String} formatted birthdate, e.g., 'Jul 4, 1975'; empty String if none found
  */
-export function formatBirthdate(patient) {
+export function formatBirthdate(patient, format = '%b %-d, %Y') {
   const bday = _.get(patient, ['profile', 'patient', 'birthday'], '');
   if (bday) {
-    return utcFormat('%b %-d, %Y')(Date.parse(bday));
+    return utcFormat(format)(Date.parse(bday));
   }
   return '';
 }
@@ -231,7 +232,7 @@ export function getChartDateBoundFormat(startDate, endDate) {
  */
 export function formatDuration(duration, opts = {}) {
   const momentDuration = moment.duration(duration);
-  const days = momentDuration.days();
+  const days = Math.trunc(momentDuration.asDays());
   const hours = momentDuration.hours();
   const minutes = momentDuration.minutes();
   const seconds = momentDuration.seconds();

@@ -46,6 +46,24 @@ const getEventContent = (event, timePrefs) => {
   const msPer24 = getMsPer24(event?.normalTime, timePrefs?.timezoneName);
   const time = formatClocktimeFromMsPer24(msPer24);
 
+  if (event?.tags?.siteChange) {
+    let daysSinceText = null;
+    if (event.daysSince != null) {
+      daysSinceText = event.daysSince === 1
+        ? t('1 day')
+        : t('{{daysSince}} days', { daysSince: event.daysSince });
+    }
+
+    return {
+      time,
+      title: event.displayLabel
+        ? t('Site Change: {{displayLabel}}', { displayLabel: event.displayLabel })
+        : t('Site Change'),
+      value: daysSinceText,
+      renderer: renderStandardEvent,
+    };
+  }
+
   switch (event?.tags?.event) {
     case EVENT_PUMP_SHUTDOWN:
       return {
@@ -151,9 +169,12 @@ EventTooltip.propTypes = {
   showDividers: PropTypes.bool,
   event: PropTypes.shape({
     tags: PropTypes.shape({
-      event: PropTypes.string.isRequired,
+      event: PropTypes.string,
+      siteChange: PropTypes.bool,
     }).isRequired,
     normalTime: PropTypes.number.isRequired,
+    displayLabel: PropTypes.string,
+    daysSince: PropTypes.number,
   }).isRequired,
   timePrefs: PropTypes.object.isRequired,
 };
