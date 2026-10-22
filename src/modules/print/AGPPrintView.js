@@ -214,7 +214,7 @@ class AGPPrintView extends PrintView {
     this.renderSectionContainer(section);
 
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
-    const patientBirthdate = formatBirthdate(this.patient);
+    const patientBirthdate = formatBirthdate(this.patient, '%Y-%m-%d');
     const { sensorUsageAGP } = this.stats.sensorUsage?.data?.raw || {};
     const { bgDaysWorn = 0, oldestDatum, newestDatum } = this.stats.bgExtents?.data?.raw || {};
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;

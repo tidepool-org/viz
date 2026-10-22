@@ -61,7 +61,11 @@ describe('TagsAndSitesPrintView', () => {
   let doc;
   let Renderer;
 
-  const createRenderer = (renderOpts = {}) => new TagsAndSitesPrintView(doc, {}, { ...opts, ...renderOpts });
+  // The page always follows an AGP section, so it always carries that section's query range.
+  const range = [Date.UTC(2026, 5, 1), Date.UTC(2026, 6, 1)];
+  const data = { data: { current: { endpoints: { range } } } };
+
+  const createRenderer = (renderOpts = {}) => new TagsAndSitesPrintView(doc, data, { ...opts, ...renderOpts });
 
   // The stub doc reports a constant string height, so overflow is forced by raising it:
   // one row then measures 200 plus 14 points of padding against a 650 point column.
@@ -136,6 +140,15 @@ describe('TagsAndSitesPrintView', () => {
       const columns = tableSpy.getCall(0).args[0];
       expect(columns).to.have.length(1);
       expect(columns[0].id).to.equal('name');
+    });
+
+    it('should zebra stripe the rows', () => {
+      Renderer.render();
+
+      const [, , tableOpts] = tableSpy.getCall(0).args;
+      expect(tableOpts.columnDefaults.zebra).to.be.true;
+      expect(Renderer.tableSettings.colors.zebraEven).to.equal('#FFFFFF');
+      expect(Renderer.tableSettings.colors.zebraOdd).to.equal('#F6F6F6');
     });
 
     it('should omit the tags section when there are no tags', () => {
@@ -282,6 +295,18 @@ describe('TagsAndSitesPrintView', () => {
   });
 
   describe('newPage', () => {
+    it('should pass the whole-day date range of the followed agp query to the page header', () => {
+      sinon.stub(Renderer, 'getDateRange').returns('Date range: a - b');
+      const newPageSpy = sinon.spy(PrintView.prototype, 'newPage');
+      const headerSpy = sinon.spy(PrintView.prototype, 'renderHeader');
+
+      Renderer.newPage();
+
+      sinon.assert.calledWithExactly(Renderer.getDateRange, range[0], range[1] - 1, undefined, 'Date range: ');
+      sinon.assert.calledWith(newPageSpy, 'Date range: a - b');
+      sinon.assert.calledWith(headerSpy, 'Date range: a - b');
+    });
+
     it('should render the header badge block when there are tags or sites', () => {
       const badgeSpy = sinon.spy(PrintView.prototype, 'renderHeaderBadges');
 
