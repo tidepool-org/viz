@@ -4554,9 +4554,18 @@ describe('DataUtil', () => {
       });
 
       expect(dataUtil.uploadMap[uploadData[5].uploadId]).to.eql({
-        source: 'Unknown',
+        source: 'trio',
         deviceSerialNumber: 'Unknown',
       });
+    });
+
+    it('should set `source` for a Loop upload from its own client name when no pumpSettings share its uploadId', () => {
+      dataUtil.removeData({ type: 'pumpSettings', uploadId: uploadData[3].uploadId });
+      dataUtil.removeData({ type: 'pumpSettings', uploadId: uploadData[4].uploadId });
+
+      dataUtil.setUploadMap();
+      expect(dataUtil.uploadMap[uploadData[3].uploadId].source).to.equal('tidepool loop');
+      expect(dataUtil.uploadMap[uploadData[4].uploadId].source).to.equal('diy loop');
     });
 
     it('should set `deviceSerialNumber` from the `pumpSettings.serialNumber` associated with an upload when not available on the upload', () => {

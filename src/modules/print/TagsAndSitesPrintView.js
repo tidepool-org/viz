@@ -19,13 +19,17 @@ class TagsAndSitesPrintView extends PrintView {
 
     this.tableSettings.borderWidth = 0.6;
     this.tableSettings.colors.border = '#989898';
-    this.tableSettings.colors.zebraEven = '#F6F6F6';
-    this.tableSettings.colors.zebraOdd = '#FFFFFF';
+    this.tableSettings.colors.zebraEven = '#FFFFFF';
+    this.tableSettings.colors.zebraOdd = '#F6F6F6';
 
     this.colors.tableDivider = '#5D5C5C';
     this.colors.tableText = '#1E1E1E';
 
     this.doc.addPage();
+  }
+
+  newPage() {
+    super.newPage(this.getDateRange(this.endpoints.range[0], this.endpoints.range[1] - 1, undefined, t('Date range: ')));
   }
 
   render() {
@@ -110,10 +114,10 @@ class TagsAndSitesPrintView extends PrintView {
       fontSize: this.nameFontSize,
       padding: this.namePadding,
       width: columnWidth,
-      zebra: true,
     }], rows, {
       showHeaders: false,
       bottomMargin: this.tableBottomMargin,
+      columnDefaults: { zebra: true },
     });
 
     // The table draws every cell edge at one width and colour, so the heavier outer rule
