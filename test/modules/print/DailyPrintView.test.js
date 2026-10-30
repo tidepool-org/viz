@@ -36,7 +36,7 @@ import { getBasalPathGroups } from '../../../src/utils/basal';
 import { formatDecimalNumber, formatBgValue } from '../../../src/utils/format';
 
 import Doc from '../../helpers/pdfDoc';
-import { MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, SITE_CHANGE, SITE_CHANGE_CANNULA, SITE_CHANGE_TUBING } from '../../../src/utils/constants';
+import { MS_IN_HOUR, MS_IN_MIN, MMOLL_UNITS, DEFAULT_BG_BOUNDS, ADA_OLDER_HIGH_RISK_BG_BOUNDS, EVENT_NOTES, SITE_CHANGE, SITE_CHANGE_CANNULA, SITE_CHANGE_RESERVOIR, SITE_CHANGE_TUBING } from '../../../src/utils/constants';
 
 describe('DailyPrintView', () => {
   let Renderer;
@@ -488,7 +488,7 @@ describe('DailyPrintView', () => {
         dataByDate: {
           [sampleDate]: {
             deviceEvent: [
-              { subType: 'prime', primeTarget: 'cannula', normalTime: 50, tags: {} },
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 50, source: 'Tandem', tags: {} },
             ],
           },
         },
@@ -499,7 +499,87 @@ describe('DailyPrintView', () => {
       expect(itemIds).to.include(SITE_CHANGE);
 
       const siteChangeItem = _.find(legendItems, item => item.type === SITE_CHANGE);
-      expect(siteChangeItem.labels).to.deep.equal(['Site', 'Change']);
+      expect(siteChangeItem.labels).to.deep.equal(['Cannula', 'Fill']);
+      expect(siteChangeItem.image).to.equal('images/sitechange-cannula.png');
+    });
+
+    it('should label a twiist reservoir change with the pump\'s cassette change name', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_RESERVOIR;
+      Renderer.manufacturer = 'twiist';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'reservoirChange', normalTime: 50, source: 'twiist', tags: {} },
+            ],
+          },
+        },
+      };
+
+      const siteChangeItems = _.filter(Renderer.getLegendItems(), { type: SITE_CHANGE });
+      expect(siteChangeItems).to.have.lengthOf(1);
+      expect(siteChangeItems[0].labels).to.deep.equal(['Cassette', 'Change']);
+      expect(siteChangeItems[0].image).to.equal('images/sitechange-twiist-cassette.png');
+    });
+
+    it('should label a CareLink cannula prime with the Medtronic site change name', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_CANNULA;
+      Renderer.manufacturer = 'medtronic';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'cannula', normalTime: 50, source: 'carelink', tags: {} },
+            ],
+          },
+        },
+      };
+
+      const siteChangeItem = _.find(Renderer.getLegendItems(), { type: SITE_CHANGE });
+      expect(siteChangeItem.labels).to.deep.equal(['Cannula', 'Prime']);
+    });
+
+    it('should list one site change item for the same device across several days', () => {
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+            ],
+          },
+          '2017-01-03': {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+            ],
+          },
+        },
+      };
+
+      expect(_.filter(Renderer.getLegendItems(), { type: SITE_CHANGE })).to.have.lengthOf(1);
+    });
+
+    it('should place the site change items after the note item and before the pump alarm item', () => {
+      Renderer.hasAlarms = true;
+      Renderer.siteChangeSource = SITE_CHANGE_TUBING;
+      Renderer.manufacturer = 'tandem';
+      Renderer.aggregationsByDate = {
+        dataByDate: {
+          [sampleDate]: {
+            deviceEvent: [
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 50, source: 'Tandem', tags: {} },
+              { subType: 'prime', primeTarget: 'tubing', normalTime: 10 * MS_IN_MIN, source: 'Tidepool Loop', tags: {} },
+            ],
+            reportedState: [
+              { normalTime: 50, tags: { event: EVENT_NOTES } },
+            ],
+          },
+        },
+      };
+
+      const itemTypes = _.map(Renderer.getLegendItems(), 'type');
+      expect(_.takeRight(itemTypes, 4)).to.deep.equal([EVENT_NOTES, SITE_CHANGE, SITE_CHANGE, 'alarms']);
     });
 
     it('should not include the site change legend item when no site changes are present', () => {
@@ -518,7 +598,7 @@ describe('DailyPrintView', () => {
       expect(_.map(Renderer.getLegendItems(), item => item.type)).to.not.include(SITE_CHANGE);
     });
 
-    it('should list each distinct site change icon once, sized to fit them', () => {
+    it('should list one site change item per distinct device icon and label', () => {
       Renderer.siteChangeSource = SITE_CHANGE_TUBING;
       Renderer.manufacturer = 'tandem';
       Renderer.aggregationsByDate = {
@@ -534,9 +614,12 @@ describe('DailyPrintView', () => {
         },
       };
 
-      const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
-      expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png', 'images/sitechange-loop-tubing.png']);
-      expect(siteChangeItem.iconWidth).to.equal((Renderer.eventRadius * 4) + 2);
+      const siteChangeItems = _.filter(Renderer.getLegendItems(), { type: SITE_CHANGE });
+      expect(_.map(siteChangeItems, item => [item.image, item.labels])).to.deep.equal([
+        ['images/sitechange-tubing.png', ['Tubing', 'Fill']],
+        ['images/sitechange-tubing.png', ['Prime']],
+        ['images/sitechange-loop-tubing.png', ['Tubing', 'Fill']],
+      ]);
     });
 
     it('should list one site change icon for sources within the same 5-minute window', () => {
@@ -553,14 +636,15 @@ describe('DailyPrintView', () => {
         },
       };
 
-      const siteChangeItem = _.find(Renderer.getLegendItems(), item => item.type === SITE_CHANGE);
-      expect(siteChangeItem.images).to.deep.equal(['images/sitechange-tubing.png']);
+      const siteChangeItems = _.filter(Renderer.getLegendItems(), { type: SITE_CHANGE });
+      expect(_.map(siteChangeItems, item => [item.image, item.labels])).to.deep.equal([
+        ['images/sitechange-tubing.png', ['Tubing', 'Fill']],
+      ]);
     });
 
-    it('should size the site change legend icon from the constructor', () => {
-      // Guards the constructor ordering: legendItems must be built after eventRadius is set.
-      // Otherwise iconWidth is NaN and the render throws inside the PDF worker, where blip
-      // never sees the error and the print dialog spins forever.
+    it('should label the site change legend item from the constructor', () => {
+      // Guards the constructor ordering: legendItems must be built after siteChangeSource
+      // is set. Otherwise the site change item is missing from the printed legend.
       const siteChangeData = _.cloneDeep(data);
       const [date] = _.keys(siteChangeData.data.current.aggregationsByDate.dataByDate);
       siteChangeData.data.current.aggregationsByDate.dataByDate[date].deviceEvent = [
@@ -568,7 +652,7 @@ describe('DailyPrintView', () => {
       ];
 
       const item = _.find(new DailyPrintView(doc, siteChangeData, opts).legendItems, { type: SITE_CHANGE });
-      expect(item.iconWidth).to.equal(Renderer.eventRadius * 2);
+      expect(item.labels).to.deep.equal(['Pod', 'Change']);
     });
   });
 
@@ -1644,7 +1728,7 @@ describe('DailyPrintView', () => {
       sinon.assert.neverCalledWith(Renderer.doc.image, 'images/sitechange-loop-tubing.png');
     });
 
-    it('should render one site change legend icon per distinct device icon in the document', () => {
+    it('should render each site change legend item with its own icon and label', () => {
       sinon.stub(Renderer, 'renderEventPath');
       sinon.stub(Renderer, 'renderBasalPaths');
 
@@ -1668,13 +1752,15 @@ describe('DailyPrintView', () => {
 
       Renderer.renderLegend();
 
-      const tubingCall = Renderer.doc.image.getCalls().find(call => call.args[0] === 'images/sitechange-tubing.png');
-      const loopCall = Renderer.doc.image.getCalls().find(call => call.args[0] === 'images/sitechange-loop-tubing.png');
-      expect(tubingCall).to.exist;
-      expect(loopCall).to.exist;
-      // The icons sit side by side, not stacked: the second starts one icon width
-      // plus SITE_CHANGE_LEGEND_ICON_GAP (2) after the first. args[1] is the x position.
-      expect(loopCall.args[1]).to.equal(tubingCall.args[1] + (Renderer.eventRadius * 2) + 2);
+      const tubingCalls = _.filter(Renderer.doc.image.getCalls(), call => call.args[0] === 'images/sitechange-tubing.png');
+      const loopCalls = _.filter(Renderer.doc.image.getCalls(), call => call.args[0] === 'images/sitechange-loop-tubing.png');
+      expect(tubingCalls).to.have.lengthOf(1);
+      expect(loopCalls).to.have.lengthOf(1);
+      sinon.assert.calledTwice(Renderer.doc.text.withArgs('Tubing'));
+      sinon.assert.calledTwice(Renderer.doc.text.withArgs('Fill'));
+      // The second item's icon follows the first item's label rather than sitting
+      // beside the first icon. args[1] is the x position.
+      expect(loopCalls[0].args[1]).to.be.greaterThan(tubingCalls[0].args[1] + (Renderer.eventRadius * 2) + 2);
     });
 
     it('should render the legend with pump alarms when present in dataset', () => {

@@ -79,7 +79,7 @@ import {
   TWIIST_LOOP,
 } from '../../utils/constants';
 
-import { getSiteChangeSource } from '../../utils/basics/data';
+import { getSiteChangeSource, getSiteChangeSourceLabel } from '../../utils/basics/data';
 
 import {
   processBasalRange,
@@ -130,7 +130,6 @@ function getSiteChangeImage(subType, manufacturer) {
 }
 
 const SITE_CHANGE_DEDUP_WINDOW_MS = 5 * MS_IN_MIN;
-const SITE_CHANGE_LEGEND_ICON_GAP = 2;
 
 // Site changes within 5 minutes of one another count as the same change; keep only
 // the first (sorted by time), so at most one icon prints per 5-minute window.
@@ -314,16 +313,26 @@ class DailyPrintView extends PrintView {
   }
 
   getLegendItems() {
-    // One legend icon per distinct site-change image printed anywhere in the
-    // document, so a document spanning two pumps shows both devices' icons.
-    const siteChangeImagesInDocument = this.siteChangeSource
-      ? _.uniq(_.flatMap(this.aggregationsByDate.dataByDate, dateData => _.map(
+    // One legend item per distinct device icon and label printed anywhere in the
+    // document, so a document spanning two pumps shows each device's icon and its
+    // own site-change name.
+    const siteChangeLegendItems = this.siteChangeSource
+      ? _.uniqBy(_.flatMap(this.aggregationsByDate.dataByDate, dateData => _.map(
         dedupeSiteChangesWithinWindow(_.filter(
           dateData.deviceEvent || [],
           d => getSiteChangeSubType(d) === this.siteChangeSource
         )),
-        d => getSiteChangeImage(this.siteChangeSource, d.source)
-      )))
+        d => {
+          const source = manufacturerKey(d.source) === 'carelink' ? 'medtronic' : manufacturerKey(d.source);
+
+          return {
+            type: SITE_CHANGE,
+            show: true,
+            image: getSiteChangeImage(this.siteChangeSource, source),
+            labels: _.split(getSiteChangeSourceLabel(this.siteChangeSource, source), /\s+/),
+          };
+        }
+      )), item => `${item.image}|${_.join(item.labels, ' ')}`)
       : [];
 
     const legendItems = [
@@ -425,14 +434,7 @@ class DailyPrintView extends PrintView {
         ),
         labels: [t('Note')],
       },
-      {
-        type: SITE_CHANGE,
-        show: siteChangeImagesInDocument.length > 0,
-        images: siteChangeImagesInDocument,
-        iconWidth: (siteChangeImagesInDocument.length * this.eventRadius * 2)
-          + ((siteChangeImagesInDocument.length - 1) * SITE_CHANGE_LEGEND_ICON_GAP),
-        labels: [t('Site'), t('Change')],
-      },
+      ...siteChangeLegendItems,
       {
         type: 'alarms',
         show: this.hasAlarms,
@@ -1707,13 +1709,14 @@ class DailyPrintView extends PrintView {
       carbsDeleted: this.carbRadius,
       [EVENT_PHYSICAL_ACTIVITY]: this.eventRadius * 2,
       [EVENT_NOTES]: this.eventRadius * 2,
+      [SITE_CHANGE]: this.eventRadius * 2,
       [EVENT_HEALTH]: this.eventRadius * 2,
       alarms: this.eventRadius * 2,
     };
 
     // Function to calculate item width
     const getItemWidth = (item) => {
-      const iconWidth = item.iconWidth ?? iconWidths[item.type] ?? 0;
+      const iconWidth = iconWidths[item.type] ?? 0;
       const maxLabelWidth = _.max(_.map(item.labels, label => this.doc.widthOfString(label))) || 0;
       return iconWidth + 4 + maxLabelWidth;
     };
@@ -2195,13 +2198,11 @@ class DailyPrintView extends PrintView {
           }
 
           case SITE_CHANGE: {
-            _.each(item.images, (image, index) => {
-              this.doc.image(image, cursor + index * (this.eventRadius * 2 + SITE_CHANGE_LEGEND_ICON_GAP), rowVerticalMiddle - this.eventRadius, {
-                width: this.eventRadius * 2,
-              });
+            this.doc.image(item.image, cursor, rowVerticalMiddle - this.eventRadius, {
+              width: this.eventRadius * 2,
             });
 
-            cursor += item.iconWidth;
+            cursor += this.eventRadius * 2;
             cursor = renderLabels(item, cursor, rowIndex);
             break;
           }
