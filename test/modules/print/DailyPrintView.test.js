@@ -1763,6 +1763,40 @@ describe('DailyPrintView', () => {
       expect(loopCalls[0].args[1]).to.be.greaterThan(tubingCalls[0].args[1] + (Renderer.eventRadius * 2) + 2);
     });
 
+    it('should keep single-line labels on subsequent legend rows within the legend', () => {
+      // Labels measure in proportion to their length, so 'Pump Alarm' on one line is
+      // wider than either word alone.
+      Renderer.doc.widthOfString = sinon.stub().callsFake(str => str.length * 5);
+      Renderer.legendItems = _.times(20, () => ({ type: 'alarms', show: true, labels: ['Pump', 'Alarm'] }));
+
+      Renderer.renderLegend();
+
+      const legendRightEdge = Renderer.margins.left + Renderer.width;
+      const labelCalls = _.filter(Renderer.doc.text.getCalls(), call => _.isNumber(call.args[1]));
+      expect(_.some(labelCalls, call => call.args[0] === 'Pump Alarm')).to.be.true;
+
+      _.each(labelCalls, call => {
+        expect(call.args[1] + Renderer.doc.widthOfString(call.args[0])).to.be.at.most(legendRightEdge);
+      });
+    });
+
+    it('should add the legend padding between subsequent rows when there are three or more rows', () => {
+      Renderer.doc.widthOfString = sinon.stub().callsFake(str => str.length * 5);
+      Renderer.legendItems = _.times(20, () => ({ type: 'alarms', show: true, labels: ['Pump', 'Alarm'] }));
+
+      Renderer.renderLegend();
+
+      // Rows after the first render 'Pump Alarm' on one line; args[2] is the y position
+      const rowYPositions = _.sortBy(_.uniq(_.map(
+        Renderer.doc.text.withArgs('Pump Alarm').getCalls(),
+        call => call.args[2]
+      )));
+
+      expect(rowYPositions).to.have.lengthOf(2);
+      // paddedLineHeight (10 + 1) + legendYPadding (4)
+      expect(rowYPositions[1] - rowYPositions[0]).to.equal(15);
+    });
+
     it('should render the legend with pump alarms when present in dataset', () => {
       doc = new Doc({ margin: MARGIN });
       Renderer = new DailyPrintView(doc, {

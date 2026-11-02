@@ -1714,10 +1714,12 @@ class DailyPrintView extends PrintView {
       alarms: this.eventRadius * 2,
     };
 
-    // Function to calculate item width
-    const getItemWidth = (item) => {
+    // Function to calculate item width. Rows after the first render labels joined
+    // onto a single line, so measure their combined width.
+    const getItemWidth = (item, singleLine) => {
       const iconWidth = iconWidths[item.type] ?? 0;
-      const maxLabelWidth = _.max(_.map(item.labels, label => this.doc.widthOfString(label))) || 0;
+      const labels = singleLine ? [item.labels.join(' ')] : item.labels;
+      const maxLabelWidth = _.max(_.map(labels, label => this.doc.widthOfString(label))) || 0;
       return iconWidth + 4 + maxLabelWidth;
     };
 
@@ -1727,7 +1729,7 @@ class DailyPrintView extends PrintView {
     let currentRowWidth = 0;
 
     _.each(this.legendItems, item => {
-      const itemWidth = getItemWidth(item);
+      const itemWidth = getItemWidth(item, legendRows.length > 0);
       const nextItemWidth = currentRowWidth + (currentRow.length > 0 ? itemGap : 0) + itemWidth;
 
       if (currentRow.length === 0 || nextItemWidth <= availableWidth) {
@@ -1737,7 +1739,7 @@ class DailyPrintView extends PrintView {
         // Start new row
         legendRows.push(currentRow);
         currentRow = [item];
-        currentRowWidth = itemWidth;
+        currentRowWidth = getItemWidth(item, true);
       }
     });
 
@@ -1765,9 +1767,14 @@ class DailyPrintView extends PrintView {
       ? firstRowHeight
       : subsequentRowHeight));
 
+    // With three or more rows, lift the second row into the first row's bottom padding
+    // so the subsequent rows' taller icons don't crowd one another
+    const subsequentRowShift = legendRows.length > 2 ? legendYPadding : 0;
+    const subsequentRowsTop = legendTop + firstRowHeight - subsequentRowShift;
+
     const rowVerticalMiddles = _.map(legendRows, (row, rowIndex) => (rowIndex === 0
       ? legendTop + firstRowHeight * 0.5
-      : legendTop + firstRowHeight + ((rowIndex - 1) * subsequentRowHeight) + (subsequentRowHeight * 0.5)));
+      : subsequentRowsTop + ((rowIndex - 1) * (subsequentRowHeight + subsequentRowShift)) + (subsequentRowHeight * 0.5)));
 
     this.doc.lineWidth(1)
       .rect(this.margins.left, legendTop, this.width, legendHeight)
