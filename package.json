@@ -4,7 +4,7 @@
     "node": "24.15.0"
   },
   "packageManager": "yarn@3.6.4",
-  "version": "1.60.1-rc.2",
+  "version": "1.61.0",
   "description": "Tidepool data visualization for diabetes device data.",
   "keywords": [
     "data visualization"
@@ -122,7 +122,6 @@
     "brfs": "2.0.2",
     "chai": "4.3.10",
     "chance": "1.1.11",
-    "chromedriver": "135.0.2",
     "core-js": "3.42.0",
     "create-react-class": "15.7.0",
     "css-loader": "6.8.1",
