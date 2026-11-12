@@ -23,7 +23,7 @@ import ClipboardButton from '../common/controls/ClipboardButton';
 import Header from './common/Header';
 import Table from './common/Table';
 import CollapsibleContainer from './common/CollapsibleContainer';
-import { MGDL_UNITS, MMOLL_UNITS } from '../../utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, SUPPORTED_NON_TANDEM_PUMPS } from '../../utils/constants';
 import * as nonTandemData from '../../utils/settings/nonTandemData';
 import { deviceName, insulinSettings, presetSettings } from '../../utils/settings/data';
 import { nonTandemText } from '../../utils/settings/textData';
@@ -311,7 +311,7 @@ NonTandem.propTypes = {
   }),
   copySettingsClicked: PropTypes.func.isRequired,
   metaData: PropTypes.object,
-  deviceKey: PropTypes.oneOf(['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist']).isRequired,
+  deviceKey: PropTypes.oneOf(SUPPORTED_NON_TANDEM_PUMPS).isRequired,
   openedSections: PropTypes.object.isRequired,
   patient: PropTypes.object,
   pumpSettings: PropTypes.shape({
