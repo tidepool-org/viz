@@ -16,9 +16,7 @@ export class PumpSettingsContainer extends PureComponent {
       sites: PropTypes.array,
     }),
     copySettingsClicked: PropTypes.func.isRequired,
-    manufacturerKey: PropTypes.oneOf(
-      ['animas', 'carelink', 'insulet', 'medtronic', 'tandem', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist']
-    ).isRequired,
+    manufacturerKey: PropTypes.oneOf(['tandem', ...SUPPORTED_NON_TANDEM_PUMPS]).isRequired,
     metaData: PropTypes.object,
     patient: PropTypes.object,
     // see more specific schema in NonTandem and Tandem components!
