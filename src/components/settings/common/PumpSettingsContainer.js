@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import React, { PureComponent } from 'react';
 import { connect } from 'react-redux';
 
-import { MGDL_UNITS, MMOLL_UNITS } from '../../../utils/constants';
+import { MGDL_UNITS, MMOLL_UNITS, SUPPORTED_NON_TANDEM_PUMPS } from '../../../utils/constants';
 import NonTandem from '../NonTandem';
 import Tandem from '../Tandem';
 
@@ -62,7 +62,6 @@ export class PumpSettingsContainer extends PureComponent {
       timePrefs,
       toggleSettingsSection,
     } = this.props;
-    const supportedNonTandemPumps = ['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist'];
     const toggleFn = _.partial(toggleSettingsSection, manufacturerKey);
 
     if (manufacturerKey === 'tandem') {
@@ -81,7 +80,7 @@ export class PumpSettingsContainer extends PureComponent {
           user={user}
         />
       );
-    } else if (_.includes(supportedNonTandemPumps, manufacturerKey)) {
+    } else if (_.includes(SUPPORTED_NON_TANDEM_PUMPS, manufacturerKey)) {
       return (
         <NonTandem
           bgUnits={bgUnits}
