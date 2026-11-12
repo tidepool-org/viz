@@ -283,6 +283,23 @@ describe('SettingsPrintView', () => {
       sinon.assert.calledOnce(Renderer.renderWizardSettings);
     });
 
+    it('should render only device meta for an unsupported manufacturer', () => {
+      Renderer = createRenderer(data.omnipodMultirate);
+      Renderer.manufacturer = 'unknown';
+
+      sinon.spy(Renderer, 'renderDeviceMeta');
+      sinon.spy(Renderer, 'renderPumpSettings');
+      sinon.spy(Renderer, 'renderBasalSchedules');
+      sinon.spy(Renderer, 'renderWizardSettings');
+
+      expect(() => Renderer.render()).to.not.throw();
+
+      sinon.assert.calledOnce(Renderer.renderDeviceMeta);
+      sinon.assert.notCalled(Renderer.renderPumpSettings);
+      sinon.assert.notCalled(Renderer.renderBasalSchedules);
+      sinon.assert.notCalled(Renderer.renderWizardSettings);
+    });
+
     it('should call all the appropriate render methods for tandem devices', () => {
       Renderer = createRenderer(data.tandemMultirate);
 

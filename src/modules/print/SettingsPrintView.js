@@ -37,7 +37,7 @@ import {
 } from '../../utils/settings/nonTandemData';
 
 import { getPumpVocabulary, getDeviceName, isControlIQ, isLoop, isTrio } from '../../utils/device';
-import { INSULIN_MODEL_LABELS } from '../../utils/constants';
+import { INSULIN_MODEL_LABELS, SUPPORTED_NON_TANDEM_PUMPS } from '../../utils/constants';
 
 import {
   basalSchedules as profileSchedules,
@@ -71,7 +71,7 @@ class SettingsPrintView extends PrintView {
       this.renderTandemProfiles();
     } else if (isLoop(this.latestPumpUpload.settings) || isTrio(this.latestPumpUpload.settings)) {
       this.renderTherapySettings();
-    } else {
+    } else if (_.includes(SUPPORTED_NON_TANDEM_PUMPS, this.manufacturer)) {
       if (this.manufacturer !== 'animas') this.renderPumpSettings();
       this.renderBasalSchedules();
       this.renderWizardSettings();
