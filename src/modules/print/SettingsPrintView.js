@@ -586,8 +586,14 @@ class SettingsPrintView extends PrintView {
 
   renderBasalSchedules() {
     this.doc.x = this.chartArea.leftEdge;
-    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
-    this.doc.moveDown();
+
+    // Start below the pump settings columns. Animas skips renderPumpSettings, so there are none
+    // and Basal Rates follows the device line directly, like the first section of other pumps.
+    const columnsBottom = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
+    if (columnsBottom !== undefined) {
+      this.doc.y = columnsBottom;
+      this.doc.moveDown();
+    }
 
     this.renderSectionHeading(t('Basal Rates'));
 
