@@ -94,6 +94,9 @@ export const EVENT_NOTES = 'notes';
 export const EVENT_PHYSICAL_ACTIVITY = 'physical_activity';
 export const EVENT_PUMP_SHUTDOWN = 'pump_shutdown';
 
+// Manufacturers the non-Tandem settings views know how to render. Others get no settings view.
+export const SUPPORTED_NON_TANDEM_PUMPS = ['animas', 'carelink', 'insulet', 'medtronic', 'microtech', 'diy loop', 'trio', 'tidepool loop', 'twiist'];
+
 export const AUTOMATED_BOLUS = 'automatedBolus';
 export const AUTOMATED_DELIVERY = 'automatedDelivery';
 export const AUTOMATED_SUSPEND = 'automatedSuspend';

@@ -187,7 +187,7 @@ export function createPrintPDFPackage(data, opts) {
 
   const pdfOpts = _.cloneDeep(opts);
 
-  return new Promise(async (resolve, reject) => {
+  const renderPDFPackage = async () => {
     const DocLib = typeof PDFDocument !== 'undefined' ? PDFDocument : utils.PDFDocument;
 
     /* NB: if you don't set the `margin` (or `margins` if not all are the same)
@@ -229,20 +229,22 @@ export function createPrintPDFPackage(data, opts) {
 
     PrintView.renderPageNumbers(doc);
 
-    waitForData(doc)
-      .then(dataUrl => {
-        const byte = base64ToArrayBuffer(dataUrl);
-        const blob = new Blob([byte], { type: 'application/pdf' });
-        const pdf = {
-          blob,
-          url: URL.createObjectURL(blob),
-        };
-        return resolve(pdf);
-      })
-      .catch(error => reject(error));
-
+    // Listen for the document's data before ending it
+    const dataUrl = waitForData(doc);
     doc.end();
-  });
+
+    const byte = base64ToArrayBuffer(await dataUrl);
+    const blob = new Blob([byte], { type: 'application/pdf' });
+
+    return {
+      blob,
+      url: URL.createObjectURL(blob),
+    };
+  };
+
+  // An error thrown while rendering must reject the returned promise, so that the caller can
+  // handle it. Rendering inside an async promise executor would leave it unhandled instead.
+  return Promise.resolve(renderPDFPackage());
 }
 
 export default createPrintPDFPackage;
