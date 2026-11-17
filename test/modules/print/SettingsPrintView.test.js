@@ -283,6 +283,42 @@ describe('SettingsPrintView', () => {
       sinon.assert.calledOnce(Renderer.renderWizardSettings);
     });
 
+    it('should render Animas settings without the pump settings layout columns', () => {
+      Renderer = createRenderer(data.animasFlatrate);
+      // The test Doc doesn't track position, so start it somewhere. With real pdfkit, an undefined y
+      // becomes NaN and the next text() call throws.
+      Renderer.doc.y = 100;
+      const headingYs = [];
+      const renderSectionHeading = Renderer.renderSectionHeading.bind(Renderer);
+      sinon.stub(Renderer, 'renderSectionHeading').callsFake((...args) => {
+        headingYs.push(Renderer.doc.y);
+        return renderSectionHeading(...args);
+      });
+
+      Renderer.render();
+
+      sinon.assert.calledWithMatch(Renderer.renderSectionHeading, 'Basal Rates');
+      sinon.assert.calledWithMatch(Renderer.renderSectionHeading, 'ezCarb ezBG');
+      _.each(headingYs, y => expect(y).to.be.finite);
+    });
+
+    it('should render only device meta for an unsupported manufacturer', () => {
+      Renderer = createRenderer(data.omnipodMultirate);
+      Renderer.manufacturer = 'unknown';
+
+      sinon.spy(Renderer, 'renderDeviceMeta');
+      sinon.spy(Renderer, 'renderPumpSettings');
+      sinon.spy(Renderer, 'renderBasalSchedules');
+      sinon.spy(Renderer, 'renderWizardSettings');
+
+      expect(() => Renderer.render()).to.not.throw();
+
+      sinon.assert.calledOnce(Renderer.renderDeviceMeta);
+      sinon.assert.notCalled(Renderer.renderPumpSettings);
+      sinon.assert.notCalled(Renderer.renderBasalSchedules);
+      sinon.assert.notCalled(Renderer.renderWizardSettings);
+    });
+
     it('should call all the appropriate render methods for tandem devices', () => {
       Renderer = createRenderer(data.tandemMultirate);
 

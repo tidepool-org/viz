@@ -37,7 +37,7 @@ import {
 } from '../../utils/settings/nonTandemData';
 
 import { getPumpVocabulary, getDeviceName, isControlIQ, isLoop, isTrio } from '../../utils/device';
-import { INSULIN_MODEL_LABELS } from '../../utils/constants';
+import { INSULIN_MODEL_LABELS, SUPPORTED_NON_TANDEM_PUMPS } from '../../utils/constants';
 
 import {
   basalSchedules as profileSchedules,
@@ -71,7 +71,7 @@ class SettingsPrintView extends PrintView {
       this.renderTandemProfiles();
     } else if (isLoop(this.latestPumpUpload.settings) || isTrio(this.latestPumpUpload.settings)) {
       this.renderTherapySettings();
-    } else {
+    } else if (_.includes(SUPPORTED_NON_TANDEM_PUMPS, this.manufacturer)) {
       if (this.manufacturer !== 'animas') this.renderPumpSettings();
       this.renderBasalSchedules();
       this.renderWizardSettings();
@@ -586,8 +586,14 @@ class SettingsPrintView extends PrintView {
 
   renderBasalSchedules() {
     this.doc.x = this.chartArea.leftEdge;
-    this.doc.y = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
-    this.doc.moveDown();
+
+    // Start below the pump settings columns. Animas skips renderPumpSettings, so there are none
+    // and Basal Rates follows the device line directly, like the first section of other pumps.
+    const columnsBottom = _.get(this.layoutColumns, ['columns', this.getLongestLayoutColumn(), 'y']);
+    if (columnsBottom !== undefined) {
+      this.doc.y = columnsBottom;
+      this.doc.moveDown();
+    }
 
     this.renderSectionHeading(t('Basal Rates'));
 
