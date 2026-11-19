@@ -6422,7 +6422,7 @@ describe('DataUtil', () => {
       expect(resultWithDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
     });
 
-    it('should optionally cover every calendar day touched by endpoints offset from midnight', () => {
+    it('should optionally extend to the end of the day for endpoints offset from midnight', () => {
       // 2 days from 16:00 EST: touches Feb 1, Feb 2 and the morning of Feb 3
       const endpoints = [
         '2018-02-01T21:00:00.000Z',
@@ -6438,24 +6438,24 @@ describe('DataUtil', () => {
       dataUtil.activeEndpoints = dataUtil.endpoints.current;
       const range = dataUtil.activeEndpoints.range;
 
-      const resultWithoutCover = dataUtil.getFillData(range);
-      expect(resultWithoutCover).to.be.an('array').and.have.lengthOf(16);
-      expect(resultWithoutCover[0].normalTime).to.equal(Date.parse('2018-02-01T05:00:00.000Z')); // Feb 1 00:00 EST
-      expect(_.last(resultWithoutCover).normalEnd).to.equal(Date.parse('2018-02-03T05:00:00.000Z')); // Feb 3 00:00 EST
+      const resultWithoutExtend = dataUtil.getFillData(range);
+      expect(resultWithoutExtend).to.be.an('array').and.have.lengthOf(16);
+      expect(resultWithoutExtend[0].normalTime).to.equal(Date.parse('2018-02-01T05:00:00.000Z')); // Feb 1 00:00 EST
+      expect(_.last(resultWithoutExtend).normalEnd).to.equal(Date.parse('2018-02-03T05:00:00.000Z')); // Feb 3 00:00 EST
 
-      const resultWithCover = dataUtil.getFillData(range, { coverCalendarDays: true });
-      expect(resultWithCover).to.be.an('array').and.have.lengthOf(24);
-      expect(resultWithCover[0].normalTime).to.equal(Date.parse('2018-02-01T05:00:00.000Z')); // Feb 1 00:00 EST
-      expect(_.last(resultWithCover).normalEnd).to.equal(Date.parse('2018-02-04T05:00:00.000Z')); // Feb 4 00:00 EST
+      const resultWithExtend = dataUtil.getFillData(range, { extendToEndOfDay: true });
+      expect(resultWithExtend).to.be.an('array').and.have.lengthOf(24);
+      expect(resultWithExtend[0].normalTime).to.equal(Date.parse('2018-02-01T05:00:00.000Z')); // Feb 1 00:00 EST
+      expect(_.last(resultWithExtend).normalEnd).to.equal(Date.parse('2018-02-04T05:00:00.000Z')); // Feb 4 00:00 EST
     });
 
-    it('should not change the fill data for midnight-aligned endpoints when covering calendar days', () => {
+    it('should not change the fill data for midnight-aligned endpoints when extending to the end of the day', () => {
       initDataUtil(defaultData);
       dataUtil.query(defaultQuery);
 
       const endpoints = _.map(dayEndpoints, Date.parse);
 
-      expect(dataUtil.getFillData(endpoints, { coverCalendarDays: true })).to.eql(dataUtil.getFillData(endpoints));
+      expect(dataUtil.getFillData(endpoints, { extendToEndOfDay: true })).to.eql(dataUtil.getFillData(endpoints));
     });
   });
 

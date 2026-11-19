@@ -2313,9 +2313,9 @@ export class DataUtil {
 
     let days = this.activeEndpoints.days;
 
-    if (opts.coverCalendarDays) {
-      // Cover every calendar day the endpoints touch, so that a range offset from midnight also
-      // gets fill data for the partial day at its end
+    if (opts.extendToEndOfDay) {
+      // Extend the fill to the end of the day containing the range end, so that a range offset
+      // from midnight also gets fill data for the partial day at its end
       const end = moment.utc(endpoints[1]).tz(timezone);
       const endDayCeiling = end.clone().startOf('day');
       if (endDayCeiling.isBefore(end)) endDayCeiling.add(1, 'day');
