@@ -3,7 +3,7 @@ import _ from 'lodash';
 import DataUtil from '../../src/utils/DataUtil';
 import AggregationUtil from '../../src/utils/AggregationUtil';
 import { types as Types, generateGUID } from '../../data/types';
-import { MGDL_UNITS, MGDL_PER_MMOLL } from '../../src/utils/constants';
+import { MGDL_UNITS, MGDL_PER_MMOLL, MS_IN_HOUR } from '../../src/utils/constants';
 
 /* eslint-disable max-len, no-underscore-dangle */
 
@@ -462,6 +462,99 @@ describe('AggregationUtil', () => {
     it('should reset `dataUtil.activeEndpoints` to initial values after processing', () => {
       aggregationUtil.aggregateDataByDate(groupByDate);
       expect(aggregationUtil.dataUtil.activeEndpoints).to.eql(aggregationUtil.initialActiveEndpoints);
+    });
+
+    context('range offset from midnight', () => {
+      const timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+
+      // One cbg reading on every hour within [start, end)
+      const hourlyCbgData = (start, end) => _.map(_.range(Date.parse(start), Date.parse(end), MS_IN_HOUR), time => ({
+        ..._.toPlainObject(new Types.CBG({ deviceTime: new Date(time).toISOString().slice(0, 19), ...useRawData })),
+        id: generateGUID(),
+      }));
+
+      const aggregateCbgByDate = (dataset, endpoints) => {
+        aggregationUtil = createAggregationUtil(dataset, {
+          ...defaultOpts,
+          endpoints,
+          timePrefs,
+          types: { cbg: {} },
+        });
+        groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
+
+        return aggregationUtil.aggregateDataByDate(groupByDate);
+      };
+
+      const cbgCountsByDate = dataByDate => _.mapValues(dataByDate, ({ cbg }) => cbg.length);
+      const cbgLocalDatesByDate = dataByDate => _.mapValues(dataByDate, ({ cbg }) => _.uniq(_.map(cbg, 'localDate')));
+
+      // 3 24-hour periods from Feb 1 16:00 EST to Feb 4 16:00 EST
+      const offsetEndpoints = [
+        '2018-02-01T21:00:00.000Z',
+        '2018-02-04T21:00:00.000Z',
+      ];
+
+      it('should key the data by calendar date, with partial first and last days', () => {
+        const result = aggregateCbgByDate(
+          hourlyCbgData('2018-02-01T05:00:00.000Z', '2018-02-05T05:00:00.000Z'), // Feb 1 - Feb 4 EST
+          offsetEndpoints,
+        );
+
+        expect(cbgCountsByDate(result)).to.eql({
+          '2018-02-01': 8, // 16:00 - 23:00
+          '2018-02-02': 24,
+          '2018-02-03': 24,
+          '2018-02-04': 16, // 00:00 - 15:00
+        });
+
+        expect(cbgLocalDatesByDate(result)).to.eql({
+          '2018-02-01': ['2018-02-01'],
+          '2018-02-02': ['2018-02-02'],
+          '2018-02-03': ['2018-02-03'],
+          '2018-02-04': ['2018-02-04'],
+        });
+      });
+
+      it('should include data from a calendar date whose preceding date has no data', () => {
+        // Data starts after midnight, within the first 24-hour period of the range
+        const result = aggregateCbgByDate(
+          hourlyCbgData('2018-02-02T07:00:00.000Z', '2018-02-05T05:00:00.000Z'), // Feb 2 02:00 EST - Feb 4 EST
+          offsetEndpoints,
+        );
+
+        expect(result['2018-02-01']).to.be.undefined;
+        expect(result['2018-02-02'].cbg).to.have.lengthOf(22); // 02:00 - 23:00
+      });
+
+      it('should key a range ending just before midnight by the calendar dates it covers', () => {
+        // Feb 1 00:00 EST to Feb 3 23:59:59.998 EST, as sent for a custom past print range
+        const result = aggregateCbgByDate(
+          hourlyCbgData('2018-01-31T05:00:00.000Z', '2018-02-05T05:00:00.000Z'), // Jan 31 - Feb 4 EST
+          ['2018-02-01T05:00:00.000Z', '2018-02-04T04:59:59.998Z'],
+        );
+
+        expect(cbgCountsByDate(result)).to.eql({
+          '2018-02-01': 24,
+          '2018-02-02': 24,
+          '2018-02-03': 24,
+        });
+
+        expect(cbgLocalDatesByDate(result)['2018-02-01']).to.eql(['2018-02-01']);
+      });
+
+      it('should use the full local day across DST changes', () => {
+        // Mar 10 16:00 EST to Mar 12 16:00 EDT, spanning the 23-hour Mar 11 spring forward day
+        const result = aggregateCbgByDate(
+          hourlyCbgData('2018-03-10T05:00:00.000Z', '2018-03-13T04:00:00.000Z'), // Mar 10 - Mar 12 local
+          ['2018-03-10T21:00:00.000Z', '2018-03-12T20:00:00.000Z'],
+        );
+
+        expect(cbgCountsByDate(result)).to.eql({
+          '2018-03-10': 8, // 16:00 - 23:00 EST
+          '2018-03-11': 23,
+          '2018-03-12': 16, // 00:00 - 15:00 EDT
+        });
+      });
     });
   });
 

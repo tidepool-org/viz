@@ -6421,6 +6421,42 @@ describe('DataUtil', () => {
       expect(resultWithDSTAdjust[1].normalTime).to.equal(moment.utc(endpoints[0]).add(4, 'hours').valueOf());
       expect(resultWithDSTAdjust[1].normalEnd).to.equal(moment.utc(endpoints[0]).add(7, 'hours').valueOf());
     });
+
+    it('should optionally cover every calendar day touched by endpoints offset from midnight', () => {
+      // 2 days from 16:00 EST: touches Feb 1, Feb 2 and the morning of Feb 3
+      const endpoints = [
+        '2018-02-01T21:00:00.000Z',
+        '2018-02-03T21:00:00.000Z',
+      ];
+
+      initDataUtil(defaultData);
+      dataUtil.query(createQuery({
+        endpoints,
+        timePrefs: { timezoneAware: true, timezoneName: 'US/Eastern' },
+      }));
+
+      dataUtil.activeEndpoints = dataUtil.endpoints.current;
+      const range = dataUtil.activeEndpoints.range;
+
+      const resultWithoutCover = dataUtil.getFillData(range);
+      expect(resultWithoutCover).to.be.an('array').and.have.lengthOf(16);
+      expect(resultWithoutCover[0].normalTime).to.equal(Date.parse('2018-02-01T05:00:00.000Z')); // Feb 1 00:00 EST
+      expect(_.last(resultWithoutCover).normalEnd).to.equal(Date.parse('2018-02-03T05:00:00.000Z')); // Feb 3 00:00 EST
+
+      const resultWithCover = dataUtil.getFillData(range, { coverCalendarDays: true });
+      expect(resultWithCover).to.be.an('array').and.have.lengthOf(24);
+      expect(resultWithCover[0].normalTime).to.equal(Date.parse('2018-02-01T05:00:00.000Z')); // Feb 1 00:00 EST
+      expect(_.last(resultWithCover).normalEnd).to.equal(Date.parse('2018-02-04T05:00:00.000Z')); // Feb 4 00:00 EST
+    });
+
+    it('should not change the fill data for midnight-aligned endpoints when covering calendar days', () => {
+      initDataUtil(defaultData);
+      dataUtil.query(defaultQuery);
+
+      const endpoints = _.map(dayEndpoints, Date.parse);
+
+      expect(dataUtil.getFillData(endpoints, { coverCalendarDays: true })).to.eql(dataUtil.getFillData(endpoints));
+    });
   });
 
   describe('getMetaData', () => {

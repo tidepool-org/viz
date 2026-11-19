@@ -2309,12 +2309,22 @@ export class DataUtil {
   getFillData = (endpoints, opts = {}) => {
     this.startTimer('generate fillData');
     const timezone = _.get(this, 'timePrefs.timezoneName', 'UTC');
-    const days = this.activeEndpoints.days;
+    const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
+
+    let days = this.activeEndpoints.days;
+
+    if (opts.coverCalendarDays) {
+      // Cover every calendar day the endpoints touch, so that a range offset from midnight also
+      // gets fill data for the partial day at its end
+      const end = moment.utc(endpoints[1]).tz(timezone);
+      const endDayCeiling = end.clone().startOf('day');
+      if (endDayCeiling.isBefore(end)) endDayCeiling.add(1, 'day');
+      days = (endDayCeiling.valueOf() - start) / MS_IN_DAY;
+    }
+
     const fillHours = 3;
     const fillBinCount = (24 / fillHours) * days;
     const duration = fillHours * MS_IN_HOUR;
-
-    const start = moment.utc(endpoints[0]).tz(timezone).startOf('day').valueOf();
 
     const hourlyStarts = [start];
     for (let index = 1; index < 24 * days; index++) {

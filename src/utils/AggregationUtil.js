@@ -580,6 +580,39 @@ export class AggregationUtil {
   };
 
   /**
+   * getActiveRangeCalendarDays
+   *
+   * Returns the calendar days touched by the active range, most recent first. Each day's range is
+   * clipped to the bounds of the active range, so a range offset from midnight yields a partial
+   * first and last day.
+   *
+   * @returns {Array} objects with the `date` (YYYY-MM-DD) and `range` ([start, end) hammertimes)
+   * of each day
+   */
+  getActiveRangeCalendarDays = () => {
+    const { days, range = [] } = this.initialActiveEndpoints || {};
+    const [rangeStart, rangeEnd] = range;
+
+    if (!days || !_.isFinite(rangeStart) || !_.isFinite(rangeEnd)) return [];
+
+    const calendarDays = [];
+    let dayStart = moment.utc(rangeStart).tz(this.timezoneName).startOf('day');
+
+    while (dayStart.valueOf() < rangeEnd) {
+      const dayEnd = dayStart.clone().add(1, 'day');
+
+      calendarDays.push({
+        date: dayStart.format('YYYY-MM-DD'),
+        range: [_.max([dayStart.valueOf(), rangeStart]), _.min([dayEnd.valueOf(), rangeEnd])],
+      });
+
+      dayStart = dayEnd;
+    }
+
+    return calendarDays.reverse();
+  };
+
+  /**
    * postProcessDataByDateAggregations
    *
    * Post processor for crossfilter reductio data by date aggregations
@@ -592,11 +625,10 @@ export class AggregationUtil {
     const datesWithData = _.map(data, 'key');
     const processedData = {};
 
-    const activeRangeDates = _.map(_.range(this.initialActiveEndpoints.days || 0), (val, index) => (
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName)).subtract(index + 1, 'days').format('YYYY-MM-DD')
-    );
-
-    _.each(activeRangeDates, (date, index) => {
+    // Data is keyed by calendar date, so that consumers drawing midnight-to-midnight days (such as
+    // the AGP daily glucose profiles) receive each day's data, even when the range is offset from
+    // midnight. The first and last days of an offset range are partial.
+    _.each(this.getActiveRangeCalendarDays(), ({ date, range }) => {
       if (_.includes(datesWithData, date)) {
         const dataForDay = _.find(data, { key: date });
 
@@ -608,10 +640,7 @@ export class AggregationUtil {
 
         // Set the endpoints to filter current data for day
         this.dataUtil.activeEndpoints = {
-          range: [
-            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
-            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
-          ],
+          range,
           days: 1,
           activeDays: 1,
         };
