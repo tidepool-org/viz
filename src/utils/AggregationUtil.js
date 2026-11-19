@@ -613,6 +613,39 @@ export class AggregationUtil {
   };
 
   /**
+   * getActiveRangePeriods
+   *
+   * Returns the 24-hour periods of the active range, most recent first, counted back from the
+   * range end in local time and keyed by the date each period starts on. The oldest period is
+   * clipped to the range start, so no period extends beyond the range when it isn't a whole number
+   * of days long, such as across a DST change.
+   *
+   * @returns {Array} objects with the `date` (YYYY-MM-DD) and `range` ([start, end) hammertimes)
+   * of each period
+   */
+  getActiveRangePeriods = () => {
+    const { days, range = [] } = this.initialActiveEndpoints || {};
+    const [rangeStart, rangeEnd] = range;
+
+    if (!days || !_.isFinite(rangeStart) || !_.isFinite(rangeEnd)) return [];
+
+    const end = moment.utc(rangeEnd).tz(this.timezoneName);
+    const periods = [];
+
+    for (let i = 0; end.clone().subtract(i, 'days').valueOf() > rangeStart; i++) {
+      const periodStart = end.clone().subtract(i + 1, 'days');
+      const periodEnd = end.clone().subtract(i, 'days');
+
+      periods.push({
+        date: periodStart.format('YYYY-MM-DD'),
+        range: [_.max([periodStart.valueOf(), rangeStart]), periodEnd.valueOf()],
+      });
+    }
+
+    return periods;
+  };
+
+  /**
    * postProcessDataByDateAggregations
    *
    * Post processor for crossfilter reductio data by date aggregations
@@ -700,7 +733,8 @@ export class AggregationUtil {
   /**
    * postProcessStatsByDateAggregations
    *
-   * Post processor for crossfilter reductio stats by date aggregations
+   * Post processor for crossfilter reductio stats by date aggregations. Stats are generated for
+   * each 24-hour period of the active range, keyed by the date the period starts on.
    *
    * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
    * @returns {Object} formatted stats by date aggregations
@@ -710,25 +744,26 @@ export class AggregationUtil {
     const datesWithData = _.map(data, 'key');
     const processedData = {};
 
-    const activeRangeDates = _.map(_.range(this.initialActiveEndpoints.days || 0), (val, index) => (
-      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName)).subtract(index + 1, 'days').format('YYYY-MM-DD')
-    );
+    _.each(this.getActiveRangePeriods(), ({ date, range }) => {
+      // A period spans two calendar dates when the range is offset from midnight, so we generate
+      // stats for it when either date has data. A midnight-aligned period overlaps only the date it
+      // starts on.
+      const overlappedDates = _.uniq([
+        moment.utc(range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
+        moment.utc(range[1] - 1).tz(this.timezoneName).format('YYYY-MM-DD'),
+      ]);
 
-    _.each(activeRangeDates, (date, index) => {
-      if (_.includes(datesWithData, date)) {
-        // Set the endpoints to filter current data for day
+      if (_.some(overlappedDates, overlappedDate => _.includes(datesWithData, overlappedDate))) {
+        // Set the endpoints to filter current data for the period
         this.dataUtil.activeEndpoints = {
-          range: [
-            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
-            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
-          ],
+          range,
           days: 1,
           activeDays: 1,
         };
 
-        this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+        this.dataUtil.filter.byEndpoints(range);
 
-        // Fetch the stats with endpoints and activeDays set for the day
+        // Fetch the stats with endpoints and activeDays set for the period
         processedData[date] = this.dataUtil.getStats(this.dataUtil.stats);
       }
     });

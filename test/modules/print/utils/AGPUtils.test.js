@@ -4,7 +4,9 @@ import { colors, AGP_FONT_FAMILY } from '../../../../src/modules/print/utils/AGP
 
 
 import { createAGPData } from '../../../../data/print/fixtures';
-import { BGM_DATA_KEY, CGM_DATA_KEY, MS_IN_MIN } from '../../../../src/utils/constants';
+import { types as Types, generateGUID } from '../../../../data/types';
+import DataUtil from '../../../../src/utils/DataUtil';
+import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../../../src/utils/constants';
 
 const cbgAGPData = createAGPData(CGM_DATA_KEY);
 const smbgAGPData = createAGPData(BGM_DATA_KEY);
@@ -215,6 +217,46 @@ describe('AGPUtils', () => {
     context('exactly 7 24-hour periods ending before the end of the queried range', () => {
       it('should assess the periods ending with the one containing the newest datum', () => {
         expect(AGPUtils.calculateCGMDataSufficiency(exactly7PeriodsEndingBeforeRangeEnd)).to.eql({
+          ambulatoryGlucoseProfile: true,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+    });
+
+    context('7 24-hour periods offset from midnight, queried from DataUtil, with data beginning after midnight in the first period', () => {
+      it('should assess the first period using the data it contains', () => {
+        const timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+
+        // cbg readings every 5 minutes from Oct 14 02:00 EDT to Oct 20 15:20 EDT
+        const cbgData = _.map(
+          _.range(Date.parse('2025-10-14T06:00:00.000Z'), Date.parse('2025-10-20T19:25:00.000Z'), MS_IN_MIN * 5),
+          time => ({
+            ..._.toPlainObject(new Types.CBG({ deviceTime: new Date(time).toISOString().slice(0, 19), raw: true })),
+            id: generateGUID(),
+          }),
+        );
+
+        const dataUtil = new DataUtil();
+        dataUtil.addData(cbgData, 'patient-1');
+
+        // 7 periods from Oct 13 16:00 EDT to Oct 20 16:00 EDT. The first period's data all falls on
+        // Oct 14, after midnight.
+        const result = dataUtil.query({
+          endpoints: [Date.parse('2025-10-13T20:00:00.000Z'), Date.parse('2025-10-20T20:00:00.000Z')],
+          aggregationsByDate: 'dataByDate, statsByDate',
+          bgSource: CGM_DATA_KEY,
+          stats: ['bgExtents', 'sensorUsage'],
+          types: { cbg: {} },
+          bgPrefs: { bgUnits: MGDL_UNITS },
+          timePrefs,
+        });
+
+        expect(result.data.current.stats.bgExtents.bg24hPeriodsWorn).to.equal(7);
+        expect(_.keys(result.data.current.aggregationsByDate.statsByDate)).to.have.lengthOf(7);
+
+        expect(AGPUtils.calculateCGMDataSufficiency({ ...result, timePrefs })).to.eql({
           ambulatoryGlucoseProfile: true,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,

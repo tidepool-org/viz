@@ -643,6 +643,85 @@ describe('AggregationUtil', () => {
       aggregationUtil.aggregateStatsByDate(groupByDate);
       expect(aggregationUtil.dataUtil.activeEndpoints).to.eql(aggregationUtil.initialActiveEndpoints);
     });
+
+    context('range offset from midnight', () => {
+      const timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+
+      // One cbg reading on every hour within [start, end), excluding [gapStart, gapEnd)
+      const hourlyCbgData = (start, end, [gapStart, gapEnd] = []) => _.map(
+        _.reject(_.range(Date.parse(start), Date.parse(end), MS_IN_HOUR), time => (
+          gapStart && time >= Date.parse(gapStart) && time < Date.parse(gapEnd)
+        )),
+        time => ({
+          ..._.toPlainObject(new Types.CBG({ deviceTime: new Date(time).toISOString().slice(0, 19), ...useRawData })),
+          id: generateGUID(),
+        }),
+      );
+
+      const aggregateCbgStatsByDate = (dataset, endpoints) => {
+        aggregationUtil = createAggregationUtil(dataset, {
+          ...defaultOpts,
+          bgSource: 'cbg',
+          endpoints,
+          timePrefs,
+          stats: 'averageGlucose',
+        });
+        groupByDate = aggregationUtil.dataUtil.dimension.byDate.group();
+
+        return aggregationUtil.aggregateStatsByDate(groupByDate);
+      };
+
+      const cbgTotalsByDate = statsByDate => _.mapValues(statsByDate, ({ averageGlucose }) => averageGlucose.total);
+
+      // 3 24-hour periods from Feb 1 16:00 EST to Feb 4 16:00 EST
+      const offsetEndpoints = [
+        '2018-02-01T21:00:00.000Z',
+        '2018-02-04T21:00:00.000Z',
+      ];
+
+      it('should include a period whose data begins after midnight', () => {
+        const result = aggregateCbgStatsByDate(
+          hourlyCbgData('2018-02-02T07:00:00.000Z', '2018-02-05T05:00:00.000Z'), // Feb 2 02:00 EST - Feb 4 EST
+          offsetEndpoints,
+        );
+
+        expect(cbgTotalsByDate(result)).to.eql({
+          '2018-02-01': 14, // Feb 2 02:00 - 15:00
+          '2018-02-02': 24,
+          '2018-02-03': 24,
+        });
+      });
+
+      it('should include a period whose start date has no data', () => {
+        const result = aggregateCbgStatsByDate(
+          hourlyCbgData(
+            '2018-02-01T05:00:00.000Z', // Feb 1 EST
+            '2018-02-05T05:00:00.000Z', // through Feb 4 EST
+            ['2018-02-02T05:00:00.000Z', '2018-02-03T05:00:00.000Z'], // no data on Feb 2 EST
+          ),
+          offsetEndpoints,
+        );
+
+        expect(cbgTotalsByDate(result)).to.eql({
+          '2018-02-01': 8, // Feb 1 16:00 - 23:00
+          '2018-02-02': 16, // Feb 3 00:00 - 15:00
+          '2018-02-03': 24,
+        });
+      });
+
+      it('should only generate stats for periods within the range across DST changes', () => {
+        // Nov 3 16:00 EDT to Nov 5 16:00 EST is 49 hours long, spanning the Nov 4 fall back change
+        const result = aggregateCbgStatsByDate(
+          hourlyCbgData('2018-11-01T04:00:00.000Z', '2018-11-07T05:00:00.000Z'), // Nov 1 - Nov 6 local
+          ['2018-11-03T20:00:00.000Z', '2018-11-05T21:00:00.000Z'],
+        );
+
+        expect(cbgTotalsByDate(result)).to.eql({
+          '2018-11-03': 25, // Nov 3 16:00 EDT - Nov 4 16:00 EST
+          '2018-11-04': 24,
+        });
+      });
+    });
   });
 
   describe('filterByActiveRange', () => {
