@@ -2285,6 +2285,7 @@ export class DataUtil {
       siteChanges: 'aggregateSiteChanges',
       dataByDate: 'aggregateDataByDate',
       statsByDate: 'aggregateStatsByDate',
+      statsBy24hPeriod: 'aggregateStatsBy24hPeriod',
     };
 
     this.aggregationUtil = new AggregationUtil(this);

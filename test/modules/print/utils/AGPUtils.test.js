@@ -1,9 +1,10 @@
 import _ from 'lodash';
+import moment from 'moment-timezone';
 import * as AGPUtils from '../../../../src/modules/print/utils/AGPUtils';
 import { colors, AGP_FONT_FAMILY } from '../../../../src/modules/print/utils/AGPConstants';
 
 
-import { createAGPData } from '../../../../data/print/fixtures';
+import { agpStatsByDate, createAGPData, toStatsBy24hPeriod } from '../../../../data/print/fixtures';
 import { types as Types, generateGUID } from '../../../../data/types';
 import DataUtil from '../../../../src/utils/DataUtil';
 import { BGM_DATA_KEY, CGM_DATA_KEY, MGDL_UNITS, MS_IN_MIN } from '../../../../src/utils/constants';
@@ -87,24 +88,34 @@ describe('AGPUtils', () => {
     const sensorUSage69Percent24HrsData = _.cloneDeep(sensorUSage70Percent24HrsData);
     sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
 
-    const top7DaysLessThan1HourDataEach = _.cloneDeep(cbgAGPData);
-    top7DaysLessThan1HourDataEach.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
-    top7DaysLessThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].sensorUsage.count = 0;
+    // The fixture's 24-hour periods, keyed by the UTC ISO timestamp of their US/Eastern start
+    const getPeriodKey = (date, startHour = 0) => moment.tz(date, 'US/Eastern').hour(startHour).toISOString();
+    const getStatsBy24hPeriod = data => data.data.current.aggregationsByDate.statsBy24hPeriod;
+
+    // Data worn for only the 7 periods from 2023-03-10 to 2023-03-16
+    const withOnly7PeriodsWorn = data => {
+      data.data.current.stats.bgExtents.bg24hPeriodsWorn = 7; // eslint-disable-line no-param-reassign
+      _.each(['2023-03-03', '2023-03-04', '2023-03-05', '2023-03-06', '2023-03-07', '2023-03-08', '2023-03-09'], date => {
+        delete getStatsBy24hPeriod(data)[getPeriodKey(date)]; // eslint-disable-line no-param-reassign
+      });
+      return data;
+    };
+
+    const top7DaysLessThan1HourDataEach = withOnly7PeriodsWorn(_.cloneDeep(cbgAGPData));
+    getStatsBy24hPeriod(top7DaysLessThan1HourDataEach)[getPeriodKey('2023-03-16')].stats.sensorUsage.count = 0;
     sensorUSage69Percent24HrsData.data.current.stats.sensorUsage.sensorUsageAGP = 69;
 
-    const exactly7DaysGreaterThan1HourDataEach = _.cloneDeep(cbgAGPData);
-    exactly7DaysGreaterThan1HourDataEach.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
+    const exactly7DaysGreaterThan1HourDataEach = withOnly7PeriodsWorn(_.cloneDeep(cbgAGPData));
 
     const top7DaysLessThan70PercentMeanUsage = _.cloneDeep(cbgAGPData);
-    delete top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate['2023-03-16'];
-    _.each(top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate, (stats, date) => {
+    delete getStatsBy24hPeriod(top7DaysLessThan70PercentMeanUsage)[getPeriodKey('2023-03-16')];
+    _.each(getStatsBy24hPeriod(top7DaysLessThan70PercentMeanUsage), ({ stats }) => {
       const maxPossibleReadings = 288;
-      top7DaysLessThan70PercentMeanUsage.data.current.aggregationsByDate.statsByDate[date].sensorUsage.count = maxPossibleReadings * 0.69;
+      stats.sensorUsage.count = maxPossibleReadings * 0.69; // eslint-disable-line no-param-reassign
     });
 
     // A 7-period window offset from midnight: the periods run 10:00 - 10:00 US/Eastern, ending
-    // 2023-03-17 10:00 EDT, and the statsByDate entries are keyed by the date each period starts on.
-    // The newest datum falls on 2023-03-17, a calendar date with no statsByDate entry of its own.
+    // 2023-03-17 10:00 EDT. The newest datum falls on 2023-03-17, within the last period.
     const tenHours = MS_IN_MIN * 60 * 10;
     const exactly7OffsetPeriodsGreaterThan1HourDataEach = _.cloneDeep(cbgAGPData);
     exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.endpoints = {
@@ -114,21 +125,22 @@ describe('AGPUtils', () => {
     };
     exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
     exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.stats.bgExtents.newestDatum.time = 1679059365000; // 2023-03-17 09:22:45 EDT
-    _.each(['2023-03-03', '2023-03-04', '2023-03-05', '2023-03-06', '2023-03-07', '2023-03-08', '2023-03-09'], date => {
-      delete exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsByDate[date];
-    });
-    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-16'].bgExtents.newestDatum.time = 1679059365000;
-    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsByDate['2023-03-10'].bgExtents.oldestDatum.time = 1678460554000; // 2023-03-10 10:02:34 EST
+    exactly7OffsetPeriodsGreaterThan1HourDataEach.data.current.aggregationsByDate.statsBy24hPeriod = toStatsBy24hPeriod(
+      _.omit(_.cloneDeep(agpStatsByDate), ['2023-03-03', '2023-03-04', '2023-03-05', '2023-03-06', '2023-03-07', '2023-03-08', '2023-03-09']),
+      { startHour: 10 },
+    );
+    getStatsBy24hPeriod(exactly7OffsetPeriodsGreaterThan1HourDataEach)[getPeriodKey('2023-03-16', 10)].stats.bgExtents.newestDatum.time = 1679059365000;
+    getStatsBy24hPeriod(exactly7OffsetPeriodsGreaterThan1HourDataEach)[getPeriodKey('2023-03-10', 10)].stats.bgExtents.oldestDatum.time = 1678460554000; // 2023-03-10 10:02:34 EST
 
     // A 14-day range whose newest datum falls 3 days before the end of the range, with exactly 7
     // periods worn: 2023-03-07 through 2023-03-13
     const exactly7PeriodsEndingBeforeRangeEnd = _.cloneDeep(cbgAGPData);
     exactly7PeriodsEndingBeforeRangeEnd.data.current.stats.bgExtents.bg24hPeriodsWorn = 7;
     exactly7PeriodsEndingBeforeRangeEnd.data.current.stats.bgExtents.newestDatum = _.cloneDeep(
-      exactly7PeriodsEndingBeforeRangeEnd.data.current.aggregationsByDate.statsByDate['2023-03-13'].bgExtents.newestDatum
+      getStatsBy24hPeriod(exactly7PeriodsEndingBeforeRangeEnd)[getPeriodKey('2023-03-13')].stats.bgExtents.newestDatum
     );
     _.each(['2023-03-03', '2023-03-04', '2023-03-05', '2023-03-06', '2023-03-14', '2023-03-15', '2023-03-16'], date => {
-      delete exactly7PeriodsEndingBeforeRangeEnd.data.current.aggregationsByDate.statsByDate[date];
+      delete getStatsBy24hPeriod(exactly7PeriodsEndingBeforeRangeEnd)[getPeriodKey(date)];
     });
 
     context('fully sufficient data', () => {
@@ -226,38 +238,55 @@ describe('AGPUtils', () => {
     });
 
     context('7 24-hour periods offset from midnight, queried from DataUtil, with data beginning after midnight in the first period', () => {
-      it('should assess the first period using the data it contains', () => {
-        const timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
+      const timePrefs = { timezoneAware: true, timezoneName: 'US/Eastern' };
 
-        // cbg readings every 5 minutes from Oct 14 02:00 EDT to Oct 20 15:20 EDT
-        const cbgData = _.map(
-          _.range(Date.parse('2025-10-14T06:00:00.000Z'), Date.parse('2025-10-20T19:25:00.000Z'), MS_IN_MIN * 5),
-          time => ({
-            ..._.toPlainObject(new Types.CBG({ deviceTime: new Date(time).toISOString().slice(0, 19), raw: true })),
-            id: generateGUID(),
-          }),
-        );
+      // cbg readings every 5 minutes from Oct 14 02:00 EDT to Oct 20 15:20 EDT
+      const cbgData = _.map(
+        _.range(Date.parse('2025-10-14T06:00:00.000Z'), Date.parse('2025-10-20T19:25:00.000Z'), MS_IN_MIN * 5),
+        time => ({
+          ..._.toPlainObject(new Types.CBG({ deviceTime: new Date(time).toISOString().slice(0, 19), raw: true })),
+          id: generateGUID(),
+        }),
+      );
 
+      // 7 periods from Oct 13 16:00 EDT to Oct 20 16:00 EDT. The first period's data all falls on
+      // Oct 14, after midnight.
+      const queryAGPData = aggregationsByDate => {
         const dataUtil = new DataUtil();
         dataUtil.addData(cbgData, 'patient-1');
 
-        // 7 periods from Oct 13 16:00 EDT to Oct 20 16:00 EDT. The first period's data all falls on
-        // Oct 14, after midnight.
-        const result = dataUtil.query({
+        return dataUtil.query({
           endpoints: [Date.parse('2025-10-13T20:00:00.000Z'), Date.parse('2025-10-20T20:00:00.000Z')],
-          aggregationsByDate: 'dataByDate, statsByDate',
+          aggregationsByDate,
           bgSource: CGM_DATA_KEY,
           stats: ['bgExtents', 'sensorUsage'],
           types: { cbg: {} },
           bgPrefs: { bgUnits: MGDL_UNITS },
           timePrefs,
         });
+      };
+
+      it('should assess the first period using the data it contains when stats by 24-hour period are queried', () => {
+        const result = queryAGPData('dataByDate, statsBy24hPeriod');
 
         expect(result.data.current.stats.bgExtents.bg24hPeriodsWorn).to.equal(7);
-        expect(_.keys(result.data.current.aggregationsByDate.statsByDate)).to.have.lengthOf(7);
+        expect(_.keys(result.data.current.aggregationsByDate.statsBy24hPeriod)).to.have.lengthOf(7);
 
         expect(AGPUtils.calculateCGMDataSufficiency({ ...result, timePrefs })).to.eql({
           ambulatoryGlucoseProfile: true,
+          dailyGlucoseProfiles: true,
+          glucoseMetrics: true,
+          percentInRanges: true,
+        });
+      });
+
+      it('should treat every period as having no data when stats by 24-hour period are not queried', () => {
+        const result = queryAGPData('dataByDate, statsByDate');
+
+        expect(result.data.current.aggregationsByDate.statsBy24hPeriod).to.be.undefined;
+
+        expect(AGPUtils.calculateCGMDataSufficiency({ ...result, timePrefs })).to.eql({
+          ambulatoryGlucoseProfile: false,
           dailyGlucoseProfiles: true,
           glucoseMetrics: true,
           percentInRanges: true,

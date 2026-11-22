@@ -38,6 +38,7 @@ export class AggregationUtil {
     reductio.registerPostProcessor('postProcessSMBGAggregations', this.postProcessSMBGAggregations);
     reductio.registerPostProcessor('postProcessDataByDateAggregations', this.postProcessDataByDateAggregations);
     reductio.registerPostProcessor('postProcessStatsByDateAggregations', this.postProcessStatsByDateAggregations);
+    reductio.registerPostProcessor('postProcessStatsBy24hPeriodAggregations', this.postProcessStatsBy24hPeriodAggregations);
   };
 
   aggregateBasals = group => {
@@ -222,6 +223,15 @@ export class AggregationUtil {
     reducer(group);
 
     return group.post().postProcessStatsByDateAggregations()();
+  };
+
+  aggregateStatsBy24hPeriod = group => {
+    const reducer = reductio();
+    reducer.dataList(true);
+
+    reducer(group);
+
+    return group.post().postProcessStatsBy24hPeriodAggregations()();
   };
 
   /**
@@ -616,12 +626,11 @@ export class AggregationUtil {
    * getActiveRangePeriods
    *
    * Returns the 24-hour periods of the active range, most recent first, counted back from the
-   * range end in local time and keyed by the date each period starts on. The oldest period is
-   * clipped to the range start, so no period extends beyond the range when it isn't a whole number
-   * of days long, such as across a DST change.
+   * range end in local time. The oldest period is clipped to the range start, so no period extends
+   * beyond the range when it isn't a whole number of days long, such as across a DST change.
    *
-   * @returns {Array} objects with the `date` (YYYY-MM-DD) and `range` ([start, end) hammertimes)
-   * of each period
+   * @returns {Array} objects with the `key` (UTC ISO timestamp of the unclipped period start) and
+   * `range` ([start, end) hammertimes) of each period
    */
   getActiveRangePeriods = () => {
     const { days, range = [] } = this.initialActiveEndpoints || {};
@@ -637,7 +646,7 @@ export class AggregationUtil {
       const periodEnd = end.clone().subtract(i, 'days');
 
       periods.push({
-        date: periodStart.format('YYYY-MM-DD'),
+        key: periodStart.toISOString(),
         range: [_.max([periodStart.valueOf(), rangeStart]), periodEnd.valueOf()],
       });
     }
@@ -733,8 +742,7 @@ export class AggregationUtil {
   /**
    * postProcessStatsByDateAggregations
    *
-   * Post processor for crossfilter reductio stats by date aggregations. Stats are generated for
-   * each 24-hour period of the active range, keyed by the date the period starts on.
+   * Post processor for crossfilter reductio stats by date aggregations
    *
    * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
    * @returns {Object} formatted stats by date aggregations
@@ -744,10 +752,55 @@ export class AggregationUtil {
     const datesWithData = _.map(data, 'key');
     const processedData = {};
 
-    _.each(this.getActiveRangePeriods(), ({ date, range }) => {
-      // A period spans two calendar dates when the range is offset from midnight, so we generate
-      // stats for it when either date has data. A midnight-aligned period overlaps only the date it
-      // starts on.
+    const activeRangeDates = _.map(_.range(this.initialActiveEndpoints.days || 0), (val, index) => (
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName)).subtract(index + 1, 'days').format('YYYY-MM-DD')
+    );
+
+    _.each(activeRangeDates, (date, index) => {
+      if (_.includes(datesWithData, date)) {
+        // Set the endpoints to filter current data for day
+        this.dataUtil.activeEndpoints = {
+          range: [
+            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+            moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
+          ],
+          days: 1,
+          activeDays: 1,
+        };
+
+        this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+
+        // Fetch the stats with endpoints and activeDays set for the day
+        processedData[date] = this.dataUtil.getStats(this.dataUtil.stats);
+      }
+    });
+
+    // Reset the activeEndpoints to it's initial value
+    this.dataUtil.activeEndpoints = _.cloneDeep(this.initialActiveEndpoints);
+    this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
+
+    return processedData;
+  };
+
+  /**
+   * postProcessStatsBy24hPeriodAggregations
+   *
+   * Post processor for crossfilter reductio stats by 24-hour period aggregations. Stats are
+   * generated for each 24-hour period of the active range, counted back from the range end, so that
+   * a range offset from midnight is assessed by period rather than by calendar date. A period spans
+   * two calendar dates when the range is offset from midnight, so we generate stats for it when
+   * either date has data.
+   *
+   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
+   * @returns {Object} stats by 24-hour period, keyed by the UTC ISO timestamp of each period start,
+   * e.g. { '2025-10-06T20:00:00.000Z': { start, end, stats } }, with start and end as hammertimes
+   */
+  postProcessStatsBy24hPeriodAggregations = priorResults => () => {
+    const data = this.filterByActiveRange(priorResults());
+    const datesWithData = _.map(data, 'key');
+    const processedData = {};
+
+    _.each(this.getActiveRangePeriods(), ({ key, range }) => {
       const overlappedDates = _.uniq([
         moment.utc(range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
         moment.utc(range[1] - 1).tz(this.timezoneName).format('YYYY-MM-DD'),
@@ -764,7 +817,11 @@ export class AggregationUtil {
         this.dataUtil.filter.byEndpoints(range);
 
         // Fetch the stats with endpoints and activeDays set for the period
-        processedData[date] = this.dataUtil.getStats(this.dataUtil.stats);
+        processedData[key] = {
+          start: range[0],
+          end: range[1],
+          stats: this.dataUtil.getStats(this.dataUtil.stats),
+        };
       }
     });
 

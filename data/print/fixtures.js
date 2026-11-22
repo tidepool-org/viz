@@ -16,6 +16,7 @@
  */
 
 import _ from 'lodash';
+import moment from 'moment-timezone';
 
 import types from '../types';
 import { THREE_HRS } from '../../src/utils/datetime';
@@ -1116,6 +1117,344 @@ const agpDataByDate = bgSource => ({
   ] },
 });
 
+// CGM stats for each calendar day of the AGP fixture range
+export const agpStatsByDate = {
+  '2023-03-16': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678976565000,
+        msPer24: 37365000,
+        localDate: '2023-03-16',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678939365000,
+        msPer24: 165000,
+        localDate: '2023-03-16',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 37500000,
+      sensorUsageAGP: 100,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 125,
+    },
+  },
+  '2023-03-15': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678939066000,
+        msPer24: 86266000,
+        localDate: '2023-03-15',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678852964000,
+        msPer24: 164000,
+        localDate: '2023-03-15',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86400000,
+      sensorUsageAGP: 99.93060374739764,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 288,
+    },
+  },
+  '2023-03-14': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678852664000,
+        msPer24: 86264000,
+        localDate: '2023-03-14',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678766561000,
+        msPer24: 161000,
+        localDate: '2023-03-14',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86400000,
+      sensorUsageAGP: 99.93060374739764,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 288,
+    },
+  },
+  '2023-03-13': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678766261000,
+        msPer24: 86261000,
+        localDate: '2023-03-13',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678680159000,
+        msPer24: 159000,
+        localDate: '2023-03-13',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86400000,
+      sensorUsageAGP: 99.93060374739764,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 288,
+    },
+  },
+  '2023-03-12': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678679859000,
+        msPer24: 86259000,
+        localDate: '2023-03-12',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678597358000,
+        msPer24: 158000,
+        localDate: '2023-03-12',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 82800000,
+      sensorUsageAGP: 99.9275887038378,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 276,
+    },
+  },
+  '2023-03-11': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678597059000,
+        msPer24: 86259000,
+        localDate: '2023-03-11',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678510958000,
+        msPer24: 158000,
+        localDate: '2023-03-11',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 78600000,
+      sensorUsageAGP: 90.90909090909092,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 262,
+    },
+  },
+  '2023-03-10': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678510657000,
+        msPer24: 86257000,
+        localDate: '2023-03-10',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678424554000,
+        msPer24: 154000,
+        localDate: '2023-03-10',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86400000,
+      sensorUsageAGP: 99.93060374739764,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 288,
+    },
+  },
+  '2023-03-09': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678424254000,
+        msPer24: 86254000,
+        localDate: '2023-03-09',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678338154000,
+        msPer24: 154000,
+        localDate: '2023-03-09',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86100000,
+      sensorUsageAGP: 99.65277777777779,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 287,
+    },
+  },
+  '2023-03-08': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678337854000,
+        msPer24: 86254000,
+        localDate: '2023-03-08',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678251751000,
+        msPer24: 151000,
+        localDate: '2023-03-08',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86400000,
+      sensorUsageAGP: 99.93060374739764,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 288,
+    },
+  },
+  '2023-03-07': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678251452000,
+        msPer24: 86252000,
+        localDate: '2023-03-07',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678171950000,
+        msPer24: 6750000,
+        localDate: '2023-03-07',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 79800000,
+      sensorUsageAGP: 99.92486851990985,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 266,
+    },
+  },
+  '2023-03-06': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678163250000,
+        msPer24: 84450000,
+        localDate: '2023-03-06',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1678078948000,
+        msPer24: 148000,
+        localDate: '2023-03-06',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 84600000,
+      sensorUsageAGP: 99.92912827781716,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 282,
+    },
+  },
+  '2023-03-05': {
+    bgExtents: {
+      newestDatum: {
+        time: 1678078648000,
+        msPer24: 86248000,
+        localDate: '2023-03-05',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1677992546000,
+        msPer24: 146000,
+        localDate: '2023-03-05',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86400000,
+      sensorUsageAGP: 99.93060374739764,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 288,
+    },
+  },
+  '2023-03-04': {
+    bgExtents: {
+      newestDatum: {
+        time: 1677992246000,
+        msPer24: 86246000,
+        localDate: '2023-03-04',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1677906146000,
+        msPer24: 146000,
+        localDate: '2023-03-04',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 86700000,
+      sensorUsageAGP: 100.34722222222223,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 289,
+    },
+  },
+  '2023-03-03': {
+    bgExtents: {
+      newestDatum: {
+        time: 1677905846000,
+        msPer24: 86246000,
+        localDate: '2023-03-03',
+      },
+      bg24hPeriodsWorn: 1,
+      oldestDatum: {
+        time: 1677819745000,
+        msPer24: 145000,
+        localDate: '2023-03-03',
+      },
+    },
+    sensorUsage: {
+      sensorUsage: 84600000,
+      sensorUsageAGP: 97.84871616932685,
+      total: 86400000,
+      sampleInterval: 300000,
+      count: 282,
+    },
+  },
+};
+
+/**
+ * toStatsBy24hPeriod
+ *
+ * Converts stats by calendar date to the shape of the `statsBy24hPeriod` aggregation, keyed by the
+ * UTC ISO timestamp of each period start. Periods start at `startHour` on each date.
+ *
+ * @param {Object} statsByDate - stats keyed by YYYY-MM-DD date
+ * @param {Object} [opts]
+ * @param {String} [opts.timezoneName] - timezone the dates are in
+ * @param {Number} [opts.startHour=0] - hour of the day each period starts at
+ *
+ * @return {Object} stats keyed by period start, as `{ start, end, stats }`
+ */
+export const toStatsBy24hPeriod = (statsByDate, opts = {}) => {
+  const { timezoneName = timePrefs.timezoneName, startHour = 0 } = opts;
+
+  return _.reduce(statsByDate, (result, stats, date) => {
+    const start = moment.tz(date, timezoneName).hour(startHour);
+    const end = start.clone().add(1, 'day');
+    return {
+      ...result,
+      [start.toISOString()]: { start: start.valueOf(), end: end.valueOf(), stats },
+    };
+  }, {});
+};
+
 export const createAGPData = bgSource => ({
   timePrefs,
   bgPrefs,
@@ -1136,316 +1475,7 @@ export const createAGPData = bgSource => ({
         activeDays: 14,
       },
       aggregationsByDate: {
-        statsByDate: {
-          '2023-03-16': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678976565000,
-                msPer24: 37365000,
-                localDate: '2023-03-16',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678939365000,
-                msPer24: 165000,
-                localDate: '2023-03-16',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 37500000,
-              sensorUsageAGP: 100,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 125,
-            },
-          },
-          '2023-03-15': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678939066000,
-                msPer24: 86266000,
-                localDate: '2023-03-15',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678852964000,
-                msPer24: 164000,
-                localDate: '2023-03-15',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 288,
-            },
-          },
-          '2023-03-14': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678852664000,
-                msPer24: 86264000,
-                localDate: '2023-03-14',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678766561000,
-                msPer24: 161000,
-                localDate: '2023-03-14',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 288,
-            },
-          },
-          '2023-03-13': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678766261000,
-                msPer24: 86261000,
-                localDate: '2023-03-13',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678680159000,
-                msPer24: 159000,
-                localDate: '2023-03-13',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 288,
-            },
-          },
-          '2023-03-12': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678679859000,
-                msPer24: 86259000,
-                localDate: '2023-03-12',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678597358000,
-                msPer24: 158000,
-                localDate: '2023-03-12',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 82800000,
-              sensorUsageAGP: 99.9275887038378,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 276,
-            },
-          },
-          '2023-03-11': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678597059000,
-                msPer24: 86259000,
-                localDate: '2023-03-11',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678510958000,
-                msPer24: 158000,
-                localDate: '2023-03-11',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 78600000,
-              sensorUsageAGP: 90.90909090909092,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 262,
-            },
-          },
-          '2023-03-10': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678510657000,
-                msPer24: 86257000,
-                localDate: '2023-03-10',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678424554000,
-                msPer24: 154000,
-                localDate: '2023-03-10',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 288,
-            },
-          },
-          '2023-03-09': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678424254000,
-                msPer24: 86254000,
-                localDate: '2023-03-09',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678338154000,
-                msPer24: 154000,
-                localDate: '2023-03-09',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86100000,
-              sensorUsageAGP: 99.65277777777779,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 287,
-            },
-          },
-          '2023-03-08': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678337854000,
-                msPer24: 86254000,
-                localDate: '2023-03-08',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678251751000,
-                msPer24: 151000,
-                localDate: '2023-03-08',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 288,
-            },
-          },
-          '2023-03-07': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678251452000,
-                msPer24: 86252000,
-                localDate: '2023-03-07',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678171950000,
-                msPer24: 6750000,
-                localDate: '2023-03-07',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 79800000,
-              sensorUsageAGP: 99.92486851990985,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 266,
-            },
-          },
-          '2023-03-06': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678163250000,
-                msPer24: 84450000,
-                localDate: '2023-03-06',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1678078948000,
-                msPer24: 148000,
-                localDate: '2023-03-06',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 84600000,
-              sensorUsageAGP: 99.92912827781716,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 282,
-            },
-          },
-          '2023-03-05': {
-            bgExtents: {
-              newestDatum: {
-                time: 1678078648000,
-                msPer24: 86248000,
-                localDate: '2023-03-05',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1677992546000,
-                msPer24: 146000,
-                localDate: '2023-03-05',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86400000,
-              sensorUsageAGP: 99.93060374739764,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 288,
-            },
-          },
-          '2023-03-04': {
-            bgExtents: {
-              newestDatum: {
-                time: 1677992246000,
-                msPer24: 86246000,
-                localDate: '2023-03-04',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1677906146000,
-                msPer24: 146000,
-                localDate: '2023-03-04',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 86700000,
-              sensorUsageAGP: 100.34722222222223,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 289,
-            },
-          },
-          '2023-03-03': {
-            bgExtents: {
-              newestDatum: {
-                time: 1677905846000,
-                msPer24: 86246000,
-                localDate: '2023-03-03',
-              },
-              bg24hPeriodsWorn: 1,
-              oldestDatum: {
-                time: 1677819745000,
-                msPer24: 145000,
-                localDate: '2023-03-03',
-              },
-            },
-            sensorUsage: {
-              sensorUsage: 84600000,
-              sensorUsageAGP: 97.84871616932685,
-              total: 86400000,
-              sampleInterval: 300000,
-              count: 282,
-            },
-          },
-        },
+        statsBy24hPeriod: toStatsBy24hPeriod(_.cloneDeep(agpStatsByDate)),
         dataByDate: agpDataByDate(bgSource),
       },
       stats: {

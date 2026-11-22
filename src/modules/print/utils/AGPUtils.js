@@ -19,7 +19,7 @@ import {
 
 import { DPI, MARGINS, WIDTH, HEIGHT } from './constants';
 import { bankersRound, formatBgValue, formatPercentage } from '../../../utils/format';
-import { ONE_HR, getTimezoneFromTimePrefs } from '../../../utils/datetime';
+import { ONE_HR } from '../../../utils/datetime';
 import { classifyBgValue, mungeBGDataBins } from '../../../utils/bloodglucose';
 import { getGlycemicRangesPreset } from '../../../utils/glycemicRanges';
 import { reconcileTIRPercentages } from '../../../utils/stat';
@@ -53,8 +53,7 @@ export const createAnnotation = options => {
 };
 
 export const calculateCGMDataSufficiency = (data = {}) => {
-  const { statsByDate } = data.data?.current?.aggregationsByDate;
-  const { newestDatum, bg24hPeriodsWorn } = data.data?.current?.stats?.bgExtents || {};
+  const { statsBy24hPeriod } = data.data?.current?.aggregationsByDate || {};
 
   const {
     count,
@@ -91,39 +90,26 @@ export const calculateCGMDataSufficiency = (data = {}) => {
     };
   }
 
-  const timezone = getTimezoneFromTimePrefs(data.timePrefs);
-  const rangeEnd = data.data?.current?.endpoints?.range?.[1];
+  // The 24-hour periods with CGM data, oldest first. Periods without data can never count toward
+  // sufficiency, so only these need assessing. Periods are treated as having no data if the query
+  // did not request `statsBy24hPeriod`.
+  const cgmPeriods = _.sortBy(
+    _.filter(_.values(statsBy24hPeriod), ({ stats }) => stats?.sensorUsage?.count > 0),
+    'start'
+  );
 
-  const periodsEnd = _.isFinite(rangeEnd) && rangeEnd > 0
-    ? moment.utc(rangeEnd).tz(timezone)
-    : moment.utc(newestDatum.time).tz(timezone).startOf('day').add(1, 'day');
-
-  // The newest datum may fall some periods before the end of the range, so the periods assessed
-  // are the ones ending with the period that contains it, not the ones ending with the range.
-  const newestDatumPeriodOffset = _.max([
-    periodsEnd.diff(moment.utc(newestDatum.time).tz(timezone), 'days'),
-    0,
-  ]);
-
-  const cgmPeriods = _.map(_.range(_.max([bg24hPeriodsWorn, 7])), (val, index) => {
-    const periodOffset = newestDatumPeriodOffset + index;
-    const start = periodsEnd.clone().subtract(periodOffset + 1, 'days');
-    const end = periodsEnd.clone().subtract(periodOffset, 'days');
-    return { date: start.format('YYYY-MM-DD'), start: start.valueOf(), end: end.valueOf() };
-  }).reverse();
-
-  const sensorUsageByPeriod = _.map(cgmPeriods, ({ date, start, end }, index) => {
+  const sensorUsageByPeriod = _.map(cgmPeriods, ({ start, end, stats }, index) => {
     const {
       count: countForPeriod,
       sampleInterval: sampleFrequencyForPeriod,
-    } = statsByDate[date]?.sensorUsage || {};
+    } = stats.sensorUsage;
 
     const {
       newestDatum: newestDatumForPeriod = {},
       oldestDatum: oldestDatumForPeriod = {},
-    } = statsByDate[date]?.bgExtents || {};
+    } = stats.bgExtents || {};
 
-    if (!sampleFrequencyForPeriod || !countForPeriod) {
+    if (!sampleFrequencyForPeriod) {
       return { sufficiencyMet: false, sensorUsage: 0 };
     }
 
@@ -145,7 +131,7 @@ export const calculateCGMDataSufficiency = (data = {}) => {
     const sensorUsage = maxPossibleReadings > 0 ? countForPeriod / maxPossibleReadings * 100 : 0;
     const sufficiencyMet = countForPeriod >= minCount;
 
-    return ({ count: countForPeriod, date, maxPossibleReadings, sensorUsage, sufficiencyMet });
+    return ({ count: countForPeriod, start, maxPossibleReadings, sensorUsage, sufficiencyMet });
   });
 
   // AGP section requires that each 24-hour period in the top 7 have at least an hour of data
