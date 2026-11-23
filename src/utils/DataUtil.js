@@ -14,6 +14,8 @@ import {
   isLoop,
   isAutomatedBasalDevice,
   isAutomatedBolusDevice,
+  isOneButtonBolusDevice,
+  isPreOneButtonBolusUpload,
   isSettingsOverrideDevice,
   isDIYLoop,
   isTrio,
@@ -1656,6 +1658,8 @@ export class DataUtil {
       const latestPumpSettingsOrUpload = latestPumpSettings || latestPumpUpload;
       const pumpIsAutomatedBasalDevice = isAutomatedBasalDevice(manufacturer, latestPumpSettingsOrUpload, deviceModel);
       const pumpIsAutomatedBolusDevice = isAutomatedBolusDevice(manufacturer, latestPumpSettingsOrUpload);
+      const pumpIsOneButtonBolusDevice = isOneButtonBolusDevice(manufacturer, latestPumpSettingsOrUpload)
+        && !isPreOneButtonBolusUpload(latestPumpUpload);
       const pumpIsSettingsOverrideDevice = isSettingsOverrideDevice(manufacturer, latestPumpSettingsOrUpload);
 
       if (latestPumpSettings && pumpIsAutomatedBasalDevice) {
@@ -1667,6 +1671,7 @@ export class DataUtil {
         deviceModel,
         isAutomatedBasalDevice: pumpIsAutomatedBasalDevice,
         isAutomatedBolusDevice: pumpIsAutomatedBolusDevice,
+        isOneButtonBolusDevice: pumpIsOneButtonBolusDevice,
         isSettingsOverrideDevice: pumpIsSettingsOverrideDevice,
         manufacturer,
         settings: latestPumpSettings,

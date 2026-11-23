@@ -4268,10 +4268,39 @@ describe('DataUtil', () => {
       expect(dataUtil.latestPumpUpload.settings).to.be.undefined;
     });
 
+    it('should only flag a one-button bolus capable pump when its latest upload is from a Tidepool Uploader version that tags one-button boluses', () => {
+      const oneButtonFlagForUploadClient = client => {
+        const upload = { ..._.omit(_.cloneDeep(uploadData[2]), 'client'), ...(client ? { client } : {}) };
+        initDataUtil(_.map(defaultData, d => (d === uploadData[2] ? upload : d)));
+
+        dataUtil.latestDatumByType.pumpSettings = {
+          type: 'pumpSettings',
+          deviceId: 'MMT-1780:sn-2',
+          uploadId: upload.uploadId,
+          time: Date.parse(upload.deviceTime),
+        };
+        dataUtil.latestDatumByType.basal = {
+          type: 'basal',
+          time: Date.parse(upload.deviceTime),
+          uploadId: upload.uploadId,
+        };
+
+        dataUtil.setLatestPumpUpload();
+        return dataUtil.latestPumpUpload.isOneButtonBolusDevice;
+      };
+
+      expect(oneButtonFlagForUploadClient({ name: 'org.tidepool.uploader', version: '2.68.0' })).to.be.false;
+      expect(oneButtonFlagForUploadClient({ name: 'org.tidepool.uploader', version: '2.69.0' })).to.be.true;
+
+      // Uploads without a client (non-uploader paths) are not version-gated
+      expect(oneButtonFlagForUploadClient(undefined)).to.be.true;
+    });
+
     it('should return the make, model, latest settings, and automated delivery and settings override capabilities using latest pump data when available, else fallback to latest upload', () => {
       // 1) Use latest pump data and matching pumpSettings for uploadData[2]
       let latestPumpSettings = {
         type: 'pumpSettings',
+        deviceId: 'MMT-1780:sn-2',
         uploadId: uploadData[2].uploadId,
         time: Date.parse(uploadData[2].deviceTime),
       };
@@ -4289,6 +4318,7 @@ describe('DataUtil', () => {
         deviceModel: '1780',
         isAutomatedBasalDevice: true,
         isAutomatedBolusDevice: false,
+        isOneButtonBolusDevice: true,
         isSettingsOverrideDevice: false,
         settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
       });
@@ -4314,6 +4344,7 @@ describe('DataUtil', () => {
         deviceModel: 'dash',
         isAutomatedBasalDevice: false,
         isAutomatedBolusDevice: false,
+        isOneButtonBolusDevice: false,
         isSettingsOverrideDevice: false,
         settings: { ...latestPumpSettings },
       });
@@ -4339,6 +4370,7 @@ describe('DataUtil', () => {
         deviceModel: '12345',
         isAutomatedBasalDevice: true,
         isAutomatedBolusDevice: true,
+        isOneButtonBolusDevice: true,
         isSettingsOverrideDevice: true,
         settings: { ...latestPumpSettings, lastManualBasalSchedule: 'standard' },
       });
@@ -6579,6 +6611,7 @@ describe('DataUtil', () => {
         'deviceModel',
         'isAutomatedBasalDevice',
         'isAutomatedBolusDevice',
+        'isOneButtonBolusDevice',
         'isSettingsOverrideDevice',
         'manufacturer',
         'settings',
