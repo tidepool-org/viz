@@ -995,7 +995,7 @@ class PrintView {
     } = opts;
 
     const patientName = _.truncate(getPatientFullName(this.patient), { length: 32 });
-    const patientBirthdate = formatBirthdate(this.patient);
+    const patientBirthdate = formatBirthdate(this.patient, '%Y-%m-%d');
     let patientMRN = this.patient?.clinicPatientMRN || this.patient?.profile?.patient?.mrn;
 
     this.doc.font(this.boldFont).fontSize(fontSize).lineGap(lineGap);

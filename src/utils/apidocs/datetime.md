@@ -8,7 +8,7 @@
 <dt><a href="#getTimezoneFromTimePrefs">getTimezoneFromTimePrefs(timePrefs)</a> ⇒ <code>String</code></dt>
 <dd><p>getTimezoneFromTimePrefs</p>
 </dd>
-<dt><a href="#formatBirthdate">formatBirthdate(patient)</a> ⇒ <code>String</code></dt>
+<dt><a href="#formatBirthdate">formatBirthdate(patient, [format])</a> ⇒ <code>String</code></dt>
 <dd><p>formatBirthdate</p>
 </dd>
 <dt><a href="#formatClocktimeFromMsPer24">formatClocktimeFromMsPer24(duration, [format])</a> ⇒ <code>String</code></dt>
@@ -48,7 +48,7 @@ getTimezoneFromTimePrefs
 
 <a name="formatBirthdate"></a>
 
-## formatBirthdate(patient) ⇒ <code>String</code>
+## formatBirthdate(patient, [format]) ⇒ <code>String</code>
 formatBirthdate
 
 **Kind**: global function  
@@ -57,6 +57,7 @@ formatBirthdate
 | Param | Type | Description |
 | --- | --- | --- |
 | patient | <code>Object</code> | Tidepool patient object containing profile |
+| [format] | <code>String</code> | optional d3 time format string; default is '%b %-d, %Y' |
 
 <a name="formatClocktimeFromMsPer24"></a>
 

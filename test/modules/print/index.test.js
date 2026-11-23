@@ -20,6 +20,7 @@ import MemoryStream from 'memorystream';
 
 import * as Module from '../../../src/modules/print';
 import Doc from '../../helpers/pdfDoc';
+import * as pdfkitHelpers from '../../../src/modules/print/pdfkitHelpers';
 
 // Mock pdfkit so the source code falls back to utils.PDFDocument (which we stub)
 jest.mock('pdfkit', () => ({ __esModule: true, default: undefined }));
@@ -225,6 +226,45 @@ describe('print module', () => {
         expect(renderOpts.sites).to.eql(sites);
       });
     });
+  });
+
+  it('should reject when a view throws while rendering', () => {
+    const error = new TypeError("Cannot read properties of undefined (reading 'text')");
+    const settingsView = new SettingsPrintView();
+    sandbox.stub(settingsView, 'render').throws(error);
+    Module.utils.SettingsPrintView.returns(settingsView);
+
+    return Module.createPrintPDFPackage(data, opts).then(
+      () => { throw new Error('expected createPrintPDFPackage to reject'); },
+      err => {
+        expect(err).to.equal(error);
+        sinon.assert.notCalled(doc.end);
+      }
+    ).finally(() => {
+      Module.utils.SettingsPrintView.returns(new SettingsPrintView());
+    });
+  });
+
+  it('should reject when an async view rejects while rendering', () => {
+    const error = new Error('AGP render failed');
+    Module.utils.AGPPrintView.returns({ render: sinon.stub().rejects(error) });
+
+    return Module.createPrintPDFPackage(data, opts).then(
+      () => { throw new Error('expected createPrintPDFPackage to reject'); },
+      err => expect(err).to.equal(error)
+    ).finally(() => {
+      Module.utils.AGPPrintView.returns(new AGPPrintView());
+    });
+  });
+
+  it('should reject when the document data cannot be read', () => {
+    const error = new Error('stream failed');
+    pdfkitHelpers.waitForData.mockRejectedValueOnce(error);
+
+    return Module.createPrintPDFPackage(data, opts).then(
+      () => { throw new Error('expected createPrintPDFPackage to reject'); },
+      err => expect(err).to.equal(error)
+    );
   });
 
   it('should default patientTags and sites to empty arrays when omitted from opts', () => {
@@ -535,23 +575,28 @@ describe('print module', () => {
     const cgmTimePrefs = { timezoneAware: true, timezoneName: 'US/Pacific' };
     const bgmTimePrefs = { timezoneAware: true, timezoneName: 'Europe/London' };
 
+    const cgmEndpoints = { range: [Date.UTC(2026, 5, 1), Date.UTC(2026, 5, 15)] };
+    const bgmEndpoints = { range: [Date.UTC(2026, 4, 1), Date.UTC(2026, 4, 31)] };
+
+    const agpSectionData = endpoints => ({ current: { endpoints } });
+
     const dataWithTimePrefs = {
       ...data,
-      agpCGM: { ...data.agpCGM, timePrefs: cgmTimePrefs },
-      agpBGM: { ...data.agpBGM, timePrefs: bgmTimePrefs },
+      agpCGM: { ...data.agpCGM, timePrefs: cgmTimePrefs, data: agpSectionData(cgmEndpoints) },
+      agpBGM: { ...data.agpBGM, timePrefs: bgmTimePrefs, data: agpSectionData(bgmEndpoints) },
       basics: { ...data.basics, timePrefs: { timezoneAware: true, timezoneName: 'Asia/Tokyo' } },
     };
 
-    it('should give it the timePrefs of the agp section it follows', () => {
+    it('should pass only the timePrefs and date range of the agp section it follows', () => {
       const result = Module.createPrintPDFPackage(dataWithTimePrefs, { ...opts, patientTags, sites });
 
       return result.then(() => {
         expect(Module.utils.TagsAndSitesPrintView.firstCall.args[1])
-          .to.eql({ timePrefs: bgmTimePrefs });
+          .to.eql({ timePrefs: bgmTimePrefs, data: { current: { endpoints: bgmEndpoints } } });
       });
     });
 
-    it('should take the agp CGM timePrefs when the agp BGM section is disabled', () => {
+    it('should pass only the agp CGM timePrefs and date range when the agp BGM section is disabled', () => {
       const result = Module.createPrintPDFPackage(dataWithTimePrefs, {
         ...opts,
         patientTags,
@@ -561,7 +606,7 @@ describe('print module', () => {
 
       return result.then(() => {
         expect(Module.utils.TagsAndSitesPrintView.firstCall.args[1])
-          .to.eql({ timePrefs: cgmTimePrefs });
+          .to.eql({ timePrefs: cgmTimePrefs, data: { current: { endpoints: cgmEndpoints } } });
       });
     });
   });

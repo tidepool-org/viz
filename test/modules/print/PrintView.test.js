@@ -1880,7 +1880,7 @@ describe('PrintView', () => {
         'MRN: ',
         'mrn123',
         'DOB: ',
-        formatBirthdate(opts.patient),
+        formatBirthdate(opts.patient, '%Y-%m-%d'),
       ]);
     });
 

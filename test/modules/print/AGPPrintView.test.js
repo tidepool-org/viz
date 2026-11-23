@@ -277,7 +277,7 @@ describe('AGPPrintView', () => {
 
     it('should render the patient DOB', () => {
       sinon.assert.calledWithMatch(Renderer.doc.text, 'DOB:');
-      sinon.assert.calledWithMatch(Renderer.doc.text, 'Jan 31, 1983');
+      sinon.assert.calledWithMatch(Renderer.doc.text, '1983-01-31');
     });
 
     it('should render the patient MRN', () => {
