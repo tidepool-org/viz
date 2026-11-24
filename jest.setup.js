@@ -6,8 +6,9 @@
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 
 // Add any global setup for Jest tests here
-// Use require (not static import) so NODE_ENV is already set when core-js loads
-require('core-js/stable');
+// No core-js: Node has these features natively. core-js also reads Error.stack on load, and
+// because the `^fs$` moduleNameMapper hides the real fs, source-map-support then fetches
+// source maps by sync XHR (one child process each).
 
 // Setup Intl polyfill
 global.IntlPolyfill = require('intl');

@@ -5730,7 +5730,6 @@ __metadata:
     chai: 4.3.10
     chance: 1.1.11
     classnames: 2.3.2
-    core-js: 3.42.0
     create-react-class: 15.7.0
     crossfilter2: 1.5.4
     css-loader: 6.8.1
@@ -8773,13 +8772,6 @@ __metadata:
   version: 3.33.0
   resolution: "core-js-pure@npm:3.33.0"
   checksum: d47084a4de9a0cef9779eccd3ac9f435cf9fd7aa71794150cd4c6b305036bcc392d94766d4a7b6456bdd08faba7752d55c2ec40185bda161c3563081c9fa1e17
-  languageName: node
-  linkType: hard
-
-"core-js@npm:3.42.0":
-  version: 3.42.0
-  resolution: "core-js@npm:3.42.0"
-  checksum: 270b5532511e2e6cc8e6b10c1434306208dca377aba3850875941316ce605b008ddbdeca0b6dd6eb2a4b188899dab259c0aecd7dc265bc5e7df19563e4e284b7
   languageName: node
   linkType: hard
 
