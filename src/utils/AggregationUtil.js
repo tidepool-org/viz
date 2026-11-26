@@ -590,38 +590,6 @@ export class AggregationUtil {
   };
 
   /**
-   * getActiveRangePeriods
-   *
-   * Returns the 24-hour periods of the active range, most recent first, counted back from the
-   * range end in local time. The oldest period is clipped to the range start, so no period extends
-   * beyond the range when it isn't a whole number of days long, such as across a DST change.
-   *
-   * @returns {Array} objects with the `key` (UTC ISO timestamp of the unclipped period start) and
-   * `range` ([start, end) hammertimes) of each period
-   */
-  getActiveRangePeriods = () => {
-    const { days, range = [] } = this.initialActiveEndpoints || {};
-    const [rangeStart, rangeEnd] = range;
-
-    if (!days || !_.isFinite(rangeStart) || !_.isFinite(rangeEnd)) return [];
-
-    const end = moment.utc(rangeEnd).tz(this.timezoneName);
-    const periods = [];
-
-    for (let i = 0; end.clone().subtract(i, 'days').valueOf() > rangeStart; i++) {
-      const periodStart = end.clone().subtract(i + 1, 'days');
-      const periodEnd = end.clone().subtract(i, 'days');
-
-      periods.push({
-        key: periodStart.toISOString(),
-        range: [_.max([periodStart.valueOf(), rangeStart]), periodEnd.valueOf()],
-      });
-    }
-
-    return periods;
-  };
-
-  /**
    * postProcessDataByDateAggregations
    *
    * Post processor for crossfilter reductio data by date aggregations
@@ -764,42 +732,36 @@ export class AggregationUtil {
    *
    * Post processor for crossfilter reductio stats by 24-hour period aggregations. Stats are
    * generated for each 24-hour period of the active range, counted back from the range end, so that
-   * a range offset from midnight is assessed by period rather than by calendar date. A period spans
-   * two calendar dates when the range is offset from midnight, so we generate stats for it when
-   * either date has data.
+   * a range offset from midnight is assessed by period rather than by calendar date.
    *
-   * @param {Function} priorResults - returns the data from the active crossfilter reductio reducer
    * @returns {Object} stats by 24-hour period, keyed by the UTC ISO timestamp of each period start,
    * e.g. { '2025-10-06T20:00:00.000Z': { start, end, stats } }, with start and end as hammertimes
    */
-  postProcessStatsBy24hPeriodAggregations = priorResults => () => {
-    const data = this.filterByActiveRange(priorResults());
-    const datesWithData = _.map(data, 'key');
+  postProcessStatsBy24hPeriodAggregations = () => () => {
     const processedData = {};
 
-    _.each(this.getActiveRangePeriods(), ({ key, range }) => {
-      const overlappedDates = _.uniq([
-        moment.utc(range[0]).tz(this.timezoneName).format('YYYY-MM-DD'),
-        moment.utc(range[1] - 1).tz(this.timezoneName).format('YYYY-MM-DD'),
-      ]);
+    // A range that spans a clock change is an hour longer or shorter than its number of periods
+    const activeRangePeriods = _.map(_.range(Math.round(this.initialActiveEndpoints.days || 0)), (val, index) => ([
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index + 1, 'days').valueOf(),
+      moment.utc(this.initialActiveEndpoints.range[1]).tz(this.timezoneName).subtract(index, 'days').valueOf(),
+    ]));
 
-      if (_.some(overlappedDates, overlappedDate => _.includes(datesWithData, overlappedDate))) {
-        // Set the endpoints to filter current data for the period
-        this.dataUtil.activeEndpoints = {
-          range,
-          days: 1,
-          activeDays: 1,
-        };
+    _.each(activeRangePeriods, ([start, end]) => {
+      // Set the endpoints to filter current data for the period
+      this.dataUtil.activeEndpoints = {
+        range: [start, end],
+        days: 1,
+        activeDays: 1,
+      };
 
-        this.dataUtil.filter.byEndpoints(range);
+      this.dataUtil.filter.byEndpoints(this.dataUtil.activeEndpoints.range);
 
-        // Fetch the stats with endpoints and activeDays set for the period
-        processedData[key] = {
-          start: range[0],
-          end: range[1],
-          stats: this.dataUtil.getStats(this.dataUtil.stats),
-        };
-      }
+      // Fetch the stats with endpoints and activeDays set for the period
+      processedData[moment.utc(start).toISOString()] = {
+        start,
+        end,
+        stats: this.dataUtil.getStats(this.dataUtil.stats),
+      };
     });
 
     // Reset the activeEndpoints to it's initial value
