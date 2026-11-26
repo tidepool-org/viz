@@ -590,39 +590,6 @@ export class AggregationUtil {
   };
 
   /**
-   * getActiveRangeCalendarDays
-   *
-   * Returns the calendar days touched by the active range, most recent first. Each day's range is
-   * clipped to the bounds of the active range, so a range offset from midnight yields a partial
-   * first and last day.
-   *
-   * @returns {Array} objects with the `date` (YYYY-MM-DD) and `range` ([start, end) hammertimes)
-   * of each day
-   */
-  getActiveRangeCalendarDays = () => {
-    const { days, range = [] } = this.initialActiveEndpoints || {};
-    const [rangeStart, rangeEnd] = range;
-
-    if (!days || !_.isFinite(rangeStart) || !_.isFinite(rangeEnd)) return [];
-
-    const calendarDays = [];
-    let dayStart = moment.utc(rangeStart).tz(this.timezoneName).startOf('day');
-
-    while (dayStart.valueOf() < rangeEnd) {
-      const dayEnd = dayStart.clone().add(1, 'day');
-
-      calendarDays.push({
-        date: dayStart.format('YYYY-MM-DD'),
-        range: [_.max([dayStart.valueOf(), rangeStart]), _.min([dayEnd.valueOf(), rangeEnd])],
-      });
-
-      dayStart = dayEnd;
-    }
-
-    return calendarDays.reverse();
-  };
-
-  /**
    * getActiveRangePeriods
    *
    * Returns the 24-hour periods of the active range, most recent first, counted back from the
@@ -669,10 +636,20 @@ export class AggregationUtil {
 
     // Data is keyed by calendar date, so that consumers drawing midnight-to-midnight days (such as
     // the AGP daily glucose profiles) receive each day's data, even when the range is offset from
-    // midnight. The first and last days of an offset range are partial.
-    _.each(this.getActiveRangeCalendarDays(), ({ date, range }) => {
+    // midnight. The dates in the active range are the group keys we already have. Each one is
+    // trimmed to the range, so the first and last days of an offset range are partial.
+    const [rangeStart, rangeEnd] = this.initialActiveEndpoints.range;
+    const activeRangeDates = this.initialActiveEndpoints.days ? _.reverse([...datesWithData]) : [];
+
+    _.each(activeRangeDates, date => {
       if (_.includes(datesWithData, date)) {
         const dataForDay = _.find(data, { key: date });
+
+        // A day ends at the next date's midnight. Adding a day to its start would instead land an
+        // hour early where a clock change skips that midnight.
+        const nextDate = moment.utc(date).add(1, 'day').format('YYYY-MM-DD');
+        const dayStart = moment.tz(date, this.timezoneName).valueOf();
+        const dayEnd = moment.tz(nextDate, this.timezoneName).valueOf();
 
         const {
           value: {
@@ -682,7 +659,7 @@ export class AggregationUtil {
 
         // Set the endpoints to filter current data for day
         this.dataUtil.activeEndpoints = {
-          range,
+          range: [_.max([dayStart, rangeStart]), _.min([dayEnd, rangeEnd])],
           days: 1,
           activeDays: 1,
         };
